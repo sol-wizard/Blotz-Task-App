@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image } from "react-native";
+import { View, Image, Pressable, Text } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
+import { GashaponHelpModal } from "@/feature/gashapon-machine/components/gashapon-help-modal";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
@@ -20,10 +22,12 @@ import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 
 export default function GashaponMachineScreen() {
+  const { t } = useTranslation("notes");
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isHelpModalVisible, setHelpModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
@@ -82,6 +86,16 @@ export default function GashaponMachineScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center justify-center">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("gashapon.helpButtonA11yLabel")}
+          hitSlop={12}
+          onPress={() => setHelpModalVisible(true)}
+          className="absolute right-6 z-50 w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
+          style={{ top: 110 }}
+        >
+          <Text className="text-lg font-bold text-secondary">?</Text>
+        </Pressable>
         <NoteRevealModal
           visible={isModalVisible}
           task={randomNote}
@@ -89,6 +103,7 @@ export default function GashaponMachineScreen() {
           onCancel={handleCancel}
           isDoNowLoading={isConverting}
         />
+        <GashaponHelpModal visible={isHelpModalVisible} onClose={() => setHelpModalVisible(false)} />
         {!isAllLoaded && <LoadingScreen />}
         <View
           style={{
