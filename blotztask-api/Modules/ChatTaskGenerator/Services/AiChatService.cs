@@ -73,6 +73,8 @@ public class AiChatService(
     {
         context.Tools.ResetCallCount();
 
+        int inputTokens = 0, outputTokens = 0, totalTokens = 0;
+
         try
         {
             await checkAiQuotaService.CheckQuotaAsync(userId, ct);
@@ -83,9 +85,9 @@ public class AiChatService(
             var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
             runSw.Stop();
 
-            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
-            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
-            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
+            inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = userId,
@@ -98,20 +100,6 @@ public class AiChatService(
                 "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
                 runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
                 context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count);
-
-            var isSuccess = context.Tools.ToolCallCount > 0;
-
-            return new AiGenerateMessage
-            {
-                IsSuccess = isSuccess,
-                ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
-                ExtractedTasks = context.Tools.Tasks,
-                ExtractedNotes = context.Tools.Notes,
-                ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input.",
-                InputTokens = inputTokens,
-                OutputTokens = outputTokens,
-                TotalTokens = totalTokens
-            };
         }
         catch (OperationCanceledException oce)
         {
@@ -136,5 +124,17 @@ public class AiChatService(
             throw new AiTaskGenerationException(AiErrorCode.Unknown,
                 "An unhandled exception occurred during AI task generation.", ex);
         }
+
+        if (context.Tools.ToolCallCount <= 0)
+            throw new AiTaskGenerationException(AiErrorCode.NoTasksExtracted, "No tasks or notes were extracted.");
+
+        return new AiGenerateMessage
+        {
+            ExtractedTasks = context.Tools.Tasks,
+            ExtractedNotes = context.Tools.Notes,
+            InputTokens = inputTokens,
+            OutputTokens = outputTokens,
+            TotalTokens = totalTokens
+        };
     }
 }

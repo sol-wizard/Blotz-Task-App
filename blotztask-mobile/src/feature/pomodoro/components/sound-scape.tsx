@@ -1,9 +1,5 @@
 import { ImageBackground, Pressable, Text, View } from "react-native";
-import {
-  ITEM_WIDTH,
-  ITEM_GAP,
-  PomodoroSoundscapeType,
-} from "../../pomodoro/utils/pomodoro-setting";
+import { ITEM_WIDTH, ITEM_GAP, PomodoroSoundscapeType } from "../utils/pomodoro-setting";
 import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
@@ -59,11 +55,17 @@ export const SoundscapeCard = ({
       >
         <ImageBackground
           source={item.imageUrl}
-          className="w-full h-[100px] border-[3px] border-white justify-end p-2 bg-white"
+          className={`w-full h-[100px] border-[3px] justify-end p-2 ${
+            isSelected ? "border-highlight" : "border-transparent"
+          }`}
           imageStyle={{ borderRadius: 20, resizeMode: "cover" }}
           style={{ borderRadius: 20, overflow: "hidden" }}
         >
-          <Text className="text-white font-baloo text-[11px] text-center leading-tight shadow-sm shadow-black">
+          <Text
+            className={`font-baloo text-[11px] text-center leading-tight ${
+              isSelected ? "text-highlight shadow-transparent" : "text-white shadow-black"
+            }`}
+          >
             {t(`soundscape.${item.type}`)}
           </Text>
         </ImageBackground>

@@ -28,10 +28,14 @@ public static class LoggingExtensions
 
     public static WebApplicationBuilder AddAzureMonitorTelemetry(this WebApplicationBuilder builder)
     {
-        
-        if (!builder.Environment.IsDevelopment())
+        var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+
+        if (!string.IsNullOrEmpty(connectionString) && !builder.Environment.IsDevelopment())
         {
-            builder.Services.AddOpenTelemetry().UseAzureMonitor();
+            builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+            {
+                options.ConnectionString = connectionString;
+            });
         }
         return builder;
     }
