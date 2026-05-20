@@ -35,10 +35,12 @@ export const SoundscapeCard = ({
   const animatedStyle = useAnimatedStyle(() => {
     const inputRange = [index - 1, index, index + 1];
 
+    const scrollTranslateY = interpolate(scrollX.value, inputRange, [0, -12, 0], "clamp");
+
     return {
-      transform: [{ translateY: interpolate(scrollX.value, inputRange, [0, -12, 0], "clamp") }],
+      transform: [{ translateY: isSelected ? -12 : scrollTranslateY }],
     };
-  });
+  }, [isSelected]);
 
   return (
     <Pressable onPress={() => onPress(index, item.type)}>
