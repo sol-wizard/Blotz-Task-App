@@ -33,11 +33,11 @@ const useTaskMutations = () => {
       toggleTaskCompletion(taskId),
     onMutate: async (data) => {
       if (!data?.selectedDay) return;
-      const prevSelectedDayData = queryClient.getQueryData<any>(
+      const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
         taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(data.selectedDay))),
       );
-      const toggleInList = (list: any[] | undefined) =>
-        list?.map((t) => (t.id === data.taskId ? { ...t, isCompleted: !t.isCompleted } : t));
+      const toggleInList = (list: TaskDetailDTO[] | undefined) =>
+        list?.map((t) => (t.id === data.taskId ? { ...t, isDone: !t.isDone } : t));
       queryClient.setQueryData(taskKeys.all, toggleInList(prevSelectedDayData));
       return { prevSelectedDayData };
     },
@@ -51,7 +51,7 @@ const useTaskMutations = () => {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (task: TaskDetailDTO) => deleteTask(task.id),
+    mutationFn: (task: TaskDetailDTO) => deleteTask(task.id!),
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);

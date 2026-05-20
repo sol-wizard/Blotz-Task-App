@@ -62,7 +62,7 @@ export function AnimatedDropdown<T>({
 
   const visibleCount = Math.min(options.length, maxVisibleItems);
 
-  const openDropdown = (ref: any) => {
+  const openDropdown = (ref: View | null) => {
     if (!ref?.measureInWindow) {
       setOpen(true);
       return;
@@ -76,7 +76,7 @@ export function AnimatedDropdown<T>({
   const closeDropdown = () => setOpen(false);
 
   // use ref-less approach via callback ref
-  const [triggerRef, setTriggerRef] = useState<any>(null);
+  const [triggerRef, setTriggerRef] = useState<View | null>(null);
 
   const onSelect = (next: T) => {
     onChange(next);

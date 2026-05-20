@@ -1,5 +1,4 @@
-import { Control, useController, UseFormClearErrors, UseFormSetValue } from "react-hook-form";
-import { TaskFormField } from "../models/task-form-schema";
+import { useController, useFormContext } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -9,16 +8,10 @@ import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { TaskFormField } from "../models/task-form-schema";
 
-export const ReminderTab = ({
-  control,
-  setValue,
-  clearErrors,
-}: {
-  control: Control<TaskFormField>;
-  setValue: UseFormSetValue<TaskFormField>;
-  clearErrors: UseFormClearErrors<TaskFormField>;
-}) => {
+export const ReminderTab = () => {
+  const { control, setValue, clearErrors } = useFormContext<TaskFormField>();
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
