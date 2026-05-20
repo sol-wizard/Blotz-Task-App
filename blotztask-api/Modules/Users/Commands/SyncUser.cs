@@ -3,11 +3,10 @@ using System.Globalization;
 using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Entities;
-using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
-using BlotzTask.Modules.Tasks.Domain.Entities;
-using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Users.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Users.Commands;
@@ -44,6 +43,7 @@ public class SyncUserCommandHandler(
             logger.LogWarning("Invalid created_at format, using fallback now: {createdAtStr}", createdAtStr);
 
         var signUpAt = parsedDate;
+        var preferredLanguage = GetPreferredLanguage(user);
 
         if (string.IsNullOrWhiteSpace(auth0UserId) || string.IsNullOrWhiteSpace(email))
         {
@@ -78,7 +78,8 @@ public class SyncUserCommandHandler(
 
             var userPreference = new UserPreference
             {
-                UserId = row.Id
+                UserId = row.Id,
+                PreferredLanguage = preferredLanguage
             };
             db.UserPreferences.Add(userPreference);
 
@@ -103,40 +104,11 @@ public class SyncUserCommandHandler(
 
             // Seed default tasks for new user
             var utcNowWithOffset = DateTimeOffset.UtcNow;
-            var singleTime = utcNowWithOffset;
-            var rangeStart = utcNowWithOffset;
-            var rangeEnd = utcNowWithOffset.AddHours(2);
-
-            var defaultTasks = new List<TaskItem>
-            {
-                new TaskItem
-                {
-                    Title = "Welcome to Blotz!",
-                    Description = "This is a single-time task example",
-                    StartTime = singleTime,
-                    EndTime = singleTime,
-                    TimeType = TaskTimeType.SingleTime,
-                    UserId = row.Id,
-                    IsDone = false,
-                    LabelId = 7,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                },
-                new TaskItem
-                {
-                    Title = "Explore the app",
-                    Description = "This is a range-time task example",
-                    StartTime = rangeStart,
-                    EndTime = rangeEnd,
-                    TimeType = TaskTimeType.RangeTime,
-                    UserId = row.Id,
-                    IsDone = false,
-                    LabelId = 8,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                },
-            };
-
+            var defaultTasks = DefaultOnboardingSeedFactory.BuildTasks(
+                row.Id,
+                utcNow,
+                utcNowWithOffset,
+                preferredLanguage);
             db.TaskItems.AddRange(defaultTasks);
             await db.SaveChangesAsync(ct);
 
@@ -145,38 +117,10 @@ public class SyncUserCommandHandler(
                 defaultTasks.Count, row.Id);
 
             // Seed default notes for new user
-            var defaultNotes = new List<Note>
-            {
-                new Note
-                {
-                    Text = "Welcome to BlotzTask! This is your first note.",
-                    UserId = row.Id,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                },
-                new Note
-                {
-                    Text = "You can use notes to capture quick thoughts and ideas.",
-                    UserId = row.Id,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                },
-                new Note
-                {
-                    Text = "Notes are perfect for things that don't need a due date.",
-                    UserId = row.Id,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                },
-                new Note
-                {
-                    Text = "Try creating your own note!",
-                    UserId = row.Id,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                }
-            };
-
+            var defaultNotes = DefaultOnboardingSeedFactory.BuildNotes(
+                row.Id,
+                utcNow,
+                preferredLanguage);
             db.Notes.AddRange(defaultNotes);
             await db.SaveChangesAsync(ct);
 
@@ -195,6 +139,19 @@ public class SyncUserCommandHandler(
         await db.SaveChangesAsync(ct);
 
         return new SyncUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
+    }
+
+    private Language GetPreferredLanguage(JsonElement user)
+    {
+        var raw = GetFromUser(user, "preferred_language");
+
+        if (!string.IsNullOrWhiteSpace(raw) &&
+            Enum.TryParse<Language>(raw, ignoreCase: true, out var language))
+        {
+            return language;
+        }
+
+        return Language.En;
     }
 
     private string? Get(JsonElement source, string name)

@@ -13,6 +13,7 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { Language } from "@/shared/models/user-preferences-dto";
 
 export default function GetStartedButton() {
   const { authorize } = useAuth0();
@@ -28,7 +29,7 @@ export default function GetStartedButton() {
 
   const onPress = async () => {
     try {
-      const language = systemPreferredLanguage?.startsWith("zh") ? "zh-CN" : "en";
+      const language = systemPreferredLanguage === Language.Zh ? "zh-CN" : "en";
 
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
