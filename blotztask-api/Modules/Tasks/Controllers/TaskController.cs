@@ -185,7 +185,12 @@ public class TaskController(
             throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
 
         if (result.IsDone)
-            await eventDispatcher.DispatchAsync(new TaskCompletedEvent { UserId = userId }, ct);
+            await eventDispatcher.DispatchAsync(new TaskCompletedEvent
+            {
+                TriggerAction = "task_complete",
+                UserId = userId,
+                TaskId = id
+            }, ct);
 
         return result;
     }
