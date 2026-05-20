@@ -15,4 +15,6 @@ public class Badge
     public int Order { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; }
+
+    public ICollection<BadgeCriteria> Criteria { get; set; } = [];
 }

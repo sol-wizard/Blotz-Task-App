@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using BlotzTask.Modules.Badges.Enum;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -185,7 +186,16 @@ public class TaskController(
             throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
 
         if (result.IsDone)
-            await eventDispatcher.DispatchAsync(new TaskCompletedEvent { UserId = userId }, ct);
+        {
+            Console.WriteLine("Task status update done, starts event");
+            await eventDispatcher.DispatchAsync(new TaskCompletedEvent
+            {
+                TriggerAction = TriggerAction.TaskComplete,
+                UserId = userId,
+                TaskId = id
+            }, ct);
+        }
+           
 
         return result;
     }
