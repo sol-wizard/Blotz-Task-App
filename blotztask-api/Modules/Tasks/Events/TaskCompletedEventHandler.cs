@@ -7,18 +7,27 @@ namespace BlotzTask.Modules.Tasks.Events;
 
 public class TaskCompletedEventHandler(
     BlotzTaskDbContext db,
-    EvaluateBadgeCriteriaHandler evaluateBadgeCriteriaHandler)
+    EvaluateBadgeCriteriaHandler evaluateBadgeCriteriaHandler,
+    AwardNewBadgesToUserHandler awardNewBadgesToUserHandler)
     : IDomainEventHandler<TaskCompletedEvent>
 {
     public async Task HandleAsync(TaskCompletedEvent domainEvent, CancellationToken ct = default)
     {
+        Console.WriteLine("🔔TaskCompletedEvent is triggered");
         var task = await db.TaskItems
             .FirstOrDefaultAsync(t => t.Id == domainEvent.TaskId, ct);
 
         int completeOffsetMinutes = 0;
 
         if (task != null)
-            completeOffsetMinutes = (int)(task.EndTime - DateTimeOffset.UtcNow).TotalMinutes;
+        {
+            completeOffsetMinutes = (int)( DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
+        }
+
+        Console.WriteLine($"task completeOffsetMinutes is: {completeOffsetMinutes}");
+            
+        
+        Console.WriteLine("🔔evaluateBadgeCriteriaHandler is triggered");
 
         var matchingBadgeIds = await evaluateBadgeCriteriaHandler.Handle(new EvaluateBadgeCriteriaCommand
         {
@@ -28,5 +37,15 @@ public class TaskCompletedEventHandler(
                 ["complete_offset_mins"] = completeOffsetMinutes
             }
         }, ct);
+
+        Console.WriteLine("🔔evaluateBadgeCriteriaHandler is finished");
+
+        await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
+        {
+            UserId = domainEvent.UserId,
+            BadgeIds = matchingBadgeIds
+        }, ct);
+        
+        Console.WriteLine("🔔awardNewBadgesToUserHandler is finished");
     }
 }

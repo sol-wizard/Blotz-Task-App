@@ -8,6 +8,7 @@ public static class DependencyInjection
     {
         services.AddScoped<CheckAndAwardBadgesCommandHandler>();
         services.AddScoped<EvaluateBadgeCriteriaHandler>();
+        services.AddScoped<AwardNewBadgesToUserHandler>();
 
         return services;
     }

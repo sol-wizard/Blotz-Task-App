@@ -1,11 +1,12 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Badges.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Badges.Commands;
 
 public class EvaluateBadgeCriteriaCommand
 {
-    public required string TriggerAction { get; init; }
+    public required TriggerAction TriggerAction { get; init; }
     public required Dictionary<string, double> EventValues { get; init; }
 }
 
@@ -13,12 +14,17 @@ public class EvaluateBadgeCriteriaHandler(BlotzTaskDbContext db, ILogger<Evaluat
 {
     public async Task<List<int>> Handle(EvaluateBadgeCriteriaCommand command, CancellationToken ct = default)
     {
+        Console.WriteLine("⚠️Evaluate badge criteria");
         var criteria = await db.BadgeCriteria
             .Where(c => c.TriggerAction == command.TriggerAction)
             .ToListAsync(ct);
 
         if (criteria.Count == 0)
+        {
+            Console.WriteLine("⚠️No badge criteria");
             return [];
+        }
+            
 
         var matchingBadgeIds = criteria
             .GroupBy(c => c.BadgeId)
