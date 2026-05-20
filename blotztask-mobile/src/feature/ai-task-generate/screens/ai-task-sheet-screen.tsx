@@ -66,6 +66,11 @@ export default function AiTaskSheetScreen() {
     requestRecordingPermissionsAsync().then(({ granted }) => {
       if (!granted) {
         console.warn("[Mic] Permission not granted");
+        analytics.trackAiTaskGenerationFailed({
+          inputMode: "voice",
+          stage: "permission",
+          errorCode: "PermissionDenied",
+        });
         router.back();
       }
     });

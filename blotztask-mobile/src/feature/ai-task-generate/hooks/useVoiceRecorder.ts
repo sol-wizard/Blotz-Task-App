@@ -8,6 +8,7 @@ import { useRef } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
+import { analytics } from "@/shared/services/analytics";
 
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const { t } = useTranslation("aiTaskGenerate");
@@ -26,6 +27,11 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     } catch (error) {
       Toast.show({ type: "warning", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "recording",
+        errorCode: "RecordingStartFailed",
+      });
     }
   };
 
@@ -40,6 +46,11 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     if (!recorder.isRecording) {
       Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
       console.warn("[Mic] stopAndUpload called but recorder is not recording.");
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "recording",
+        errorCode: "NotRecording",
+      });
       return;
     }
 
@@ -49,6 +60,11 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       const uri = recorder.uri;
       if (!uri) {
         Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
+        analytics.trackAiTaskGenerationFailed({
+          inputMode: "voice",
+          stage: "recording",
+          errorCode: "EmptyAudio",
+        });
         return;
       }
 
@@ -56,6 +72,11 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       new ExpoFile(uri).delete();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "recording",
+        errorCode: "RecordingStopFailed",
+      });
     }
   };
 
