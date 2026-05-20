@@ -52,7 +52,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, getValues, trigger } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, getValues } = form;
   const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
