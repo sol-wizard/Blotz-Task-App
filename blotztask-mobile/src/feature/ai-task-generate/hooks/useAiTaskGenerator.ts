@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiNoteDTO, AiResultMessageDTO, ExtractedTaskDTO } from "../models/ai-result-message-dto";
+import {
+  AiGenerationErrorDTO,
+  AiNoteDTO,
+  AiResultMessageDTO,
+  ExtractedTaskDTO,
+} from "../models/ai-result-message-dto";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import type { AiTaskGenerationTurn, AiTaskInputMode } from "@/shared/constants/posthog-events";
@@ -80,17 +85,20 @@ export function useAiTaskGenerator({
 
     pendingInputModeRef.current = null;
 
-    if (!result.isSuccess) {
-      setStreamedTasks([]);
-      setStreamedNotes([]);
-      const i18nKey = ERROR_CODE_TO_I18N_KEY[result.errorCode ?? ""] ?? "errors.default";
-      Toast.show({ type: "error", text1: t(i18nKey) });
-      return;
-    }
-
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
     setStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
+  };
+
+  const generationErrorHandler = (error: AiGenerationErrorDTO) => {
+    setTranscript(undefined);
+    setIsAiGenerating(false);
+    requestStartedAtRef.current = null;
+    setStreamedTasks([]);
+    setStreamedNotes([]);
+
+    const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
+    Toast.show({ type: "error", text1: t(i18nKey) });
   };
 
   useEffect(() => {
@@ -102,6 +110,7 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
+        conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
           setTranscript(text);
         });
@@ -120,6 +129,7 @@ export function useAiTaskGenerator({
     return () => {
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
+        conn.off("ReceiveGenerationError", generationErrorHandler);
         conn.off("ReceiveTranscript");
         conn.off("ReceiveTaskExtracted");
         conn.off("ReceiveNoteExtracted");

@@ -5,28 +5,28 @@ export const ITEM_GAP = 12;
 export const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
 
 export const SOUNDSCAPES = {
-  easyFocus: {
-    imageUrl: ASSETS.pomodoroSoundEasyFocus,
-    music: ASSETS.pomodoroEasyFocus,
+  streamWhisper: {
+    imageUrl: ASSETS.pomodoroImgStreamWhisper,
+    music: ASSETS.pomodoroStreamWhisper,
   },
-  deepWork: {
-    imageUrl: ASSETS.pomodoroSoundDeepWork,
-    music: ASSETS.pomodoroDeepWork,
+  pineFocus: {
+    imageUrl: ASSETS.pomodoroImgPineFocus,
+    music: ASSETS.pomodoroPineFocus,
   },
-  taskFlow: {
-    imageUrl: ASSETS.pomodoroSoundTaskFlow,
-    music: ASSETS.pomodoroTaskFlow,
+  nightGlow: {
+    imageUrl: ASSETS.pomodoroImgNightGlow,
+    music: ASSETS.pomodoroNightGlow,
   },
-  calmMind: {
-    imageUrl: ASSETS.pomodoroSoundCalmMind,
-    music: ASSETS.pomodoroCalmMind,
+  silentMind: {
+    imageUrl: ASSETS.pomodoroImgSilentMind,
+    music: ASSETS.pomodoroSilentMind,
   },
-  cafeVibe: {
-    imageUrl: ASSETS.pomodoroSoundCafeVibe,
-    music: ASSETS.pomodoroCafeVibe,
+  cafeNook: {
+    imageUrl: ASSETS.pomodoroImgCafeNook,
+    music: ASSETS.pomodoroCafeNook,
   },
   noSound: {
-    imageUrl: ASSETS.pomodoroSoundNoSound,
+    imageUrl: ASSETS.pomodoroImgNoSound,
     music: null,
   },
 } as const;
