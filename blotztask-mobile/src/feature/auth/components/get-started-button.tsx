@@ -13,7 +13,6 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { Language } from "@/shared/models/user-preferences-dto";
 
 export default function GetStartedButton() {
   const { authorize } = useAuth0();
