@@ -2,6 +2,7 @@ using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ public class TaskController(
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
     GetMonthlyTaskAvailabilityQueryHandler getMonthlyTaskAvailabilityQueryHandler,
-    IEventDispatcher eventDispatcher,
+    IBackgroundTaskQueue backgroundTaskQueue,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -186,17 +187,17 @@ public class TaskController(
 
         if (result.IsDone)
         {
-            var sw = Stopwatch.StartNew();
-            _logger.LogInformation("[TaskStatusUpdate] Task {TaskId} completed — dispatching event", id);
-
-            await eventDispatcher.DispatchAsync(new TaskCompletedEvent
+            backgroundTaskQueue.Enqueue(async (sp, token) =>
             {
-                UserId = userId,
-                TaskId = id
-            }, ct);
+                var dispatcher = sp.GetRequiredService<IEventDispatcher>();
+                await dispatcher.DispatchAsync(new TaskCompletedEvent
+                {
+                    UserId = userId,
+                    TaskId =  id
+                }, token);
+            });
 
-            sw.Stop();
-            _logger.LogInformation("🍎[TaskStatusUpdate] Event dispatch finished in {ElapsedMs}ms — returning response now", sw.ElapsedMilliseconds);
+            
         }
 
         return result;
