@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using BlotzTask.Modules.Badges.Enum;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -187,15 +186,18 @@ public class TaskController(
 
         if (result.IsDone)
         {
-            Console.WriteLine("Task status update done, starts event");
+            var sw = Stopwatch.StartNew();
+            _logger.LogInformation("[TaskStatusUpdate] Task {TaskId} completed — dispatching event", id);
+
             await eventDispatcher.DispatchAsync(new TaskCompletedEvent
             {
-                TriggerAction = TriggerAction.TaskComplete,
                 UserId = userId,
                 TaskId = id
             }, ct);
+
+            sw.Stop();
+            _logger.LogInformation("🍎[TaskStatusUpdate] Event dispatch finished in {ElapsedMs}ms — returning response now", sw.ElapsedMilliseconds);
         }
-           
 
         return result;
     }

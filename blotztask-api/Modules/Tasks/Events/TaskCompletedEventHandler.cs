@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Badges.Commands;
+using BlotzTask.Modules.Badges.Enum;
 using BlotzTask.Shared.Events;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,7 +32,7 @@ public class TaskCompletedEventHandler(
 
         var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
-            TriggerAction = domainEvent.TriggerAction,
+            TriggerAction = TriggerAction.TaskComplete,
             EventValues = new Dictionary<string, double>
             {
                 ["complete_offset_mins"] = completeOffsetMinutes
