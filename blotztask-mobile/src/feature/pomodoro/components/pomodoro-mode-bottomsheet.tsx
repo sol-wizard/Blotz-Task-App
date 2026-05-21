@@ -4,7 +4,7 @@ import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
-import { SoundscapeCard } from "../../calendar/components/sound-scape";
+import { SoundscapeCard } from "./sound-scape";
 import { useTranslation } from "react-i18next";
 import {
   PomodoroSoundscapeType,
@@ -234,11 +234,7 @@ export const ModeBottomSheet = ({
 
             {/* pic for soundscape */}
             <Pressable className="items-center -mt-12 relative">
-              <Image
-                source={ASSETS.pomodoroSoundChoose}
-                className="w-32 h-12"
-                resizeMode="contain"
-              />
+              <Image source={ASSETS.pomodoroImgChoose} className="w-32 h-12" resizeMode="contain" />
             </Pressable>
           </View>
         </View>
