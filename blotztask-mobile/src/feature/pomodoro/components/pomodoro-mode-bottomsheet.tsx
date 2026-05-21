@@ -4,7 +4,7 @@ import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
-import { SoundscapeCard } from "../../calendar/components/sound-scape";
+import { SoundscapeCard } from "./sound-scape";
 import { useTranslation } from "react-i18next";
 import {
   PomodoroSoundscapeType,
