@@ -15,14 +15,7 @@ export const GashaponHelpModal: React.FC<GashaponHelpModalProps> = ({ visible, o
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <Pressable className="flex-1 bg-black/40 items-center justify-center px-6" onPress={onClose}>
         <Pressable
-          className="w-full max-w-[320px] rounded-3xl bg-background px-6 py-7"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 10 },
-            shadowRadius: 20,
-            elevation: 10,
-          }}
+          className="w-full max-w-[320px] rounded-3xl bg-background px-6 py-7 shadow-xl"
         >
           <Text className="text-slate-800 text-2xl font-bold text-center font-baloo">
             {t("gashapon.helpTitle")}

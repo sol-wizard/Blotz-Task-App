@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image, Pressable, Text } from "react-native";
+import { View, Image, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
@@ -22,7 +22,6 @@ import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 
 export default function GashaponMachineScreen() {
-  const { t } = useTranslation("notes");
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
@@ -91,12 +90,11 @@ export default function GashaponMachineScreen() {
             headerRight: () => (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={t("gashapon.helpButtonA11yLabel")}
                 hitSlop={12}
                 onPress={() => setHelpModalVisible(true)}
                 className="w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
               >
-                <Text className="text-lg font-bold text-secondary">?</Text>
+                <Ionicons name="help-circle-outline" size={20} color="#444964" />
               </Pressable>
             ),
           }}
