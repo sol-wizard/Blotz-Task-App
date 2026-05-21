@@ -145,14 +145,11 @@ public class SyncUserCommandHandler(
     {
         var raw = GetFromUser(user, "preferred_language");
 
-        if (!string.IsNullOrWhiteSpace(raw) &&
-            Enum.TryParse<Language>(raw, ignoreCase: true, out var language))
-        {
-            return language;
-        }
-
-        return Language.En;
+        return raw?.Trim().StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true
+            ? Language.Zh
+            : Language.En;
     }
+
 
     private string? Get(JsonElement source, string name)
     {
