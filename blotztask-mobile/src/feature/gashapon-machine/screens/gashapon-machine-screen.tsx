@@ -14,7 +14,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
@@ -86,16 +86,21 @@ export default function GashaponMachineScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("gashapon.helpButtonA11yLabel")}
-          hitSlop={12}
-          onPress={() => setHelpModalVisible(true)}
-          className="absolute right-6 z-50 w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
-          style={{ top: 110 }}
-        >
-          <Text className="text-lg font-bold text-secondary">?</Text>
-        </Pressable>
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("gashapon.helpButtonA11yLabel")}
+                hitSlop={12}
+                onPress={() => setHelpModalVisible(true)}
+                className="w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
+              >
+                <Text className="text-lg font-bold text-secondary">?</Text>
+              </Pressable>
+            ),
+          }}
+        />
         <NoteRevealModal
           visible={isModalVisible}
           task={randomNote}
@@ -103,7 +108,10 @@ export default function GashaponMachineScreen() {
           onCancel={handleCancel}
           isDoNowLoading={isConverting}
         />
-        <GashaponHelpModal visible={isHelpModalVisible} onClose={() => setHelpModalVisible(false)} />
+        <GashaponHelpModal
+          visible={isHelpModalVisible}
+          onClose={() => setHelpModalVisible(false)}
+        />
         {!isAllLoaded && <LoadingScreen />}
         <View
           style={{
