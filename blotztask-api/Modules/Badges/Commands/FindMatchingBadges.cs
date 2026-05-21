@@ -14,7 +14,6 @@ public class FindMatchingBadgesHandler(BlotzTaskDbContext db, ILogger<FindMatchi
 {
     public async Task<List<int>> Handle(FindMatchingBadgesCommand command, CancellationToken ct = default)
     {
-        Console.WriteLine("⚠️Evaluate badge criteria");
         var criteria = await db.BadgeCriteria
             .Where(c => c.TriggerAction == command.TriggerAction)
             .ToListAsync(ct);
