@@ -12,7 +12,6 @@
     "cancel": "Cancel",
     "doItNow": "Do it now",
     "pickNote": "Pick a note",
-    "helpButtonA11yLabel": "Open gacha help",
     "helpTitle": "Gacha Help",
     "helpSteps": [
       "Each time you create a Note, a star will appear inside the machine.",

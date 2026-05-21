@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image, Pressable } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
@@ -14,7 +13,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import { router, Stack } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
@@ -27,6 +26,7 @@ export default function GashaponMachineScreen() {
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isHelpModalVisible, setHelpModalVisible] = useState(false);
+  const { showHelp } = useLocalSearchParams<{ showHelp?: string }>();
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
@@ -36,6 +36,13 @@ export default function GashaponMachineScreen() {
   useEffect(() => {
     analytics.trackScreenViewed(SCREEN_NAMES.GASHAPON_MACHINE);
   }, []);
+
+  useEffect(() => {
+    if (showHelp === "1") {
+      setHelpModalVisible(true);
+      router.setParams({ showHelp: "" });
+    }
+  }, [showHelp]);
 
   const MAX_STARS = 30;
 
@@ -85,20 +92,6 @@ export default function GashaponMachineScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Stack.Screen
-          options={{
-            headerRight: () => (
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={12}
-                onPress={() => setHelpModalVisible(true)}
-                className="w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
-              >
-                <Ionicons name="help-circle-outline" size={20} color="#444964" />
-              </Pressable>
-            ),
-          }}
-        />
         <NoteRevealModal
           visible={isModalVisible}
           task={randomNote}

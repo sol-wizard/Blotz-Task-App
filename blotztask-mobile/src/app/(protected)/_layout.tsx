@@ -2,9 +2,11 @@ import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUse
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { analytics } from "@/shared/services/analytics";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useAuth0 } from "react-native-auth0";
 import { useEffect } from "react";
+import { Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ProtectedLayout() {
   const { user, getCredentials } = useAuth0();
@@ -74,6 +76,16 @@ export default function ProtectedLayout() {
           headerStyle: {
             backgroundColor: "transparent",
           },
+          headerRight: () => (
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={12}
+              onPress={() => router.setParams({ showHelp: "1" })}
+              className="w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
+            >
+              <Ionicons name="help-circle-outline" size={20} color="#444964" />
+            </Pressable>
+          ),
         }}
       />
       <Stack.Screen
