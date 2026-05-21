@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Tasks.Events;
 
 public class TaskCompletedEventHandler(
     BlotzTaskDbContext db,
-    EvaluateBadgeCriteriaHandler evaluateBadgeCriteriaHandler,
+    FindMatchingBadgesHandler findMatchingBadgesHandler,
     AwardNewBadgesToUserHandler awardNewBadgesToUserHandler)
     : IDomainEventHandler<TaskCompletedEvent>
 {
@@ -29,7 +29,7 @@ public class TaskCompletedEventHandler(
         
         Console.WriteLine("🔔evaluateBadgeCriteriaHandler is triggered");
 
-        var matchingBadgeIds = await evaluateBadgeCriteriaHandler.Handle(new EvaluateBadgeCriteriaCommand
+        var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
             TriggerAction = domainEvent.TriggerAction,
             EventValues = new Dictionary<string, double>

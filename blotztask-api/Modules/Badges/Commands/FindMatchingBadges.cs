@@ -4,26 +4,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Badges.Commands;
 
-public class EvaluateBadgeCriteriaCommand
+public class FindMatchingBadgesCommand
 {
     public required TriggerAction TriggerAction { get; init; }
     public required Dictionary<string, double> EventValues { get; init; }
 }
 
-public class EvaluateBadgeCriteriaHandler(BlotzTaskDbContext db, ILogger<EvaluateBadgeCriteriaHandler> logger)
+public class FindMatchingBadgesHandler(BlotzTaskDbContext db, ILogger<FindMatchingBadgesHandler> logger)
 {
-    public async Task<List<int>> Handle(EvaluateBadgeCriteriaCommand command, CancellationToken ct = default)
+    public async Task<List<int>> Handle(FindMatchingBadgesCommand command, CancellationToken ct = default)
     {
         Console.WriteLine("⚠️Evaluate badge criteria");
         var criteria = await db.BadgeCriteria
             .Where(c => c.TriggerAction == command.TriggerAction)
             .ToListAsync(ct);
-
-        if (criteria.Count == 0)
-        {
-            Console.WriteLine("⚠️No badge criteria");
-            return [];
-        }
             
 
         var matchingBadgeIds = criteria
