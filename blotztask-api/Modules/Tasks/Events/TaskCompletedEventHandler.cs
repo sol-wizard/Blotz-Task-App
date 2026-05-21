@@ -23,9 +23,7 @@ public class TaskCompletedEventHandler(
         int completeOffsetMinutes = 0;
         if (task != null)
             completeOffsetMinutes = (int)(DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
-
-        logger.LogInformation("[TaskCompletedEventHandler] completeOffsetMinutes={Minutes}", completeOffsetMinutes);
-
+        
         var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
             TriggerAction = TriggerAction.TaskComplete,
@@ -34,15 +32,12 @@ public class TaskCompletedEventHandler(
                 ["complete_offset_mins"] = completeOffsetMinutes
             }
         }, ct);
-
-        logger.LogInformation("[TaskCompletedEventHandler] FindMatchingBadges returned {Count} badge(s)", matchingBadgeIds.Count);
-
+        
         await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
         {
             UserId = taskCompletedEvent.UserId,
             BadgeIds = matchingBadgeIds
         }, ct);
-
-        logger.LogInformation("[TaskCompletedEventHandler] Completed — TaskId {TaskId}", taskCompletedEvent.TaskId);
+      
     }
 }
