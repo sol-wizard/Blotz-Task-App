@@ -13,12 +13,12 @@ public class TaskCompletedEventHandler(
     ILogger<TaskCompletedEventHandler> logger)
     : IDomainEventHandler<TaskCompletedEvent>
 {
-    public async Task HandleAsync(TaskCompletedEvent domainEvent, CancellationToken ct = default)
+    public async Task HandleAsync(TaskCompletedEvent taskCompletedEvent, CancellationToken ct = default)
     {
-        logger.LogInformation("[TaskCompletedEventHandler] Started — TaskId {TaskId}", domainEvent.TaskId);
+        logger.LogInformation("[TaskCompletedEventHandler] Started — TaskId {TaskId}", taskCompletedEvent.TaskId);
 
         var task = await db.TaskItems
-            .FirstOrDefaultAsync(t => t.Id == domainEvent.TaskId, ct);
+            .FirstOrDefaultAsync(t => t.Id == taskCompletedEvent.TaskId, ct);
 
         int completeOffsetMinutes = 0;
         if (task != null)
@@ -39,10 +39,10 @@ public class TaskCompletedEventHandler(
 
         await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
         {
-            UserId = domainEvent.UserId,
+            UserId = taskCompletedEvent.UserId,
             BadgeIds = matchingBadgeIds
         }, ct);
 
-        logger.LogInformation("[TaskCompletedEventHandler] Completed — TaskId {TaskId}", domainEvent.TaskId);
+        logger.LogInformation("[TaskCompletedEventHandler] Completed — TaskId {TaskId}", taskCompletedEvent.TaskId);
     }
 }
