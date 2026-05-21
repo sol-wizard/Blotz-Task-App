@@ -29,14 +29,9 @@ export default function GetStartedButton() {
 
   const onPress = async () => {
     try {
-      const language = systemPreferredLanguage === Language.Zh ? "zh-CN" : "en";
-
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
         scope: "openid profile email offline_access",
-        additionalParameters: {
-          ui_locales: language,
-        },
       });
 
       // Check if we have a valid result with access token
