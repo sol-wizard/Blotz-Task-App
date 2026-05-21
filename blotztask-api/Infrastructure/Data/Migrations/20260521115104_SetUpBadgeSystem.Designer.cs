@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20260520015554_AddBadgeCriteriaTable")]
-    partial class AddBadgeCriteriaTable
+    [Migration("20260521115104_SetUpBadgeSystem")]
+    partial class SetUpBadgeSystem
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -144,12 +144,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Threshold")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

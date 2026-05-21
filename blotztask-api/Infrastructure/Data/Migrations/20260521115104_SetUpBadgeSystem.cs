@@ -5,11 +5,19 @@
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddBadgeCriteriaTable : Migration
+    public partial class SetUpBadgeSystem : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropColumn(
+                name: "Order",
+                table: "Badges");
+
+            migrationBuilder.DropColumn(
+                name: "Threshold",
+                table: "Badges");
+
             migrationBuilder.CreateTable(
                 name: "BadgeCriteria",
                 columns: table => new
@@ -44,6 +52,19 @@ namespace BlotzTask.Infrastructure.Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "BadgeCriteria");
+
+            migrationBuilder.AddColumn<int>(
+                name: "Order",
+                table: "Badges",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<int>(
+                name: "Threshold",
+                table: "Badges",
+                type: "int",
+                nullable: true);
         }
     }
 }
