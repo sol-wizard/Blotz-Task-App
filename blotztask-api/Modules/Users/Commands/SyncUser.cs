@@ -104,7 +104,7 @@ public class SyncUserCommandHandler(
 
             // Seed default tasks for new user
             var utcNowWithOffset = DateTimeOffset.UtcNow;
-            var defaultTasks = DefaultOnboardingSeedFactory.BuildTasks(
+            var defaultTasks = DefaultOnboardingDataFactory.BuildTasks(
                 row.Id,
                 utcNow,
                 utcNowWithOffset,
@@ -117,7 +117,7 @@ public class SyncUserCommandHandler(
                 defaultTasks.Count, row.Id);
 
             // Seed default notes for new user
-            var defaultNotes = DefaultOnboardingSeedFactory.BuildNotes(
+            var defaultNotes = DefaultOnboardingDataFactory.BuildNotes(
                 row.Id,
                 utcNow,
                 preferredLanguage);

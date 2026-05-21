@@ -5,7 +5,7 @@ using BlotzTask.Modules.Users.Enums;
 
 namespace BlotzTask.Modules.Users.Services;
 
-public static class DefaultOnboardingSeedFactory
+public static class DefaultOnboardingDataFactory
 {
     public static List<TaskItem> BuildTasks(
         Guid userId,
@@ -83,30 +83,71 @@ public static class DefaultOnboardingSeedFactory
 
     public static List<Note> BuildNotes(Guid userId, DateTime utcNow, Language language)
     {
-        var noteTexts = language == Language.Zh
-            ? new[]
+        if (language == Language.Zh)
+        {
+            return new List<Note>
             {
-                "欢迎使用 BlotzTask！这是你的第一条笔记。",
-                "你可以用笔记快速记录想法和灵感。",
-                "笔记适合记录那些暂时不需要截止日期的事情。",
-                "试着创建一条属于你的笔记吧！"
-            }
-            : new[]
-            {
-                "Welcome to BlotzTask! This is your first note.",
-                "You can use notes to capture quick thoughts and ideas.",
-                "Notes are perfect for things that don't need a due date.",
-                "Try creating your own note!"
+                new Note
+                {
+                    Text = "欢迎使用 BlotzTask！这是你的第一条笔记。",
+                    UserId = userId,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new Note
+                {
+                    Text = "你可以用笔记快速记录想法和灵感。",
+                    UserId = userId,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new Note
+                {
+                    Text = "笔记适合记录那些暂时不需要截止日期的事情。",
+                    UserId = userId,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new Note
+                {
+                    Text = "试着创建一条属于你的笔记吧！",
+                    UserId = userId,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                }
             };
+        }
 
-        return noteTexts
-            .Select(text => new Note
+        return new List<Note>
+        {
+            new Note
             {
-                Text = text,
+                Text = "Welcome to BlotzTask! This is your first note.",
                 UserId = userId,
                 CreatedAt = utcNow,
                 UpdatedAt = utcNow
-            })
-            .ToList();
+            },
+            new Note
+            {
+                Text = "You can use notes to capture quick thoughts and ideas.",
+                UserId = userId,
+                CreatedAt = utcNow,
+                UpdatedAt = utcNow
+            },
+            new Note
+            {
+                Text = "Notes are perfect for things that don't need a due date.",
+                UserId = userId,
+                CreatedAt = utcNow,
+                UpdatedAt = utcNow
+            },
+            new Note
+            {
+                Text = "Try creating your own note!",
+                UserId = userId,
+                CreatedAt = utcNow,
+                UpdatedAt = utcNow
+            }
+        };
     }
 }
