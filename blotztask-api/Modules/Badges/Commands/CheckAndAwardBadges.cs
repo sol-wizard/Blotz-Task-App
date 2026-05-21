@@ -33,8 +33,6 @@ public class CheckAndAwardBadgesCommandHandler(BlotzTaskDbContext db, ILogger<Ch
         var newlyEarned = await db.Badges
             .Where(b => b.Category == command.Category
                      && b.IsActive
-                     && b.Threshold.HasValue
-                     && b.Threshold.Value <= command.CurrentValue
                      && !db.UserBadges.Any(ub => ub.UserId == command.UserId && ub.BadgeId == b.Id))
             .ToListAsync(ct);
 
