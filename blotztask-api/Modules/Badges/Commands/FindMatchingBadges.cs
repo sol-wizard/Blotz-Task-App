@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Badges.Commands;
 public class FindMatchingBadgesCommand
 {
     public required TriggerAction TriggerAction { get; init; }
-    public required Dictionary<string, double> EventValues { get; init; }
+    public required Dictionary<EventValueKey, double> EventValues { get; init; }
 }
 
 public class FindMatchingBadgesHandler(BlotzTaskDbContext db, ILogger<FindMatchingBadgesHandler> logger)

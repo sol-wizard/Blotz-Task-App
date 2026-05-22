@@ -16,7 +16,8 @@ public class BadgeCriteriaConfiguration : IEntityTypeConfiguration<BadgeCriteria
             .HasConversion<string>();
         builder.Property(c => c.ConditionKey)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(200)
+            .HasConversion<string>();
         builder.Property(c => c.ConditionOperator)
             .IsRequired()
             .HasMaxLength(50);

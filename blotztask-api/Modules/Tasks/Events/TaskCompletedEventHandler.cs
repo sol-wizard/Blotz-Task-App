@@ -27,9 +27,9 @@ public class TaskCompletedEventHandler(
         var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
             TriggerAction = TriggerAction.TaskComplete,
-            EventValues = new Dictionary<string, double>
+            EventValues = new Dictionary<EventValueKey, double>
             {
-                ["complete_offset_mins"] = completeOffsetMinutes
+                [EventValueKey.CompleteOffsetMins] = completeOffsetMinutes
             }
         }, ct);
         
