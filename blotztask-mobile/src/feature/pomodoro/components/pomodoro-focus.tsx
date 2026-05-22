@@ -62,16 +62,11 @@ export const PomodoroFocus = () => {
             onPress={toggleSoundscape}
             className="w-10 h-10 items-center justify-center relative"
           >
-            <Ionicons name="musical-notes" size={24} color="#444964" />
-
-            {!isPlaying && (
-              <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
-                <View
-                  className="w-7 h-[2px] bg-[#444964] rounded-full"
-                  style={{ transform: [{ rotate: "35deg" }] }} // "\" 方向
-                />
-              </View>
-            )}
+            <MaterialCommunityIcons
+              name={isPlaying ? "music" : "music-off"}
+              size={26}
+              color="#444964"
+            />
           </Pressable>
         </View>
 
