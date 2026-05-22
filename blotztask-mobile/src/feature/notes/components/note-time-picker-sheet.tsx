@@ -7,6 +7,7 @@ import { NoteDTO } from "../models/note-dto";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle";
+import { SegmentButtonValue } from "@/feature/task-add-edit/models/segment-button-value";
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
 import { TimeFormValues } from "@/feature/task-add-edit/models/task-form-schema";
@@ -47,18 +48,18 @@ export const NoteTimePickerSheet = ({
   });
 
   const { handleSubmit, reset, setValue } = form;
-  const [mode, setMode] = useState<"reminder" | "event">("reminder");
+  const [mode, setMode] = useState<SegmentButtonValue>(SegmentButtonValue.Reminder);
 
   useEffect(() => {
     if (visible) {
       reset(getDefaultValues());
-      setMode("reminder");
+      setMode(SegmentButtonValue.Reminder);
     }
   }, [visible]);
 
-  const handleTabChange = (next: "reminder" | "event") => {
+  const handleTabChange = (next: SegmentButtonValue) => {
     setMode(next);
-    if (next === "reminder") {
+    if (next === SegmentButtonValue.Reminder) {
       setValue("startDate", getDefaultValues().startDate);
       setValue("startTime", getDefaultValues().startTime);
       setValue("endDate", getDefaultValues().endDate);
@@ -76,8 +77,8 @@ export const NoteTimePickerSheet = ({
     const { startTime, endTime } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
-      mode === "reminder" ? data.startDate : data.endDate,
-      mode === "reminder" ? data.startTime : data.endTime,
+      mode === SegmentButtonValue.Reminder ? data.startDate : data.endDate,
+      mode === SegmentButtonValue.Reminder ? data.startTime : data.endTime,
     );
 
     addNoteToTask({
@@ -109,10 +110,7 @@ export const NoteTimePickerSheet = ({
             <View className="flex-row items-center justify-between mb-6 gap-3 h-20">
               {/* Left: toggle fills available horizontal space but stays vertically centered */}
               <View className="flex-1 self-center pt-3 ml-1">
-                <SegmentToggle
-                  value={mode === "reminder" ? "reminder" : "event"}
-                  setValue={handleTabChange}
-                />
+                <SegmentToggle value={mode} setValue={handleTabChange} />
               </View>
               <View className="flex-row items-center ml-3 gap-x-2 -mt-3">
                 {/* AI button */}
@@ -144,7 +142,7 @@ export const NoteTimePickerSheet = ({
 
             {/* Mode toggle (Reminder / Event) */}
             <View className="mb-4">
-              {mode === "reminder" ? (
+              {mode === SegmentButtonValue.Reminder ? (
                 <View className="mb-6">
                   <ReminderTab />
                 </View>
