@@ -234,11 +234,7 @@ export const ModeBottomSheet = ({
 
             {/* pic for soundscape */}
             <Pressable className="items-center -mt-12 relative">
-              <Image
-                source={ASSETS.pomodoroSoundChoose}
-                className="w-32 h-12"
-                resizeMode="contain"
-              />
+              <Image source={ASSETS.pomodoroImgChoose} className="w-32 h-12" resizeMode="contain" />
             </Pressable>
           </View>
         </View>
