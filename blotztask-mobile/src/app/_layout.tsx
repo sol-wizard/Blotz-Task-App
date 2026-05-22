@@ -30,6 +30,7 @@ import "@/shared/util/typography";
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   environment: process.env.EXPO_PUBLIC_APP_ENV,
+  enabled: process.env.EXPO_PUBLIC_APP_ENV !== "development",
   sendDefaultPii: true,
   enableNative: true,
   replaysSessionSampleRate: 0.1,
