@@ -106,7 +106,6 @@ public class SyncUserCommandHandler(
             var utcNowWithOffset = DateTimeOffset.UtcNow;
             var defaultTasks = DefaultOnboardingData.BuildTasks(
                 row.Id,
-                utcNow,
                 utcNowWithOffset,
                 preferredLanguage);
             db.TaskItems.AddRange(defaultTasks);
@@ -119,7 +118,6 @@ public class SyncUserCommandHandler(
             // Seed default notes for new user
             var defaultNotes = DefaultOnboardingData.BuildNotes(
                 row.Id,
-                utcNow,
                 preferredLanguage);
             db.Notes.AddRange(defaultNotes);
             await db.SaveChangesAsync(ct);
@@ -145,7 +143,7 @@ public class SyncUserCommandHandler(
     {
         var preferredLanguageValue = GetFromUser(user, "preferred_language");
 
-        return preferredLanguageValue?.Trim().StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true
+        return preferredLanguageValue?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true
             ? Language.Zh
             : Language.En;
     }

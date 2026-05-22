@@ -9,10 +9,10 @@ public static class DefaultOnboardingData
 {
     public static List<TaskItem> BuildTasks(
         Guid userId,
-        DateTime utcNow,
         DateTimeOffset utcNowWithOffset,
         Language language)
     {
+        var utcNow = DateTime.UtcNow;
         var singleTime = utcNowWithOffset;
         var rangeStart = utcNowWithOffset;
         var rangeEnd = utcNowWithOffset.AddHours(2); // Example Range Task Duration
@@ -81,8 +81,10 @@ public static class DefaultOnboardingData
         };
     }
 
-    public static List<Note> BuildNotes(Guid userId, DateTime utcNow, Language language)
+    public static List<Note> BuildNotes(Guid userId, Language language)
     {
+        var utcNow = DateTime.UtcNow;
+
         if (language == Language.Zh)
         {
             return new List<Note>
