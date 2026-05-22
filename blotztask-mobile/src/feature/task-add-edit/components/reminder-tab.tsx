@@ -8,10 +8,10 @@ import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-import { TaskFormField } from "../models/task-form-schema";
+import { TimeFormValues } from "../models/task-form-schema";
 
 export const ReminderTab = () => {
-  const { control, setValue, clearErrors } = useFormContext<TaskFormField>();
+  const { control, setValue, clearErrors } = useFormContext<TimeFormValues>();
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
@@ -26,20 +26,6 @@ export const ReminderTab = () => {
   } = useController({
     control,
     name: "startTime",
-  });
-
-  const {
-    field: { value: deadlineDate },
-  } = useController({
-    control,
-    name: "deadlineDate",
-  });
-
-  const {
-    field: { value: isDdl },
-  } = useController({
-    control,
-    name: "isDeadline",
   });
 
   const { t, i18n } = useTranslation("tasks");
@@ -76,7 +62,6 @@ export const ReminderTab = () => {
           >
             <SingleDateCalendar
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
-              deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
                 setValue("startDate", nextDate, { shouldValidate: false });
                 setValue("endDate", nextDate, { shouldValidate: false });

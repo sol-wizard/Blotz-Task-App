@@ -36,6 +36,8 @@ export const taskFormSchema = z
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
 
+export type TimeFormValues = Pick<TaskFormField, "startDate" | "startTime" | "endDate" | "endTime">;
+
 export function hasDeadlineWarning(data: TaskFormField): boolean {
   if (!data.isDeadline) return false;
 

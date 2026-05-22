@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useController, useFormContext } from "react-hook-form";
-import { TaskFormField } from "../models/task-form-schema";
+import { TimeTimeFormValues } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,7 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { combineDateTime } from "../util/combine-date-time";
 
 export const EventTab = () => {
-  const { control, trigger, clearErrors } = useFormContext<TaskFormField>();
+  const { control, trigger, clearErrors } = useFormContext<TimeFormValues>();
 
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
@@ -40,18 +40,13 @@ export const EventTab = () => {
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
-  const useField = (name: keyof TaskFormField) =>
+  const useField = (name: keyof TimeFormValues) =>
     useController({ control, name }).field;
 
   const { value: startDateValue, onChange: startDateOnChange } = useField("startDate");
   const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime");
   const { value: endDateValue, onChange: endDateOnChange } = useField("endDate");
   const { value: endTimeValue, onChange: endTimeOnChange } = useField("endTime");
-  const { value: deadlineDate } = useField("deadlineDate");
-  const { value: isDdl } = useField("isDeadline");
-
-  const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
-
   const handleStartDateChange = (nextDate: Date) => {
     startDateOnChange(nextDate);
 
@@ -122,7 +117,6 @@ export const EventTab = () => {
             <SingleDateCalendar
               onStartDateChange={handleStartDateChange}
               defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
-              deadlineDate={ddlStr}
             />
           </Animated.View>
         )}
@@ -190,7 +184,6 @@ export const EventTab = () => {
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
-              deadlineDate={ddlStr}
               setEndDate={(v: Date) => {
                 endDateOnChange(v);
                 validateRange(startDateValue, startTimeValue, v, endTimeValue);

@@ -9,7 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle";
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
-import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
+import { TimeFormValues } from "@/feature/task-add-edit/models/task-form-schema";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
 import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { theme } from "@/shared/constants/theme";
@@ -32,24 +32,17 @@ export const NoteTimePickerSheet = ({
   const { t } = useTranslation("notes");
   const { addNoteToTask, isConverting } = useAddNoteToTask();
 
-  const getDefaultValues = (): TaskFormField => {
+  const getDefaultValues = (): TimeFormValues => {
     const now = new Date();
     return {
-      title: "",
-      description: null,
       startDate: now,
       startTime: now,
       endDate: now,
       endTime: addMinutes(now, 60),
-      labelId: null,
-      alert: null,
-      isDeadline: false,
-      deadlineDate: now,
-      deadlineTime: now,
     };
   };
 
-  const form = useForm<TaskFormField>({
+  const form = useForm<TimeFormValues>({
     defaultValues: getDefaultValues(),
   });
 
