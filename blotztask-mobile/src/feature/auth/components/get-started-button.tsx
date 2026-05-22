@@ -5,7 +5,6 @@ import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { systemPreferredLanguage } from "../utils/system-preferred-language";
 import { Pressable, Text } from "react-native";
 import {
   createAnimatedComponent,
@@ -28,14 +27,9 @@ export default function GetStartedButton() {
 
   const onPress = async () => {
     try {
-      const language = systemPreferredLanguage?.startsWith("zh") ? "zh-CN" : "en";
-
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
         scope: "openid profile email offline_access",
-        additionalParameters: {
-          ui_locales: language,
-        },
       });
 
       // Check if we have a valid result with access token
