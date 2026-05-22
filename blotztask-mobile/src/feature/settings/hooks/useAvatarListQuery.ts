@@ -4,7 +4,5 @@ import { LOCAL_AVATARS } from "@/feature/settings/constants/local-avatar-catalog
 export function useAvatarListQuery() {
   return {
     avatars: LOCAL_AVATARS as AvatarDTO[],
-    isAvatarListLoading: false,
-    isAvatarListError: false,
   };
 }

@@ -2,10 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import {
-  getLocalAvatarComponent,
-  isRemoteAvatarUrl,
-} from "@/feature/settings/constants/local-avatar-catalog";
+import { getLocalAvatarComponent } from "@/feature/settings/constants/local-avatar-catalog";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { ASSETS, PNGIMAGES } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/form-divider";
@@ -59,7 +56,7 @@ export default function SettingsScreen() {
 
   const pictureValue = userProfile?.pictureUrl;
   const SelectedAvatarComponent = getLocalAvatarComponent(pictureValue);
-  const avatarSource = isRemoteAvatarUrl(pictureValue) ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
+  const avatarSource = pictureValue && !SelectedAvatarComponent ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => {
     router.push("/settings/avatar" as const);
