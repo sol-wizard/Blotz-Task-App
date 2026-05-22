@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useController, useFormContext } from "react-hook-form";
-import { TimeTimeFormValues } from "../models/task-form-schema";
+import { TimeFormValues } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
@@ -40,8 +40,7 @@ export const EventTab = () => {
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
-  const useField = (name: keyof TimeFormValues) =>
-    useController({ control, name }).field;
+  const useField = (name: keyof TimeFormValues) => useController({ control, name }).field;
 
   const { value: startDateValue, onChange: startDateOnChange } = useField("startDate");
   const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime");
@@ -51,8 +50,9 @@ export const EventTab = () => {
     startDateOnChange(nextDate);
 
     if (endDateValue && isAfter(nextDate, endDateValue)) {
-      const previousSpan =
-        startDateValue ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0) : 0;
+      const previousSpan = startDateValue
+        ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0)
+        : 0;
       const nextEndDate = addDays(nextDate, previousSpan);
       endDateOnChange(nextEndDate);
       validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
