@@ -5,13 +5,13 @@ import { getLocalAvatarComponent } from "@/feature/settings/constants/local-avat
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
-import { useAvatarListQuery } from "@/feature/settings/hooks/useAvatarListQuery";
+import { LOCAL_AVATARS } from "@/feature/settings/constants/local-avatar-catalog";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsAvatarScreen() {
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  const { avatars } = useAvatarListQuery();
+  const avatars = LOCAL_AVATARS;
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
 
   const handleAvatarSelect = async (avatar: AvatarDTO) => {
