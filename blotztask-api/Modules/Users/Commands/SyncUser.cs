@@ -104,7 +104,7 @@ public class SyncUserCommandHandler(
 
             // Seed default tasks for new user
             var utcNowWithOffset = DateTimeOffset.UtcNow;
-            var defaultTasks = DefaultOnboardingDataFactory.BuildTasks(
+            var defaultTasks = DefaultOnboardingData.BuildTasks(
                 row.Id,
                 utcNow,
                 utcNowWithOffset,
@@ -117,7 +117,7 @@ public class SyncUserCommandHandler(
                 defaultTasks.Count, row.Id);
 
             // Seed default notes for new user
-            var defaultNotes = DefaultOnboardingDataFactory.BuildNotes(
+            var defaultNotes = DefaultOnboardingData.BuildNotes(
                 row.Id,
                 utcNow,
                 preferredLanguage);
@@ -143,9 +143,9 @@ public class SyncUserCommandHandler(
 
     private Language GetPreferredLanguage(JsonElement user)
     {
-        var raw = GetFromUser(user, "preferred_language");
+        var preferredLanguageValue = GetFromUser(user, "preferred_language");
 
-        return raw?.Trim().StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true
+        return preferredLanguageValue?.Trim().StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true
             ? Language.Zh
             : Language.En;
     }

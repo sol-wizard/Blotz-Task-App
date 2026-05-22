@@ -5,7 +5,7 @@ using BlotzTask.Modules.Users.Enums;
 
 namespace BlotzTask.Modules.Users.Services;
 
-public static class DefaultOnboardingDataFactory
+public static class DefaultOnboardingData
 {
     public static List<TaskItem> BuildTasks(
         Guid userId,
@@ -15,7 +15,7 @@ public static class DefaultOnboardingDataFactory
     {
         var singleTime = utcNowWithOffset;
         var rangeStart = utcNowWithOffset;
-        var rangeEnd = utcNowWithOffset.AddHours(2);
+        var rangeEnd = utcNowWithOffset.AddHours(2); // Example Range Task Duration
 
         if (language == Language.Zh)
         {
