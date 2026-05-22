@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { View, Image } from "react-native";
+import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { View, Image, Pressable } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router, useNavigation } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
@@ -13,7 +15,6 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import { router, useLocalSearchParams } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
@@ -26,23 +27,31 @@ export default function GashaponMachineScreen() {
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [isHelpModalVisible, setHelpModalVisible] = useState(false);
-  const { showHelp } = useLocalSearchParams<{ showHelp?: string }>();
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const { addNoteToTask, isConverting } = useAddNoteToTask();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
+  const navigation = useNavigation();
 
   useEffect(() => {
     analytics.trackScreenViewed(SCREEN_NAMES.GASHAPON_MACHINE);
   }, []);
 
-  useEffect(() => {
-    if (showHelp === "1") {
-      setHelpModalVisible(true);
-      router.setParams({ showHelp: "" });
-    }
-  }, [showHelp]);
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={12}
+          onPress={() => setHelpModalVisible(true)}
+          className="w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
+        >
+          <Ionicons name="help-circle-outline" size={20} color="#444964" />
+        </Pressable>
+      ),
+    });
+  }, []);
 
   const MAX_STARS = 30;
 
