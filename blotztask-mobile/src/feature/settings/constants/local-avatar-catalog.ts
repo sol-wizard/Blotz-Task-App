@@ -46,12 +46,8 @@ export const LOCAL_AVATARS: AvatarDTO[] = [
   { id: "avatar12", label: "Avatar12" },
 ];
 
-export function isLocalAvatarId(value: string | null | undefined): value is LocalAvatarId {
+function isLocalAvatarId(value: string | null | undefined): value is LocalAvatarId {
   return typeof value === "string" && value in LOCAL_AVATAR_COMPONENTS;
-}
-
-export function isRemoteAvatarUrl(value: string | null | undefined): value is string {
-  return typeof value === "string" && /^https?:\/\//.test(value);
 }
 
 export function getLocalAvatarComponent(value: string | null | undefined) {
