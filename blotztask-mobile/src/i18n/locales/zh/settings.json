@@ -7,6 +7,7 @@
     "taskHandling": "任务处理",
     "notifications": "通知",
     "language": "语言",
+    "shareApp": "分享 Blotz",
     "allTasks": "所有任务页面 (测试版)",
     "about": "关于"
   },
@@ -65,6 +66,10 @@
   "profile": {
     "title": "个人资料",
     "editProfile": "编辑个人资料"
+  },
+  "share": {
+    "title": "Blotz",
+    "message": "试试 Blotz，一款能把想法整理成任务的 AI 任务应用：{{url}}"
   },
   "about": {
     "title": "关于",
