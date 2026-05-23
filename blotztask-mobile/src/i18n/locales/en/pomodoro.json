@@ -39,11 +39,11 @@
     "modeLockedWhileRunning": "Pomodoro settings can’t be changed while a Pomodoro is running."
   },
   "soundscape": {
-    "easyFocus": "Easy\nFocus",
-    "deepWork": "Deep\nWork",
-    "taskFlow": "Task\nFlow",
-    "calmMind": "Calm\nMind",
-    "cafeVibe": "Cafe\nVibe",
+    "streamWhisper": "Stream\nWhisper",
+    "pineFocus": "Pine\nFocus",
+    "silentMind": "Silent\nMind",
+    "nightGlow": "Night\nGlow",
+    "cafeNook": "Cafe\nNook",
     "noSound": "No\nSound"
   }
 }

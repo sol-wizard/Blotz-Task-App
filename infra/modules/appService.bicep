@@ -6,6 +6,7 @@ param keyVaultUri string
 param openAiEndpoint string
 param openAiTaskGenerationDeploymentId string
 param openAiBreakdownDeploymentId string
+param openAiSpeechDeploymentId string
 param logAnalyticsWorkspaceId string
 
 // Auth0 Configuration
@@ -92,16 +93,16 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           value: openAiBreakdownDeploymentId
         }
         {
+          name: 'AzureOpenAI__AiModels__Speech__DeploymentId'
+          value: openAiSpeechDeploymentId
+        }
+        {
           name: 'ApiKeys__UserSync'
           value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/apikeys-usersync/)'
         }
         {
           name: 'AzureOpenAI__ApiKey'
           value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/azureopenai-apikey/)'
-        }
-        {
-          name: 'AzureSpeech__Key'
-          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/azurespeech-key/)'
         }
         {
           name: 'ConnectionStrings__DefaultConnection'

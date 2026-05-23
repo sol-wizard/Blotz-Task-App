@@ -43,6 +43,7 @@ export default function AiTaskSheetScreen() {
   const hasSubmittedAiRequest = useRef(false);
   const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
+
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
   const {
     transcript,
@@ -188,7 +189,6 @@ export default function AiTaskSheetScreen() {
               )}
 
               {/* Input bar sticks to the keyboard only */}
-
               <View
                 className="w-full flex-row items-center px-6 gap-4"
                 style={{ paddingBottom: bottomPadding }}
