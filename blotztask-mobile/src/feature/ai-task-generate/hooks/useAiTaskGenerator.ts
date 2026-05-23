@@ -88,7 +88,6 @@ export function useAiTaskGenerator({
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
-    const startedAt = requestStartedAtRef.current;
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
@@ -98,8 +97,6 @@ export function useAiTaskGenerator({
       setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
     }
 
-    pendingInputModeRef.current = null;
-
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
     setStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
@@ -108,9 +105,22 @@ export function useAiTaskGenerator({
   const generationErrorHandler = (error: AiGenerationErrorDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
+    const startedAt = requestStartedAtRef.current;
     requestStartedAtRef.current = null;
+    const inputMode = pendingInputModeRef.current;
+    pendingInputModeRef.current = null;
     setStreamedTasks([]);
     setStreamedNotes([]);
+
+    analytics.trackAiTaskGenerationFailed({
+      inputMode: inputMode ?? "text",
+      stage:
+        error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
+          ? "transcription"
+          : "generation",
+      errorCode: error.errorCode,
+      durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
+    });
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
     Toast.show({ type: "error", text1: t(i18nKey) });
