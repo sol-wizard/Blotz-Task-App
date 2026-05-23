@@ -25,7 +25,8 @@
     "startNow": "Start now",
     "oops": "Oops!",
     "errorMessage": "Could not estimate time, please try again later.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "apply": "Apply"
   },
   "emptyNoteMessage": {
     "encouragingTitle": "You're all caught up",

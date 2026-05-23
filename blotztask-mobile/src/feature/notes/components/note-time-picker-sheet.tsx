@@ -164,7 +164,7 @@ export const NoteTimePickerSheet = ({
               {isConverting ? (
                 <ActivityIndicator size="small" color={theme.colors.onSurface} />
               ) : (
-                <Text className="font-balooBold text-lg text-black">Apply</Text>
+                <Text className="font-balooBold text-lg text-black">{t("timeEstimate.apply")}</Text>
               )}
             </Pressable>
           </ScrollView>
