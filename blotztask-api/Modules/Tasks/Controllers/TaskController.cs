@@ -2,6 +2,7 @@ using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ public class TaskController(
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
     GetMonthlyTaskAvailabilityQueryHandler getMonthlyTaskAvailabilityQueryHandler,
-    IEventDispatcher eventDispatcher,
+    IBackgroundTaskQueue backgroundTaskQueue,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -185,7 +186,18 @@ public class TaskController(
             throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
 
         if (result.IsDone)
-            await eventDispatcher.DispatchAsync(new TaskCompletedEvent { UserId = userId }, ct);
+        {
+            backgroundTaskQueue.Enqueue(async (sp, token) =>
+            {
+                var dispatcher = sp.GetRequiredService<IEventDispatcher>();
+                await dispatcher.DispatchAsync(new TaskCompletedEvent
+                {
+                    UserId = userId,
+                    TaskId =  id
+                }, token);
+            });
+            
+        }
 
         return result;
     }
