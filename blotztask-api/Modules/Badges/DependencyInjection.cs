@@ -6,7 +6,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddBadgeModule(this IServiceCollection services)
     {
-        services.AddScoped<CheckAndAwardBadgesCommandHandler>();
+        services.AddScoped<FindMatchingBadgesHandler>();
+        services.AddScoped<AwardNewBadgesToUserHandler>();
 
         return services;
     }
