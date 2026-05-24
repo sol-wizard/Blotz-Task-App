@@ -41,13 +41,8 @@ export default function GashaponMachineScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={12}
-          onPress={() => setHelpModalVisible(true)}
-          className="w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
-        >
-          <Ionicons name="help-circle-outline" size={20} color="#444964" />
+        <Pressable accessibilityRole="button" hitSlop={12} onPress={() => setHelpModalVisible(true)}>
+          <Ionicons name="help" size={24} color="#000000" />
         </Pressable>
       ),
     });
