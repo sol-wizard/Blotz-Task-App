@@ -29,7 +29,7 @@ export function usePushNotificationSetup() {
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(
       async (response) => {
-        const data = response.notification.request.content.data as any;
+        const data = response.notification.request.content.data;
         const taskId = data?.taskId as string | undefined;
 
         if (response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {

@@ -8,17 +8,30 @@ import {
   isAfter,
   isSameDay,
   isBefore,
+  isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { Control, FieldPath, useController } from "react-hook-form";
-import { TaskFormField } from "../models/task-form-schema";
+import { useController, useFormContext } from "react-hook-form";
+import { TimeFormValues } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
+export const EventTab = () => {
+  const { control, trigger, clearErrors } = useFormContext<TimeFormValues>();
+
+  const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
+    const start = combineDateTime(sd, st);
+    const end = combineDateTime(ed, et);
+    if (start && end && (isBefore(start, end) || isEqual(start, end))) {
+      clearErrors("endTime");
+    } else {
+      trigger("endTime");
+    }
+  };
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -27,26 +40,24 @@ export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
-  const useField = <T extends FieldPath<TaskFormField>>(name: T) =>
-    useController<TaskFormField, T>({ control, name }).field;
+  const useField = (name: keyof TimeFormValues) => useController({ control, name }).field;
 
   const { value: startDateValue, onChange: startDateOnChange } = useField("startDate");
   const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime");
   const { value: endDateValue, onChange: endDateOnChange } = useField("endDate");
   const { value: endTimeValue, onChange: endTimeOnChange } = useField("endTime");
-  const { value: deadlineDate } = useField("deadlineDate");
-  const { value: isDdl } = useField("isDeadline");
-
-  const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
-
   const handleStartDateChange = (nextDate: Date) => {
     startDateOnChange(nextDate);
 
     if (endDateValue && isAfter(nextDate, endDateValue)) {
-      const previousSpan =
-        startDateValue ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0) : 0;
+      const previousSpan = startDateValue
+        ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0)
+        : 0;
       const nextEndDate = addDays(nextDate, previousSpan);
       endDateOnChange(nextEndDate);
+      validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
+    } else {
+      validateRange(nextDate, startTimeValue, endDateValue, endTimeValue);
     }
   };
 
@@ -106,7 +117,6 @@ export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
             <SingleDateCalendar
               onStartDateChange={handleStartDateChange}
               defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
-              deadlineDate={ddlStr}
             />
           </Animated.View>
         )}
@@ -119,6 +129,7 @@ export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
               value={startTimeValue}
               onChange={(v: Date) => {
                 startTimeOnChange(v);
+                validateRange(startDateValue, v, endDateValue, endTimeValue);
               }}
             />
           </Animated.View>
@@ -173,8 +184,10 @@ export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
-              deadlineDate={ddlStr}
-              setEndDate={(v: Date) => endDateOnChange(v)}
+              setEndDate={(v: Date) => {
+                endDateOnChange(v);
+                validateRange(startDateValue, startTimeValue, v, endTimeValue);
+              }}
               current={format(
                 activeSelector === "endDate"
                   ? (endDateValue ?? startDateValue ?? new Date())
@@ -191,7 +204,10 @@ export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
           >
             <TimePicker
               value={endTimeValue}
-              onChange={(v: Date) => endTimeOnChange(v)}
+              onChange={(v: Date) => {
+                endTimeOnChange(v);
+                validateRange(startDateValue, startTimeValue, endDateValue, v);
+              }}
             />
           </Animated.View>
         )}

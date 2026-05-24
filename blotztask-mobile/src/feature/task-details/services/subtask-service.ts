@@ -33,8 +33,8 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
 
   try {
     await apiClient.put(url, { ...newSubtask });
-  } catch (err: any){
-    throw new Error("Update subtask failed", err);
+  } catch (err: unknown) {
+    throw new Error("Update subtask failed", { cause: err });
   }
 }
 

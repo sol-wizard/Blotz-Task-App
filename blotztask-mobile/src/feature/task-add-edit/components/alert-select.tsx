@@ -1,14 +1,15 @@
 import React from "react";
 import { Text } from "react-native";
 import { Controller, Control } from "react-hook-form";
+import { TaskFormField } from "../models/task-form-schema";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { AnimatedDropdown } from "@/shared/components/animated-dropdown";
 
 type AlertSelectProps = {
-  control: Control<any>;
-  name?: string;
+  control: Control<TaskFormField>;
+  name?: keyof TaskFormField;
 };
 
 export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert" }) => {
