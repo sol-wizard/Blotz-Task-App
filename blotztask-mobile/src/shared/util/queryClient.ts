@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
+import * as Sentry from "@sentry/react-native";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -13,6 +14,8 @@ export const queryClient = new QueryClient({
       }
       if (query.meta?.silent) return;
 
+      Sentry.captureException(error, { tags: { source: "query" } });
+
       const msg = getErrorMessage(error);
 
       Toast.show({
@@ -24,6 +27,8 @@ export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
       if (mutation.meta?.silent) return;
+
+      Sentry.captureException(error, { tags: { source: "mutation" } });
 
       const msg = getErrorMessage(error);
 
