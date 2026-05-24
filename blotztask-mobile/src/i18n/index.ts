@@ -76,6 +76,6 @@ i18n.use(initReactI18next).init({
   react: {
     useSuspense: false, // Prevents suspense issues in React Native
   },
-} as any);
+});
 
 export default i18n;
