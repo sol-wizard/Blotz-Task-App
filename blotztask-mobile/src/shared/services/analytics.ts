@@ -85,7 +85,7 @@ export const analytics = {
    * Use this to monitor reliability and slice by input mode, stage, and error code.
    */
   trackAiTaskGenerationFailed(params: {
-    inputMode: AiTaskInputMode;
+    inputMode: AiTaskInputMode | "unknown";
     stage: AiTaskFailureStage;
     errorCode: string;
     durationMs?: number;

@@ -113,7 +113,7 @@ export function useAiTaskGenerator({
     setStreamedNotes([]);
 
     analytics.trackAiTaskGenerationFailed({
-      inputMode: inputMode ?? "text",
+      inputMode: inputMode ?? "unknown",
       stage:
         error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
           ? "transcription"
