@@ -56,20 +56,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
     try {
       await recorder.stop();
-
-      const uri = recorder.uri;
-      if (!uri) {
-        Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
-        analytics.trackAiTaskGenerationFailed({
-          inputMode: "voice",
-          stage: "recording",
-          errorCode: "EmptyAudio",
-        });
-        return;
-      }
-
-      await submitAudioForTranscription(uri);
-      new ExpoFile(uri).delete();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
       analytics.trackAiTaskGenerationFailed({
@@ -77,6 +63,37 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
         stage: "recording",
         errorCode: "RecordingStopFailed",
       });
+      return;
+    }
+
+    const uri = recorder.uri;
+    if (!uri) {
+      Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "recording",
+        errorCode: "EmptyAudio",
+      });
+      return;
+    }
+
+    try {
+      await submitAudioForTranscription(uri);
+    } catch (error) {
+      console.warn("[Mic] Error submitting audio for transcription.", error);
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "send",
+        errorCode: "AudioSubmitFailed",
+      });
+      return;
+    }
+
+    // Best-effort cleanup of the temp recording; failure here shouldn't surface as an AI failure.
+    try {
+      new ExpoFile(uri).delete();
+    } catch (error) {
+      console.warn("[Mic] Failed to delete temp recording file.", error);
     }
   };
 
