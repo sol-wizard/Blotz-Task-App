@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { Pressable, Text, View, Platform } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
 import XDate from "xdate";
 import { theme } from "@/shared/constants/theme";
 import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
 import { useLocalSearchParams } from "expo-router";
-
 import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 import { SelectedDayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet from "@expo/ui/community/bottom-sheet";
 import { formatBottomSheetDate } from "@/feature/calendar/util/date-formatter";
 import i18n from "@/i18n";
 import { ReturnButton } from "@/shared/components/return-button";
@@ -26,9 +25,6 @@ export default function MonthlyCalendarScreen() {
   const { selectedDate } = useLocalSearchParams<{ selectedDate: string }>();
   const [selectedDay, setSelectedDay] = useState(new Date(selectedDate || new Date()));
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
-
-  const insets = useSafeAreaInsets();
-  const androidBottomOffset = Platform.OS === "android" ? insets.bottom : 0;
 
   // Derived values
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
@@ -109,7 +105,6 @@ export default function MonthlyCalendarScreen() {
         index={0}
         snapPoints={SNAP_POINTS}
         handleComponent={null}
-        bottomInset={androidBottomOffset}
         enableOverDrag={false}
         enableDynamicSizing={false}
         backgroundStyle={{

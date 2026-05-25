@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator } from "react-native";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { theme } from "@/shared/constants/theme";

@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import GetStartedButton from "@/feature/auth/components/get-started-button";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import MaskedView from "@react-native-masked-view/masked-view";
+import MaskedView from "@expo/ui/community/masked-view";
 
 export default function SigninScreen() {
   return (
