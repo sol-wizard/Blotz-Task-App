@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
+import * as Sentry from "@sentry/react-native";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -13,6 +14,9 @@ export const queryClient = new QueryClient({
       }
       if (query.meta?.silent) return;
 
+      if (__DEV__) console.error("[Query Error]", error);
+      Sentry.captureException(error, { tags: { source: "query" } });
+
       const msg = getErrorMessage(error);
 
       Toast.show({
@@ -23,7 +27,16 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
+      if (
+        isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        return;
+      }
       if (mutation.meta?.silent) return;
+
+      if (__DEV__) console.error("[Mutation Error]", error);
+      Sentry.captureException(error, { tags: { source: "mutation" } });
 
       const msg = getErrorMessage(error);
 
@@ -31,9 +44,6 @@ export const queryClient = new QueryClient({
         type: "error",
         text1: msg,
       });
-    },
-    onSuccess: (data, variables) => {
-      console.log("[Mutation Success]", data, variables);
     },
   }),
   defaultOptions: {
@@ -58,10 +68,5 @@ function getErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     return error.response?.data?.message || "Something went wrong";
   }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
   return "Something went wrong";
 }

@@ -97,6 +97,7 @@
     "@eslint/js": "^9.34.0",
     "@types/matter-js": "^0.20.2",
     "@types/react": "~19.2.10",
+    "@types/xdate": "^0.8.35",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
     "ajv": "^8.17.1",

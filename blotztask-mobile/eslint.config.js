@@ -28,7 +28,7 @@ module.exports = defineConfig([
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       camelcase: "warn",
       quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
     },
