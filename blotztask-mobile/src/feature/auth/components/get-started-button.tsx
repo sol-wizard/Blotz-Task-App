@@ -26,6 +26,14 @@ export default function GetStartedButton() {
     transform: [{ scale: scale.value }],
   }));
 
+  const onPressIn = () => {
+    scale.value = withTiming(1.08, { duration: 100 });
+  };
+
+  const onPressOut = () => {
+    scale.value = withTiming(1, { duration: 120 });
+  };
+
   const onPress = async () => {
     try {
       const result = await authorize({
@@ -56,12 +64,8 @@ export default function GetStartedButton() {
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={() => {
-        scale.value = withTiming(1.08, { duration: 100 });
-      }}
-      onPressOut={() => {
-        scale.value = withTiming(1, { duration: 120 });
-      }}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       style={animatedStyle}
     >
       <Text
