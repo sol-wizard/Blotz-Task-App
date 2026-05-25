@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -55,7 +56,7 @@ export default function SettingsScreen() {
   ];
 
   const pictureValue = userProfile?.pictureUrl;
-  const SelectedAvatarComponent = getLocalAvatarComponent(pictureValue);
+  const SelectedAvatarComponent = useMemo(() => getLocalAvatarComponent(pictureValue), [pictureValue]);
   const avatarSource = pictureValue && !SelectedAvatarComponent ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => {
