@@ -46,7 +46,7 @@
       "ios": {
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.0.3"
+          "APP_VERSION": "1.0.4"
         }
       },
       "env": {
@@ -98,7 +98,7 @@
         "ascAppId": "6761295231"
       },
       "android": {
-        "track": "alpha" // Closed testing
+        "track": "alpha"
       }
     },
     "production": {
