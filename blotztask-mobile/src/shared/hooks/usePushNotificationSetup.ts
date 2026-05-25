@@ -1,31 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
 import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
 import { useRouter } from "expo-router";
 import { toggleTaskCompletion } from "../services/task-service";
 
 export function usePushNotificationSetup() {
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    // Register notification permissions & get token
-    registerForPushNotificationsAsync().then((token) => {
-      if (token) setExpoPushToken(token);
-    });
-
-    // Get Notification Channel for Android
-    if (Platform.OS === "android") {
-      Notifications.getNotificationChannelsAsync().then((value) => setChannels(value ?? []));
-    }
-
-    // Register notification listeners
-    const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
-      setNotification(notification);
-    });
+    registerForPushNotificationsAsync();
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(
       async (response) => {
@@ -45,16 +28,8 @@ export function usePushNotificationSetup() {
       },
     );
 
-    // Cleanup listeners on unmount
     return () => {
-      notificationListener.remove();
       responseListener.remove();
     };
   }, []);
-
-  return {
-    expoPushToken,
-    channels,
-    notification,
-  };
 }
