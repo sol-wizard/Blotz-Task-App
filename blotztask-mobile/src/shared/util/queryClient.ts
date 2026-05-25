@@ -14,6 +14,7 @@ export const queryClient = new QueryClient({
       }
       if (query.meta?.silent) return;
 
+      if (__DEV__) console.error("[Query Error]", error);
       Sentry.captureException(error, { tags: { source: "query" } });
 
       const msg = getErrorMessage(error);
@@ -34,6 +35,7 @@ export const queryClient = new QueryClient({
       }
       if (mutation.meta?.silent) return;
 
+      if (__DEV__) console.error("[Mutation Error]", error);
       Sentry.captureException(error, { tags: { source: "mutation" } });
 
       const msg = getErrorMessage(error);
@@ -64,7 +66,7 @@ export const queryClient = new QueryClient({
 
 function getErrorMessage(error: unknown): string {
   if (isAxiosError(error) && !error.response) {
-    return "Network error. Please check your connection.";
+    return "Unable to connect to the server.";
   }
   return "Something went wrong";
 }
