@@ -1,5 +1,23 @@
+import * as Application from "expo-application";
+import { EventSubscription } from "expo-modules-core";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { upsertPushToken } from "./user-service";
+
+export function setupPushTokenListener(): EventSubscription {
+  return Notifications.addPushTokenListener(async ({ data: token }) => {
+    let deviceId: string;
+    if (Platform.OS === "android") {
+      deviceId = Application.getAndroidId();
+    } else {
+      const iosId = await Application.getIosIdForVendorAsync();
+      if (!iosId) return;
+      deviceId = iosId;
+    }
+
+    await upsertPushToken({ token, deviceId });
+  });
+}
 
 export async function registerForPushNotificationsAsync(): Promise<void> {
   if (Platform.OS === "android") {
