@@ -26,6 +26,12 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
+      if (
+        isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        return;
+      }
       if (mutation.meta?.silent) return;
 
       Sentry.captureException(error, { tags: { source: "mutation" } });
@@ -36,9 +42,6 @@ export const queryClient = new QueryClient({
         type: "error",
         text1: msg,
       });
-    },
-    onSuccess: (data, variables) => {
-      console.log("[Mutation Success]", data, variables);
     },
   }),
   defaultOptions: {
@@ -60,13 +63,8 @@ export const queryClient = new QueryClient({
 });
 
 function getErrorMessage(error: unknown): string {
-  if (isAxiosError(error)) {
-    return error.response?.data?.message || "Something went wrong";
+  if (isAxiosError(error) && !error.response) {
+    return "Network error. Please check your connection.";
   }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
   return "Something went wrong";
 }

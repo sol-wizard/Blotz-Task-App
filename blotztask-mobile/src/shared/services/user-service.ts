@@ -10,12 +10,7 @@ export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
 
 export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Promise<string> => {
   const url = `/User`;
-  try {
-    return await apiClient.put<string>(url, userProfile);
-  } catch (err: unknown) {
-    console.error("Update user profile failed:", err);
-    throw new Error("Failed to update user profile data");
-  }
+  return await apiClient.put<string>(url, userProfile);
 };
 
 export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
@@ -26,20 +21,10 @@ export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
 
 export const updateUserPreferences = async (preferences: UserPreferencesDTO): Promise<string> => {
   const url = `/user-preferences`;
-  try {
-    return await apiClient.put(url, preferences);
-  } catch (err: unknown) {
-    console.error("Update user preferences failed:", err);
-    throw new Error("Failed to update user preferences");
-  }
+  return await apiClient.put(url, preferences);
 };
 
 export const deleteUser = async (): Promise<void> => {
   const url = `/User`;
-  try {
-    await apiClient.delete<void>(url);
-  } catch (err: unknown) {
-    console.error("Delete user failed:", err);
-    throw new Error("Failed to delete user");
-  }
+  await apiClient.delete<void>(url);
 };
