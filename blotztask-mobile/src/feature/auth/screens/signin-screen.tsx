@@ -1,10 +1,12 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
+
 import GetStartedButton from "@/feature/auth/components/get-started-button";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import MaskedView from "@expo/ui/community/masked-view";
 
 export default function SigninScreen() {
+  const { height: SCREEN_HEIGHT } = Dimensions.get("window");
   return (
     <>
       <View
@@ -17,7 +19,7 @@ export default function SigninScreen() {
         }}
       >
         <MaskedView
-          style={{ flex: 1, flexDirection: "row", height: "100%" }}
+          style={{ width: "100%", height: SCREEN_HEIGHT * 0.7 }}
           maskElement={
             <View className="flex-1 flex-row justify-center items-center">
               {"Blotz".split("").map((letter, index) => (
@@ -50,14 +52,7 @@ export default function SigninScreen() {
           />
         </MaskedView>
 
-        <View
-          style={{
-            width: "100%",
-            paddingBottom: 60,
-          }}
-        >
-          <GetStartedButton />
-        </View>
+        <GetStartedButton />
       </View>
     </>
   );
