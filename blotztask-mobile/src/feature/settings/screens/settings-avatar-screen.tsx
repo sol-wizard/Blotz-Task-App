@@ -48,7 +48,7 @@ export default function SettingsAvatarScreen() {
               <View
                 className="rounded-full border-4"
                 style={{
-                  borderColor: isSelected ? "#8B86B3" : "transparent",
+                  borderColor: isSelected ? "#444964" : "transparent",
                 }}
               >
                 {AvatarComponent ? <AvatarComponent width={80} height={80} /> : null}
