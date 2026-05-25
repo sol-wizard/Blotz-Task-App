@@ -18,7 +18,7 @@ export default function TaskCreateScreen() {
       onSuccess: () => {
         analytics.trackManualTaskCreated();
         router.back();
-        Toast.show({ type: "success", text1: t("success.taskCreated") });
+        Toast.show({ type: "warning", text1: t("success.taskCreated") });
       },
     });
   };

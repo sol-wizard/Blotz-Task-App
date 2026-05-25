@@ -116,7 +116,7 @@ export default function AiTaskSheetScreen() {
       });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
-      requestIdleCallback(() => Toast.show({ type: "success", text1: t("success.taskAdded") }));
+      requestIdleCallback(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }));
     } catch {
       // Each failed mutation is already handled by the global mutationCache.onError (toast + Sentry).
       // Catch here only to prevent unhandled rejection from Promise.all.
