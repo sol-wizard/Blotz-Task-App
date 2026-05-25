@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image } from "react-native";
 import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType } from "react-native";
 
@@ -20,11 +20,11 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
 
-  const dimOpacity = useRef(new Animated.Value(0)).current;
-  const rewardTranslateX = useRef(new Animated.Value(0)).current;
-  const rewardTranslateY = useRef(new Animated.Value(0)).current;
-  const rewardScale = useRef(new Animated.Value(1)).current;
-  const rewardRotate = useRef(new Animated.Value(0)).current;
+  const [dimOpacity] = useState(() => new Animated.Value(0));
+  const [rewardTranslateX] = useState(() => new Animated.Value(0));
+  const [rewardTranslateY] = useState(() => new Animated.Value(0));
+  const [rewardScale] = useState(() => new Animated.Value(1));
+  const [rewardRotate] = useState(() => new Animated.Value(0));
 
   const CENTER_X = 0;
   const CENTER_Y = 0;
