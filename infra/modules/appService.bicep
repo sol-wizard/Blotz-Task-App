@@ -21,12 +21,6 @@ param appServiceSkuTier string = 'Basic'
 
 var normalizedKeyVaultUri = endsWith(keyVaultUri, '/') ? keyVaultUri : '${keyVaultUri}/'
 
-var corsAllowedOrigins = environment == 'stag' ? [
-  'https://app-blotztaskapp-ui-stag.azurewebsites.net'
-] : environment == 'prod' ? [
-  'https://blotz-task-app.vercel.app'
-] : []
-
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: 'asp-${webAppName}-${environment}'
   location: location
@@ -58,8 +52,8 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
       ftpsState: 'Disabled'
       http20Enabled: true
       cors: {
-        allowedOrigins: corsAllowedOrigins
-        supportCredentials: true
+        allowedOrigins: []
+        supportCredentials: false
       }
       appSettings: [
         {
