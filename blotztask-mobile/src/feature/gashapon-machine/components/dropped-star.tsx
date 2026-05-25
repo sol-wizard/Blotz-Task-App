@@ -100,7 +100,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
       <Animated.View
         pointerEvents="none"
         style={[
-          StyleSheet.absoluteFillObject,
+          StyleSheet.absoluteFill,
           {
             backgroundColor: "black",
             opacity: dimOpacity,

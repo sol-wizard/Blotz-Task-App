@@ -33,18 +33,20 @@ export default function TaskDetailsScreen() {
   }, [selectedTask]);
 
   const handleUpdateDescription = async (newDescription: string) => {
-    if (!selectedTask || !selectedTask.id) return;
+    if (!selectedTask) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
     await updateTask({
-      taskId: selectedTask.id,
+      taskId,
       dto: {
         title: selectedTask.title,
         description: newDescription,
         startTime: convertToDateTimeOffset(new Date(selectedTask.startTime)),
         endTime: convertToDateTimeOffset(new Date(selectedTask.endTime)),
         labelId: selectedTask.label?.labelId,
-        timeType: selectedTask.timeType ?? null,
+        timeType: selectedTask.timeType,
+        notificationId: selectedTask.notificationId,
+        isDeadline: selectedTask.isDeadline,
       },
     });
   };

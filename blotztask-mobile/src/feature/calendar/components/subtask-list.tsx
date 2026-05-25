@@ -32,6 +32,7 @@ const SubtaskList = ({ task, progress }: Props) => {
   }));
 
   const handleToggleSubtask = async (subtaskId: number) => {
+    if (task.id == null) return;
     await toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
   };
 

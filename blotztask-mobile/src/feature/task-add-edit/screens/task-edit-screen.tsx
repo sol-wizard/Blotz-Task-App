@@ -36,7 +36,7 @@ export default function TaskEditScreen() {
   const handleTaskSubmit = async (formValues: TaskUpsertDTO) => {
     try {
       await updateTaskAsync({
-        taskId: selectedTask.id,
+        taskId,
         dto: formValues,
       });
 

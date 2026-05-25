@@ -85,7 +85,7 @@ export default function SettingsAllTasksScreen() {
           className="flex-1"
           data={tasksOfSelectedStatus}
           renderItem={renderTask}
-          keyExtractor={(task) => task.id.toString()}
+          keyExtractor={(task) => String(task.id ?? "")}
           contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
         />
       ) : (

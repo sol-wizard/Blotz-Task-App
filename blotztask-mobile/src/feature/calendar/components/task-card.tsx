@@ -34,7 +34,7 @@ interface TaskCardProps {
   deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
-  onOpenMode: () => void;
+  onOpenMode?: () => void;
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
@@ -122,7 +122,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
       return;
     }
 
-    onOpenMode();
+    onOpenMode?.();
     swipeRef.current?.reset();
   };
 

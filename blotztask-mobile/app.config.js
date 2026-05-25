@@ -74,6 +74,8 @@ export default {
       "expo-build-properties",
       "expo-image",
       "expo-web-browser",
+      "expo-splash-screen",
+      "expo-status-bar",
     ],
     experiments: {
       typedRoutes: true,
