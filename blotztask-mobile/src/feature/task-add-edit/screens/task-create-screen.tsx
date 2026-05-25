@@ -13,18 +13,14 @@ export default function TaskCreateScreen() {
   const { addTask, isAdding } = useTaskMutations();
   const { t } = useTranslation("tasks");
 
-  const handleTaskSubmit = async (submitTask: TaskUpsertDTO) => {
-    try {
-      await addTask(submitTask);
-
-      analytics.trackManualTaskCreated();
-
-      router.back();
-      Toast.show({ type: "warning", text1: t("success.taskCreated") });
-      console.log("Task created successfully");
-    } catch (error) {
-      console.error("Failed to create task:", error);
-    }
+  const handleTaskSubmit = (submitTask: TaskUpsertDTO) => {
+    addTask(submitTask, {
+      onSuccess: () => {
+        analytics.trackManualTaskCreated();
+        router.back();
+        Toast.show({ type: "success", text1: t("success.taskCreated") });
+      },
+    });
   };
 
   if (isAdding) {

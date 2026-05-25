@@ -31,19 +31,14 @@ export default function SettingsAvatarScreen() {
 
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
 
-  const handleAvatarSelect = async (avatar: AvatarDTO) => {
+  const handleAvatarSelect = (avatar: AvatarDTO) => {
     if (isUserUpdating) return;
     setSelectedAvatarUrl(avatar.url);
-
-    try {
-      await updateUserProfile({
-        displayName: userProfile?.displayName ?? "",
-        pictureUrl: avatar.url,
-        isOnBoarded: userProfile?.isOnBoarded ?? false,
-      });
-    } catch {
-      console.log("Failed to update avatar.");
-    }
+    updateUserProfile({
+      displayName: userProfile?.displayName ?? "",
+      pictureUrl: avatar.url,
+      isOnBoarded: userProfile?.isOnBoarded ?? false,
+    });
   };
 
   return (
