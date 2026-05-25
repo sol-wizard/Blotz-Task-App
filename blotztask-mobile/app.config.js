@@ -70,7 +70,6 @@ export default {
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
       "expo-asset",
-      "@react-native-community/datetimepicker",
       "expo-build-properties",
       "expo-image",
       "expo-web-browser",
