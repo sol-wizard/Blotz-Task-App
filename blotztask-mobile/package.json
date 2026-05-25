@@ -29,7 +29,7 @@
     "@tanstack/react-query": "^5.90.3",
     "@types/react": "~19.1.10",
     "axios": "1.15.0",
-    "babel-preset-expo": "^56.0.12",
+    "babel-preset-expo": "~55.0.8",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "expo": "~55.0.26",
