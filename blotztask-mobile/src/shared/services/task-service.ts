@@ -43,13 +43,8 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 }
 
 export const addTaskItem = async (addTaskForm: TaskUpsertDTO): Promise<number> => {
-  try {
-    const url = `/Task`;
-    const newTaskId: number = await apiClient.post(url, addTaskForm);
-    return newTaskId;
-  } catch {
-    throw new Error("Failed to add task.");
-  }
+  const url = `/Task`;
+  return await apiClient.post(url, addTaskForm);
 };
 
 export async function updateTaskItem(taskId: number, updatedTask: TaskUpsertDTO): Promise<void> {
@@ -65,21 +60,12 @@ export async function deleteTask(taskId: number): Promise<void> {
 
 export async function getAllTasks(): Promise<TaskDetailDTO[]> {
   const url = `/Task/all`;
-  try {
-    const data: TaskDetailDTO[] = await apiClient.get(url);
-    return data;
-  } catch {
-    throw new Error("Failed to fetch all tasks.");
-  }
+  return await apiClient.get(url);
 }
 
 export async function saveRecurringOccurrence(payload: {
   recurringTaskId: number;
   occurrenceDate: string;
 }): Promise<{ taskItemId: number }> {
-  try {
-    return await apiClient.post("/RecurringTask/occurrence/complete", payload);
-  } catch {
-    throw new Error("Failed to save recurring occurrence.");
-  }
+  return await apiClient.post("/RecurringTask/occurrence/complete", payload);
 }
