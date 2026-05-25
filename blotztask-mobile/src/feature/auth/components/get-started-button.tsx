@@ -13,12 +13,13 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
+const AnimatedPressable = createAnimatedComponent(Pressable);
+
 export default function GetStartedButton() {
   const { authorize } = useAuth0();
   const router = useRouter();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
-  const AnimatedPressable = createAnimatedComponent(Pressable);
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
