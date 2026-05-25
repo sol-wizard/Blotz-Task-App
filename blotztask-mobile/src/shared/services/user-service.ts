@@ -2,6 +2,7 @@ import { UserProfileDTO } from "@/shared/models/user-profile-dto";
 import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import { apiClient } from "./api/client";
 import { UpdateUserProfileDTO } from "@/feature/settings/modals/update-user-profile-dto";
+import { PushTokenDTO } from "@/shared/models/push-token-dto";
 
 export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
   const url = `/User`;
@@ -31,6 +32,16 @@ export const updateUserPreferences = async (preferences: UserPreferencesDTO): Pr
   } catch (err: unknown) {
     console.error("Update user preferences failed:", err);
     throw new Error("Failed to update user preferences");
+  }
+};
+
+export const upsertPushToken = async ({ token, deviceId }: PushTokenDTO): Promise<void> => {
+  const url = `/user-push-tokens`;
+  try {
+    await apiClient.post<void>(url, { token, deviceId });
+  } catch (err: unknown) {
+    console.error("Upsert push token failed:", err);
+    throw new Error("Failed to upsert push token");
   }
 };
 
