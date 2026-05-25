@@ -8,34 +8,20 @@ export const createBreakDownSubtasks = async (
   taskId: number,
 ): Promise<BreakdownResultDTO | undefined> => {
   if (!taskId) return;
-  try {
-    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
-    const data: BreakdownResultDTO = await apiClient.post(url);
-    return data;
-  } catch {
-    throw new Error("Error breaking down subtasks");
-  }
+  const url = `/TaskBreakdown/${taskId}`;
+  return await apiClient.post(url);
 };
 
 export async function addSubtask(newSubtask: AddNewSubtaskDTO): Promise<number> {
-  try {
-    return await apiClient.post<number>("/SubTask", { ...newSubtask });
-  } catch {
-    throw new Error("Add subtask failed");
-  }
+  return await apiClient.post<number>("/SubTask", { ...newSubtask });
 }
-
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.parentTaskId;
   const subtaskId = newSubtask.subTaskId;
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/subtasks/${subtaskId}`;
+  const url = `/SubTask/tasks/${taskId}/subtasks/${subtaskId}`;
 
-  try {
-    await apiClient.put(url, { ...newSubtask });
-  } catch (err: unknown) {
-    throw new Error("Update subtask failed", { cause: err });
-  }
+  await apiClient.put(url, { ...newSubtask });
 }
 
 export async function replaceSubtasks({
@@ -45,43 +31,22 @@ export async function replaceSubtasks({
   taskId: number;
   subtasks: AddSubtaskDTO[];
 }): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/replaceSubtasks`;
+  const url = `/SubTask/tasks/${taskId}/replaceSubtasks`;
 
-  try {
-    await apiClient.post(url, { taskId, subtasks });
-  } catch (err: unknown) {
-    console.error("Add subtasks failed:", err);
-    throw new Error("Add subtasks failed");
-  }
+  await apiClient.post(url, { taskId, subtasks });
 }
 
 export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDTO[]> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${parentId}`;
-  try {
-    const data: SubtaskDTO[] = await apiClient.get(url);
-    return data;
-  } catch (error) {
-    console.error("Error fetching subtasks by parent ID:", error);
-    return [];
-  }
+  const url = `/SubTask/tasks/${parentId}`;
+  return await apiClient.get(url);
 }
 
 export async function deleteSubtask(subtaskId: number): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtasks/${subtaskId}`;
-  try {
-    await apiClient.delete(url);
-  } catch (err) {
-    console.error("Error deleting subtask:", err);
-    throw new Error("Delete subtask failed");
-  }
+  const url = `/SubTask/subtasks/${subtaskId}`;
+  await apiClient.delete(url);
 }
 
 export async function toggleSubtaskStatus(subtaskId: number): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtask-completion-status/${subtaskId}`;
-  try {
-    await apiClient.put(url);
-  } catch (err) {
-    console.error("Error toggling subtask status:", err);
-    throw new Error("Toggle subtask status failed");
-  }
+  const url = `/SubTask/subtask-completion-status/${subtaskId}`;
+  await apiClient.put(url);
 }
