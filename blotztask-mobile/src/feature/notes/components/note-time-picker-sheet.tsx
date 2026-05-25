@@ -15,7 +15,7 @@ import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-converti
 import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { theme } from "@/shared/constants/theme";
 import { addMinutes } from "date-fns/addMinutes";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 
 export const NoteTimePickerSheet = ({
   visible,

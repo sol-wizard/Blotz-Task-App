@@ -8,7 +8,7 @@ import { Pressable, Text, View, FlatList, Dimensions, NativeSyntheticEvent, Nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { BlotzLogo } from "@/shared/components/blotz-logo";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, Text, Pressable, Modal, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "./sound-scape";

@@ -7,7 +7,7 @@ import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-plac
 import { getAllTasks } from "@/shared/services/task-service";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/return-button";

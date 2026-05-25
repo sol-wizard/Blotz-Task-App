@@ -1,4 +1,5 @@
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { formatTaskTime } from "../utils/format-task-time";

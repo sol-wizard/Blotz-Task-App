@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useState } from "react";
 import { ReturnButton } from "@/shared/components/return-button";
 import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { FormDivider } from "@/shared/components/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/loading-screen";

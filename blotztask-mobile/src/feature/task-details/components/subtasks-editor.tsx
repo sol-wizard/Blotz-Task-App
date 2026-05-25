@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";

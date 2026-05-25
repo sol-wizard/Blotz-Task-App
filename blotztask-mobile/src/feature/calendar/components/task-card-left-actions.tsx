@@ -1,4 +1,5 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { Pressable, Text, View } from "react-native";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";

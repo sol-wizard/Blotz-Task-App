@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useRouter } from "expo-router";
 import { getLocalAvatarComponent } from "@/feature/settings/constants/local-avatar-catalog";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";

@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Linking, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
 import { PNGIMAGES } from "@/shared/constants/assets";
 

@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { format, parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 
