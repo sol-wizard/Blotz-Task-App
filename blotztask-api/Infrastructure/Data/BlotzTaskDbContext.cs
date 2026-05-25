@@ -37,6 +37,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<UserSubscription> UserSubscriptions { get; set; }
     public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
     public DbSet<MonthlyReviewReport> MonthlyReviewReports { get; set; }
+    public DbSet<UserPushToken> UserPushTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
