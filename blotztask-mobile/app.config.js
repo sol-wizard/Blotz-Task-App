@@ -44,7 +44,6 @@ export default {
     },
     plugins: [
       "expo-router",
-      "expo-speech-recognition",
       "expo-secure-store",
       [
         "expo-dev-client",

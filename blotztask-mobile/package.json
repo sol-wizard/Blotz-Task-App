@@ -18,6 +18,10 @@
     "@microsoft/signalr": "^8.0.7",
     "@quidone/react-native-wheel-picker": "^1.6.0",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-vector-icons/feather": "^13.1.2",
+    "@react-native-vector-icons/ionicons": "^13.1.2",
+    "@react-native-vector-icons/material-design-icons": "^13.1.2",
+    "@react-native-vector-icons/material-icons": "^13.1.2",
     "@sentry/react-native": "~7.11.0",
     "@tanstack/react-query": "^5.90.3",
     "@types/react": "~19.1.10",
@@ -45,7 +49,6 @@
     "expo-router": "~56.2.6",
     "expo-secure-store": "~56.0.4",
     "expo-sensors": "~56.0.5",
-    "expo-speech-recognition": "^2.1.5",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
     "expo-symbols": "~56.0.5",
@@ -84,11 +87,7 @@
     "tailwindcss": "^3.4.17",
     "use-debounce": "^10.0.6",
     "zod": "^4.0.5",
-    "zustand": "^5.0.8",
-    "@react-native-vector-icons/ionicons": "^13.1.2",
-    "@react-native-vector-icons/material-design-icons": "^13.1.2",
-    "@react-native-vector-icons/material-icons": "^13.1.2",
-    "@react-native-vector-icons/feather": "^13.1.2"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
