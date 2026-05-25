@@ -5,6 +5,6 @@ import { NoteDTO } from "../models/note-dto";
 export const estimateNoteTime = async (
   floatingTask: NoteDTO,
 ): Promise<NoteTimeEstimationResult> => {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TimeEstimate`;
+  const url = `/TimeEstimate`;
   return await apiClient.post(url, floatingTask);
 };
