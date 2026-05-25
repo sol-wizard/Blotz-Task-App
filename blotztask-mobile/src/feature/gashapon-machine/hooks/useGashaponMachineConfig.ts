@@ -192,6 +192,7 @@ export const useGashaponMachineConfig = ({
       };
     });
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional initialization; newEntities depends on Matter.js bodies that can only be created here
     setEntities(newEntities);
     Matter.Events.on(engine, "collisionStart", (event) => {
       event.pairs.forEach((pair) => {
@@ -253,7 +254,7 @@ export const useGashaponMachineConfig = ({
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
     };
-  }, [notes]);
+  }, [notes, starRadius, onStarDropped]);
 
   return { entities, handleRelease, resetStarsPhysics };
 };
