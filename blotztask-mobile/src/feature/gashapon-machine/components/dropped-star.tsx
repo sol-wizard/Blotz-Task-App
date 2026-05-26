@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Image } from "react-native";
 import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType } from "react-native";
 
@@ -18,9 +18,8 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
   setTaskRevealModalVisible,
   imageSource,
 }) => {
-  const [visible, setVisible] = useState(false);
-
   const dimOpacityRef = useRef(new Animated.Value(0));
+  const starOpacity = useRef(new Animated.Value(0));
   const rewardTranslateX = useRef(new Animated.Value(0));
   const rewardTranslateY = useRef(new Animated.Value(0));
   const rewardScale = useRef(new Animated.Value(1));
@@ -41,7 +40,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
   useEffect(() => {
     if (!trigger) return;
 
-    setVisible(true);
+    starOpacity.current.setValue(1);
 
     dimOpacityRef.current.setValue(0);
     rewardScale.current.setValue(1);
@@ -91,7 +90,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
         }),
       ]).start(() => {
         setTaskRevealModalVisible(true);
-        setVisible(false);
+        starOpacity.current.setValue(0);
         dimOpacityRef.current.setValue(0);
       });
     });
@@ -119,6 +118,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
           left: SCREEN_WIDTH / 2 - 50,
           top: SCREEN_HEIGHT / 2 - 50,
           zIndex: 30,
+          opacity: starOpacity.current,
           transform: [
             { translateX: rewardTranslateX.current },
             { translateY: rewardTranslateY.current },
