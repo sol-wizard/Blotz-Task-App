@@ -23,12 +23,8 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
-  const [descriptionText, setDescriptionText] = useState("");
-  const descInitializedRef = useRef(false);
-  if (!descInitializedRef.current && selectedTask !== undefined) {
-    descInitializedRef.current = true;
-    setDescriptionText(selectedTask.description ?? "");
-  }
+  const [descriptionText, setDescriptionText] = useState(selectedTask?.description ?? "");
+
   const { t } = useTranslation();
 
   const handleUpdateDescription = async (newDescription: string) => {

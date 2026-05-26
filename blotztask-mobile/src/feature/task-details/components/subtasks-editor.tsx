@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Platform } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
