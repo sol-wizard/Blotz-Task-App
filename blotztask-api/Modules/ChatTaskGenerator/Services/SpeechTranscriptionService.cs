@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Azure;
 using BlotzTask.Shared.Exceptions;
 using OpenAI.Audio;
@@ -10,6 +11,8 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
     {
         if (audio.Length <= 0)
             throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
+
+        var stopwatch = Stopwatch.StartNew();
 
         try
         {
@@ -30,20 +33,23 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
             if (string.IsNullOrWhiteSpace(transcriptionResult))
                 throw new InvalidOperationException("Transcription returned empty text.");
 
+            stopwatch.Stop();
+            logger.LogInformation(
+                "Whisper transcription completed in {ElapsedMilliseconds}ms. TranscriptionText: {TranscriptionText}",
+                stopwatch.ElapsedMilliseconds, transcriptionResult.Trim());
+
             return transcriptionResult.Trim();
         }
         catch (RequestFailedException ex)
         {
             logger.LogWarning(ex,
-                "Whisper API request failed. Status: {Status}, ErrorCode: {ErrorCode}",
-                ex.Status, ex.ErrorCode);
+                "Whisper API request failed.");
             throw new AiTranscriptionException("Whisper API request failed.", ex);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex,
-                "Whisper transcription failed. ExceptionType: {ExceptionType}, Message: {Message}",
-                ex.GetType().FullName, ex.Message);
+                "Whisper transcription failed.");
             throw new AiTranscriptionException("Whisper transcription failed unexpectedly.", ex);
         }
     }
