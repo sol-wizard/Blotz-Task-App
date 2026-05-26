@@ -3,7 +3,9 @@ import posthog from "@/shared/constants/posthog-client";
 import {
   EVENTS,
   SCREEN_NAMES,
+  type AiTaskFailureStage,
   type AiTaskGenerationTurn,
+  type AiTaskInputMode,
   type AiTaskOutcome,
 } from "@/shared/constants/posthog-events";
 
@@ -67,11 +69,34 @@ export const analytics = {
     outcome: AiTaskOutcome;
     turns: AiTaskGenerationTurn[];
   }) {
+    // Avoid logging empty input to PostHog — empty input is usually caused by a backend failure or similar.
+    if (params.turns.length === 0) return;
+
     posthog.capture(EVENTS.AI_TASK_GENERATION_SESSION, {
       outcome: params.outcome,
       input_modes: Array.from(new Set(params.turns.map((turn) => turn.input_mode))),
       turns: params.turns,
     });
+  },
+
+  /**
+   * Fires whenever an AI task generation attempt fails — covers client-side issues
+   * (mic permission, recording, send) and backend errors (transcription, generation).
+   * Use this to monitor reliability and slice by input mode, stage, and error code.
+   */
+  trackAiTaskGenerationFailed(params: {
+    inputMode: AiTaskInputMode | "unknown";
+    stage: AiTaskFailureStage;
+    errorCode: string;
+    durationMs?: number;
+  }) {
+    const properties: Record<string, string | number> = {
+      input_mode: params.inputMode,
+      stage: params.stage,
+      error_code: params.errorCode,
+    };
+    if (params.durationMs !== undefined) properties.duration_ms = params.durationMs;
+    posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
   },
 
   /**
