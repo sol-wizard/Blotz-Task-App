@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Platform, Pressable, Text, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
 import XDate from "xdate";
@@ -10,7 +10,7 @@ import { useLocalSearchParams } from "expo-router";
 import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 import { SelectedDayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
-import BottomSheet from "@expo/ui/community/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { formatBottomSheetDate } from "@/feature/calendar/util/date-formatter";
 import i18n from "@/i18n";
 import { ReturnButton } from "@/shared/components/return-button";
@@ -29,6 +29,8 @@ export default function MonthlyCalendarScreen() {
   // Derived values
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
   const selectedMonthKey = format(selectedDay, "yyyy-MM");
+  const insets = useSafeAreaInsets();
+  const androidBottomOffset = Platform.OS === "android" ? insets.bottom : 0;
 
   const dataByDate: Record<string, TaskThumbnailDTO[]> = {};
   monthlyTaskAvailability.forEach((item) => {
@@ -107,6 +109,7 @@ export default function MonthlyCalendarScreen() {
         handleComponent={null}
         enableOverDrag={false}
         enableDynamicSizing={false}
+        bottomInset={androidBottomOffset}
         backgroundStyle={{
           backgroundColor: "white",
           borderRadius: 32,
