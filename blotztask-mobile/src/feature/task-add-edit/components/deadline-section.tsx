@@ -6,7 +6,7 @@ import { Control, UseFormGetValues, useController } from "react-hook-form";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
-import { hasDeadlineWarning } from "../models/task-form-schema";
+import TaskFormField, { hasDeadlineWarning } from "../models/task-form-schema";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { ToggleSwitch } from "../../settings/components/toggle-switch";
@@ -14,7 +14,6 @@ import { SingleDateCalendar } from "./single-date-calendar";
 import TimePicker from "./time-picker";
 
 import { SegmentButtonValue } from "../models/segment-button-value";
-import { TaskFormField } from "../models/task-form-schema";
 
 interface DeadlineSectionProps {
   control: Control<TaskFormField>;
