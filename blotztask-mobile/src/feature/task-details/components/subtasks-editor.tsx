@@ -108,7 +108,6 @@ const SubtasksEditor = ({
               onPress={async () => {
                 await onRefreshSubtasks();
                 setDraggableSubtasks(fetchedSubtasks ?? []);
-                console.log("fetched subtasks after refresh:", fetchedSubtasks);
               }}
               className="p-2"
             >
