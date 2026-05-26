@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Image } from "react-native";
 import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType } from "react-native";
 
@@ -20,45 +20,49 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
 
-  const [dimOpacity] = useState(() => new Animated.Value(0));
-  const [rewardTranslateX] = useState(() => new Animated.Value(0));
-  const [rewardTranslateY] = useState(() => new Animated.Value(0));
-  const [rewardScale] = useState(() => new Animated.Value(1));
-  const [rewardRotate] = useState(() => new Animated.Value(0));
+  const dimOpacityRef = useRef(new Animated.Value(0));
+  const rewardTranslateX = useRef(new Animated.Value(0));
+  const rewardTranslateY = useRef(new Animated.Value(0));
+  const rewardScale = useRef(new Animated.Value(1));
+  const rewardRotate = useRef(new Animated.Value(0));
 
   const CENTER_X = 0;
   const CENTER_Y = 0;
 
-  const rotate = rewardRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  const rotate = useMemo(
+    () =>
+      rewardRotate.current.interpolate({
+        inputRange: [0, 1],
+        outputRange: ["0deg", "360deg"],
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (!trigger) return;
 
     setVisible(true);
 
-    dimOpacity.setValue(0);
-    rewardScale.setValue(1);
-    rewardRotate.setValue(0);
+    dimOpacityRef.current.setValue(0);
+    rewardScale.current.setValue(1);
+    rewardRotate.current.setValue(0);
 
-    rewardTranslateX.setValue(DROPOUT_X - SCREEN_WIDTH / 2);
-    rewardTranslateY.setValue(DROPOUT_Y - SCREEN_HEIGHT / 2);
+    rewardTranslateX.current.setValue(DROPOUT_X - SCREEN_WIDTH / 2);
+    rewardTranslateY.current.setValue(DROPOUT_Y - SCREEN_HEIGHT / 2);
 
     Animated.parallel([
-      Animated.timing(dimOpacity, {
+      Animated.timing(dimOpacityRef.current, {
         toValue: 0.7,
         duration: 250,
         useNativeDriver: true,
       }),
       Animated.sequence([
-        Animated.timing(rewardScale, {
+        Animated.timing(rewardScale.current, {
           toValue: 1.3,
           duration: 200,
           useNativeDriver: true,
         }),
-        Animated.timing(rewardScale, {
+        Animated.timing(rewardScale.current, {
           toValue: 1.1,
           duration: 150,
           useNativeDriver: true,
@@ -68,19 +72,19 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
       const MOVE_DURATION = 800;
 
       Animated.parallel([
-        Animated.timing(rewardTranslateX, {
+        Animated.timing(rewardTranslateX.current, {
           toValue: CENTER_X,
           duration: MOVE_DURATION,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.timing(rewardTranslateY, {
+        Animated.timing(rewardTranslateY.current, {
           toValue: CENTER_Y,
           duration: MOVE_DURATION,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.timing(rewardRotate, {
+        Animated.timing(rewardRotate.current, {
           toValue: 1,
           duration: MOVE_DURATION,
           useNativeDriver: true,
@@ -88,12 +92,10 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
       ]).start(() => {
         setTaskRevealModalVisible(true);
         setVisible(false);
-        dimOpacity.setValue(0);
+        dimOpacityRef.current.setValue(0);
       });
     });
   }, [trigger]);
-
-  if (!visible) return null;
 
   return (
     <>
@@ -103,7 +105,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
           StyleSheet.absoluteFill,
           {
             backgroundColor: "black",
-            opacity: dimOpacity,
+            opacity: dimOpacityRef.current,
             zIndex: 20,
           },
         ]}
@@ -118,9 +120,9 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
           top: SCREEN_HEIGHT / 2 - 50,
           zIndex: 30,
           transform: [
-            { translateX: rewardTranslateX },
-            { translateY: rewardTranslateY },
-            { scale: rewardScale },
+            { translateX: rewardTranslateX.current },
+            { translateY: rewardTranslateY.current },
+            { scale: rewardScale.current },
             { rotate },
           ],
           shadowColor: "#FFFFFF",
