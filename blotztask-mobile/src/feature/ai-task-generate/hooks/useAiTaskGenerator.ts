@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import type { AiTaskGenerationTurn, AiTaskInputMode } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
 
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   TranscriptionFailed: "errors.transcriptionFailed",
@@ -51,6 +52,12 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "transcription",
+        errorCode: "NetworkError",
+        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+      });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
@@ -68,6 +75,12 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "text",
+        stage: "send",
+        errorCode: "NetworkError",
+        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+      });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
@@ -77,13 +90,12 @@ export function useAiTaskGenerator({
     setIsAiGenerating(false);
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
+    pendingInputModeRef.current = null;
     const inputText = result.userInput;
 
     if (inputMode && inputText) {
       setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
     }
-
-    pendingInputModeRef.current = null;
 
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
     setStreamedTasks(result.extractedTasks ?? []);
@@ -93,9 +105,22 @@ export function useAiTaskGenerator({
   const generationErrorHandler = (error: AiGenerationErrorDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
+    const startedAt = requestStartedAtRef.current;
     requestStartedAtRef.current = null;
+    const inputMode = pendingInputModeRef.current;
+    pendingInputModeRef.current = null;
     setStreamedTasks([]);
     setStreamedNotes([]);
+
+    analytics.trackAiTaskGenerationFailed({
+      inputMode: inputMode ?? "unknown",
+      stage:
+        error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
+          ? "transcription"
+          : "generation",
+      errorCode: error.errorCode,
+      durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
+    });
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
     Toast.show({ type: "error", text1: t(i18nKey) });

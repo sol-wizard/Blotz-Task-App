@@ -9,9 +9,7 @@ public static class CorsServiceExtensions
             options.AddPolicy("AllowSpecificOrigin",
                 builder =>
                 {
-                    builder.WithOrigins("http://localhost:3000", // DEV frontend origin
-                            "http://localhost:8081", // DEV mobile app origin
-                            "https://blotz-task-app.vercel.app") // Prod frontend origin    
+                    builder.WithOrigins("http://localhost:3000") // devtools (local only)
                         .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE")
                         .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent",
                             "x-requested-with")
