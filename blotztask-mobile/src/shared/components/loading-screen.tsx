@@ -1,5 +1,5 @@
 import { ASSETS } from "@/shared/constants/assets";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, View, Text } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 export default function LoadingScreen() {
   const { t } = useTranslation("common");
-  const bounceAnim = useMemo(() => new Animated.Value(0), []);
+  const bounceAnim = useRef(new Animated.Value(0));
 
   useEffect(() => {
     const amplitude = 40;
@@ -16,13 +16,13 @@ export default function LoadingScreen() {
     const half = Math.max(1, Math.floor(duration / 2));
 
     const singleCycle = Animated.sequence([
-      Animated.timing(bounceAnim, {
+      Animated.timing(bounceAnim.current, {
         toValue: -amplitude,
         duration: half,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
-      Animated.timing(bounceAnim, {
+      Animated.timing(bounceAnim.current, {
         toValue: 0,
         duration: half,
         easing: Easing.in(Easing.quad),
@@ -37,7 +37,7 @@ export default function LoadingScreen() {
     return () => loop.stop();
   }, []);
 
-  const scale = bounceAnim.interpolate({
+  const scale = bounceAnim.current.interpolate({
     inputRange: [-30, 0],
     outputRange: [1.05, 1],
   });
@@ -48,7 +48,7 @@ export default function LoadingScreen() {
         <Animated.Image
           source={ASSETS.loadingBun}
           className="w-[60px] h-[60px]"
-          style={{ transform: [{ translateY: bounceAnim }, { scale }] }}
+          style={{ transform: [{ translateY: bounceAnim.current }, { scale }] }}
           resizeMode="contain"
         />
         <Image
