@@ -76,7 +76,14 @@ export default {
       "@react-native-vector-icons/material-icons",
       "expo-image",
       "expo-web-browser",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          backgroundColor: "#ffffff",
+          image: "./assets/images-png/blotz-icon.png",
+          imageWidth: 200,
+        },
+      ],
       "expo-status-bar",
     ],
     experiments: {
