@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createElement } from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -14,10 +14,12 @@ import { Image } from "expo-image";
 const AvatarDisplay = ({ pictureValue }: { pictureValue: string | null | undefined }) => {
   const LocalComp = getLocalAvatarComponent(pictureValue);
   if (LocalComp) {
-    return <LocalComp width={96} height={96} />;
+    return createElement(LocalComp, { width: 96, height: 96 });
   }
   const source = pictureValue ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
-  return <Image source={source} style={{ width: 96, height: 96, borderRadius: 48 }} contentFit="cover" />;
+  return (
+    <Image source={source} style={{ width: 96, height: 96, borderRadius: 48 }} contentFit="cover" />
+  );
 };
 
 export default function SettingsScreen() {
@@ -63,7 +65,6 @@ export default function SettingsScreen() {
       route: "/settings/about",
     },
   ];
-
 
   const handleProfileEdit = () => {
     router.push("/settings/avatar" as const);
