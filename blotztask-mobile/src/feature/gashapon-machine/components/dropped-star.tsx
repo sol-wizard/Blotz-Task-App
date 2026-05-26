@@ -1,5 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType, Image } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Easing,
+  ImageSourcePropType,
+  Image,
+  useAnimatedValue,
+} from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -17,12 +25,12 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
   setTaskRevealModalVisible,
   imageSource,
 }) => {
-  const [dimOpacity] = useState(() => new Animated.Value(0));
-  const [starOpacity] = useState(() => new Animated.Value(0));
-  const [rewardTranslateX] = useState(() => new Animated.Value(0));
-  const [rewardTranslateY] = useState(() => new Animated.Value(0));
-  const [rewardScale] = useState(() => new Animated.Value(1));
-  const [rewardRotate] = useState(() => new Animated.Value(0));
+  const dimOpacity = useAnimatedValue(0);
+  const starOpacity = useAnimatedValue(0);
+  const rewardTranslateX = useAnimatedValue(0);
+  const rewardTranslateY = useAnimatedValue(0);
+  const rewardScale = useAnimatedValue(1);
+  const rewardRotate = useAnimatedValue(0);
 
   const CENTER_X = 0;
   const CENTER_Y = 0;

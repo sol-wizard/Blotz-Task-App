@@ -1,5 +1,5 @@
 import { ASSETS } from "@/shared/constants/assets";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import { Animated, Easing, View, Text, useAnimatedValue } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
