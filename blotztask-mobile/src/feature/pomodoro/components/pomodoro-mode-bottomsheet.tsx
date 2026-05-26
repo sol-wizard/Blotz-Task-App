@@ -1,5 +1,14 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, Modal, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native-reanimated";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { ASSETS } from "@/shared/constants/assets";
@@ -47,20 +56,9 @@ export const ModeBottomSheet = ({
 
   const { t } = useTranslation("pomodoro");
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setDraftDuration(selectedDuration);
-    setDraftSoundscape(selectedSoundscape);
-    const index = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
-    scrollX.value = index;
-    flatListRef.current?.scrollToOffset({
-      offset: index * SNAP_INTERVAL,
-      animated: false,
-    });
-  }, [isOpen, selectedDuration, selectedSoundscape]);
-
   // Animated values and functions for soundscape list
-  const scrollX = useSharedValue(0);
+  const initialIndex = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
+  const scrollX = useSharedValue(initialIndex);
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
   });

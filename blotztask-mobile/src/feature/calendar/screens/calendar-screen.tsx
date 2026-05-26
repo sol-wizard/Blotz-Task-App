@@ -80,6 +80,7 @@ export default function CalendarScreen() {
       </CalendarProvider>
       {pomodoroSetting && (
         <ModeBottomSheet
+          key={isModeSheetOpen ? "open" : "closed"}
           isOpen={isModeSheetOpen}
           onClose={() => {
             setIsModeSheetOpen(false);
