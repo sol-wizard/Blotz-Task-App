@@ -222,7 +222,7 @@ export const useGashaponMachineConfig = ({
     });
 
     Accelerometer.setUpdateInterval(16);
-    
+
     const shakingSubscription = Accelerometer.addListener((accelerometerData) => {
       const y = accelerometerData.y;
       let x = accelerometerData.x;
@@ -254,7 +254,7 @@ export const useGashaponMachineConfig = ({
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
     };
-  }, [notes, starRadius, onStarDropped]);
+  }, [notes]);
 
   return { entities, handleRelease, resetStarsPhysics };
 };

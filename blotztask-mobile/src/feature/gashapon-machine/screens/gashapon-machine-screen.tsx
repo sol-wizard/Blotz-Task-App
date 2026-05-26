@@ -52,12 +52,12 @@ export default function GashaponMachineScreen() {
     });
   };
 
-  const handleStarDropped = useCallback((starIndex: number) => {
+  const handleStarDropped = (starIndex: number) => {
     const droppedNote = limitedNotes[starIndex];
     setRandomTask(droppedNote);
     setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
     setDropStarTrigger((prev) => prev + 1);
-  }, [limitedNotes]);
+  };
 
   const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
