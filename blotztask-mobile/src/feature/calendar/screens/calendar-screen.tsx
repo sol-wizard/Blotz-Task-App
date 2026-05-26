@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
@@ -10,7 +10,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
-import { useLocalSearchParams } from "expo-router";
 import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
 import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 import { useTranslation } from "react-i18next";

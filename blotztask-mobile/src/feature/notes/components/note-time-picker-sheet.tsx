@@ -50,13 +50,6 @@ export const NoteTimePickerSheet = ({
   const { handleSubmit, reset, setValue } = form;
   const [mode, setMode] = useState<SegmentButtonValue>(SegmentButtonValue.Reminder);
 
-  useEffect(() => {
-    if (visible) {
-      reset(getDefaultValues());
-      setMode(SegmentButtonValue.Reminder);
-    }
-  }, [visible]);
-
   const handleTabChange = (next: SegmentButtonValue) => {
     setMode(next);
     if (next === SegmentButtonValue.Reminder) {
@@ -71,6 +64,8 @@ export const NoteTimePickerSheet = ({
   const onApply = handleSubmit((data) => {
     if (!note) {
       onClose();
+      reset(getDefaultValues());
+      setMode(SegmentButtonValue.Reminder);
       return;
     }
 
