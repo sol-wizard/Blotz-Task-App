@@ -1,14 +1,20 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
-import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import Toast from "react-native-toast-message";
 import { BreakdownResultDTO } from "../models/breakdown-result-dto";
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+} from "react-native-draggable-flatlist";
+import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
+import SubtaskItem from "@/feature/task-details/components/subtask-item";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SubtasksEditorProps = {
   parentTask: TaskDetailDTO;
@@ -16,26 +22,34 @@ type SubtasksEditorProps = {
   isRefreshingSubtasks: boolean;
 };
 
-const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }: SubtasksEditorProps) => {
+const SubtasksEditor = ({
+  parentTask,
+  onRefreshSubtasks,
+  isRefreshingSubtasks,
+}: SubtasksEditorProps) => {
   const { t } = useTranslation(["tasks", "common"]);
   const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id!);
 
-  const { deleteSubtask, isDeletingSubtask, toggleSubtaskStatus, addSubtask, isAddingSubtask } = useSubtaskMutations();
+  const { deleteSubtask, isDeletingSubtask, toggleSubtaskStatus, addSubtask, isAddingSubtask } =
+    useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const taskColor = parentTask?.label?.color ?? theme.colors.disabled;
+  const [listData, setListData] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
+  const { bottom } = useSafeAreaInsets();
+  const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
-  const onBack = () => {
-    setIsEditMode(false);
-  };
-
-  const handleRefresh = async () => {
-    await onRefreshSubtasks();
-  };
-
-  const handleEdit = () => {
-    setIsEditMode(!isEditMode);
-  };
+  const renderItem = ({ item, drag }: RenderItemParams<SubtaskDTO>) => (
+    <ScaleDecorator>
+      <SubtaskItem
+        item={item}
+        onToggle={(id) => toggleSubtaskStatus({ subtaskId: id, parentTaskId: parentTask.id! })}
+        isEditMode={isEditMode}
+        onDelete={handleDelete}
+        drag={drag}
+        parentTaskId={parentTask.id!}
+      />
+    </ScaleDecorator>
+  );
 
   const handleDelete = async (id: number) => {
     try {
@@ -51,11 +65,11 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
 
   const handleAddSubtask = async () => {
     addSubtask({
-        parentTaskId: parentTask.id!,
-        title: "New subtask",
-        duration: "00:00:00",
-        order: (fetchedSubtasks?.length ?? 0) + 1,
-      });
+      parentTaskId: parentTask.id!,
+      title: "New subtask",
+      duration: "00:00:00",
+      order: (fetchedSubtasks?.length ?? 0) + 1,
+    });
   };
 
   if (isLoading || isRefreshingSubtasks || isDeletingSubtask) {
@@ -74,7 +88,7 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
         <Text className="text-base font-baloo text-primary">
           {t("tasks:details.noSubtasksYet")}
         </Text>
-        <TouchableOpacity onPress={onBack} className="mt-4">
+        <TouchableOpacity onPress={() => setIsEditMode(false)} className="mt-4">
           <Text className="text-blue-500 font-balooSemiBold">{t("common:buttons.goBack")}</Text>
         </TouchableOpacity>
       </View>
@@ -90,27 +104,32 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
 
         <View className="flex-row items-center mr-1">
           {!isEditMode && (
-            <TouchableOpacity onPress={handleRefresh} className="p-2">
+            <TouchableOpacity
+              onPress={async () => {
+                await onRefreshSubtasks();
+              }}
+              className="p-2"
+            >
               <MaterialIcons name="sync" size={26} color={theme.colors.disabled} />
             </TouchableOpacity>
           )}
           {isEditMode ? (
-            <TouchableOpacity onPress={handleEdit} className="px-2 py-1">
+            <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)} className="px-2 py-1">
               <Text className="font-balooBold text-lg" style={{ color: theme.colors.highlight }}>
                 {t("tasks:details.complete")}
               </Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={handleEdit} className="p-2">
+            <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)} className="p-2">
               <MaterialIcons name="swap-vert" size={26} color={theme.colors.disabled} />
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity 
-            onPress={handleAddSubtask} 
+          <TouchableOpacity
+            onPress={handleAddSubtask}
             disabled={isAddingSubtask}
             className="p-2 ml-1"
-            >
+          >
             <MaterialIcons name="add" size={28} color={theme.colors.disabled} />
           </TouchableOpacity>
         </View>
@@ -118,13 +137,16 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
 
       {/* Subtasks List */}
       <View className="flex-1">
-        <DraggableSubtaskList
-          subtasks={fetchedSubtasks}
-          isEditMode={isEditMode}
-          onDelete={handleDelete}
-          onToggle={(subtaskId) => toggleSubtaskStatus({ subtaskId, parentTaskId: parentTask.id! })}
-          color={taskColor}
-          parentTaskId={parentTask.id!}
+        <DraggableFlatList
+          data={listData}
+          onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setListData(newData)}
+          keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: listBottomPadding }}
+          autoscrollThreshold={40}
+          autoscrollSpeed={100}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         />
       </View>
 
