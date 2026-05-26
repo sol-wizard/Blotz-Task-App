@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Image } from "react-native";
-import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType } from "react-native";
+import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType, Image } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
