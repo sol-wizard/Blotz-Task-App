@@ -26,12 +26,6 @@ export default function TaskDetailsScreen() {
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (selectedTask) {
-      setDescriptionText(selectedTask.description || "");
-    }
-  }, [selectedTask]);
-
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
     if (newDescription === (selectedTask.description ?? "")) return;
@@ -62,7 +56,6 @@ export default function TaskDetailsScreen() {
         <Text className="text-lg text-gray-600">{t("tasks:details.notFound")}</Text>
         <TouchableOpacity
           onPress={() => {
-            handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
