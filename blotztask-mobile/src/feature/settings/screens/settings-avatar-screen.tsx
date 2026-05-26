@@ -14,10 +14,10 @@ export default function SettingsAvatarScreen() {
   const avatars = LOCAL_AVATARS;
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
 
-  const handleAvatarSelect = async (avatar: AvatarDTO) => {
+  const handleAvatarSelect = (avatar: AvatarDTO) => {
     if (isUserUpdating) return;
 
-    await updateUserProfile({
+    updateUserProfile({
       displayName: userProfile?.displayName ?? "",
       pictureUrl: avatar.id,
       isOnBoarded: userProfile?.isOnBoarded ?? false,
