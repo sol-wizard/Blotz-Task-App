@@ -34,7 +34,7 @@ const SubtasksEditor = ({
     useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [listData, setListData] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
+  const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
   const { bottom } = useSafeAreaInsets();
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
@@ -107,6 +107,8 @@ const SubtasksEditor = ({
             <TouchableOpacity
               onPress={async () => {
                 await onRefreshSubtasks();
+                setDraggableSubtasks(fetchedSubtasks ?? []);
+                console.log("fetched subtasks after refresh:", fetchedSubtasks);
               }}
               className="p-2"
             >
@@ -138,9 +140,9 @@ const SubtasksEditor = ({
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableFlatList
-          data={listData}
-          onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setListData(newData)}
-          keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
+          data={draggableSubtasks}
+          onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setDraggableSubtasks(newData)}
+          keyExtractor={(item: SubtaskDTO) => item.title.toString()}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: listBottomPadding }}
           autoscrollThreshold={40}

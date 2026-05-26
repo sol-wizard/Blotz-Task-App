@@ -14,13 +14,6 @@ import { analytics } from "@/shared/services/analytics";
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
 
-  const breakdownMutation = useMutation<BreakdownResultDTO | undefined, void, number>({
-    mutationFn: createBreakDownSubtasks,
-    onError: (error) => {
-      console.error("Failed to create subtasks:", error);
-    },
-  });
-
   const breakDownAndReplaceSubtasksMutation = useMutation<
     BreakdownResultDTO | undefined,
     Error,
@@ -49,8 +42,8 @@ export const useSubtaskMutations = () => {
       }
     },
     onSuccess: async (_, taskId) => {
-      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
 
@@ -83,7 +76,7 @@ export const useSubtaskMutations = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    }
+    },
   });
 
   const toggleSubtaskStatusMutation = useMutation({
@@ -100,9 +93,6 @@ export const useSubtaskMutations = () => {
 
   return {
     // Breakdown
-    breakDownTask: breakdownMutation.mutateAsync,
-    isBreakingDown: breakdownMutation.isPending,
-
     breakDownAndReplaceSubtasks: breakDownAndReplaceSubtasksMutation.mutateAsync,
     isBreakingDownAndReplacingSubtasks: breakDownAndReplaceSubtasksMutation.isPending,
 

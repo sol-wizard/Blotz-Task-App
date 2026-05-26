@@ -1,6 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
-import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import TasksCheckbox from "../../../shared/components/task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
@@ -11,6 +10,7 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import SubtaskInlineEditor from "./subtask-inline-editor";
 import { useTranslation } from "react-i18next";
 import { SubtaskDTO } from "../models/subtask-dto";
+import { ASSETS } from "@/shared/constants/assets";
 
 type SubtaskItemProps = {
   item: SubtaskDTO;
@@ -158,11 +158,7 @@ export default function SubtaskItem({
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity onPress={handleInlineEditToggle}>
-                  <MaterialCommunityIcons
-                    name="pencil-minus-outline"
-                    size={22}
-                    color={theme.colors.disabled}
-                  />
+                  <ASSETS.editIcon width={28} height={22} fill={theme.colors.disabled} />
                 </TouchableOpacity>
               )}
             </View>
