@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -10,6 +10,15 @@ import { FormDivider } from "@/shared/components/form-divider";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { useTranslation } from "react-i18next";
 import { Image } from "expo-image";
+
+const AvatarDisplay = ({ pictureValue }: { pictureValue: string | null | undefined }) => {
+  const LocalComp = getLocalAvatarComponent(pictureValue);
+  if (LocalComp) {
+    return <LocalComp width={96} height={96} />;
+  }
+  const source = pictureValue ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
+  return <Image source={source} style={{ width: 96, height: 96, borderRadius: 48 }} contentFit="cover" />;
+};
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -55,9 +64,6 @@ export default function SettingsScreen() {
     },
   ];
 
-  const pictureValue = userProfile?.pictureUrl;
-  const SelectedAvatarComponent = useMemo(() => getLocalAvatarComponent(pictureValue), [pictureValue]);
-  const avatarSource = pictureValue && !SelectedAvatarComponent ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => {
     router.push("/settings/avatar" as const);
@@ -71,15 +77,7 @@ export default function SettingsScreen() {
 
       <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
         <View>
-          {SelectedAvatarComponent ? (
-            <SelectedAvatarComponent width={96} height={96} />
-          ) : (
-            <Image
-              source={avatarSource}
-              style={{ width: 96, height: 96, borderRadius: 48 }}
-              contentFit="cover"
-            />
-          )}
+          <AvatarDisplay pictureValue={userProfile?.pictureUrl} />
           <Pressable
             onPress={handleProfileEdit}
             className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
