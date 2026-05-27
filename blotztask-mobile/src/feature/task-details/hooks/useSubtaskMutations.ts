@@ -51,12 +51,8 @@ export const useSubtaskMutations = () => {
     mutationFn: ({ subtaskId, parentTaskId }: { subtaskId: number; parentTaskId: number }) =>
       deleteSubtask(subtaskId),
     onSuccess: (_, variables) => {
-      console.log("Deleted subtask", variables.subtaskId);
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-    onError: (error) => {
-      console.error("Failed to delete subtask:", error);
     },
   });
 
@@ -65,9 +61,6 @@ export const useSubtaskMutations = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-    onError: (error) => {
-      console.error("Failed to update subtask:", error);
     },
   });
 
@@ -86,9 +79,6 @@ export const useSubtaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
-    onError: (error) => {
-      console.error("Failed to toggle subtask status:", error);
-    },
   });
 
   return {
@@ -97,11 +87,11 @@ export const useSubtaskMutations = () => {
     isBreakingDownAndReplacingSubtasks: breakDownAndReplaceSubtasksMutation.isPending,
 
     // Delete subtask
-    deleteSubtask: deleteSubtaskMutation.mutateAsync,
+    deleteSubtask: deleteSubtaskMutation.mutate,
     isDeletingSubtask: deleteSubtaskMutation.isPending,
 
-    //Update subtask
-    updateSubtask: updateSubtaskMutation.mutateAsync,
+    // Update subtask
+    updateSubtask: updateSubtaskMutation.mutate,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
 
     // Add subtask
@@ -109,7 +99,7 @@ export const useSubtaskMutations = () => {
     isAddingSubtask: addSubtaskMutation.isPending,
 
     // Toggle subtask status
-    toggleSubtaskStatus: toggleSubtaskStatusMutation.mutateAsync,
+    toggleSubtaskStatus: toggleSubtaskStatusMutation.mutate,
     isTogglingSubtaskStatus: toggleSubtaskStatusMutation.isPending,
   };
 };

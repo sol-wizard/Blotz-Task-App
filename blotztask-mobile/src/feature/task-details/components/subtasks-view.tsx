@@ -22,10 +22,9 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
 
-  const handleBreakDown = async () => {
+  const handleBreakDown = () => {
     if (isBreakingDownAndReplacingSubtasks || parentTask.id == null) return;
-
-    return await breakDownAndReplaceSubtasks(parentTask.id);
+    breakDownAndReplaceSubtasks(parentTask.id);
   };
 
   const isLoading = isBreakingDownAndReplacingSubtasks || isLoadingSubtasks;

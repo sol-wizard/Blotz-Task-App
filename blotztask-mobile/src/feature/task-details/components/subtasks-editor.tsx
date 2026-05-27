@@ -6,8 +6,6 @@ import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import Toast from "react-native-toast-message";
-import { BreakdownResultDTO } from "../models/breakdown-result-dto";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
@@ -18,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SubtasksEditorProps = {
   parentTask: TaskDetailDTO;
-  onRefreshSubtasks: () => Promise<BreakdownResultDTO | undefined>;
+  onRefreshSubtasks: () => void;
   isRefreshingSubtasks: boolean;
 };
 
@@ -51,16 +49,8 @@ const SubtasksEditor = ({
     </ScaleDecorator>
   );
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
-    } catch (error) {
-      console.error("Failed to delete subtask:", error);
-      Toast.show({
-        type: "error",
-        text1: t("tasks:details.failedToDeleteSubtask"),
-      });
-    }
+  const handleDelete = (id: number) => {
+    deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
   };
 
   const handleAddSubtask = async () => {

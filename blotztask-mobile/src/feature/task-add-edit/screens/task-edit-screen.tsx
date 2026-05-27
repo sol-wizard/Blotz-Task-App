@@ -9,7 +9,7 @@ import { View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
 
 export default function TaskEditScreen() {
-  const { updateTaskAsync, isUpdating } = useTaskMutations();
+  const { updateTask, isUpdating } = useTaskMutations();
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading, isFetching } = useTaskById({ taskId });
@@ -33,17 +33,8 @@ export default function TaskEditScreen() {
     dueAt: selectedTask.dueAt,
   };
 
-  const handleTaskSubmit = async (formValues: TaskUpsertDTO) => {
-    try {
-      await updateTaskAsync({
-        taskId,
-        dto: formValues,
-      });
-
-      router.back();
-    } catch (error) {
-      console.error("Failed to submit task:", error);
-    }
+  const handleTaskSubmit = (formValues: TaskUpsertDTO) => {
+    updateTask({ taskId, dto: formValues }, { onSuccess: () => router.back() });
   };
 
   return (

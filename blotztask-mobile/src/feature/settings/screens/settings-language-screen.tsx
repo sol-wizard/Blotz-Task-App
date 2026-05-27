@@ -21,15 +21,10 @@ export default function SettingsLanguageScreen() {
     const i18nLang = language === Language.En ? "en" : "zh";
     await i18n.changeLanguage(i18nLang);
 
-    try {
-      await updateUserPreferences({
-        ...userPreferences,
-        preferredLanguage: language,
-      });
-      console.log(`Language updated to: ${language}`);
-    } catch (error) {
-      console.log("Failed to update language:", error);
-    }
+    updateUserPreferences({
+      ...userPreferences,
+      preferredLanguage: language,
+    });
   };
 
   if (isUserPreferencesLoading) {

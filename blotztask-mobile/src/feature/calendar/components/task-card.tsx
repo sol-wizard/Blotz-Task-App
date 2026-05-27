@@ -76,18 +76,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     router.push({ pathname: "/(protected)/task-details", params: { taskId: task.id } });
   };
 
-  const handleBreakdown = async () => {
+  const handleBreakdown = () => {
     if (isLoading || task.id == null) return;
-
-    try {
-      const result = await breakDownAndReplaceSubtasks(task.id);
-      if (result?.subtasks?.length) {
-        setIsExpanded(true);
-        swipeRef.current?.close();
-      }
-    } catch (e) {
-      console.error("Breakdown error:", e);
-    }
+    breakDownAndReplaceSubtasks(task.id, {
+      onSuccess: (result) => {
+        if (result?.subtasks?.length) {
+          setIsExpanded(true);
+          swipeRef.current?.close();
+        }
+      },
+    });
   };
 
   const handleDelete = async () => {
