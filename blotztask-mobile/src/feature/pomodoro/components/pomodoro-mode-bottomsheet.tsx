@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -56,9 +56,19 @@ export const ModeBottomSheet = ({
 
   const { t } = useTranslation("pomodoro");
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const index = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
+    scrollX.value = index;
+    flatListRef.current?.scrollToOffset({
+      offset: index * SNAP_INTERVAL,
+      animated: false,
+    });
+  }, [isOpen, selectedDuration, selectedSoundscape]);
+
   // Animated values and functions for soundscape list
-  const initialIndex = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
-  const scrollX = useSharedValue(initialIndex);
+  const scrollX = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
   });
