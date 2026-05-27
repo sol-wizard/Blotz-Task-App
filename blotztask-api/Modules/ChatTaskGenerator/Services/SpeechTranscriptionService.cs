@@ -46,6 +46,12 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
                 "Whisper API request failed.");
             throw new AiTranscriptionException("Whisper API request failed.", ex);
         }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogWarning(ex,
+                "Whisper transcription was cancelled.");
+            throw new AiTranscriptionException("Whisper transcription was cancelled.", ex);
+        }
         catch (Exception ex)
         {
             logger.LogWarning(ex,
