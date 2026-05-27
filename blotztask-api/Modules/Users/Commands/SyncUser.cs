@@ -34,9 +34,11 @@ public class SyncUserCommandHandler(
         var email =
             GetFromUser(user, "email") ??
             GetFromUserMetadata(user, "user_email");
+        var phoneNumber = GetFromUser(user, "phone_number");
         var displayName =
             GetFromUser(user, "name") ??
-            email;
+            email ??
+            phoneNumber;
         var pictureUrl = GetFromUser(user, "picture");
         var createdAtStr = GetFromUser(user, "created_at")!;
         if (!DateTime.TryParse(createdAtStr, null, DateTimeStyles.RoundtripKind, out var parsedDate))
@@ -45,12 +47,18 @@ public class SyncUserCommandHandler(
         var signUpAt = parsedDate;
         var preferredLanguage = GetPreferredLanguage(user);
 
-        if (string.IsNullOrWhiteSpace(auth0UserId) || string.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(auth0UserId))
+        {
+            logger.LogError("Invalid user payload: missing user_id");
+            throw new ValidationException("user_id is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phoneNumber))
         {
             logger.LogError(
-                "Invalid user payload: missing user_id or email. user_id: {Auth0UserId}, email: {Email}",
-                auth0UserId, email);
-            throw new ValidationException("user_id and email are required");
+                "Invalid user payload: missing both email and phone_number. user_id: {Auth0UserId}",
+                auth0UserId);
+            throw new ValidationException("either email or phone_number is required");
         }
 
         var utcNow = DateTime.UtcNow;
@@ -65,6 +73,7 @@ public class SyncUserCommandHandler(
             {
                 Auth0UserId = auth0UserId,
                 Email = email,
+                PhoneNumber = phoneNumber,
                 DisplayName = displayName,
                 PictureUrl = pictureUrl,
                 SignUpAt = signUpAt,
