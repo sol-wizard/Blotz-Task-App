@@ -15,6 +15,7 @@ import { analytics } from "@/shared/services/analytics";
 
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   TranscriptionFailed: "errors.transcriptionFailed",
+  TranscriptionTimedOut: "errors.transcriptionTimedOut",
   EmptyAudio: "errors.emptyAudio",
   TokenLimited: "errors.tokenLimited",
   BlockedByContentFilter: "errors.contentFilter",
@@ -109,8 +110,15 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    setStreamedTasks([]);
-    setStreamedNotes([]);
+
+    const isTranscriptionError =
+      error.errorCode === "TranscriptionFailed" ||
+      error.errorCode === "TranscriptionTimedOut" ||
+      error.errorCode === "EmptyAudio";
+    if (!isTranscriptionError) {
+      setStreamedTasks([]);
+      setStreamedNotes([]);
+    }
 
     analytics.trackAiTaskGenerationFailed({
       inputMode: inputMode ?? "unknown",

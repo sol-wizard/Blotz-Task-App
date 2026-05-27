@@ -13,7 +13,8 @@ public enum AiErrorCode
     TranscriptionFailed = 6,
     EmptyAudio = 7,
     NoTasksExtracted = 8,
-    QuotaExceeded = 9
+    QuotaExceeded = 9,
+    TranscriptionTimedOut = 10
 }
 
 public class AiTaskGenerationException : HubException
@@ -51,6 +52,15 @@ public sealed class AiTranscriptionException
 {
     public AiTranscriptionException(string message = "Audio transcription failed.", Exception? inner = null)
         : base(AiErrorCode.TranscriptionFailed, message, inner)
+    {
+    }
+}
+
+public sealed class AiTranscriptionTimeoutException
+    : AiTaskGenerationException
+{
+    public AiTranscriptionTimeoutException(Exception? inner = null)
+        : base(AiErrorCode.TranscriptionTimedOut, "Audio transcription timed out. Please try again.", inner)
     {
     }
 }

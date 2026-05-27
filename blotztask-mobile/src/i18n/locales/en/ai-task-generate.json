@@ -22,6 +22,7 @@
   "errors": {
     "default": "Oops something went over my head. Please try again.",
     "transcriptionFailed": "Could not understand the audio. Please try again.",
+    "transcriptionTimedOut": "Audio transcription timed out. Please try again.",
     "emptyAudio": "No audio was recorded. Please try again.",
     "tokenLimited": "You've hit the usage limit. Please try again later.",
     "contentFilter": "Your message was flagged. Please rephrase and try again.",

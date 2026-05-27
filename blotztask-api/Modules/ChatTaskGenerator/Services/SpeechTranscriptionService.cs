@@ -7,6 +7,8 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechTranscriptionService> logger)
 {
+    private static readonly TimeSpan TranscriptionTimeout = TimeSpan.FromSeconds(10);
+
     public async Task<string> TranscribeAsync(IFormFile audio, CancellationToken ct = default)
     {
         if (audio.Length <= 0)
@@ -17,6 +19,8 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
         try
         {
             await using var stream = audio.OpenReadStream();
+            using var timeoutCts = new CancellationTokenSource(TranscriptionTimeout);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
 
             var result = await audioClient.TranscribeAudioAsync(
                 stream,
@@ -25,7 +29,7 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
                 {
                     ResponseFormat = AudioTranscriptionFormat.Text
                 },
-                ct
+                linkedCts.Token
             );
 
             var transcriptionResult = result.Value.Text;
@@ -45,6 +49,12 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
             logger.LogWarning(ex,
                 "Whisper API request failed.");
             throw new AiTranscriptionException("Whisper API request failed.", ex);
+        }
+        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogWarning(ex,
+                "Whisper transcription timed out.");
+            throw new AiTranscriptionTimeoutException(ex);
         }
         catch (TaskCanceledException ex)
         {
