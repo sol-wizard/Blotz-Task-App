@@ -62,6 +62,14 @@ function PillButton({ label, onPress }: { label: string; onPress: () => void }) 
     transform: [{ scale: scale.value }],
   }));
 
+  const onPressIn = () => {
+    scale.value = withTiming(1.08, { duration: 100 });
+  };
+
+  const onPressOut = () => {
+    scale.value = withTiming(1, { duration: 120 });
+  };
+
   return (
     <AnimatedPressable
       onPress={onPress}
