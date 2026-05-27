@@ -110,22 +110,21 @@ export default function AiTaskSheetScreen() {
 
   const handleAddAll = async () => {
     if (isAdding || isNoteCreating) return;
-    try {
-      await Promise.all([
-        ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
-        ...displayNotes.map((n) => createNoteAsync(n.text)),
-      ]);
-      analytics.trackAiTaskGenerationSession({
-        outcome: "accepted",
-        turns,
-      });
+
+    const results = await Promise.allSettled([
+      ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
+      ...displayNotes.map((n) => createNoteAsync(n.text)),
+    ]);
+
+    const allSucceeded = results.every((r) => r.status === "fulfilled");
+
+    if (allSucceeded) {
+      analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
       requestIdleCallback(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }));
-    } catch {
-      // Each failed mutation is already handled by the global mutationCache.onError (toast + Sentry).
-      // Catch here only to prevent unhandled rejection from Promise.all.
     }
+    // Failed mutations are already handled by the global mutationCache.onError (toast + Sentry).
   };
 
   const handleMicPressIn = () => {
