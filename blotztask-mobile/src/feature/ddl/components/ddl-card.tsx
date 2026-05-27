@@ -3,7 +3,7 @@ import { View, Text } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { differenceInCalendarDays, format } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";

@@ -1,45 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "@/shared/components/task-status-row";
 
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
-import { getAllTasks } from "@/shared/services/task-service";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TaskCard from "@/feature/calendar/components/task-card";
+import { useAllTasksQuery } from "@/feature/settings/hooks/useAllTasksQuery";
 
 export default function SettingsAllTasksScreen() {
-  const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
   const { isDeleting, deleteTask } = useTaskMutations();
+  const { allTasks, isAllTasksLoading } = useAllTasksQuery();
 
-  const filteredTaskList = filterSelectedTask({ selectedDayTasks: tasks });
+  const filteredTaskList = filterSelectedTask({ selectedDayTasks: allTasks });
   const tasksOfSelectedStatus = filteredTaskList.find(
     (item) => item.status === selectedStatus,
   )?.tasks;
-
-  const fetchTasks = async () => {
-    try {
-      const data = await getAllTasks();
-      setTasks(data);
-    } catch (err: unknown) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
@@ -76,7 +60,7 @@ export default function SettingsAllTasksScreen() {
         onChange={setSelectedStatus}
       />
 
-      {loading ? (
+      {isAllTasksLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="small" />
         </View>
@@ -85,7 +69,7 @@ export default function SettingsAllTasksScreen() {
           className="flex-1"
           data={tasksOfSelectedStatus}
           renderItem={renderTask}
-          keyExtractor={(task) => task.id.toString()}
+          keyExtractor={(task) => String(task.id ?? "")}
           contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
         />
       ) : (

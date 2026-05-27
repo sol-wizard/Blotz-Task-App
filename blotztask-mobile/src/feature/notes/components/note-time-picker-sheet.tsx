@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
 import { FormProvider, useForm } from "react-hook-form";
@@ -15,7 +15,7 @@ import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-converti
 import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { theme } from "@/shared/constants/theme";
 import { addMinutes } from "date-fns/addMinutes";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 
 export const NoteTimePickerSheet = ({
   visible,
@@ -50,13 +50,6 @@ export const NoteTimePickerSheet = ({
   const { handleSubmit, reset, setValue } = form;
   const [mode, setMode] = useState<SegmentButtonValue>(SegmentButtonValue.Reminder);
 
-  useEffect(() => {
-    if (visible) {
-      reset(getDefaultValues());
-      setMode(SegmentButtonValue.Reminder);
-    }
-  }, [visible]);
-
   const handleTabChange = (next: SegmentButtonValue) => {
     setMode(next);
     if (next === SegmentButtonValue.Reminder) {
@@ -71,6 +64,8 @@ export const NoteTimePickerSheet = ({
   const onApply = handleSubmit((data) => {
     if (!note) {
       onClose();
+      reset(getDefaultValues());
+      setMode(SegmentButtonValue.Reminder);
       return;
     }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DetailsView from "@/feature/task-details/components/details-view";
@@ -23,28 +23,25 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
-  const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+  const [descriptionText, setDescriptionText] = useState(selectedTask?.description ?? "");
+
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (selectedTask) {
-      setDescriptionText(selectedTask.description || "");
-    }
-  }, [selectedTask]);
-
   const handleUpdateDescription = async (newDescription: string) => {
-    if (!selectedTask || !selectedTask.id) return;
+    if (!selectedTask) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
     await updateTask({
-      taskId: selectedTask.id,
+      taskId,
       dto: {
         title: selectedTask.title,
         description: newDescription,
         startTime: convertToDateTimeOffset(new Date(selectedTask.startTime)),
         endTime: convertToDateTimeOffset(new Date(selectedTask.endTime)),
         labelId: selectedTask.label?.labelId,
-        timeType: selectedTask.timeType ?? null,
+        timeType: selectedTask.timeType,
+        notificationId: selectedTask.notificationId,
+        isDeadline: selectedTask.isDeadline,
       },
     });
   };
@@ -60,7 +57,6 @@ export default function TaskDetailsScreen() {
         <Text className="text-lg text-gray-600">{t("tasks:details.notFound")}</Text>
         <TouchableOpacity
           onPress={() => {
-            handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
@@ -85,8 +81,26 @@ export default function TaskDetailsScreen() {
       className="flex-1"
       style={{ backgroundColor: selectedTask.label?.color ?? theme.colors.fallback }}
     >
-      <View pointerEvents="box-none" className="ml-6 pt-2">
+      <View
+        pointerEvents="box-none"
+        className="flex pt-2 flex-row justify-between w-full px-8 mb-2"
+      >
         <ReturnButton />
+        <View className="flex-row gap-2">
+          <View className="px-3 py-1 rounded-xl border border-black">
+            <Text className={`text-sm font-medium text-black`}>
+              {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
+            </Text>
+          </View>
+
+          {selectedTask.label && (
+            <View className="px-3 py-1 rounded-xl border border-black flex-shrink">
+              <Text className="text-sm font-medium text-black" numberOfLines={1}>
+                {getTranslatedLabelName(selectedTask.label.name)}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
       <TouchableWithoutFeedback
         onPress={() => {
@@ -94,23 +108,10 @@ export default function TaskDetailsScreen() {
         }}
       >
         <View className="pb-6 px-8">
-          <View className="flex-row items-center justify-between mb-4 mt-6">
-            <View className="flex-1 flex-row items-center gap-2">
-              <View className="px-3 py-1 rounded-xl border border-black">
-                <Text className={`text-sm font-medium text-black`}>
-                  {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
-                </Text>
-              </View>
-
-              {selectedTask.label && (
-                <View className="px-3 py-1 rounded-xl border border-black flex-shrink">
-                  <Text className="text-sm font-medium text-black" numberOfLines={1}>
-                    {getTranslatedLabelName(selectedTask.label.name)}
-                  </Text>
-                </View>
-              )}
-            </View>
-
+          <View className="flex-row items-start justify-center my-4">
+            <Text className="flex-1 font-balooBold text-3xl leading-normal">
+              {selectedTask.title}
+            </Text>
             <TouchableOpacity
               onPress={() => {
                 router.push({
@@ -122,12 +123,6 @@ export default function TaskDetailsScreen() {
             >
               <ASSETS.editIcon width={28} height={28} fill="#444964" />
             </TouchableOpacity>
-          </View>
-
-          <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-3xl leading-normal">
-              {selectedTask.title}
-            </Text>
           </View>
 
           {selectedTask.startTime === selectedTask.endTime ? (

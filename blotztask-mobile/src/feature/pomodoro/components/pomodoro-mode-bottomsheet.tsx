@@ -1,7 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, Modal, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "./sound-scape";
@@ -49,8 +58,7 @@ export const ModeBottomSheet = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setDraftDuration(selectedDuration);
-    setDraftSoundscape(selectedSoundscape);
+
     const index = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
     scrollX.value = index;
     flatListRef.current?.scrollToOffset({

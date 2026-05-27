@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";

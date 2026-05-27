@@ -44,7 +44,6 @@ export default {
     },
     plugins: [
       "expo-router",
-      "expo-speech-recognition",
       "expo-secure-store",
       [
         "expo-dev-client",
@@ -70,10 +69,22 @@ export default {
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
       "expo-asset",
-      "@react-native-community/datetimepicker",
       "expo-build-properties",
+      "@react-native-vector-icons/ionicons",
+      "@react-native-vector-icons/feather",
+      "@react-native-vector-icons/material-design-icons",
+      "@react-native-vector-icons/material-icons",
       "expo-image",
       "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          backgroundColor: "#ffffff",
+          image: "./assets/images-png/blotz-icon.png",
+          imageWidth: 200,
+        },
+      ],
+      "expo-status-bar",
     ],
     experiments: {
       typedRoutes: true,

@@ -34,10 +34,7 @@ export default function TaskEditScreen() {
   };
 
   const handleTaskSubmit = (formValues: TaskUpsertDTO) => {
-    updateTask(
-      { taskId: selectedTask.id, dto: formValues },
-      { onSuccess: () => router.back() },
-    );
+    updateTask({ taskId, dto: formValues }, { onSuccess: () => router.back() });
   };
 
   return (

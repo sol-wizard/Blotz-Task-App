@@ -50,10 +50,7 @@ export default function GetStartedButton() {
     <View style={{ gap: 12 }}>
       <PillButton label={t("buttons.continue")} onPress={() => signIn()} />
       {showPhone && (
-        <PillButton
-          label={t("buttons.continueWithPhone")}
-          onPress={() => signIn("sms")}
-        />
+        <PillButton label={t("buttons.continueWithPhone")} onPress={() => signIn("sms")} />
       )}
     </View>
   );
@@ -65,15 +62,19 @@ function PillButton({ label, onPress }: { label: string; onPress: () => void }) 
     transform: [{ scale: scale.value }],
   }));
 
+  const onPressIn = () => {
+    scale.value = withTiming(1.08, { duration: 100 });
+  };
+
+  const onPressOut = () => {
+    scale.value = withTiming(1, { duration: 120 });
+  };
+
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={() => {
-        scale.value = withTiming(1.08, { duration: 100 });
-      }}
-      onPressOut={() => {
-        scale.value = withTiming(1, { duration: 120 });
-      }}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       style={animatedStyle}
     >
       <Text

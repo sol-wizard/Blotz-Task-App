@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { format, parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 
@@ -34,7 +34,7 @@ interface TaskCardProps {
   deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
-  onOpenMode: () => void;
+  onOpenMode?: () => void;
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
@@ -120,7 +120,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
       return;
     }
 
-    onOpenMode();
+    onOpenMode?.();
     swipeRef.current?.reset();
   };
 
