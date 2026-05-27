@@ -11,6 +11,7 @@ export default {
     userInterfaceStyle: "light",
     ios: {
       supportsTablet: false,
+      deploymentTarget: "16.4",
       bundleIdentifier: process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -63,13 +64,20 @@ export default {
         "@sentry/react-native/expo",
         {
           url: "https://sentry.io/",
-          project: "react-native",
-          organization: "nicoles-project",
+          project: "blotz-app",
+          organization: "blotz",
         },
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
       "expo-asset",
-      "expo-build-properties",
+      [
+        "expo-build-properties",
+        {
+          ios: {
+            deploymentTarget: "16.4",
+          },
+        },
+      ],
       "@react-native-vector-icons/ionicons",
       "@react-native-vector-icons/feather",
       "@react-native-vector-icons/material-design-icons",
