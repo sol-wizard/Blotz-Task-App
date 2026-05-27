@@ -2,7 +2,8 @@
   "buttons": {
     "cancel": "Cancel",
     "done": "Done",
-    "getStarted": "Get Started",
+    "continue": "Continue",
+    "continueWithPhone": "Continue with Phone",
     "save": "Save",
     "saving": "Saving...",
     "goBack": "Go back",
