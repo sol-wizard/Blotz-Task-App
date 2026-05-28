@@ -1,8 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { Image } from "expo-image";
-import { Asset, requestPermissionsAsync } from "expo-media-library";
-import { isAvailableAsync, shareAsync } from "expo-sharing";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,23 +16,14 @@ import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
 import { formatMonth } from "../utils/month-utils";
 import { MonthlyReviewShareImageGenerator } from "../components/monthly-review-share-image-generator";
-
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-};
+import { MonthlyReviewSharePreviewSheet } from "../components/monthly-review-share-preview-sheet";
 
 export default function MonthlyReviewScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
-  const [isSharing, setIsSharing] = useState(false);
   const [previewImageUri, setPreviewImageUri] = useState<string | null>(null);
-  const [isSavingImage, setIsSavingImage] = useState(false);
   const [isGeneratingShareImage, setIsGeneratingShareImage] = useState(false);
   const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
@@ -53,57 +41,6 @@ export default function MonthlyReviewScreen() {
     }
 
     setIsGeneratingShareImage(true);
-  };
-
-  const handleSharePreviewImage = async () => {
-    if (!previewImageUri) {
-      return;
-    }
-
-    try {
-      setIsSharing(true);
-      const isAvailable = await isAvailableAsync();
-
-      if (!isAvailable) {
-        Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
-        return;
-      }
-
-      await shareAsync(previewImageUri, {
-        mimeType: "image/png",
-        UTI: "public.png",
-      });
-    } catch (error: unknown) {
-      console.error("Failed to share monthly review image", getErrorMessage(error));
-      Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  const handleSavePreviewImage = async () => {
-    if (!previewImageUri || isSavingImage) {
-      return;
-    }
-
-    setIsSavingImage(true);
-
-    try {
-      const permission = await requestPermissionsAsync();
-
-      if (!permission.granted) {
-        Toast.show({ type: "error", text1: t("monthlyReview.savePermissionMessage") });
-        return;
-      }
-
-      await Asset.create(previewImageUri);
-      Toast.show({ type: "warning", text1: t("monthlyReview.saveSuccessMessage") });
-    } catch (error: unknown) {
-      console.error("Failed to save monthly review image", getErrorMessage(error));
-      Toast.show({ type: "error", text1: t("monthlyReview.saveErrorMessage") });
-    } finally {
-      setIsSavingImage(false);
-    }
   };
 
   return (
@@ -190,85 +127,17 @@ export default function MonthlyReviewScreen() {
             setPreviewImageUri(uri);
             setIsGeneratingShareImage(false);
           }}
-          onError={(error) => {
-            console.error("Failed to prepare monthly review image", getErrorMessage(error));
+          onError={() => {
             Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
             setIsGeneratingShareImage(false);
           }}
         />
       )}
 
-      <Modal
-        visible={previewImageUri !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={closeSharePreview}
-      >
-        <View className="flex-1 justify-end bg-black/45">
-          <Pressable className="flex-1" onPress={closeSharePreview} />
-          <View className="rounded-t-3xl bg-background px-5 pt-4 pb-8">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-balooBold text-secondary">
-                {t("monthlyReview.previewTitle")}
-              </Text>
-              <Pressable
-                onPress={closeSharePreview}
-                className="w-9 h-9 rounded-full bg-white items-center justify-center"
-              >
-                <MaterialCommunityIcons name="close" size={20} color="#363853" />
-              </Pressable>
-            </View>
-
-            <Text className="text-sm font-baloo text-secondary/60 mb-4">
-              {t("monthlyReview.previewSubtitle")}
-            </Text>
-
-            <View className="items-center">
-              <View className="rounded-2xl overflow-hidden bg-white">
-                {previewImageUri ? (
-                  <Image
-                    source={{ uri: previewImageUri }}
-                    style={{ width: 220, aspectRatio: 360 / 640 }}
-                    contentFit="contain"
-                  />
-                ) : (
-                  <View className="w-[220px] h-[391px] items-center justify-center">
-                    <ActivityIndicator color="#363853" />
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <View className="mt-5">
-              <Pressable
-                onPress={handleSharePreviewImage}
-                disabled={isSharing}
-                className="h-12 rounded-full bg-secondary flex-row items-center justify-center"
-                style={{ opacity: isSharing ? 0.6 : 1 }}
-              >
-                <MaterialCommunityIcons name="share-outline" size={20} color="#FFFFFF" />
-                <Text className="ml-2 text-base font-balooBold text-white">
-                  {isSharing ? t("monthlyReview.sharing") : t("monthlyReview.shareNow")}
-                </Text>
-              </Pressable>
-
-              <View className="flex-row mt-3">
-                <Pressable
-                  onPress={handleSavePreviewImage}
-                  disabled={isSavingImage}
-                  className="flex-1 h-12 rounded-full bg-white flex-row items-center justify-center mr-2"
-                  style={{ opacity: isSavingImage ? 0.6 : 1 }}
-                >
-                  <MaterialCommunityIcons name="download-outline" size={20} color="#363853" />
-                  <Text className="ml-2 text-sm font-balooBold text-secondary">
-                    {isSavingImage ? t("monthlyReview.savingImage") : t("monthlyReview.saveImage")}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <MonthlyReviewSharePreviewSheet
+        imageUri={previewImageUri}
+        onClose={closeSharePreview}
+      />
     </SafeAreaView>
   );
 }
