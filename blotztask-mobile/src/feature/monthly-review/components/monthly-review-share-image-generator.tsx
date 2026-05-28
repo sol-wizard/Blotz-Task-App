@@ -19,18 +19,12 @@ export function MonthlyReviewShareImageGenerator({
   onError,
 }: Props) {
   const cardRef = useRef<View>(null);
-  const hasCapturedRef = useRef(false);
 
   useEffect(() => {
     let isActive = true;
 
     const generate = async () => {
       try {
-        if (hasCapturedRef.current) {
-          return;
-        }
-
-        hasCapturedRef.current = true;
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
         if (!cardRef.current || !isActive) {
@@ -61,11 +55,7 @@ export function MonthlyReviewShareImageGenerator({
   }, [onError, onGenerated]);
 
   return (
-    <View
-      pointerEvents="none"
-      className="absolute left-0 top-0 -z-10"
-      collapsable={false}
-    >
+    <View pointerEvents="none" className="absolute left-0 top-0 -z-10" collapsable={false}>
       <View ref={cardRef} collapsable={false}>
         <MonthlyReviewShareCard
           displayMonth={displayMonth}
