@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
@@ -10,7 +10,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
-import { useLocalSearchParams } from "expo-router";
 import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
 import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 import { useTranslation } from "react-i18next";
@@ -21,9 +20,7 @@ const calendarTheme = {
 
 export default function CalendarScreen() {
   const { i18n } = useTranslation();
-  const params = useLocalSearchParams<{ selectedDate?: string | string[] }>();
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [calendarKey, setCalendarKey] = useState(0);
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
@@ -43,16 +40,6 @@ export default function CalendarScreen() {
     [handleDayPress],
   );
 
-  useEffect(() => {
-    if (typeof params.selectedDate !== "string") return;
-
-    const parsedDate = new Date(params.selectedDate);
-    if (Number.isNaN(parsedDate.getTime())) return;
-
-    setSelectedDay(parsedDate);
-    setCalendarKey((k) => k + 1);
-  }, [params.selectedDate]);
-
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <CalendarHeader
@@ -65,7 +52,7 @@ export default function CalendarScreen() {
         }}
       />
       <CalendarProvider
-        key={`${calendarKey}-${i18n.language}`}
+        key={`${selectedDay}-${i18n.language}`}
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => {
           setSelectedDay(new Date(date));
@@ -93,6 +80,7 @@ export default function CalendarScreen() {
       </CalendarProvider>
       {pomodoroSetting && (
         <ModeBottomSheet
+          key={isModeSheetOpen ? "open" : "closed"}
           isOpen={isModeSheetOpen}
           onClose={() => {
             setIsModeSheetOpen(false);

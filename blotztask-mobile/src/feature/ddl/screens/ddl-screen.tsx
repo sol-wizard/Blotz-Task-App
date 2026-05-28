@@ -12,7 +12,9 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 export default function DdlScreen() {
   const { t } = useTranslation("deadline");
   const { ddlTasks, isLoading } = useAllDdl();
-  const sortedTasks = [...ddlTasks].sort((left, right) => Number(right.isPinned) - Number(left.isPinned));
+  const sortedTasks = [...ddlTasks].sort(
+    (left, right) => Number(right.isPinned) - Number(left.isPinned),
+  );
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -23,7 +25,9 @@ export default function DdlScreen() {
       <SafeAreaView className="flex-1" edges={["top"]}>
         <View className="flex-row px-6 mt-6 items-center">
           <ReturnButton className="mb-3" />
-          <Text className="font-baloo text-4xl text-secondary font-bold px-6 py-2">{t("title")}</Text>
+          <Text className="font-baloo text-4xl text-secondary font-bold px-6 py-2">
+            {t("title")}
+          </Text>
         </View>
 
         <FlatList

@@ -192,6 +192,7 @@ export const useGashaponMachineConfig = ({
       };
     });
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional initialization; newEntities depends on Matter.js bodies that can only be created here
     setEntities(newEntities);
     Matter.Events.on(engine, "collisionStart", (event) => {
       event.pairs.forEach((pair) => {
@@ -221,7 +222,7 @@ export const useGashaponMachineConfig = ({
     });
 
     Accelerometer.setUpdateInterval(16);
-    
+
     const shakingSubscription = Accelerometer.addListener((accelerometerData) => {
       const y = accelerometerData.y;
       let x = accelerometerData.x;

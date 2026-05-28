@@ -11,7 +11,7 @@ import {
 import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import LottieView from "lottie-react-native";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -67,6 +67,11 @@ export default function AiTaskSheetScreen() {
     requestRecordingPermissionsAsync().then(({ granted }) => {
       if (!granted) {
         console.warn("[Mic] Permission not granted");
+        analytics.trackAiTaskGenerationFailed({
+          inputMode: "voice",
+          stage: "permission",
+          errorCode: "PermissionDenied",
+        });
         router.back();
       }
     });
@@ -105,21 +110,21 @@ export default function AiTaskSheetScreen() {
 
   const handleAddAll = async () => {
     if (isAdding || isNoteCreating) return;
-    try {
-      await Promise.all([
-        ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
-        ...displayNotes.map((n) => createNoteAsync(n.text)),
-      ]);
-      analytics.trackAiTaskGenerationSession({
-        outcome: "accepted",
-        turns,
-      });
+
+    const results = await Promise.allSettled([
+      ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
+      ...displayNotes.map((n) => createNoteAsync(n.text)),
+    ]);
+
+    const allSucceeded = results.every((r) => r.status === "fulfilled");
+
+    if (allSucceeded) {
+      analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
       requestIdleCallback(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }));
-    } catch (error) {
-      console.error("Add tasks/notes failed", error);
     }
+    // Failed mutations are already handled by the global mutationCache.onError (toast + Sentry).
   };
 
   const handleMicPressIn = () => {

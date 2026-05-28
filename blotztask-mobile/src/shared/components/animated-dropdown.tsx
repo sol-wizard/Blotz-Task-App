@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View, FlatList } from "react-native";
 import Animated, { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import Modal from "react-native-modal";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
 
 import { AnimatedChevron } from "./chevron";
 import { FormDivider } from "./form-divider";

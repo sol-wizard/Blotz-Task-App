@@ -1,6 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Image } from "react-native";
-import { Animated, Dimensions, StyleSheet, Easing, ImageSourcePropType } from "react-native";
+import React, { useEffect, useMemo } from "react";
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Easing,
+  ImageSourcePropType,
+  Image,
+  useAnimatedValue,
+} from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -18,31 +25,32 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
   setTaskRevealModalVisible,
   imageSource,
 }) => {
-  const [visible, setVisible] = useState(false);
-
-  const dimOpacity = useRef(new Animated.Value(0)).current;
-  const rewardTranslateX = useRef(new Animated.Value(0)).current;
-  const rewardTranslateY = useRef(new Animated.Value(0)).current;
-  const rewardScale = useRef(new Animated.Value(1)).current;
-  const rewardRotate = useRef(new Animated.Value(0)).current;
+  const dimOpacity = useAnimatedValue(0);
+  const starOpacity = useAnimatedValue(0);
+  const rewardTranslateX = useAnimatedValue(0);
+  const rewardTranslateY = useAnimatedValue(0);
+  const rewardScale = useAnimatedValue(1);
+  const rewardRotate = useAnimatedValue(0);
 
   const CENTER_X = 0;
   const CENTER_Y = 0;
 
-  const rotate = rewardRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  const rotate = useMemo(
+    () =>
+      rewardRotate.interpolate({
+        inputRange: [0, 1],
+        outputRange: ["0deg", "360deg"],
+      }),
+    [rewardRotate],
+  );
 
   useEffect(() => {
     if (!trigger) return;
 
-    setVisible(true);
-
+    starOpacity.setValue(1);
     dimOpacity.setValue(0);
     rewardScale.setValue(1);
     rewardRotate.setValue(0);
-
     rewardTranslateX.setValue(DROPOUT_X - SCREEN_WIDTH / 2);
     rewardTranslateY.setValue(DROPOUT_Y - SCREEN_HEIGHT / 2);
 
@@ -87,20 +95,18 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
         }),
       ]).start(() => {
         setTaskRevealModalVisible(true);
-        setVisible(false);
+        starOpacity.setValue(0);
         dimOpacity.setValue(0);
       });
     });
   }, [trigger]);
-
-  if (!visible) return null;
 
   return (
     <>
       <Animated.View
         pointerEvents="none"
         style={[
-          StyleSheet.absoluteFillObject,
+          StyleSheet.absoluteFill,
           {
             backgroundColor: "black",
             opacity: dimOpacity,
@@ -117,6 +123,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({
           left: SCREEN_WIDTH / 2 - 50,
           top: SCREEN_HEIGHT / 2 - 50,
           zIndex: 30,
+          opacity: starOpacity,
           transform: [
             { translateX: rewardTranslateX },
             { translateY: rewardTranslateY },

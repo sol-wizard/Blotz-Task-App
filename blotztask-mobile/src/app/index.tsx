@@ -3,6 +3,10 @@ import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useUpdateCheck, UpdateCheckStatus } from "@/shared/hooks/useUpdateCheck";
 import LoadingScreen from "@/shared/components/loading-screen";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+
+SplashScreen.preventAutoHideAsync();
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -36,12 +40,23 @@ export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const updateCheck = useUpdateCheck();
 
-  if (isAuthLoading || updateCheck.status === UpdateCheckStatus.Pending) {
+  const isReady = !isAuthLoading && updateCheck.status !== UpdateCheckStatus.Pending;
+
+  useEffect(() => {
+    if (isReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [isReady]);
+
+  if (!isReady) {
     return <LoadingScreen />;
   }
-
   if (updateCheck.status === UpdateCheckStatus.Outdated) {
-    return <Redirect href={{ pathname: "/update-required", params: { storeUrl: updateCheck.storeUrl } }} />;
+    return (
+      <Redirect
+        href={{ pathname: "/update-required", params: { storeUrl: updateCheck.storeUrl } }}
+      />
+    );
   }
 
   if (isAuthenticated) {

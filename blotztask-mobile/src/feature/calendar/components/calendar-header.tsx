@@ -3,7 +3,8 @@ import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { router } from "expo-router";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import Feather from "@react-native-vector-icons/feather/static";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { SharedValue } from "react-native-reanimated";
 
 interface CalendarHeaderProps {

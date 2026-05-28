@@ -87,5 +87,8 @@
     "retry": "重试",
     "generate": "生成信件",
     "footnote": "由 AI 根据您本月创建的任务生成。"
+  },
+  "avatar": {
+    "title": "头像"
   }
 }

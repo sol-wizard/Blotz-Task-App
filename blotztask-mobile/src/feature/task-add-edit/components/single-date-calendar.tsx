@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
 import { Calendar, DateData } from "react-native-calendars";
@@ -27,10 +27,6 @@ export const SingleDateCalendar = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
 
-  useEffect(() => {
-    setSelectedDate(defaultStartDate ?? null);
-  }, [defaultStartDate]);
-
   return (
     <Calendar
       onDayPress={(day: DateData) => {
@@ -52,7 +48,7 @@ export const SingleDateCalendar = ({
       enableSwipeMonths
       dayComponent={({ date, state }: DayProps & { date?: DateData }) => {
         if (!date) return null;
-        const isSelected = !isDeadlinePicker && (selectedDate === date.dateString);
+        const isSelected = !isDeadlinePicker && selectedDate === date.dateString;
         const isDeadline = deadlineDate === date.dateString;
         const isDisabled = disabledDates.includes(date.dateString);
         const isInHighlight = highlightDates.includes(date.dateString);
@@ -61,15 +57,15 @@ export const SingleDateCalendar = ({
         let isRangeStart = false;
         let isRangeEnd = false;
         let isInEventRange = false;
-        
+
         if (eventStartDate && eventEndDate) {
-           const startMs = parseISO(eventStartDate).getTime();
-           const endMs = parseISO(eventEndDate).getTime();
-           if (currentMs >= startMs && currentMs <= endMs) {
-              isRangeStart = currentMs === startMs;
-              isRangeEnd = currentMs === endMs;
-              isInEventRange = currentMs > startMs && currentMs < endMs;
-           }
+          const startMs = parseISO(eventStartDate).getTime();
+          const endMs = parseISO(eventEndDate).getTime();
+          if (currentMs >= startMs && currentMs <= endMs) {
+            isRangeStart = currentMs === startMs;
+            isRangeEnd = currentMs === endMs;
+            isInEventRange = currentMs > startMs && currentMs < endMs;
+          }
         }
 
         return (

@@ -1,13 +1,13 @@
 import { ASSETS } from "@/shared/constants/assets";
-import React, { useEffect, useRef } from "react";
-import { Animated, Easing, View, Text } from "react-native";
+import React, { useEffect } from "react";
+import { Animated, Easing, View, Text, useAnimatedValue } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 export default function LoadingScreen() {
   const { t } = useTranslation("common");
-  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const bounceAnim = useAnimatedValue(0);
 
   useEffect(() => {
     const amplitude = 40;

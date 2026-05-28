@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { Pressable, Text } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   createAnimatedComponent,
   useAnimatedStyle,
@@ -13,66 +13,102 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
+const AnimatedPressable = createAnimatedComponent(Pressable);
+
 export default function GetStartedButton() {
   const { authorize } = useAuth0();
   const router = useRouter();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
-  const AnimatedPressable = createAnimatedComponent(Pressable);
-  const scale = useSharedValue(1);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const onPress = async () => {
+  const signIn = async (connection?: string) => {
     try {
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
         scope: "openid profile email offline_access",
+        connection,
       });
 
-      // Check if we have a valid result with access token
-      if (result && result.accessToken && result.refreshToken) {
-        // Save the access token to secure storage
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
-        console.log("Access token saved to storage");
-        await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
-        console.log("Refresh token saved to storage");
-
-        // Refresh auth state cache so dependent queries can start
-        refreshAuthState();
-
-        router.replace("/(protected)");
-      } else {
+      if (!result?.accessToken || !result?.refreshToken) {
         console.error("No access token received from Auth0");
+        return;
       }
+
+      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
+      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+
+      refreshAuthState();
+      router.replace("/(protected)");
     } catch (e) {
       console.error("Auth0 authorization error:", e);
     }
   };
 
+  const showPhone = process.env.EXPO_PUBLIC_APP_ENV !== "production";
+
+  return (
+    <View style={{ gap: 12, width: "100%" }}>
+      <PillButton label={t("buttons.continue")} onPress={() => signIn()} variant="primary" />
+      {showPhone && (
+        <PillButton
+          label={t("buttons.continueWithPhone")}
+          onPress={() => signIn("sms")}
+          variant="secondary"
+        />
+      )}
+    </View>
+  );
+}
+
+function PillButton({
+  label,
+  onPress,
+  variant,
+}: {
+  label: string;
+  onPress: () => void;
+  variant: "primary" | "secondary";
+}) {
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    width: "100%",
+  }));
+
+  const isPrimary = variant === "primary";
+
   return (
     <AnimatedPressable
       onPress={onPress}
       onPressIn={() => {
-        scale.value = withTiming(1.08, { duration: 100 });
+        scale.value = withTiming(0.97, { duration: 100 });
       }}
       onPressOut={() => {
         scale.value = withTiming(1, { duration: 120 });
       }}
-      style={animatedStyle}
+      style={[
+        animatedStyle,
+        {
+          paddingVertical: 16,
+          borderRadius: 999,
+          borderCurve: "continuous",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: isPrimary ? "#000000" : "#ffffff",
+          borderWidth: isPrimary ? 0 : 1.5,
+          borderColor: "#000000",
+          boxShadow: isPrimary ? "0 10px 24px rgba(0, 0, 0, 0.18)" : undefined,
+        },
+      ]}
     >
       <Text
-        className="font-balooBold text-lg py-3 px-10 bg-black text-white rounded-full"
+        className="font-balooBold text-lg"
         style={{
-          borderCurve: "continuous",
-          textAlign: "center",
+          color: isPrimary ? "#ffffff" : "#000000",
           letterSpacing: 0.3,
-          boxShadow: "0 10px 24px rgba(0, 0, 0, 0.18)",
         }}
       >
-        {t("buttons.getStarted")}
+        {label}
       </Text>
     </AnimatedPressable>
   );

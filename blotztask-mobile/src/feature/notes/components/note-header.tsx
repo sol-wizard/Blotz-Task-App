@@ -1,7 +1,7 @@
 import { View, Text, Pressable, TextInput } from "react-native";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import MaterialCommunityIcons from "@expo/vector-icons/build/MaterialCommunityIcons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { theme } from "@/shared/constants/theme";
 
 type NoteHeaderProps = {

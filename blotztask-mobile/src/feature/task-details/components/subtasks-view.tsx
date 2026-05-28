@@ -1,7 +1,7 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import SubtasksEditor from "./subtasks-editor";
@@ -22,10 +22,9 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
 
-  const handleBreakDown = async () => {
+  const handleBreakDown = () => {
     if (isBreakingDownAndReplacingSubtasks || parentTask.id == null) return;
-
-    return await breakDownAndReplaceSubtasks(parentTask.id);
+    breakDownAndReplaceSubtasks(parentTask.id);
   };
 
   const isLoading = isBreakingDownAndReplacingSubtasks || isLoadingSubtasks;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, ActivityIndicator } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
 type DdlRightActionsProps = {

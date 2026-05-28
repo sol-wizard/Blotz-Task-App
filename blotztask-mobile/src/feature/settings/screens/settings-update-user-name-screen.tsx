@@ -16,14 +16,12 @@ export default function SettingsUpdateUserNameScreen() {
 
   const { updateUserProfile: updateUser, isUserUpdating } = useUserProfileMutation();
 
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
     if (!enableDoneButton || isUserUpdating) return;
-    try {
-      await updateUser({ displayName: name.trim(), pictureUrl: userProfile?.pictureUrl ?? "" });
-      router.back();
-    } catch (e) {
-      console.log("Failed to update user name:", e);
-    }
+    updateUser(
+      { displayName: name.trim(), pictureUrl: userProfile?.pictureUrl ?? "" },
+      { onSuccess: () => router.back() },
+    );
   };
 
   return (
