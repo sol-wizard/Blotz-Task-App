@@ -35,6 +35,7 @@
     "expo-audio": "~56.0.10",
     "expo-blur": "~56.0.3",
     "expo-build-properties": "~56.0.14",
+    "expo-calendar": "~56.0.8",
     "expo-checkbox": "~56.0.1",
     "expo-constants": "~56.0.15",
     "expo-dev-client": "~56.0.15",

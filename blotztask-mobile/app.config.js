@@ -68,6 +68,13 @@ export default {
         },
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
+      [
+        "expo-calendar",
+        {
+          calendarPermission:
+            "BlotzTask needs calendar access to sync your tasks into Apple Calendar.",
+        },
+      ],
       "expo-asset",
       "expo-build-properties",
       "@react-native-vector-icons/ionicons",
