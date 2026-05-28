@@ -1,8 +1,8 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Image, Pressable } from "react-native";
 import { GameEngine } from "react-native-game-engine";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useNavigation } from "expo-router";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { ASSETS } from "@/shared/constants/assets";
@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
 import { GashaponHelpModal } from "@/feature/gashapon-machine/components/gashapon-help-modal";
 import LoadingScreen from "@/shared/components/loading-screen";
+import { ReturnButton } from "@/shared/components/return-button";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
@@ -32,20 +33,10 @@ export default function GashaponMachineScreen() {
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const { addNoteToTask, isConverting } = useAddNoteToTask();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
-  const navigation = useNavigation();
+  const { top } = useSafeAreaInsets();
 
   useEffect(() => {
     analytics.trackScreenViewed(SCREEN_NAMES.GASHAPON_MACHINE);
-  }, []);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable accessibilityRole="button" hitSlop={12} onPress={() => setHelpModalVisible(true)}>
-          <Ionicons name="help" size={24} color="#000000" />
-        </Pressable>
-      ),
-    });
   }, []);
 
   const MAX_STARS = 30;
@@ -166,6 +157,21 @@ export default function GashaponMachineScreen() {
             setModalVisible(true);
           }}
         />
+
+        <View
+          pointerEvents="box-none"
+          className="absolute left-0 right-0 flex-row justify-between items-center px-4 h-11"
+          style={{ top, zIndex: 100 }}
+        >
+          <ReturnButton className="bg-white shadow-sm border-gray-50 w-9 h-9" />
+          <Pressable
+            hitSlop={10}
+            onPress={() => setHelpModalVisible(true)}
+            className="bg-white shadow-sm border-gray-50 w-9 h-9 rounded-full border items-center justify-center"
+          >
+            <Ionicons name="help" size={20} color="#6B7280" />
+          </Pressable>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
