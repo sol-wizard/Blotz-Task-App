@@ -12,9 +12,9 @@ type Props = {
 
 export function UpdateRequiredScreen({ storeUrl, forced }: Props) {
   const { t } = useTranslation("common");
-  const route = useRouter();
+  const router = useRouter();
   const skip = () => {
-    route.replace("/(auth)/signin");
+    router.back();
   };
   const openStore = () => {
     if (storeUrl) void Linking.openURL(storeUrl);

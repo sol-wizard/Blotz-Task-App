@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BlotzTask.Modules.AppVersion.Dtos;
 using BlotzTask.Modules.AppVersion.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,19 +9,18 @@ namespace BlotzTask.Modules.AppVersion.Controller;
 [AllowAnonymous]
 [ApiController]
 [Route("api/app-version")]
-public sealed class AppVersionController : ControllerBase
+public sealed class AppVersionController(IOptions<AppVersionOptions> options) : ControllerBase
 {
-    private readonly AppVersionOptions _options;
-
-    public AppVersionController(IOptions<AppVersionOptions> options)
-    {
-        _options = options.Value;
-    }
-    
     [HttpGet]
-    public ActionResult<AppVersionOptions> Get()
+    public ActionResult<AppVersionResponse> Get()
     {
-        return Ok(_options);
+        var option = options.Value;
+        return Ok(new AppVersionResponse(
+            Ios: Map(option.Ios),
+            Android: Map(option.Android)
+        ));
     }
-        
+
+    private static PlatformVersionPolicyResponse Map(PlatformVersionPolicy p) =>
+        new(p.LatestVersion, p.MinimumSupportedVersion, p.StoreUrl);
 }

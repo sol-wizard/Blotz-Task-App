@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace BlotzTask.Modules.AppVersion.Options
 {
     public sealed class AppVersionOptions
@@ -16,7 +11,7 @@ namespace BlotzTask.Modules.AppVersion.Options
     {
         public string LatestVersion {get;set;} = "";
 
-        public string MinimumSupportVersion {get;set;} = "";
+        public string MinimumSupportedVersion {get;set;} = "";
 
         public string StoreUrl {get;set;} = "";
     }
