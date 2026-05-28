@@ -47,7 +47,7 @@ export default function MonthlyReviewScreen() {
       return;
     }
 
-    prepareSharePreview();
+    void prepareSharePreview();
   };
 
   return (
@@ -63,14 +63,15 @@ export default function MonthlyReviewScreen() {
           <Pressable
             onPress={handleShareMonthlyReview}
             disabled={isGeneratingShareImage}
-            className="h-10 px-3 rounded-full bg-white flex-row items-center justify-center"
-            style={{ opacity: isGeneratingShareImage ? 0.6 : 1 }}
+            className={`h-10 flex-row items-center justify-center rounded-full bg-white px-3 ${
+              isGeneratingShareImage ? "opacity-60" : "opacity-100"
+            }`}
           >
             <MaterialCommunityIcons name="share-outline" size={18} color="#363853" />
 
             <Text className="ml-1 text-sm font-balooBold text-secondary">
               {isGeneratingShareImage
-                ? t("monthlyReview.preparingShare")
+                ? t("monthlyReview.preparingShare") // TODO: delete
                 : t("monthlyReview.share")}
             </Text>
           </Pressable>
@@ -130,7 +131,7 @@ export default function MonthlyReviewScreen() {
       </ScrollView>
 
       {report && (
-        <View pointerEvents="none" collapsable={false} className="absolute top-0 -left-[10000px]">
+        <View collapsable={false} className="absolute top-0 -z-10 opacity-0">
           <View ref={shareCardRef} collapsable={false}>
             <MonthlyReviewShareCard
               displayMonth={displayMonth}

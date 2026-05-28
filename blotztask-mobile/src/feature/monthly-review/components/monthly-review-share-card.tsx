@@ -23,29 +23,27 @@ export function MonthlyReviewShareCard({ displayMonth, recipientName, body }: Pr
             />
           </View>
           <View className="ml-3">
-            <Text className="font-baloo text-[10px] text-[#363853]/55">
-              {t("monthlyReview.shareCard.label")}
-            </Text>
-            <Text className="font-balooBold text-base text-[#363853]">Blotz</Text>
+            <Text className="font-baloo text-[10px]">{t("monthlyReview.shareCard.label")}</Text>
+            <Text className="font-balooBold text-base text-secondary">Blotz</Text>
           </View>
         </View>
-        <Text className="font-balooBold text-[15px] text-[#363853]">{displayMonth}</Text>
+        <Text className="font-balooBold text-[15px] text-secondary">{displayMonth}</Text>
       </View>
 
-      <View className="my-6 h-px bg-[#363853]/10" />
+      <View className="my-6 h-px bg-secondary/10" />
 
-      <Text className="font-balooBold text-[30px] leading-9 text-[#363853]">
+      <Text className="font-balooBold text-xl text-secondary">
         {t("monthlyReview.shareCard.title")}
       </Text>
-      <Text className="mt-2.5 font-baloo text-[15px] leading-[22px] text-[#363853]/70">
+      <Text className="mt-2.5 font-baloo text-l text-secondary/60">
         {t("monthlyReview.greeting", { name: recipientName })}
       </Text>
 
-      <View className="mt-6 rounded-[22px] bg-white px-[22px] py-[22px]">
+      <View className="mt-6 rounded-[22px] px-[22px] py-[22px]">
         <Text
           numberOfLines={12}
           ellipsizeMode="tail"
-          className="font-baloo text-base leading-[25px] text-[#363853]"
+          className="font-baloo text-base leading-[25px] text-secondary"
         >
           {body}
         </Text>
