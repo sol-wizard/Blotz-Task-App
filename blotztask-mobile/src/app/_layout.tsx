@@ -55,7 +55,10 @@ function RootLayout() {
   });
 
   return (
-    <Sentry.ErrorBoundary fallback={<CrashScreen />}>
+    <Sentry.ErrorBoundary
+      fallback={<CrashScreen />}
+      onError={(error, componentStack) => console.error(error, componentStack)}
+    >
       <Auth0Provider domain={domain} clientId={clientId}>
         <PostHogProvider client={posthog} autocapture={false}>
           <GestureHandlerRootView>

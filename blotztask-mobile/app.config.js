@@ -11,7 +11,6 @@ export default {
     userInterfaceStyle: "light",
     ios: {
       supportsTablet: false,
-      deploymentTarget: "16.4",
       bundleIdentifier: process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -70,14 +69,7 @@ export default {
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
       "expo-asset",
-      [
-        "expo-build-properties",
-        {
-          ios: {
-            deploymentTarget: "16.4",
-          },
-        },
-      ],
+      "expo-build-properties",
       "@react-native-vector-icons/ionicons",
       "@react-native-vector-icons/feather",
       "@react-native-vector-icons/material-design-icons",

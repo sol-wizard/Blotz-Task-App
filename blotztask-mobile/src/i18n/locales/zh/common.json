@@ -39,8 +39,8 @@
     "button": "马上去更新"
   },
   "crash": {
-    "title": "突发问题",
-    "message": "遇到了意外问题，重启App试试看！",
+    "title": "哎呀，出问题了！",
+    "message": "出了点小问题，重启App试试看！",
     "button": "重启应用"
   }
 }
