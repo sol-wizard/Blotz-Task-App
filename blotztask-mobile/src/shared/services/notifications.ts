@@ -1,23 +1,7 @@
 import * as Application from "expo-application";
-import { EventSubscription } from "expo-modules-core";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { upsertPushToken } from "./user-service";
-
-export function setupPushTokenListener(): EventSubscription {
-  return Notifications.addPushTokenListener(async ({ data: token }) => {
-    let deviceId: string;
-    if (Platform.OS === "android") {
-      deviceId = Application.getAndroidId();
-    } else {
-      const iosId = await Application.getIosIdForVendorAsync();
-      if (!iosId) return;
-      deviceId = iosId;
-    }
-
-    await upsertPushToken({ token, deviceId });
-  });
-}
 
 export async function registerForPushNotificationsAsync(): Promise<void> {
   if (Platform.OS === "android") {
@@ -31,12 +15,35 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
 
   const settings = await Notifications.getPermissionsAsync();
   if (
-    settings.granted ||
-    settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+    !settings.granted &&
+    settings.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL
   ) {
     const { granted: requestGranted } = await Notifications.requestPermissionsAsync();
     if (!requestGranted) {
       alert("Failed to get push token for push notification!");
     }
+    const token = await getExpoPushTokenAsync();
+    if (token) {
+      await handlePushTokenUpdate(token);
+    }
   }
+}
+
+async function getExpoPushTokenAsync(): Promise<string | null> {
+  try {
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    return tokenData.data;
+  } catch (error) {
+    console.error("Error getting Expo push token:", error);
+    return null;
+  }
+}
+
+async function handlePushTokenUpdate(token: string) {
+  const deviceId =
+    Platform.OS === "android"
+      ? Application.getAndroidId()
+      : await Application.getIosIdForVendorAsync();
+  if (!deviceId) return;
+  await upsertPushToken({ token, deviceId });
 }

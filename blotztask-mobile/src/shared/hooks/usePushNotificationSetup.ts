@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
-import {
-  registerForPushNotificationsAsync,
-  setupPushTokenListener,
-} from "@/shared/services/notifications";
+import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
 import { useRouter } from "expo-router";
 import { toggleTaskCompletion } from "../services/task-service";
 
@@ -12,8 +9,7 @@ export function usePushNotificationSetup() {
 
   useEffect(() => {
     registerForPushNotificationsAsync();
-
-    const pushTokenListener = setupPushTokenListener();
+    console.log("start setting up push notification listeners");
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(
       async (response) => {
@@ -34,7 +30,6 @@ export function usePushNotificationSetup() {
     );
 
     return () => {
-      pushTokenListener.remove();
       responseListener.remove();
     };
   }, []);
