@@ -10,6 +10,7 @@ using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
+using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using Serilog;
 
@@ -24,6 +25,8 @@ builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 builder.Services.AddAuth0JwtBearerAuthentication(builder.Configuration);
 builder.Services.AddCustomCors();
 builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+builder.Services.AddHostedService<QueuedHostedService>();
 
 // Feature modules
 builder.Services.AddAiUsageModule();

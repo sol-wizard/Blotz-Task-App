@@ -28,7 +28,9 @@ import posthog from "@/shared/constants/posthog-client";
 import "@/shared/util/typography";
 
 Sentry.init({
-  dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  environment: process.env.EXPO_PUBLIC_APP_ENV,
+  enabled: process.env.EXPO_PUBLIC_APP_ENV !== "development",
   sendDefaultPii: true,
   enableNative: true,
   replaysSessionSampleRate: 0.1,
@@ -37,7 +39,7 @@ Sentry.init({
   integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
 });
 
-export default function RootLayout() {
+function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
 
@@ -68,6 +70,8 @@ export default function RootLayout() {
     </Auth0Provider>
   );
 }
+
+export default Sentry.wrap(RootLayout);
 
 function RootStack() {
   const { isAuthenticated } = useAuth();

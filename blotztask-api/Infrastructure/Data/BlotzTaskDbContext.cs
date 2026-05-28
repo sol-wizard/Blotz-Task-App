@@ -30,6 +30,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
     public DbSet<Note> Notes { get; set; }
     public DbSet<Badge> Badges { get; set; }
+    public DbSet<BadgeCriteria> BadgeCriteria { get; set; }
     public DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<UserProgress> UserProgress { get; set; }
     public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }

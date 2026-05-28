@@ -10,12 +10,10 @@ public class BadgeConfiguration : IEntityTypeConfiguration<Badge>
     {
         builder.ToTable("Badges");
         builder.HasKey(b => b.Id);
-        builder.Property(b => b.Name)
-            .IsRequired()
-            .HasMaxLength(200);
-        builder.Property(b => b.Description)
-            .IsRequired()
-            .HasMaxLength(1000);
+        builder.Property(b => b.NameEn).IsRequired().HasMaxLength(200);
+        builder.Property(b => b.NameZh).IsRequired().HasMaxLength(200);
+        builder.Property(b => b.DescriptionEn).IsRequired().HasMaxLength(1000);
+        builder.Property(b => b.DescriptionZh).IsRequired().HasMaxLength(1000);
         builder.Property(b => b.IconUrl)
             .IsRequired();
         builder.Property(b => b.Category)

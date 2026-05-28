@@ -8,18 +8,36 @@ namespace BlotzTask.Modules.Tasks.Events;
 
 public class TaskCompletedEventHandler(
     BlotzTaskDbContext db,
-    CheckAndAwardBadgesCommandHandler checkAndAwardBadgesCommandHandler)
+    FindMatchingBadgesHandler findMatchingBadgesHandler,
+    AwardNewBadgesToUserHandler awardNewBadgesToUserHandler,
+    ILogger<TaskCompletedEventHandler> logger)
     : IDomainEventHandler<TaskCompletedEvent>
 {
-    public async Task HandleAsync(TaskCompletedEvent domainEvent, CancellationToken ct = default)
+    public async Task HandleAsync(TaskCompletedEvent taskCompletedEvent, CancellationToken ct = default)
     {
-        var completedCount = await db.TaskItems.CountAsync(t => t.UserId == domainEvent.UserId && t.IsDone, ct);
+        logger.LogInformation("[TaskCompletedEventHandler] Started — TaskId {TaskId}", taskCompletedEvent.TaskId);
 
-        await checkAndAwardBadgesCommandHandler.Handle(new CheckAndAwardBadgesCommand
+        var task = await db.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == taskCompletedEvent.TaskId, ct);
+
+        int completeOffsetMinutes = 0;
+        if (task != null)
+            completeOffsetMinutes = (int)(DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
+        
+        var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
-            UserId = domainEvent.UserId,
-            Category = BadgeCategory.TaskCompletion,
-            CurrentValue = completedCount
+            TriggerAction = TriggerAction.TaskComplete,
+            EventValues = new Dictionary<EventValueKey, double>
+            {
+                [EventValueKey.CompleteOffsetMins] = completeOffsetMinutes
+            }
         }, ct);
+        
+        await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
+        {
+            UserId = taskCompletedEvent.UserId,
+            BadgeIds = matchingBadgeIds
+        }, ct);
+      
     }
 }
