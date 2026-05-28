@@ -3,14 +3,19 @@ import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
+import { useRouter } from "expo-router";
 
 type Props = {
   storeUrl: string;
+  forced: boolean;
 };
 
-export function UpdateRequiredScreen({ storeUrl }: Props) {
+export function UpdateRequiredScreen({ storeUrl, forced }: Props) {
   const { t } = useTranslation("common");
-
+  const route = useRouter();
+  const skip = () => {
+    route.replace("/(auth)/signin");
+  };
   const openStore = () => {
     if (storeUrl) void Linking.openURL(storeUrl);
   };
@@ -28,9 +33,17 @@ export function UpdateRequiredScreen({ storeUrl }: Props) {
           {t("update.message")}
         </Text>
 
-        <Pressable onPress={openStore} className="bg-highlight rounded-2xl px-10 py-4 active:opacity-80">
+        <Pressable
+          onPress={openStore}
+          className="bg-highlight rounded-2xl px-10 py-4 active:opacity-80"
+        >
           <Text className="font-balooBold text-white text-base">{t("update.button")}</Text>
         </Pressable>
+        {!forced && (
+          <Pressable onPress={skip} className="mt-4 active:opacity-60">
+            <Text className="font-baloo text-sm text-primary">{t("update.skip")}</Text>
+          </Pressable>
+        )}
       </SafeAreaView>
     </View>
   );

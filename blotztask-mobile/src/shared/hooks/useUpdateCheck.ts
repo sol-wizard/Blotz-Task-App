@@ -5,20 +5,24 @@ export enum UpdateCheckStatus {
   Pending = "pending",
   UpToDate = "upToDate",
   Outdated = "outdated",
+  ForceUpdate = "forceUpdate",
 }
 
 type UpdateCheckState =
   | { status: UpdateCheckStatus.Pending }
   | { status: UpdateCheckStatus.UpToDate }
-  | { status: UpdateCheckStatus.Outdated; storeUrl: string };
+  | { status: UpdateCheckStatus.Outdated; storeUrl: string }
+  | { status: UpdateCheckStatus.ForceUpdate; storeUrl: string };
 
 export function useUpdateCheck(): UpdateCheckState {
   const [state, setState] = useState<UpdateCheckState>({ status: UpdateCheckStatus.Pending });
 
   useEffect(() => {
     checkForUpdate()
-      .then(({ isUpToDate, storeUrl }) => {
-        if (isUpToDate) {
+      .then(({ isUpToDate, isForceUpdate, storeUrl }) => {
+        if (isForceUpdate) {
+          setState({ status: UpdateCheckStatus.ForceUpdate, storeUrl: storeUrl ?? "" });
+        } else if (isUpToDate) {
           setState({ status: UpdateCheckStatus.UpToDate });
         } else {
           setState({ status: UpdateCheckStatus.Outdated, storeUrl: storeUrl ?? "" });

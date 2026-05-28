@@ -3,41 +3,47 @@ import { Platform } from "react-native";
 
 export type UpdateCheckResult = {
   isUpToDate: boolean;
+  isForceUpdate: boolean;
   storeUrl: string | null;
+};
+
+export type PlatformVersionPolicy = {
+  latestVersion: string;
+  minimumSupportVersion: string;
+  storeUrl: string;
+};
+
+export type AppVersionResponse = {
+  ios: PlatformVersionPolicy;
+  android: PlatformVersionPolicy;
 };
 
 export const checkForUpdate = async (): Promise<UpdateCheckResult> => {
   const isProduction = process.env.EXPO_PUBLIC_APP_ENV === "production";
-  const isIOS = Platform.OS === "ios";
+  if (!isProduction) return { isUpToDate: true, isForceUpdate: false, storeUrl: null };
 
   // TODO: Skip andoid check for now, need to figure out the best way to do it
-  if (!isProduction || !isIOS) return { isUpToDate: true, storeUrl: null };
+  const versionInfo = await fetchAppVersion();
+  const platform = Platform.OS === "ios" ? versionInfo.ios : versionInfo.android;
+  const currentVersion = Application.nativeApplicationVersion;
 
-  const { latestVersion, currentVersion, storeUrl } = await checkIOSVersion();
+  if (!currentVersion) return { isUpToDate: true, isForceUpdate: false, storeUrl: null };
 
-  if (!currentVersion) return { isUpToDate: true, storeUrl: null };
+  if (isNewerVersion(platform.minimumSupportVersion, currentVersion)) {
+    return { isUpToDate: false, isForceUpdate: true, storeUrl: platform.storeUrl };
+  }
 
   return {
-    isUpToDate: !isNewerVersion(latestVersion, currentVersion),
-    storeUrl,
+    isUpToDate: !isNewerVersion(platform.latestVersion, currentVersion),
+    isForceUpdate: false,
+    storeUrl: platform.storeUrl,
   };
 };
 
-const checkIOSVersion = async () => {
-  const bundleId = Application.applicationId;
-
-  const res = await fetch(`https://itunes.apple.com/lookup?bundleId=${bundleId}`);
-  const data = await res.json();
-
-  if (!data.results || data.results.length === 0) {
-    throw new Error("App not found in App Store");
-  }
-
-  const latestVersion: string = data.results[0].version;
-  const storeUrl: string = data.results[0].trackViewUrl;
-  const currentVersion = Application.nativeApplicationVersion;
-
-  return { currentVersion, latestVersion, storeUrl };
+const fetchAppVersion = async (): Promise<AppVersionResponse> => {
+  const res = await fetch(`${process.env.EXPO_PUBLIC_URL_WITH_API}/app-version`);
+  if (!res.ok) throw new Error("Failed to fetch app version");
+  return res.json();
 };
 
 const isNewerVersion = (latest: string, current: string): boolean => {

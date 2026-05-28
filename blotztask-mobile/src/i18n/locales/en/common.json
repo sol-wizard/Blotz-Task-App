@@ -36,6 +36,7 @@
   "update": {
     "title": "Fresh Update Dropped!",
     "message": "We've been busy making Blotz even better just for you. Grab the latest version to keep the good vibes going!",
-    "button": "Let's Go!"
+    "button": "Let's Go!",
+    "skip": "Next time!"
   }
 }
