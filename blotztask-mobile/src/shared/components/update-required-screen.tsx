@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 type Props = {
   storeUrl: string;
@@ -13,8 +14,9 @@ type Props = {
 export function UpdateRequiredScreen({ storeUrl, forced }: Props) {
   const { t } = useTranslation("common");
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const skip = () => {
-    router.back();
+    router.replace(isAuthenticated ? "/(protected)" : "/(auth)/signin");
   };
   const openStore = () => {
     if (storeUrl) void Linking.openURL(storeUrl);
