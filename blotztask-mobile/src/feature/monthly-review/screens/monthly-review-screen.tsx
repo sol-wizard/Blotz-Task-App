@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useState, useRef } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -13,24 +13,29 @@ import { LetterHeader } from "../components/letter-header";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
-import { useMonthlyReviewSharePreview } from "../hooks/useMonthlyReviewSharePreview";
+import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
-import { MonthlyReviewShareImageGenerator } from "../components/monthly-review-share-image-generator";
 import { MonthlyReviewSharePreviewSheet } from "../components/monthly-review-share-preview-sheet";
+import { MonthlyReviewShareCard } from "../components/monthly-review-share-card";
 
 export default function MonthlyReviewScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const shareCardRef = useRef<View>(null);
   const {
     previewImageUri,
     isGeneratingShareImage,
-    startShareImageGeneration,
-    handleShareImageGenerated,
-    handleShareImageGenerationError,
+    isSharingImage,
+    isSavingImage,
+    prepareSharePreview,
+    shareImage,
+    saveImage,
     closeSharePreview,
-  } = useMonthlyReviewSharePreview();
+  } = useMonthlyReviewShare({
+    captureTargetRef: shareCardRef,
+  });
   const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
@@ -42,7 +47,7 @@ export default function MonthlyReviewScreen() {
       return;
     }
 
-    startShareImageGeneration();
+    prepareSharePreview();
   };
 
   return (
@@ -62,8 +67,11 @@ export default function MonthlyReviewScreen() {
             style={{ opacity: isGeneratingShareImage ? 0.6 : 1 }}
           >
             <MaterialCommunityIcons name="share-outline" size={18} color="#363853" />
+
             <Text className="ml-1 text-sm font-balooBold text-secondary">
-              {isGeneratingShareImage ? t("monthlyReview.sharing") : t("monthlyReview.share")}
+              {isGeneratingShareImage
+                ? t("monthlyReview.preparingShare")
+                : t("monthlyReview.share")}
             </Text>
           </Pressable>
         )}
@@ -120,18 +128,25 @@ export default function MonthlyReviewScreen() {
           </Text>
         </View>
       </ScrollView>
-      {report && isGeneratingShareImage && (
-        <MonthlyReviewShareImageGenerator
-          displayMonth={displayMonth}
-          recipientName={recipientName}
-          body={report.aiGeneratedLetter}
-          onGenerated={handleShareImageGenerated}
-          onError={handleShareImageGenerationError}
-        />
+
+      {report && (
+        <View pointerEvents="none" collapsable={false} className="absolute top-0 -left-[10000px]">
+          <View ref={shareCardRef} collapsable={false}>
+            <MonthlyReviewShareCard
+              displayMonth={displayMonth}
+              recipientName={recipientName}
+              body={report.aiGeneratedLetter}
+            />
+          </View>
+        </View>
       )}
 
       <MonthlyReviewSharePreviewSheet
         imageUri={previewImageUri}
+        isSharingImage={isSharingImage}
+        isSavingImage={isSavingImage}
+        onShare={shareImage}
+        onSave={saveImage}
         onClose={closeSharePreview}
       />
     </SafeAreaView>
