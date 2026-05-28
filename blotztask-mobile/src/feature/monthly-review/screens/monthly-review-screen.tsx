@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import Toast from "react-native-toast-message";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -14,6 +13,7 @@ import { LetterHeader } from "../components/letter-header";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
+import { useMonthlyReviewSharePreview } from "../hooks/useMonthlyReviewSharePreview";
 import { formatMonth } from "../utils/month-utils";
 import { MonthlyReviewShareImageGenerator } from "../components/monthly-review-share-image-generator";
 import { MonthlyReviewSharePreviewSheet } from "../components/monthly-review-share-preview-sheet";
@@ -23,24 +23,26 @@ export default function MonthlyReviewScreen() {
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
-  const [previewImageUri, setPreviewImageUri] = useState<string | null>(null);
-  const [isGeneratingShareImage, setIsGeneratingShareImage] = useState(false);
+  const {
+    previewImageUri,
+    isGeneratingShareImage,
+    startShareImageGeneration,
+    handleShareImageGenerated,
+    handleShareImageGenerationError,
+    closeSharePreview,
+  } = useMonthlyReviewSharePreview();
   const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
 
-  const closeSharePreview = () => {
-    setPreviewImageUri(null);
-  };
-
   const handleShareMonthlyReview = () => {
     if (!report || isGeneratingShareImage) {
       return;
     }
 
-    setIsGeneratingShareImage(true);
+    startShareImageGeneration();
   };
 
   return (
@@ -123,14 +125,8 @@ export default function MonthlyReviewScreen() {
           displayMonth={displayMonth}
           recipientName={recipientName}
           body={report.aiGeneratedLetter}
-          onGenerated={(uri) => {
-            setPreviewImageUri(uri);
-            setIsGeneratingShareImage(false);
-          }}
-          onError={() => {
-            Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
-            setIsGeneratingShareImage(false);
-          }}
+          onGenerated={handleShareImageGenerated}
+          onError={handleShareImageGenerationError}
         />
       )}
 
