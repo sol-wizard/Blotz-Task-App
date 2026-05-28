@@ -1,15 +1,9 @@
-import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  Share,
-  Text,
-  View,
-} from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { Asset, requestPermissionsAsync } from "expo-media-library";
+import { isAvailableAsync, shareAsync } from "expo-sharing";
+import Toast from "react-native-toast-message";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -22,13 +16,9 @@ import { LetterEmptyState } from "../components/letter-empty-state";
 import { LetterHeader } from "../components/letter-header";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
-import { MonthlyReviewShareCard } from "../components/monthly-review-share-card";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
 import { formatMonth } from "../utils/month-utils";
-
-type ViewShotModule = typeof import("react-native-view-shot");
-type MediaLibraryModule = typeof import("expo-media-library");
-type ClipboardModule = typeof import("expo-clipboard");
+import { MonthlyReviewShareImageGenerator } from "../components/monthly-review-share-image-generator";
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) {
@@ -46,44 +36,23 @@ export default function MonthlyReviewScreen() {
   const [isSharing, setIsSharing] = useState(false);
   const [previewImageUri, setPreviewImageUri] = useState<string | null>(null);
   const [isSavingImage, setIsSavingImage] = useState(false);
-  const [isCopyingCaption, setIsCopyingCaption] = useState(false);
-  const [hasCopiedCaption, setHasCopiedCaption] = useState(false);
-  const shareCardRef = useRef<View>(null);
+  const [isGeneratingShareImage, setIsGeneratingShareImage] = useState(false);
   const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
-  const shareTitle = t("monthlyReview.shareTitle", { month: displayMonth });
-  const shareCaption = t("monthlyReview.shareCaption", { month: displayMonth });
 
   const closeSharePreview = () => {
     setPreviewImageUri(null);
-    setHasCopiedCaption(false);
   };
 
-  const handleShareMonthlyReview = async () => {
-    if (!report || !shareCardRef.current || isSharing) {
+  const handleShareMonthlyReview = () => {
+    if (!report || isGeneratingShareImage) {
       return;
     }
 
-    setIsSharing(true);
-
-    try {
-      const { captureRef } = (await import("react-native-view-shot")) as ViewShotModule;
-      const uri = await captureRef(shareCardRef.current, {
-        format: "png",
-        quality: 1,
-        result: "tmpfile",
-      });
-
-      setPreviewImageUri(uri);
-    } catch (error: unknown) {
-      console.error("Failed to prepare monthly review image", getErrorMessage(error));
-      Alert.alert(t("monthlyReview.shareErrorTitle"), t("monthlyReview.shareErrorMessage"));
-    } finally {
-      setIsSharing(false);
-    }
+    setIsGeneratingShareImage(true);
   };
 
   const handleSharePreviewImage = async () => {
@@ -92,13 +61,23 @@ export default function MonthlyReviewScreen() {
     }
 
     try {
-      await Share.share({
-        title: shareTitle,
-        url: previewImageUri,
+      setIsSharing(true);
+      const isAvailable = await isAvailableAsync();
+
+      if (!isAvailable) {
+        Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+        return;
+      }
+
+      await shareAsync(previewImageUri, {
+        mimeType: "image/png",
+        UTI: "public.png",
       });
     } catch (error: unknown) {
       console.error("Failed to share monthly review image", getErrorMessage(error));
-      Alert.alert(t("monthlyReview.shareErrorTitle"), t("monthlyReview.shareErrorMessage"));
+      Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -110,43 +89,20 @@ export default function MonthlyReviewScreen() {
     setIsSavingImage(true);
 
     try {
-      const MediaLibrary = (await import("expo-media-library")) as MediaLibraryModule;
-      const permission = await MediaLibrary.requestPermissionsAsync();
+      const permission = await requestPermissionsAsync();
 
       if (!permission.granted) {
-        Alert.alert(
-          t("monthlyReview.savePermissionTitle"),
-          t("monthlyReview.savePermissionMessage"),
-        );
+        Toast.show({ type: "error", text1: t("monthlyReview.savePermissionMessage") });
         return;
       }
 
-      await MediaLibrary.saveToLibraryAsync(previewImageUri);
-      Alert.alert(t("monthlyReview.saveSuccessTitle"), t("monthlyReview.saveSuccessMessage"));
+      await Asset.create(previewImageUri);
+      Toast.show({ type: "warning", text1: t("monthlyReview.saveSuccessMessage") });
     } catch (error: unknown) {
       console.error("Failed to save monthly review image", getErrorMessage(error));
-      Alert.alert(t("monthlyReview.saveErrorTitle"), t("monthlyReview.saveErrorMessage"));
+      Toast.show({ type: "error", text1: t("monthlyReview.saveErrorMessage") });
     } finally {
       setIsSavingImage(false);
-    }
-  };
-
-  const handleCopyCaption = async () => {
-    if (isCopyingCaption) {
-      return;
-    }
-
-    setIsCopyingCaption(true);
-
-    try {
-      const Clipboard = (await import("expo-clipboard")) as ClipboardModule;
-      await Clipboard.setStringAsync(shareCaption);
-      setHasCopiedCaption(true);
-    } catch (error: unknown) {
-      console.error("Failed to copy monthly review caption", getErrorMessage(error));
-      Alert.alert(t("monthlyReview.copyErrorTitle"), t("monthlyReview.copyErrorMessage"));
-    } finally {
-      setIsCopyingCaption(false);
     }
   };
 
@@ -162,13 +118,13 @@ export default function MonthlyReviewScreen() {
         {report && (
           <Pressable
             onPress={handleShareMonthlyReview}
-            disabled={isSharing}
+            disabled={isGeneratingShareImage}
             className="h-10 px-3 rounded-full bg-white flex-row items-center justify-center"
-            style={{ opacity: isSharing ? 0.6 : 1 }}
+            style={{ opacity: isGeneratingShareImage ? 0.6 : 1 }}
           >
             <MaterialCommunityIcons name="share-outline" size={18} color="#363853" />
             <Text className="ml-1 text-sm font-balooBold text-secondary">
-              {isSharing ? t("monthlyReview.sharing") : t("monthlyReview.share")}
+              {isGeneratingShareImage ? t("monthlyReview.sharing") : t("monthlyReview.share")}
             </Text>
           </Pressable>
         )}
@@ -189,12 +145,12 @@ export default function MonthlyReviewScreen() {
             <LetterHeader displayMonth={displayMonth} />
             {isLoading ? (
               // TODO: replace with a shared inline loading component once one exists.
-              (<View className="py-12 items-center">
+              <View className="py-12 items-center">
                 <CustomSpinner size={48} />
                 <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
                   {t("monthlyReview.loading")}
                 </Text>
-              </View>)
+              </View>
             ) : report ? (
               <>
                 <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
@@ -225,21 +181,21 @@ export default function MonthlyReviewScreen() {
           </Text>
         </View>
       </ScrollView>
-
-      {report && (
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", left: -10000, top: 0 }}
-          collapsable={false}
-        >
-          <View ref={shareCardRef} collapsable={false}>
-            <MonthlyReviewShareCard
-              displayMonth={displayMonth}
-              recipientName={recipientName}
-              body={report.aiGeneratedLetter}
-            />
-          </View>
-        </View>
+      {report && isGeneratingShareImage && (
+        <MonthlyReviewShareImageGenerator
+          displayMonth={displayMonth}
+          recipientName={recipientName}
+          body={report.aiGeneratedLetter}
+          onGenerated={(uri) => {
+            setPreviewImageUri(uri);
+            setIsGeneratingShareImage(false);
+          }}
+          onError={(error) => {
+            console.error("Failed to prepare monthly review image", getErrorMessage(error));
+            Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+            setIsGeneratingShareImage(false);
+          }}
+        />
       )}
 
       <Modal
@@ -286,11 +242,13 @@ export default function MonthlyReviewScreen() {
             <View className="mt-5">
               <Pressable
                 onPress={handleSharePreviewImage}
+                disabled={isSharing}
                 className="h-12 rounded-full bg-secondary flex-row items-center justify-center"
+                style={{ opacity: isSharing ? 0.6 : 1 }}
               >
                 <MaterialCommunityIcons name="share-outline" size={20} color="#FFFFFF" />
                 <Text className="ml-2 text-base font-balooBold text-white">
-                  {t("monthlyReview.shareNow")}
+                  {isSharing ? t("monthlyReview.sharing") : t("monthlyReview.shareNow")}
                 </Text>
               </Pressable>
 
@@ -304,24 +262,6 @@ export default function MonthlyReviewScreen() {
                   <MaterialCommunityIcons name="download-outline" size={20} color="#363853" />
                   <Text className="ml-2 text-sm font-balooBold text-secondary">
                     {isSavingImage ? t("monthlyReview.savingImage") : t("monthlyReview.saveImage")}
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={handleCopyCaption}
-                  disabled={isCopyingCaption}
-                  className="flex-1 h-12 rounded-full bg-white flex-row items-center justify-center ml-2"
-                  style={{ opacity: isCopyingCaption ? 0.6 : 1 }}
-                >
-                  <MaterialCommunityIcons
-                    name={hasCopiedCaption ? "check" : "content-copy"}
-                    size={19}
-                    color="#363853"
-                  />
-                  <Text className="ml-2 text-sm font-balooBold text-secondary">
-                    {hasCopiedCaption
-                      ? t("monthlyReview.copiedCaption")
-                      : t("monthlyReview.copyCaption")}
                   </Text>
                 </Pressable>
               </View>
