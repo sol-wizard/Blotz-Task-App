@@ -6,18 +6,14 @@ import { useTranslation } from "react-i18next";
 type Props = {
   imageUri: string | null;
   isSharingImage: boolean;
-  isSavingImage: boolean;
   onShare: () => void;
-  onSave: () => void;
   onClose: () => void;
 };
 
 export function MonthlyReviewSharePreviewSheet({
   imageUri,
   isSharingImage,
-  isSavingImage,
   onShare,
-  onSave,
   onClose,
 }: Props) {
   const { t } = useTranslation("settings");
@@ -69,19 +65,6 @@ export function MonthlyReviewSharePreviewSheet({
 
               <Text className="ml-2 text-base font-balooBold text-white">
                 {isSharingImage ? t("monthlyReview.sharing") : t("monthlyReview.shareNow")}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={onSave}
-              disabled={isSavingImage}
-              className="mt-3 h-12 flex-row items-center justify-center rounded-full bg-white"
-              style={{ opacity: isSavingImage ? 0.6 : 1 }}
-            >
-              <MaterialCommunityIcons name="download-outline" size={20} color="#363853" />
-
-              <Text className="ml-2 text-sm font-balooBold text-secondary">
-                {isSavingImage ? t("monthlyReview.savingImage") : t("monthlyReview.saveImage")}
               </Text>
             </Pressable>
           </View>

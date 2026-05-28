@@ -28,10 +28,8 @@ export default function MonthlyReviewScreen() {
     previewImageUri,
     isGeneratingShareImage,
     isSharingImage,
-    isSavingImage,
     prepareSharePreview,
     shareImage,
-    saveImage,
     closeSharePreview,
   } = useMonthlyReviewShare({
     captureTargetRef: shareCardRef,
@@ -145,9 +143,7 @@ export default function MonthlyReviewScreen() {
       <MonthlyReviewSharePreviewSheet
         imageUri={previewImageUri}
         isSharingImage={isSharingImage}
-        isSavingImage={isSavingImage}
         onShare={shareImage}
-        onSave={saveImage}
         onClose={closeSharePreview}
       />
     </SafeAreaView>

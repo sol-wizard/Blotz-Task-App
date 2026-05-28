@@ -28,14 +28,13 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
   const [previewImageUri, setPreviewImageUri] = useState<string | null>(null);
   const [isGeneratingShareImage, setIsGeneratingShareImage] = useState(false);
   const [isSharingImage, setIsSharingImage] = useState(false);
-  const [isSavingImage, setIsSavingImage] = useState(false);
 
   const previewImageUriRef = useRef<string | null>(null);
 
-  const setTrackedPreviewImageUri = useCallback((uri: string | null) => {
+  const setTrackedPreviewImageUri = (uri: string | null) => {
     previewImageUriRef.current = uri;
     setPreviewImageUri(uri);
-  }, []);
+  };
 
   const prepareSharePreview = useCallback(async () => {
     if (isGeneratingShareImage) {
@@ -101,39 +100,6 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     }
   }, [isSharingImage, t]);
 
-  const saveImage = useCallback(async () => {
-    const imageUri = previewImageUriRef.current;
-
-    if (!imageUri || isSavingImage) {
-      return;
-    }
-
-    setIsSavingImage(true);
-
-    try {
-      const permission = await requestPermissionsAsync(true);
-
-      if (!permission.granted) {
-        Toast.show({
-          type: "error",
-          text1: t("monthlyReview.savePermissionMessage"),
-        });
-        return;
-      }
-
-      await Asset.create(imageUri);
-
-      Toast.show({
-        type: "success",
-        text1: t("monthlyReview.saveSuccessMessage"),
-      });
-    } catch {
-      Toast.show({ type: "error", text1: t("monthlyReview.saveErrorMessage") });
-    } finally {
-      setIsSavingImage(false);
-    }
-  }, [isSavingImage, t]);
-
   const closeSharePreview = useCallback(() => {
     safeReleaseCapture(previewImageUriRef.current);
     setTrackedPreviewImageUri(null);
@@ -149,10 +115,8 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     previewImageUri,
     isGeneratingShareImage,
     isSharingImage,
-    isSavingImage,
     prepareSharePreview,
     shareImage,
-    saveImage,
     closeSharePreview,
   };
 }
