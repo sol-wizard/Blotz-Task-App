@@ -2,7 +2,6 @@ import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { captureRef, releaseCapture } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import { Asset, requestPermissionsAsync } from "expo-media-library";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 
@@ -93,6 +92,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
         mimeType: "image/png",
         UTI: "public.png",
       });
+      closeSharePreview();
     } catch {
       Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
     } finally {
