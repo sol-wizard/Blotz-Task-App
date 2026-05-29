@@ -27,12 +27,7 @@ export const updateUserPreferences = async (preferences: UserPreferencesDTO): Pr
 
 export const upsertPushToken = async ({ token, deviceId }: PushTokenDTO): Promise<void> => {
   const url = `/user-push-tokens`;
-  try {
-    await apiClient.post<void>(url, { token, deviceId });
-  } catch (err: unknown) {
-    console.error("Upsert push token failed:", err);
-    throw new Error("Failed to upsert push token");
-  }
+  await apiClient.post<void>(url, { token, deviceId });
 };
 
 export const deleteUser = async (): Promise<void> => {
