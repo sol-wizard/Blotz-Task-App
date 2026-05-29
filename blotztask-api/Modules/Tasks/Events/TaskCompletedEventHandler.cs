@@ -25,7 +25,9 @@ public class TaskCompletedEventHandler(
         int completeOffsetMinutes = 0;
         if (task != null)
             completeOffsetMinutes = (int)(DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
+        
 
+        // TODO: You can consider merging these three functions into one, so we won't need to use all three repetitively in every badge event handler.
         var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
             TriggerAction = TriggerAction.TaskComplete,
