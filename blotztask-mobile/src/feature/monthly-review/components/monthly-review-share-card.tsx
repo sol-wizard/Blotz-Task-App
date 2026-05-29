@@ -21,7 +21,7 @@ export function MonthlyReviewShareCard({ displayMonth, recipientName, body }: Pr
 
           <View className="ml-3">
             <Text className="font-baloo text-xs text-secondary/60">
-              {t("monthlyReview.shareCard.label")}
+              {t("monthlyReview.title")}
             </Text>
             <Text className="font-balooBold text-base text-secondary">Blotz</Text>
           </View>

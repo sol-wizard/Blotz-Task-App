@@ -64,7 +64,7 @@ export function MonthlyReviewSharePreviewSheet({
               <MaterialCommunityIcons name="share-outline" size={20} color="#FFFFFF" />
 
               <Text className="ml-2 text-base font-balooBold text-white">
-                {isSharingImage ? t("monthlyReview.sharing") : t("monthlyReview.shareNow")}
+                {isSharingImage ? t("monthlyReview.sharing") : t("monthlyReview.share")}
               </Text>
             </Pressable>
           </View>
