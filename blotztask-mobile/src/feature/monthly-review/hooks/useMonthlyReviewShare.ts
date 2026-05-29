@@ -24,7 +24,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     const captureTarget = captureTargetRef.current;
 
     if (!captureTarget) {
-      Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+      Toast.show({ type: "error", text1: t("monthlyReview.error") });
       return;
     }
 
@@ -45,7 +45,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
 
       setPreviewImageUri(uri);
     } catch {
-      Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+      Toast.show({ type: "error", text1: t("monthlyReview.error") });
     } finally {
       setIsGeneratingShareImage(false);
     }
@@ -62,7 +62,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
       const isAvailable = await isAvailableAsync();
 
       if (!isAvailable) {
-        Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+        Toast.show({ type: "error", text1: t("monthlyReview.error") });
         return;
       }
 
@@ -73,7 +73,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
 
       closeSharePreview();
     } catch {
-      Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
+      Toast.show({ type: "error", text1: t("monthlyReview.error") });
     } finally {
       setIsSharingImage(false);
     }
