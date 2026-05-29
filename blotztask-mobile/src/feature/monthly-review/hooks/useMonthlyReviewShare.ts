@@ -1,24 +1,12 @@
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, useState } from "react";
 import { View } from "react-native";
 import { captureRef, releaseCapture } from "react-native-view-shot";
-import * as Sharing from "expo-sharing";
+import { isAvailableAsync, shareAsync } from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 
 type Params = {
   captureTargetRef: RefObject<View | null>;
-};
-
-const safeReleaseCapture = (uri: string | null) => {
-  if (!uri) {
-    return;
-  }
-
-  try {
-    releaseCapture(uri);
-  } catch {
-    // Ignore cleanup failure. The main user-facing action has already completed.
-  }
 };
 
 export function useMonthlyReviewShare({ captureTargetRef }: Params) {
@@ -28,14 +16,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
   const [isGeneratingShareImage, setIsGeneratingShareImage] = useState(false);
   const [isSharingImage, setIsSharingImage] = useState(false);
 
-  const previewImageUriRef = useRef<string | null>(null);
-
-  const setTrackedPreviewImageUri = (uri: string | null) => {
-    previewImageUriRef.current = uri;
-    setPreviewImageUri(uri);
-  };
-
-  const prepareSharePreview = useCallback(async () => {
+  const prepareSharePreview = async () => {
     if (isGeneratingShareImage) {
       return;
     }
@@ -50,8 +31,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     setIsGeneratingShareImage(true);
 
     try {
-      safeReleaseCapture(previewImageUriRef.current);
-      setTrackedPreviewImageUri(null);
+      setPreviewImageUri(null);
 
       await new Promise<void>((resolve) => {
         requestAnimationFrame(() => resolve());
@@ -63,53 +43,53 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
         result: "tmpfile",
       });
 
-      setTrackedPreviewImageUri(uri);
+      setPreviewImageUri(uri);
     } catch {
       Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
     } finally {
       setIsGeneratingShareImage(false);
     }
-  }, [captureTargetRef, isGeneratingShareImage, setTrackedPreviewImageUri, t]);
+  };
 
-  const shareImage = useCallback(async () => {
-    const imageUri = previewImageUriRef.current;
-
-    if (!imageUri || isSharingImage) {
+  const shareImage = async () => {
+    if (!previewImageUri || isSharingImage) {
       return;
     }
 
     setIsSharingImage(true);
 
     try {
-      const isAvailable = await Sharing.isAvailableAsync();
+      const isAvailable = await isAvailableAsync();
 
       if (!isAvailable) {
         Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
         return;
       }
 
-      await Sharing.shareAsync(imageUri, {
+      await shareAsync(previewImageUri, {
         mimeType: "image/png",
         UTI: "public.png",
       });
+
       closeSharePreview();
     } catch {
       Toast.show({ type: "error", text1: t("monthlyReview.shareErrorMessage") });
     } finally {
       setIsSharingImage(false);
     }
-  }, [isSharingImage, t]);
+  };
 
-  const closeSharePreview = useCallback(() => {
-    safeReleaseCapture(previewImageUriRef.current);
-    setTrackedPreviewImageUri(null);
-  }, [setTrackedPreviewImageUri]);
+  const closeSharePreview = () => {
+    if (previewImageUri) {
+      try {
+        releaseCapture(previewImageUri);
+      } catch {
+        // Ignore cleanup failure.
+      }
+    }
 
-  useEffect(() => {
-    return () => {
-      safeReleaseCapture(previewImageUriRef.current);
-    };
-  }, []);
+    setPreviewImageUri(null);
+  };
 
   return {
     previewImageUri,
