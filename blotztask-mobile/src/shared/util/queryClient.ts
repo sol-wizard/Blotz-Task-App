@@ -52,7 +52,7 @@ export const queryClient = new QueryClient({
       gcTime: 5 * 60 * 1000,
       retry: (failureCount, error) => {
         const status = isAxiosError(error) ? error.response?.status : undefined;
-        if (status && status < 500 && status !== 408 && status !== 429) {
+        if (status && status < 500) {
           return false;
         }
         return failureCount < 2;
