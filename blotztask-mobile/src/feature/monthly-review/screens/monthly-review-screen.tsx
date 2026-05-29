@@ -68,9 +68,7 @@ export default function MonthlyReviewScreen() {
             <MaterialCommunityIcons name="share-outline" size={18} color="#363853" />
 
             <Text className="ml-1 text-sm font-balooBold text-secondary">
-              {isGeneratingShareImage
-                ? t("monthlyReview.preparingShare") // TODO: delete
-                : t("monthlyReview.share")}
+              {t("monthlyReview.share")}
             </Text>
           </Pressable>
         )}
