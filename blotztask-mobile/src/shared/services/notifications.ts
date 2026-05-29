@@ -33,17 +33,6 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   }
 }
 
-async function getExpoPushTokenAsync(): Promise<string | null> {
-  try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-    return tokenData.data;
-  } catch (error) {
-    console.error("Error getting Expo push token:", error);
-    return null;
-  }
-}
-
 export function handleBadgeNotification(notification: Notifications.Notification): void {
   const data = notification.request.content.data;
   if (data?.type !== "badge") return;
@@ -54,6 +43,17 @@ export function handleBadgeNotification(notification: Notifications.Notification
   Alert.alert(badgeName, description);
   // TODO: On OK dismiss, notify backend that this badge notification has been displayed (markBadgeAsDisplayed).
   // TODO: On app launch, add a backend catch-up service to fetch all badges where displayed=false and re-show them.
+}
+
+async function getExpoPushTokenAsync(): Promise<string | null> {
+  try {
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    return tokenData.data;
+  } catch (error) {
+    console.error("Error getting Expo push token:", error);
+    return null;
+  }
 }
 
 async function handlePushTokenUpdate(token: string) {
