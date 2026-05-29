@@ -3,9 +3,8 @@ import * as Application from "expo-application";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Alert, Platform } from "react-native";
+import { STORAGE_KEYS } from "../constants/storage-keys";
 import { upsertPushToken } from "./user-service";
-
-const PUSH_TOKEN_CACHE_KEY = "push_token";
 
 export async function registerForPushNotificationsAsync(): Promise<void> {
   if (Platform.OS === "android") {
@@ -29,9 +28,9 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   if (!granted) return;
 
   const token = await getExpoPushTokenAsync();
-  // if (token) {
-  //   await handlePushTokenUpdate(token);
-  // }
+  if (token) {
+    await handlePushTokenUpdate(token);
+  }
 }
 
 async function getExpoPushTokenAsync(): Promise<string | null> {
@@ -53,11 +52,13 @@ export function handleBadgeNotification(notification: Notifications.Notification
   const description = (data?.description as string | undefined) ?? "";
 
   Alert.alert(badgeName, description);
+  // TODO: On OK dismiss, notify backend that this badge notification has been displayed (markBadgeAsDisplayed).
+  // TODO: On app launch, add a backend catch-up service to fetch all badges where displayed=false and re-show them.
 }
 
 async function handlePushTokenUpdate(token: string) {
   console.log("start handlePushTokenUpdate:", token);
-  const cachedToken = await AsyncStorage.getItem(PUSH_TOKEN_CACHE_KEY);
+  const cachedToken = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_TOKEN);
   if (cachedToken === token) return;
 
   const deviceId =
@@ -67,5 +68,5 @@ async function handlePushTokenUpdate(token: string) {
   if (!deviceId) return;
 
   await upsertPushToken({ token, deviceId });
-  await AsyncStorage.setItem(PUSH_TOKEN_CACHE_KEY, token);
+  await AsyncStorage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
 }
