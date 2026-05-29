@@ -15,8 +15,6 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { ReturnButton } from "@/shared/components/return-button";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
-import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import { router } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
