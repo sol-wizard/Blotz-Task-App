@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Image, Pressable } from "react-native";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
@@ -166,9 +166,9 @@ export default function GashaponMachineScreen() {
           <Pressable
             hitSlop={10}
             onPress={() => setHelpModalVisible(true)}
-            className="bg-white shadow-sm border-gray-50 w-9 h-9 rounded-full border items-center justify-center"
+            className="bg-white shadow-sm border border-gray-50 w-9 h-9 rounded-full items-center justify-center"
           >
-            <Ionicons name="help" size={20} color="#6B7280" />
+            <MaterialCommunityIcons name="help" size={22} color="#6B7280" />
           </Pressable>
         </View>
       </SafeAreaView>
