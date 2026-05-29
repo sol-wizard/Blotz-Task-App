@@ -57,7 +57,6 @@ export function handleBadgeNotification(notification: Notifications.Notification
 }
 
 async function handlePushTokenUpdate(token: string) {
-  console.log("start handlePushTokenUpdate:", token);
   const cachedToken = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_TOKEN);
   if (cachedToken === token) return;
 

@@ -12,10 +12,8 @@ export function usePushNotificationSetup() {
 
   useEffect(() => {
     registerForPushNotificationsAsync();
-    console.log("start setting up push notification listeners");
 
     const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
-      console.log("🔔 Notification received:", notification);
       handleBadgeNotification(notification);
     });
 
