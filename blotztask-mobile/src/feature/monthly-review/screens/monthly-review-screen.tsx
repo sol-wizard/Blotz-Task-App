@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
 import { addMonths, isSameMonth, startOfMonth } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
@@ -36,7 +36,6 @@ export default function MonthlyReviewScreen() {
           {t("monthlyReview.title")}
         </Text>
       </View>
-
       <View className="px-5 mb-4">
         <MonthSelector
           label={displayMonth}
@@ -45,19 +44,18 @@ export default function MonthlyReviewScreen() {
           disableNext={isAtCurrentMonth}
         />
       </View>
-
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
           <View className="rounded-3xl px-7 pt-7 pb-8" style={{ backgroundColor: "#FFFBF3" }}>
             <LetterHeader displayMonth={displayMonth} />
             {isLoading ? (
               // TODO: replace with a shared inline loading component once one exists.
-              <View className="py-12 items-center">
+              (<View className="py-12 items-center">
                 <CustomSpinner size={48} />
                 <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
                   {t("monthlyReview.loading")}
                 </Text>
-              </View>
+              </View>)
             ) : report ? (
               <>
                 <LetterBody

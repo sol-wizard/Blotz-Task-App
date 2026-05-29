@@ -14,13 +14,6 @@ import { analytics } from "@/shared/services/analytics";
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
 
-  const breakdownMutation = useMutation<BreakdownResultDTO | undefined, void, number>({
-    mutationFn: createBreakDownSubtasks,
-    onError: (error) => {
-      console.error("Failed to create subtasks:", error);
-    },
-  });
-
   const breakDownAndReplaceSubtasksMutation = useMutation<
     BreakdownResultDTO | undefined,
     Error,
@@ -49,8 +42,8 @@ export const useSubtaskMutations = () => {
       }
     },
     onSuccess: async (_, taskId) => {
-      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
 
@@ -58,12 +51,8 @@ export const useSubtaskMutations = () => {
     mutationFn: ({ subtaskId, parentTaskId }: { subtaskId: number; parentTaskId: number }) =>
       deleteSubtask(subtaskId),
     onSuccess: (_, variables) => {
-      console.log("Deleted subtask", variables.subtaskId);
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-    onError: (error) => {
-      console.error("Failed to delete subtask:", error);
     },
   });
 
@@ -73,9 +62,6 @@ export const useSubtaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
-    onError: (error) => {
-      console.error("Failed to update subtask:", error);
-    },
   });
 
   const addSubtaskMutation = useMutation({
@@ -83,7 +69,7 @@ export const useSubtaskMutations = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    }
+    },
   });
 
   const toggleSubtaskStatusMutation = useMutation({
@@ -93,25 +79,19 @@ export const useSubtaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
-    onError: (error) => {
-      console.error("Failed to toggle subtask status:", error);
-    },
   });
 
   return {
     // Breakdown
-    breakDownTask: breakdownMutation.mutateAsync,
-    isBreakingDown: breakdownMutation.isPending,
-
     breakDownAndReplaceSubtasks: breakDownAndReplaceSubtasksMutation.mutateAsync,
     isBreakingDownAndReplacingSubtasks: breakDownAndReplaceSubtasksMutation.isPending,
 
     // Delete subtask
-    deleteSubtask: deleteSubtaskMutation.mutateAsync,
+    deleteSubtask: deleteSubtaskMutation.mutate,
     isDeletingSubtask: deleteSubtaskMutation.isPending,
 
-    //Update subtask
-    updateSubtask: updateSubtaskMutation.mutateAsync,
+    // Update subtask
+    updateSubtask: updateSubtaskMutation.mutate,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
 
     // Add subtask
@@ -119,7 +99,7 @@ export const useSubtaskMutations = () => {
     isAddingSubtask: addSubtaskMutation.isPending,
 
     // Toggle subtask status
-    toggleSubtaskStatus: toggleSubtaskStatusMutation.mutateAsync,
+    toggleSubtaskStatus: toggleSubtaskStatusMutation.mutate,
     isTogglingSubtaskStatus: toggleSubtaskStatusMutation.isPending,
   };
 };

@@ -1,5 +1,5 @@
 import { TouchableOpacity, View, Text } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import Toast, { ToastConfigParams } from "react-native-toast-message";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";

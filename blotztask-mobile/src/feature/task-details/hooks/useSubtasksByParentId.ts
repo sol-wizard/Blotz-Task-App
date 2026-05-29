@@ -3,10 +3,10 @@ import { getSubtasksByParentId } from "@/feature/task-details/services/subtask-s
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { subtaskKeys } from "@/shared/constants/query-key-factory";
 
-export const useSubtasksByParentId = (parentId: number) => {
+export const useSubtasksByParentId = (parentId: number | null) => {
   return useQuery<SubtaskDTO[], Error>({
-    queryKey: subtaskKeys.all(parentId),
-    queryFn: () => getSubtasksByParentId(parentId),
-    enabled: !!parentId,
+    queryKey: subtaskKeys.all(parentId ?? 0),
+    queryFn: () => getSubtasksByParentId(parentId!),
+    enabled: parentId != null,
   });
 };

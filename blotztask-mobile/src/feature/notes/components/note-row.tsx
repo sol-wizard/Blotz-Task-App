@@ -1,10 +1,8 @@
-import React, { useRef, useState } from "react";
-import { RefObject } from "react";
+import React, { RefObject, useRef, useState } from "react";
 import Animated from "react-native-reanimated";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-
 import { NoteDTO } from "../models/note-dto";
 import { NoteCard } from "./note-card";
 import { NoteActions } from "./note-actions";

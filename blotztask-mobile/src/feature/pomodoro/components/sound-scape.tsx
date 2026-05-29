@@ -3,7 +3,7 @@ import { ITEM_WIDTH, ITEM_GAP, PomodoroSoundscapeType } from "../utils/pomodoro-
 import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import type { ImageSourcePropType } from "react-native";
 
 type SoundscapeItem = {

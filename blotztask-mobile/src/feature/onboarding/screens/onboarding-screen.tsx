@@ -4,11 +4,11 @@ import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onbo
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { router } from "expo-router";
 import React, { useState, useRef } from "react";
-import { Pressable, Text, View, FlatList, Dimensions } from "react-native";
+import { Pressable, Text, View, FlatList, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { BlotzLogo } from "@/shared/components/blotz-logo";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -22,7 +22,7 @@ export default function OnboardingScreen() {
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
-  const onMomentumScrollEnd = (e: any) => {
+  const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
     setActiveOnboardingIndex(index);
   };

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
-import { Calendar } from "react-native-calendars";
+import { Calendar, DateData } from "react-native-calendars";
+import { DayProps } from "react-native-calendars/src/calendar/day";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 import { CustomCalendarDay } from "./custom-calendar-day";
 
@@ -26,13 +27,9 @@ export const SingleDateCalendar = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
 
-  useEffect(() => {
-    setSelectedDate(defaultStartDate ?? null);
-  }, [defaultStartDate]);
-
   return (
     <Calendar
-      onDayPress={(day: any) => {
+      onDayPress={(day: DateData) => {
         const asDate = parseISO(day.dateString);
         setSelectedDate(day.dateString);
         onStartDateChange(asDate);
@@ -49,8 +46,9 @@ export const SingleDateCalendar = ({
       }}
       renderHeader={renderCalendarHeader}
       enableSwipeMonths
-      dayComponent={({ date, state }: any) => {
-        const isSelected = !isDeadlinePicker && (selectedDate === date.dateString);
+      dayComponent={({ date, state }: DayProps & { date?: DateData }) => {
+        if (!date) return null;
+        const isSelected = !isDeadlinePicker && selectedDate === date.dateString;
         const isDeadline = deadlineDate === date.dateString;
         const isDisabled = disabledDates.includes(date.dateString);
         const isInHighlight = highlightDates.includes(date.dateString);
@@ -59,21 +57,21 @@ export const SingleDateCalendar = ({
         let isRangeStart = false;
         let isRangeEnd = false;
         let isInEventRange = false;
-        
+
         if (eventStartDate && eventEndDate) {
-           const startMs = parseISO(eventStartDate).getTime();
-           const endMs = parseISO(eventEndDate).getTime();
-           if (currentMs >= startMs && currentMs <= endMs) {
-              isRangeStart = currentMs === startMs;
-              isRangeEnd = currentMs === endMs;
-              isInEventRange = currentMs > startMs && currentMs < endMs;
-           }
+          const startMs = parseISO(eventStartDate).getTime();
+          const endMs = parseISO(eventEndDate).getTime();
+          if (currentMs >= startMs && currentMs <= endMs) {
+            isRangeStart = currentMs === startMs;
+            isRangeEnd = currentMs === endMs;
+            isInEventRange = currentMs > startMs && currentMs < endMs;
+          }
         }
 
         return (
           <CustomCalendarDay
             date={date}
-            state={state}
+            state={state ?? ""}
             isSelected={isSelected}
             isDeadline={isDeadline}
             isInRange={isInHighlight || isInEventRange}

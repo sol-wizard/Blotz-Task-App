@@ -16,6 +16,7 @@ import { ReturnButton } from "@/shared/components/return-button";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
+import { router } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
@@ -59,7 +60,7 @@ export default function GashaponMachineScreen() {
   };
 
   const handleStarDropped = (starIndex: number) => {
-    const droppedNote = limitedNotes[starIndex] ?? pickRandomNote();
+    const droppedNote = limitedNotes[starIndex];
     setRandomTask(droppedNote);
     setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
     setDropStarTrigger((prev) => prev + 1);

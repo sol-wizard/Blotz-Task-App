@@ -31,8 +31,9 @@ const SubtaskList = ({ task, progress }: Props) => {
     overflow: "hidden",
   }));
 
-  const handleToggleSubtask = async (subtaskId: number) => {
-    await toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
+  const handleToggleSubtask = (subtaskId: number) => {
+    if (task.id == null) return;
+    toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
   };
 
   const onSubtaskContentLayout = (e: LayoutChangeEvent) => {

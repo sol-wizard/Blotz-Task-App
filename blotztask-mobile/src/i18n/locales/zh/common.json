@@ -2,7 +2,8 @@
   "buttons": {
     "cancel": "取消",
     "done": "完成",
-    "getStarted": "开始",
+    "continue": "继续",
+    "continueWithPhone": "使用手机号",
     "save": "保存",
     "saving": "保存中...",
     "goBack": "返回",
@@ -36,5 +37,10 @@
     "title": "新版本来啦！",
     "message": "我们悄悄做了好多优化，快来体验全新的 Blotz 吧～",
     "button": "马上去更新"
+  },
+  "crash": {
+    "title": "哎呀，出问题了！",
+    "message": "出了点小问题，重启App试试看！",
+    "button": "重启应用"
   }
 }

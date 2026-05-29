@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Pressable, ViewStyle } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { theme } from "@/shared/constants/theme";
 import * as Haptics from "expo-haptics";
 import Animated, {

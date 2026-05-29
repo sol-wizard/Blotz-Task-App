@@ -28,9 +28,13 @@ module.exports = defineConfig([
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       camelcase: "warn",
       quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
+      // useSharedValue().value is designed to be mutated — the rule's type inference
+      // incorrectly treats it as frozen in some patterns despite ReanimatedSharedValueId
+      // being in the mutable types list.
+      "react-hooks/immutability": "off",
     },
   },
   prettier,

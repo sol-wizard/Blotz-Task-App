@@ -1,7 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, Modal, Image, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native-reanimated";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "./sound-scape";
@@ -14,6 +23,8 @@ import {
 } from "../utils/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
+
+type SoundscapeOption = (typeof SOUNDSCAPE_OPTIONS)[number];
 interface ModeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,8 +58,7 @@ export const ModeBottomSheet = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    setDraftDuration(selectedDuration);
-    setDraftSoundscape(selectedSoundscape);
+
     const index = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
     scrollX.value = index;
     flatListRef.current?.scrollToOffset({
@@ -63,9 +73,9 @@ export const ModeBottomSheet = ({
     scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
   });
 
-  const flatListRef = useRef<Animated.FlatList<any>>(null);
+  const flatListRef = useRef<Animated.FlatList<SoundscapeOption>>(null);
 
-  const handleMomentumScrollEnd = (event: any) => {
+  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / SNAP_INTERVAL);
 
     if (SOUNDSCAPE_OPTIONS[index]) {

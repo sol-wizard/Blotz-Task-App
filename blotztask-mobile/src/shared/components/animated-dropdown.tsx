@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View, FlatList } from "react-native";
 import Animated, { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import Modal from "react-native-modal";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
 
 import { AnimatedChevron } from "./chevron";
 import { FormDivider } from "./form-divider";
@@ -62,7 +62,7 @@ export function AnimatedDropdown<T>({
 
   const visibleCount = Math.min(options.length, maxVisibleItems);
 
-  const openDropdown = (ref: any) => {
+  const openDropdown = (ref: View | null) => {
     if (!ref?.measureInWindow) {
       setOpen(true);
       return;
@@ -76,7 +76,7 @@ export function AnimatedDropdown<T>({
   const closeDropdown = () => setOpen(false);
 
   // use ref-less approach via callback ref
-  const [triggerRef, setTriggerRef] = useState<any>(null);
+  const [triggerRef, setTriggerRef] = useState<View | null>(null);
 
   const onSelect = (next: T) => {
     onChange(next);

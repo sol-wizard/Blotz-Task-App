@@ -1,49 +1,27 @@
-import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
-import avatarDataDevelopment from "../constants/avatar-development.json";
-import avatarDataProduction from "../constants/avatar-production.json";
+import { getLocalAvatarComponent } from "@/feature/settings/constants/local-avatar-catalog";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
+import { LOCAL_AVATARS } from "@/feature/settings/constants/local-avatar-catalog";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
-
-const appEnv = process.env.EXPO_PUBLIC_APP_ENV;
 
 export default function SettingsAvatarScreen() {
-  const avatarData =
-    appEnv === "production"
-      ? avatarDataProduction
-      : appEnv === "development"
-        ? avatarDataDevelopment
-        : avatarDataDevelopment;
-  const avatars = avatarData.avatars;
+  const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-
-  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(() => {
-    const pictureUrl = userProfile?.pictureUrl;
-    if (pictureUrl && avatars.some((avatar) => avatar.url === pictureUrl)) {
-      return pictureUrl;
-    }
-    return null;
-  });
-
+  const avatars = LOCAL_AVATARS;
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
 
-  const handleAvatarSelect = async (avatar: AvatarDTO) => {
+  const handleAvatarSelect = (avatar: AvatarDTO) => {
     if (isUserUpdating) return;
-    setSelectedAvatarUrl(avatar.url);
 
-    try {
-      await updateUserProfile({
-        displayName: userProfile?.displayName ?? "",
-        pictureUrl: avatar.url,
-        isOnBoarded: userProfile?.isOnBoarded ?? false,
-      });
-    } catch {
-      console.log("Failed to update avatar.");
-    }
+    updateUserProfile({
+      displayName: userProfile?.displayName ?? "",
+      pictureUrl: avatar.id,
+      isOnBoarded: userProfile?.isOnBoarded ?? false,
+    });
   };
 
   return (
@@ -51,17 +29,18 @@ export default function SettingsAvatarScreen() {
       <View className="flex-row px-6 pt-6">
         <ReturnButton />
         <View className="flex-1 items-center">
-          <Text className="text-3xl font-balooExtraBold text-secondary">Avatar</Text>
+          <Text className="text-3xl font-balooExtraBold text-secondary">{t("avatar.title")}</Text>
         </View>
       </View>
 
       <View className="flex-row flex-wrap justify-between m-6">
         {avatars.map((avatar) => {
-          const isSelected = avatar.url === selectedAvatarUrl;
+          const isSelected = avatar.id === userProfile?.pictureUrl;
+          const AvatarComponent = getLocalAvatarComponent(avatar.id);
 
           return (
             <Pressable
-              key={avatar.url}
+              key={avatar.id}
               onPress={() => handleAvatarSelect(avatar)}
               className={`mb-6 items-center ${isUserUpdating ? "opacity-70" : ""}`}
               disabled={isUserUpdating}
@@ -69,14 +48,10 @@ export default function SettingsAvatarScreen() {
               <View
                 className="rounded-full border-4"
                 style={{
-                  borderColor: isSelected ? "#F2A74B" : "transparent",
+                  borderColor: isSelected ? "#444964" : "transparent",
                 }}
               >
-                <Image
-                  source={{ uri: avatar.url }}
-                  style={{ width: 80, height: 80, borderRadius: 48 }}
-                  contentFit="cover"
-                />
+                {AvatarComponent ? <AvatarComponent width={80} height={80} /> : null}
               </View>
             </Pressable>
           );

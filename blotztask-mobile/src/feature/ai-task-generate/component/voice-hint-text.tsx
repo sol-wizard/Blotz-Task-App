@@ -10,7 +10,6 @@ export const VoiceHintText = () => {
   const indexRef = useRef(0);
 
   useEffect(() => {
-    setDisplayedHint("");
     indexRef.current = 0;
 
     const interval = setInterval(() => {

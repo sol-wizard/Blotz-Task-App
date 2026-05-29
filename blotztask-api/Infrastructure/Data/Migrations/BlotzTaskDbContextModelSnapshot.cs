@@ -684,7 +684,6 @@ namespace BlotzTask.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsOnboarded")
@@ -692,6 +691,9 @@ namespace BlotzTask.Migrations
 
                     b.Property<DateTime?>("LoginAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
