@@ -46,7 +46,6 @@ export function MonthlyReviewSharePreviewSheet({
             {imageUri && (
               <Image
                 source={{ uri: imageUri }}
-                // className="h-full w-full"
                 style={{ width: 188, height: 347 }}
                 contentFit="contain"
               />

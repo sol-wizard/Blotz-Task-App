@@ -20,9 +20,7 @@ export function MonthlyReviewShareCard({ displayMonth, recipientName, body }: Pr
           </View>
 
           <View className="ml-3">
-            <Text className="font-baloo text-xs text-secondary/60">
-              {t("monthlyReview.title")}
-            </Text>
+            <Text className="font-baloo text-xs text-secondary/60">{t("monthlyReview.title")}</Text>
             <Text className="font-balooBold text-base text-secondary">Blotz</Text>
           </View>
         </View>
@@ -53,7 +51,7 @@ export function MonthlyReviewShareCard({ displayMonth, recipientName, body }: Pr
       <View className="flex-1" />
 
       <View className="mt-6 flex-row items-center justify-end">
-        <Image source={PNGIMAGES.successBun} className="h-16 w-16" resizeMode="contain" />
+        <Image source={PNGIMAGES.loadingBun} className="h-16 w-16" resizeMode="contain" />
       </View>
     </View>
   );
