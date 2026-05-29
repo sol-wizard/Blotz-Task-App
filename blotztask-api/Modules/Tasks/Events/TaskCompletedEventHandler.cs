@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Badges.Commands;
 using BlotzTask.Modules.Badges.Enum;
+using BlotzTask.Modules.Badges.Services;
 using BlotzTask.Shared.Events;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ public class TaskCompletedEventHandler(
     BlotzTaskDbContext db,
     FindMatchingBadgesHandler findMatchingBadgesHandler,
     AwardNewBadgesToUserHandler awardNewBadgesToUserHandler,
+    IBadgeNotificationService badgeNotificationService,
     ILogger<TaskCompletedEventHandler> logger)
     : IDomainEventHandler<TaskCompletedEvent>
 {
@@ -23,7 +25,7 @@ public class TaskCompletedEventHandler(
         int completeOffsetMinutes = 0;
         if (task != null)
             completeOffsetMinutes = (int)(DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
-        
+
         var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
             TriggerAction = TriggerAction.TaskComplete,
@@ -32,12 +34,15 @@ public class TaskCompletedEventHandler(
                 [EventValueKey.CompleteOffsetMins] = completeOffsetMinutes
             }
         }, ct);
-        
-        await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
+
+        var awardedBadgeIds = await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
         {
             UserId = taskCompletedEvent.UserId,
             BadgeIds = matchingBadgeIds
         }, ct);
-      
+
+        Console.WriteLine("start sending new badges to user by notifications");
+
+        await badgeNotificationService.SendBadgeNotificationsAsync(taskCompletedEvent.UserId, awardedBadgeIds, ct);
     }
 }

@@ -11,6 +11,10 @@ export function usePushNotificationSetup() {
     registerForPushNotificationsAsync();
     console.log("start setting up push notification listeners");
 
+    const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
+      console.log("🔔 Received notification:", notification);
+    });
+
     const responseListener = Notifications.addNotificationResponseReceivedListener(
       async (response) => {
         const data = response.notification.request.content.data;
@@ -31,6 +35,7 @@ export function usePushNotificationSetup() {
 
     return () => {
       responseListener.remove();
+      notificationListener.remove();
     };
   }, []);
 }

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Application from "expo-application";
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { upsertPushToken } from "./user-service";
@@ -35,7 +36,8 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
 
 async function getExpoPushTokenAsync(): Promise<string | null> {
   try {
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     return tokenData.data;
   } catch (error) {
     console.error("Error getting Expo push token:", error);
