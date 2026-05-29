@@ -1,7 +1,7 @@
 import { RefObject, useState } from "react";
 import { View } from "react-native";
 import { captureRef, releaseCapture } from "react-native-view-shot";
-import { isAvailableAsync, shareAsync } from "expo-sharing";
+import { shareAsync } from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 
@@ -33,10 +33,6 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     try {
       setPreviewImageUri(null);
 
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => resolve());
-      });
-
       const uri = await captureRef(captureTarget, {
         format: "png",
         quality: 1,
@@ -59,13 +55,6 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     setIsSharingImage(true);
 
     try {
-      const isAvailable = await isAvailableAsync();
-
-      if (!isAvailable) {
-        Toast.show({ type: "error", text1: t("monthlyReview.error") });
-        return;
-      }
-
       await shareAsync(previewImageUri, {
         mimeType: "image/png",
         UTI: "public.png",
