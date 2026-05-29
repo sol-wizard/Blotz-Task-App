@@ -43,24 +43,23 @@ export function MonthlyReviewSharePreviewSheet({
           </Text>
 
           <View className="items-center">
-            <View className="overflow-hidden rounded-2xl bg-white">
-              {imageUri && (
-                <Image
-                  source={{ uri: imageUri }}
-                  // className="h-full w-full"
-                  style={{ width: 188, height: 347 }}
-                  contentFit="contain"
-                />
-              )}
-            </View>
+            {imageUri && (
+              <Image
+                source={{ uri: imageUri }}
+                // className="h-full w-full"
+                style={{ width: 188, height: 347 }}
+                contentFit="contain"
+              />
+            )}
           </View>
 
           <View className="mt-5">
             <Pressable
               onPress={onShare}
               disabled={isSharingImage}
-              className="h-12 flex-row items-center justify-center rounded-full bg-secondary"
-              style={{ opacity: isSharingImage ? 0.6 : 1 }}
+              className={`h-12 flex-row items-center justify-center rounded-full bg-secondary ${
+                isSharingImage ? "opacity-60" : "opacity-100"
+              }`}
             >
               <MaterialCommunityIcons name="share-outline" size={20} color="#FFFFFF" />
 
