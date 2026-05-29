@@ -97,14 +97,24 @@ $easJson | ConvertTo-Json -Depth 10 | Set-Content $easPath
 # ------------------------
 # Build command
 # ------------------------
-$args = @(
+$buildArgs = @(
     "build"
     "--platform", $platform
     "--profile", $profile
     "--non-interactive"
-    "--local"
 )
 
-Write-Host "`nRunning: eas $($args -join ' ')" -ForegroundColor Green
+# iOS: cloud build + auto-submit to App Store
+# Android APK: local build (sideload)
+# Android AAB: cloud build + auto-submit to Play Store
+if ($platform -eq "ios") {
+    $buildArgs += "--auto-submit"
+} elseif ($platform -eq "android" -and $androidBuildType -eq "apk") {
+    $buildArgs += "--local"
+} elseif ($platform -eq "android" -and $androidBuildType -eq "app-bundle") {
+    $buildArgs += "--auto-submit"
+}
 
-& eas @args
+Write-Host "`nRunning: eas $($buildArgs -join ' ')" -ForegroundColor Green
+
+& eas @buildArgs

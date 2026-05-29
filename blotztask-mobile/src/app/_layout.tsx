@@ -26,6 +26,7 @@ import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
 import "@/shared/util/typography";
+import { CrashScreen } from "@/shared/components/crash-screen";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -54,20 +55,25 @@ function RootLayout() {
   });
 
   return (
-    <Auth0Provider domain={domain} clientId={clientId}>
-      <PostHogProvider client={posthog} autocapture={false}>
-        <GestureHandlerRootView>
-          <QueryClientProvider client={queryClient}>
-            <SafeAreaProvider>
-              <KeyboardProvider>
-                <RootStack />
-                <Toast config={toastConfig} position="bottom" bottomOffset={220} />
-              </KeyboardProvider>
-            </SafeAreaProvider>
-          </QueryClientProvider>
-        </GestureHandlerRootView>
-      </PostHogProvider>
-    </Auth0Provider>
+    <Sentry.ErrorBoundary
+      fallback={<CrashScreen />}
+      onError={(error, componentStack) => console.error(error, componentStack)}
+    >
+      <Auth0Provider domain={domain} clientId={clientId}>
+        <PostHogProvider client={posthog} autocapture={false}>
+          <GestureHandlerRootView>
+            <QueryClientProvider client={queryClient}>
+              <SafeAreaProvider>
+                <KeyboardProvider>
+                  <RootStack />
+                  <Toast config={toastConfig} position="bottom" bottomOffset={220} />
+                </KeyboardProvider>
+              </SafeAreaProvider>
+            </QueryClientProvider>
+          </GestureHandlerRootView>
+        </PostHogProvider>
+      </Auth0Provider>
+    </Sentry.ErrorBoundary>
   );
 }
 
