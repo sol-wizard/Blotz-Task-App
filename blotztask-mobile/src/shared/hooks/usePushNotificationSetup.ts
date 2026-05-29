@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
-import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
+import {
+  handleBadgeNotification,
+  registerForPushNotificationsAsync,
+} from "@/shared/services/notifications";
 import { useRouter } from "expo-router";
 import { toggleTaskCompletion } from "../services/task-service";
 
@@ -12,7 +15,8 @@ export function usePushNotificationSetup() {
     console.log("start setting up push notification listeners");
 
     const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
-      console.log("🔔 Received notification:", notification);
+      console.log("🔔 Notification received:", notification);
+      handleBadgeNotification(notification);
     });
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(

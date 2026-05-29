@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 import { upsertPushToken } from "./user-service";
 
 const PUSH_TOKEN_CACHE_KEY = "push_token";
@@ -29,9 +29,9 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   if (!granted) return;
 
   const token = await getExpoPushTokenAsync();
-  if (token) {
-    await handlePushTokenUpdate(token);
-  }
+  // if (token) {
+  //   await handlePushTokenUpdate(token);
+  // }
 }
 
 async function getExpoPushTokenAsync(): Promise<string | null> {
@@ -43,6 +43,16 @@ async function getExpoPushTokenAsync(): Promise<string | null> {
     console.error("Error getting Expo push token:", error);
     return null;
   }
+}
+
+export function handleBadgeNotification(notification: Notifications.Notification): void {
+  const data = notification.request.content.data;
+  if (data?.type !== "badge") return;
+
+  const badgeName = notification.request.content.body ?? "";
+  const description = (data?.description as string | undefined) ?? "";
+
+  Alert.alert(badgeName, description);
 }
 
 async function handlePushTokenUpdate(token: string) {

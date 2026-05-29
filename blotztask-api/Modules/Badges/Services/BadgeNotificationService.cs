@@ -47,13 +47,21 @@ public class BadgeNotificationService(
 
         var isEnglish = language == Language.En;
 
+        var notificationTitle = isEnglish ? "You have received a new badge" : "你收到了一个新的奖章";
+
         // One message per badge, with all tokens in the `to` array
         var messages = badges.Select(badge => new
         {
             to = pushTokens,
-            title = isEnglish ? badge.NameEn : badge.NameZh,
-            body = isEnglish ? badge.DescriptionEn : badge.DescriptionZh,
-            data = new { badgeId = badge.Id, iconUrl = badge.IconUrl }
+            title = notificationTitle,
+            body = isEnglish ? badge.NameEn : badge.NameZh,
+            data = new
+            {
+                type = "badge",
+                badgeId = badge.Id,
+                iconUrl = badge.IconUrl,
+                description = isEnglish ? badge.DescriptionEn : badge.DescriptionZh
+            }
         });
 
         var client = httpClientFactory.CreateClient("Expo");
