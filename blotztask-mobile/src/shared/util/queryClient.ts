@@ -48,12 +48,10 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: Infinity,
       gcTime: 5 * 60 * 1000,
       retry: (failureCount, error) => {
-        const status = isAxiosError(error)
-          ? error.response?.status
-          : undefined;
+        const status = isAxiosError(error) ? error.response?.status : undefined;
         if (status && status < 500 && status !== 408 && status !== 429) {
           return false;
         }
