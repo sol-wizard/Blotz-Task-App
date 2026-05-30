@@ -3,7 +3,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlotzTask.Modules.UserPushTokens.Commands;
+namespace BlotzTask.Modules.Users.Commands;
 
 public class UpsertPushTokenCommand
 {

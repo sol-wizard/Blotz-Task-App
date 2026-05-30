@@ -9,7 +9,6 @@ using BlotzTask.Modules.MonthlyReviews;
 using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
-using BlotzTask.Modules.UserPushTokens;
 using BlotzTask.Modules.Users;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
@@ -40,7 +39,6 @@ builder.Services.AddPomodoroModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
-builder.Services.AddUserPushTokenModule();
 
 // External integrations
 builder.Services.AddAgentFrameworkServices(builder.Configuration);

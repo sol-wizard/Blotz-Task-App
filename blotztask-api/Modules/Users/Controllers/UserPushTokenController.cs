@@ -1,8 +1,8 @@
-using BlotzTask.Modules.UserPushTokens.Commands;
+using BlotzTask.Modules.Users.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlotzTask.Modules.UserPushTokens.Controllers;
+namespace BlotzTask.Modules.Users.Controllers;
 
 [Authorize]
 [ApiController]
