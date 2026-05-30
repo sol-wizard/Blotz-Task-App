@@ -1,5 +1,5 @@
 import React, { createElement } from "react";
-import { View, Text, Pressable, Share } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useRouter } from "expo-router";
@@ -22,27 +22,10 @@ const AvatarDisplay = ({ pictureValue }: { pictureValue: string | null | undefin
   );
 };
 
-const WEBSITE_URL = "https://blotz-website.vercel.app/";
-
 export default function SettingsScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const { t } = useTranslation("settings");
-
-  const handleShareApp = async () => {
-    try {
-      const shareAsset = Asset.fromModule(PNGIMAGES.onboardingNotes);
-      await shareAsset.downloadAsync();
-
-      await Share.share({
-        title: t("share.title"),
-        url: shareAsset.localUri ?? shareAsset.uri,
-        message: t("share.message", { url: WEBSITE_URL }),
-      });
-    } catch (error: unknown) {
-      console.error("Failed to open share sheet", error);
-    }
-  };
 
   const menuItems: SettingsMenuItem[] = [
     {
@@ -76,15 +59,6 @@ export default function SettingsScreen() {
       route: "/settings/language",
     },
     {
-      key: "share-app",
-      label: t("menu.shareApp"),
-      icon: "share-variant-outline",
-      rightIcon: "share-outline",
-      onPress: () => {
-        void handleShareApp();
-      },
-    },
-    {
       key: "about",
       label: t("menu.about"),
       icon: "information-outline",
@@ -94,15 +68,6 @@ export default function SettingsScreen() {
 
   const handleProfileEdit = () => {
     router.push("/settings/avatar" as const);
-  };
-
-  const handleMenuItemPress = (item: SettingsMenuItem) => {
-    if (item.onPress) {
-      item.onPress();
-      return;
-    }
-
-    router.push(item.route);
   };
 
   return (
@@ -128,18 +93,14 @@ export default function SettingsScreen() {
           {menuItems.map((item, index) => (
             <View key={item.key} className="w-11/12">
               <Pressable
-                onPress={() => handleMenuItemPress(item)}
+                onPress={() => router.push(item.route)}
                 className="flex-row items-center justify-between pl-4 py-4"
               >
                 <View className="flex-row items-center">
                   <MaterialCommunityIcons name={item.icon} size={22} color="#444964" />
                   <Text className="text-lg font-baloo text-secondary ml-3">{item.label}</Text>
                 </View>
-                <MaterialCommunityIcons
-                    name={item.rightIcon ?? "chevron-right"}
-                    size={22}
-                    color="#444964"
-                  />
+                <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </Pressable>
               {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
             </View>

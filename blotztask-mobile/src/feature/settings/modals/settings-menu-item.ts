@@ -9,24 +9,10 @@ export type SettingsMenuKey =
   | "task-handling"
   | "notifications"
   | "language"
-  | "share-app"
   | "about";
-
-type BaseSettingsMenuItem = {
+export type SettingsMenuItem = {
   key: SettingsMenuKey;
   label: string;
   icon: IconName;
-  rightIcon?: IconName;
-};
-
-type SettingsRouteMenuItem = BaseSettingsMenuItem & {
   route: Href;
-  onPress?: never;
 };
-
-type SettingsActionMenuItem = BaseSettingsMenuItem & {
-  onPress: () => void;
-  route?: never;
-};
-
-export type SettingsMenuItem = SettingsRouteMenuItem | SettingsActionMenuItem;
