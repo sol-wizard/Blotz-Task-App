@@ -43,7 +43,6 @@ public class TaskCompletedEventHandler(
             BadgeIds = matchingBadgeIds
         }, ct);
 
-        Console.WriteLine("start sending new badges to user by notifications");
 
         await badgeNotificationService.SendBadgeNotificationsAsync(taskCompletedEvent.UserId, awardedBadgeIds, ct);
     }
