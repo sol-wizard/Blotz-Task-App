@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Users.Commands;
 
+public record UpsertPushTokenRequest(string Token, string DeviceId);
+
 public class UpsertPushTokenCommand
 {
     [Required] public required string Token { get; init; }

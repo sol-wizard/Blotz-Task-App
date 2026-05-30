@@ -9,8 +9,6 @@ namespace BlotzTask.Modules.Users.Controllers;
 [Route("api/user-push-tokens")]
 public class UserPushTokenController(UpsertPushTokenCommandHandler upsertPushTokenCommandHandler) : ControllerBase
 {
-    public record UpsertPushTokenRequest(string Token, string DeviceId);
-
     [HttpPost]
     public async Task<IActionResult> UpsertPushToken([FromBody] UpsertPushTokenRequest request, CancellationToken ct)
     {
