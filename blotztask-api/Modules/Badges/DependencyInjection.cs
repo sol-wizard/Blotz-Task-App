@@ -5,14 +5,14 @@ namespace BlotzTask.Modules.Badges;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddBadgeModule(this IServiceCollection services)
+    public static IServiceCollection AddBadgeModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<FindMatchingBadgesHandler>();
         services.AddScoped<AwardNewBadgesToUserHandler>();
 
         services.AddHttpClient("Expo", client =>
         {
-            client.BaseAddress = new Uri("https://exp.host/--/api/v2/");
+            client.BaseAddress = new Uri(configuration["Expo:BaseUrl"]!);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         });
         services.AddScoped<IBadgeNotificationService, BadgeNotificationService>();

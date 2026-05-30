@@ -14,7 +14,6 @@ public class BadgeNotificationService(
     IHttpClientFactory httpClientFactory,
     ILogger<BadgeNotificationService> logger) : IBadgeNotificationService
 {
-
     public async Task SendBadgeNotificationsAsync(Guid userId, List<int> badgeIds, CancellationToken ct = default)
     {
         if (badgeIds.Count == 0) return;
@@ -46,22 +45,15 @@ public class BadgeNotificationService(
             .FirstOrDefaultAsync(ct);
 
         var isEnglish = language == Language.En;
-
-        var notificationTitle = isEnglish ? "You have received a new badge" : "你收到了一个新的奖章";
+        var title = isEnglish ? "You have received a new badge" : "你收到了一个新的奖章";
 
         // One message per badge, with all tokens in the `to` array
         var messages = badges.Select(badge => new
         {
             to = pushTokens,
-            title = notificationTitle,
+            title,
             body = isEnglish ? badge.NameEn : badge.NameZh,
-            data = new
-            {
-                type = "badge",
-                badgeId = badge.Id,
-                iconUrl = badge.IconUrl,
-                description = isEnglish ? badge.DescriptionEn : badge.DescriptionZh
-            }
+            data = new { type = "badge", badgeId = badge.Id, iconUrl = badge.IconUrl, description = isEnglish ? badge.DescriptionEn : badge.DescriptionZh }
         });
 
         var client = httpClientFactory.CreateClient("Expo");
@@ -69,8 +61,7 @@ public class BadgeNotificationService(
 
         if (!response.IsSuccessStatusCode)
         {
-            logger.LogError("Expo push failed with {Status} for user {UserId}, badges {BadgeIds}.",
-                response.StatusCode, userId, string.Join(", ", badgeIds));
+            logger.LogError("Expo push failed with {Status} for user {UserId}.", response.StatusCode, userId);
             return;
         }
 
