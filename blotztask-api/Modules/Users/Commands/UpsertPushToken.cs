@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Users.Commands;
 
-public record UpsertPushTokenRequest(string Token, string DeviceId);
+public record UpsertPushTokenRequest([Required] string Token, [Required] string DeviceId);
 
 public class UpsertPushTokenCommand
 {
-    [Required] public required string Token { get; init; }
-    [Required] public required string DeviceId { get; init; }
+    public required string Token { get; init; }
+    public required string DeviceId { get; init; }
     public Guid UserId { get; init; }
 }
 
