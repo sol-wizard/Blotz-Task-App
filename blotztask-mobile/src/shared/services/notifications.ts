@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
+import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Alert, Platform } from "react-native";
 import { STORAGE_KEYS } from "../constants/storage-keys";
@@ -46,6 +47,8 @@ export function handleBadgeNotification(notification: Notifications.Notification
 }
 
 async function getExpoPushTokenAsync(): Promise<string | null> {
+  if (!Device.isDevice) return null;
+
   try {
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
