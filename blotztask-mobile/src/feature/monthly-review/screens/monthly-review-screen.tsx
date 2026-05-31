@@ -15,7 +15,6 @@ import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
 import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
-import { MonthlyReviewSharePreviewSheet } from "../components/monthly-review-share-preview-sheet";
 import { MonthlyReviewShareCard } from "../components/monthly-review-share-card";
 
 export default function MonthlyReviewScreen() {
@@ -24,14 +23,7 @@ export default function MonthlyReviewScreen() {
   const { userProfile } = useUserProfile();
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
   const shareCardRef = useRef<View>(null);
-  const {
-    previewImageUri,
-    isGeneratingShareImage,
-    isSharingImage,
-    prepareSharePreview,
-    shareImage,
-    closeSharePreview,
-  } = useMonthlyReviewShare({
+  const { isSharingImage, shareImage } = useMonthlyReviewShare({
     captureTargetRef: shareCardRef,
   });
   const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
@@ -41,11 +33,11 @@ export default function MonthlyReviewScreen() {
   const recipientName = userProfile?.displayName ?? "Friend";
 
   const handleShareMonthlyReview = () => {
-    if (!report || isGeneratingShareImage) {
+    if (!report || isSharingImage) {
       return;
     }
 
-    void prepareSharePreview();
+    void shareImage();
   };
 
   return (
@@ -60,15 +52,15 @@ export default function MonthlyReviewScreen() {
         {report && (
           <Pressable
             onPress={handleShareMonthlyReview}
-            disabled={isGeneratingShareImage}
+            disabled={isSharingImage}
             className={`h-10 flex-row items-center justify-center rounded-full bg-white px-3 ${
-              isGeneratingShareImage ? "opacity-60" : "opacity-100"
+              isSharingImage ? "opacity-60" : "opacity-100"
             }`}
           >
             <MaterialCommunityIcons name="share-outline" size={18} color="#363853" />
 
             <Text className="ml-1 text-sm font-balooBold text-secondary">
-              {t("monthlyReview.share")}
+              {isSharingImage ? t("monthlyReview.sharing") : t("monthlyReview.share")}
             </Text>
           </Pressable>
         )}
@@ -137,13 +129,6 @@ export default function MonthlyReviewScreen() {
           </View>
         </View>
       )}
-
-      <MonthlyReviewSharePreviewSheet
-        imageUri={previewImageUri}
-        isSharingImage={isSharingImage}
-        onShare={shareImage}
-        onClose={closeSharePreview}
-      />
     </SafeAreaView>
   );
 }

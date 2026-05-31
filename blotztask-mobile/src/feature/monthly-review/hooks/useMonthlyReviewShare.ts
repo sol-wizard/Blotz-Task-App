@@ -12,12 +12,10 @@ type Params = {
 export function useMonthlyReviewShare({ captureTargetRef }: Params) {
   const { t } = useTranslation("settings");
 
-  const [previewImageUri, setPreviewImageUri] = useState<string | null>(null);
-  const [isGeneratingShareImage, setIsGeneratingShareImage] = useState(false);
   const [isSharingImage, setIsSharingImage] = useState(false);
 
-  const prepareSharePreview = async () => {
-    if (isGeneratingShareImage) {
+  const shareImage = async () => {
+    if (isSharingImage) {
       return;
     }
 
@@ -28,64 +26,37 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
       return;
     }
 
-    setIsGeneratingShareImage(true);
+    setIsSharingImage(true);
+    let capturedUri: string | null = null;
 
     try {
-      setPreviewImageUri(null);
-
-      const uri = await captureRef(captureTarget, {
+      capturedUri = await captureRef(captureTarget, {
         format: "png",
         quality: 1,
         result: "tmpfile",
       });
 
-      setPreviewImageUri(uri);
-    } catch {
-      Toast.show({ type: "error", text1: t("monthlyReview.error") });
-    } finally {
-      setIsGeneratingShareImage(false);
-    }
-  };
-
-  const shareImage = async () => {
-    if (!previewImageUri || isSharingImage) {
-      return;
-    }
-
-    setIsSharingImage(true);
-
-    try {
-      await shareAsync(previewImageUri, {
+      await shareAsync(capturedUri, {
         mimeType: "image/png",
         UTI: "public.png",
       });
-
-      closeSharePreview();
     } catch {
       Toast.show({ type: "error", text1: t("monthlyReview.error") });
     } finally {
+      if (capturedUri) {
+        try {
+          releaseCapture(capturedUri);
+        } catch {
+          // Ignore cleanup failure.
+        }
+      }
+
       setIsSharingImage(false);
     }
   };
 
-  const closeSharePreview = () => {
-    if (previewImageUri) {
-      try {
-        releaseCapture(previewImageUri);
-      } catch {
-        // Ignore cleanup failure.
-      }
-    }
-
-    setPreviewImageUri(null);
-  };
-
   return {
-    previewImageUri,
-    isGeneratingShareImage,
     isSharingImage,
-    prepareSharePreview,
     shareImage,
-    closeSharePreview,
   };
 }
