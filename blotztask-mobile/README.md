@@ -41,19 +41,22 @@ We ship iOS + Android together, built locally via `build.ps1`. Two GitHub Action
 track what's in each release — they build/submit nothing, so there's no risk to the stores.
 
 **Before shipping — see what's coming:** the **"Next release (unreleased)"** draft under the
-repo's **Releases** page always lists every PR merged since the last shipped release. It
-auto-updates on every merge to `main` (workflow: `preview-next-release.yml`), so the team /
-PM can see the impact of a release before it goes out. Bookmark that draft.
+repo's **Releases** page shows an **AI-written, user-facing "What's New" summary** of everything
+merged since the last shipped release (powered by GitHub Models — no API key). It auto-updates
+on every merge to `main` (workflow: `preview-next-release.yml`), so the team / PM can read the
+user-facing impact before it ships. Bookmark that draft.
+
+For the summary to be accurate, each PR's **"Release note"** section (in the PR template) must be
+filled in — one user-facing sentence plus a **Status** (User-facing / Beta / Hidden in production /
+Internal). The AI omits internal/hidden work and tags beta features as "(beta)".
 
 **After shipping — record the release:** once you've submitted to both stores, go to the
 **Actions** tab → **Tag Release** → **Run workflow**. Optionally fill in the iOS/Android
 build numbers (from App Store Connect / Play Console); versions default from `eas.json`.
-It creates a `release/<date>` tag and a published Release with auto-generated notes covering
-everything since the previous release. That published release becomes the new baseline, so
-the "Next release" draft resets to empty.
+It creates a `release/<date>` tag and a published Release. That published release becomes the
+new baseline, so the "Next release" draft resets.
 
-Both release bodies are editable — polish the auto-generated PR list into user-facing
-"what's new" copy when needed.
+Release bodies are editable — tweak the wording before pasting into the stores when needed.
 
 ## Learn more
 
