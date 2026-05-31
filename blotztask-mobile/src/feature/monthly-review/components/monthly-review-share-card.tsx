@@ -12,7 +12,7 @@ export function MonthlyReviewShareCard({ displayMonth, recipientName, body }: Pr
   const { t } = useTranslation("settings");
 
   return (
-    <View collapsable={false} className="h-128 w-96 bg-[#FFFBF3] px-7 pb-7 pt-8">
+    <View collapsable={false} className="w-96 bg-[#FFFBF3] px-7 pb-7 pt-8">
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <View className="h-10 w-10 items-center justify-center rounded-full bg-white">
@@ -39,16 +39,10 @@ export function MonthlyReviewShareCard({ displayMonth, recipientName, body }: Pr
       </Text>
 
       <View className="mt-6 rounded-3xl px-6 py-6">
-        <Text
-          numberOfLines={16}
-          ellipsizeMode="tail"
-          className="font-baloo text-base leading-6 text-secondary"
-        >
+        <Text className="font-baloo text-base leading-6 text-secondary">
           {body}
         </Text>
       </View>
-
-      <View className="flex-1" />
 
       <View className="mt-6 flex-row items-center justify-end">
         <Image source={PNGIMAGES.loadingBun} className="h-16 w-16" resizeMode="contain" />
