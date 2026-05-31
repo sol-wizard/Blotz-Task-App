@@ -9,6 +9,7 @@ public static class DependencyInjection
     {
         services.AddScoped<FindMatchingBadgesHandler>();
         services.AddScoped<AwardNewBadgesToUserHandler>();
+        services.AddScoped<BadgeAwardService>();
 
         services.AddHttpClient("Expo", client =>
         {
