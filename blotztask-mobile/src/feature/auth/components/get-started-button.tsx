@@ -47,43 +47,65 @@ export default function GetStartedButton() {
   const showPhone = process.env.EXPO_PUBLIC_APP_ENV !== "production";
 
   return (
-    <View style={{ gap: 12 }}>
-      <PillButton label={t("buttons.continue")} onPress={() => signIn()} />
+    <View style={{ gap: 12, width: "100%" }}>
+      <PillButton label={t("buttons.continue")} onPress={() => signIn()} variant="primary" />
       {showPhone && (
-        <PillButton label={t("buttons.continueWithPhone")} onPress={() => signIn("sms")} />
+        <PillButton
+          label={t("buttons.continueWithPhone")}
+          onPress={() => signIn("sms")}
+          variant="secondary"
+        />
       )}
     </View>
   );
 }
 
-function PillButton({ label, onPress }: { label: string; onPress: () => void }) {
+function PillButton({
+  label,
+  onPress,
+  variant,
+}: {
+  label: string;
+  onPress: () => void;
+  variant: "primary" | "secondary";
+}) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    width: "100%",
   }));
 
-  const onPressIn = () => {
-    scale.value = withTiming(1.08, { duration: 100 });
-  };
-
-  const onPressOut = () => {
-    scale.value = withTiming(1, { duration: 120 });
-  };
+  const isPrimary = variant === "primary";
 
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      style={animatedStyle}
+      onPressIn={() => {
+        scale.value = withTiming(0.97, { duration: 100 });
+      }}
+      onPressOut={() => {
+        scale.value = withTiming(1, { duration: 120 });
+      }}
+      style={[
+        animatedStyle,
+        {
+          paddingVertical: 16,
+          borderRadius: 999,
+          borderCurve: "continuous",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: isPrimary ? "#000000" : "#ffffff",
+          borderWidth: isPrimary ? 0 : 1.5,
+          borderColor: "#000000",
+          boxShadow: isPrimary ? "0 10px 24px rgba(0, 0, 0, 0.18)" : undefined,
+        },
+      ]}
     >
       <Text
-        className="font-balooBold text-lg py-3 px-10 bg-black text-white rounded-full"
+        className="font-balooBold text-lg"
         style={{
-          borderCurve: "continuous",
-          textAlign: "center",
+          color: isPrimary ? "#ffffff" : "#000000",
           letterSpacing: 0.3,
-          boxShadow: "0 10px 24px rgba(0, 0, 0, 0.18)",
         }}
       >
         {label}
