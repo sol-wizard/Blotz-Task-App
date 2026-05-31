@@ -35,6 +35,26 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+## Releases & changelogs
+
+We ship iOS + Android together, built locally via `build.ps1`. Two GitHub Actions
+track what's in each release — they build/submit nothing, so there's no risk to the stores.
+
+**Before shipping — see what's coming:** the **"Next release (unreleased)"** draft under the
+repo's **Releases** page always lists every PR merged since the last shipped release. It
+auto-updates on every merge to `main` (workflow: `preview-next-release.yml`), so the team /
+PM can see the impact of a release before it goes out. Bookmark that draft.
+
+**After shipping — record the release:** once you've submitted to both stores, go to the
+**Actions** tab → **Tag Release** → **Run workflow**. Optionally fill in the iOS/Android
+build numbers (from App Store Connect / Play Console); versions default from `eas.json`.
+It creates a `release/<date>` tag and a published Release with auto-generated notes covering
+everything since the previous release. That published release becomes the new baseline, so
+the "Next release" draft resets to empty.
+
+Both release bodies are editable — polish the auto-generated PR list into user-facing
+"what's new" copy when needed.
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:

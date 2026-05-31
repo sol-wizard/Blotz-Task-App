@@ -1,0 +1,68 @@
+name: Preview Next Release
+
+# Keeps a single DRAFT GitHub Release ("Next release (unreleased)") up to date
+# with every PR merged to main since the last shipped release. This gives the
+# team / product manager a live view of what is queued for the next App Store
+# and Play Store release — BEFORE it ships.
+#
+# It refreshes automatically on every merge to main, whenever a release is
+# published (so it resets to the new baseline), and on demand. It uses only the
+# built-in token and creates nothing user-facing in the stores.
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate pending changelog and upsert the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${{ github.repository }}"
+
+          # Latest published release = the last shipped version = our baseline.
+          PREV=$(gh api "repos/$REPO/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+
+          # Auto-generate notes for everything merged since PREV up to main HEAD.
+          if [ -n "$PREV" ]; then
+            BODY=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
+              -f tag_name=next -f target_commitish=main -f previous_tag_name="$PREV" \
+              --jq '.body')
+          else
+            BODY=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
+              -f tag_name=next -f target_commitish=main --jq '.body')
+          fi
+
+          {
+            echo "> ⚠️ **Unreleased preview** — what will ship in the next App Store / Play release."
+            echo "> Auto-updated on every merge to main. Baseline (last shipped): \`${PREV:-none yet}\`."
+            echo ""
+            echo "$BODY"
+          } > body.md
+
+          # Upsert a single draft named "Next release (unreleased)".
+          ID=$(gh api "repos/$REPO/releases" --jq '.[] | select(.draft and .name=="Next release (unreleased)") | .id' | head -n1)
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/$REPO/releases/$ID" -f body="$(cat body.md)" >/dev/null
+            echo "Updated existing draft (id=$ID, baseline=${PREV:-none})."
+          else
+            gh api -X POST "repos/$REPO/releases" \
+              -F draft=true -f name="Next release (unreleased)" \
+              -f tag_name=next -f target_commitish=main \
+              -f body="$(cat body.md)" >/dev/null
+            echo "Created draft (baseline=${PREV:-none})."
+          fi
