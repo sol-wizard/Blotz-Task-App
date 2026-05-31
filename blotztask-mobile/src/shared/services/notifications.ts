@@ -42,8 +42,6 @@ export function handleBadgeNotification(notification: Notifications.Notification
   const description = (data?.description as string | undefined) ?? "";
 
   Alert.alert(badgeName, description);
-  // TODO: On OK dismiss, notify backend that this badge notification has been displayed (markBadgeAsDisplayed).
-  // TODO: On app launch, add a backend catch-up service to fetch all badges where displayed=false and re-show them.
 }
 
 async function getExpoPushTokenAsync(): Promise<string | null> {
