@@ -34,10 +34,7 @@ public class NotifyBadgesToUser(
             return;
         }
 
-        var language = await db.UserPreferences
-            .Where(p => p.UserId == userId)
-            .Select(p => p.PreferredLanguage)
-            .FirstOrDefaultAsync(ct);
+        var language = await LoadPreferredLanguageAsync(userId, ct);
 
         var isEnglish = language == Language.En;
         var title = isEnglish ? "You have received a new badge" : "你收到了一个新的奖章";
@@ -67,4 +64,10 @@ public class NotifyBadgesToUser(
             logger.LogInformation("Deleted {Count} dead push token(s).", deadTokens.Count);
         }
     }
+
+    private Task<Language> LoadPreferredLanguageAsync(Guid userId, CancellationToken ct) =>
+        db.UserPreferences
+            .Where(p => p.UserId == userId)
+            .Select(p => p.PreferredLanguage)
+            .FirstOrDefaultAsync(ct);
 }
