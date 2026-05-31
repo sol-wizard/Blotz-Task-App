@@ -6,18 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserPushTokensAndIsDisplayedToUserBadge : Migration
+    public partial class AddUserPushTokens : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsDisplayed",
-                table: "UserBadges",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
-
             migrationBuilder.CreateTable(
                 name: "UserPushTokens",
                 columns: table => new
@@ -57,10 +50,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "UserPushTokens");
-
-            migrationBuilder.DropColumn(
-                name: "IsDisplayed",
-                table: "UserBadges");
         }
     }
 }

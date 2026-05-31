@@ -206,9 +206,6 @@ namespace BlotzTask.Migrations
                     b.Property<DateTime>("EarnedAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsDisplayed")
-                        .HasColumnType("bit");
-
                     b.HasKey("UserId", "BadgeId");
 
                     b.HasIndex("BadgeId");

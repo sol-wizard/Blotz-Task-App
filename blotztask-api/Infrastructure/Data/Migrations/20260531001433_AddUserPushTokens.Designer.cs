@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20260525045119_AddUserPushTokensAndIsDisplayedToUserBadge")]
-    partial class AddUserPushTokensAndIsDisplayedToUserBadge
+    [Migration("20260531001433_AddUserPushTokens")]
+    partial class AddUserPushTokens
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -208,9 +208,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
 
                     b.Property<DateTime>("EarnedAtUtc")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDisplayed")
-                        .HasColumnType("bit");
 
                     b.HasKey("UserId", "BadgeId");
 
@@ -690,7 +687,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsOnboarded")
@@ -698,6 +694,9 @@ namespace BlotzTask.Infrastructure.Data.Migrations
 
                     b.Property<DateTime?>("LoginAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
