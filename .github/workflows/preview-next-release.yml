@@ -1,13 +1,15 @@
 name: Preview Next Release
 
-# Keeps a single DRAFT GitHub Release ("Next release (unreleased)") up to date
-# with every PR merged to main since the last shipped release. This gives the
-# team / product manager a live view of what is queued for the next App Store
-# and Play Store release — BEFORE it ships.
+# Keeps a single DRAFT GitHub Release ("Next release (unreleased)") updated with
+# an AI-written, USER-FACING summary of what will ship in the next release.
 #
-# It refreshes automatically on every merge to main, whenever a release is
-# published (so it resets to the new baseline), and on demand. It uses only the
-# built-in token and creates nothing user-facing in the stores.
+# It reads the PRs merged since the last release — including the "Release note"
+# section each PR author fills in (see .github/pull_request_template.md) — and
+# uses GitHub Models to draft friendly "What's New" copy: it omits work marked
+# internal or hidden-in-production, and tags beta features as "(beta)".
+#
+# Refreshes on every merge to main, when a release is published, and on demand.
+# Uses only the built-in token (no API key, no cost). Builds/ships nothing.
 
 on:
   push:
@@ -15,9 +17,15 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      model:
+        description: "GitHub Models model"
+        required: false
+        default: "openai/gpt-4o"
 
 permissions:
   contents: write
+  models: read
 
 jobs:
   preview:
@@ -28,41 +36,63 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate pending changelog and upsert the draft
+      - name: Collect PRs merged since the last release
+        id: collect
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           REPO="${{ github.repository }}"
-
-          # Latest published release = the last shipped version = our baseline.
-          PREV=$(gh api "repos/$REPO/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
-
-          # Auto-generate notes for everything merged since PREV up to main HEAD.
-          if [ -n "$PREV" ]; then
-            BODY=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
-              -f tag_name=next -f target_commitish=main -f previous_tag_name="$PREV" \
-              --jq '.body')
+          PREV_TAG=$(gh api "repos/$REPO/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            SINCE=$(gh api "repos/$REPO/commits/$PREV_TAG" --jq '.commit.committer.date')
           else
-            BODY=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
-              -f tag_name=next -f target_commitish=main --jq '.body')
+            SINCE="1970-01-01T00:00:00Z"
           fi
+          gh pr list --repo "$REPO" --state merged --base main --limit 100 \
+            --json number,title,body,mergedAt \
+            --jq "[.[] | select(.mergedAt > \"$SINCE\")] | sort_by(.mergedAt)
+                  | .[] | \"#\(.number) \(.title)\n\(.body // \"\" | .[0:1500])\n---\"" > prs.txt
+          echo "prev_tag=${PREV_TAG:-none}" >> "$GITHUB_OUTPUT"
+          echo "Collected $(grep -c '^---$' prs.txt) PRs since ${PREV_TAG:-start}."
 
+      - name: Summarize with GitHub Models
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MODEL="${{ inputs.model }}"; [ -z "$MODEL" ] && MODEL="openai/gpt-4o"
+          SYSTEM='You write user-facing release notes ("What'\''s New") for BlotzTask, an ADHD-friendly mobile task manager. You receive the pull requests merged since the last release. Each PR may include a "Release note" line (a user-facing sentence) and a "Status" checklist. RULES: (1) If a PR is marked "Internal only" or "Hidden in production", OMIT it entirely. (2) If marked "Beta", include it but clearly append "(beta)". (3) Prefer the PR'\''s "Release note" sentence for wording. (4) For PRs with no Release note section, judge conservatively from the title: include ONLY if it is clearly a user-visible feature or improvement, and when unsure, omit it. Never invent a feature or assume something is live in production. (5) Group into short, friendly bullet points, each starting with a relevant emoji, max ~6 bullets. Output only the bullet list, no preamble.'
+
+          jq -n --arg model "$MODEL" --arg sys "$SYSTEM" --rawfile prs prs.txt \
+            '{model:$model, temperature:0.3,
+              messages:[{role:"system",content:$sys},
+                        {role:"user",content:("PRs merged since the last release:\n\n"+$prs)}]}' > body.json
+
+          HTTP=$(curl -sS -o resp.json -w '%{http_code}' \
+            https://models.github.ai/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @body.json)
+          if [ "$HTTP" != "200" ]; then
+            echo "GitHub Models request failed (HTTP $HTTP):"; cat resp.json; exit 1
+          fi
+          jq -r '.choices[0].message.content' resp.json > notes.md
+
+      - name: Upsert the draft with the AI summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${{ github.repository }}"
           {
-            echo "> ⚠️ **Unreleased preview** — what will ship in the next App Store / Play release."
-            echo "> Auto-updated on every merge to main. Baseline (last shipped): \`${PREV:-none yet}\`."
+            echo "> 🟡 **Preview of the next release** — AI-drafted from merged PRs, auto-updated on every merge to main. Review before publishing."
+            echo "> Since: \`${{ steps.collect.outputs.prev_tag }}\`"
             echo ""
-            echo "$BODY"
-          } > body.md
-
-          # Upsert a single draft named "Next release (unreleased)".
+            cat notes.md
+          } > out.md
           ID=$(gh api "repos/$REPO/releases" --jq '.[] | select(.draft and .name=="Next release (unreleased)") | .id' | head -n1)
           if [ -n "$ID" ]; then
-            gh api -X PATCH "repos/$REPO/releases/$ID" -f body="$(cat body.md)" >/dev/null
-            echo "Updated existing draft (id=$ID, baseline=${PREV:-none})."
+            gh api -X PATCH "repos/$REPO/releases/$ID" -f body="$(cat out.md)" >/dev/null
+            echo "Updated existing draft (id=$ID)."
           else
             gh api -X POST "repos/$REPO/releases" \
               -F draft=true -f name="Next release (unreleased)" \
-              -f tag_name=next -f target_commitish=main \
-              -f body="$(cat body.md)" >/dev/null
-            echo "Created draft (baseline=${PREV:-none})."
+              -f tag_name=next -f target_commitish=main -f body="$(cat out.md)" >/dev/null
+            echo "Created draft."
           fi
