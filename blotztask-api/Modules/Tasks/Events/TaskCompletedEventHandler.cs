@@ -11,7 +11,7 @@ public class TaskCompletedEventHandler(
     BlotzTaskDbContext db,
     FindMatchingBadgesHandler findMatchingBadgesHandler,
     AwardNewBadgesToUserHandler awardNewBadgesToUserHandler,
-    IBadgeNotificationService badgeNotificationService,
+    NotifyBadgesToUser notifyBadgesToUser,
     ILogger<TaskCompletedEventHandler> logger)
     : IDomainEventHandler<TaskCompletedEvent>
 {
@@ -44,6 +44,6 @@ public class TaskCompletedEventHandler(
         }, ct);
 
 
-        await badgeNotificationService.SendBadgeNotificationsAsync(taskCompletedEvent.UserId, awardedBadgeIds, ct);
+        await notifyBadgesToUser.HandleAsync(taskCompletedEvent.UserId, awardedBadgeIds, ct);
     }
 }

@@ -16,6 +16,7 @@ public static class DependencyInjection
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         });
         services.AddScoped<IBadgeNotificationService, BadgeNotificationService>();
+        services.AddScoped<NotifyBadgesToUser>();
 
         return services;
     }
