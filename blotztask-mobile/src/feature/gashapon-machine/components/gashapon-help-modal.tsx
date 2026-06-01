@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, View, Text, ScrollView, Pressable } from "react-native";
+import { Modal, View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 
 interface GashaponHelpModalProps {
@@ -20,7 +20,7 @@ export const GashaponHelpModal: React.FC<GashaponHelpModalProps> = ({ visible, o
           <Text className="text-slate-800 text-2xl font-bold text-center font-baloo">
             {t("gashapon.helpTitle")}
           </Text>
-          <ScrollView className="mt-4 max-h-72" showsVerticalScrollIndicator={false}>
+          <View className="mt-4">
             {helpSteps.map((step, index) => (
               <View key={step} className="mb-3 flex-row">
                 <Text className="w-7 text-base leading-6 text-secondary font-balooBold">
@@ -31,7 +31,7 @@ export const GashaponHelpModal: React.FC<GashaponHelpModalProps> = ({ visible, o
                 </Text>
               </View>
             ))}
-          </ScrollView>
+          </View>
           <Pressable
             onPress={onClose}
             className="mt-6 h-11 items-center justify-center rounded-full bg-[#99D612]"
