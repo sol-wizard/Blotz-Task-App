@@ -30,7 +30,7 @@ builder.Services.AddHostedService<QueuedHostedService>();
 
 // Feature modules
 builder.Services.AddAiUsageModule();
-builder.Services.AddBadgeModule();
+builder.Services.AddBadgeModule(builder.Configuration);
 builder.Services.AddChatTaskGeneratorModule();
 builder.Services.AddLabelModule();
 builder.Services.AddMonthlyReviewModule();

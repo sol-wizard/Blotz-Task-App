@@ -49,10 +49,15 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: Infinity,
-      gcTime: 1 * 60 * 1000,
-      retry: 2,
+      gcTime: 5 * 60 * 1000,
+      retry: (failureCount, error) => {
+        const status = isAxiosError(error) ? error.response?.status : undefined;
+        if (status && status < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
-      refetchOnMount: "always",
       refetchOnReconnect: true,
       refetchOnWindowFocus: true,
       networkMode: "online",

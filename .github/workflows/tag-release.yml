@@ -1,0 +1,68 @@
+name: Tag Release
+
+# Records a SHIPPED release (iOS + Android, which ship together) in GitHub.
+# Run this manually AFTER you have built and submitted to both stores — the
+# builds themselves stay local via build.ps1 / `eas build --local`.
+#
+# It creates a `release/<date>` tag + a published GitHub Release whose notes are
+# auto-generated from every PR merged since the previous release. This published
+# release also becomes the new baseline for the "Preview Next Release" draft.
+# It builds and submits nothing, and needs no Expo/App Store credentials.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ios_version:
+        description: "iOS version shipped (blank = read from eas.json production.ios)"
+        required: false
+      ios_build:
+        description: "iOS build number from App Store Connect (e.g. 139)"
+        required: false
+      android_version:
+        description: "Android version shipped (blank = read from eas.json production.android)"
+        required: false
+      android_build:
+        description: "Android version code / build from Play Console"
+        required: false
+      commit:
+        description: "Commit SHA that was built (blank = latest main)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.commit || 'main' }}
+
+      - name: Resolve versions and tag
+        id: meta
+        run: |
+          IOS_V="${{ inputs.ios_version }}"
+          if [ -z "$IOS_V" ]; then
+            IOS_V=$(jq -r '.build.production.ios.env.APP_VERSION' blotztask-mobile/eas.json)
+          fi
+          AND_V="${{ inputs.android_version }}"
+          if [ -z "$AND_V" ]; then
+            AND_V=$(jq -r '.build.production.android.env.APP_VERSION' blotztask-mobile/eas.json)
+          fi
+          {
+            echo "ios_v=$IOS_V"
+            echo "and_v=$AND_V"
+            echo "tag=release/$(date -u +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and published release with auto-generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.meta.outputs.tag }}" \
+            --title "Release ${{ steps.meta.outputs.tag }} — iOS ${{ steps.meta.outputs.ios_v }} (${{ inputs.ios_build }}) · Android ${{ steps.meta.outputs.and_v }} (${{ inputs.android_build }})" \
+            --target "${{ github.sha }}" \
+            --generate-notes

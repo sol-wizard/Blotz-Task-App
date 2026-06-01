@@ -10,12 +10,15 @@ SplashScreen.preventAutoHideAsync();
 
 // Configure notification handling
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    const isBadge = notification.request.content.data?.type === "badge";
+    return {
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: !isBadge,
+      shouldShowList: !isBadge,
+    };
+  },
 });
 
 Notifications.setNotificationCategoryAsync("task-reminder", [
