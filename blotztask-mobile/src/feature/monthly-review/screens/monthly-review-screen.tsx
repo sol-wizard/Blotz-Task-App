@@ -79,8 +79,7 @@ export default function MonthlyReviewScreen() {
           <View
             ref={shareCardRef}
             collapsable={false}
-            className="rounded-3xl px-7 pt-7 pb-8"
-            style={{ backgroundColor: "#FFFBF3" }}
+            className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
           >
             <LetterHeader displayMonth={displayMonth} />
             {isLoading ? (
@@ -121,7 +120,6 @@ export default function MonthlyReviewScreen() {
           </Text>
         </View>
       </ScrollView>
-
     </SafeAreaView>
   );
 }
