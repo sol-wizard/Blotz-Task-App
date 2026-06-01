@@ -1,0 +1,47 @@
+name: PR Release Note Check
+
+# Fails a PR until its "Release note" section is filled in (see
+# .github/pull_request_template.md): a Release note heading plus exactly one
+# ticked Status box. This is what keeps the auto-generated release notes
+# accurate — the author declares user impact / beta / hidden / internal.
+#
+# Re-runs when the PR description is edited, so authors can fix it without a
+# new commit. Make it a REQUIRED status check (Settings → Branches) to block
+# merges until it passes.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify the Release note section is filled
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # Skip automated PRs (dependabot, copilot, other bots).
+          case "$AUTHOR" in
+            *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
+          esac
+
+          FAIL=0
+          if ! grep -qiE '^#+[[:space:]]*Release note' <<< "$BODY"; then
+            echo "::error::Missing the '## Release note' section — please use the PR template."
+            FAIL=1
+          fi
+          if ! grep -qE '^[[:space:]]*-[[:space:]]*\[[xX]\]' <<< "$BODY"; then
+            echo "::error::Tick exactly one Status box (User-facing / Beta / Hidden in production / Internal only)."
+            FAIL=1
+          fi
+
+          if [ "$FAIL" = "1" ]; then
+            echo "Fill in the Release note section in the PR description, then save — this check re-runs automatically."
+            exit 1
+          fi
+          echo "Release note section is filled. ✅"
