@@ -1,0 +1,78 @@
+name: Suggest Release Note
+
+# When a PR is opened, an AI bot reads the title + diff and posts a ready-to-paste
+# "Release note" suggestion (with a guessed Status pre-ticked) as a comment. The
+# author just copies it into the PR description and fixes the status if the guess
+# is wrong. Uses GitHub Models (no API key). It NEVER fails the PR — it's a helper,
+# not a gate (the gate is the separate "PR Release Note Check").
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  models: read
+
+jobs:
+  suggest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Draft and post a suggested release note
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          case "$AUTHOR" in *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;; esac
+
+          DIFF=$(gh pr diff "$PR" --repo "$REPO" 2>/dev/null | head -c 6000)
+
+          SYSTEM='You draft a user-facing release-note line for a pull request in BlotzTask, an ADHD-friendly mobile task manager. Given the PR title and diff, output EXACTLY two lines and nothing else: a line "note: <one short sentence a normal user would understand, or the word none>" and a line "status: <exactly one of: User-facing | Beta | Hidden in production | Internal only>". Be conservative: refactors, tests, CI, infra, dependency bumps => Internal only; if the change is gated behind an env var / feature flag / a check like APP_ENV !== "production" => Hidden in production.'
+
+          jq -n --arg sys "$SYSTEM" --arg t "$TITLE" --arg d "$DIFF" \
+            '{model:"openai/gpt-4o", temperature:0.2,
+              messages:[{role:"system",content:$sys},
+                        {role:"user",content:("PR title: "+$t+"\n\nDiff (truncated):\n"+$d)}]}' > body.json
+
+          HTTP=$(curl -sS -o resp.json -w '%{http_code}' https://models.github.ai/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @body.json)
+          if [ "$HTTP" != "200" ]; then echo "GitHub Models unavailable (HTTP $HTTP) — skipping suggestion."; cat resp.json; exit 0; fi
+
+          SUGGESTION=$(jq -r '.choices[0].message.content' resp.json)
+          NOTE=$(printf '%s\n' "$SUGGESTION" | sed -n 's/^note:[[:space:]]*//Ip' | head -1)
+          STATUS=$(printf '%s\n' "$SUGGESTION" | sed -n 's/^status:[[:space:]]*//Ip' | head -1)
+          [ -z "$NOTE" ] && NOTE="(please write one user-facing sentence, or 'none')"
+          [ -z "$STATUS" ] && STATUS="User-facing"
+
+          # Render the four template options, pre-ticking the one the AI guessed.
+          render_box() { case "$1" in "$STATUS"*) printf -- "- [x] %s\n" "$1" ;; *) printf -- "- [ ] %s\n" "$1" ;; esac; }
+          {
+            echo "<!-- release-note-suggestion -->"
+            echo "🤖 **Suggested release note** — copy this into the PR description and fix the status if my guess is wrong (I can't see feature flags or product intent):"
+            echo ""
+            echo '```markdown'
+            echo "## Release note"
+            echo ""
+            echo "> $NOTE"
+            echo ""
+            echo "**Status:**"
+            echo ""
+            render_box "User-facing — announce it"
+            render_box "Beta / partial — announce, but tagged as beta"
+            render_box "Hidden in production (feature-flagged / not enabled for users) — don't announce"
+            render_box "Internal only (refactor / infra / tests / CI / deps) — don't announce"
+            echo '```'
+          } > comment.md
+
+          CID=$(gh api "repos/$REPO/issues/$PR/comments" --jq '.[] | select(.body | contains("<!-- release-note-suggestion -->")) | .id' | head -n1)
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$CID" -f body="$(cat comment.md)" >/dev/null
+            echo "Updated suggestion comment."
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -f body="$(cat comment.md)" >/dev/null
+            echo "Posted suggestion comment."
+          fi
