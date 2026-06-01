@@ -76,6 +76,8 @@
   },
   "monthlyReview": {
     "title": "月度回顾",
+    "share": "分享",
+    "sharing": "分享中...",
     "greeting": "亲爱的 {{name}}，",
     "letterLabel": "月度信件",
     "dateLabel": "日期",
@@ -84,7 +86,7 @@
     "empty": "本月还没有信件。",
     "loading": "正在加载信件…",
     "error": "信件加载失败。",
-    "retry": "重试",
+    "shareError": "分享信件失败。",
     "generate": "生成信件",
     "footnote": "由 AI 根据您本月创建的任务生成。"
   },
