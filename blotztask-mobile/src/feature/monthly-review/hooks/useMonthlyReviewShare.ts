@@ -43,15 +43,11 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     } catch {
       Toast.show({ type: "error", text1: t("monthlyReview.shareError") });
     } finally {
-      if (capturedUri) {
-        try {
-          releaseCapture(capturedUri);
-        } catch {
-          // Ignore cleanup failure.
-        }
-      }
-
       setIsSharingImage(false);
+
+      if (capturedUri) {
+        releaseCapture(capturedUri);
+      }
     }
   };
 
