@@ -15,7 +15,6 @@ import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
 import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
-import { MonthlyReviewShareCard } from "../components/monthly-review-share-card";
 
 export default function MonthlyReviewScreen() {
   const router = useRouter();
@@ -77,7 +76,12 @@ export default function MonthlyReviewScreen() {
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
-          <View className="rounded-3xl px-7 pt-7 pb-8" style={{ backgroundColor: "#FFFBF3" }}>
+          <View
+            ref={shareCardRef}
+            collapsable={false}
+            className="rounded-3xl px-7 pt-7 pb-8"
+            style={{ backgroundColor: "#FFFBF3" }}
+          >
             <LetterHeader displayMonth={displayMonth} />
             {isLoading ? (
               // TODO: replace with a shared inline loading component once one exists.
@@ -118,17 +122,6 @@ export default function MonthlyReviewScreen() {
         </View>
       </ScrollView>
 
-      {report && (
-        <View collapsable={false} className="absolute top-0 -z-10 opacity-0">
-          <View ref={shareCardRef} collapsable={false}>
-            <MonthlyReviewShareCard
-              displayMonth={displayMonth}
-              recipientName={recipientName}
-              body={report.aiGeneratedLetter}
-            />
-          </View>
-        </View>
-      )}
     </SafeAreaView>
   );
 }

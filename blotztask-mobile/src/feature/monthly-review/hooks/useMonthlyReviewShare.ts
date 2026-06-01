@@ -22,7 +22,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
     const captureTarget = captureTargetRef.current;
 
     if (!captureTarget) {
-      Toast.show({ type: "error", text1: t("monthlyReview.error") });
+      Toast.show({ type: "error", text1: t("monthlyReview.shareError") });
       return;
     }
 
@@ -41,7 +41,7 @@ export function useMonthlyReviewShare({ captureTargetRef }: Params) {
         UTI: "public.png",
       });
     } catch {
-      Toast.show({ type: "error", text1: t("monthlyReview.error") });
+      Toast.show({ type: "error", text1: t("monthlyReview.shareError") });
     } finally {
       if (capturedUri) {
         try {
