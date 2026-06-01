@@ -4,7 +4,7 @@ import { Controller, Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-import { AnimatedDropdown, DropdownOption } from "@/shared/components/ui/animated-dropdown";
+import { AnimatedDropdown, DropdownOption } from "@/shared/components/animated-dropdown";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 
 type RecurrenceSelectProps = {
