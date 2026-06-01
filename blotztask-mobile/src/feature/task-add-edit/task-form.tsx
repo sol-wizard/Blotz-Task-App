@@ -15,7 +15,13 @@ import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
 import { getTaskFormDefaults } from "./util/get-task-form-defaults";
 import { getTaskNotification } from "./util/get-task-notification";
-import { buildTaskTimePayload, calculateAlertTime } from "./util/time-convertion";
+import { RecurrenceSelect } from "./components/recurrence-select";
+import { createNotificationFromAlert } from "./util/create-notification-from-alert";
+import {
+  buildTaskTimePayload,
+  calculateAlertSeconds,
+  calculateAlertTime,
+} from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -46,6 +52,38 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
   // Form
+  const { labels = [], isLoading } = useAllLabels();
+
+  const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
+
+  const defaultAlert = userPreferences?.upcomingNotification
+    ? (initialAlertTime ?? 300)
+    : (initialAlertTime ?? null);
+
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 3600000);
+  const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
+
+  const initialStartDate = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialStartTime = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialEndDate = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+  const initialEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+
+  const defaultValues: TaskFormField = {
+    title: dto?.title ?? "",
+    description: dto?.description ?? "",
+    labelId: dto?.labelId ?? null,
+    startDate: initialStartDate,
+    startTime: initialStartTime,
+    endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
+    endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
+    alert: defaultAlert,
+    recurrence: "never",
+    isDeadline: dto?.isDeadline ?? !!initialDueAt,
+    deadlineDate: initialDueAt ?? oneHourLater,
+    deadlineTime: initialDueAt ?? oneHourLater,
+  };
+
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
@@ -167,6 +205,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         )}
         {isActiveTab === SegmentButtonValue.Reminder && <ReminderTab />}
         {isActiveTab === SegmentButtonValue.Event && <EventTab />}
+        <FormDivider />
+        <RecurrenceSelect control={control} />
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
