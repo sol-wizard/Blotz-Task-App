@@ -49,8 +49,6 @@ export const NoteTimeEstimateModal = ({
       isVisible={visible}
       onBackdropPress={() => setIsModalVisible(false)}
       backdropOpacity={0.4}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
       useNativeDriver={false}
     >
       <View className="flex-1 items-center justify-center px-6">
