@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Badges.Commands;
 using BlotzTask.Modules.Badges.Enum;
+using BlotzTask.Modules.Badges.Services;
 using BlotzTask.Shared.Events;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,7 @@ namespace BlotzTask.Modules.Tasks.Events;
 
 public class TaskCompletedEventHandler(
     BlotzTaskDbContext db,
-    FindMatchingBadgesHandler findMatchingBadgesHandler,
-    AwardNewBadgesToUserHandler awardNewBadgesToUserHandler,
+    BadgeAwardService badgeAwardService,
     ILogger<TaskCompletedEventHandler> logger)
     : IDomainEventHandler<TaskCompletedEvent>
 {
@@ -23,21 +23,15 @@ public class TaskCompletedEventHandler(
         int completeOffsetMinutes = 0;
         if (task != null)
             completeOffsetMinutes = (int)(DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
-        
-        var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
+
+        await badgeAwardService.ProcessAsync(new BadgeAwardCommand
         {
+            UserId = taskCompletedEvent.UserId,
             TriggerAction = TriggerAction.TaskComplete,
             EventValues = new Dictionary<EventValueKey, double>
             {
                 [EventValueKey.CompleteOffsetMins] = completeOffsetMinutes
             }
         }, ct);
-        
-        await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
-        {
-            UserId = taskCompletedEvent.UserId,
-            BadgeIds = matchingBadgeIds
-        }, ct);
-      
     }
 }

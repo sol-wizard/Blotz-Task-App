@@ -1,26 +1,13 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Application from "expo-application";
+import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
+import { STORAGE_KEYS } from "../constants/storage-keys";
+import { upsertPushToken } from "./user-service";
 
-export async function schedulePushNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "I'M AN IMPORTANT NOTIFICATION! 📬",
-      body: "CLICK ME TO SEE MORE DATA",
-      data: { data: "goes here", test: { test1: "more data" } },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 2,
-    },
-    ...(Platform.OS === "android" && { channelId: "blotzNotificationChannel" }),
-  });
-}
-
-export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  let token: string | null = null;
-
+export async function registerForPushNotificationsAsync(): Promise<void> {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("blotzNotificationChannel", {
       name: "A channel is needed for the permissions prompt to appear",
@@ -30,35 +17,56 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     });
   }
 
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
-      return null;
-    }
+  const settings = await Notifications.getPermissionsAsync();
+  let granted =
+    settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
 
-    try {
-      const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
-      if (!projectId) {
-        throw new Error("Project ID not found");
-      }
-      token = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
-      ).data;
-      console.log(token);
-    } catch (e) {
-      token = `${e}`;
-    }
-  } else {
-    alert("Must use physical device for Push Notifications");
+  if (!granted) {
+    const { granted: requestGranted } = await Notifications.requestPermissionsAsync();
+    granted = requestGranted;
   }
 
-  return token;
+  if (!granted) return;
+
+  const token = await getExpoPushTokenAsync();
+  if (token) {
+    await handlePushTokenUpdate(token);
+  }
+}
+
+export function handleBadgeNotification(notification: Notifications.Notification): void {
+  const data = notification.request.content.data;
+  if (data?.type !== "badge") return;
+
+  const badgeName = notification.request.content.body ?? "";
+  const description = (data?.description as string | undefined) ?? "";
+
+  Alert.alert(badgeName, description);
+}
+
+async function getExpoPushTokenAsync(): Promise<string | null> {
+  if (!Device.isDevice) return null;
+
+  try {
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    return tokenData.data;
+  } catch (error) {
+    console.error("Error getting Expo push token:", error);
+    return null;
+  }
+}
+
+async function handlePushTokenUpdate(token: string) {
+  const cachedToken = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_TOKEN);
+  if (cachedToken === token) return;
+
+  const deviceId =
+    Platform.OS === "android"
+      ? Application.getAndroidId()
+      : await Application.getIosIdForVendorAsync();
+  if (!deviceId) return;
+
+  await upsertPushToken({ token, deviceId });
+  await AsyncStorage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
 }
