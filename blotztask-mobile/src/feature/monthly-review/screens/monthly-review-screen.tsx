@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +13,7 @@ import { LetterHeader } from "../components/letter-header";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
+import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
 
 export default function MonthlyReviewScreen() {
@@ -20,11 +21,23 @@ export default function MonthlyReviewScreen() {
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const shareCardRef = useRef<View>(null);
+  const { isSharingImage, shareImage } = useMonthlyReviewShare({
+    captureTargetRef: shareCardRef,
+  });
   const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
+
+  const handleShareMonthlyReview = () => {
+    if (!report || isSharingImage) {
+      return;
+    }
+
+    void shareImage();
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -32,36 +45,54 @@ export default function MonthlyReviewScreen() {
         <Pressable onPress={() => router.back()} className="mr-4">
           <MaterialCommunityIcons name="arrow-left" size={24} color="#363853" />
         </Pressable>
-        <Text className="text-2xl font-balooBold text-secondary">
+        <Text className="flex-1 text-2xl font-balooBold text-secondary">
           {t("monthlyReview.title")}
         </Text>
+        {report && (
+          <Pressable
+            onPress={handleShareMonthlyReview}
+            disabled={isSharingImage}
+            className={`h-10 flex-row items-center justify-center rounded-full bg-white px-3 ${
+              isSharingImage ? "opacity-60" : "opacity-100"
+            }`}
+          >
+            <MaterialCommunityIcons name="share-outline" size={18} color="#363853" />
+
+            <Text className="ml-1 text-sm font-balooBold text-secondary">
+              {isSharingImage ? t("monthlyReview.sharing") : t("monthlyReview.share")}
+            </Text>
+          </Pressable>
+        )}
       </View>
       <View className="px-5 mb-4">
         <MonthSelector
           label={displayMonth}
           onPrev={() => setSelectedMonth((m) => addMonths(m, -1))}
-          onNext={() => { if (!isAtCurrentMonth) setSelectedMonth((m) => addMonths(m, 1)); }}
+          onNext={() => {
+            if (!isAtCurrentMonth) setSelectedMonth((m) => addMonths(m, 1));
+          }}
           disableNext={isAtCurrentMonth}
         />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
-          <View className="rounded-3xl px-7 pt-7 pb-8" style={{ backgroundColor: "#FFFBF3" }}>
+          <View
+            ref={shareCardRef}
+            collapsable={false}
+            className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
+          >
             <LetterHeader displayMonth={displayMonth} />
             {isLoading ? (
               // TODO: replace with a shared inline loading component once one exists.
-              (<View className="py-12 items-center">
+              <View className="py-12 items-center">
                 <CustomSpinner size={48} />
                 <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
                   {t("monthlyReview.loading")}
                 </Text>
-              </View>)
+              </View>
             ) : report ? (
               <>
-                <LetterBody
-                  recipientName={recipientName}
-                  body={report.aiGeneratedLetter}
-                />
+                <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
                 <LetterSignature />
               </>
             ) : (

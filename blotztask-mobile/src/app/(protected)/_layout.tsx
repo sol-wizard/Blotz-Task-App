@@ -61,21 +61,7 @@ export default function ProtectedLayout() {
         }}
       />
 
-      <Stack.Screen
-        name="gashapon-machine"
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTransparent: true,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#000000",
-          headerBackButtonDisplayMode: "minimal",
-          headerStyle: {
-            backgroundColor: "transparent",
-          },
-        }}
-      />
+      <Stack.Screen name="gashapon-machine" options={{ headerShown: false }} />
       <Stack.Screen
         name="ai-task-sheet"
         options={{
