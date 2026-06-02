@@ -63,8 +63,8 @@ export default {
         "@sentry/react-native/expo",
         {
           url: "https://sentry.io/",
-          project: "react-native",
-          organization: "nicoles-project",
+          project: "blotz-app",
+          organization: "blotz",
         },
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
@@ -75,6 +75,7 @@ export default {
       "@react-native-vector-icons/material-design-icons",
       "@react-native-vector-icons/material-icons",
       "expo-image",
+      "expo-sharing",
       "expo-web-browser",
       [
         "expo-splash-screen",

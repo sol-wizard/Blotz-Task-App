@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<DeleteUserCommandHandler>();
         services.AddScoped<UpdateUserPreferenceCommandHandler>();
         services.AddScoped<GetUserPreferencesQueryHandler>();
+        services.AddScoped<UpsertPushTokenCommandHandler>();
         services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
         // Manual registration of query handlers 
         return services;

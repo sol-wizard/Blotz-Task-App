@@ -168,7 +168,7 @@ export default function AiTaskSheetScreen() {
               {/* Task / note cards (streamed or final) */}
               {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
-              {isAiGenerating && !!transcript && !hasContent && (
+              {isAiGenerating && !!transcript && (
                 <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
                   &ldquo;{transcript}&rdquo;
                 </Text>
