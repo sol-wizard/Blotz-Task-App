@@ -43,7 +43,6 @@ public class NotifyBadgesToUser(
             .Where(ub => ub.UserId == userId && badgeIds.Contains(ub.BadgeId))
             .ToDictionaryAsync(ub => ub.BadgeId, ub => ub.EarnedAtUtc, ct);
 
-        // One message per badge, with all tokens in the `to` array
         var messages = badges.Select(badge =>
         {
             var earnedAtUtc = earnedAtByBadgeId.TryGetValue(badge.Id, out var earnedAt)
