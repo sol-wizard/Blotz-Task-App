@@ -2,6 +2,7 @@
   "title": "设置",
   "menu": {
     "account": "账户",
+    "monthlyReview": "月度回顾",
     "MembershipPlan": "会员计划",
     "betaFeatures": "测试功能",
     "taskHandling": "任务处理",
@@ -87,8 +88,7 @@
     "loading": "正在加载信件…",
     "error": "信件加载失败。",
     "shareError": "分享信件失败。",
-    "generate": "生成信件",
-    "footnote": "由 AI 根据您本月创建的任务生成。"
+    "generate": "生成信件"
   },
   "avatar": {
     "title": "头像"

@@ -35,6 +35,12 @@ export default function SettingsScreen() {
       route: "/settings/account",
     },
     {
+      key: "monthly-review",
+      label: t("menu.monthlyReview"),
+      icon: "email-outline",
+      route: "/settings/monthly-review",
+    },
+    {
       key: "beta-features",
       label: t("menu.betaFeatures"),
       icon: "flask-outline",

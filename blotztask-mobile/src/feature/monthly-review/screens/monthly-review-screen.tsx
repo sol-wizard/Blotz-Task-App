@@ -114,10 +114,6 @@ export default function MonthlyReviewScreen() {
               </>
             )}
           </View>
-
-          <Text className="text-xs font-baloo text-secondary/50 text-center mt-8 px-4">
-            {t("monthlyReview.footnote")}
-          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
