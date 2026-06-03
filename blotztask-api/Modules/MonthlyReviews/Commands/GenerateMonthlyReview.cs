@@ -1,9 +1,11 @@
+using System.ClientModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json;
 using Azure.AI.OpenAI;
 using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.MonthlyReviews.Domain;
 using BlotzTask.Modules.MonthlyReviews.Dtos;
 using BlotzTask.Modules.MonthlyReviews.Prompts;
@@ -32,6 +34,8 @@ public class GenerateMonthlyReviewCommandHandler(
     BlotzTaskDbContext db,
     AzureOpenAIClient azureOpenAIClient,
     AgentFrameworkServiceExtensions.AzureAIOptions aiOptions,
+    ICheckAiQuotaService checkAiQuotaService,
+    IRecordAiUsageService recordAiUsageService,
     ILogger<GenerateMonthlyReviewCommandHandler> logger)
 {
     // TODO: Reusing the Breakdown deployment for v1. ReasoningEffortLevel is only honoured on
@@ -84,11 +88,24 @@ public class GenerateMonthlyReviewCommandHandler(
 
         var preferredLanguage = await LoadPreferredLanguageAsync(command.UserId, ct);
 
-        var (letter, model) = await GenerateLetterAsync(
+        // TODO: This throws AiQuotaExceededException when over quota, but the manual POST /generate
+        // endpoint and the mobile Generate button don't handle that case yet. Decide how it surfaces
+        // when the real (scheduled / quota-aware) trigger is wired up.
+        await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
+
+        var (letter, model, usage) = await GenerateLetterAsync(
             preferredLanguage.ToDisplayName(),
             monthStartUtc.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
             aiInputJson,
             ct);
+
+        await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+        {
+            UserId = command.UserId,
+            InputTokens = usage?.InputTokenCount ?? 0,
+            OutputTokens = usage?.OutputTokenCount ?? 0,
+            TotalTokens = usage?.TotalTokenCount ?? 0,
+        }, ct);
 
         var report = new MonthlyReviewReport
         {
@@ -151,7 +168,7 @@ public class GenerateMonthlyReviewCommandHandler(
             .FirstOrDefaultAsync(ct);
     }
 
-    private async Task<(string Letter, string Model)> GenerateLetterAsync(
+    private async Task<(string Letter, string Model, ChatTokenUsage? Usage)> GenerateLetterAsync(
         string preferredLanguage,
         string displayMonth,
         string aiInputJson,
@@ -194,26 +211,23 @@ public class GenerateMonthlyReviewCommandHandler(
                 "Monthly review generated (deployment={DeploymentId}, length={Length})",
                 _deploymentId, letter.Length);
 
-            return (letter, _deploymentId);
+            return (letter, _deploymentId, response.Value.Usage);
         }
         catch (OperationCanceledException oce)
         {
             logger.LogWarning(oce, "Monthly review generation canceled");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        //TODO : Handle this more gracefully once the error updated pr merge
-        catch (Exception ex) when (
-            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
+        catch (ClientResultException ex) when (ex.Status == 429)
         {
-            logger.LogWarning(ex, "Token / rate limit hit while generating monthly review");
+            logger.LogError(ex, "Azure AI rate limit hit while generating monthly review.");
             throw new AzureAiException();
         }
-        catch (Exception ex) when (
+        catch (ClientResultException ex) when (
+            ex.Status == 400 &&
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogWarning(ex, "Content filter blocked monthly review generation");
+            logger.LogWarning(ex, "Content filter blocked monthly review generation.");
             throw new AiContentFilterException();
         }
         catch (AiTaskGenerationException)
