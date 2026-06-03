@@ -39,13 +39,30 @@ public class NotifyBadgesToUser(
         var isEnglish = language == Language.En;
         var title = isEnglish ? "You have received a new badge" : "你收到了一个新的奖章";
 
+        var earnedAtByBadgeId = await db.UserBadges
+            .Where(ub => ub.UserId == userId && badgeIds.Contains(ub.BadgeId))
+            .ToDictionaryAsync(ub => ub.BadgeId, ub => ub.EarnedAtUtc, ct);
+
         // One message per badge, with all tokens in the `to` array
-        var messages = badges.Select(badge => new ExpoMessage(
-            To: pushTokens,
-            Title: title,
-            Body: isEnglish ? badge.NameEn : badge.NameZh,
-            Data: new { type = "badge", badgeId = badge.Id, iconUrl = badge.IconUrl, description = isEnglish ? badge.DescriptionEn : badge.DescriptionZh }
-        ));
+        var messages = badges.Select(badge =>
+        {
+            var earnedAtUtc = earnedAtByBadgeId.TryGetValue(badge.Id, out var earnedAt)
+                ? earnedAt
+                : DateTime.UtcNow;
+
+            return new ExpoMessage(
+                To: pushTokens,
+                Title: title,
+                Body: isEnglish ? badge.NameEn : badge.NameZh,
+                Data: new
+                {
+                    type = "badge",
+                    badgeId = badge.Id,
+                    iconUrl = badge.IconUrl,
+                    description = isEnglish ? badge.DescriptionEn : badge.DescriptionZh,
+                    earnedAtUtc
+                });
+        });
 
         var deadTokens = await notificationService.SendAsync(messages, ct);
 

@@ -42,5 +42,9 @@
     "title": "哎呀，出问题了！",
     "message": "出了点小问题，重启App试试看！",
     "button": "重启应用"
+  },
+  "badge": {
+    "achievementUnlocked": "成就解锁！",
+    "obtainedOn": "获得于 {{date}}"
   }
 }
