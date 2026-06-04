@@ -2,6 +2,8 @@ using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
+using OpenAI;
+using System.ClientModel;
 
 namespace BlotzTask.Extension;
 
@@ -13,7 +15,6 @@ public static class AgentFrameworkServiceExtensions
         public required string ApiKey { get; init; }
         public required string TaskGenerationDeploymentId { get; init; }
         public required string BreakdownDeploymentId { get; init; }
-        public required string SpeechDeploymentId { get; init; }
     }
 
     public static IServiceCollection AddAgentFrameworkServices(
@@ -29,8 +30,6 @@ public static class AgentFrameworkServiceExtensions
                 ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId"),
             BreakdownDeploymentId = configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
                 ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId"),
-            SpeechDeploymentId = configuration["AzureOpenAI:AiModels:Speech:DeploymentId"]
-                ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Speech:DeploymentId"),
         };
 
         // AIProjectClient is shared — one client, multiple deployment targets.
@@ -42,8 +41,20 @@ public static class AgentFrameworkServiceExtensions
             new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey)));
         services.AddSingleton<AIProjectClient>(_ =>
             new AIProjectClient(new Uri(options.Endpoint), new DefaultAzureCredential()));
-        services.AddSingleton(sp =>
-            sp.GetRequiredService<AzureOpenAIClient>().GetAudioClient(options.SpeechDeploymentId));
+        var groqApiKey = configuration["Groq:ApiKey"]
+            ?? throw new InvalidOperationException("Missing Groq:ApiKey");
+        var groqModel = configuration["Groq:SpeechModel"]
+            ?? throw new InvalidOperationException("Missing Groq:SpeechModel");
+
+        services.AddSingleton(_ =>
+        {
+            var openAiOptions = new OpenAIClientOptions
+            {
+                Endpoint = new Uri("https://api.groq.com/openai/v1")
+            };
+            var groqClient = new OpenAIClient(new ApiKeyCredential(groqApiKey), openAiOptions);
+            return groqClient.GetAudioClient(groqModel);
+        });
 
         return services;
     }

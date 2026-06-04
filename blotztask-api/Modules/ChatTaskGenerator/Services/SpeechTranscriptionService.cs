@@ -1,4 +1,4 @@
-using Azure;
+using System.ClientModel;
 using BlotzTask.Shared.Exceptions;
 using OpenAI.Audio;
 
@@ -32,11 +32,11 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
 
             return transcriptionResult.Trim();
         }
-        catch (RequestFailedException ex)
+        catch (ClientResultException ex)
         {
             logger.LogWarning(ex,
-                "Whisper API request failed. Status: {Status}, ErrorCode: {ErrorCode}",
-                ex.Status, ex.ErrorCode);
+                "Whisper API request failed. Status: {Status}",
+                ex.Status);
             throw new AiTranscriptionException("Whisper API request failed.", ex);
         }
         catch (Exception ex)
