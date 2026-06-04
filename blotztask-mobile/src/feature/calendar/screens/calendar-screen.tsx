@@ -52,7 +52,7 @@ export default function CalendarScreen() {
         }}
       />
       <CalendarProvider
-        key={`${selectedDay}-${i18n.language}`}
+        key={i18n.language}
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => {
           setSelectedDay(new Date(date));
