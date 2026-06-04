@@ -37,7 +37,7 @@
     "title": "Fresh Update Dropped!",
     "message": "We've been busy making Blotz even better just for you. Grab the latest version to keep the good vibes going!",
     "button": "Let's Go!",
-    "skip": "Next time!"
+    "skip": "Next time!",
     "forced": {
       "title": "Update Required",
       "message": "This version is no longer supported.Please update to continue using Blotz."
