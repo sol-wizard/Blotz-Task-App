@@ -45,9 +45,15 @@ public class NotifyBadgesToUser(
 
         var messages = badges.Select(badge =>
         {
-            var earnedAtUtc = earnedAtByBadgeId.TryGetValue(badge.Id, out var earnedAt)
-                ? earnedAt
-                : DateTime.UtcNow;
+            if (!earnedAtByBadgeId.TryGetValue(badge.Id, out var earnedAt))
+            {
+                logger.LogWarning(
+                    "No UserBadge row for user {UserId} and badge {BadgeId}; falling back to current time.",
+                    userId, badge.Id);
+                earnedAt = DateTime.UtcNow;
+            }
+
+            var earnedAtUtc = DateTime.SpecifyKind(earnedAt, DateTimeKind.Utc);
 
             return new ExpoMessage(
                 To: pushTokens,
