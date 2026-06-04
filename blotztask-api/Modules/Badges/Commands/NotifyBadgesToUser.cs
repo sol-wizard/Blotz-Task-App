@@ -50,10 +50,8 @@ public class NotifyBadgesToUser(
                 logger.LogWarning(
                     "No UserBadge row for user {UserId} and badge {BadgeId}; falling back to current time.",
                     userId, badge.Id);
-                earnedAt = DateTime.UtcNow;
+                earnedAt = DateTimeOffset.UtcNow;
             }
-
-            var earnedAtUtc = DateTime.SpecifyKind(earnedAt, DateTimeKind.Utc);
 
             return new ExpoMessage(
                 To: pushTokens,
@@ -65,7 +63,7 @@ public class NotifyBadgesToUser(
                     badgeId = badge.Id,
                     iconUrl = badge.IconUrl,
                     description = isEnglish ? badge.DescriptionEn : badge.DescriptionZh,
-                    earnedAtUtc
+                    earnedAtUtc = earnedAt
                 });
         });
 

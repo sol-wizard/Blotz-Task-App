@@ -31,7 +31,7 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
         {
             UserId = command.UserId,
             BadgeId = badgeId,
-            EarnedAtUtc = DateTime.UtcNow
+            EarnedAtUtc = DateTimeOffset.UtcNow
         }));
 
         await db.SaveChangesAsync(ct);
