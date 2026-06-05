@@ -1,6 +1,6 @@
 import { useBadgeQueue } from "@/feature/badge/hooks/useBadgeQueue";
 import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
-import { GradientShader } from "@/shared/components/gradient-shader";
+import { GradientColor } from "@/shared/components/gradient-color";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -29,11 +29,11 @@ export function BadgeAchievementModal() {
           </View>
 
           <View className="w-full items-center mb-4">
-            <GradientShader>
+            <GradientColor>
               <Text className="max-w-64 text-4xl font-balooExtraBold text-center leading-normal">
                 {t("achievementUnlocked")}
               </Text>
-            </GradientShader>
+            </GradientColor>
           </View>
 
           <Image
