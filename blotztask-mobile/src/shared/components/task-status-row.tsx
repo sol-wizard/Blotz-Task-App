@@ -3,17 +3,14 @@ import { View, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { TaskStatusType } from "../../feature/calendar/models/task-status-type";
 import { TaskStatusButton } from "@/shared/components/task-status-button";
-import { startOfDay, isBefore, isAfter } from "date-fns";
 
 export function TaskStatusRow({
   allTaskCount,
   todoTaskCount,
-  inProgressTaskCount,
   doneTaskCount,
   overdueTaskCount,
   selectedStatus,
   onChange,
-  selectedDay,
 }: {
   allTaskCount: number;
   todoTaskCount: number;
@@ -26,14 +23,6 @@ export function TaskStatusRow({
 }) {
   const { t } = useTranslation("calendar");
 
-  // Determine if the selected day is past, today, or future
-  const today = startOfDay(new Date());
-  const selectedDate = selectedDay ? startOfDay(selectedDay) : today;
-
-  const isPastDate = isBefore(selectedDate, today);
-  const isFutureDate = isAfter(selectedDate, today);
-  const isToday = !isPastDate && !isFutureDate;
-
   return (
     <ScrollView
       horizontal={true}
@@ -43,13 +32,6 @@ export function TaskStatusRow({
     >
       <View className="flex-row gap-2 px-4 items-center">
         <TaskStatusButton
-          isSelected={selectedStatus === "All"}
-          onChange={() => onChange("All")}
-          statusName={t("status.all")}
-          taskCount={allTaskCount}
-        />
-
-        <TaskStatusButton
           isSelected={selectedStatus === "To Do"}
           onChange={() => onChange("To Do")}
           statusName={t("status.toDo")}
@@ -57,10 +39,10 @@ export function TaskStatusRow({
         />
 
         <TaskStatusButton
-          isSelected={selectedStatus === "In Progress"}
-          onChange={() => onChange("In Progress")}
-          statusName={t("status.inProgress")}
-          taskCount={inProgressTaskCount}
+          isSelected={selectedStatus === "Overdue"}
+          onChange={() => onChange("Overdue")}
+          statusName={t("status.overdue")}
+          taskCount={overdueTaskCount}
         />
 
         <TaskStatusButton
@@ -70,14 +52,12 @@ export function TaskStatusRow({
           taskCount={doneTaskCount}
         />
 
-        {(isToday || isPastDate) && (
-          <TaskStatusButton
-            isSelected={selectedStatus === "Overdue"}
-            onChange={() => onChange("Overdue")}
-            statusName={t("status.overdue")}
-            taskCount={overdueTaskCount}
-          />
-        )}
+        <TaskStatusButton
+          isSelected={selectedStatus === "All"}
+          onChange={() => onChange("All")}
+          statusName={t("status.all")}
+          taskCount={allTaskCount}
+        />
       </View>
     </ScrollView>
   );

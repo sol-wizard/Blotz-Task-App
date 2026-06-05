@@ -16,11 +16,10 @@
     "december": "December"
   },
   "status": {
-    "all": "All",
     "toDo": "To Do",
-    "inProgress": "Doing",
-    "done": "Done",
-    "overdue": "Overdue"
+    "overdue": "Overdue",
+    "done": "Completed",
+    "all": "All"
   },
   "emptyState": {
     "all": {
