@@ -80,7 +80,7 @@ public class GenerateMonthlyReviewCommandHandler(
         // TODO: v1 uses a UTC month boundary. Tasks created within ~12h of a month edge in the
         // user's local timezone will bucket into the wrong UTC month. Fix once UserPreference
         // stores a TimeZoneId (mobile reports latest-known TZ on sync, scheduler reads it).
-        var monthStartUtc = new DateTime(command.Year, command.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var monthStartUtc = new DateTimeOffset(command.Year, command.Month, 1, 0, 0, 0, TimeSpan.Zero);
         var nextMonthStartUtc = monthStartUtc.AddMonths(1);
 
         var monthlyTasks = await LoadMonthlyTasksAsync(command.UserId, monthStartUtc, nextMonthStartUtc, ct);
@@ -137,22 +137,26 @@ public class GenerateMonthlyReviewCommandHandler(
 
     private Task<List<MonthlyReviewTaskDto>> LoadMonthlyTasksAsync(
         Guid userId,
-        DateTime monthStartUtc,
-        DateTime nextMonthStartUtc,
+        DateTimeOffset monthStartUtc,
+        DateTimeOffset nextMonthStartUtc,
         CancellationToken ct)
     {
         return db.TaskItems
             .AsNoTracking()
+            // Include tasks that were planned in the month or completed in the month.
             .Where(t => t.UserId == userId
-                        && t.CreatedAt >= monthStartUtc
-                        && t.CreatedAt < nextMonthStartUtc)
-            .OrderBy(t => t.CreatedAt)
+                        && ((t.StartTime >= monthStartUtc && t.StartTime < nextMonthStartUtc)
+                            || (t.CompletedAt != null
+                                && t.CompletedAt >= monthStartUtc
+                                && t.CompletedAt < nextMonthStartUtc)))
+            .OrderBy(t => t.StartTime)
             .Select(t => new MonthlyReviewTaskDto
             {
                 Title = t.Title,
                 Details = t.Description ?? string.Empty,
                 CreatedDate = t.CreatedAt,
                 PlannedDate = t.StartTime,
+                CompletedDate = t.CompletedAt,
                 TimeTakenMinutes = (int)(t.EndTime - t.StartTime).TotalMinutes,
                 IsDone = t.IsDone,
             })

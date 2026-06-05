@@ -14,6 +14,7 @@ public class MonthlyReviewTaskDto
     public string Details { get; set; } = string.Empty;
     public DateTime CreatedDate { get; set; }
     public DateTimeOffset PlannedDate { get; set; }
+    public DateTimeOffset? CompletedDate { get; set; }
     public int TimeTakenMinutes { get; set; }
     public bool IsDone { get; set; }
 }
