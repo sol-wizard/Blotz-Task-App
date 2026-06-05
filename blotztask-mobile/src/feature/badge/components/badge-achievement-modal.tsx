@@ -1,4 +1,4 @@
-import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
+import { useBadgeQueue } from "@/feature/badge/hooks/useBadgeQueue";
 import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { GradientShader } from "@/shared/components/gradient-shader";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
@@ -6,22 +6,24 @@ import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, Text, View } from "react-native";
 
-interface BadgeAchievementModalProps {
-  badge?: BadgeNotificationDTO;
-  onDismiss: () => void;
-}
-
-export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
+export function BadgeAchievementModal() {
   const { t } = useTranslation("badge");
+  const { currentBadge, dismissBadge } = useBadgeQueue();
 
-  if (!badge) return null;
+  if (!currentBadge) return null;
 
   return (
-    <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={onDismiss}>
+    <Modal
+      transparent
+      visible
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={dismissBadge}
+    >
       <View className="flex-1 bg-black/50 items-center justify-center px-8">
         <View className="w-full items-center">
           <View className="w-full items-end mb-1">
-            <Pressable onPress={onDismiss} hitSlop={12}>
+            <Pressable onPress={dismissBadge} hitSlop={12}>
               <MaterialIcons name="highlight-off" size={30} color="#FFFFFF" />
             </Pressable>
           </View>
@@ -35,23 +37,23 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </View>
 
           <Image
-            source={{ uri: badge.iconUrl }}
+            source={{ uri: currentBadge.iconUrl }}
             style={{ width: 128, height: 128, marginBottom: 20 }}
             contentFit="contain"
           />
 
           <View className="h-14 bg-lime-100 rounded-full px-5 mb-2 items-center justify-center">
             <Text className="text-secondary text-2xl font-bold font-baloo text-center leading-8 pt-1">
-              {badge.name}
+              {currentBadge.name}
             </Text>
           </View>
 
           <Text className="text-white text-xl font-balooThin text-center w-64">
-            {badge.description}
+            {currentBadge.description}
           </Text>
 
           <Text className="text-white text-xl font-baloo mt-4">
-            {t("obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
+            {t("obtainedOn", { date: formatBadgeDate(currentBadge.obtainedAt) })}
           </Text>
         </View>
       </View>
