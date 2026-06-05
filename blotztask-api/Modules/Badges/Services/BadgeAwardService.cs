@@ -23,12 +23,12 @@ public class BadgeAwardService(
             EventValues = command.EventValues
         }, ct);
 
-        var awardedBadgeIds = await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
+        var awardedBadges = await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
         {
             UserId = command.UserId,
             BadgeIds = matchingBadgeIds
         }, ct);
 
-        await notifyBadgesToUser.HandleAsync(command.UserId, awardedBadgeIds, ct);
+        await notifyBadgesToUser.HandleAsync(command.UserId, awardedBadges, ct);
     }
 }

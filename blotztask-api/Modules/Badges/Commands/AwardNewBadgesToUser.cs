@@ -10,9 +10,15 @@ public class AwardNewBadgesToUserCommand
     public required List<int> BadgeIds { get; init; }
 }
 
+public class AwardedBadge
+{
+    public required int BadgeId { get; init; }
+    public required DateTimeOffset EarnedAt { get; init; }
+}
+
 public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNewBadgesToUserHandler> logger)
 {
-    public async Task<List<int>> Handle(AwardNewBadgesToUserCommand command, CancellationToken ct = default)
+    public async Task<List<AwardedBadge>> Handle(AwardNewBadgesToUserCommand command, CancellationToken ct = default)
     {
         if (command.BadgeIds.Count == 0)
             return [];
@@ -27,11 +33,13 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
         if (toAward.Count == 0)
             return [];
 
+        var earnedAt = DateTimeOffset.UtcNow;
+
         db.UserBadges.AddRange(toAward.Select(badgeId => new UserBadge
         {
             UserId = command.UserId,
             BadgeId = badgeId,
-            EarnedAtUtc = DateTimeOffset.UtcNow
+            EarnedAtUtc = earnedAt
         }));
 
         await db.SaveChangesAsync(ct);
@@ -39,6 +47,6 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
         logger.LogInformation("User {UserId} awarded {Count} new badge(s): {BadgeIds}",
             command.UserId, toAward.Count, toAward);
 
-        return toAward;
+        return toAward.Select(badgeId => new AwardedBadge { BadgeId = badgeId, EarnedAt = earnedAt }).ToList();
     }
 }

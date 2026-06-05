@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Badges.Commands;
 using BlotzTask.Modules.Users.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,9 +10,12 @@ public class NotifyBadgesToUser(
     IBadgeNotificationService notificationService,
     ILogger<NotifyBadgesToUser> logger)
 {
-    public async Task HandleAsync(Guid userId, List<int> badgeIds, CancellationToken ct = default)
+    public async Task HandleAsync(Guid userId, List<AwardedBadge> awardedBadges, CancellationToken ct = default)
     {
-        if (badgeIds.Count == 0) return;
+        if (awardedBadges.Count == 0) return;
+
+        var earnedAtByBadgeId = awardedBadges.ToDictionary(b => b.BadgeId, b => b.EarnedAt);
+        var badgeIds = earnedAtByBadgeId.Keys.ToList();
 
         var badges = await db.Badges
             .Where(b => badgeIds.Contains(b.Id))
@@ -39,19 +43,9 @@ public class NotifyBadgesToUser(
         var isEnglish = language == Language.En;
         var title = isEnglish ? "You have received a new badge" : "你收到了一个新的奖章";
 
-        var earnedAtByBadgeId = await db.UserBadges
-            .Where(ub => ub.UserId == userId && badgeIds.Contains(ub.BadgeId))
-            .ToDictionaryAsync(ub => ub.BadgeId, ub => ub.EarnedAtUtc, ct);
-
         var messages = badges.Select(badge =>
         {
-            if (!earnedAtByBadgeId.TryGetValue(badge.Id, out var earnedAt))
-            {
-                logger.LogWarning(
-                    "No UserBadge row for user {UserId} and badge {BadgeId}; falling back to current time.",
-                    userId, badge.Id);
-                earnedAt = DateTimeOffset.UtcNow;
-            }
+            var earnedAt = earnedAtByBadgeId[badge.Id];
 
             return new ExpoMessage(
                 To: pushTokens,
