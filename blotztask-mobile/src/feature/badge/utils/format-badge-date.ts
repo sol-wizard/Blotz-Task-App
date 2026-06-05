@@ -1,5 +1,5 @@
-import { format } from "date-fns";
 import i18n from "@/i18n";
+import { format } from "date-fns";
 
 export function formatBadgeDate(date: Date): string {
   const isChinese = i18n.language === "zh";

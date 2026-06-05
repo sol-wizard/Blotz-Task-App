@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
-import { BadgeNotificationDTO } from "@/shared/models/badge-notification-dto";
+import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
 import { useRouter } from "expo-router";
 import { toggleTaskCompletion } from "../services/task-service";

@@ -1,4 +1,4 @@
-import { BadgeAchievementModal } from "@/shared/components/badge-achievement-modal";
+import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";

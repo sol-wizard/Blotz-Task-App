@@ -47,9 +47,5 @@
     "title": "Something went wrong",
     "message": "Sorry about that! The app ran into an unexpected issue. Reloading usually fixes it.",
     "button": "Reload App"
-  },
-  "badge": {
-    "achievementUnlocked": "Achievement unlocked!",
-    "obtainedOn": "Obtained on {{date}}"
   }
 }

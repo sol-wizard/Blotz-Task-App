@@ -1,5 +1,5 @@
-import { BadgeNotificationDTO } from "@/shared/models/badge-notification-dto";
-import { formatBadgeDate } from "@/shared/util/format-badge-date";
+import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
+import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ interface BadgeAchievementModalProps {
 }
 
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("badge");
 
   if (!badge) return null;
 
@@ -24,7 +24,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </Pressable>
 
           <Text className="text-highlight text-4xl font-baloo mb-4 text-center w-64 leading-normal">
-            {t("badge.achievementUnlocked")}
+            {t("achievementUnlocked")}
           </Text>
 
           <Image
@@ -44,7 +44,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </Text>
 
           <Text className="text-white text-xl font-baloo mt-4">
-            {t("badge.obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
+            {t("obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
           </Text>
         </View>
       </View>
