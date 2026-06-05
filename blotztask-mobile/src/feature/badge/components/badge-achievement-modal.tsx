@@ -1,5 +1,6 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
+import { GradientShader } from "@/shared/components/gradient-shader";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -19,13 +20,19 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={onDismiss}>
       <View className="flex-1 bg-black/50 items-center justify-center px-8">
         <View className="w-full items-center">
-          <Pressable onPress={onDismiss} hitSlop={12} className="absolute right-0 top-0">
-            <MaterialIcons name="highlight-off" size={30} color="#FFFFFF" />
-          </Pressable>
+          <View className="w-full items-end mb-1">
+            <Pressable onPress={onDismiss} hitSlop={12}>
+              <MaterialIcons name="highlight-off" size={30} color="#FFFFFF" />
+            </Pressable>
+          </View>
 
-          <Text className="text-highlight text-4xl font-baloo mb-4 text-center w-64 leading-normal">
-            {t("achievementUnlocked")}
-          </Text>
+          <View className="w-full items-center mb-4">
+            <GradientShader>
+              <Text className="max-w-64 text-4xl font-balooExtraBold text-center leading-normal">
+                {t("achievementUnlocked")}
+              </Text>
+            </GradientShader>
+          </View>
 
           <Image
             source={{ uri: badge.iconUrl }}
@@ -33,8 +40,8 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
             contentFit="contain"
           />
 
-          <View className="bg-lime-100 rounded-full px-4 py-1.5 mb-2">
-            <Text className="text-secondary text-2xl font-bold font-baloo text-center">
+          <View className="h-14 bg-lime-100 rounded-full px-5 mb-2 items-center justify-center">
+            <Text className="text-secondary text-2xl font-bold font-baloo text-center leading-8 pt-1">
               {badge.name}
             </Text>
           </View>
