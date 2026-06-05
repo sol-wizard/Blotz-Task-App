@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView,Modal } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
-
+import Modal from "react-native-modal";
 
 interface GashaponHelpModalProps {
   visible: boolean;
@@ -14,13 +14,12 @@ export const GashaponHelpModal: React.FC<GashaponHelpModalProps> = ({ visible, o
 
   return (
     <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
+      isVisible={visible}
+      animationIn="slideInUp"
       statusBarTranslucent
+      onBackdropPress={() => onClose()}
     >
-       <Pressable className="flex-1 bg-black/40 items-center justify-center" onPress={onClose}>
-      <View className="items-center justify-center p-6 bg-background rounded-2xl w-80 h-120">
+      <View className="items-center justify-center p-6 w-200 h-300 bg-background rounded-2xl">
         <ScrollView className="w-full">
           <Text className="text-slate-800 text-2xl font-bold text-center font-baloo">
             {t("gashapon.helpTitle")}
@@ -31,7 +30,7 @@ export const GashaponHelpModal: React.FC<GashaponHelpModalProps> = ({ visible, o
                 <Text className="w-7 text-xl leading-6 text-secondary font-balooBold">
                   {index + 1}.
                 </Text>
-                <Text className="flex-1 text-xl leading-6 text-gray-600 font-balooThin py-1">
+                <Text className="flex-1 text-xl leading-6 text-gray-600 font-balooThin pt-1">
                   {step}
                 </Text>
               </View>
@@ -45,7 +44,6 @@ export const GashaponHelpModal: React.FC<GashaponHelpModalProps> = ({ visible, o
           <Text className="text-slate-900 font-semibold font-baloo">{t("close")}</Text>
         </Pressable>
       </View>
-      </Pressable>
     </Modal>
   );
 };
