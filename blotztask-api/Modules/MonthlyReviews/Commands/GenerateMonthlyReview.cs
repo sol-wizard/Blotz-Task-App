@@ -157,7 +157,7 @@ public class GenerateMonthlyReviewCommandHandler(
                 CreatedDate = t.CreatedAt,
                 PlannedDate = t.StartTime,
                 CompletedDate = t.CompletedAt,
-                TimeTakenMinutes = (int)(t.EndTime - t.StartTime).TotalMinutes,
+                PlannedDurationMinutes = (int)(t.EndTime - t.StartTime).TotalMinutes,
                 IsDone = t.IsDone,
             })
             .ToListAsync(ct);

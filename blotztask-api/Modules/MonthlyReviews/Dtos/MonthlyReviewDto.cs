@@ -15,6 +15,6 @@ public class MonthlyReviewTaskDto
     public DateTime CreatedDate { get; set; }
     public DateTimeOffset PlannedDate { get; set; }
     public DateTimeOffset? CompletedDate { get; set; }
-    public int TimeTakenMinutes { get; set; }
+    public int PlannedDurationMinutes { get; set; }
     public bool IsDone { get; set; }
 }
