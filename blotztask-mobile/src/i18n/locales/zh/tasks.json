@@ -59,7 +59,13 @@
     "biweekly": "每2周",
     "monthly": "每月",
     "yearly": "每年",
-    "custom": "自定义"
+    "custom": "自定义",
+    "end": "重复结束",
+    "endNever": "永不",
+    "endOnDate": "指定日期",
+    "endDate": "结束日期",
+    "endDateRequired": "请选择结束日期",
+    "endDateBeforeStart": "结束日期不能早于首次重复日期"
   },
   "categories": {
     "work": "工作",

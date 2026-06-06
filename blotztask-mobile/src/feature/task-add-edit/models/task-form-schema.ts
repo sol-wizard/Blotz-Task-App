@@ -12,6 +12,8 @@ export const recurrenceValues = [
   "custom",
 ] as const;
 
+export const recurrenceEndModeValues = ["never", "onDate"] as const;
+
 export const taskFormSchema = z
   .object({
     title: z
@@ -27,6 +29,8 @@ export const taskFormSchema = z
     labelId: z.number().nullable(),
     alert: z.number().nullable(),
     recurrence: z.enum(recurrenceValues),
+    recurrenceEndMode: z.enum(recurrenceEndModeValues),
+    recurrenceEndDate: z.date().nullable(),
     isDeadline: z.boolean(),
     deadlineDate: z.date().nullable(),
     deadlineTime: z.date().nullable(),
@@ -42,6 +46,33 @@ export const taskFormSchema = z
     {
       message: "form.invalidTimeRange",
       path: ["endTime"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.recurrence === "never" || data.recurrence === "custom") return true;
+      if (data.recurrenceEndMode === "never") return true;
+
+      return data.recurrenceEndDate != null;
+    },
+    {
+      message: "recurrence.endDateRequired",
+      path: ["recurrenceEndDate"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.recurrence === "never" || data.recurrence === "custom") return true;
+      if (data.recurrenceEndMode === "never" || !data.recurrenceEndDate) return true;
+
+      return (
+        isBefore(data.startDate, data.recurrenceEndDate) ||
+        isEqual(data.startDate, data.recurrenceEndDate)
+      );
+    },
+    {
+      message: "recurrence.endDateBeforeStart",
+      path: ["recurrenceEndDate"],
     },
   );
 

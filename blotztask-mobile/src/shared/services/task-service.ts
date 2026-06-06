@@ -45,7 +45,12 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 
 export const addTaskItem = async (addTaskForm: TaskUpsertDTO): Promise<number> => {
   const url = `/Task`;
-  const { recurrence: _recurrence, ...taskPayload } = addTaskForm;
+  const {
+    recurrence: _recurrence,
+    recurrenceEndMode: _recurrenceEndMode,
+    recurrenceEndDate: _recurrenceEndDate,
+    ...taskPayload
+  } = addTaskForm;
   return await apiClient.post(url, taskPayload);
 };
 

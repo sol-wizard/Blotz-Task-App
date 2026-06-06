@@ -79,7 +79,7 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
         : null,
     dayOfMonth: recurrence === "monthly" ? new Date(task.startTime).getDate() : null,
     startDate: toDateOnly(task.startTime),
-    endDate: null,
+    endDate: task.recurrenceEndDate ?? null,
   };
 }
 

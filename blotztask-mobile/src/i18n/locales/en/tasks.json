@@ -58,7 +58,13 @@
     "weekly": "Every Week",
     "biweekly": "Every 2 Weeks",
     "monthly": "Every Month",
-    "yearly": "Every Year"
+    "yearly": "Every Year",
+    "end": "Repeat ends",
+    "endNever": "Never",
+    "endOnDate": "On date",
+    "endDate": "End date",
+    "endDateRequired": "Choose an end date",
+    "endDateBeforeStart": "End date cannot be before the first repeat date"
   },
   "categories": {
     "work": "Work",

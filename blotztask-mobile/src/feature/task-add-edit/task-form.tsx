@@ -29,7 +29,8 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
-import { addHours } from "date-fns";
+import { addHours, format } from "date-fns";
+import { RecurrenceEndSection } from "./components/recurrence-end-section";
 
 export type TaskFormProps = {
   onSubmit: (data: TaskUpsertDTO) => void;
@@ -103,6 +104,16 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
       recurrence: mode === "create" ? data.recurrence : undefined,
+      recurrenceEndMode: mode === "create" ? data.recurrenceEndMode : undefined,
+      recurrenceEndDate:
+        mode === "create"
+          ? data.recurrence !== "never" &&
+            data.recurrence !== "custom" &&
+            data.recurrenceEndMode === "onDate" &&
+            data.recurrenceEndDate
+            ? format(data.recurrenceEndDate, "yyyy-MM-dd")
+            : null
+          : undefined,
     };
 
     onSubmit(submitTask);
@@ -181,6 +192,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         {isActiveTab === SegmentButtonValue.Event && <EventTab />}
         <FormDivider />
         <RecurrenceSelect control={control} />
+        <RecurrenceEndSection control={control} />
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
