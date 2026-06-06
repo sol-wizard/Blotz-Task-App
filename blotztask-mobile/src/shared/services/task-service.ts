@@ -1,4 +1,5 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { RecurringTaskCreateDTO } from "@/shared/models/recurring-task-create-dto";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { apiClient } from "./api/client";
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
@@ -44,7 +45,15 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 
 export const addTaskItem = async (addTaskForm: TaskUpsertDTO): Promise<number> => {
   const url = `/Task`;
-  return await apiClient.post(url, addTaskForm);
+  const { recurrence: _recurrence, ...taskPayload } = addTaskForm;
+  return await apiClient.post(url, taskPayload);
+};
+
+export const createRecurringTask = async (
+  recurringTask: RecurringTaskCreateDTO,
+): Promise<number> => {
+  const url = `/RecurringTask`;
+  return await apiClient.post(url, recurringTask);
 };
 
 export async function updateTaskItem(taskId: number, updatedTask: TaskUpsertDTO): Promise<void> {

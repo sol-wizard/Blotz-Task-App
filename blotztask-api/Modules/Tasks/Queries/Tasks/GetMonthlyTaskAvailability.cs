@@ -80,6 +80,33 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 t.Label
             })
             .ToListAsync(ct);
+
+        var materializedOccurrences = await db.TaskItems
+            .AsNoTracking()
+            .Where(t => t.UserId == query.UserId
+                && t.RecurringTaskId != null
+                && (
+                    (t.RecurringOccurrenceDate != null
+                        && t.RecurringOccurrenceDate >= monthStartDate
+                        && t.RecurringOccurrenceDate < monthEndDate)
+                    ||
+                    (t.RecurringOccurrenceDate == null
+                        && t.StartTime >= monthStart
+                        && t.StartTime < monthEnd)
+                ))
+            .Select(t => new
+            {
+                RecurringTaskId = t.RecurringTaskId!.Value,
+                t.RecurringOccurrenceDate,
+                t.StartTime
+            })
+            .ToListAsync(ct);
+
+        var materializedOccurrenceKeys = materializedOccurrences
+            .Select(t => (
+                t.RecurringTaskId,
+                OccurrenceDate: t.RecurringOccurrenceDate ?? DateOnly.FromDateTime(t.StartTime.Date)))
+            .ToHashSet();
         
         
         var recurringTasks = await db.RecurringTasks
@@ -129,7 +156,8 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             {
                 var offset = 4 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
-                    .Where(r => generatorService.IsOccurrenceOn(r, dayDate))
+                    .Where(r => !materializedOccurrenceKeys.Contains((r.Id, dayDate))
+                        && generatorService.IsOccurrenceOn(r, dayDate))
                     .OrderBy(r => r.TemplateStartTime)
                     .Select(r => new TaskThumbnailDto
                     {

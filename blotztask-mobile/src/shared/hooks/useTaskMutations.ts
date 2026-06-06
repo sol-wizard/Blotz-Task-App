@@ -1,13 +1,15 @@
 import { QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TaskUpsertDTO } from "../models/task-upsert-dto";
+import { RecurringTaskCreateDTO } from "../models/recurring-task-create-dto";
 import {
   addTaskItem,
+  createRecurringTask,
   deleteTask,
   toggleTaskCompletion,
   updateTaskItem,
 } from "../services/task-service";
 import { taskKeys } from "../constants/query-key-factory";
-import { addDays, isSameDay, startOfDay } from "date-fns";
+import { addDays, format, isSameDay, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 
@@ -25,6 +27,15 @@ const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
+    },
+  });
+
+  const createRecurringTaskMutation = useMutation({
+    mutationFn: (task: RecurringTaskCreateDTO) => createRecurringTask(task),
+    onSuccess: (_data, task) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      invalidateSelectedDayTask(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
+      invalidateTaskAvailability(queryClient, task.templateStartTime);
     },
   });
 
@@ -70,11 +81,14 @@ const useTaskMutations = () => {
   return {
     addTask: addTaskMutation.mutate,
     addTaskAsync: addTaskMutation.mutateAsync,
+    createRecurringTask: createRecurringTaskMutation.mutate,
+    createRecurringTaskAsync: createRecurringTaskMutation.mutateAsync,
     toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
     updateTaskAsync: updateTaskMutation.mutateAsync,
     isAdding: addTaskMutation.isPending,
+    isCreatingRecurringTask: createRecurringTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
@@ -106,4 +120,13 @@ export function invalidateSelectedDayTask(
       cursorDay = addDays(cursorDay, 1);
     }
   }
+}
+
+function invalidateTaskAvailability(queryClient: QueryClient, dateTime: string) {
+  const date = new Date(dateTime);
+  const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const monthKey = format(startOfMonth(date), "yyyy-MM");
+
+  queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
+  queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
 }

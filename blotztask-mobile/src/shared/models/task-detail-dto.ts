@@ -5,6 +5,7 @@ import { BaseTaskDTO } from "./base-task-dto";
 export interface TaskDetailDTO extends BaseTaskDTO {
   id: number | null;
   recurringTaskId?: number | null;
+  recurringOccurrenceDate?: string | null;
   isDone: boolean;
   label?: LabelDTO;
   subtasks?: SubtaskDTO[];

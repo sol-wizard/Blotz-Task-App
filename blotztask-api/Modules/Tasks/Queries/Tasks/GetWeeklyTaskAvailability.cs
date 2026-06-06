@@ -80,6 +80,33 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             })
             .ToListAsync(ct);
 
+        var materializedOccurrences = await db.TaskItems
+            .AsNoTracking()
+            .Where(t => t.UserId == query.UserId
+                && t.RecurringTaskId != null
+                && (
+                    (t.RecurringOccurrenceDate != null
+                        && t.RecurringOccurrenceDate >= weekStartDate
+                        && t.RecurringOccurrenceDate < weekEndDate)
+                    ||
+                    (t.RecurringOccurrenceDate == null
+                        && t.StartTime >= weekStart
+                        && t.StartTime < weekEndExclusive)
+                ))
+            .Select(t => new
+            {
+                RecurringTaskId = t.RecurringTaskId!.Value,
+                t.RecurringOccurrenceDate,
+                t.StartTime
+            })
+            .ToListAsync(ct);
+
+        var materializedOccurrenceKeys = materializedOccurrences
+            .Select(t => (
+                t.RecurringTaskId,
+                OccurrenceDate: t.RecurringOccurrenceDate ?? DateOnly.FromDateTime(t.StartTime.Date)))
+            .ToHashSet();
+
         // Fetch active RecurringTasks that could have occurrences in this week
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
@@ -127,7 +154,9 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             // If no stored task found, check if any recurring task occurs on this day
             if (!hasTask)
             {
-                hasTask = recurringTasks.Any(r => generatorService.IsOccurrenceOn(r, dayDate));
+                hasTask = recurringTasks.Any(r =>
+                    !materializedOccurrenceKeys.Contains((r.Id, dayDate))
+                    && generatorService.IsOccurrenceOn(r, dayDate));
             }
 
             result.Add(new DailyTaskIndicatorDto

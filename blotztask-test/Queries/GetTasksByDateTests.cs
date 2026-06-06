@@ -272,6 +272,8 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var virtualTask = result.Should().ContainSingle(t => t.Title == "Go to Gym").Subject;
         virtualTask.Id.Should().BeNull(because: "user has not interacted with today's occurrence yet — no DB row saved");
         virtualTask.RecurringTaskId.Should().NotBeNull(because: "virtual task must reference its recurring template so the frontend knows which template it belongs to");
+        virtualTask.RecurringOccurrenceDate.Should().Be(new DateOnly(2026, 3, 14),
+            because: "virtual tasks should expose the stable recurring occurrence date for later materialization");
     }
 
     [Fact]
@@ -316,6 +318,47 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         taskResults.Should().HaveCount(1, because: "the saved DB row replaces the virtual occurrence — user should not see duplicates");
         taskResults[0].Id.Should().NotBeNull(because: "this is the real saved row, not a virtual one");
         taskResults[0].IsDone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_MaterializedOccurrenceMovedToAnotherDate_ShouldNotReturnDuplicateVirtualOccurrence()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var originalOccurrenceDate = new DateOnly(2026, 3, 14);
+        var originalQueryDate = new DateTimeOffset(2026, 3, 14, 0, 0, 0, TimeSpan.Zero);
+        var templateTime = new DateTimeOffset(2026, 3, 14, 9, 0, 0, TimeSpan.Zero);
+        var movedStart = new DateTimeOffset(2026, 3, 15, 15, 0, 0, TimeSpan.Zero);
+
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Moved Workout",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: originalOccurrenceDate,
+            templateStartTime: templateTime);
+
+        var movedOccurrence = await _seeder.CreateTaskAsync(
+            userId,
+            title: "Moved Workout",
+            start: movedStart,
+            end: movedStart);
+        movedOccurrence.RecurringTaskId = recurring.Id;
+        movedOccurrence.RecurringOccurrenceDate = originalOccurrenceDate;
+        await _context.SaveChangesAsync();
+
+        var query = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = originalQueryDate,
+            IncludeFloatingForToday = false
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+
+        // Assert
+        result.Should().NotContain(t => t.Title == "Moved Workout",
+            because: "the original occurrence date already has a materialized task even if that task was rescheduled to another calendar day");
     }
 
     [Fact]

@@ -65,6 +65,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   // Handlers
   const handleFormSubmit = async (data: TaskFormField) => {
+    const isRecurringCreate =
+      mode === "create" && data.recurrence !== "never" && data.recurrence !== "custom";
     const isReminderTab = isActiveTab === SegmentButtonValue.Reminder;
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
@@ -74,13 +76,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     );
 
     const newAlertTime = calculateAlertTime(startTime!, data.alert);
-    const notificationId = await getTaskNotification({
-      mode,
-      dto,
-      upcomingNotification: userPreferences?.upcomingNotification,
-      newAlertTime,
-      newTaskTitle: data.title,
-    });
+    const notificationId = isRecurringCreate
+      ? null
+      : await getTaskNotification({
+          mode,
+          dto,
+          upcomingNotification: userPreferences?.upcomingNotification,
+          newAlertTime,
+          newTaskTitle: data.title,
+        });
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
@@ -91,10 +95,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       endTime: convertToDateTimeOffset(endTime!),
       labelId: data.labelId ?? undefined,
       timeType,
-      alertTime: notificationId && newAlertTime ? convertToDateTimeOffset(newAlertTime) : undefined,
+      alertTime:
+        !isRecurringCreate && notificationId && newAlertTime
+          ? convertToDateTimeOffset(newAlertTime)
+          : undefined,
       notificationId,
       isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
+      recurrence: mode === "create" ? data.recurrence : undefined,
     };
 
     onSubmit(submitTask);

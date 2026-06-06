@@ -26,5 +26,6 @@ public class TaskItem
     public DateTimeOffset? AlertTime { get; set; }
     public TaskDeadline? Deadline { get; set; }
     public int? RecurringTaskId { get; set; }
+    public DateOnly? RecurringOccurrenceDate { get; set; }
     public RecurringTask? RecurringTask { get; set; }
 }

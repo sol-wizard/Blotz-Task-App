@@ -9,7 +9,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
     public void Configure(EntityTypeBuilder<TaskItem> builder)
     {
         builder.HasIndex(t => new { t.UserId, t.StartTime, t.EndTime });
-        builder.HasIndex(t => t.RecurringTaskId);
+        builder.HasIndex(t => new { t.RecurringTaskId, t.RecurringOccurrenceDate })
+            .IsUnique()
+            .HasFilter("[RecurringTaskId] IS NOT NULL AND [RecurringOccurrenceDate] IS NOT NULL");
 
         builder.HasOne(t => t.User)
             .WithMany()

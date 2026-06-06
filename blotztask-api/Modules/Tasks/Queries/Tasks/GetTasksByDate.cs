@@ -85,6 +85,7 @@ public class GetTasksByDateQueryHandler(
             {
                 Id = task.Id,
                 RecurringTaskId = task.RecurringTaskId,
+                RecurringOccurrenceDate = task.RecurringOccurrenceDate,
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -132,15 +133,24 @@ public class GetTasksByDateQueryHandler(
             .ToListAsync(ct);
 
         // Step 3: Find which recurring templates already have a stored row for this date
-        var alreadySavedIds = tasks
-            .Where(t => t.RecurringTaskId != null && t.StartTime?.Date == requestedDate.ToDateTime(TimeOnly.MinValue))
+        var requestedDateTime = requestedDate.ToDateTime(TimeOnly.MinValue);
+        var alreadySavedIds = await db.TaskItems
+            .AsNoTracking()
+            .Where(t => t.UserId == query.UserId
+                && t.RecurringTaskId != null
+                && (t.RecurringOccurrenceDate == requestedDate
+                    || (t.RecurringOccurrenceDate == null && t.StartTime.Date == requestedDateTime)))
             .Select(t => t.RecurringTaskId!.Value)
+            .Distinct()
+            .ToListAsync(ct);
+
+        var alreadySavedIdSet = alreadySavedIds
             .ToHashSet();
 
         // Step 4: For each recurring task not yet saved, check if it occurs on this date
         foreach (var recurring in recurringTasks)
         {
-            if (alreadySavedIds.Contains(recurring.Id)) continue;
+            if (alreadySavedIdSet.Contains(recurring.Id)) continue;
             if (!generatorService.IsOccurrenceOn(recurring, requestedDate)) continue;
 
             var startTime = new DateTimeOffset(
@@ -159,6 +169,7 @@ public class GetTasksByDateQueryHandler(
             {
                 Id = null,  // no DB row yet
                 RecurringTaskId = recurring.Id,
+                RecurringOccurrenceDate = requestedDate,
                 Title = recurring.Title,
                 Description = recurring.Description,
                 StartTime = startTime,
@@ -205,6 +216,7 @@ public class TaskByDateItemDto
 {
     public int? Id { get; set; }           // null = virtual occurrence (no DB row yet)
     public int? RecurringTaskId { get; set; }
+    public DateOnly? RecurringOccurrenceDate { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
