@@ -11,7 +11,8 @@ public class RecurringTaskController(
     CreateRecurringTaskCommandHandler createRecurringTaskCommandHandler,
     SaveRecurringOccurrenceCommandHandler saveRecurringOccurrenceCommandHandler,
     MaterializeRecurringOccurrenceCommandHandler materializeRecurringOccurrenceCommandHandler,
-    UpdateRecurringOccurrenceCommandHandler updateRecurringOccurrenceCommandHandler) : ControllerBase
+    UpdateRecurringOccurrenceCommandHandler updateRecurringOccurrenceCommandHandler,
+    UpdateRecurringTaskFutureCommandHandler updateRecurringTaskFutureCommandHandler) : ControllerBase
 {
     [HttpPost]
     public async Task<int> CreateRecurringTask(
@@ -78,6 +79,32 @@ public class RecurringTaskController(
 
         var taskItemId = await updateRecurringOccurrenceCommandHandler.Handle(command, ct);
         return Ok(new { taskItemId });
+    }
+
+    [HttpPut("future")]
+    public async Task<IActionResult> UpdateFutureOccurrences(
+        [FromBody] UpdateRecurringTaskFutureRequest request,
+        CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var command = new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = request.RecurringTaskId,
+            EffectiveDate = request.EffectiveDate,
+            TaskDetails = request.TaskDetails,
+            UserId = userId,
+            StopRepeating = request.StopRepeating,
+            Frequency = request.Frequency,
+            Interval = request.Interval,
+            DaysOfWeek = request.DaysOfWeek,
+            DayOfMonth = request.DayOfMonth,
+            EndDate = request.EndDate,
+            EndDateChanged = request.EndDateChanged,
+            DeadlineTimeZoneId = request.DeadlineTimeZoneId
+        };
+
+        var recurringTaskId = await updateRecurringTaskFutureCommandHandler.Handle(command, ct);
+        return Ok(new { recurringTaskId });
     }
 
     private Guid GetUserId()

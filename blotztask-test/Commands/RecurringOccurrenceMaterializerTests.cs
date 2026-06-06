@@ -305,4 +305,124 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             because: "the stable recurring identity must not change when the scheduled time is edited");
         occurrenceCount.Should().Be(1, because: "the atomic update should not create duplicate task items for the same occurrence");
     }
+
+    [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_SplitsTemplateFromEffectiveDate()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily Standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var existing = await _seeder.CreateTaskAsync(userId, "Daily Standup", templateTime, templateTime);
+        existing.RecurringTaskId = recurring.Id;
+        existing.RecurringOccurrenceDate = new DateOnly(2026, 6, 3);
+        await _context.SaveChangesAsync();
+        var logger = TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>();
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            logger);
+
+        // Act
+        var futureRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 3),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Future standup",
+                Description = "New cadence",
+                StartTime = new DateTimeOffset(2026, 6, 3, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 3, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var futureTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == futureRecurringTaskId);
+        var movedOccurrence = await _context.TaskItems.SingleAsync(t => t.Id == existing.Id);
+
+        // Assert
+        oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 2),
+            because: "future edits should preserve historical occurrences by ending the old template before the effective date");
+        futureTemplate.StartDate.Should().Be(new DateOnly(2026, 6, 3),
+            because: "future edits should create a new template starting on the selected occurrence date");
+        futureTemplate.Title.Should().Be("Future standup",
+            because: "the new template should use the edited task fields for future virtual occurrences");
+        futureTemplate.Pattern.Frequency.Should().Be(RecurrenceFrequency.Daily,
+            because: "future edits without recurrence changes should inherit the previous recurrence rule");
+        futureTemplate.TemplateStartTime.TimeOfDay.Should().Be(new TimeSpan(10, 0, 0),
+            because: "future virtual occurrences should use the edited time of day");
+        movedOccurrence.RecurringTaskId.Should().Be(futureTemplate.Id,
+            because: "a materialized occurrence on the effective date should move to the new template to avoid duplicate calendar rows");
+        movedOccurrence.Title.Should().Be("Future standup",
+            because: "the selected materialized occurrence should receive the same edited fields as future virtual occurrences");
+    }
+
+    [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_StopRepeating_TruncatesTemplateAndMaterializesEffectiveDate()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily Standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var logger = TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>();
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            logger);
+
+        // Act
+        var futureRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 3),
+            UserId = userId,
+            StopRepeating = true,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Final standup",
+                Description = "Last one",
+                StartTime = new DateTimeOffset(2026, 6, 3, 9, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 3, 9, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var materialized = await _context.TaskItems.SingleAsync(t =>
+            t.RecurringTaskId == recurring.Id
+            && t.RecurringOccurrenceDate == new DateOnly(2026, 6, 3));
+
+        // Assert
+        futureRecurringTaskId.Should().BeNull(
+            because: "stopping repetition from a date should not create a replacement recurring template");
+        oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 2),
+            because: "the old template should stop before the selected effective date");
+        materialized.Title.Should().Be("Final standup",
+            because: "the selected occurrence should remain as a concrete task after repetition stops");
+    }
 }

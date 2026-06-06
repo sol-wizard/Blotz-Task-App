@@ -64,7 +64,17 @@
     "endOnDate": "On date",
     "endDate": "End date",
     "endDateRequired": "Choose an end date",
-    "endDateBeforeStart": "End date cannot be before the first repeat date"
+    "endDateBeforeStart": "End date cannot be before the first repeat date",
+    "editTitle": "Save Changes",
+    "editMessage": "Apply these changes only to this date, or to this and future dates?",
+    "editThisDate": "Only This Date",
+    "editFutureDates": "This And Future Dates",
+    "editCancel": "Cancel",
+    "updateTitle": "Update Repeat",
+    "updateMessage": "Repeat changes apply from this date forward.",
+    "stopTitle": "Stop Repeating",
+    "stopMessage": "This task will stop repeating from this date forward.",
+    "stopFromDate": "Stop From This Date"
   },
   "categories": {
     "work": "Work",

@@ -65,7 +65,17 @@
     "endOnDate": "指定日期",
     "endDate": "结束日期",
     "endDateRequired": "请选择结束日期",
-    "endDateBeforeStart": "结束日期不能早于首次重复日期"
+    "endDateBeforeStart": "结束日期不能早于首次重复日期",
+    "editTitle": "保存更改",
+    "editMessage": "这些更改只应用到这一天，还是从这一天开始应用到将来？",
+    "editThisDate": "仅此日期",
+    "editFutureDates": "此日期及将来日期",
+    "editCancel": "取消",
+    "updateTitle": "更新重复规则",
+    "updateMessage": "重复规则的更改会从这一天开始应用到将来。",
+    "stopTitle": "停止重复",
+    "stopMessage": "这个任务将从这一天开始停止重复。",
+    "stopFromDate": "从此日期停止"
   },
   "categories": {
     "work": "工作",

@@ -33,6 +33,17 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
                         OccurrenceDate = task.RecurringOccurrenceDate.Value
                     }
                     : null,
+                RecurringTask = task.RecurringTask == null
+                    ? null
+                    : new RecurringTaskEditMetadataDto
+                    {
+                        Frequency = task.RecurringTask.Pattern.Frequency,
+                        Interval = task.RecurringTask.Pattern.Interval,
+                        DaysOfWeek = task.RecurringTask.Pattern.DaysOfWeek,
+                        DayOfMonth = task.RecurringTask.Pattern.DayOfMonth,
+                        StartDate = task.RecurringTask.StartDate,
+                        EndDate = task.RecurringTask.EndDate
+                    },
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,

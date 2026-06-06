@@ -32,11 +32,16 @@ import { theme } from "@/shared/constants/theme";
 import { addHours, format } from "date-fns";
 import { RecurrenceEndSection } from "./components/recurrence-end-section";
 
-export type TaskFormProps = {
-  onSubmit: (data: TaskUpsertDTO) => void;
-} & ({ mode: "create"; dto?: undefined } | { mode: "edit"; dto: TaskUpsertDTO });
+export type TaskFormDirtyFields = Readonly<Partial<Record<keyof TaskFormField, boolean>>>;
 
-const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+export type TaskFormProps = {
+  onSubmit: (data: TaskUpsertDTO, dirtyFields: TaskFormDirtyFields) => void;
+} & (
+  | { mode: "create"; dto?: undefined; recurrenceEditMode?: undefined }
+  | { mode: "edit"; dto: TaskUpsertDTO; recurrenceEditMode?: "hidden" | "futureOnly" }
+);
+
+const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) => {
   // Queries
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
   const { labels = [], isLoading } = useAllLabels();
@@ -59,6 +64,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue, clearErrors, getValues } = form;
   const { isSubmitting } = formState;
+  const shouldShowRecurrence = mode === "create" || recurrenceEditMode === "futureOnly";
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -103,10 +109,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       notificationId,
       isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
-      recurrence: mode === "create" ? data.recurrence : undefined,
-      recurrenceEndMode: mode === "create" ? data.recurrenceEndMode : undefined,
+      recurrence: shouldShowRecurrence ? data.recurrence : undefined,
+      recurrenceEndMode: shouldShowRecurrence ? data.recurrenceEndMode : undefined,
       recurrenceEndDate:
-        mode === "create"
+        shouldShowRecurrence
           ? data.recurrence !== "never" &&
             data.recurrence !== "custom" &&
             data.recurrenceEndMode === "onDate" &&
@@ -116,7 +122,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           : undefined,
     };
 
-    onSubmit(submitTask);
+    onSubmit(submitTask, formState.dirtyFields);
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
@@ -191,9 +197,13 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         {isActiveTab === SegmentButtonValue.Reminder && <ReminderTab />}
         {isActiveTab === SegmentButtonValue.Event && <EventTab />}
         <FormDivider />
-        <RecurrenceSelect control={control} />
-        <RecurrenceEndSection control={control} />
-        <FormDivider />
+        {shouldShowRecurrence && (
+          <>
+            <RecurrenceSelect control={control} />
+            <RecurrenceEndSection control={control} />
+            <FormDivider />
+          </>
+        )}
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
 

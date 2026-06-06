@@ -7,6 +7,7 @@ import {
   deleteTask,
   toggleTaskCompletion,
   updateRecurringOccurrence,
+  updateRecurringTaskFuture,
   updateTaskItem,
 } from "../services/task-service";
 import { taskKeys } from "../constants/query-key-factory";
@@ -23,6 +24,20 @@ type UpdateRecurringOccurrenceArgs = {
   recurringTaskId: number;
   occurrenceDate: string;
   dto: TaskUpsertDTO;
+};
+
+type UpdateRecurringTaskFutureArgs = {
+  recurringTaskId: number;
+  effectiveDate: string;
+  dto: TaskUpsertDTO;
+  stopRepeating: boolean;
+  frequency?: RecurringTaskCreateDTO["frequency"];
+  interval?: number;
+  daysOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  endDate?: string | null;
+  endDateChanged: boolean;
+  deadlineTimeZoneId?: string | null;
 };
 
 const useTaskMutations = () => {
@@ -101,6 +116,41 @@ const useTaskMutations = () => {
       invalidateTaskAvailability(queryClient, task.occurrenceDate);
     },
   });
+
+  const updateRecurringTaskFutureMutation = useMutation({
+    mutationFn: ({
+      recurringTaskId,
+      effectiveDate,
+      dto,
+      stopRepeating,
+      frequency,
+      interval,
+      daysOfWeek,
+      dayOfMonth,
+      endDate,
+      endDateChanged,
+      deadlineTimeZoneId,
+    }: UpdateRecurringTaskFutureArgs) =>
+      updateRecurringTaskFuture({
+        recurringTaskId,
+        effectiveDate,
+        taskDetails: dto,
+        stopRepeating,
+        frequency,
+        interval,
+        daysOfWeek,
+        dayOfMonth,
+        endDate,
+        endDateChanged,
+        deadlineTimeZoneId,
+      }),
+    onSuccess: (_data, task) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
+      invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
+      invalidateTaskAvailability(queryClient, task.effectiveDate);
+    },
+  });
   return {
     addTask: addTaskMutation.mutate,
     addTaskAsync: addTaskMutation.mutateAsync,
@@ -112,12 +162,15 @@ const useTaskMutations = () => {
     updateTaskAsync: updateTaskMutation.mutateAsync,
     updateRecurringOccurrence: updateRecurringOccurrenceMutation.mutate,
     updateRecurringOccurrenceAsync: updateRecurringOccurrenceMutation.mutateAsync,
+    updateRecurringTaskFuture: updateRecurringTaskFutureMutation.mutate,
+    updateRecurringTaskFutureAsync: updateRecurringTaskFutureMutation.mutateAsync,
     isAdding: addTaskMutation.isPending,
     isCreatingRecurringTask: createRecurringTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
     isUpdatingRecurringOccurrence: updateRecurringOccurrenceMutation.isPending,
+    isUpdatingRecurringTaskFuture: updateRecurringTaskFutureMutation.isPending,
     deleteTaskSuccess: deleteTaskMutation.isSuccess,
     resetDeleteTask: deleteTaskMutation.reset,
   };

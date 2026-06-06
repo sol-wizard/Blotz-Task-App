@@ -94,6 +94,17 @@ public class GetTasksByDateQueryHandler(
                         OccurrenceDate = task.RecurringOccurrenceDate.Value
                     }
                     : null,
+                RecurringTask = task.RecurringTask == null
+                    ? null
+                    : new RecurringTaskEditMetadataDto
+                    {
+                        Frequency = task.RecurringTask.Pattern.Frequency,
+                        Interval = task.RecurringTask.Pattern.Interval,
+                        DaysOfWeek = task.RecurringTask.Pattern.DaysOfWeek,
+                        DayOfMonth = task.RecurringTask.Pattern.DayOfMonth,
+                        StartDate = task.RecurringTask.StartDate,
+                        EndDate = task.RecurringTask.EndDate
+                    },
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -182,6 +193,15 @@ public class GetTasksByDateQueryHandler(
                 {
                     RecurringTaskId = recurring.Id,
                     OccurrenceDate = requestedDate
+                },
+                RecurringTask = new RecurringTaskEditMetadataDto
+                {
+                    Frequency = recurring.Pattern.Frequency,
+                    Interval = recurring.Pattern.Interval,
+                    DaysOfWeek = recurring.Pattern.DaysOfWeek,
+                    DayOfMonth = recurring.Pattern.DayOfMonth,
+                    StartDate = recurring.StartDate,
+                    EndDate = recurring.EndDate
                 },
                 Title = recurring.Title,
                 Description = recurring.Description,

@@ -74,6 +74,22 @@ export async function updateRecurringOccurrence(payload: {
   return await apiClient.put<{ taskItemId: number }>("/RecurringTask/occurrence", payload);
 }
 
+export async function updateRecurringTaskFuture(payload: {
+  recurringTaskId: number;
+  effectiveDate: string;
+  taskDetails: TaskUpsertDTO;
+  stopRepeating: boolean;
+  frequency?: RecurringTaskCreateDTO["frequency"];
+  interval?: number;
+  daysOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  endDate?: string | null;
+  endDateChanged: boolean;
+  deadlineTimeZoneId?: string | null;
+}): Promise<{ recurringTaskId: number | null }> {
+  return await apiClient.put<{ recurringTaskId: number | null }>("/RecurringTask/future", payload);
+}
+
 export async function deleteTask(taskId: number): Promise<void> {
   const url = `/Task/${taskId}`;
 
