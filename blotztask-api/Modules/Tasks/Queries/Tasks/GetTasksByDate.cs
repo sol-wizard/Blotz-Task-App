@@ -102,7 +102,8 @@ public class GetTasksByDateQueryHandler(
                 TimeType = task.TimeType,
                 NotificationId = task.NotificationId,
                 AlertTime = task.AlertTime,
-                IsDeadline = db.TaskDeadlines.Any(td => td.TaskItemId == task.Id),
+                IsDeadline = task.Deadline != null,
+                DueAt = task.Deadline == null ? null : task.Deadline.DueAt,
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -197,7 +198,10 @@ public class GetTasksByDateQueryHandler(
                     }
                     : null,
                 Subtasks = [],
-                IsDeadline = false
+                IsDeadline = recurring.IsDeadline,
+                DueAt = recurring.IsDeadline
+                    ? generatorService.BuildOccurrenceDueAt(recurring, requestedDate)
+                    : null
             });
         }
 
@@ -238,4 +242,5 @@ public class TaskByDateItemDto : TaskOccurrenceDtoBase
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
     public bool IsDeadline { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
 }

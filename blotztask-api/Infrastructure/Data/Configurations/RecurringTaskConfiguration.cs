@@ -8,7 +8,20 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
 {
     public void Configure(EntityTypeBuilder<RecurringTask> builder)
     {
-        builder.ToTable("RecurringTasks");
+        builder.ToTable("RecurringTasks", t =>
+        {
+            t.HasCheckConstraint(
+                "CK_RecurringTask_Deadline_Template_Complete",
+                "(" +
+                "([IsDeadline] = 0 AND [DeadlineOffsetDays] IS NULL AND [DeadlineTimeOfDay] IS NULL AND [DeadlineTimeZoneId] IS NULL)" +
+                " OR " +
+                "([IsDeadline] = 1 AND [DeadlineOffsetDays] IS NOT NULL AND [DeadlineTimeOfDay] IS NOT NULL AND [DeadlineTimeZoneId] IS NOT NULL)" +
+                ")");
+
+            t.HasCheckConstraint(
+                "CK_RecurringTask_Deadline_Offset_NonNegative",
+                "([DeadlineOffsetDays] IS NULL OR [DeadlineOffsetDays] >= 0)");
+        });
 
         builder.HasKey(r => r.Id);
 
@@ -18,6 +31,12 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
 
         builder.Property(r => r.IsActive)
             .HasDefaultValue(true);
+
+        builder.Property(r => r.IsDeadline)
+            .HasDefaultValue(false);
+
+        builder.Property(r => r.DeadlineTimeZoneId)
+            .HasMaxLength(100);
 
         builder.Property(r => r.CreatedAt)
             .HasDefaultValueSql("SYSUTCDATETIME()")

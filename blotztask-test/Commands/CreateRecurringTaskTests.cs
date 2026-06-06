@@ -89,6 +89,75 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_RecurringDeadlineTask_StoresRelativeDeadlineTemplate()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Weekly Report",
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            Frequency = RecurrenceFrequency.Weekly,
+            Interval = 1,
+            DaysOfWeek = (int)WeeklyDayFlags.Monday,
+            StartDate = new DateOnly(2026, 6, 8),
+            IsDeadline = true,
+            TemplateDueAt = new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8)),
+            DeadlineTimeZoneId = "Australia/Perth"
+        };
+
+        // Act
+        var recurringTaskId = await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == recurringTaskId);
+
+        // Assert
+        recurringTask.IsDeadline.Should().BeTrue(
+            because: "marking a recurring task as deadline should make each occurrence a deadline occurrence");
+        recurringTask.DeadlineOffsetDays.Should().Be(2,
+            because: "the template stores the due date as a relative offset from the occurrence date");
+        recurringTask.DeadlineTimeOfDay.Should().Be(new TimeOnly(17, 0),
+            because: "the template stores the due local time independently from the first due date");
+        recurringTask.DeadlineTimeZoneId.Should().Be("Australia/Perth",
+            because: "future due offsets should be resolved from the deadline timezone instead of a fixed offset");
+    }
+
+    [Fact]
+    public async Task Handle_RecurringDeadlineTaskWithoutTimezone_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Weekly Report",
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            Frequency = RecurrenceFrequency.Weekly,
+            Interval = 1,
+            DaysOfWeek = (int)WeeklyDayFlags.Monday,
+            StartDate = new DateOnly(2026, 6, 8),
+            IsDeadline = true,
+            TemplateDueAt = new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8))
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "recurring deadline templates need a timezone id to generate future due offsets correctly");
+    }
+
+    [Fact]
     public async Task Handle_WeeklyRecurringTaskWithoutDaysOfWeek_ThrowsValidationException()
     {
         // Arrange

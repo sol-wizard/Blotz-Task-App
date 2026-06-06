@@ -20,6 +20,9 @@ public class CreateRecurringTaskRequest
     public int? DayOfMonth { get; init; }
     public required DateOnly StartDate { get; init; }
     public DateOnly? EndDate { get; init; }
+    public bool? IsDeadline { get; init; }
+    public DateTimeOffset? TemplateDueAt { get; init; }
+    public string? DeadlineTimeZoneId { get; init; }
 }
 
 public class CreateRecurringTaskCommand
@@ -50,6 +53,8 @@ public class CreateRecurringTaskCommandHandler(
         TaskTimeValidator.ValidateTaskTimes(details.TemplateStartTime, templateEndTime, details.TimeType);
         ValidateRecurrence(details);
 
+        var deadlineTemplate = BuildDeadlineTemplate(details, templateEndTime!.Value);
+
         var now = DateTime.UtcNow;
         var recurringTask = new RecurringTask
         {
@@ -62,6 +67,10 @@ public class CreateRecurringTaskCommandHandler(
             LabelId = details.LabelId,
             TemplateStartTime = details.TemplateStartTime,
             TemplateEndTime = details.TimeType == TaskTimeType.SingleTime ? null : details.TemplateEndTime,
+            IsDeadline = deadlineTemplate.IsDeadline,
+            DeadlineOffsetDays = deadlineTemplate.OffsetDays,
+            DeadlineTimeOfDay = deadlineTemplate.TimeOfDay,
+            DeadlineTimeZoneId = deadlineTemplate.TimeZoneId,
             Pattern = new RecurrencePattern
             {
                 Frequency = details.Frequency,
@@ -127,4 +136,59 @@ public class CreateRecurringTaskCommandHandler(
             throw new ValidationException("DayOfMonth can only be set for monthly recurring tasks.");
         }
     }
+
+    private static RecurringDeadlineTemplate BuildDeadlineTemplate(
+        CreateRecurringTaskRequest details,
+        DateTimeOffset templateEndTime)
+    {
+        if (details.IsDeadline != true)
+        {
+            return new RecurringDeadlineTemplate(false, null, null, null);
+        }
+
+        var templateDueAt = details.TemplateDueAt ?? templateEndTime;
+        if (templateDueAt < templateEndTime)
+        {
+            throw new ValidationException("TemplateDueAt cannot be before the task end time.");
+        }
+
+        var timeZoneId = details.DeadlineTimeZoneId?.Trim();
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            throw new ValidationException("DeadlineTimeZoneId is required for recurring deadline tasks.");
+        }
+
+        try
+        {
+            TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            throw new ValidationException("DeadlineTimeZoneId is not valid.");
+        }
+        catch (InvalidTimeZoneException)
+        {
+            throw new ValidationException("DeadlineTimeZoneId is not valid.");
+        }
+
+        var deadlineOffsetDays =
+            DateOnly.FromDateTime(templateDueAt.Date).DayNumber - details.StartDate.DayNumber;
+
+        if (deadlineOffsetDays < 0)
+        {
+            throw new ValidationException("TemplateDueAt cannot be before StartDate.");
+        }
+
+        return new RecurringDeadlineTemplate(
+            true,
+            deadlineOffsetDays,
+            TimeOnly.FromTimeSpan(templateDueAt.TimeOfDay),
+            timeZoneId);
+    }
+
+    private sealed record RecurringDeadlineTemplate(
+        bool IsDeadline,
+        int? OffsetDays,
+        TimeOnly? TimeOfDay,
+        string? TimeZoneId);
 }

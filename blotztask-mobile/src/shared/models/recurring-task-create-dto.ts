@@ -15,4 +15,7 @@ export interface RecurringTaskCreateDTO {
   dayOfMonth?: number | null;
   startDate: string;
   endDate?: string | null;
+  isDeadline?: boolean;
+  templateDueAt?: string | null;
+  deadlineTimeZoneId?: string | null;
 }

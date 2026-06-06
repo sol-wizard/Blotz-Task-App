@@ -80,6 +80,11 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
     dayOfMonth: recurrence === "monthly" ? new Date(task.startTime).getDate() : null,
     startDate: toDateOnly(task.startTime),
     endDate: task.recurrenceEndDate ?? null,
+    isDeadline: task.isDeadline,
+    templateDueAt: task.isDeadline ? task.dueAt ?? task.endTime : null,
+    deadlineTimeZoneId: task.isDeadline
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : null,
   };
 }
 

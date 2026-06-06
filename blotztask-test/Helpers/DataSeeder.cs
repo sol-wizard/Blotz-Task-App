@@ -44,7 +44,11 @@ public class DataSeeder
         DateTimeOffset templateStartTime,
         int interval = 1,
         int? daysOfWeek = null,
-        DateOnly? endDate = null)
+        DateOnly? endDate = null,
+        bool isDeadline = false,
+        int? deadlineOffsetDays = null,
+        TimeOnly? deadlineTimeOfDay = null,
+        string? deadlineTimeZoneId = null)
     {
         var recurring = new RecurringTask
         {
@@ -55,6 +59,10 @@ public class DataSeeder
             StartDate = startDate,
             EndDate = endDate,
             IsActive = true,
+            IsDeadline = isDeadline,
+            DeadlineOffsetDays = deadlineOffsetDays,
+            DeadlineTimeOfDay = deadlineTimeOfDay,
+            DeadlineTimeZoneId = deadlineTimeZoneId,
             Pattern = new RecurrencePattern
             {
                 Frequency = frequency,

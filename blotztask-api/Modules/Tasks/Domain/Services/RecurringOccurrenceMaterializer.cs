@@ -38,7 +38,7 @@ public class RecurringOccurrenceMaterializer(
 
         if (existing != null) return existing;
 
-        var taskItem = RecurringTaskGeneratorService.CreateTaskItem(template, occurrenceDate);
+        var taskItem = generatorService.CreateTaskItem(template, occurrenceDate);
         taskItem.RecurringOccurrenceDate = occurrenceDate;
         taskItem.IsDone = false;
         taskItem.CreatedAt = DateTime.UtcNow;

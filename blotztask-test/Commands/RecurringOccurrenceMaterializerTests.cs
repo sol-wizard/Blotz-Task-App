@@ -60,6 +60,42 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_RecurringDeadlineOccurrence_CreatesTaskDeadline()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8));
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Weekly Report",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 6, 8),
+            templateStartTime: templateTime,
+            daysOfWeek: (int)WeeklyDayFlags.Monday,
+            isDeadline: true,
+            deadlineOffsetDays: 2,
+            deadlineTimeOfDay: new TimeOnly(17, 0),
+            deadlineTimeZoneId: "Australia/Perth");
+
+        // Act
+        var taskItem = await _materializer.EnsureRecurringOccurrenceTaskItem(
+            recurring.Id,
+            new DateOnly(2026, 6, 15),
+            userId);
+
+        var savedTask = await _context.TaskItems
+            .Include(t => t.Deadline)
+            .SingleAsync(t => t.Id == taskItem.Id);
+
+        // Assert
+        savedTask.Deadline.Should().NotBeNull(
+            because: "materializing a recurring deadline occurrence should create a concrete TaskDeadline row");
+        savedTask.Deadline!.DueAt.Should().Be(
+            new DateTimeOffset(2026, 6, 17, 17, 0, 0, TimeSpan.FromHours(8)),
+            because: "the concrete deadline should be derived from the occurrence date plus the relative deadline template");
+    }
+
+    [Fact]
     public async Task Handle_ExistingOccurrenceWithMovedStartTime_ReturnsExistingTaskItemWithoutCreatingDuplicate()
     {
         // Arrange

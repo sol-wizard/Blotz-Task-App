@@ -39,6 +39,13 @@ public class RecurringTask
     // Only set for RangeTime tasks. Null means SingleTime (start == end).
     public DateTimeOffset? TemplateEndTime { get; set; }
 
+    // Deadline template fields. When enabled, each occurrence gets a TaskDeadline
+    // derived from its occurrence date plus this relative deadline template.
+    public bool IsDeadline { get; set; } = false;
+    public int? DeadlineOffsetDays { get; set; }
+    public TimeOnly? DeadlineTimeOfDay { get; set; }
+    public string? DeadlineTimeZoneId { get; set; }
+
     // How the task repeats
     public required RecurrencePattern Pattern { get; set; }
 
