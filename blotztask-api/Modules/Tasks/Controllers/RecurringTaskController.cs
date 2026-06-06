@@ -10,7 +10,8 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 public class RecurringTaskController(
     CreateRecurringTaskCommandHandler createRecurringTaskCommandHandler,
     SaveRecurringOccurrenceCommandHandler saveRecurringOccurrenceCommandHandler,
-    MaterializeRecurringOccurrenceCommandHandler materializeRecurringOccurrenceCommandHandler) : ControllerBase
+    MaterializeRecurringOccurrenceCommandHandler materializeRecurringOccurrenceCommandHandler,
+    UpdateRecurringOccurrenceCommandHandler updateRecurringOccurrenceCommandHandler) : ControllerBase
 {
     [HttpPost]
     public async Task<int> CreateRecurringTask(
@@ -58,6 +59,24 @@ public class RecurringTaskController(
         };
 
         var taskItemId = await materializeRecurringOccurrenceCommandHandler.Handle(command, ct);
+        return Ok(new { taskItemId });
+    }
+
+    [HttpPut("occurrence")]
+    public async Task<IActionResult> UpdateOccurrence(
+        [FromBody] UpdateRecurringOccurrenceRequest request,
+        CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var command = new UpdateRecurringOccurrenceCommand
+        {
+            RecurringTaskId = request.RecurringTaskId,
+            OccurrenceDate = request.OccurrenceDate,
+            TaskDetails = request.TaskDetails,
+            UserId = userId
+        };
+
+        var taskItemId = await updateRecurringOccurrenceCommandHandler.Handle(command, ct);
         return Ok(new { taskItemId });
     }
 

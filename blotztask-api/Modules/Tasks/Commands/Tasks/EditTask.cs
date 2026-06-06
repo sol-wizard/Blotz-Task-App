@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
-using BlotzTask.Modules.Tasks.Shared;
+using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +15,10 @@ public class EditTaskCommand
     [Required] public required Guid UserId { get; init; }
 }
 
-public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskCommandHandler> logger)
+public class EditTaskCommandHandler(
+    BlotzTaskDbContext db,
+    TaskItemUpdater taskItemUpdater,
+    ILogger<EditTaskCommandHandler> logger)
 {
     public async Task<string> Handle(EditTaskCommand command, CancellationToken ct = default)
     {
@@ -28,56 +30,9 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} not found.");
 
-        TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
-            command.TaskDetails.TimeType);
-
-        var newTitle = (command.TaskDetails.Title ?? string.Empty).Trim();
-        if (string.IsNullOrEmpty(newTitle))
-        {
-            throw new ValidationException("Title is required.");
-        }
-
-        task.Title = newTitle;
-        task.Description = command.TaskDetails.Description;
-        task.StartTime = command.TaskDetails.StartTime;
-        task.EndTime = command.TaskDetails.EndTime;
-        task.TimeType = command.TaskDetails.TimeType;
-        task.NotificationId = command.TaskDetails.NotificationId;
-        task.AlertTime = command.TaskDetails.AlertTime;
-        task.UpdatedAt = DateTime.UtcNow;
-        task.LabelId = command.TaskDetails.LabelId;
-
+        taskItemUpdater.Apply(task, command.TaskDetails);
 
         db.TaskItems.Update(task);
-        
-        switch (command.TaskDetails.IsDeadline)
-        {
-            case true:
-                if (task.Deadline is null)
-                {
-                    task.Deadline = new TaskDeadline
-                    {
-                        TaskItem = task,
-                        DueAt = command.TaskDetails.DueAt ?? task.EndTime,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                        IsPinned = false
-                    };
-                }
-                else
-                {
-                    task.Deadline.DueAt = command.TaskDetails.DueAt ?? task.EndTime;
-                    task.Deadline.UpdatedAt = DateTime.UtcNow;
-                }
-                break;
-
-            case false when task.Deadline is not null:
-                db.Remove(task.Deadline);
-                break;
-
-            case null:
-                break;
-        }
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Task {TaskId} was successfully edited", command.TaskId);

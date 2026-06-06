@@ -7,6 +7,7 @@ using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Shared.Events;
 
 namespace BlotzTask.Modules.Tasks;
@@ -25,9 +26,11 @@ public static class DependencyInjection
         services.AddScoped<DeleteSubtaskCommandHandler>();
         services.AddScoped<RecurringTaskGeneratorService>();
         services.AddScoped<RecurringOccurrenceMaterializer>();
+        services.AddScoped<TaskItemUpdater>();
         services.AddScoped<CreateRecurringTaskCommandHandler>();
         services.AddScoped<SaveRecurringOccurrenceCommandHandler>();
         services.AddScoped<MaterializeRecurringOccurrenceCommandHandler>();
+        services.AddScoped<UpdateRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
         services.AddScoped<UpdateDeadlinePinCommandHandler>();
         services.AddScoped<DeleteDeadlineTaskCommandHandler>();

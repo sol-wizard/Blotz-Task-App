@@ -61,6 +61,14 @@ export async function updateTaskItem(taskId: number, updatedTask: TaskUpsertDTO)
   return await apiClient.put(url, updatedTask);
 }
 
+export async function updateRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  taskDetails: TaskUpsertDTO;
+}): Promise<{ taskItemId: number }> {
+  return await apiClient.put<{ taskItemId: number }>("/RecurringTask/occurrence", payload);
+}
+
 export async function deleteTask(taskId: number): Promise<void> {
   const url = `/Task/${taskId}`;
 
@@ -76,5 +84,15 @@ export async function saveRecurringOccurrence(payload: {
   recurringTaskId: number;
   occurrenceDate: string;
 }): Promise<{ taskItemId: number }> {
-  return await apiClient.post("/RecurringTask/occurrence/complete", payload);
+  return await apiClient.post<{ taskItemId: number }>("/RecurringTask/occurrence/complete", payload);
+}
+
+export async function materializeRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+}): Promise<{ taskItemId: number }> {
+  return await apiClient.post<{ taskItemId: number }>(
+    "/RecurringTask/occurrence/materialize",
+    payload,
+  );
 }

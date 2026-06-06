@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
+using BlotzTask.Modules.Tasks.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -21,8 +22,16 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
             .Select(task => new AllTaskItemDto
             {
                 Id = task.Id,
-                RecurringTaskId = task.RecurringTaskId,
-                RecurringOccurrenceDate = task.RecurringOccurrenceDate,
+                OccurrenceKind = task.RecurringTaskId == null
+                    ? TaskOccurrenceKind.NormalTaskItem
+                    : TaskOccurrenceKind.MaterializedRecurringOccurrence,
+                RecurringOccurrence = task.RecurringTaskId != null && task.RecurringOccurrenceDate != null
+                    ? new RecurringOccurrenceIdentityDto
+                    {
+                        RecurringTaskId = task.RecurringTaskId.Value,
+                        OccurrenceDate = task.RecurringOccurrenceDate.Value
+                    }
+                    : null,
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -46,11 +55,9 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
     }
 }
 
-public class AllTaskItemDto
+public class AllTaskItemDto : TaskOccurrenceDtoBase
 {
     public int Id { get; set; }
-    public int? RecurringTaskId { get; set; }
-    public DateOnly? RecurringOccurrenceDate { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }

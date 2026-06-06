@@ -6,6 +6,7 @@ import {
   createRecurringTask,
   deleteTask,
   toggleTaskCompletion,
+  updateRecurringOccurrence,
   updateTaskItem,
 } from "../services/task-service";
 import { taskKeys } from "../constants/query-key-factory";
@@ -15,6 +16,12 @@ import { TaskDetailDTO } from "../models/task-detail-dto";
 
 type UpdateTaskArgs = {
   taskId: number;
+  dto: TaskUpsertDTO;
+};
+
+type UpdateRecurringOccurrenceArgs = {
+  recurringTaskId: number;
+  occurrenceDate: string;
   dto: TaskUpsertDTO;
 };
 
@@ -78,6 +85,22 @@ const useTaskMutations = () => {
       invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });
+
+  const updateRecurringOccurrenceMutation = useMutation({
+    mutationFn: ({ recurringTaskId, occurrenceDate, dto }: UpdateRecurringOccurrenceArgs) =>
+      updateRecurringOccurrence({
+        recurringTaskId,
+        occurrenceDate,
+        taskDetails: dto,
+      }),
+    onSuccess: (data, task) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: taskKeys.byId(data.taskItemId) });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
+      invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
+      invalidateTaskAvailability(queryClient, task.occurrenceDate);
+    },
+  });
   return {
     addTask: addTaskMutation.mutate,
     addTaskAsync: addTaskMutation.mutateAsync,
@@ -87,11 +110,14 @@ const useTaskMutations = () => {
     deleteTask: deleteTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
     updateTaskAsync: updateTaskMutation.mutateAsync,
+    updateRecurringOccurrence: updateRecurringOccurrenceMutation.mutate,
+    updateRecurringOccurrenceAsync: updateRecurringOccurrenceMutation.mutateAsync,
     isAdding: addTaskMutation.isPending,
     isCreatingRecurringTask: createRecurringTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
+    isUpdatingRecurringOccurrence: updateRecurringOccurrenceMutation.isPending,
     deleteTaskSuccess: deleteTaskMutation.isSuccess,
     resetDeleteTask: deleteTaskMutation.reset,
   };

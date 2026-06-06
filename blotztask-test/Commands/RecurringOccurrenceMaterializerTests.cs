@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
+using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
@@ -208,5 +210,63 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         taskItem.RecurringTaskId.Should().Be(recurring.Id, because: "completed recurring occurrences must retain their template link");
         taskItem.RecurringOccurrenceDate.Should().Be(new DateOnly(2026, 6, 2),
             because: "completed recurring occurrences must retain their template occurrence date");
+    }
+
+    [Fact]
+    public async Task Handle_UpdateRecurringOccurrence_MaterializesAndUpdatesTaskItem()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var occurrenceDate = new DateOnly(2026, 6, 2);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily Standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var logger = TestDbContextFactory.CreateLogger<UpdateRecurringOccurrenceCommandHandler>();
+        var handler = new UpdateRecurringOccurrenceCommandHandler(
+            _context,
+            _materializer,
+            new TaskItemUpdater(_context),
+            logger);
+
+        // Act
+        var taskItemId = await handler.Handle(new UpdateRecurringOccurrenceCommand
+        {
+            RecurringTaskId = recurring.Id,
+            OccurrenceDate = occurrenceDate,
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Moved standup",
+                Description = "Discuss blockers",
+                StartTime = new DateTimeOffset(2026, 6, 4, 15, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 4, 16, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.RangeTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var taskItem = await _context.TaskItems.SingleAsync(t => t.Id == taskItemId);
+        var occurrenceCount = await _context.TaskItems.CountAsync(t =>
+            t.UserId == userId
+            && t.RecurringTaskId == recurring.Id
+            && t.RecurringOccurrenceDate == occurrenceDate);
+
+        // Assert
+        taskItem.Title.Should().Be("Moved standup", because: "saving a virtual occurrence should apply the edited task fields");
+        taskItem.Description.Should().Be("Discuss blockers", because: "the atomic occurrence update should use the normal task update payload");
+        taskItem.TimeType.Should().Be(TaskTimeType.RangeTime, because: "the occurrence should support the same time edits as a regular task");
+        taskItem.StartTime.Should().Be(new DateTimeOffset(2026, 6, 4, 15, 0, 0, TimeSpan.Zero),
+            because: "editing this occurrence only may move the scheduled task time");
+        taskItem.RecurringTaskId.Should().Be(recurring.Id, because: "the materialized item must stay linked to its recurring template");
+        taskItem.RecurringOccurrenceDate.Should().Be(occurrenceDate,
+            because: "the stable recurring identity must not change when the scheduled time is edited");
+        occurrenceCount.Should().Be(1, because: "the atomic update should not create duplicate task items for the same occurrence");
     }
 }

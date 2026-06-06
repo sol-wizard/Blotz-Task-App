@@ -11,6 +11,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
+import { getRecurringOccurrenceIdentity } from "@/shared/util/task-occurrence-identity";
 
 export const FilteredTaskList = ({
   selectedDay,
@@ -76,9 +77,14 @@ export const FilteredTaskList = ({
           data={tasksOfSelectedStatus}
           contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
           renderItem={renderTask}
-          keyExtractor={(task) =>
-            task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
-          }
+          keyExtractor={(task, index) => {
+            if (task.id != null) return `task-${task.id}`;
+            const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+            if (recurringOccurrence) {
+              return `virtual-${recurringOccurrence.recurringTaskId}-${recurringOccurrence.occurrenceDate}`;
+            }
+            return `task-fallback-${index}`;
+          }}
         />
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />

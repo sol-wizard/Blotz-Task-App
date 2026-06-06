@@ -271,9 +271,14 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         // Assert: "Go to Gym" appears but has no DB row yet (Id = null), only the template reference
         var virtualTask = result.Should().ContainSingle(t => t.Title == "Go to Gym").Subject;
         virtualTask.Id.Should().BeNull(because: "user has not interacted with today's occurrence yet — no DB row saved");
-        virtualTask.RecurringTaskId.Should().NotBeNull(because: "virtual task must reference its recurring template so the frontend knows which template it belongs to");
-        virtualTask.RecurringOccurrenceDate.Should().Be(new DateOnly(2026, 3, 14),
-            because: "virtual tasks should expose the stable recurring occurrence date for later materialization");
+        virtualTask.OccurrenceKind.Should().Be(TaskOccurrenceKind.VirtualRecurringOccurrence,
+            because: "the API should explicitly identify virtual recurring occurrences instead of requiring clients to infer that from a null id");
+        virtualTask.RecurringOccurrence.Should().NotBeNull(
+            because: "virtual recurring occurrences must expose a complete recurring occurrence identity");
+        virtualTask.RecurringOccurrence!.RecurringTaskId.Should().BeGreaterThan(0,
+            because: "the nested identity should include the recurring template id");
+        virtualTask.RecurringOccurrence.OccurrenceDate.Should().Be(new DateOnly(2026, 3, 14),
+            because: "the nested identity should carry the stable occurrence date used for materialization");
     }
 
     [Fact]
@@ -317,7 +322,39 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var taskResults = result.Where(t => t.Title == "Morning Run").ToList();
         taskResults.Should().HaveCount(1, because: "the saved DB row replaces the virtual occurrence — user should not see duplicates");
         taskResults[0].Id.Should().NotBeNull(because: "this is the real saved row, not a virtual one");
+        taskResults[0].OccurrenceKind.Should().Be(TaskOccurrenceKind.MaterializedRecurringOccurrence,
+            because: "stored recurring task items should be identified as materialized recurring occurrences");
         taskResults[0].IsDone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_NormalTask_ShouldReturnNormalTaskOccurrenceKind()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var queryDate = new DateTimeOffset(2026, 3, 14, 0, 0, 0, TimeSpan.Zero);
+        await _seeder.CreateTaskAsync(
+            userId,
+            "One-off task",
+            queryDate.AddHours(9),
+            queryDate.AddHours(10));
+
+        var query = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = queryDate,
+            IncludeFloatingForToday = false
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+
+        // Assert
+        var task = result.Should().ContainSingle(t => t.Title == "One-off task").Subject;
+        task.OccurrenceKind.Should().Be(TaskOccurrenceKind.NormalTaskItem,
+            because: "ordinary persisted tasks should be explicitly distinguished from recurring occurrences");
+        task.RecurringOccurrence.Should().BeNull(
+            because: "ordinary persisted tasks do not have a recurring occurrence identity");
     }
 
     [Fact]

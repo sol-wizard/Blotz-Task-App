@@ -27,6 +27,19 @@ import { useTranslation } from "react-i18next";
 import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 import { SwitchTaskModal } from "./pomodoro-switch-modal";
 import Toast from "react-native-toast-message";
+import { ensureTaskItemForTaskCard } from "../util/ensure-task-item-for-task-card";
+import { taskKeys } from "@/shared/constants/query-key-factory";
+import {
+  createVirtualTaskDetailCacheKey,
+  virtualTaskDetailKeys,
+} from "@/feature/task-details/util/virtual-task-detail-cache";
+import { TASK_DETAIL_ROUTE_MODE } from "@/feature/task-details/util/task-detail-route-mode";
+import {
+  getRecurringOccurrenceDate,
+  getRecurringTaskId,
+  hasTaskItemId,
+  isVirtualRecurringOccurrence,
+} from "@/shared/util/task-occurrence-identity";
 
 // Props
 interface TaskCardProps {
@@ -49,10 +62,15 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const isPaused = isThisTaskActive ? (session?.isPaused ?? true) : true;
   const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
   const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
   const { toggleTask, isToggling } = useTaskMutations();
-  const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
+  const {
+    completeOccurrence,
+    materializeOccurrenceAsync,
+    isPending: isRecurringTaskPending,
+  } = useRecurringTaskMutations();
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
 
   // Derived values
@@ -64,32 +82,62 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   });
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
   const isLoading =
-    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
+    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isRecurringTaskPending;
 
   const { t } = useTranslation("pomodoro");
 
   // Functions
-  const handleOpenTaskDetails = () => {
-    if (task.id == null) return;
+  const ensureTaskItemId = () =>
+    ensureTaskItemForTaskCard({
+      task,
+      materializeOccurrence: materializeOccurrenceAsync,
+    });
 
-    queryClient.setQueryData(["taskId", task.id], task);
-    router.push({ pathname: "/(protected)/task-details", params: { taskId: task.id } });
-  };
+  const handleOpenTaskDetails = async () => {
+    if (isLoading) return;
 
-  const handleBreakdown = () => {
-    if (isLoading || task.id == null) return;
-    breakDownAndReplaceSubtasks(task.id, {
-      onSuccess: (result) => {
-        if (result?.subtasks?.length) {
-          setIsExpanded(true);
-          swipeRef.current?.close();
-        }
+    if (hasTaskItemId(task)) {
+      queryClient.setQueryData(taskKeys.byId(task.id), task);
+      router.push({
+        pathname: "/(protected)/task-details",
+        params: { mode: TASK_DETAIL_ROUTE_MODE.Persisted, taskId: task.id },
+      });
+      return;
+    }
+
+    if (!isVirtualRecurringOccurrence(task)) return;
+
+    const occurrenceDate = getRecurringOccurrenceDate(task);
+    const recurringTaskId = getRecurringTaskId(task);
+    if (recurringTaskId == null || !occurrenceDate) return;
+
+    const virtualTaskCacheKey = createVirtualTaskDetailCacheKey(task, occurrenceDate);
+    queryClient.setQueryData(virtualTaskDetailKeys.byKey(virtualTaskCacheKey), task);
+    router.push({
+      pathname: "/(protected)/task-details",
+      params: {
+        mode: TASK_DETAIL_ROUTE_MODE.Virtual,
+        recurringTaskId,
+        occurrenceDate,
+        virtualTaskCacheKey,
       },
     });
   };
 
+  const handleBreakdown = async () => {
+    if (isLoading) return;
+
+    const taskId = await ensureTaskItemId();
+    const result = await breakDownAndReplaceSubtasks(taskId);
+
+    if (result?.subtasks?.length) {
+      setIsExpanded(true);
+      swipeRef.current?.close();
+    }
+  };
+
   const handleDelete = async () => {
-    if (isLoading || task.id == null) return;
+    if (isLoading || !hasTaskItemId(task)) return;
 
     await deleteTask(task);
 
@@ -98,12 +146,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     }
   };
 
-  const handleOpenFocus = () => {
-    if (!task.id) return;
-    if (session && session.taskId !== String(task.id)) {
+  const handleOpenFocus = async () => {
+    if (isLoading) return;
+
+    const taskId = await ensureTaskItemId();
+
+    if (session && session.taskId !== String(taskId)) {
+      setPendingFocusTaskId(taskId);
       setShowSwitchModal(true);
     } else {
-      router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+      router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId } });
     }
 
     swipeRef.current?.close();
@@ -125,9 +177,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   };
 
   const handleConfirmSwitch = () => {
+    if (pendingFocusTaskId == null) return;
+
     setShowSwitchModal(false);
 
-    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: pendingFocusTaskId } });
+    setPendingFocusTaskId(null);
   };
 
   const handleTogglePause = () => {
@@ -175,14 +230,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
                 checked={task.isDone}
                 disabled={isLoading}
                 onChange={async () => {
-                  if (!task.id) {
+                  if (isVirtualRecurringOccurrence(task)) {
+                    const occurrenceDate = getRecurringOccurrenceDate(task);
+                    const recurringTaskId = getRecurringTaskId(task);
+                    if (recurringTaskId == null || !occurrenceDate) return;
+
                     completeOccurrence({
-                      recurringTaskId: task.recurringTaskId!,
-                      occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                      recurringTaskId,
+                      occurrenceDate,
                     });
                     return;
                   }
-                  toggleTask({ taskId: task.id!, selectedDay });
+                  if (!hasTaskItemId(task)) return;
+                  toggleTask({ taskId: task.id, selectedDay });
                   if (task.alertTime && new Date(task.alertTime) > new Date()) {
                     await cancelNotification({ notificationId: task?.notificationId });
                   }
@@ -221,7 +281,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
                   >
                     {task.title}
                   </Text>
-                  {task.recurringTaskId && (
+                  {getRecurringTaskId(task) && (
                     <View className="ml-1.5">
                       <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
                     </View>
@@ -280,7 +340,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
       </ReanimatedSwipeable>
       <SwitchTaskModal
         isVisible={showSwitchModal}
-        onClose={() => setShowSwitchModal(false)}
+        onClose={() => {
+          setShowSwitchModal(false);
+          setPendingFocusTaskId(null);
+        }}
         onConfirm={handleConfirmSwitch}
       />
     </>

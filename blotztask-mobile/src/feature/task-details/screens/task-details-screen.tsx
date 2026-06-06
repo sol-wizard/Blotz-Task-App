@@ -16,13 +16,58 @@ import {
 } from "@/feature/task-details/components/task-time-card";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
+import { useQueryClient } from "@tanstack/react-query";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { virtualTaskDetailKeys } from "@/feature/task-details/util/virtual-task-detail-cache";
+import {
+  hasTaskItemId,
+  isVirtualRecurringOccurrence,
+} from "@/shared/util/task-occurrence-identity";
+import {
+  TASK_DETAIL_ROUTE_MODE,
+  isTaskDetailRouteMode,
+  TaskDetailRouteMode,
+} from "@/feature/task-details/util/task-detail-route-mode";
+
+function selectTaskByRouteMode({
+  mode,
+  persistedTask,
+  virtualTask,
+}: {
+  mode: TaskDetailRouteMode | null;
+  persistedTask?: TaskDetailDTO;
+  virtualTask?: TaskDetailDTO;
+}) {
+  if (mode === TASK_DETAIL_ROUTE_MODE.Persisted) return persistedTask;
+  if (mode === TASK_DETAIL_ROUTE_MODE.Virtual) return virtualTask;
+  return undefined;
+}
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ taskId: string }>();
-  const taskId = Number(params.taskId ?? "");
-  const { selectedTask, isLoading } = useTaskById({ taskId });
-  const { updateTask, isUpdating } = useTaskMutations();
+  const params = useLocalSearchParams<{
+    mode?: string;
+    taskId?: string;
+    recurringTaskId?: string;
+    occurrenceDate?: string;
+    virtualTaskCacheKey?: string;
+  }>();
+  const mode = isTaskDetailRouteMode(params.mode) ? params.mode : null;
+  const taskId = params.taskId ? Number(params.taskId) : null;
+  const recurringTaskId = params.recurringTaskId ? Number(params.recurringTaskId) : null;
+  const queryClient = useQueryClient();
+  const virtualTask = params.virtualTaskCacheKey
+    ? queryClient.getQueryData<TaskDetailDTO>(
+        virtualTaskDetailKeys.byKey(params.virtualTaskCacheKey),
+      )
+    : undefined;
+  const { selectedTask: persistedTask, isLoading } = useTaskById({
+    taskId: taskId ?? null,
+    enabled: mode === TASK_DETAIL_ROUTE_MODE.Persisted && taskId != null,
+  });
+  const selectedTask = selectTaskByRouteMode({ mode, persistedTask, virtualTask });
+  const { updateTask, updateRecurringOccurrence, isUpdating, isUpdatingRecurringOccurrence } =
+    useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description ?? "");
 
   const { t } = useTranslation();
@@ -31,26 +76,39 @@ export default function TaskDetailsScreen() {
     if (!selectedTask) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
-    await updateTask({
-      taskId,
-      dto: {
-        title: selectedTask.title,
-        description: newDescription,
-        startTime: convertToDateTimeOffset(new Date(selectedTask.startTime)),
-        endTime: convertToDateTimeOffset(new Date(selectedTask.endTime)),
-        labelId: selectedTask.label?.labelId,
-        timeType: selectedTask.timeType,
-        notificationId: selectedTask.notificationId,
-        isDeadline: selectedTask.isDeadline,
-      },
+    const dto = {
+      title: selectedTask.title,
+      description: newDescription,
+      startTime: convertToDateTimeOffset(new Date(selectedTask.startTime)),
+      endTime: convertToDateTimeOffset(new Date(selectedTask.endTime)),
+      labelId: selectedTask.label?.labelId,
+      timeType: selectedTask.timeType,
+      notificationId: selectedTask.notificationId,
+      isDeadline: selectedTask.isDeadline,
+    };
+
+    if (hasTaskItemId(selectedTask)) {
+      await updateTask({
+        taskId: selectedTask.id,
+        dto,
+      });
+      return;
+    }
+
+    if (recurringTaskId == null || !params.occurrenceDate) return;
+
+    await updateRecurringOccurrence({
+      recurringTaskId,
+      occurrenceDate: params.occurrenceDate,
+      dto,
     });
   };
 
-  if (isLoading) {
+  if (mode === TASK_DETAIL_ROUTE_MODE.Persisted && isLoading) {
     return <LoadingScreen />;
   }
 
-  if (!selectedTask || !selectedTask.id) {
+  if (!selectedTask) {
     console.warn("No selected task found");
     return (
       <View className="flex-1 items-center justify-center">
@@ -67,6 +125,7 @@ export default function TaskDetailsScreen() {
   }
 
   const canSaveDescription = descriptionText.trim() !== (selectedTask.description ?? "").trim();
+  const isSaving = isUpdating || isUpdatingRecurringOccurrence;
 
   const getTranslatedLabelName = (labelName: string): string => {
     const lowerName = labelName.toLowerCase();
@@ -114,9 +173,30 @@ export default function TaskDetailsScreen() {
             </Text>
             <TouchableOpacity
               onPress={() => {
+                if (isVirtualRecurringOccurrence(selectedTask)) {
+                  if (
+                    recurringTaskId == null ||
+                    !params.occurrenceDate ||
+                    !params.virtualTaskCacheKey
+                  ) {
+                    return;
+                  }
+
+                  router.push({
+                    pathname: "/(protected)/task-edit",
+                    params: {
+                      mode: TASK_DETAIL_ROUTE_MODE.Virtual,
+                      recurringTaskId,
+                      occurrenceDate: params.occurrenceDate,
+                      virtualTaskCacheKey: params.virtualTaskCacheKey,
+                    },
+                  });
+                  return;
+                }
+
                 router.push({
                   pathname: "/(protected)/task-edit",
-                  params: { taskId: selectedTask.id },
+                  params: { mode: TASK_DETAIL_ROUTE_MODE.Persisted, taskId: selectedTask.id },
                 });
               }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -140,12 +220,12 @@ export default function TaskDetailsScreen() {
             setDescription={setDescriptionText}
             canSave={canSaveDescription}
             onSave={() => handleUpdateDescription(descriptionText)}
-            isUpdating={isUpdating}
+            isUpdating={isSaving}
           />
         </View>
 
         <View className="flex-1 px-4">
-          <SubtasksView parentTask={selectedTask} />
+          {hasTaskItemId(selectedTask) && <SubtasksView parentTask={selectedTask} />}
         </View>
       </View>
     </SafeAreaView>

@@ -84,8 +84,16 @@ public class GetTasksByDateQueryHandler(
             .Select(task => new TaskByDateItemDto
             {
                 Id = task.Id,
-                RecurringTaskId = task.RecurringTaskId,
-                RecurringOccurrenceDate = task.RecurringOccurrenceDate,
+                OccurrenceKind = task.RecurringTaskId == null
+                    ? TaskOccurrenceKind.NormalTaskItem
+                    : TaskOccurrenceKind.MaterializedRecurringOccurrence,
+                RecurringOccurrence = task.RecurringTaskId != null && task.RecurringOccurrenceDate != null
+                    ? new RecurringOccurrenceIdentityDto
+                    {
+                        RecurringTaskId = task.RecurringTaskId.Value,
+                        OccurrenceDate = task.RecurringOccurrenceDate.Value
+                    }
+                    : null,
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -168,8 +176,12 @@ public class GetTasksByDateQueryHandler(
             tasks.Add(new TaskByDateItemDto
             {
                 Id = null,  // no DB row yet
-                RecurringTaskId = recurring.Id,
-                RecurringOccurrenceDate = requestedDate,
+                OccurrenceKind = TaskOccurrenceKind.VirtualRecurringOccurrence,
+                RecurringOccurrence = new RecurringOccurrenceIdentityDto
+                {
+                    RecurringTaskId = recurring.Id,
+                    OccurrenceDate = requestedDate
+                },
                 Title = recurring.Title,
                 Description = recurring.Description,
                 StartTime = startTime,
@@ -212,11 +224,9 @@ public class GetTasksByDateQueryHandler(
     }
 }
 
-public class TaskByDateItemDto
+public class TaskByDateItemDto : TaskOccurrenceDtoBase
 {
     public int? Id { get; set; }           // null = virtual occurrence (no DB row yet)
-    public int? RecurringTaskId { get; set; }
-    public DateOnly? RecurringOccurrenceDate { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }

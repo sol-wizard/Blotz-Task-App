@@ -1,19 +1,49 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { startOfDay } from "date-fns";
+import { QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, parseISO, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { taskKeys } from "@/shared/constants/query-key-factory";
-import { saveRecurringOccurrence } from "@/shared/services/task-service";
+import {
+  materializeRecurringOccurrence,
+  saveRecurringOccurrence,
+} from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 export function useRecurringTaskMutations() {
   const queryClient = useQueryClient();
 
-  const { mutate: completeOccurrence, isPending } = useMutation({
+  const { mutate: completeOccurrence, isPending: isCompletingOccurrence } = useMutation({
     mutationFn: saveRecurringOccurrence,
     onSuccess: (_data, variables) => {
-      const dayKey = convertToDateTimeOffset(startOfDay(new Date(variables.occurrenceDate)));
-      queryClient.invalidateQueries({ queryKey: taskKeys.selectedDay(dayKey) });
+      invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
     },
   });
 
-  return { completeOccurrence, isPending };
+  const {
+    mutateAsync: materializeOccurrenceAsync,
+    isPending: isMaterializingOccurrence,
+  } = useMutation({
+    mutationFn: materializeRecurringOccurrence,
+    onSuccess: (_data, variables) => {
+      invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
+    },
+  });
+
+  return {
+    completeOccurrence,
+    materializeOccurrenceAsync,
+    isPending: isCompletingOccurrence || isMaterializingOccurrence,
+  };
+}
+
+function invalidateRecurringOccurrenceQueries(
+  queryClient: QueryClient,
+  occurrenceDate: string,
+) {
+  const date = parseISO(occurrenceDate);
+  const dayKey = convertToDateTimeOffset(startOfDay(date));
+  const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const monthKey = format(startOfMonth(date), "yyyy-MM");
+
+  queryClient.invalidateQueries({ queryKey: taskKeys.selectedDay(dayKey) });
+  queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
+  queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
 }
