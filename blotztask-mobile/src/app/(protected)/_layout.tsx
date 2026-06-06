@@ -23,7 +23,7 @@ export default function ProtectedLayout() {
 
   useLanguageInit();
   useTrackActiveUser5s();
-  usePushNotificationSetup();
+  const { badgeQueue, dismissBadge } = usePushNotificationSetup();
 
   return (
     <>
@@ -82,7 +82,7 @@ export default function ProtectedLayout() {
         <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
       </Stack>
 
-      <BadgeAchievementModal />
+      <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
     </>
   );
 }
