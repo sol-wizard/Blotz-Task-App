@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { addMonths, isSameMonth, startOfMonth, subMonths } from "date-fns";
+import { addMonths, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterBody } from "../components/letter-body";
 import { LetterEmptyState } from "../components/letter-empty-state";
@@ -29,6 +29,12 @@ export default function MonthlyReviewScreen() {
     captureTargetRef: shareCardRef,
   });
   const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
+  // Don't let users page back before the month they registered — those months are always empty.
+  const earliestReviewableMonth = userProfile?.signUpAt
+    ? startOfMonth(new Date(userProfile.signUpAt))
+    : null;
+  const isAtEarliestMonth =
+    earliestReviewableMonth !== null && !isAfter(selectedMonth, earliestReviewableMonth);
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
@@ -70,10 +76,13 @@ export default function MonthlyReviewScreen() {
       <View className="px-5 mb-4">
         <MonthSelector
           label={displayMonth}
-          onPrev={() => setSelectedMonth((m) => addMonths(m, -1))}
+          onPrev={() => {
+            if (!isAtEarliestMonth) setSelectedMonth((m) => addMonths(m, -1));
+          }}
           onNext={() => {
             if (!isAtLatestMonth) setSelectedMonth((m) => addMonths(m, 1));
           }}
+          disablePrev={isAtEarliestMonth}
           disableNext={isAtLatestMonth}
         />
       </View>

@@ -5,18 +5,24 @@ type Props = {
   label: string;
   onPrev: () => void;
   onNext: () => void;
+  disablePrev: boolean;
   disableNext: boolean;
 };
 
-export function MonthSelector({ label, onPrev, onNext, disableNext }: Props) {
+export function MonthSelector({ label, onPrev, onNext, disablePrev, disableNext }: Props) {
   return (
     <View className="bg-white rounded-full flex-row items-center justify-between px-2 py-2">
       <Pressable
         onPress={onPrev}
+        disabled={disablePrev}
         className="w-10 h-10 rounded-full items-center justify-center"
         hitSlop={8}
       >
-        <MaterialCommunityIcons name="chevron-left" size={24} color="#363853" />
+        <MaterialCommunityIcons
+          name="chevron-left"
+          size={24}
+          color={disablePrev ? "#C7C9D6" : "#363853"}
+        />
       </Pressable>
       <Text className="text-base font-balooBold text-secondary">{label}</Text>
       <Pressable
