@@ -1,3 +1,4 @@
+import React from "react";
 import TaskForm, { TaskFormDirtyFields } from "@/feature/task-add-edit/task-form";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -5,7 +6,7 @@ import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { TaskRecurrence, TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -18,6 +19,7 @@ import {
 } from "@/feature/task-details/util/task-detail-route-mode";
 import { useTranslation } from "react-i18next";
 import { RecurrenceFrequency } from "@/shared/models/recurring-task-create-dto";
+import { ActionChoiceSheet } from "@/shared/components/action-choice-sheet";
 
 function selectTaskByRouteMode({
   mode,
@@ -32,6 +34,22 @@ function selectTaskByRouteMode({
   if (mode === TASK_DETAIL_ROUTE_MODE.Virtual) return virtualTask;
   return undefined;
 }
+
+type RecurringScopeSheetState =
+  | {
+      type: "scope";
+      formValues: TaskUpsertDTO;
+      recurringTaskId: number;
+      occurrenceDate: string;
+    }
+  | {
+      type: "future";
+      formValues: TaskUpsertDTO;
+      recurringTaskId: number;
+      occurrenceDate: string;
+      isStopRepeating: boolean;
+    }
+  | null;
 
 export default function TaskEditScreen() {
   const {
@@ -62,6 +80,8 @@ export default function TaskEditScreen() {
     enabled: mode === TASK_DETAIL_ROUTE_MODE.Persisted && taskId != null,
   });
   const selectedTask = selectTaskByRouteMode({ mode, persistedTask, virtualTask });
+  const [recurringScopeSheet, setRecurringScopeSheet] =
+    React.useState<RecurringScopeSheetState>(null);
 
   const router = useRouter();
   const { t } = useTranslation("tasks");
@@ -107,11 +127,22 @@ export default function TaskEditScreen() {
     }
 
     if (hasRecurrenceDirtyFields(dirtyFields)) {
-      showFutureOnlyConfirm(formValues, recurringOccurrence.recurringTaskId, recurringOccurrence.occurrenceDate);
+      setRecurringScopeSheet({
+        type: "future",
+        formValues,
+        recurringTaskId: recurringOccurrence.recurringTaskId,
+        occurrenceDate: recurringOccurrence.occurrenceDate,
+        isStopRepeating: formValues.recurrence === "never",
+      });
       return;
     }
 
-    showRecurringScopeConfirm(formValues, recurringOccurrence.recurringTaskId, recurringOccurrence.occurrenceDate);
+    setRecurringScopeSheet({
+      type: "scope",
+      formValues,
+      recurringTaskId: recurringOccurrence.recurringTaskId,
+      occurrenceDate: recurringOccurrence.occurrenceDate,
+    });
   };
 
   const saveThisOccurrence = (
@@ -156,50 +187,70 @@ export default function TaskEditScreen() {
     );
   };
 
-  const showRecurringScopeConfirm = (
-    formValues: TaskUpsertDTO,
-    selectedRecurringTaskId: number,
-    occurrenceDate: string,
-  ) => {
-    Alert.alert(t("recurrence.editTitle"), t("recurrence.editMessage"), [
-      {
-        text: t("recurrence.editCancel"),
-        style: "cancel",
-      },
-      {
-        text: t("recurrence.editThisDate"),
-        onPress: () => saveThisOccurrence(formValues, selectedRecurringTaskId, occurrenceDate),
-      },
-      {
-        text: t("recurrence.editFutureDates"),
-        onPress: () => saveFutureOccurrences(formValues, selectedRecurringTaskId, occurrenceDate, false),
-      },
-    ]);
-  };
+  const closeRecurringScopeSheet = () => setRecurringScopeSheet(null);
 
-  const showFutureOnlyConfirm = (
-    formValues: TaskUpsertDTO,
-    selectedRecurringTaskId: number,
-    occurrenceDate: string,
-  ) => {
-    const isStopRepeating = formValues.recurrence === "never";
-    Alert.alert(
-      isStopRepeating ? t("recurrence.stopTitle") : t("recurrence.updateTitle"),
-      isStopRepeating ? t("recurrence.stopMessage") : t("recurrence.updateMessage"),
-      [
-        {
-          text: t("recurrence.editCancel"),
-          style: "cancel",
-        },
-        {
-          text: isStopRepeating
-            ? t("recurrence.stopFromDate")
-            : t("recurrence.editFutureDates"),
-          onPress: () => saveFutureOccurrences(formValues, selectedRecurringTaskId, occurrenceDate, true),
-        },
-      ],
-    );
-  };
+  const recurringScopeSheetTitle = recurringScopeSheet
+    ? recurringScopeSheet.type === "scope"
+      ? t("recurrence.editTitle")
+      : recurringScopeSheet.isStopRepeating
+        ? t("recurrence.stopTitle")
+        : t("recurrence.updateTitle")
+    : "";
+  const recurringScopeSheetMessage = recurringScopeSheet
+    ? recurringScopeSheet.type === "scope"
+      ? t("recurrence.editMessage")
+      : recurringScopeSheet.isStopRepeating
+        ? t("recurrence.stopMessage")
+        : t("recurrence.updateMessage")
+    : "";
+  const recurringScopeSheetActions =
+    recurringScopeSheet == null
+      ? []
+      : recurringScopeSheet.type === "scope"
+        ? [
+            {
+              key: "this-date",
+              title: t("recurrence.editThisDate"),
+              description: t("recurrence.editThisDateDescription"),
+              icon: "calendar-today" as const,
+              onPress: () => {
+                const sheet = recurringScopeSheet;
+                closeRecurringScopeSheet();
+                saveThisOccurrence(sheet.formValues, sheet.recurringTaskId, sheet.occurrenceDate);
+              },
+            },
+            {
+              key: "future-dates",
+              title: t("recurrence.editFutureDates"),
+              description: t("recurrence.editFutureDatesDescription"),
+              icon: "calendar-sync" as const,
+              onPress: () => {
+                const sheet = recurringScopeSheet;
+                closeRecurringScopeSheet();
+                saveFutureOccurrences(sheet.formValues, sheet.recurringTaskId, sheet.occurrenceDate, false);
+              },
+            },
+          ]
+        : [
+            {
+              key: "future-dates",
+              title: recurringScopeSheet.isStopRepeating
+                ? t("recurrence.stopFromDate")
+                : t("recurrence.editFutureDates"),
+              description: recurringScopeSheet.isStopRepeating
+                ? t("recurrence.stopFromDateDescription")
+                : t("recurrence.updateFutureDescription"),
+              icon: recurringScopeSheet.isStopRepeating
+                ? ("calendar-remove" as const)
+                : ("calendar-sync" as const),
+              destructive: recurringScopeSheet.isStopRepeating,
+              onPress: () => {
+                const sheet = recurringScopeSheet;
+                closeRecurringScopeSheet();
+                saveFutureOccurrences(sheet.formValues, sheet.recurringTaskId, sheet.occurrenceDate, true);
+              },
+            },
+          ];
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
@@ -220,6 +271,14 @@ export default function TaskEditScreen() {
           onSubmit={handleTaskSubmit}
         />
       </View>
+      <ActionChoiceSheet
+        visible={recurringScopeSheet != null}
+        title={recurringScopeSheetTitle}
+        message={recurringScopeSheetMessage}
+        actions={recurringScopeSheetActions}
+        cancelText={t("recurrence.editCancel")}
+        onClose={closeRecurringScopeSheet}
+      />
     </SafeAreaView>
   );
 }

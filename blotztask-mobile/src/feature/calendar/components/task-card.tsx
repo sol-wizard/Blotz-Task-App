@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Alert, View, Text, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -41,6 +41,7 @@ import {
   hasTaskItemId,
   isVirtualRecurringOccurrence,
 } from "@/shared/util/task-occurrence-identity";
+import { ActionChoiceSheet } from "@/shared/components/action-choice-sheet";
 
 // Props
 interface TaskCardProps {
@@ -63,6 +64,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const isPaused = isThisTaskActive ? (session?.isPaused ?? true) : true;
   const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
   const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [showRecurringDeleteSheet, setShowRecurringDeleteSheet] = useState(false);
   const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
@@ -152,52 +154,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
     const recurringOccurrence = getRecurringOccurrenceIdentity(task);
     if (recurringOccurrence) {
-      Alert.alert(tTasks("recurrence.deleteTitle"), tTasks("recurrence.deleteMessage"), [
-        {
-          text: tTasks("recurrence.deleteCancel"),
-          style: "cancel",
-        },
-        {
-          text: tTasks("recurrence.deleteThisDate"),
-          style: "destructive",
-          onPress: () =>
-            deleteRecurringOccurrence(
-              {
-                recurringTaskId: recurringOccurrence.recurringTaskId,
-                occurrenceDate: recurringOccurrence.occurrenceDate,
-                deleteFuture: false,
-              },
-              {
-                onSuccess: () => {
-                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                    void cancelNotification({ notificationId: task.notificationId });
-                  }
-                  swipeRef.current?.close();
-                },
-              },
-            ),
-        },
-        {
-          text: tTasks("recurrence.deleteFutureDates"),
-          style: "destructive",
-          onPress: () =>
-            deleteRecurringOccurrence(
-              {
-                recurringTaskId: recurringOccurrence.recurringTaskId,
-                occurrenceDate: recurringOccurrence.occurrenceDate,
-                deleteFuture: true,
-              },
-              {
-                onSuccess: () => {
-                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                    void cancelNotification({ notificationId: task.notificationId });
-                  }
-                  swipeRef.current?.close();
-                },
-              },
-            ),
-        },
-      ]);
+      setShowRecurringDeleteSheet(true);
       return;
     }
 
@@ -208,6 +165,28 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     if (task.alertTime && new Date(task.alertTime) > new Date()) {
       await cancelNotification({ notificationId: task.notificationId });
     }
+  };
+
+  const deleteRecurringTaskOccurrence = (deleteFuture: boolean) => {
+    const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+    if (!recurringOccurrence) return;
+
+    setShowRecurringDeleteSheet(false);
+    deleteRecurringOccurrence(
+      {
+        recurringTaskId: recurringOccurrence.recurringTaskId,
+        occurrenceDate: recurringOccurrence.occurrenceDate,
+        deleteFuture,
+      },
+      {
+        onSuccess: () => {
+          if (task.alertTime && new Date(task.alertTime) > new Date()) {
+            void cancelNotification({ notificationId: task.notificationId });
+          }
+          swipeRef.current?.close();
+        },
+      },
+    );
   };
 
   const handleOpenFocus = async () => {
@@ -411,6 +390,31 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
           setPendingFocusTaskId(null);
         }}
         onConfirm={handleConfirmSwitch}
+      />
+      <ActionChoiceSheet
+        visible={showRecurringDeleteSheet}
+        title={tTasks("recurrence.deleteTitle")}
+        message={tTasks("recurrence.deleteMessage")}
+        cancelText={tTasks("recurrence.deleteCancel")}
+        onClose={() => setShowRecurringDeleteSheet(false)}
+        actions={[
+          {
+            key: "this-date",
+            title: tTasks("recurrence.deleteThisDate"),
+            description: tTasks("recurrence.deleteThisDateDescription"),
+            icon: "calendar-remove",
+            destructive: true,
+            onPress: () => deleteRecurringTaskOccurrence(false),
+          },
+          {
+            key: "future-dates",
+            title: tTasks("recurrence.deleteFutureDates"),
+            description: tTasks("recurrence.deleteFutureDatesDescription"),
+            icon: "calendar-remove",
+            destructive: true,
+            onPress: () => deleteRecurringTaskOccurrence(true),
+          },
+        ]}
       />
     </>
   );
