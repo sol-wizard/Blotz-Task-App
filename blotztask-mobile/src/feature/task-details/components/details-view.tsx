@@ -1,26 +1,25 @@
+import { useState } from "react";
 import { View, TextInput, TouchableOpacity, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 type DetailsViewProps = {
-  taskDescription: string;
-  setDescription: (v: string) => void;
-  canSave: boolean;
-  onSave: () => void;
+  initialDescription: string;
+  onSave: (description: string) => void;
   isUpdating: boolean;
 };
 const DetailsView = ({
-  taskDescription,
-  setDescription,
+  initialDescription,
   onSave,
-  canSave,
   isUpdating,
 }: DetailsViewProps) => {
   const { t } = useTranslation();
+  const [description, setDescription] = useState(initialDescription);
+  const canSave = description.trim() !== initialDescription.trim();
 
   return (
     <View className="bg-gray-100 rounded-xl p-4 h-[190px] w-full">
       <TextInput
-        value={taskDescription}
+        value={description}
         onChangeText={setDescription}
         placeholder={t("tasks:details.addDetails")}
         multiline
@@ -29,7 +28,7 @@ const DetailsView = ({
       />
       <View className="mt-3 items-end">
         <TouchableOpacity
-          onPress={onSave}
+          onPress={() => onSave(description)}
           disabled={!canSave}
           className={`
             rounded-xl px-4 py-2

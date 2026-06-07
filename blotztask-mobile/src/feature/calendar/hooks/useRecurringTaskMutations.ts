@@ -7,6 +7,12 @@ import {
 } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
+type MaterializeRecurringOccurrenceArgs = {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  invalidateOnSuccess?: boolean;
+};
+
 export function useRecurringTaskMutations() {
   const queryClient = useQueryClient();
 
@@ -21,8 +27,11 @@ export function useRecurringTaskMutations() {
     mutateAsync: materializeOccurrenceAsync,
     isPending: isMaterializingOccurrence,
   } = useMutation({
-    mutationFn: materializeRecurringOccurrence,
+    mutationFn: ({ recurringTaskId, occurrenceDate }: MaterializeRecurringOccurrenceArgs) =>
+      materializeRecurringOccurrence({ recurringTaskId, occurrenceDate }),
     onSuccess: (_data, variables) => {
+      if (variables.invalidateOnSuccess === false) return;
+
       invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
     },
   });

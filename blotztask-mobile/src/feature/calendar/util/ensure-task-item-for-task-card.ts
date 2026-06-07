@@ -8,6 +8,7 @@ import {
 type RecurringOccurrencePayload = {
   recurringTaskId: number;
   occurrenceDate: string;
+  invalidateOnSuccess?: boolean;
 };
 
 type RecurringOccurrenceResult = {
@@ -19,11 +20,13 @@ type EnsureTaskItemForTaskCardParams = {
   materializeOccurrence: (
     payload: RecurringOccurrencePayload,
   ) => Promise<RecurringOccurrenceResult>;
+  invalidateOnMaterializeSuccess?: boolean;
 };
 
 export async function ensureTaskItemForTaskCard({
   task,
   materializeOccurrence,
+  invalidateOnMaterializeSuccess = true,
 }: EnsureTaskItemForTaskCardParams): Promise<number> {
   if (hasTaskItemId(task)) {
     return task.id;
@@ -42,6 +45,7 @@ export async function ensureTaskItemForTaskCard({
   const result = await materializeOccurrence({
     recurringTaskId,
     occurrenceDate,
+    invalidateOnSuccess: invalidateOnMaterializeSuccess,
   });
 
   return result.taskItemId;

@@ -65,6 +65,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [showRecurringDeleteSheet, setShowRecurringDeleteSheet] = useState(false);
+  const [isBreakdownPending, setIsBreakdownPending] = useState(false);
   const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
@@ -93,6 +94,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     isToggling ||
     isDeleting ||
     isDeletingRecurringOccurrence ||
+    isBreakdownPending ||
     isBreakingDownAndReplacingSubtasks ||
     isRecurringTaskPending;
 
@@ -100,10 +102,11 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const { t: tTasks } = useTranslation("tasks");
 
   // Functions
-  const ensureTaskItemId = () =>
+  const ensureTaskItemId = (invalidateOnMaterializeSuccess = true) =>
     ensureTaskItemForTaskCard({
       task,
       materializeOccurrence: materializeOccurrenceAsync,
+      invalidateOnMaterializeSuccess,
     });
 
   const handleOpenTaskDetails = async () => {
@@ -140,12 +143,18 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const handleBreakdown = async () => {
     if (isLoading) return;
 
-    const taskId = await ensureTaskItemId();
-    const result = await breakDownAndReplaceSubtasks(taskId);
+    setIsBreakdownPending(true);
 
-    if (result?.subtasks?.length) {
-      setIsExpanded(true);
-      swipeRef.current?.close();
+    try {
+      const taskId = await ensureTaskItemId(false);
+      const result = await breakDownAndReplaceSubtasks(taskId);
+
+      if (result?.subtasks?.length) {
+        setIsExpanded(true);
+        swipeRef.current?.close();
+      }
+    } finally {
+      setIsBreakdownPending(false);
     }
   };
 
@@ -255,8 +264,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
             progress={rightActionsProgress}
             onBreakdown={handleBreakdown}
             onDelete={handleDelete}
-            isDeleting={isDeleting}
-            isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+            isDeleting={isDeleting || isDeletingRecurringOccurrence}
+            isRefreshingSubtasks={isBreakdownPending || isBreakingDownAndReplacingSubtasks}
           />
         )}
         rightThreshold={12}

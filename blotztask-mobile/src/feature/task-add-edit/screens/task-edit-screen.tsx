@@ -20,6 +20,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { RecurrenceFrequency } from "@/shared/models/recurring-task-create-dto";
 import { ActionChoiceSheet } from "@/shared/components/action-choice-sheet";
+import { labelKeys, taskKeys } from "@/shared/constants/query-key-factory";
+import { LabelDTO } from "@/shared/models/label-dto";
 
 function selectTaskByRouteMode({
   mode,
@@ -50,6 +52,13 @@ type RecurringScopeSheetState =
       isStopRepeating: boolean;
     }
   | null;
+
+type RecurringPatternDetails = {
+  frequency: RecurrenceFrequency;
+  interval: number;
+  daysOfWeek: number | null;
+  dayOfMonth: number | null;
+};
 
 export default function TaskEditScreen() {
   const {
@@ -156,7 +165,12 @@ export default function TaskEditScreen() {
         occurrenceDate,
         dto: formValues,
       },
-      { onSuccess: () => router.back() },
+      {
+        onSuccess: () => {
+          updateTaskDetailCache(formValues);
+          router.back();
+        },
+      },
     );
   };
 
@@ -183,8 +197,59 @@ export default function TaskEditScreen() {
           ? Intl.DateTimeFormat().resolvedOptions().timeZone
           : null,
       },
-      { onSuccess: () => router.back() },
+      {
+        onSuccess: () => {
+          updateTaskDetailCache(formValues, recurrenceDetails);
+          router.back();
+        },
+      },
     );
+  };
+
+  const updateTaskDetailCache = (
+    formValues: TaskUpsertDTO,
+    recurrenceDetails?: RecurringPatternDetails | null,
+  ) => {
+    const labels = queryClient.getQueryData<LabelDTO[]>(labelKeys.all) ?? [];
+    const updateCachedTask = (currentTask: TaskDetailDTO | undefined) => {
+      if (!currentTask) return currentTask;
+
+      const label = formValues.labelId
+        ? labels.find((candidate) => candidate.labelId === formValues.labelId) ?? currentTask.label
+        : undefined;
+
+      return {
+        ...currentTask,
+        title: formValues.title,
+        description: formValues.description,
+        startTime: formValues.startTime,
+        endTime: formValues.endTime,
+        label,
+        timeType: formValues.timeType,
+        notificationId: formValues.notificationId,
+        alertTime: formValues.alertTime,
+        isDeadline: formValues.isDeadline,
+        dueAt: formValues.dueAt,
+        recurringTask:
+          recurrenceDetails === undefined
+            ? currentTask.recurringTask
+            : mapFormValuesToRecurringMetadata(currentTask, formValues, recurrenceDetails),
+      };
+    };
+
+    if (params.virtualTaskCacheKey) {
+      queryClient.setQueryData<TaskDetailDTO>(
+        virtualTaskDetailKeys.byKey(params.virtualTaskCacheKey),
+        updateCachedTask,
+      );
+    }
+
+    if (hasTaskItemId(selectedTask)) {
+      queryClient.setQueryData<TaskDetailDTO>(
+        taskKeys.byId(selectedTask.id),
+        updateCachedTask,
+      );
+    }
   };
 
   const closeRecurringScopeSheet = () => setRecurringScopeSheet(null);
@@ -307,14 +372,7 @@ function mapRecurringMetadataToTaskRecurrence(
 function mapTaskRecurrenceToRecurringPattern(
   task: TaskUpsertDTO,
   occurrenceDate: string,
-):
-  | {
-      frequency: RecurrenceFrequency;
-      interval: number;
-      daysOfWeek: number | null;
-      dayOfMonth: number | null;
-    }
-  | null {
+): RecurringPatternDetails | null {
   const recurrence = task.recurrence;
   if (!recurrence || recurrence === "never" || recurrence === "custom") return null;
 
@@ -334,6 +392,23 @@ function mapTaskRecurrenceToRecurringPattern(
         ? getWeeklyDayFlag(occurrenceDate)
         : null,
     dayOfMonth: recurrence === "monthly" ? Number(occurrenceDate.slice(8, 10)) : null,
+  };
+}
+
+function mapFormValuesToRecurringMetadata(
+  currentTask: TaskDetailDTO,
+  formValues: TaskUpsertDTO,
+  recurrenceDetails: RecurringPatternDetails | null,
+): TaskDetailDTO["recurringTask"] {
+  if (!recurrenceDetails) return null;
+
+  return {
+    frequency: recurrenceDetails.frequency,
+    interval: recurrenceDetails.interval,
+    daysOfWeek: recurrenceDetails.daysOfWeek,
+    dayOfMonth: recurrenceDetails.dayOfMonth,
+    startDate: currentTask.recurringTask?.startDate ?? currentTask.startTime,
+    endDate: formValues.recurrenceEndDate ?? null,
   };
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DetailsView from "@/feature/task-details/components/details-view";
@@ -16,7 +16,7 @@ import {
 } from "@/feature/task-details/components/task-time-card";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { virtualTaskDetailKeys } from "@/feature/task-details/util/virtual-task-detail-cache";
 import {
@@ -56,11 +56,14 @@ export default function TaskDetailsScreen() {
   const taskId = params.taskId ? Number(params.taskId) : null;
   const recurringTaskId = params.recurringTaskId ? Number(params.recurringTaskId) : null;
   const queryClient = useQueryClient();
-  const virtualTask = params.virtualTaskCacheKey
-    ? queryClient.getQueryData<TaskDetailDTO>(
-        virtualTaskDetailKeys.byKey(params.virtualTaskCacheKey),
-      )
-    : undefined;
+  const virtualTaskDetailQueryKey = virtualTaskDetailKeys.byKey(
+    params.virtualTaskCacheKey ?? "__missing__",
+  );
+  const { data: virtualTask } = useQuery<TaskDetailDTO | undefined>({
+    queryKey: virtualTaskDetailQueryKey,
+    queryFn: () => queryClient.getQueryData<TaskDetailDTO>(virtualTaskDetailQueryKey),
+    enabled: false,
+  });
   const { selectedTask: persistedTask, isLoading } = useTaskById({
     taskId: taskId ?? null,
     enabled: mode === TASK_DETAIL_ROUTE_MODE.Persisted && taskId != null,
@@ -68,7 +71,6 @@ export default function TaskDetailsScreen() {
   const selectedTask = selectTaskByRouteMode({ mode, persistedTask, virtualTask });
   const { updateTask, updateRecurringOccurrence, isUpdating, isUpdatingRecurringOccurrence } =
     useTaskMutations();
-  const [descriptionText, setDescriptionText] = useState(selectedTask?.description ?? "");
 
   const { t } = useTranslation();
 
@@ -124,7 +126,6 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  const canSaveDescription = descriptionText.trim() !== (selectedTask.description ?? "").trim();
   const isSaving = isUpdating || isUpdatingRecurringOccurrence;
 
   const getTranslatedLabelName = (labelName: string): string => {
@@ -216,10 +217,9 @@ export default function TaskDetailsScreen() {
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
         <View className="flex-row justify-around mb-6">
           <DetailsView
-            taskDescription={descriptionText}
-            setDescription={setDescriptionText}
-            canSave={canSaveDescription}
-            onSave={() => handleUpdateDescription(descriptionText)}
+            key={`${selectedTask.id ?? "virtual"}-${selectedTask.description ?? ""}`}
+            initialDescription={selectedTask.description ?? ""}
+            onSave={handleUpdateDescription}
             isUpdating={isSaving}
           />
         </View>
