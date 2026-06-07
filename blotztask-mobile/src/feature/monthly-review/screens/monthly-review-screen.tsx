@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { addMonths, isSameMonth, startOfMonth } from "date-fns";
+import { addMonths, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterBody } from "../components/letter-body";
 import { LetterEmptyState } from "../components/letter-empty-state";
@@ -20,12 +20,15 @@ export default function MonthlyReviewScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  // A monthly review is a month-end summary, so the latest viewable month is last month —
+  // never the current, in-progress one. Default to it and cap navigation there.
+  const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useMonthlyReviewShare({
     captureTargetRef: shareCardRef,
   });
-  const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
+  const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
@@ -69,9 +72,9 @@ export default function MonthlyReviewScreen() {
           label={displayMonth}
           onPrev={() => setSelectedMonth((m) => addMonths(m, -1))}
           onNext={() => {
-            if (!isAtCurrentMonth) setSelectedMonth((m) => addMonths(m, 1));
+            if (!isAtLatestMonth) setSelectedMonth((m) => addMonths(m, 1));
           }}
-          disableNext={isAtCurrentMonth}
+          disableNext={isAtLatestMonth}
         />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>

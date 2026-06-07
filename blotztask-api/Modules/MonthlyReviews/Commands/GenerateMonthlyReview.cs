@@ -83,6 +83,12 @@ public class GenerateMonthlyReviewCommandHandler(
         var monthStartUtc = new DateTimeOffset(command.Year, command.Month, 1, 0, 0, 0, TimeSpan.Zero);
         var nextMonthStartUtc = monthStartUtc.AddMonths(1);
 
+        // A monthly review is a month-end summary, so it is only available once the month has fully
+        // ended (defence-in-depth — the app shouldn't offer the current/future month). UTC granularity
+        // is fine for a whole-month gate; the timezone-edge nuance above doesn't matter here.
+        if (DateTimeOffset.UtcNow < nextMonthStartUtc)
+            throw new ArgumentException("A monthly review is only available after the month has ended.");
+
         var monthlyTasks = await LoadMonthlyTasksAsync(command.UserId, monthStartUtc, nextMonthStartUtc, ct);
         var aiInputJson = JsonSerializer.Serialize(monthlyTasks, JsonOptions);
 
