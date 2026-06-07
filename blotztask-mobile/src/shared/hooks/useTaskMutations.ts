@@ -4,6 +4,7 @@ import { RecurringTaskCreateDTO } from "../models/recurring-task-create-dto";
 import {
   addTaskItem,
   createRecurringTask,
+  deleteRecurringOccurrence,
   deleteTask,
   toggleTaskCompletion,
   updateRecurringOccurrence,
@@ -11,7 +12,7 @@ import {
   updateTaskItem,
 } from "../services/task-service";
 import { taskKeys } from "../constants/query-key-factory";
-import { addDays, format, isSameDay, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import { addDays, format, isSameDay, parseISO, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 
@@ -38,6 +39,12 @@ type UpdateRecurringTaskFutureArgs = {
   endDate?: string | null;
   endDateChanged: boolean;
   deadlineTimeZoneId?: string | null;
+};
+
+type DeleteRecurringOccurrenceArgs = {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  deleteFuture: boolean;
 };
 
 const useTaskMutations = () => {
@@ -88,6 +95,16 @@ const useTaskMutations = () => {
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
+    },
+  });
+
+  const deleteRecurringOccurrenceMutation = useMutation({
+    mutationFn: (payload: DeleteRecurringOccurrenceArgs) => deleteRecurringOccurrence(payload),
+    onSuccess: (_data, task) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
+      invalidateSelectedDayByDateOnly(queryClient, task.occurrenceDate);
+      invalidateTaskAvailability(queryClient, task.occurrenceDate);
     },
   });
 
@@ -158,6 +175,7 @@ const useTaskMutations = () => {
     createRecurringTaskAsync: createRecurringTaskMutation.mutateAsync,
     toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
+    deleteRecurringOccurrence: deleteRecurringOccurrenceMutation.mutate,
     updateTask: updateTaskMutation.mutate,
     updateTaskAsync: updateTaskMutation.mutateAsync,
     updateRecurringOccurrence: updateRecurringOccurrenceMutation.mutate,
@@ -168,6 +186,7 @@ const useTaskMutations = () => {
     isCreatingRecurringTask: createRecurringTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
+    isDeletingRecurringOccurrence: deleteRecurringOccurrenceMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
     isUpdatingRecurringOccurrence: updateRecurringOccurrenceMutation.isPending,
     isUpdatingRecurringTaskFuture: updateRecurringTaskFutureMutation.isPending,
@@ -202,10 +221,16 @@ export function invalidateSelectedDayTask(
 }
 
 function invalidateTaskAvailability(queryClient: QueryClient, dateTime: string) {
-  const date = new Date(dateTime);
+  const date = parseISO(dateTime);
   const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const monthKey = format(startOfMonth(date), "yyyy-MM");
 
   queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
   queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
+}
+
+function invalidateSelectedDayByDateOnly(queryClient: QueryClient, dateOnly: string) {
+  queryClient.invalidateQueries({
+    queryKey: taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(parseISO(dateOnly)))),
+  });
 }

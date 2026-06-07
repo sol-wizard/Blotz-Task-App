@@ -75,7 +75,12 @@
     "updateMessage": "重复规则的更改会从这一天开始应用到将来。",
     "stopTitle": "停止重复",
     "stopMessage": "这个任务将从这一天开始停止重复。",
-    "stopFromDate": "从此日期停止"
+    "stopFromDate": "从此日期停止",
+    "deleteTitle": "删除重复任务",
+    "deleteMessage": "只删除这一天，还是删除这一天及之后的重复任务？",
+    "deleteThisDate": "仅此日期",
+    "deleteFutureDates": "此日期及将来日期",
+    "deleteCancel": "取消"
   },
   "categories": {
     "work": "工作",

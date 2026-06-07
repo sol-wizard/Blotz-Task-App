@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<MaterializeRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateRecurringTaskFutureCommandHandler>();
+        services.AddScoped<DeleteRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
         services.AddScoped<UpdateDeadlinePinCommandHandler>();
         services.AddScoped<DeleteDeadlineTaskCommandHandler>();

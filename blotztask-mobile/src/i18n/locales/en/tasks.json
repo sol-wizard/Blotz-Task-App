@@ -74,7 +74,12 @@
     "updateMessage": "Repeat changes apply from this date forward.",
     "stopTitle": "Stop Repeating",
     "stopMessage": "This task will stop repeating from this date forward.",
-    "stopFromDate": "Stop From This Date"
+    "stopFromDate": "Stop From This Date",
+    "deleteTitle": "Delete Repeat",
+    "deleteMessage": "Delete only this date, or this and future dates?",
+    "deleteThisDate": "Only This Date",
+    "deleteFutureDates": "This And Future Dates",
+    "deleteCancel": "Cancel"
   },
   "categories": {
     "work": "Work",

@@ -12,7 +12,8 @@ public class RecurringTaskController(
     SaveRecurringOccurrenceCommandHandler saveRecurringOccurrenceCommandHandler,
     MaterializeRecurringOccurrenceCommandHandler materializeRecurringOccurrenceCommandHandler,
     UpdateRecurringOccurrenceCommandHandler updateRecurringOccurrenceCommandHandler,
-    UpdateRecurringTaskFutureCommandHandler updateRecurringTaskFutureCommandHandler) : ControllerBase
+    UpdateRecurringTaskFutureCommandHandler updateRecurringTaskFutureCommandHandler,
+    DeleteRecurringOccurrenceCommandHandler deleteRecurringOccurrenceCommandHandler) : ControllerBase
 {
     [HttpPost]
     public async Task<CreateRecurringTaskResult> CreateRecurringTask(
@@ -105,6 +106,24 @@ public class RecurringTaskController(
 
         var recurringTaskId = await updateRecurringTaskFutureCommandHandler.Handle(command, ct);
         return Ok(new { recurringTaskId });
+    }
+
+    [HttpPost("occurrence/delete")]
+    public async Task<IActionResult> DeleteOccurrence(
+        [FromBody] DeleteRecurringOccurrenceRequest request,
+        CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var command = new DeleteRecurringOccurrenceCommand
+        {
+            RecurringTaskId = request.RecurringTaskId,
+            OccurrenceDate = request.OccurrenceDate,
+            DeleteFuture = request.DeleteFuture,
+            UserId = userId
+        };
+
+        await deleteRecurringOccurrenceCommandHandler.Handle(command, ct);
+        return Ok();
     }
 
     private Guid GetUserId()

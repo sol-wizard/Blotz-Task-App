@@ -93,6 +93,14 @@ export async function updateRecurringTaskFuture(payload: {
   return await apiClient.put<{ recurringTaskId: number | null }>("/RecurringTask/future", payload);
 }
 
+export async function deleteRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  deleteFuture: boolean;
+}): Promise<void> {
+  return await apiClient.post<void>("/RecurringTask/occurrence/delete", payload);
+}
+
 export async function deleteTask(taskId: number): Promise<void> {
   const url = `/Task/${taskId}`;
 

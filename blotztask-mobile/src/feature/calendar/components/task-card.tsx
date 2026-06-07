@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { Alert, View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -35,6 +35,7 @@ import {
 } from "@/feature/task-details/util/virtual-task-detail-cache";
 import { TASK_DETAIL_ROUTE_MODE } from "@/feature/task-details/util/task-detail-route-mode";
 import {
+  getRecurringOccurrenceIdentity,
   getRecurringOccurrenceDate,
   getRecurringTaskId,
   hasTaskItemId,
@@ -65,7 +66,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
-  const { toggleTask, isToggling } = useTaskMutations();
+  const {
+    toggleTask,
+    deleteRecurringOccurrence,
+    isToggling,
+    isDeletingRecurringOccurrence,
+  } = useTaskMutations();
   const {
     completeOccurrence,
     materializeOccurrenceAsync,
@@ -82,9 +88,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   });
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
   const isLoading =
-    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isRecurringTaskPending;
+    isToggling ||
+    isDeleting ||
+    isDeletingRecurringOccurrence ||
+    isBreakingDownAndReplacingSubtasks ||
+    isRecurringTaskPending;
 
-  const { t } = useTranslation("pomodoro");
+  const { t: tPomodoro } = useTranslation("pomodoro");
+  const { t: tTasks } = useTranslation("tasks");
 
   // Functions
   const ensureTaskItemId = () =>
@@ -137,7 +148,60 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   };
 
   const handleDelete = async () => {
-    if (isLoading || !hasTaskItemId(task)) return;
+    if (isLoading) return;
+
+    const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+    if (recurringOccurrence) {
+      Alert.alert(tTasks("recurrence.deleteTitle"), tTasks("recurrence.deleteMessage"), [
+        {
+          text: tTasks("recurrence.deleteCancel"),
+          style: "cancel",
+        },
+        {
+          text: tTasks("recurrence.deleteThisDate"),
+          style: "destructive",
+          onPress: () =>
+            deleteRecurringOccurrence(
+              {
+                recurringTaskId: recurringOccurrence.recurringTaskId,
+                occurrenceDate: recurringOccurrence.occurrenceDate,
+                deleteFuture: false,
+              },
+              {
+                onSuccess: () => {
+                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                    void cancelNotification({ notificationId: task.notificationId });
+                  }
+                  swipeRef.current?.close();
+                },
+              },
+            ),
+        },
+        {
+          text: tTasks("recurrence.deleteFutureDates"),
+          style: "destructive",
+          onPress: () =>
+            deleteRecurringOccurrence(
+              {
+                recurringTaskId: recurringOccurrence.recurringTaskId,
+                occurrenceDate: recurringOccurrence.occurrenceDate,
+                deleteFuture: true,
+              },
+              {
+                onSuccess: () => {
+                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                    void cancelNotification({ notificationId: task.notificationId });
+                  }
+                  swipeRef.current?.close();
+                },
+              },
+            ),
+        },
+      ]);
+      return;
+    }
+
+    if (!hasTaskItemId(task)) return;
 
     await deleteTask(task);
 
@@ -165,7 +229,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     if (session) {
       Toast.show({
         type: "warning",
-        text1: t("focusMode.modeLockedWhileRunning"),
+        text1: tPomodoro("focusMode.modeLockedWhileRunning"),
         visibilityTime: 2500,
       });
       swipeRef.current?.close();
@@ -326,8 +390,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
                 <View className="flex-row items-center">
                   <Text className="text-gray-400 font-inter text-[12px] mr-0.5">
                     {isPaused
-                      ? t("focusMode.paused", "Paused")
-                      : t(`focusMode.milestones.${getMilestoneKey(elapsedSeconds)}.subtitle`)}
+                      ? tPomodoro("focusMode.paused", "Paused")
+                      : tPomodoro(
+                          `focusMode.milestones.${getMilestoneKey(elapsedSeconds)}.subtitle`,
+                        )}
                   </Text>
                   <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />
                 </View>
