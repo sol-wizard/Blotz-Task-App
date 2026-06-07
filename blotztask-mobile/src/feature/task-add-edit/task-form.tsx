@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { FormTextInput } from "@/shared/components/form-text-input";
@@ -65,6 +65,9 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
   const { handleSubmit, formState, control, setValue, clearErrors, getValues } = form;
   const { isSubmitting } = formState;
   const shouldShowRecurrence = mode === "create" || recurrenceEditMode === "futureOnly";
+  const recurrence = useWatch({ control, name: "recurrence" });
+  const isRecurringTaskForm =
+    shouldShowRecurrence && recurrence !== "never" && recurrence !== "custom";
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -197,6 +200,8 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
         {isActiveTab === SegmentButtonValue.Reminder && <ReminderTab />}
         {isActiveTab === SegmentButtonValue.Event && <EventTab />}
         <FormDivider />
+        <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
+        <FormDivider />
         {shouldShowRecurrence && (
           <>
             <RecurrenceSelect control={control} />
@@ -204,11 +209,13 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
             <FormDivider />
           </>
         )}
-        <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
-        <FormDivider />
 
-        <AlertSelect control={control} />
-        <FormDivider />
+        {!isRecurringTaskForm && (
+          <>
+            <AlertSelect control={control} />
+            <FormDivider />
+          </>
+        )}
 
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>

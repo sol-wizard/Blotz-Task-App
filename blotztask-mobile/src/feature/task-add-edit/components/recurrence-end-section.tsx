@@ -71,7 +71,7 @@ export const RecurrenceEndSection = ({ control }: RecurrenceEndSectionProps) => 
     : t("form.selectDate");
 
   return (
-    <Animated.View layout={MotionAnimations.layout}>
+    <Animated.View className="mt-4" layout={MotionAnimations.layout}>
       <Animated.View
         className="flex-row items-center justify-between"
         layout={MotionAnimations.layout}
