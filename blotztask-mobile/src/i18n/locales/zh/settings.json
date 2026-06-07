@@ -88,7 +88,9 @@
     "loading": "正在加载信件…",
     "error": "信件加载失败。",
     "shareError": "分享信件失败。",
-    "generate": "生成信件"
+    "generate": "生成信件",
+    "generateError": "信件生成失败，请重试。",
+    "quotaError": "你已达到使用上限，请稍后再试。"
   },
   "avatar": {
     "title": "头像"
