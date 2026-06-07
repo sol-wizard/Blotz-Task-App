@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
+using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -25,35 +26,19 @@ public class GetAllDdlTasksQueryHandler(
         var now = query.Now ?? DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.Date);
 
-        var recurringOverrideKeys = (await db.RecurringOccurrenceOverrides
-                .AsNoTracking()
-                .Where(o => o.Series.UserId == query.UserId
-                    && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
-                .Select(o => new
-                {
-                    o.SeriesId,
-                    o.OccurrenceDate
-                })
-                .ToListAsync(ct))
-            .Select(o => (o.SeriesId, o.OccurrenceDate))
-            .ToHashSet();
-
         var ddlTasks = await db.TaskItems
             .AsNoTracking()
             .Include(t => t.Deadline)
             .Include(t => t.Label)
             .Where(t => t.UserId == query.UserId 
                         && t.Deadline != null
-                        && !t.IsDone)
+                        && !t.IsDone
+                        && t.RecurringOccurrenceOverride == null)
             .Select(task => new DeadlineTaskDto
             {
                 Id = task.Id,
-                OccurrenceKind = task.RecurringOccurrenceOverride == null
-                    ? TaskOccurrenceKind.NormalTaskItem
-                    : TaskOccurrenceKind.MaterializedRecurringOccurrence,
-                RecurringOccurrence = task.RecurringOccurrenceOverride != null
-                    ? TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(task.RecurringOccurrenceOverride)
-                    : null,
+                OccurrenceKind = TaskOccurrenceKind.NormalTaskItem,
+                RecurringOccurrence = null,
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -83,13 +68,54 @@ public class GetAllDdlTasksQueryHandler(
                 && r.StartDate <= today)
             .ToListAsync(ct);
 
-        foreach (var recurring in recurringDeadlineTemplates)
-        {
-            var occurrenceDate = generatorService.GetCurrentOccurrenceDate(recurring, today);
-            if (occurrenceDate == null) continue;
+        var currentOccurrencesBySeries = recurringDeadlineTemplates
+            .Select(recurring => new CurrentRecurringDeadlineOccurrence(
+                recurring,
+                generatorService.GetCurrentOccurrenceDate(recurring, today)))
+            .Where(x => x.OccurrenceDate != null)
+            .GroupBy(x => x.Recurring.SeriesId)
+            .Select(group => group
+                .OrderByDescending(x => x.OccurrenceDate)
+                .ThenByDescending(x => x.Recurring.StartDate)
+                .ThenByDescending(x => x.Recurring.Id)
+                .First())
+            .ToList();
 
-            var occurrenceKey = (recurring.SeriesId, occurrenceDate.Value);
-            if (recurringOverrideKeys.Contains(occurrenceKey)) continue;
+        var currentSeriesIds = currentOccurrencesBySeries
+            .Select(x => x.Recurring.SeriesId)
+            .ToHashSet();
+
+        var currentOccurrenceDates = currentOccurrencesBySeries
+            .Select(x => x.OccurrenceDate!.Value)
+            .ToHashSet();
+
+        var recurringOverrideMap = await db.RecurringOccurrenceOverrides
+            .AsNoTracking()
+            .Include(o => o.TaskItem)
+            .ThenInclude(t => t!.Deadline)
+            .Include(o => o.TaskItem)
+            .ThenInclude(t => t!.Label)
+            .Where(o => o.Series.UserId == query.UserId
+                && currentSeriesIds.Contains(o.SeriesId)
+                && currentOccurrenceDates.Contains(o.OccurrenceDate))
+            .ToDictionaryAsync(o => new RecurringSeriesOccurrenceKey(o.SeriesId, o.OccurrenceDate), ct);
+
+        foreach (var currentOccurrence in currentOccurrencesBySeries)
+        {
+            var recurring = currentOccurrence.Recurring;
+            var occurrenceDate = currentOccurrence.OccurrenceDate!.Value;
+
+            var occurrenceKey = new RecurringSeriesOccurrenceKey(recurring.SeriesId, occurrenceDate);
+            if (recurringOverrideMap.TryGetValue(occurrenceKey, out var recurringOverride))
+            {
+                var materializedDdlTask = DeadlineTaskDtoFactory.ToDeadlineTaskDto(recurringOverride);
+                if (materializedDdlTask != null)
+                {
+                    ddlTasks.Add(materializedDdlTask);
+                }
+
+                continue;
+            }
 
             ddlTasks.Add(new DeadlineTaskDto
             {
@@ -98,14 +124,14 @@ public class GetAllDdlTasksQueryHandler(
                 RecurringOccurrence = new RecurringOccurrenceIdentityDto
                 {
                     RecurringTaskId = recurring.Id,
-                    OccurrenceDate = occurrenceDate.Value
+                    OccurrenceDate = occurrenceDate
                 },
                 Title = recurring.Title,
                 Description = recurring.Description,
-                StartTime = generatorService.BuildOccurrenceStartTime(recurring, occurrenceDate.Value),
-                EndTime = generatorService.BuildOccurrenceEndTime(recurring, occurrenceDate.Value),
+                StartTime = generatorService.BuildOccurrenceStartTime(recurring, occurrenceDate),
+                EndTime = generatorService.BuildOccurrenceEndTime(recurring, occurrenceDate),
                 IsDone = false,
-                DueAt = generatorService.BuildOccurrenceDueAt(recurring, occurrenceDate.Value),
+                DueAt = generatorService.BuildOccurrenceDueAt(recurring, occurrenceDate),
                 IsPinned = false,
                 Label = recurring.Label != null
                     ? new LabelDto
@@ -144,4 +170,50 @@ public class DeadlineTaskDto : TaskOccurrenceDtoBase
     public LabelDto? Label { get; set; }
     public DateTimeOffset DueAt { get; set; }
     public bool IsPinned { get; set; }
+}
+
+internal sealed record CurrentRecurringDeadlineOccurrence(
+    RecurringTask Recurring,
+    DateOnly? OccurrenceDate);
+
+internal sealed record RecurringSeriesOccurrenceKey(int SeriesId, DateOnly OccurrenceDate);
+
+internal static class DeadlineTaskDtoFactory
+{
+    public static DeadlineTaskDto? ToDeadlineTaskDto(RecurringOccurrenceOverride recurringOverride)
+    {
+        if (recurringOverride.OverrideType is RecurringOccurrenceOverrideType.Skipped
+            or RecurringOccurrenceOverrideType.Detached)
+        {
+            return null;
+        }
+
+        var task = recurringOverride.TaskItem;
+        if (task == null || task.IsDone || task.Deadline == null)
+        {
+            return null;
+        }
+
+        return new DeadlineTaskDto
+        {
+            Id = task.Id,
+            OccurrenceKind = TaskOccurrenceKind.MaterializedRecurringOccurrence,
+            RecurringOccurrence = TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(recurringOverride),
+            Title = task.Title,
+            Description = task.Description,
+            StartTime = task.StartTime,
+            EndTime = task.EndTime,
+            IsDone = task.IsDone,
+            DueAt = task.Deadline.DueAt,
+            IsPinned = task.Deadline.IsPinned,
+            Label = task.Label != null
+                ? new LabelDto
+                {
+                    LabelId = task.Label.LabelId,
+                    Name = task.Label.Name,
+                    Color = task.Label.Color
+                }
+                : null
+        };
+    }
 }
