@@ -11,6 +11,13 @@ public class RecurringTaskGeneratorService
     /// </summary>
     public bool IsOccurrenceOn(RecurringTask template, DateOnly date)
     {
+        if (!template.IsActive
+            || template.StartDate > date
+            || (template.EndDate != null && template.EndDate < date))
+        {
+            return false;
+        }
+
         var first = FirstOccurrenceOnOrAfter(template, date);
         return first.HasValue && first.Value == date;
     }

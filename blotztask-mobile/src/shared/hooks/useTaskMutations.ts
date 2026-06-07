@@ -100,11 +100,17 @@ const useTaskMutations = () => {
 
   const deleteRecurringOccurrenceMutation = useMutation({
     mutationFn: (payload: DeleteRecurringOccurrenceArgs) => deleteRecurringOccurrence(payload),
-    onSuccess: (_data, task) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      queryClient.invalidateQueries({ queryKey: ["ddl"] });
-      invalidateSelectedDayByDateOnly(queryClient, task.occurrenceDate);
-      invalidateTaskAvailability(queryClient, task.occurrenceDate);
+    onSuccess: async (_data, task) => {
+      removeDeletedRecurringOccurrencesFromSelectedDayCaches(queryClient, task);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: taskKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ["ddl"] }),
+        queryClient.invalidateQueries({ queryKey: [...taskKeys.all, "weekAvailability"] }),
+        queryClient.invalidateQueries({ queryKey: [...taskKeys.all, "monthAvailability"] }),
+        invalidateSelectedDayByDateOnly(queryClient, task.occurrenceDate),
+        invalidateTaskAvailability(queryClient, task.occurrenceDate),
+      ]);
     },
   });
 
@@ -225,12 +231,50 @@ function invalidateTaskAvailability(queryClient: QueryClient, dateTime: string) 
   const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const monthKey = format(startOfMonth(date), "yyyy-MM");
 
-  queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
-  queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) }),
+    queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) }),
+  ]);
 }
 
 function invalidateSelectedDayByDateOnly(queryClient: QueryClient, dateOnly: string) {
-  queryClient.invalidateQueries({
+  return queryClient.invalidateQueries({
     queryKey: taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(parseISO(dateOnly)))),
   });
+}
+
+function removeDeletedRecurringOccurrencesFromSelectedDayCaches(
+  queryClient: QueryClient,
+  deletedOccurrence: DeleteRecurringOccurrenceArgs,
+) {
+  const cachedSelectedDayQueries = queryClient.getQueriesData<TaskDetailDTO[]>({
+    queryKey: [...taskKeys.all, "selectedDay"],
+  });
+
+  cachedSelectedDayQueries.forEach(([queryKey, cachedTasks]) => {
+    if (!cachedTasks) return;
+
+    const remainingTasks = cachedTasks.filter(
+      (task) => !matchesDeletedRecurringOccurrence(task, deletedOccurrence),
+    );
+
+    if (remainingTasks.length === cachedTasks.length) return;
+
+    queryClient.setQueryData(queryKey, remainingTasks);
+  });
+}
+
+function matchesDeletedRecurringOccurrence(
+  task: TaskDetailDTO,
+  deletedOccurrence: DeleteRecurringOccurrenceArgs,
+): boolean {
+  const recurringOccurrence = task.recurringOccurrence;
+  if (!recurringOccurrence) return false;
+  if (recurringOccurrence.recurringTaskId !== deletedOccurrence.recurringTaskId) return false;
+
+  if (deletedOccurrence.deleteFuture) {
+    return recurringOccurrence.occurrenceDate >= deletedOccurrence.occurrenceDate;
+  }
+
+  return recurringOccurrence.occurrenceDate === deletedOccurrence.occurrenceDate;
 }
