@@ -84,27 +84,15 @@ public class GetTasksByDateQueryHandler(
             .Select(task => new TaskByDateItemDto
             {
                 Id = task.Id,
-                OccurrenceKind = task.RecurringTaskId == null
+                OccurrenceKind = task.RecurringOccurrenceOverride == null
                     ? TaskOccurrenceKind.NormalTaskItem
                     : TaskOccurrenceKind.MaterializedRecurringOccurrence,
-                RecurringOccurrence = task.RecurringTaskId != null && task.RecurringOccurrenceDate != null
-                    ? new RecurringOccurrenceIdentityDto
-                    {
-                        RecurringTaskId = task.RecurringTaskId.Value,
-                        OccurrenceDate = task.RecurringOccurrenceDate.Value
-                    }
+                RecurringOccurrence = task.RecurringOccurrenceOverride != null
+                    ? TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(task.RecurringOccurrenceOverride)
                     : null,
-                RecurringTask = task.RecurringTask == null
-                    ? null
-                    : new RecurringTaskEditMetadataDto
-                    {
-                        Frequency = task.RecurringTask.Pattern.Frequency,
-                        Interval = task.RecurringTask.Pattern.Interval,
-                        DaysOfWeek = task.RecurringTask.Pattern.DaysOfWeek,
-                        DayOfMonth = task.RecurringTask.Pattern.DayOfMonth,
-                        StartDate = task.RecurringTask.StartDate,
-                        EndDate = task.RecurringTask.EndDate
-                    },
+                RecurringTask = task.RecurringOccurrenceOverride != null
+                    ? TaskOccurrenceDtoHelpers.ToRecurringTaskMetadata(task.RecurringOccurrenceOverride.RecurringTask)
+                    : null,
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -146,31 +134,30 @@ public class GetTasksByDateQueryHandler(
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                 && r.IsActive
+                && !r.Series.IsDeleted
                 && r.StartDate <= requestedDate
                 && (r.EndDate == null || r.EndDate >= requestedDate))
             .ToListAsync(ct);
 
-        // Step 3: Find which recurring templates already have a stored row for this date
-        var requestedDateTime = requestedDate.ToDateTime(TimeOnly.MinValue);
-        var alreadySavedIds = await db.TaskItems
+        // Step 3: Find overrides that suppress or replace virtual occurrences on this date
+        var overrideMap = await db.RecurringOccurrenceOverrides
             .AsNoTracking()
-            .Where(t => t.UserId == query.UserId
-                && t.RecurringTaskId != null
-                && (t.RecurringOccurrenceDate == requestedDate
-                    || (t.RecurringOccurrenceDate == null && t.StartTime.Date == requestedDateTime)))
-            .Select(t => t.RecurringTaskId!.Value)
-            .Distinct()
-            .ToListAsync(ct);
-
-        var alreadySavedIdSet = alreadySavedIds
-            .ToHashSet();
+            .Where(o => o.Series.UserId == query.UserId
+                && o.OccurrenceDate == requestedDate)
+            .ToDictionaryAsync(o => o.SeriesId, o => o, ct);
 
         // Step 4: For each recurring task not yet saved, check if it occurs on this date
         foreach (var recurring in recurringTasks)
         {
-            if (alreadySavedIdSet.Contains(recurring.Id)) continue;
+            if (overrideMap.TryGetValue(recurring.SeriesId, out var recurringOverride)
+                && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            {
+                continue;
+            }
+
             if (!generatorService.IsOccurrenceOn(recurring, requestedDate)) continue;
 
             var startTime = new DateTimeOffset(

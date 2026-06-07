@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Domain.Services;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Services;
 
 namespace BlotzTask.Modules.Tasks.Commands.RecurringTasks;
@@ -37,7 +38,13 @@ public class UpdateRecurringOccurrenceCommandHandler(
             ct);
 
         await db.Entry(taskItem).Reference(t => t.Deadline).LoadAsync(ct);
+        await db.Entry(taskItem).Reference(t => t.RecurringOccurrenceOverride).LoadAsync(ct);
         taskItemUpdater.Apply(taskItem, command.TaskDetails);
+        if (taskItem.RecurringOccurrenceOverride != null)
+        {
+            taskItem.RecurringOccurrenceOverride.OverrideType = RecurringOccurrenceOverrideType.Modified;
+            taskItem.RecurringOccurrenceOverride.UpdatedAt = DateTime.UtcNow;
+        }
         db.TaskItems.Update(taskItem);
 
         await db.SaveChangesAsync(ct);

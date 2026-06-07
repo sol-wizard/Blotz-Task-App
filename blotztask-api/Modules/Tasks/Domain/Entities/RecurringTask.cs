@@ -22,6 +22,11 @@ public class RecurringTask
 {
     public int Id { get; set; }
 
+    public required int SeriesId { get; set; }
+    public RecurringTaskSeries Series { get; set; } = null!;
+    public int? PreviousRecurringTaskId { get; set; }
+    public RecurringTask? PreviousRecurringTask { get; set; }
+
     public required Guid UserId { get; set; }
     public AppUser User { get; set; } = null!;
 
@@ -54,6 +59,32 @@ public class RecurringTask
     public DateOnly? EndDate { get; set; }
     public bool IsActive { get; set; } = true;
 
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class RecurringTaskSeries
+{
+    public int Id { get; set; }
+    public required Guid UserId { get; set; }
+    public AppUser User { get; set; } = null!;
+    public bool IsDeleted { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public ICollection<RecurringTask> Versions { get; set; } = new List<RecurringTask>();
+    public ICollection<RecurringOccurrenceOverride> Overrides { get; set; } = new List<RecurringOccurrenceOverride>();
+}
+
+public class RecurringOccurrenceOverride
+{
+    public int Id { get; set; }
+    public required int SeriesId { get; set; }
+    public RecurringTaskSeries Series { get; set; } = null!;
+    public required int RecurringTaskId { get; set; }
+    public RecurringTask RecurringTask { get; set; } = null!;
+    public required DateOnly OccurrenceDate { get; set; }
+    public required RecurringOccurrenceOverrideType OverrideType { get; set; }
+    public TaskItem? TaskItem { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

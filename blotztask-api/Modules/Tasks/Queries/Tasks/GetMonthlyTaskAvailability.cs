@@ -5,6 +5,7 @@ using BlotzTask.Modules.Tasks.Domain.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using BlotzTask.Modules.Labels.Domain;
+using BlotzTask.Modules.Tasks.Enums;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
@@ -81,39 +82,31 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             })
             .ToListAsync(ct);
 
-        var materializedOccurrences = await db.TaskItems
+        var recurringOverrides = await db.RecurringOccurrenceOverrides
             .AsNoTracking()
-            .Where(t => t.UserId == query.UserId
-                && t.RecurringTaskId != null
-                && (
-                    (t.RecurringOccurrenceDate != null
-                        && t.RecurringOccurrenceDate >= monthStartDate
-                        && t.RecurringOccurrenceDate < monthEndDate)
-                    ||
-                    (t.RecurringOccurrenceDate == null
-                        && t.StartTime >= monthStart
-                        && t.StartTime < monthEnd)
-                ))
-            .Select(t => new
+            .Where(o => o.Series.UserId == query.UserId
+                && o.OccurrenceDate >= monthStartDate
+                && o.OccurrenceDate < monthEndDate
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            .Select(o => new
             {
-                RecurringTaskId = t.RecurringTaskId!.Value,
-                t.RecurringOccurrenceDate,
-                t.StartTime
+                o.SeriesId,
+                o.OccurrenceDate
             })
             .ToListAsync(ct);
 
-        var materializedOccurrenceKeys = materializedOccurrences
-            .Select(t => (
-                t.RecurringTaskId,
-                OccurrenceDate: t.RecurringOccurrenceDate ?? DateOnly.FromDateTime(t.StartTime.Date)))
+        var recurringOverrideKeys = recurringOverrides
+            .Select(o => (o.SeriesId, o.OccurrenceDate))
             .ToHashSet();
         
         
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                         && r.IsActive
+                        && !r.Series.IsDeleted
                         && r.StartDate <= monthEndDate
                         && (r.EndDate == null || r.EndDate >= monthStartDate))
             .ToListAsync(ct);
@@ -156,7 +149,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             {
                 var offset = 4 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
-                    .Where(r => !materializedOccurrenceKeys.Contains((r.Id, dayDate))
+                    .Where(r => !recurringOverrideKeys.Contains((r.SeriesId, dayDate))
                         && generatorService.IsOccurrenceOn(r, dayDate))
                     .OrderBy(r => r.TemplateStartTime)
                     .Select(r => new TaskThumbnailDto

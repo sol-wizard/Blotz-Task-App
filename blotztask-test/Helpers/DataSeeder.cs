@@ -50,8 +50,20 @@ public class DataSeeder
         TimeOnly? deadlineTimeOfDay = null,
         string? deadlineTimeZoneId = null)
     {
+        var series = new RecurringTaskSeries
+        {
+            UserId = userId,
+            IsDeleted = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.RecurringTaskSeries.Add(series);
+        await _context.SaveChangesAsync();
+
         var recurring = new RecurringTask
         {
+            SeriesId = series.Id,
             UserId = userId,
             Title = title,
             TimeType = TaskTimeType.SingleTime,
@@ -74,6 +86,33 @@ public class DataSeeder
         _context.RecurringTasks.Add(recurring);
         await _context.SaveChangesAsync();
         return recurring;
+    }
+
+    public async Task<RecurringOccurrenceOverride> CreateRecurringOccurrenceOverrideAsync(
+        RecurringTask recurringTask,
+        DateOnly occurrenceDate,
+        RecurringOccurrenceOverrideType overrideType,
+        TaskItem? taskItem = null)
+    {
+        var recurringOverride = new RecurringOccurrenceOverride
+        {
+            SeriesId = recurringTask.SeriesId,
+            RecurringTaskId = recurringTask.Id,
+            OccurrenceDate = occurrenceDate,
+            OverrideType = overrideType,
+            TaskItem = taskItem,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        if (taskItem != null)
+        {
+            taskItem.RecurringOccurrenceOverride = recurringOverride;
+        }
+
+        _context.RecurringOccurrenceOverrides.Add(recurringOverride);
+        await _context.SaveChangesAsync();
+        return recurringOverride;
     }
 
     public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null)

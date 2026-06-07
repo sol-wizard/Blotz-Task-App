@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Services;
+using BlotzTask.Modules.Tasks.Enums;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -80,38 +81,30 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             })
             .ToListAsync(ct);
 
-        var materializedOccurrences = await db.TaskItems
+        var recurringOverrides = await db.RecurringOccurrenceOverrides
             .AsNoTracking()
-            .Where(t => t.UserId == query.UserId
-                && t.RecurringTaskId != null
-                && (
-                    (t.RecurringOccurrenceDate != null
-                        && t.RecurringOccurrenceDate >= weekStartDate
-                        && t.RecurringOccurrenceDate < weekEndDate)
-                    ||
-                    (t.RecurringOccurrenceDate == null
-                        && t.StartTime >= weekStart
-                        && t.StartTime < weekEndExclusive)
-                ))
-            .Select(t => new
+            .Where(o => o.Series.UserId == query.UserId
+                && o.OccurrenceDate >= weekStartDate
+                && o.OccurrenceDate < weekEndDate
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            .Select(o => new
             {
-                RecurringTaskId = t.RecurringTaskId!.Value,
-                t.RecurringOccurrenceDate,
-                t.StartTime
+                o.SeriesId,
+                o.OccurrenceDate
             })
             .ToListAsync(ct);
 
-        var materializedOccurrenceKeys = materializedOccurrences
-            .Select(t => (
-                t.RecurringTaskId,
-                OccurrenceDate: t.RecurringOccurrenceDate ?? DateOnly.FromDateTime(t.StartTime.Date)))
+        var recurringOverrideKeys = recurringOverrides
+            .Select(o => (o.SeriesId, o.OccurrenceDate))
             .ToHashSet();
 
         // Fetch active RecurringTasks that could have occurrences in this week
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                 && r.IsActive
+                && !r.Series.IsDeleted
                 && r.StartDate <= weekEndDate
                 && (r.EndDate == null || r.EndDate >= weekStartDate))
             .ToListAsync(ct);
@@ -155,7 +148,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             if (!hasTask)
             {
                 hasTask = recurringTasks.Any(r =>
-                    !materializedOccurrenceKeys.Contains((r.Id, dayDate))
+                    !recurringOverrideKeys.Contains((r.SeriesId, dayDate))
                     && generatorService.IsOccurrenceOn(r, dayDate));
             }
 

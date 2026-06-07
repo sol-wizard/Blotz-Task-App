@@ -31,11 +31,17 @@ public class CreateRecurringTaskCommand
     public required CreateRecurringTaskRequest TaskDetails { get; init; }
 }
 
+public class CreateRecurringTaskResult
+{
+    public required int SeriesId { get; init; }
+    public required int RecurringTaskId { get; init; }
+}
+
 public class CreateRecurringTaskCommandHandler(
     BlotzTaskDbContext db,
     ILogger<CreateRecurringTaskCommandHandler> logger)
 {
-    public async Task<int> Handle(CreateRecurringTaskCommand command, CancellationToken ct = default)
+    public async Task<CreateRecurringTaskResult> Handle(CreateRecurringTaskCommand command, CancellationToken ct = default)
     {
         var details = command.TaskDetails;
         logger.LogInformation("Creating recurring task for user {UserId}", command.UserId);
@@ -55,9 +61,23 @@ public class CreateRecurringTaskCommandHandler(
 
         var deadlineTemplate = BuildDeadlineTemplate(details, templateEndTime!.Value);
 
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+
         var now = DateTime.UtcNow;
+        var series = new RecurringTaskSeries
+        {
+            UserId = command.UserId,
+            IsDeleted = false,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.RecurringTaskSeries.Add(series);
+        await db.SaveChangesAsync(ct);
+
         var recurringTask = new RecurringTask
         {
+            SeriesId = series.Id,
             UserId = command.UserId,
             Title = title,
             Description = string.IsNullOrWhiteSpace(details.Description)
@@ -89,13 +109,18 @@ public class CreateRecurringTaskCommandHandler(
 
         db.RecurringTasks.Add(recurringTask);
         await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
 
         logger.LogInformation(
             "RecurringTask {RecurringTaskId} was successfully created for user {UserId}",
             recurringTask.Id,
             command.UserId);
 
-        return recurringTask.Id;
+        return new CreateRecurringTaskResult
+        {
+            SeriesId = series.Id,
+            RecurringTaskId = recurringTask.Id
+        };
     }
 
     private static void ValidateRecurrence(CreateRecurringTaskRequest details)

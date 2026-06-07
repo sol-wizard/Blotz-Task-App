@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ public class RecurringOccurrenceMaterializer(
         CancellationToken ct = default)
     {
         var template = await db.RecurringTasks
+            .Include(r => r.Series)
             .FirstOrDefaultAsync(r => r.Id == recurringTaskId && r.UserId == userId, ct);
 
         if (template == null)
@@ -34,15 +36,40 @@ public class RecurringOccurrenceMaterializer(
             throw new ValidationException("Occurrence date is not valid for this recurring task.");
         }
 
-        var existing = await FindExistingOccurrence(recurringTaskId, occurrenceDate, userId, ct);
+        var existingOverride = await FindExistingOverride(template.SeriesId, occurrenceDate, userId, ct);
 
-        if (existing != null) return existing;
+        if (existingOverride?.OverrideType is RecurringOccurrenceOverrideType.Skipped
+            or RecurringOccurrenceOverrideType.Detached)
+        {
+            throw new ValidationException("Occurrence date has been removed from this recurring task.");
+        }
+
+        if (existingOverride?.TaskItem != null) return existingOverride.TaskItem;
 
         var taskItem = generatorService.CreateTaskItem(template, occurrenceDate);
-        taskItem.RecurringOccurrenceDate = occurrenceDate;
         taskItem.IsDone = false;
         taskItem.CreatedAt = DateTime.UtcNow;
         taskItem.UpdatedAt = DateTime.UtcNow;
+
+        var recurringOverride = existingOverride ?? new RecurringOccurrenceOverride
+        {
+            SeriesId = template.SeriesId,
+            RecurringTaskId = template.Id,
+            OccurrenceDate = occurrenceDate,
+            OverrideType = RecurringOccurrenceOverrideType.Materialized,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        recurringOverride.TaskItem = taskItem;
+        recurringOverride.OverrideType = RecurringOccurrenceOverrideType.Materialized;
+        recurringOverride.UpdatedAt = DateTime.UtcNow;
+        taskItem.RecurringOccurrenceOverride = recurringOverride;
+
+        if (existingOverride == null)
+        {
+            db.RecurringOccurrenceOverrides.Add(recurringOverride);
+        }
 
         db.TaskItems.Add(taskItem);
         try
@@ -52,9 +79,13 @@ public class RecurringOccurrenceMaterializer(
         catch (DbUpdateException)
         {
             db.Entry(taskItem).State = EntityState.Detached;
+            if (existingOverride == null)
+            {
+                db.Entry(recurringOverride).State = EntityState.Detached;
+            }
 
-            var existingAfterConflict = await FindExistingOccurrence(recurringTaskId, occurrenceDate, userId, ct);
-            if (existingAfterConflict != null) return existingAfterConflict;
+            var existingAfterConflict = await FindExistingOverride(template.SeriesId, occurrenceDate, userId, ct);
+            if (existingAfterConflict?.TaskItem != null) return existingAfterConflict.TaskItem;
 
             throw;
         }
@@ -62,14 +93,16 @@ public class RecurringOccurrenceMaterializer(
         return taskItem;
     }
 
-    private Task<TaskItem?> FindExistingOccurrence(
-        int recurringTaskId,
+    private Task<RecurringOccurrenceOverride?> FindExistingOverride(
+        int seriesId,
         DateOnly occurrenceDate,
         Guid userId,
         CancellationToken ct)
     {
-        return db.TaskItems.SingleOrDefaultAsync(t => t.UserId == userId
-            && t.RecurringTaskId == recurringTaskId
-            && t.RecurringOccurrenceDate == occurrenceDate, ct);
+        return db.RecurringOccurrenceOverrides
+            .Include(o => o.TaskItem)
+            .SingleOrDefaultAsync(o => o.SeriesId == seriesId
+                && o.OccurrenceDate == occurrenceDate
+                && o.Series.UserId == userId, ct);
     }
 }

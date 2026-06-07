@@ -40,15 +40,18 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
         };
 
         // Act
-        var recurringTaskId = await _handler.Handle(new CreateRecurringTaskCommand
+        var result = await _handler.Handle(new CreateRecurringTaskCommand
         {
             UserId = userId,
             TaskDetails = request
         });
 
-        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == recurringTaskId);
+        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == result.RecurringTaskId);
+        var series = await _context.RecurringTaskSeries.SingleAsync(s => s.Id == result.SeriesId);
 
         // Assert
+        series.UserId.Should().Be(userId, because: "creating a recurring task should create an owning series for future rule versions");
+        recurringTask.SeriesId.Should().Be(series.Id, because: "the first recurring rule version must belong to the new series");
         recurringTask.UserId.Should().Be(userId, because: "created recurring tasks must belong to the current user");
         recurringTask.Title.Should().Be("Daily Focus", because: "titles should be trimmed before saving");
         recurringTask.Description.Should().Be("Deep work", because: "descriptions should be trimmed before saving");
@@ -75,13 +78,13 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
         };
 
         // Act
-        var recurringTaskId = await _handler.Handle(new CreateRecurringTaskCommand
+        var result = await _handler.Handle(new CreateRecurringTaskCommand
         {
             UserId = userId,
             TaskDetails = request
         });
 
-        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == recurringTaskId);
+        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == result.RecurringTaskId);
 
         // Assert
         recurringTask.Pattern.DayOfMonth.Should().Be(15,
@@ -108,13 +111,13 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
         };
 
         // Act
-        var recurringTaskId = await _handler.Handle(new CreateRecurringTaskCommand
+        var result = await _handler.Handle(new CreateRecurringTaskCommand
         {
             UserId = userId,
             TaskDetails = request
         });
 
-        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == recurringTaskId);
+        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == result.RecurringTaskId);
 
         // Assert
         recurringTask.IsDeadline.Should().BeTrue(

@@ -26,11 +26,17 @@ public class EditTaskCommandHandler(
 
         var task = await db.TaskItems
             .Include(t=>t.Deadline)
+            .Include(t => t.RecurringOccurrenceOverride)
             .FirstOrDefaultAsync(t => t.Id == command.TaskId && t.UserId == command.UserId, ct);
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} not found.");
 
         taskItemUpdater.Apply(task, command.TaskDetails);
+        if (task.RecurringOccurrenceOverride != null)
+        {
+            task.RecurringOccurrenceOverride.OverrideType = RecurringOccurrenceOverrideType.Modified;
+            task.RecurringOccurrenceOverride.UpdatedAt = DateTime.UtcNow;
+        }
 
         db.TaskItems.Update(task);
         await db.SaveChangesAsync(ct);

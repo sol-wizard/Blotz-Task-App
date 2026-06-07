@@ -257,8 +257,6 @@ public class RecurringTaskGeneratorService
             TimeType        = template.TimeType,
             UserId          = template.UserId,
             LabelId         = template.LabelId,
-            RecurringTaskId = template.Id,
-            RecurringOccurrenceDate = date,
             IsDone          = false,
         };
 

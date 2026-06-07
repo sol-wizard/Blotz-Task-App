@@ -156,6 +156,7 @@ public class RecurringTaskGeneratorServiceTests
     {
         return new RecurringTask
         {
+            SeriesId = 1,
             Title = "Test Task",
             UserId = Guid.NewGuid(),
             TimeType = TaskTimeType.SingleTime,

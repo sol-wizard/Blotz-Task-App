@@ -23,27 +23,15 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
             .Select(task => new TaskByIdItemDto
             {
                 Id = task.Id,
-                OccurrenceKind = task.RecurringTaskId == null
+                OccurrenceKind = task.RecurringOccurrenceOverride == null
                     ? TaskOccurrenceKind.NormalTaskItem
                     : TaskOccurrenceKind.MaterializedRecurringOccurrence,
-                RecurringOccurrence = task.RecurringTaskId != null && task.RecurringOccurrenceDate != null
-                    ? new RecurringOccurrenceIdentityDto
-                    {
-                        RecurringTaskId = task.RecurringTaskId.Value,
-                        OccurrenceDate = task.RecurringOccurrenceDate.Value
-                    }
+                RecurringOccurrence = task.RecurringOccurrenceOverride != null
+                    ? TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(task.RecurringOccurrenceOverride)
                     : null,
-                RecurringTask = task.RecurringTask == null
-                    ? null
-                    : new RecurringTaskEditMetadataDto
-                    {
-                        Frequency = task.RecurringTask.Pattern.Frequency,
-                        Interval = task.RecurringTask.Pattern.Interval,
-                        DaysOfWeek = task.RecurringTask.Pattern.DaysOfWeek,
-                        DayOfMonth = task.RecurringTask.Pattern.DayOfMonth,
-                        StartDate = task.RecurringTask.StartDate,
-                        EndDate = task.RecurringTask.EndDate
-                    },
+                RecurringTask = task.RecurringOccurrenceOverride != null
+                    ? TaskOccurrenceDtoHelpers.ToRecurringTaskMetadata(task.RecurringOccurrenceOverride.RecurringTask)
+                    : null,
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,

@@ -304,9 +304,13 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             title: "Morning Run",
             start: templateTime,
             end: templateTime);
-        savedOccurrence.RecurringTaskId = recurring.Id;
         savedOccurrence.IsDone = true;
         await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 3, 14),
+            RecurringOccurrenceOverrideType.Materialized,
+            savedOccurrence);
 
         var query = new GetTasksByDateQuery
         {
@@ -379,9 +383,11 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             title: "Moved Workout",
             start: movedStart,
             end: movedStart);
-        movedOccurrence.RecurringTaskId = recurring.Id;
-        movedOccurrence.RecurringOccurrenceDate = originalOccurrenceDate;
-        await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            originalOccurrenceDate,
+            RecurringOccurrenceOverrideType.Modified,
+            movedOccurrence);
 
         var query = new GetTasksByDateQuery
         {

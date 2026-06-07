@@ -15,7 +15,7 @@ public class RecurringTaskController(
     UpdateRecurringTaskFutureCommandHandler updateRecurringTaskFutureCommandHandler) : ControllerBase
 {
     [HttpPost]
-    public async Task<int> CreateRecurringTask(
+    public async Task<CreateRecurringTaskResult> CreateRecurringTask(
         [FromBody] CreateRecurringTaskRequest request,
         CancellationToken ct)
     {

@@ -25,18 +25,17 @@ public class GetAllDdlTasksQueryHandler(
         var now = query.Now ?? DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.Date);
 
-        var materializedRecurringOccurrenceKeys = (await db.TaskItems
+        var recurringOverrideKeys = (await db.RecurringOccurrenceOverrides
                 .AsNoTracking()
-                .Where(t => t.UserId == query.UserId
-                    && t.RecurringTaskId != null
-                    && t.RecurringOccurrenceDate != null)
-                .Select(t => new
+                .Where(o => o.Series.UserId == query.UserId
+                    && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
+                .Select(o => new
                 {
-                    RecurringTaskId = t.RecurringTaskId!.Value,
-                    OccurrenceDate = t.RecurringOccurrenceDate!.Value
+                    o.SeriesId,
+                    o.OccurrenceDate
                 })
                 .ToListAsync(ct))
-            .Select(t => (t.RecurringTaskId, t.OccurrenceDate))
+            .Select(o => (o.SeriesId, o.OccurrenceDate))
             .ToHashSet();
 
         var ddlTasks = await db.TaskItems
@@ -49,15 +48,11 @@ public class GetAllDdlTasksQueryHandler(
             .Select(task => new DeadlineTaskDto
             {
                 Id = task.Id,
-                OccurrenceKind = task.RecurringTaskId == null
+                OccurrenceKind = task.RecurringOccurrenceOverride == null
                     ? TaskOccurrenceKind.NormalTaskItem
                     : TaskOccurrenceKind.MaterializedRecurringOccurrence,
-                RecurringOccurrence = task.RecurringTaskId != null && task.RecurringOccurrenceDate != null
-                    ? new RecurringOccurrenceIdentityDto
-                    {
-                        RecurringTaskId = task.RecurringTaskId.Value,
-                        OccurrenceDate = task.RecurringOccurrenceDate.Value
-                    }
+                RecurringOccurrence = task.RecurringOccurrenceOverride != null
+                    ? TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(task.RecurringOccurrenceOverride)
                     : null,
                 Title = task.Title,
                 Description = task.Description,
@@ -80,8 +75,10 @@ public class GetAllDdlTasksQueryHandler(
         var recurringDeadlineTemplates = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                 && r.IsActive
+                && !r.Series.IsDeleted
                 && r.IsDeadline
                 && r.StartDate <= today)
             .ToListAsync(ct);
@@ -91,8 +88,8 @@ public class GetAllDdlTasksQueryHandler(
             var occurrenceDate = generatorService.GetCurrentOccurrenceDate(recurring, today);
             if (occurrenceDate == null) continue;
 
-            var occurrenceKey = (recurring.Id, occurrenceDate.Value);
-            if (materializedRecurringOccurrenceKeys.Contains(occurrenceKey)) continue;
+            var occurrenceKey = (recurring.SeriesId, occurrenceDate.Value);
+            if (recurringOverrideKeys.Contains(occurrenceKey)) continue;
 
             ddlTasks.Add(new DeadlineTaskDto
             {

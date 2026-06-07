@@ -19,3 +19,8 @@ export interface RecurringTaskCreateDTO {
   templateDueAt?: string | null;
   deadlineTimeZoneId?: string | null;
 }
+
+export interface CreateRecurringTaskResultDTO {
+  seriesId: number;
+  recurringTaskId: number;
+}

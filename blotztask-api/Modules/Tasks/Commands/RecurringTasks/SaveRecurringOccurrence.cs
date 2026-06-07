@@ -23,6 +23,8 @@ public class SaveRecurringOccurrenceCommandHandler(
 {
     public async Task<int> Handle(SaveRecurringOccurrenceCommand command, CancellationToken ct)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+
         var taskItem = await materializer.EnsureRecurringOccurrenceTaskItem(
             command.RecurringTaskId,
             command.OccurrenceDate,
@@ -33,6 +35,7 @@ public class SaveRecurringOccurrenceCommandHandler(
         taskItem.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
 
         logger.LogInformation(
             "Completed occurrence for RecurringTask {RecurringTaskId} on {Date} as TaskItem {TaskItemId}",

@@ -52,6 +52,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
     public async Task<int?> Handle(UpdateRecurringTaskFutureCommand command, CancellationToken ct = default)
     {
         var template = await db.RecurringTasks
+            .Include(r => r.Series)
             .FirstOrDefaultAsync(r => r.Id == command.RecurringTaskId && r.UserId == command.UserId, ct);
 
         if (template == null)
@@ -81,7 +82,13 @@ public class UpdateRecurringTaskFutureCommandHandler(
                 ct);
 
             await db.Entry(taskItem).Reference(t => t.Deadline).LoadAsync(ct);
+            await db.Entry(taskItem).Reference(t => t.RecurringOccurrenceOverride).LoadAsync(ct);
             taskItemUpdater.Apply(taskItem, command.TaskDetails);
+            if (taskItem.RecurringOccurrenceOverride != null)
+            {
+                taskItem.RecurringOccurrenceOverride.OverrideType = RecurringOccurrenceOverrideType.Detached;
+                taskItem.RecurringOccurrenceOverride.UpdatedAt = DateTime.UtcNow;
+            }
 
             TruncateTemplate(template, command.EffectiveDate);
             await db.SaveChangesAsync(ct);
@@ -106,28 +113,36 @@ public class UpdateRecurringTaskFutureCommandHandler(
         db.RecurringTasks.Add(futureTemplate);
         await db.SaveChangesAsync(ct);
 
-        var existingFutureOccurrences = await db.TaskItems
-            .Include(t => t.Deadline)
-            .Where(t => t.UserId == command.UserId
-                && t.RecurringTaskId == command.RecurringTaskId
-                && t.RecurringOccurrenceDate >= command.EffectiveDate)
+        var futureOverrides = await db.RecurringOccurrenceOverrides
+            .Include(o => o.TaskItem)
+            .ThenInclude(t => t!.Deadline)
+            .Where(o => o.SeriesId == template.SeriesId
+                && o.RecurringTaskId == template.Id
+                && o.OccurrenceDate >= command.EffectiveDate
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .ToListAsync(ct);
 
-        foreach (var occurrence in existingFutureOccurrences)
+        foreach (var recurringOverride in futureOverrides)
         {
-            if (occurrence.RecurringOccurrenceDate == command.EffectiveDate)
+            if (recurringOverride.OverrideType == RecurringOccurrenceOverrideType.Materialized
+                && recurringOverride.TaskItem != null)
             {
-                taskItemUpdater.Apply(occurrence, command.TaskDetails);
+                var occurrenceDetails = BuildOccurrenceTaskDetails(futureTemplate, recurringOverride.OccurrenceDate, recurringOverride.TaskItem);
+                taskItemUpdater.Apply(recurringOverride.TaskItem, occurrenceDetails);
             }
 
-            occurrence.RecurringTaskId = futureTemplate.Id;
-            db.TaskItems.Update(occurrence);
+            if (recurringOverride.OverrideType == RecurringOccurrenceOverrideType.Modified
+                && recurringOverride.OccurrenceDate == command.EffectiveDate
+                && recurringOverride.TaskItem != null)
+            {
+                taskItemUpdater.Apply(recurringOverride.TaskItem, command.TaskDetails);
+            }
+
+            recurringOverride.RecurringTaskId = futureTemplate.Id;
+            recurringOverride.UpdatedAt = DateTime.UtcNow;
         }
 
-        if (existingFutureOccurrences.Count > 0)
-        {
-            await db.SaveChangesAsync(ct);
-        }
+        await db.SaveChangesAsync(ct);
 
         await transaction.CommitAsync(ct);
 
@@ -220,6 +235,8 @@ public class UpdateRecurringTaskFutureCommandHandler(
         return new RecurringTask
         {
             UserId = oldTemplate.UserId,
+            SeriesId = oldTemplate.SeriesId,
+            PreviousRecurringTaskId = oldTemplate.Id,
             Title = title,
             Description = string.IsNullOrWhiteSpace(details.Description)
                 ? null
@@ -293,6 +310,29 @@ public class UpdateRecurringTaskFutureCommandHandler(
     {
         template.EndDate = effectiveDate.AddDays(-1);
         template.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static EditTaskItemDto BuildOccurrenceTaskDetails(
+        RecurringTask template,
+        DateOnly occurrenceDate,
+        TaskItem existingTask)
+    {
+        var generator = new RecurringTaskGeneratorService();
+        return new EditTaskItemDto
+        {
+            Title = template.Title,
+            Description = template.Description,
+            StartTime = generator.BuildOccurrenceStartTime(template, occurrenceDate),
+            EndTime = generator.BuildOccurrenceEndTime(template, occurrenceDate),
+            TimeType = template.TimeType,
+            LabelId = template.LabelId,
+            NotificationId = existingTask.NotificationId,
+            AlertTime = existingTask.AlertTime,
+            IsDeadline = template.IsDeadline,
+            DueAt = template.IsDeadline
+                ? generator.BuildOccurrenceDueAt(template, occurrenceDate)
+                : null
+        };
     }
 
     private sealed record RecurringDeadlineTemplate(

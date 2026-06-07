@@ -51,6 +51,16 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne(r => r.Series)
+            .WithMany(s => s.Versions)
+            .HasForeignKey(r => r.SeriesId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasOne(r => r.PreviousRecurringTask)
+            .WithMany()
+            .HasForeignKey(r => r.PreviousRecurringTaskId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         // RecurrencePattern is stored in the same RecurringTasks table row.
         // Column names are set explicitly to avoid the default "Pattern_X" prefix.
         builder.OwnsOne(r => r.Pattern, pattern =>
@@ -62,5 +72,6 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
         });
 
         builder.HasIndex(r => new { r.UserId, r.IsActive });
+        builder.HasIndex(r => new { r.SeriesId, r.StartDate, r.EndDate });
     }
 }

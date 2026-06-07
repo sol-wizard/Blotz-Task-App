@@ -49,9 +49,13 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
 
         // Assert
         taskItem.Id.Should().BeGreaterThan(0, because: "materializing a virtual occurrence should create a persisted task item");
-        taskItem.RecurringTaskId.Should().Be(recurring.Id, because: "the task item must remain linked to its recurring template");
-        taskItem.RecurringOccurrenceDate.Should().Be(new DateOnly(2026, 6, 2),
-            because: "the task item must record the template occurrence date independently from its scheduled start time");
+        taskItem.RecurringOccurrenceOverrideId.Should().NotBeNull(because: "materialized recurring occurrences should link through an override row");
+        var recurringOverride = await _context.RecurringOccurrenceOverrides.SingleAsync(o => o.Id == taskItem.RecurringOccurrenceOverrideId);
+        recurringOverride.RecurringTaskId.Should().Be(recurring.Id, because: "the override links the task item to the recurring rule version");
+        recurringOverride.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 2),
+            because: "the override records the stable occurrence date independently from scheduled task time");
+        recurringOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Materialized,
+            because: "plain materialization should not mark the occurrence as user-modified");
         taskItem.UserId.Should().Be(userId, because: "the created occurrence must belong to the current user");
         taskItem.IsDone.Should().BeFalse(because: "materializing alone should not mark the occurrence complete");
         taskItem.StartTime.Should().Be(new DateTimeOffset(2026, 6, 2, 9, 0, 0, TimeSpan.Zero),
@@ -109,11 +113,14 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             templateStartTime: occurrenceTime);
 
         var existing = await _seeder.CreateTaskAsync(userId, "Daily Review", occurrenceTime, occurrenceTime);
-        existing.RecurringTaskId = recurring.Id;
-        existing.RecurringOccurrenceDate = new DateOnly(2026, 6, 3);
         existing.StartTime = new DateTimeOffset(2026, 6, 4, 15, 0, 0, TimeSpan.Zero);
         existing.EndTime = existing.StartTime;
         await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 3),
+            RecurringOccurrenceOverrideType.Modified,
+            existing);
 
         // Act
         var taskItem = await _materializer.EnsureRecurringOccurrenceTaskItem(
@@ -121,10 +128,9 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             new DateOnly(2026, 6, 3),
             userId);
 
-        var occurrenceCount = await _context.TaskItems
-            .CountAsync(t => t.UserId == userId
-                && t.RecurringTaskId == recurring.Id
-                && t.RecurringOccurrenceDate == new DateOnly(2026, 6, 3));
+        var occurrenceCount = await _context.RecurringOccurrenceOverrides
+            .CountAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == new DateOnly(2026, 6, 3));
 
         // Assert
         taskItem.Id.Should().Be(existing.Id, because: "materialization must use the stable occurrence date identity even when the scheduled start time was edited");
@@ -155,10 +161,9 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             materializerA.EnsureRecurringOccurrenceTaskItem(recurring.Id, occurrenceDate, userId),
             materializerB.EnsureRecurringOccurrenceTaskItem(recurring.Id, occurrenceDate, userId));
 
-        var occurrenceCount = await _context.TaskItems
-            .CountAsync(t => t.UserId == userId
-                && t.RecurringTaskId == recurring.Id
-                && t.RecurringOccurrenceDate == occurrenceDate);
+        var occurrenceCount = await _context.RecurringOccurrenceOverrides
+            .CountAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == occurrenceDate);
 
         // Assert
         results.Select(t => t.Id).Distinct().Should().ContainSingle(
@@ -240,11 +245,15 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         }, CancellationToken.None);
 
         var taskItem = await _context.TaskItems.SingleAsync(t => t.Id == taskItemId);
+        var recurringOverride = await _context.RecurringOccurrenceOverrides.SingleAsync(o => o.Id == taskItem.RecurringOccurrenceOverrideId);
 
         // Assert
         taskItem.IsDone.Should().BeTrue(because: "complete occurrence should mark the materialized task as done");
-        taskItem.RecurringTaskId.Should().Be(recurring.Id, because: "completed recurring occurrences must retain their template link");
-        taskItem.RecurringOccurrenceDate.Should().Be(new DateOnly(2026, 6, 2),
+        taskItem.RecurringOccurrenceOverrideId.Should().Be(recurringOverride.Id,
+            because: "completed recurring occurrences should link to the override row instead of duplicating recurring fields on TaskItem");
+        recurringOverride.RecurringTaskId.Should().Be(recurring.Id,
+            because: "completed recurring occurrences must retain their template link through the override row");
+        recurringOverride.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 2),
             because: "completed recurring occurrences must retain their template occurrence date");
     }
 
@@ -289,10 +298,10 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         }, CancellationToken.None);
 
         var taskItem = await _context.TaskItems.SingleAsync(t => t.Id == taskItemId);
-        var occurrenceCount = await _context.TaskItems.CountAsync(t =>
-            t.UserId == userId
-            && t.RecurringTaskId == recurring.Id
-            && t.RecurringOccurrenceDate == occurrenceDate);
+        var recurringOverride = await _context.RecurringOccurrenceOverrides.SingleAsync(o => o.Id == taskItem.RecurringOccurrenceOverrideId);
+        var occurrenceCount = await _context.RecurringOccurrenceOverrides.CountAsync(o =>
+            o.SeriesId == recurring.SeriesId
+            && o.OccurrenceDate == occurrenceDate);
 
         // Assert
         taskItem.Title.Should().Be("Moved standup", because: "saving a virtual occurrence should apply the edited task fields");
@@ -300,9 +309,14 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         taskItem.TimeType.Should().Be(TaskTimeType.RangeTime, because: "the occurrence should support the same time edits as a regular task");
         taskItem.StartTime.Should().Be(new DateTimeOffset(2026, 6, 4, 15, 0, 0, TimeSpan.Zero),
             because: "editing this occurrence only may move the scheduled task time");
-        taskItem.RecurringTaskId.Should().Be(recurring.Id, because: "the materialized item must stay linked to its recurring template");
-        taskItem.RecurringOccurrenceDate.Should().Be(occurrenceDate,
+        taskItem.RecurringOccurrenceOverrideId.Should().Be(recurringOverride.Id,
+            because: "the materialized item should use the override row as its only recurring link");
+        recurringOverride.RecurringTaskId.Should().Be(recurring.Id,
+            because: "the override must stay linked to its recurring template");
+        recurringOverride.OccurrenceDate.Should().Be(occurrenceDate,
             because: "the stable recurring identity must not change when the scheduled time is edited");
+        recurringOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Modified,
+            because: "saving only this occurrence records a user-level override");
         occurrenceCount.Should().Be(1, because: "the atomic update should not create duplicate task items for the same occurrence");
     }
 
@@ -319,9 +333,11 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             startDate: new DateOnly(2026, 6, 1),
             templateStartTime: templateTime);
         var existing = await _seeder.CreateTaskAsync(userId, "Daily Standup", templateTime, templateTime);
-        existing.RecurringTaskId = recurring.Id;
-        existing.RecurringOccurrenceDate = new DateOnly(2026, 6, 3);
-        await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 3),
+            RecurringOccurrenceOverrideType.Materialized,
+            existing);
         var logger = TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>();
         var handler = new UpdateRecurringTaskFutureCommandHandler(
             _context,
@@ -353,6 +369,7 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
         var futureTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == futureRecurringTaskId);
         var movedOccurrence = await _context.TaskItems.SingleAsync(t => t.Id == existing.Id);
+        var movedOverride = await _context.RecurringOccurrenceOverrides.SingleAsync(o => o.Id == movedOccurrence.RecurringOccurrenceOverrideId);
 
         // Assert
         oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 2),
@@ -365,7 +382,9 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             because: "future edits without recurrence changes should inherit the previous recurrence rule");
         futureTemplate.TemplateStartTime.TimeOfDay.Should().Be(new TimeSpan(10, 0, 0),
             because: "future virtual occurrences should use the edited time of day");
-        movedOccurrence.RecurringTaskId.Should().Be(futureTemplate.Id,
+        movedOccurrence.RecurringOccurrenceOverrideId.Should().Be(movedOverride.Id,
+            because: "TaskItem should keep only the override link after a future split");
+        movedOverride.RecurringTaskId.Should().Be(futureTemplate.Id,
             because: "a materialized occurrence on the effective date should move to the new template to avoid duplicate calendar rows");
         movedOccurrence.Title.Should().Be("Future standup",
             because: "the selected materialized occurrence should receive the same edited fields as future virtual occurrences");
@@ -413,15 +432,19 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         }, CancellationToken.None);
 
         var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
-        var materialized = await _context.TaskItems.SingleAsync(t =>
-            t.RecurringTaskId == recurring.Id
-            && t.RecurringOccurrenceDate == new DateOnly(2026, 6, 3));
+        var materializedOverride = await _context.RecurringOccurrenceOverrides
+            .Include(o => o.TaskItem)
+            .SingleAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == new DateOnly(2026, 6, 3));
+        var materialized = materializedOverride.TaskItem!;
 
         // Assert
         futureRecurringTaskId.Should().BeNull(
             because: "stopping repetition from a date should not create a replacement recurring template");
         oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 2),
             because: "the old template should stop before the selected effective date");
+        materializedOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Detached,
+            because: "stopping future repetition turns the selected occurrence into a detached concrete task");
         materialized.Title.Should().Be("Final standup",
             because: "the selected occurrence should remain as a concrete task after repetition stops");
     }

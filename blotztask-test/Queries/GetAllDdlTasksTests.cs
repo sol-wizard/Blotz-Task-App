@@ -85,8 +85,6 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             "Weekly Report",
             new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
             new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)));
-        materialized.RecurringTaskId = recurring.Id;
-        materialized.RecurringOccurrenceDate = new DateOnly(2026, 6, 8);
         materialized.Deadline = new TaskDeadline
         {
             TaskItem = materialized,
@@ -95,6 +93,11 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 8),
+            RecurringOccurrenceOverrideType.Materialized,
+            materialized);
 
         var query = new GetAllDdlTasksQuery
         {
@@ -137,8 +140,6 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             "Weekly Report",
             new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
             new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)));
-        completed.RecurringTaskId = recurring.Id;
-        completed.RecurringOccurrenceDate = new DateOnly(2026, 6, 8);
         completed.IsDone = true;
         completed.Deadline = new TaskDeadline
         {
@@ -148,6 +149,11 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 8),
+            RecurringOccurrenceOverrideType.Materialized,
+            completed);
 
         var query = new GetAllDdlTasksQuery
         {
