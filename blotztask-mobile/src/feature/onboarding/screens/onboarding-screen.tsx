@@ -4,12 +4,20 @@ import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onbo
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { router } from "expo-router";
 import React, { useState, useRef } from "react";
-import { Pressable, Text, View, FlatList, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import {
+  Pressable,
+  Text,
+  View,
+  FlatList,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
-import { BlotzLogo } from "@/shared/components/blotz-logo";
+import { GradientColor } from "@/shared/components/gradient-color";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -59,7 +67,11 @@ export default function OnboardingScreen() {
             </Pressable>
           )}
         </View>
-        <BlotzLogo fontSize={30} />
+        <GradientColor className="h-[45px] w-[135px]">
+          <View className="flex-1 flex-row justify-center items-center bg-transparent">
+            <Text className="text-[30px] leading-9 font-balooExtraBold text-center">Blotz</Text>
+          </View>
+        </GradientColor>
         <View className="flex-1 items-end">
           <Pressable onPress={handleFinish} hitSlop={10}>
             <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>

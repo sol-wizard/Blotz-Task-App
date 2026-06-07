@@ -23,6 +23,8 @@ import enDeadline from "./locales/en/deadline.json";
 import zhDeadline from "./locales/zh/deadline.json";
 import enPomodoro from "./locales/en/pomodoro.json";
 import zhPomodoro from "./locales/zh/pomodoro.json";
+import enBadge from "./locales/en/badge.json";
+import zhBadge from "./locales/zh/badge.json";
 
 // Get device language code (e.g., 'en', 'zh')
 const getDeviceLanguage = (): string => {
@@ -52,6 +54,7 @@ i18n.use(initReactI18next).init({
       privacyPolicy: enPrivacyPolicy,
       deadline: enDeadline,
       pomodoro: enPomodoro,
+      badge: enBadge,
     },
     zh: {
       common: zhCommon,
@@ -64,6 +67,7 @@ i18n.use(initReactI18next).init({
       privacyPolicy: zhPrivacyPolicy,
       deadline: zhDeadline,
       pomodoro: zhPomodoro,
+      badge: zhBadge,
     },
   },
   lng: getDeviceLanguage(), // Will be overridden by user preference from backend
