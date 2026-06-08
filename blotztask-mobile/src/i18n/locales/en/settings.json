@@ -89,7 +89,8 @@
     "shareError": "Couldn't share this letter.",
     "generate": "Generate letter",
     "generateError": "Couldn't generate this letter. Please try again.",
-    "quotaError": "You've hit the usage limit. Please try again later."
+    "quotaError": "You've hit the usage limit. Please try again later.",
+    "lowActivityHint": "Want Blotz to get to know you better? 🌱 Log a few more tasks and your next letter will be way more fun! ✨"
   },
   "avatar": {
     "title": "Avatar"

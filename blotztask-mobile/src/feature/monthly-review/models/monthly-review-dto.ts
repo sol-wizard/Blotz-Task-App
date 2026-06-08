@@ -3,4 +3,5 @@ export type MonthlyReviewDTO = {
   month: number;
   aiGeneratedLetter: string;
   createdAt: string;
+  isLowActivity: boolean;
 };

@@ -12,6 +12,7 @@ import { LetterEmptyState } from "../components/letter-empty-state";
 import { LetterHeader } from "../components/letter-header";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
+import { MonthlyReviewTipBanner } from "../components/monthly-review-tip-banner";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
 import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
@@ -24,6 +25,7 @@ export default function MonthlyReviewScreen() {
   // Latest viewable month is last month — the current one is still in progress.
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
+  const [isTipDismissed, setIsTipDismissed] = useState(false);
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useMonthlyReviewShare({ captureTargetRef: shareCardRef });
   const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
@@ -85,6 +87,13 @@ export default function MonthlyReviewScreen() {
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
+          {report?.isLowActivity && !isTipDismissed && (
+            <MonthlyReviewTipBanner
+              text={t("monthlyReview.lowActivityHint")}
+              onDismiss={() => setIsTipDismissed(true)}
+            />
+          )}
+
           <View
             ref={shareCardRef}
             collapsable={false}
