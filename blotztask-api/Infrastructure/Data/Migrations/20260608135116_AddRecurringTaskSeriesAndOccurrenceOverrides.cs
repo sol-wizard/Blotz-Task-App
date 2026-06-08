@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRecurringTaskSeriesAndOverrides : Migration
+    public partial class AddRecurringTaskSeriesAndOccurrenceOverrides : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,17 +16,39 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 table: "TaskItems");
 
             migrationBuilder.DropIndex(
-                name: "IX_TaskItems_RecurringTaskId_RecurringOccurrenceDate",
-                table: "TaskItems");
-
-            migrationBuilder.DropColumn(
-                name: "RecurringOccurrenceDate",
+                name: "IX_TaskItems_RecurringTaskId",
                 table: "TaskItems");
 
             migrationBuilder.RenameColumn(
                 name: "RecurringTaskId",
                 table: "TaskItems",
                 newName: "RecurringOccurrenceOverrideId");
+
+            migrationBuilder.AddColumn<int>(
+                name: "DeadlineOffsetDays",
+                table: "RecurringTasks",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<TimeOnly>(
+                name: "DeadlineTimeOfDay",
+                table: "RecurringTasks",
+                type: "time",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "DeadlineTimeZoneId",
+                table: "RecurringTasks",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: true);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsDeadline",
+                table: "RecurringTasks",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
 
             migrationBuilder.AddColumn<int>(
                 name: "PreviousRecurringTaskId",
@@ -109,6 +131,16 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 table: "RecurringTasks",
                 columns: new[] { "SeriesId", "StartDate", "EndDate" });
 
+            migrationBuilder.AddCheckConstraint(
+                name: "CK_RecurringTask_Deadline_Offset_NonNegative",
+                table: "RecurringTasks",
+                sql: "([DeadlineOffsetDays] IS NULL OR [DeadlineOffsetDays] >= 0)");
+
+            migrationBuilder.AddCheckConstraint(
+                name: "CK_RecurringTask_Deadline_Template_Complete",
+                table: "RecurringTasks",
+                sql: "(([IsDeadline] = 0 AND [DeadlineOffsetDays] IS NULL AND [DeadlineTimeOfDay] IS NULL AND [DeadlineTimeZoneId] IS NULL) OR ([IsDeadline] = 1 AND [DeadlineOffsetDays] IS NOT NULL AND [DeadlineTimeOfDay] IS NOT NULL AND [DeadlineTimeZoneId] IS NOT NULL))");
+
             migrationBuilder.CreateIndex(
                 name: "IX_RecurringOccurrenceOverrides_RecurringTaskId",
                 table: "RecurringOccurrenceOverrides",
@@ -180,6 +212,30 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 name: "IX_RecurringTasks_SeriesId_StartDate_EndDate",
                 table: "RecurringTasks");
 
+            migrationBuilder.DropCheckConstraint(
+                name: "CK_RecurringTask_Deadline_Offset_NonNegative",
+                table: "RecurringTasks");
+
+            migrationBuilder.DropCheckConstraint(
+                name: "CK_RecurringTask_Deadline_Template_Complete",
+                table: "RecurringTasks");
+
+            migrationBuilder.DropColumn(
+                name: "DeadlineOffsetDays",
+                table: "RecurringTasks");
+
+            migrationBuilder.DropColumn(
+                name: "DeadlineTimeOfDay",
+                table: "RecurringTasks");
+
+            migrationBuilder.DropColumn(
+                name: "DeadlineTimeZoneId",
+                table: "RecurringTasks");
+
+            migrationBuilder.DropColumn(
+                name: "IsDeadline",
+                table: "RecurringTasks");
+
             migrationBuilder.DropColumn(
                 name: "PreviousRecurringTaskId",
                 table: "RecurringTasks");
@@ -193,18 +249,10 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 table: "TaskItems",
                 newName: "RecurringTaskId");
 
-            migrationBuilder.AddColumn<DateOnly>(
-                name: "RecurringOccurrenceDate",
-                table: "TaskItems",
-                type: "date",
-                nullable: true);
-
             migrationBuilder.CreateIndex(
-                name: "IX_TaskItems_RecurringTaskId_RecurringOccurrenceDate",
+                name: "IX_TaskItems_RecurringTaskId",
                 table: "TaskItems",
-                columns: new[] { "RecurringTaskId", "RecurringOccurrenceDate" },
-                unique: true,
-                filter: "[RecurringTaskId] IS NOT NULL AND [RecurringOccurrenceDate] IS NOT NULL");
+                column: "RecurringTaskId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_TaskItems_RecurringTasks_RecurringTaskId",
