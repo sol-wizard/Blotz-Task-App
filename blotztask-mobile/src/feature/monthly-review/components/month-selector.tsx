@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
+import { REVIEW_ICON_COLOR } from "../constants/icon-colors";
 
 type Props = {
   label: string;
@@ -21,7 +22,7 @@ export function MonthSelector({ label, onPrev, onNext, disablePrev, disableNext 
         <MaterialCommunityIcons
           name="chevron-left"
           size={24}
-          color={disablePrev ? "#C7C9D6" : "#363853"}
+          color={disablePrev ? REVIEW_ICON_COLOR.disabled : REVIEW_ICON_COLOR.secondary}
         />
       </Pressable>
       <Text className="text-base font-balooBold text-secondary">{label}</Text>
@@ -34,7 +35,7 @@ export function MonthSelector({ label, onPrev, onNext, disablePrev, disableNext 
         <MaterialCommunityIcons
           name="chevron-right"
           size={24}
-          color={disableNext ? "#C7C9D6" : "#363853"}
+          color={disableNext ? REVIEW_ICON_COLOR.disabled : REVIEW_ICON_COLOR.secondary}
         />
       </Pressable>
     </View>

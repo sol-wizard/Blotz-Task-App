@@ -91,7 +91,8 @@
     "quotaError": "You've hit the usage limit. Please try again later.",
     "lowActivityHint": "Want Blotz to get to know you better? 🌱 Log a few more tasks and your next letter will be way more fun! ✨",
     "comingSoonTitle": "Your first letter is on its way ✨",
-    "comingSoonBody": "Monthly reviews arrive after your first full month with Blotz. Keep logging your tasks and we'll have a letter ready for you soon! 🌱"
+    "comingSoonBody": "Monthly reviews arrive after your first full month with Blotz. Keep logging your tasks and we'll have a letter ready for you soon! 🌱",
+    "defaultRecipient": "Friend"
   },
   "avatar": {
     "title": "Avatar"
