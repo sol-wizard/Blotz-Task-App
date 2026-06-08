@@ -73,7 +73,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   const handleOpenTaskDetails = () => {
     if (task.id == null) return;
 
-    swipeRef.current?.reset();
+    swipeRef.current?.close();
 
     queryClient.setQueryData(["taskId", task.id], task);
     router.push({ pathname: "/(protected)/task-details", params: { taskId: task.id } });
@@ -104,7 +104,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   const handleOpenFocus = () => {
     if (!task.id) return;
     
-    swipeRef.current?.reset();
+    swipeRef.current?.close();
 
     if (session && session.taskId !== String(task.id)) {
       setShowSwitchModal(true);
@@ -125,12 +125,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
     }
 
     onOpenMode?.();
-    swipeRef.current?.reset();
+    swipeRef.current?.close();
   };
 
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
-    swipeRef.current?.reset();
+    swipeRef.current?.close();
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
   };
 
