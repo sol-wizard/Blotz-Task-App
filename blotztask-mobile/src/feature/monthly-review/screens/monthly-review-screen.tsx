@@ -44,11 +44,21 @@ export default function MonthlyReviewScreen() {
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
+  const showShareButton = report !== null && !hasNoReviewableMonth;
+  const showLowActivityTip = report?.isLowActivity === true && !isTipDismissed;
 
   // — Handlers ———————————————————————————————————————————————————
   const handleShareMonthlyReview = () => {
     if (!report || isSharingImage) return;
     void shareImage();
+  };
+
+  const handlePrevMonth = () => {
+    if (!isAtEarliestMonth) setSelectedMonth((month) => addMonths(month, -1));
+  };
+
+  const handleNextMonth = () => {
+    if (!isAtLatestMonth) setSelectedMonth((month) => addMonths(month, 1));
   };
 
   return (
@@ -60,7 +70,7 @@ export default function MonthlyReviewScreen() {
         <Text className="flex-1 text-2xl font-balooBold text-secondary">
           {t("monthlyReview.title")}
         </Text>
-        {report && !hasNoReviewableMonth && (
+        {showShareButton && (
           <Pressable
             onPress={handleShareMonthlyReview}
             disabled={isSharingImage}
@@ -93,19 +103,15 @@ export default function MonthlyReviewScreen() {
           <View className="px-5 mb-4">
             <MonthSelector
               label={displayMonth}
-              onPrev={() => {
-                if (!isAtEarliestMonth) setSelectedMonth((m) => addMonths(m, -1));
-              }}
-              onNext={() => {
-                if (!isAtLatestMonth) setSelectedMonth((m) => addMonths(m, 1));
-              }}
+              onPrev={handlePrevMonth}
+              onNext={handleNextMonth}
               disablePrev={isAtEarliestMonth}
               disableNext={isAtLatestMonth}
             />
           </View>
           <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
             <View className="px-5">
-              {report?.isLowActivity && !isTipDismissed && (
+              {showLowActivityTip && (
                 <MonthlyReviewTipBanner
                   text={t("monthlyReview.lowActivityHint")}
                   onDismiss={() => setIsTipDismissed(true)}
