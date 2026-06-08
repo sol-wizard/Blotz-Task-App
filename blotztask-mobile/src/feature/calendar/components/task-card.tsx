@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { RefObject, useRef, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
@@ -35,9 +35,10 @@ interface TaskCardProps {
   isDeleting: boolean;
   selectedDay?: Date;
   onOpenMode?: () => void;
+  onRowOpen?: (refObject: React.RefObject<SwipeableMethods | null>) => void;
 }
 
-const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRowOpen }: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -72,6 +73,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const handleOpenTaskDetails = () => {
     if (task.id == null) return;
 
+    swipeRef.current?.reset();
+
     queryClient.setQueryData(["taskId", task.id], task);
     router.push({ pathname: "/(protected)/task-details", params: { taskId: task.id } });
   };
@@ -100,13 +103,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleOpenFocus = () => {
     if (!task.id) return;
+    
+    swipeRef.current?.reset();
+
     if (session && session.taskId !== String(task.id)) {
       setShowSwitchModal(true);
     } else {
       router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
     }
-
-    swipeRef.current?.close();
   };
 
   const handleOpenMode = () => {
@@ -126,7 +130,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
-
+    swipeRef.current?.reset();
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
   };
 
@@ -139,6 +143,9 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     <>
       <ReanimatedSwipeable
         ref={swipeRef}
+        onSwipeableWillOpen={() => {
+          onRowOpen?.(swipeRef);
+        }}
         renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
           <TaskCardLeftActions
             progress={leftActionsProgress}

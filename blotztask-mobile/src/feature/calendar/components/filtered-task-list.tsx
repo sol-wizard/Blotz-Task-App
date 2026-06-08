@@ -1,4 +1,4 @@
-import { FlatList } from "react-native";
+import { FlatList, TouchableWithoutFeedback, Keyboard, Pressable } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -11,6 +11,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
+import { useSwipeableManager } from "@/feature/notes/hooks/useSwipeableManager";
 
 export const FilteredTaskList = ({
   selectedDay,
@@ -24,6 +25,8 @@ export const FilteredTaskList = ({
   const { deleteTask, isDeleting } = useTaskMutations();
 
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
+
+  const { onRowOpen, closeAllRows } = useSwipeableManager();
 
   const filteredSelectedDayTasks = filterSelectedTask({
     selectedDayTasks: selectedDayTasks ?? [],
@@ -49,40 +52,54 @@ export const FilteredTaskList = ({
         isDeleting={isDeleting}
         selectedDay={selectedDay}
         onOpenMode={onOpenMode}
+        onRowOpen={onRowOpen}
       />
     </Animated.View>
   );
 
   return (
-    <Animated.View className="flex-1" layout={MotionAnimations.layout}>
-      <Animated.View layout={MotionAnimations.layout}>
-        <TaskStatusRow
-          allTaskCount={findStatusCount("All")}
-          todoTaskCount={findStatusCount("To Do")}
-          inProgressTaskCount={findStatusCount("In Progress")}
-          overdueTaskCount={findStatusCount("Overdue")}
-          doneTaskCount={findStatusCount("Done")}
-          selectedStatus={selectedStatus}
-          onChange={setSelectedStatus}
-          selectedDay={selectedDay}
-        />
-      </Animated.View>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+        closeAllRows();
+      }}
+      accessible={false}
+    >
+      <Animated.View className="flex-1" layout={MotionAnimations.layout}>
+        <Animated.View layout={MotionAnimations.layout}>
+          <TaskStatusRow
+            allTaskCount={findStatusCount("All")}
+            todoTaskCount={findStatusCount("To Do")}
+            inProgressTaskCount={findStatusCount("In Progress")}
+            overdueTaskCount={findStatusCount("Overdue")}
+            doneTaskCount={findStatusCount("Done")}
+            selectedStatus={selectedStatus}
+            onChange={setSelectedStatus}
+            selectedDay={selectedDay}
+          />
+        </Animated.View>
 
-      {isLoading ? (
-        <LoadingScreen />
-      ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
-        <FlatList
-          className="flex-1"
-          data={tasksOfSelectedStatus}
-          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
-          renderItem={renderTask}
-          keyExtractor={(task) =>
-            task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
-          }
-        />
-      ) : (
-        <TaskListPlaceholder selectedStatus={selectedStatus} />
-      )}
-    </Animated.View>
+        {isLoading ? (
+          <LoadingScreen />
+        ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
+          <FlatList
+            className="flex-1"
+            data={tasksOfSelectedStatus}
+            contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12, flexGrow: 1 }}
+            renderItem={renderTask}
+            keyExtractor={(task) =>
+              task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
+            }
+            onScrollBeginDrag={closeAllRows}
+            keyboardShouldPersistTaps="handled"
+            ListFooterComponent={
+              <Pressable className="flex-1 min-h-96" onPress={closeAllRows} />
+            }
+          />
+        ) : (
+          <TaskListPlaceholder selectedStatus={selectedStatus} />
+        )}
+      </Animated.View>
+    </TouchableWithoutFeedback>
   );
 };
