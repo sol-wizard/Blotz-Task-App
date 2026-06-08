@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { addMonths, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
+import { addMonths, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterBody } from "../components/letter-body";
 import { LetterEmptyState } from "../components/letter-empty-state";
@@ -17,34 +17,31 @@ import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
 
 export default function MonthlyReviewScreen() {
+  // — Hooks ——————————————————————————————————————————————————————
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  // A monthly review is a month-end summary, so the latest viewable month is last month —
-  // never the current, in-progress one. Default to it and cap navigation there.
+  // Latest viewable month is last month — the current one is still in progress.
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const shareCardRef = useRef<View>(null);
-  const { isSharingImage, shareImage } = useMonthlyReviewShare({
-    captureTargetRef: shareCardRef,
-  });
-  const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
-  // Don't let users page back before the month they registered — those months are always empty.
+  const { isSharingImage, shareImage } = useMonthlyReviewShare({ captureTargetRef: shareCardRef });
+  const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
+
+  // — Derived values —————————————————————————————————————————————
+  // Don't let users page back before sign-up month — those months are always empty.
   const earliestReviewableMonth = userProfile?.signUpAt
     ? startOfMonth(new Date(userProfile.signUpAt))
     : null;
+  const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const isAtEarliestMonth =
-    earliestReviewableMonth !== null && !isAfter(selectedMonth, earliestReviewableMonth);
-  const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
-
+    earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
 
+  // — Handlers ———————————————————————————————————————————————————
   const handleShareMonthlyReview = () => {
-    if (!report || isSharingImage) {
-      return;
-    }
-
+    if (!report || isSharingImage) return;
     void shareImage();
   };
 
