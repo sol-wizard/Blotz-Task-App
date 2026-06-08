@@ -57,9 +57,10 @@ public class CreateRecurringTaskCommandHandler(
             : details.TemplateEndTime;
 
         TaskTimeValidator.ValidateTaskTimes(details.TemplateStartTime, templateEndTime, details.TimeType);
+        ValidateTemplateDates(details, templateEndTime!.Value);
         ValidateRecurrence(details);
 
-        var deadlineTemplate = BuildDeadlineTemplate(details, templateEndTime!.Value);
+        var deadlineTemplate = BuildDeadlineTemplate(details, templateEndTime.Value);
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
@@ -159,6 +160,20 @@ public class CreateRecurringTaskCommandHandler(
         if (details.Frequency != RecurrenceFrequency.Monthly && details.DayOfMonth != null)
         {
             throw new ValidationException("DayOfMonth can only be set for monthly recurring tasks.");
+        }
+    }
+
+    private static void ValidateTemplateDates(CreateRecurringTaskRequest details, DateTimeOffset templateEndTime)
+    {
+        if (DateOnly.FromDateTime(details.TemplateStartTime.Date) != details.StartDate)
+        {
+            throw new ValidationException("TemplateStartTime date must match StartDate.");
+        }
+
+        if (details.TimeType == TaskTimeType.RangeTime
+            && DateOnly.FromDateTime(templateEndTime.Date) != details.StartDate)
+        {
+            throw new ValidationException("TemplateEndTime date must match StartDate.");
         }
     }
 

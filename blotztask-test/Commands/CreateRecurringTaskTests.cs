@@ -213,4 +213,59 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
         await act.Should().ThrowAsync<ArgumentException>(
             because: "range-time recurring tasks need both template start and template end times");
     }
+
+    [Fact]
+    public async Task Handle_TemplateStartTimeDateDoesNotMatchStartDate_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Daily Focus",
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            Frequency = RecurrenceFrequency.Daily,
+            Interval = 1,
+            StartDate = new DateOnly(2026, 6, 2)
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "recurring task templates should not save a date part that disagrees with the recurrence start date");
+    }
+
+    [Fact]
+    public async Task Handle_RangeTemplateEndTimeDateDoesNotMatchStartDate_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Long Session",
+            TimeType = TaskTimeType.RangeTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 2, 22, 0, 0, TimeSpan.Zero),
+            TemplateEndTime = new DateTimeOffset(2026, 6, 3, 1, 0, 0, TimeSpan.Zero),
+            Frequency = RecurrenceFrequency.Daily,
+            Interval = 1,
+            StartDate = new DateOnly(2026, 6, 2)
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "range-time recurring task templates should keep their date part aligned with the recurrence start date");
+    }
 }
