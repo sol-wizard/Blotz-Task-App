@@ -63,13 +63,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                                 t.StartTime < monthEnd
                                 && t.EndTime > monthStart
                             )
-                            ||
-                            // Overdue tasks for today/past views only.
-                            (
-                                includeOverdueTasks
-                                && !t.IsDone
-                                && t.EndTime < userNow
-                            )
+                            
                         ))
             .Select(t => new
             {

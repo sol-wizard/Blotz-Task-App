@@ -51,8 +51,9 @@ public class GetTasksByDateQueryHandler(
 
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
         var isFutureDay = query.StartDate.Date > userNow.Date;
+        var isToday = query.StartDate.Date == userNow.Date;
 
-        var overdueCutoff = query.StartDate.Date == userNow.Date? userNow : selectedDayEnd;
+        var overdueCutoff = isToday ? userNow : selectedDayEnd;
 
 
         logger.LogInformation("StartDate received: {StartDate} (Offset={Offset})", query.StartDate, query.StartDate.Offset);
@@ -72,10 +73,10 @@ public class GetTasksByDateQueryHandler(
                                 && t.EndTime >= selectedDayStart
                             )
                             ||
-                            // Overdue tasks are included only for today/past views when auto-rollover is enabled.
+                            // Overdue tasks are included only for today when auto-rollover is enabled.
                             (
                                 autoRollover
-                                && !isFutureDay
+                                && isToday
                                 && t.EndTime < overdueCutoff
                                 && !t.IsDone
                             )
