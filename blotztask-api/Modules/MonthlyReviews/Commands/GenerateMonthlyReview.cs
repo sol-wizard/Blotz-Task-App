@@ -120,6 +120,7 @@ public class GenerateMonthlyReviewCommandHandler(
             Month = command.Month,
             AiGeneratedLetter = letter,
             AiInputJson = aiInputJson,
+            AiInputTaskCount = monthlyTasks.Count,
             AiModel = model,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -138,6 +139,7 @@ public class GenerateMonthlyReviewCommandHandler(
             Month = report.Month,
             AiGeneratedLetter = report.AiGeneratedLetter,
             CreatedAt = report.CreatedAt,
+            IsLowActivity = monthlyTasks.Count < MonthlyReviewConstants.LowActivityTaskThreshold,
         };
     }
 

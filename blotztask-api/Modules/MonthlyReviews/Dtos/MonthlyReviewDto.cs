@@ -6,6 +6,7 @@ public class MonthlyReviewDto
     public int Month { get; set; }
     public string AiGeneratedLetter { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public bool IsLowActivity { get; set; }
 }
 
 public class MonthlyReviewTaskDto
