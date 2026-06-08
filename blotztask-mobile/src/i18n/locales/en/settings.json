@@ -14,8 +14,7 @@
   "betaFeatures": {
     "title": "Beta Features",
     "allTasks": "All Tasks",
-    "membershipPlan": "Membership Plan",
-    "monthlyReview": "Monthly Review"
+    "membershipPlan": "Membership Plan"
   },
   "account": {
     "title": "Account",

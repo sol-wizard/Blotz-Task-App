@@ -14,8 +14,7 @@
   "betaFeatures": {
     "title": "测试功能",
     "allTasks": "所有任务",
-    "membershipPlan": "会员计划",
-    "monthlyReview": "月度回顾"
+    "membershipPlan": "会员计划"
   },
 
   "account": {

@@ -74,6 +74,8 @@ public class GenerateMonthlyReviewCommandHandler(
                 Month = existingReport.Month,
                 AiGeneratedLetter = existingReport.AiGeneratedLetter,
                 CreatedAt = existingReport.CreatedAt,
+                IsLowActivity = existingReport.AiInputTaskCount != null
+                                && existingReport.AiInputTaskCount < MonthlyReviewConstants.LowActivityTaskThreshold,
             };
         }
 
@@ -93,10 +95,6 @@ public class GenerateMonthlyReviewCommandHandler(
         var aiInputJson = JsonSerializer.Serialize(monthlyTasks, JsonOptions);
 
         var preferredLanguage = await LoadPreferredLanguageAsync(command.UserId, ct);
-
-        // TODO: This throws AiQuotaExceededException when over quota, but the manual POST /generate
-        // endpoint and the mobile Generate button don't handle that case yet. Decide how it surfaces
-        // when the real (scheduled / quota-aware) trigger is wired up.
         await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
 
         var (letter, model, usage) = await GenerateLetterAsync(
