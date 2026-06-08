@@ -15,6 +15,7 @@ public class DeletedTaskItem
     public required DateTimeOffset EndTime { get; set; }
     public required TaskTimeType TimeType { get; set; }
     public bool IsDone { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime DeletedAt { get; set; } // Track when it was deleted
