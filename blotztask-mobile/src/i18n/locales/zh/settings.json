@@ -2,6 +2,7 @@
   "title": "设置",
   "menu": {
     "account": "账户",
+    "monthlyReview": "月度回顾",
     "MembershipPlan": "会员计划",
     "betaFeatures": "测试功能",
     "taskHandling": "任务处理",
@@ -13,8 +14,7 @@
   "betaFeatures": {
     "title": "测试功能",
     "allTasks": "所有任务",
-    "membershipPlan": "会员计划",
-    "monthlyReview": "月度回顾"
+    "membershipPlan": "会员计划"
   },
 
   "account": {
@@ -83,12 +83,18 @@
     "dateLabel": "日期",
     "signOff": "温暖地，",
     "signature": "Blotz",
-    "empty": "本月还没有信件。",
+    "empty": "Blotz 为你准备好了一封信 💌",
+    "emptyHint": "点击下方按钮即可领取。",
     "loading": "正在加载信件…",
     "error": "信件加载失败。",
     "shareError": "分享信件失败。",
-    "generate": "生成信件",
-    "footnote": "由 AI 根据您本月创建的任务生成。"
+    "generate": "领取信件",
+    "generateError": "信件生成失败，请重试。",
+    "quotaError": "你已达到使用上限，请稍后再试。",
+    "lowActivityHint": "想让 Blotz 更懂你？🌱 多记录一些任务，下封信就会写得更有意思！✨",
+    "comingSoonTitle": "你的第一封信正在路上 ✨",
+    "comingSoonBody": "月度回顾会在你使用 Blotz 满一个整月后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
+    "defaultRecipient": "朋友"
   },
   "avatar": {
     "title": "头像"

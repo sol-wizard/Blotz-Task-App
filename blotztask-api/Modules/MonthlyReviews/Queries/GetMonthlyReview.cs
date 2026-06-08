@@ -42,6 +42,8 @@ public class GetMonthlyReviewQueryHandler(
                 Month = r.Month,
                 AiGeneratedLetter = r.AiGeneratedLetter,
                 CreatedAt = r.CreatedAt,
+                IsLowActivity = r.AiInputTaskCount != null
+                                && r.AiInputTaskCount < MonthlyReviewConstants.LowActivityTaskThreshold,
             })
             .FirstOrDefaultAsync(ct);
     }
