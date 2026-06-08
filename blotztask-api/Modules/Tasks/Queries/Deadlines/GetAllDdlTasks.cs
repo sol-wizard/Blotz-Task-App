@@ -33,7 +33,8 @@ public class GetAllDdlTasksQueryHandler(
             .Where(t => t.UserId == query.UserId 
                         && t.Deadline != null
                         && !t.IsDone
-                        && t.RecurringOccurrenceOverride == null)
+                        && (t.RecurringOccurrenceOverride == null
+                            || t.RecurringOccurrenceOverride.OverrideType == RecurringOccurrenceOverrideType.Detached))
             .Select(task => new DeadlineTaskDto
             {
                 Id = task.Id,

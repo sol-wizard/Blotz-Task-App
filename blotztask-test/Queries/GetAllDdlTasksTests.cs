@@ -229,6 +229,63 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_DetachedRecurringDeadlineOccurrence_ReturnsAsNormalDeadlineTask()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Weekly Report",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 6, 8),
+            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            daysOfWeek: (int)WeeklyDayFlags.Monday,
+            isDeadline: true,
+            deadlineOffsetDays: 2,
+            deadlineTimeOfDay: new TimeOnly(17, 0),
+            deadlineTimeZoneId: "Australia/Perth");
+
+        var detached = await _seeder.CreateTaskAsync(
+            userId,
+            "Final Weekly Report",
+            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)));
+        detached.Deadline = new TaskDeadline
+        {
+            TaskItem = detached,
+            DueAt = new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8)),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        await _context.SaveChangesAsync();
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 8),
+            RecurringOccurrenceOverrideType.Detached,
+            detached);
+
+        var query = new GetAllDdlTasksQuery
+        {
+            UserId = userId,
+            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+
+        // Assert
+        var task = result.Should().ContainSingle(t => t.Title == "Final Weekly Report").Subject;
+        task.Id.Should().Be(detached.Id,
+            because: "a detached recurring deadline occurrence should remain visible as its concrete TaskItem");
+        task.OccurrenceKind.Should().Be(TaskOccurrenceKind.NormalTaskItem,
+            because: "detached occurrences should no longer expose recurring occurrence actions in DDL");
+        task.RecurringOccurrence.Should().BeNull(
+            because: "the mobile app should treat detached recurring deadline occurrences as normal deadline tasks");
+        result.Should().NotContain(t => t.Title == "Weekly Report",
+            because: "the detached override should suppress the virtual recurring deadline row for the same occurrence");
+    }
+
+    [Fact]
     public async Task Handle_CurrentRecurringDeadlineAlreadyCompleted_DoesNotReturnVirtualDuplicate()
     {
         // Arrange
