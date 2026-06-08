@@ -33,6 +33,7 @@ public class DeleteTaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteTaskC
             EndTime = taskItem.EndTime,
             TimeType = taskItem.TimeType,
             IsDone = taskItem.IsDone,
+            CompletedAt = taskItem.CompletedAt,
             CreatedAt = taskItem.CreatedAt,
             UpdatedAt = taskItem.UpdatedAt,
             DeletedAt = DateTime.UtcNow,

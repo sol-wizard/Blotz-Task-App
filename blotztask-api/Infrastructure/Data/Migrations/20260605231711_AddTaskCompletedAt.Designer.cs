@@ -4,16 +4,19 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260605231711_AddTaskCompletedAt")]
+    partial class AddTaskCompletedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,8 +206,8 @@ namespace BlotzTask.Migrations
                     b.Property<int>("BadgeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset>("EarnedAtUtc")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<DateTime>("EarnedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("UserId", "BadgeId");
 
@@ -319,9 +322,6 @@ namespace BlotzTask.Migrations
                     b.Property<string>("AiInputJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("AiInputTaskCount")
-                        .HasColumnType("int");
 
                     b.Property<string>("AiModel")
                         .IsRequired()

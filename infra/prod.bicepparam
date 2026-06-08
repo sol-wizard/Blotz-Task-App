@@ -23,6 +23,12 @@ param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 40 // AUD per month for production
 param alertEmail = 'benjaminneoh2928@gmail.com'
 
+// Azure Monitor cost controls. For an AU$1/month Log Analytics target at roughly AU$5/GB,
+// the manual portal cap would be about 0.006-0.01 GB/day; keep that manual so Bicep does not overwrite it.
+param azureMonitorOpenTelemetryEnabled = false
+param appServiceDiagnosticsEnabled = false
+param appInsightsSamplingPercentage = 4
+
 param appServiceSkuName = 'B1'
 param appServiceSkuTier = 'Basic'
 

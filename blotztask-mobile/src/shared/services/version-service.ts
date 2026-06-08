@@ -19,8 +19,8 @@ export type AppVersionResponse = {
 };
 
 export const checkForUpdate = async (): Promise<UpdateCheckResult> => {
-  const isProduction = process.env.EXPO_PUBLIC_APP_ENV === "production";
-  if (!isProduction) return { kind: "upToDate" };
+  const env = process.env.EXPO_PUBLIC_APP_ENV;
+  if (env !== "production" && env !== "preview") return { kind: "upToDate" };
 
   const versionInfo = await fetchAppVersion();
   const platform = Platform.OS === "ios" ? versionInfo.ios : versionInfo.android;

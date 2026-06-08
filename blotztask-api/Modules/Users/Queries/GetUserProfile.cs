@@ -11,7 +11,7 @@ public class UserProfileDTO
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     public bool IsOnBoarded { get; set; }
-
+    public DateTime SignUpAt { get; set; }
 }
 
 public class GetUserProfileQuery
@@ -40,7 +40,8 @@ public class GetUserProfileQueryHandler(BlotzTaskDbContext db, ILogger<GetUserPr
             DisplayName = user.DisplayName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
-            IsOnBoarded = user.IsOnboarded
+            IsOnBoarded = user.IsOnboarded,
+            SignUpAt = user.SignUpAt
         };
 
 

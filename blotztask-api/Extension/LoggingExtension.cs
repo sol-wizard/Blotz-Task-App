@@ -29,14 +29,20 @@ public static class LoggingExtensions
     public static WebApplicationBuilder AddAzureMonitorTelemetry(this WebApplicationBuilder builder)
     {
         var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+        var telemetryEnabled = builder.Configuration.GetValue<bool>("AzureMonitor:OpenTelemetryEnabled");
 
-        if (!string.IsNullOrEmpty(connectionString) && !builder.Environment.IsDevelopment())
+        // When disabled, skip automatic App Insights requests, dependencies, metrics, and performance counters; warning/error logs still use Serilog.
+        if (!telemetryEnabled || string.IsNullOrWhiteSpace(connectionString) || builder.Environment.IsDevelopment())
         {
-            builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
-            {
-                options.ConnectionString = connectionString;
-            });
+            return builder;
         }
+
+        builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+        {
+            options.ConnectionString = connectionString;
+            options.SamplingRatio = 0.05F;
+        });
+
         return builder;
     }
 }
