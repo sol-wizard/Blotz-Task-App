@@ -28,7 +28,6 @@ export default function MonthlyReviewScreen() {
   const [isTipDismissed, setIsTipDismissed] = useState(false);
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useMonthlyReviewShare({ captureTargetRef: shareCardRef });
-  const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   // — Derived values —————————————————————————————————————————————
   // Don't let users page back before sign-up month — those months are always empty.
@@ -39,6 +38,13 @@ export default function MonthlyReviewScreen() {
   // later than the latest reviewable month, so there's nothing to review yet.
   const hasNoReviewableMonth =
     earliestReviewableMonth !== null && isAfter(earliestReviewableMonth, latestReviewableMonth);
+
+  // Nothing to review yet → skip the fetch entirely (the screen shows a coming-soon state instead).
+  const { report, isLoading, generate, isGenerating } = useMonthlyReport(
+    selectedMonth,
+    !hasNoReviewableMonth,
+  );
+
   const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);

@@ -9,7 +9,7 @@ import {
 } from "@/feature/monthly-review/services/monthly-review-service";
 import { MonthlyReviewDTO } from "@/feature/monthly-review/models/monthly-review-dto";
 
-export function useMonthlyReport(selectedMonth: Date) {
+export function useMonthlyReport(selectedMonth: Date, enabled = true) {
   const queryClient = useQueryClient();
   const { t } = useTranslation("settings");
 
@@ -19,6 +19,7 @@ export function useMonthlyReport(selectedMonth: Date) {
   const reportQuery = useQuery<MonthlyReviewDTO | null>({
     queryKey: monthlyReviewKeys.byMonth(year, month),
     queryFn: () => fetchMonthlyReview(year, month),
+    enabled,
   });
 
   // TODO: temporary user-triggered generation for testing. Remove once PBI 8A
