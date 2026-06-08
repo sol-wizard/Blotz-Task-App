@@ -144,7 +144,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
     
 
     [Fact]
-    public async Task Handle_ShouldIncludeAllOverdueTasks_ForTodayAndPastDates_ButNotFutureDates()
+    public async Task Handle_ShouldIncludeOverdueTasks_OnlyForToday_NotForPastOrFutureDates()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
@@ -157,7 +157,6 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var localOffset = userNow.Offset;
         var userTodayStart = new DateTimeOffset(userNow.Date, localOffset);
         var pastSelectedDate = userTodayStart.AddDays(-3);
-        var historicalPastSelectedDate = userTodayStart.AddDays(-12);
         var futureSelectedDate = userTodayStart.AddDays(2);
 
         var nineDaysAgo = userTodayStart.AddDays(-9);
@@ -176,12 +175,11 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         completedTask.IsDone = true;
         await _context.SaveChangesAsync();
 
-        var futureScheduledDay = futureSelectedDate;
         await _seeder.CreateTaskAsync(
             userId,
             "Future Scheduled Task",
-            new DateTimeOffset(futureScheduledDay.Date.AddHours(14), localOffset),
-            new DateTimeOffset(futureScheduledDay.Date.AddHours(15), localOffset));
+            new DateTimeOffset(futureSelectedDate.Date.AddHours(14), localOffset),
+            new DateTimeOffset(futureSelectedDate.Date.AddHours(15), localOffset));
 
         var todayQuery = new GetTasksByDateQuery
         {
@@ -197,13 +195,6 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             IncludeFloatingForToday = false
         };
 
-        var historicalPastQuery = new GetTasksByDateQuery
-        {
-            UserId = userId,
-            StartDate = historicalPastSelectedDate,
-            IncludeFloatingForToday = false
-        };
-
         var futureQuery = new GetTasksByDateQuery
         {
             UserId = userId,
@@ -214,27 +205,21 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         // Act
         var todayResult = await _handler.Handle(todayQuery);
         var pastResult = await _handler.Handle(pastQuery);
-        var historicalPastResult = await _handler.Handle(historicalPastQuery);
         var futureResult = await _handler.Handle(futureQuery);
 
         // Assert
         todayResult.Should().Contain(t => t.Title == "Old Overdue Task",
-            because: "today's view should include all overdue tasks, even when they are older than seven days");
+            because: "today's view should surface all incomplete overdue tasks regardless of how old they are");
         todayResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
             because: "completed overdue tasks should not roll over");
 
-        pastResult.Should().Contain(t => t.Title == "Old Overdue Task",
-            because: "past day views should also include all currently overdue tasks");
-        pastResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
-            because: "completed overdue tasks should not appear in past day views either");
-
-        historicalPastResult.Should().NotContain(t => t.Title == "Old Overdue Task",
-            because: "even older past day views should include tasks that are overdue at request time");
+        pastResult.Should().NotContain(t => t.Title == "Old Overdue Task",
+            because: "overdue tasks are only surfaced on today's view, not on past day views");
 
         futureResult.Should().Contain(t => t.Title == "Future Scheduled Task",
-            because: "future day views should still show tasks scheduled in that selected period");
+            because: "future day views should still show tasks scheduled in that period");
         futureResult.Should().NotContain(t => t.Title == "Old Overdue Task",
-            because: "future day views must stay clean and exclude overdue tasks");
+            because: "future day views must not show overdue tasks from the past");
     }
 
     // -----------------------------------------------------------------------

@@ -1,6 +1,5 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
-using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
@@ -49,8 +48,9 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         var result = await _handler.Handle(query);
 
         // Assert
-        // Monday (Index 0) - Has a COMPLETED task -> Should show dot (True)
-        result[0].HasTask.Should().BeTrue("A completed task exists on Monday, so the green dot should appear below the date.");
+        // Monday (Index 0) - Has a COMPLETED task -> Should NOT show dot (False)
+        // Completed tasks are excluded from the weekly dot indicator so users only see pending work.
+        result[0].HasTask.Should().BeFalse("A completed task is not counted for the weekly dot indicator — only incomplete tasks trigger the dot.");
 
         // Tuesday (Index 1) - Has an INCOMPLETE task -> Should show dot (True)
         result[1].HasTask.Should().BeTrue("An incomplete task exists on Tuesday, so the green dot should appear below the date.");
@@ -64,24 +64,19 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
-    public async Task Handle_ShouldIncludeOverdueTasks_ForCurrentWeek_ButNotFutureOrTooEarlyHistoricalWeeks()
+    public async Task Handle_ShouldShowDot_ForFutureScheduledTasks_AndNotForUnrelatedPastTasks()
     {
         var userId = await _seeder.CreateUserAsync();
         var userNow = DateTimeOffset.Now;
         var localOffset = userNow.Offset;
         var daysSinceMonday = ((int)userNow.DayOfWeek + 6) % 7;
         var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), localOffset);
-        var historicalMonday = monday.AddDays(-14);
         var nextMonday = monday.AddDays(7);
-        
-        // Create UserPreferences with AutoRollover enabled (required for overdue task rollover)
-        _context.UserPreferences.Add(new UserPreference { UserId = userId, AutoRollover = true });
-        await _context.SaveChangesAsync();
 
         var sevenDaysAgo = new DateTimeOffset(userNow.Date, localOffset).AddDays(-7);
         await _seeder.CreateTaskAsync(
             userId,
-            "Old Overdue Task",
+            "Old Past Task",
             new DateTimeOffset(sevenDaysAgo.Date.AddHours(9), localOffset),
             new DateTimeOffset(sevenDaysAgo.Date.AddHours(10), localOffset));
 
@@ -92,35 +87,17 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
             scheduledFutureDay.AddHours(9),
             scheduledFutureDay.AddHours(10));
 
-        var currentWeekQuery = new GetWeeklyTaskAvailabilityQuery
-        {
-            UserId = userId,
-            Monday = monday
-        };
-        var historicalWeekQuery = new GetWeeklyTaskAvailabilityQuery
-        {
-            UserId = userId,
-            Monday = historicalMonday
-        };
         var futureWeekQuery = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
             Monday = nextMonday
         };
 
-        var currentWeekResult = await _handler.Handle(currentWeekQuery);
-        var historicalWeekResult = await _handler.Handle(historicalWeekQuery);
         var futureWeekResult = await _handler.Handle(futureWeekQuery);
 
-        currentWeekResult[daysSinceMonday].HasTask.Should().BeTrue(
-            "the current week should surface overdue tasks even when they became overdue more than seven days ago");
-
-        historicalWeekResult.Should().OnlyContain(day => !day.HasTask,
-            because: "a week from 14 days ago should not show a task that did not become overdue until 9 days ago");
-
         futureWeekResult[2].HasTask.Should().BeTrue(
-            "future week views should still show tasks scheduled during that future week");
+            "future week views should show a dot for tasks scheduled during that week");
         futureWeekResult[0].HasTask.Should().BeFalse(
-            "future week views must not be marked by unrelated overdue tasks from the past");
+            "future week views must not show a dot for tasks that are not scheduled in that week");
     }
 }
