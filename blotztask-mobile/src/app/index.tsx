@@ -61,6 +61,16 @@ export default function Index() {
       />
     );
   }
+  if (updateCheck.status === UpdateCheckStatus.ForceUpdate) {
+    return (
+      <Redirect
+        href={{
+          pathname: "/update-required",
+          params: { storeUrl: updateCheck.storeUrl, forced: "true" },
+        }}
+      />
+    );
+  }
 
   if (isAuthenticated) {
     return <Redirect href="/(protected)" />;
