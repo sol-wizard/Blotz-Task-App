@@ -1,8 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { REVIEW_ICON_COLOR } from "../constants/icon-colors";
-
 type Props = {
   onBack: () => void;
   showShare: boolean;
@@ -16,7 +14,7 @@ export function MonthlyReviewHeader({ onBack, showShare, isSharing, onShare }: P
   return (
     <View className="flex-row items-center px-5 py-4">
       <Pressable onPress={onBack} className="mr-4">
-        <MaterialCommunityIcons name="arrow-left" size={24} color={REVIEW_ICON_COLOR.secondary} />
+        <MaterialCommunityIcons name="arrow-left" size={24} color={"#444964"} />
       </Pressable>
       <Text className="flex-1 text-2xl font-balooBold text-secondary">
         {t("monthlyReview.title")}
@@ -32,7 +30,7 @@ export function MonthlyReviewHeader({ onBack, showShare, isSharing, onShare }: P
           <MaterialCommunityIcons
             name="share-outline"
             size={18}
-            color={REVIEW_ICON_COLOR.secondary}
+            color={"#444964"}
           />
           <Text className="ml-1 text-sm font-balooBold text-secondary">
             {isSharing ? t("monthlyReview.sharing") : t("monthlyReview.share")}

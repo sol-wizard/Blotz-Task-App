@@ -1,14 +1,12 @@
 import { Text, View } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { REVIEW_ICON_COLOR } from "../constants/icon-colors";
-
 export function LetterEmptyState() {
   const { t } = useTranslation("settings");
 
   return (
     <View className="py-12 items-center">
-      <MaterialCommunityIcons name="email-outline" size={40} color={REVIEW_ICON_COLOR.disabled} />
+      <MaterialCommunityIcons name="email-outline" size={40} color="#8C8C8C" />
       <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
         {t("monthlyReview.empty")}
       </Text>

@@ -37,7 +37,7 @@ export default function SettingsLanguageScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-row items-center px-5 py-4">
         <Pressable onPress={() => router.back()} className="mr-4">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#363853" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#444964" />
         </Pressable>
         <Text className="text-2xl font-balooBold text-secondary">{t("language.title")}</Text>
       </View>
