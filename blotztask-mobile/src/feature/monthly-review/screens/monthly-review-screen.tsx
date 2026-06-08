@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { addMonths, isSameMonth, startOfMonth, subMonths } from "date-fns";
+import { addMonths, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterBody } from "../components/letter-body";
 import { LetterEmptyState } from "../components/letter-empty-state";
@@ -35,6 +35,10 @@ export default function MonthlyReviewScreen() {
   const earliestReviewableMonth = userProfile?.signUpAt
     ? startOfMonth(new Date(userProfile.signUpAt))
     : null;
+  // A brand-new user has no completed month since signing up — their sign-up month is
+  // later than the latest reviewable month, so there's nothing to review yet.
+  const hasNoReviewableMonth =
+    earliestReviewableMonth !== null && isAfter(earliestReviewableMonth, latestReviewableMonth);
   const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
@@ -56,7 +60,7 @@ export default function MonthlyReviewScreen() {
         <Text className="flex-1 text-2xl font-balooBold text-secondary">
           {t("monthlyReview.title")}
         </Text>
-        {report && (
+        {report && !hasNoReviewableMonth && (
           <Pressable
             onPress={handleShareMonthlyReview}
             disabled={isSharingImage}
@@ -72,68 +76,84 @@ export default function MonthlyReviewScreen() {
           </Pressable>
         )}
       </View>
-      <View className="px-5 mb-4">
-        <MonthSelector
-          label={displayMonth}
-          onPrev={() => {
-            if (!isAtEarliestMonth) setSelectedMonth((m) => addMonths(m, -1));
-          }}
-          onNext={() => {
-            if (!isAtLatestMonth) setSelectedMonth((m) => addMonths(m, 1));
-          }}
-          disablePrev={isAtEarliestMonth}
-          disableNext={isAtLatestMonth}
-        />
-      </View>
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-        <View className="px-5">
-          {report?.isLowActivity && !isTipDismissed && (
-            <MonthlyReviewTipBanner
-              text={t("monthlyReview.lowActivityHint")}
-              onDismiss={() => setIsTipDismissed(true)}
-            />
-          )}
-
-          <View
-            ref={shareCardRef}
-            collapsable={false}
-            className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
-          >
-            <LetterHeader displayMonth={displayMonth} />
-            {isLoading ? (
-              // TODO: replace with a shared inline loading component once one exists.
-              <View className="py-12 items-center">
-                <CustomSpinner size={48} />
-                <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
-                  {t("monthlyReview.loading")}
-                </Text>
-              </View>
-            ) : report ? (
-              <>
-                <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
-                <LetterSignature />
-              </>
-            ) : (
-              <>
-                <LetterEmptyState />
-                {/* TODO: temporary test button — remove once PBI 8A scheduled trigger is in place. */}
-                <View className="items-center mb-6">
-                  <Pressable
-                    onPress={() => generate()}
-                    disabled={isGenerating}
-                    className="px-5 py-2 rounded-full bg-secondary"
-                    style={{ opacity: isGenerating ? 0.6 : 1 }}
-                  >
-                    <Text className="text-white font-balooBold">
-                      {isGenerating ? t("monthlyReview.loading") : t("monthlyReview.generate")}
-                    </Text>
-                  </Pressable>
-                </View>
-              </>
-            )}
+      {hasNoReviewableMonth ? (
+        <View className="flex-1 items-center justify-center px-10">
+          <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-white">
+            <MaterialCommunityIcons name="email-outline" size={36} color="#7AC74F" />
           </View>
+          <Text className="mb-2 text-center text-xl font-balooBold text-secondary">
+            {t("monthlyReview.comingSoonTitle")}
+          </Text>
+          <Text className="text-center text-base font-baloo leading-6 text-secondary/70">
+            {t("monthlyReview.comingSoonBody")}
+          </Text>
         </View>
-      </ScrollView>
+      ) : (
+        <>
+          <View className="px-5 mb-4">
+            <MonthSelector
+              label={displayMonth}
+              onPrev={() => {
+                if (!isAtEarliestMonth) setSelectedMonth((m) => addMonths(m, -1));
+              }}
+              onNext={() => {
+                if (!isAtLatestMonth) setSelectedMonth((m) => addMonths(m, 1));
+              }}
+              disablePrev={isAtEarliestMonth}
+              disableNext={isAtLatestMonth}
+            />
+          </View>
+          <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+            <View className="px-5">
+              {report?.isLowActivity && !isTipDismissed && (
+                <MonthlyReviewTipBanner
+                  text={t("monthlyReview.lowActivityHint")}
+                  onDismiss={() => setIsTipDismissed(true)}
+                />
+              )}
+
+              <View
+                ref={shareCardRef}
+                collapsable={false}
+                className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
+              >
+                <LetterHeader displayMonth={displayMonth} />
+                {isLoading ? (
+                  // TODO: replace with a shared inline loading component once one exists.
+                  <View className="py-12 items-center">
+                    <CustomSpinner size={48} />
+                    <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
+                      {t("monthlyReview.loading")}
+                    </Text>
+                  </View>
+                ) : report ? (
+                  <>
+                    <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
+                    <LetterSignature />
+                  </>
+                ) : (
+                  <>
+                    <LetterEmptyState />
+                    {/* TODO: temporary test button — remove once PBI 8A scheduled trigger is in place. */}
+                    <View className="items-center mb-6">
+                      <Pressable
+                        onPress={() => generate()}
+                        disabled={isGenerating}
+                        className="px-5 py-2 rounded-full bg-secondary"
+                        style={{ opacity: isGenerating ? 0.6 : 1 }}
+                      >
+                        <Text className="text-white font-balooBold">
+                          {isGenerating ? t("monthlyReview.loading") : t("monthlyReview.generate")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
+          </ScrollView>
+        </>
+      )}
     </SafeAreaView>
   );
 }
