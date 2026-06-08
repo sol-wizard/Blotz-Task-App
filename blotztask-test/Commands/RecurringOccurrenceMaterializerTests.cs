@@ -402,6 +402,40 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             frequency: RecurrenceFrequency.Daily,
             startDate: new DateOnly(2026, 6, 1),
             templateStartTime: templateTime);
+        var futureMaterialized = await _seeder.CreateTaskAsync(
+            userId,
+            "Future materialized standup",
+            new DateTimeOffset(2026, 6, 4, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 4, 9, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 4),
+            RecurringOccurrenceOverrideType.Materialized,
+            futureMaterialized);
+        var futureModified = await _seeder.CreateTaskAsync(
+            userId,
+            "Future modified standup",
+            new DateTimeOffset(2026, 6, 5, 10, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 5, 10, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 5),
+            RecurringOccurrenceOverrideType.Modified,
+            futureModified);
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 6),
+            RecurringOccurrenceOverrideType.Skipped);
+        var futureDetached = await _seeder.CreateTaskAsync(
+            userId,
+            "Future detached standup",
+            new DateTimeOffset(2026, 6, 7, 11, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 7, 11, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 7),
+            RecurringOccurrenceOverrideType.Detached,
+            futureDetached);
         var logger = TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>();
         var handler = new UpdateRecurringTaskFutureCommandHandler(
             _context,
@@ -437,6 +471,19 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             .SingleAsync(o => o.SeriesId == recurring.SeriesId
                 && o.OccurrenceDate == new DateOnly(2026, 6, 3));
         var materialized = materializedOverride.TaskItem!;
+        var futureMaterializedStillExists = await _context.TaskItems
+            .AnyAsync(t => t.Id == futureMaterialized.Id);
+        var futureModifiedStillExists = await _context.TaskItems
+            .AnyAsync(t => t.Id == futureModified.Id);
+        var futureNonDetachedOverridesStillExist = await _context.RecurringOccurrenceOverrides
+            .AnyAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate > new DateOnly(2026, 6, 3)
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached);
+        var futureDetachedStillExists = await _context.TaskItems
+            .AnyAsync(t => t.Id == futureDetached.Id);
+        var futureDetachedOverride = await _context.RecurringOccurrenceOverrides
+            .SingleAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == new DateOnly(2026, 6, 7));
 
         // Assert
         futureRecurringTaskId.Should().BeNull(
@@ -447,5 +494,15 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             because: "stopping future repetition turns the selected occurrence into a detached concrete task");
         materialized.Title.Should().Be("Final standup",
             because: "the selected occurrence should remain as a concrete task after repetition stops");
+        futureMaterializedStillExists.Should().BeFalse(
+            because: "materialized future recurring occurrences should be removed once repetition stops before them");
+        futureModifiedStillExists.Should().BeFalse(
+            because: "modified future recurring occurrences should be removed once repetition stops before them");
+        futureNonDetachedOverridesStillExist.Should().BeFalse(
+            because: "future non-detached overrides are no longer part of the series after stop repeating");
+        futureDetachedStillExists.Should().BeTrue(
+            because: "already detached future occurrences are concrete tasks and should not be deleted with the recurring series");
+        futureDetachedOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Detached,
+            because: "stop repeating should only clean future recurring overrides, not detached concrete tasks");
     }
 }

@@ -90,6 +90,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
                 taskItem.RecurringOccurrenceOverride.UpdatedAt = DateTime.UtcNow;
             }
 
+            await RemoveFutureRecurringOverrides(template, command.EffectiveDate, command.UserId, ct);
             TruncateTemplate(template, command.EffectiveDate);
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -310,6 +311,31 @@ public class UpdateRecurringTaskFutureCommandHandler(
     {
         template.EndDate = effectiveDate.AddDays(-1);
         template.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private async Task RemoveFutureRecurringOverrides(
+        RecurringTask template,
+        DateOnly effectiveDate,
+        Guid userId,
+        CancellationToken ct)
+    {
+        var futureOverrides = await db.RecurringOccurrenceOverrides
+            .Include(o => o.TaskItem)
+            .Where(o => o.SeriesId == template.SeriesId
+                && o.Series.UserId == userId
+                && o.OccurrenceDate > effectiveDate
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            .ToListAsync(ct);
+
+        foreach (var recurringOverride in futureOverrides)
+        {
+            if (recurringOverride.TaskItem != null)
+            {
+                db.TaskItems.Remove(recurringOverride.TaskItem);
+            }
+
+            db.RecurringOccurrenceOverrides.Remove(recurringOverride);
+        }
     }
 
     private static EditTaskItemDto BuildOccurrenceTaskDetails(
