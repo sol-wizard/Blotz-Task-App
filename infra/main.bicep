@@ -36,6 +36,11 @@ param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
 param alertEmail string
 
+// Azure Monitor cost controls
+param azureMonitorOpenTelemetryEnabled bool = false
+param appServiceDiagnosticsEnabled bool = false
+param appInsightsSamplingPercentage int = 5
+
 // App Service SKU settings
 param appServiceSkuName string
 param appServiceSkuTier string
@@ -80,6 +85,7 @@ module appInsight 'modules/appInsight.bicep' = {
     environment: environment
     location: location
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    samplingPercentage: appInsightsSamplingPercentage
   }
 }
 module kv 'modules/keyVault.bicep' = {
@@ -108,6 +114,8 @@ module webAppForAPI 'modules/appService.bicep' = {
     openAiBreakdownDeploymentId: openAi.outputs.breakdownDeploymentId
     openAiSpeechDeploymentId: openAi.outputs.speechDeploymentId
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    azureMonitorOpenTelemetryEnabled: azureMonitorOpenTelemetryEnabled
+    enableAppServiceDiagnostics: appServiceDiagnosticsEnabled
     appServiceSkuName: appServiceSkuName
     appServiceSkuTier: appServiceSkuTier
     auth0Domain: auth0Domain
