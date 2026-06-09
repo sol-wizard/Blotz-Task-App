@@ -394,6 +394,158 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_ExistingLaterSegment_PreservesLaterSegment()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Original standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        var laterRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 17),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Later standup",
+                StartTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        // Act
+        var midRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 13),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Mid standup",
+                StartTime = new DateTimeOffset(2026, 6, 13, 11, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 13, 11, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var midTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == midRecurringTaskId);
+        var laterTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == laterRecurringTaskId);
+
+        // Assert
+        oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 12),
+            because: "editing an earlier date should only truncate the segment that contains that date");
+        midTemplate.StartDate.Should().Be(new DateOnly(2026, 6, 13),
+            because: "the new segment should start from the selected effective date");
+        midTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 16),
+            because: "the new segment should inherit the current segment end instead of overwriting later edits");
+        midTemplate.Title.Should().Be("Mid standup",
+            because: "the selected segment should use the new future-edit details");
+        laterTemplate.StartDate.Should().Be(new DateOnly(2026, 6, 17),
+            because: "a later segment created by a prior future edit should remain in place");
+        laterTemplate.EndDate.Should().BeNull(
+            because: "editing an earlier segment should not truncate or deactivate later schedule versions");
+        laterTemplate.Title.Should().Be("Later standup",
+            because: "later user changes should keep precedence over an earlier future edit");
+        laterTemplate.IsActive.Should().BeTrue(
+            because: "later schedule versions should remain active after editing an earlier segment");
+    }
+
+    [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_StaleTemplateId_ResolvesTemplateForEffectiveDate()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Original standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        var laterRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 17),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Later standup",
+                StartTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        // Act
+        var resolvedRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 18),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Resolved later standup",
+                StartTime = new DateTimeOffset(2026, 6, 18, 12, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 18, 12, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var laterTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == laterRecurringTaskId);
+        var resolvedTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == resolvedRecurringTaskId);
+
+        // Assert
+        oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 16),
+            because: "a stale template id should not be split again when it does not contain the effective date");
+        laterTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 17),
+            because: "the handler should resolve and split the later segment that actually contains the effective date");
+        resolvedTemplate.StartDate.Should().Be(new DateOnly(2026, 6, 18),
+            because: "the replacement segment should start from the requested effective date");
+        resolvedTemplate.Title.Should().Be("Resolved later standup",
+            because: "the future edit should still apply after resolving a stale recurring task id");
+        resolvedTemplate.PreviousRecurringTaskId.Should().Be(laterTemplate.Id,
+            because: "the new segment should be chained from the resolved template rather than the stale request template");
+    }
+
+    [Fact]
     public async Task Handle_UpdateRecurringTaskFuture_StopRepeating_TruncatesTemplateAndMaterializesEffectiveDate()
     {
         // Arrange
@@ -507,5 +659,96 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             because: "already detached future occurrences are concrete tasks and should not be deleted with the recurring series");
         futureDetachedOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Detached,
             because: "stop repeating should only clean future recurring overrides, not detached concrete tasks");
+    }
+
+    [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_StopRepeatingWithLaterSegment_PreservesLaterSegment()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Original standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+        var laterRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 17),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Later standup",
+                StartTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+        var laterTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == laterRecurringTaskId);
+        var laterTaskItem = await _seeder.CreateTaskAsync(
+            userId,
+            "Later materialized standup",
+            new DateTimeOffset(2026, 6, 18, 10, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 18, 10, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            laterTemplate,
+            new DateOnly(2026, 6, 18),
+            RecurringOccurrenceOverrideType.Materialized,
+            laterTaskItem);
+
+        // Act
+        var futureRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 13),
+            UserId = userId,
+            StopRepeating = true,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Final standup",
+                StartTime = new DateTimeOffset(2026, 6, 13, 9, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 13, 9, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var preservedLaterTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == laterRecurringTaskId);
+        var laterTaskStillExists = await _context.TaskItems.AnyAsync(t => t.Id == laterTaskItem.Id);
+        var laterOverrideStillExists = await _context.RecurringOccurrenceOverrides.AnyAsync(o =>
+            o.RecurringTaskId == laterRecurringTaskId
+            && o.OccurrenceDate == new DateOnly(2026, 6, 18));
+
+        // Assert
+        futureRecurringTaskId.Should().BeNull(
+            because: "stopping repetition should not create a replacement recurring template");
+        oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 12),
+            because: "stop repeating should truncate only the segment containing the effective date");
+        preservedLaterTemplate.IsActive.Should().BeTrue(
+            because: "later segments created by earlier future edits should not be deactivated");
+        preservedLaterTemplate.StartDate.Should().Be(new DateOnly(2026, 6, 17),
+            because: "later segment boundaries should remain unchanged");
+        preservedLaterTemplate.EndDate.Should().BeNull(
+            because: "stop repeating an earlier segment should not truncate later schedule versions");
+        laterTaskStillExists.Should().BeTrue(
+            because: "materialized occurrences in later segments should not be removed by stopping an earlier segment");
+        laterOverrideStillExists.Should().BeTrue(
+            because: "override cleanup should stay within the stopped segment");
     }
 }

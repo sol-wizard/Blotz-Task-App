@@ -20,6 +20,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { virtualTaskDetailKeys } from "@/feature/task-details/util/virtual-task-detail-cache";
 import {
+  getRecurringTaskId,
   hasTaskItemId,
   isVirtualRecurringOccurrence,
 } from "@/shared/util/task-occurrence-identity";
@@ -54,7 +55,6 @@ export default function TaskDetailsScreen() {
   }>();
   const mode = isTaskDetailRouteMode(params.mode) ? params.mode : null;
   const taskId = params.taskId ? Number(params.taskId) : null;
-  const recurringTaskId = params.recurringTaskId ? Number(params.recurringTaskId) : null;
   const queryClient = useQueryClient();
   const virtualTaskDetailQueryKey = virtualTaskDetailKeys.byKey(
     params.virtualTaskCacheKey ?? "__missing__",
@@ -126,6 +126,7 @@ export default function TaskDetailsScreen() {
     );
   }
 
+  const recurringTaskId = getRecurringTaskId(selectedTask);
   const isSaving = isUpdating || isUpdatingRecurringOccurrence;
 
   const getTranslatedLabelName = (labelName: string): string => {

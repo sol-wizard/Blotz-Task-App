@@ -62,7 +62,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
             throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
         }
 
-        ValidateEffectiveDate(template, command.EffectiveDate);
+        template = await ResolveTemplateForEffectiveDate(template, command.EffectiveDate, command.UserId, ct);
         TaskTimeValidator.ValidateTaskTimes(
             command.TaskDetails.StartTime,
             command.TaskDetails.EndTime,
@@ -78,7 +78,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
         if (command.StopRepeating)
         {
             var taskItem = await materializer.EnsureRecurringOccurrenceTaskItem(
-                command.RecurringTaskId,
+                template.Id,
                 command.EffectiveDate,
                 command.UserId,
                 ct);
@@ -161,12 +161,52 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static void ValidateEffectiveDate(RecurringTask template, DateOnly effectiveDate)
     {
-        if (!template.IsActive
-            || template.StartDate > effectiveDate
-            || (template.EndDate != null && template.EndDate < effectiveDate))
+        if (!IsTemplateEffectiveOn(template, effectiveDate))
         {
             throw new ValidationException("EffectiveDate is outside recurring task range.");
         }
+    }
+
+    private async Task<RecurringTask> ResolveTemplateForEffectiveDate(
+        RecurringTask requestedTemplate,
+        DateOnly effectiveDate,
+        Guid userId,
+        CancellationToken ct)
+    {
+        if (requestedTemplate.Series.IsDeleted)
+        {
+            throw new ValidationException("EffectiveDate is outside recurring task range.");
+        }
+
+        if (IsTemplateEffectiveOn(requestedTemplate, effectiveDate))
+        {
+            return requestedTemplate;
+        }
+
+        var effectiveTemplate = await db.RecurringTasks
+            .Include(r => r.Series)
+            .Where(r => r.SeriesId == requestedTemplate.SeriesId
+                && r.UserId == userId
+                && r.IsActive
+                && r.StartDate <= effectiveDate
+                && (r.EndDate == null || r.EndDate >= effectiveDate))
+            .OrderByDescending(r => r.StartDate)
+            .ThenByDescending(r => r.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (effectiveTemplate == null || effectiveTemplate.Series.IsDeleted)
+        {
+            ValidateEffectiveDate(requestedTemplate, effectiveDate);
+        }
+
+        return effectiveTemplate!;
+    }
+
+    private static bool IsTemplateEffectiveOn(RecurringTask template, DateOnly effectiveDate)
+    {
+        return template.IsActive
+            && template.StartDate <= effectiveDate
+            && (template.EndDate == null || template.EndDate >= effectiveDate);
     }
 
     private static RecurrencePattern BuildPattern(
@@ -312,6 +352,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
             .Include(o => o.TaskItem)
             .Where(o => o.SeriesId == template.SeriesId
                 && o.Series.UserId == userId
+                && o.RecurringTaskId == template.Id
                 && o.OccurrenceDate > effectiveDate
                 && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .ToListAsync(ct);

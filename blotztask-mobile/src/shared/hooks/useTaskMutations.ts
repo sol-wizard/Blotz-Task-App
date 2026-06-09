@@ -103,7 +103,10 @@ const useTaskMutations = () => {
   const deleteRecurringOccurrenceMutation = useMutation({
     mutationFn: (payload: DeleteRecurringOccurrenceArgs) => deleteRecurringOccurrence(payload),
     onSuccess: async (_data, task) => {
-      removeDeletedRecurringOccurrencesFromSelectedDayCaches(queryClient, task);
+      queryClient.removeQueries({ queryKey: ["virtualTaskDetail"] });
+      if (!task.deleteFuture) {
+        removeDeletedRecurringOccurrencesFromSelectedDayCaches(queryClient, task);
+      }
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: taskKeys.all }),

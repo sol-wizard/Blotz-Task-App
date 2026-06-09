@@ -195,8 +195,8 @@ export default function TaskEditScreen() {
         deadlineTimeZoneId: formValues.isDeadline ? currentTimeZoneId : null,
       },
       {
-        onSuccess: () => {
-          updateTaskDetailCache(formValues, recurrenceDetails);
+        onSuccess: (data) => {
+          updateTaskDetailCache(formValues, recurrenceDetails, data.recurringTaskId);
           router.back();
         },
       },
@@ -206,6 +206,7 @@ export default function TaskEditScreen() {
   const updateTaskDetailCache = (
     formValues: TaskUpsertDTO,
     recurrenceDetails?: RecurringPatternDetails | null,
+    recurringTaskId?: number | null,
   ) => {
     const labels = queryClient.getQueryData<LabelDTO[]>(labelKeys.all) ?? [];
     const updateCachedTask = (currentTask: TaskDetailDTO | undefined) => {
@@ -227,6 +228,13 @@ export default function TaskEditScreen() {
         alertTime: formValues.alertTime,
         isDeadline: formValues.isDeadline,
         dueAt: formValues.dueAt,
+        recurringOccurrence:
+          recurringTaskId == null || !currentTask.recurringOccurrence
+            ? currentTask.recurringOccurrence
+            : {
+                ...currentTask.recurringOccurrence,
+                recurringTaskId,
+              },
         recurringTask:
           recurrenceDetails === undefined
             ? currentTask.recurringTask

@@ -39,7 +39,7 @@ public class DeleteRecurringOccurrenceCommandHandler(
             throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
         }
 
-        ValidateOccurrence(template, command.OccurrenceDate);
+        template = await ResolveTemplateForOccurrence(template, command.OccurrenceDate, command.UserId, ct);
 
         if (!generatorService.IsOccurrenceOn(template, command.OccurrenceDate))
         {
@@ -77,6 +77,7 @@ public class DeleteRecurringOccurrenceCommandHandler(
         var recurringOverride = await db.RecurringOccurrenceOverrides
             .Include(o => o.TaskItem)
             .SingleOrDefaultAsync(o => o.SeriesId == template.SeriesId
+                && o.RecurringTaskId == template.Id
                 && o.OccurrenceDate == occurrenceDate
                 && o.Series.UserId == userId, ct);
 
@@ -119,23 +120,11 @@ public class DeleteRecurringOccurrenceCommandHandler(
         template.EndDate = occurrenceDate.AddDays(-1);
         template.UpdatedAt = DateTime.UtcNow;
 
-        var futureVersions = await db.RecurringTasks
-            .Where(r => r.SeriesId == template.SeriesId
-                && r.UserId == userId
-                && r.StartDate >= occurrenceDate
-                && r.Id != template.Id)
-            .ToListAsync(ct);
-
-        foreach (var futureVersion in futureVersions)
-        {
-            futureVersion.IsActive = false;
-            futureVersion.UpdatedAt = DateTime.UtcNow;
-        }
-
         var futureOverrides = await db.RecurringOccurrenceOverrides
             .Include(o => o.TaskItem)
             .Where(o => o.SeriesId == template.SeriesId
                 && o.Series.UserId == userId
+                && o.RecurringTaskId == template.Id
                 && o.OccurrenceDate >= occurrenceDate
                 && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .ToListAsync(ct);
@@ -153,12 +142,52 @@ public class DeleteRecurringOccurrenceCommandHandler(
 
     private static void ValidateOccurrence(RecurringTask template, DateOnly occurrenceDate)
     {
-        if (!template.IsActive
-            || template.StartDate > occurrenceDate
-            || (template.EndDate != null && template.EndDate < occurrenceDate)
+        if (!IsTemplateEffectiveOn(template, occurrenceDate)
             || template.Series.IsDeleted)
         {
             throw new ValidationException("OccurrenceDate is outside recurring task range.");
         }
+    }
+
+    private async Task<RecurringTask> ResolveTemplateForOccurrence(
+        RecurringTask requestedTemplate,
+        DateOnly occurrenceDate,
+        Guid userId,
+        CancellationToken ct)
+    {
+        if (requestedTemplate.Series.IsDeleted)
+        {
+            throw new ValidationException("OccurrenceDate is outside recurring task range.");
+        }
+
+        if (IsTemplateEffectiveOn(requestedTemplate, occurrenceDate))
+        {
+            return requestedTemplate;
+        }
+
+        var effectiveTemplate = await db.RecurringTasks
+            .Include(r => r.Series)
+            .Where(r => r.SeriesId == requestedTemplate.SeriesId
+                && r.UserId == userId
+                && r.IsActive
+                && r.StartDate <= occurrenceDate
+                && (r.EndDate == null || r.EndDate >= occurrenceDate))
+            .OrderByDescending(r => r.StartDate)
+            .ThenByDescending(r => r.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (effectiveTemplate == null || effectiveTemplate.Series.IsDeleted)
+        {
+            ValidateOccurrence(requestedTemplate, occurrenceDate);
+        }
+
+        return effectiveTemplate!;
+    }
+
+    private static bool IsTemplateEffectiveOn(RecurringTask template, DateOnly occurrenceDate)
+    {
+        return template.IsActive
+            && template.StartDate <= occurrenceDate
+            && (template.EndDate == null || template.EndDate >= occurrenceDate);
     }
 }
