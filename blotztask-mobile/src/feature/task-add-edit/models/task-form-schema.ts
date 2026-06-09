@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { combineDateTime } from "../util/combine-date-time";
-import { isBefore, isEqual } from "date-fns";
+import { isBefore, isEqual, startOfDay } from "date-fns";
 
 export const recurrenceValues = [
   "never",
@@ -65,9 +65,12 @@ export const taskFormSchema = z
       if (data.recurrence === "never" || data.recurrence === "custom") return true;
       if (data.recurrenceEndMode === "never" || !data.recurrenceEndDate) return true;
 
+      const firstRepeatDate = startOfDay(data.startDate);
+      const recurrenceEndDate = startOfDay(data.recurrenceEndDate);
+
       return (
-        isBefore(data.startDate, data.recurrenceEndDate) ||
-        isEqual(data.startDate, data.recurrenceEndDate)
+        isBefore(firstRepeatDate, recurrenceEndDate) ||
+        isEqual(firstRepeatDate, recurrenceEndDate)
       );
     },
     {
