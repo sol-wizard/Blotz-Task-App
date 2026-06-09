@@ -1,5 +1,5 @@
 import React from "react";
-import TaskForm, { TaskFormDirtyFields } from "@/feature/task-add-edit/task-form";
+import TaskForm from "@/feature/task-add-edit/task-form";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
@@ -124,10 +124,7 @@ export default function TaskEditScreen() {
     recurrenceEndDate: selectedTask.recurringTask?.endDate ?? null,
   };
 
-  const handleTaskSubmit = (
-    formValues: TaskUpsertDTO,
-    dirtyFields: TaskFormDirtyFields,
-  ) => {
+  const handleTaskSubmit = (formValues: TaskUpsertDTO) => {
     const recurringOccurrence = getRecurringOccurrenceIdentity(selectedTask);
     if (!recurringOccurrence) {
       if (!hasTaskItemId(selectedTask)) return;
@@ -135,7 +132,7 @@ export default function TaskEditScreen() {
       return;
     }
 
-    if (hasRecurrenceDirtyFields(dirtyFields)) {
+    if (hasRecurrenceChanged(selectedTask, formValues)) {
       setRecurringScopeSheet({
         type: "future",
         formValues,
@@ -348,13 +345,25 @@ export default function TaskEditScreen() {
   );
 }
 
-function hasRecurrenceDirtyFields(
-  dirtyFields: TaskFormDirtyFields,
+function hasRecurrenceChanged(
+  task: TaskDetailDTO,
+  formValues: TaskUpsertDTO,
 ): boolean {
+  const recurringTask = task.recurringTask;
+  if (!recurringTask) return false;
+
+  const currentRecurrence = mapRecurringMetadataToTaskRecurrence(
+    recurringTask.frequency,
+    recurringTask.interval,
+  );
+  const currentEndMode = recurringTask.endDate ? "onDate" : "never";
+  const currentEndDate = recurringTask.endDate ?? null;
+  const nextEndDate = formValues.recurrenceEndDate ?? null;
+
   return Boolean(
-    dirtyFields.recurrence ||
-      dirtyFields.recurrenceEndMode ||
-      dirtyFields.recurrenceEndDate,
+    formValues.recurrence !== currentRecurrence ||
+      formValues.recurrenceEndMode !== currentEndMode ||
+      nextEndDate !== currentEndDate,
   );
 }
 
