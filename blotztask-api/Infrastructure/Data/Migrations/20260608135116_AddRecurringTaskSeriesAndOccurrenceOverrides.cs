@@ -56,6 +56,14 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 type: "int",
                 nullable: true);
 
+            migrationBuilder.AddColumn<string>(
+                name: "ScheduleTimeZoneId",
+                table: "RecurringTasks",
+                type: "nvarchar(100)",
+                maxLength: 100,
+                nullable: false,
+                defaultValue: "UTC");
+
             migrationBuilder.AddColumn<int>(
                 name: "SeriesId",
                 table: "RecurringTasks",
@@ -238,6 +246,10 @@ namespace BlotzTask.Infrastructure.Data.Migrations
 
             migrationBuilder.DropColumn(
                 name: "PreviousRecurringTaskId",
+                table: "RecurringTasks");
+
+            migrationBuilder.DropColumn(
+                name: "ScheduleTimeZoneId",
                 table: "RecurringTasks");
 
             migrationBuilder.DropColumn(

@@ -541,6 +541,11 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                     b.Property<int?>("PreviousRecurringTaskId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ScheduleTimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int>("SeriesId")
                         .HasColumnType("int");
 
