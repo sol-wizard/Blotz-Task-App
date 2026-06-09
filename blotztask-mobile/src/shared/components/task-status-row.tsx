@@ -38,12 +38,14 @@ export function TaskStatusRow({
           taskCount={todoTaskCount}
         />
 
-        <TaskStatusButton
-          isSelected={selectedStatus === "Overdue"}
-          onChange={() => onChange("Overdue")}
-          statusName={t("status.overdue")}
-          taskCount={overdueTaskCount}
-        />
+        {overdueTaskCount > 0 && (
+          <TaskStatusButton
+            isSelected={selectedStatus === "Overdue"}
+            onChange={() => onChange("Overdue")}
+            statusName={t("status.overdue")}
+            taskCount={overdueTaskCount}
+          />
+        )}
 
         <TaskStatusButton
           isSelected={selectedStatus === "Done"}
