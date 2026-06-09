@@ -284,10 +284,10 @@ public class RecurringTaskGeneratorService
 
     public DateTimeOffset BuildOccurrenceStartTime(RecurringTask template, DateOnly date)
     {
-        return new DateTimeOffset(
+        return BuildOccurrenceTime(
             date,
             TimeOnly.FromTimeSpan(template.TemplateStartTime.TimeOfDay),
-            template.TemplateStartTime.Offset);
+            template.ScheduleTimeZoneId);
     }
 
     public DateTimeOffset BuildOccurrenceEndTime(RecurringTask template, DateOnly date)
@@ -297,10 +297,24 @@ public class RecurringTaskGeneratorService
             return BuildOccurrenceStartTime(template, date);
         }
 
-        return new DateTimeOffset(
+        return BuildOccurrenceTime(
             date,
             TimeOnly.FromTimeSpan(template.TemplateEndTime!.Value.TimeOfDay),
-            template.TemplateEndTime.Value.Offset);
+            template.ScheduleTimeZoneId);
+    }
+
+    private static DateTimeOffset BuildOccurrenceTime(DateOnly date, TimeOnly timeOfDay, string timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            throw new ValidationException("Recurring schedule timezone is incomplete.");
+        }
+
+        var localDateTime = date.ToDateTime(timeOfDay);
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        var offset = timeZone.GetUtcOffset(localDateTime);
+
+        return new DateTimeOffset(localDateTime, offset);
     }
 
     /// Returns day offsets from Monday (0=Mon, 1=Tue, …, 6=Sun) for set flags, sorted ascending.

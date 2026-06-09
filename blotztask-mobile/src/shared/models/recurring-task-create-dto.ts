@@ -9,6 +9,7 @@ export interface RecurringTaskCreateDTO {
   labelId?: number;
   templateStartTime: string;
   templateEndTime?: string | null;
+  scheduleTimeZoneId: string;
   frequency: RecurrenceFrequency;
   interval: number;
   daysOfWeek?: number | null;

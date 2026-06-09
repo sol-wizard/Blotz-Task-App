@@ -101,6 +101,7 @@ public class RecurringTaskController(
             DayOfMonth = request.DayOfMonth,
             EndDate = request.EndDate,
             EndDateChanged = request.EndDateChanged,
+            ScheduleTimeZoneId = request.ScheduleTimeZoneId,
             DeadlineTimeZoneId = request.DeadlineTimeZoneId
         };
 

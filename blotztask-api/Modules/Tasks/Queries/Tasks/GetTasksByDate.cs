@@ -160,17 +160,8 @@ public class GetTasksByDateQueryHandler(
 
             if (!generatorService.IsOccurrenceOn(recurring, requestedDate)) continue;
 
-            var startTime = new DateTimeOffset(
-                requestedDate,
-                TimeOnly.FromTimeSpan(recurring.TemplateStartTime.TimeOfDay),
-                recurring.TemplateStartTime.Offset);
-
-            var endTime = recurring.TimeType == TaskTimeType.SingleTime
-                ? startTime
-                : new DateTimeOffset(
-                    requestedDate,
-                    TimeOnly.FromTimeSpan(recurring.TemplateEndTime!.Value.TimeOfDay),
-                    recurring.TemplateEndTime.Value.Offset);
+            var startTime = generatorService.BuildOccurrenceStartTime(recurring, requestedDate);
+            var endTime = generatorService.BuildOccurrenceEndTime(recurring, requestedDate);
 
             tasks.Add(new TaskByDateItemDto
             {

@@ -88,6 +88,7 @@ export async function updateRecurringTaskFuture(payload: {
   dayOfMonth?: number | null;
   endDate?: string | null;
   endDateChanged: boolean;
+  scheduleTimeZoneId?: string | null;
   deadlineTimeZoneId?: string | null;
 }): Promise<{ recurringTaskId: number | null }> {
   return await apiClient.put<{ recurringTaskId: number | null }>("/RecurringTask/future", payload);

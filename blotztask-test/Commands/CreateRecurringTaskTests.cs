@@ -34,6 +34,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Description = "  Deep work  ",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 2, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Daily,
             Interval = 1,
             StartDate = new DateOnly(2026, 6, 2)
@@ -57,6 +58,8 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
         recurringTask.Description.Should().Be("Deep work", because: "descriptions should be trimmed before saving");
         recurringTask.TemplateStartTime.Should().Be(request.TemplateStartTime, because: "the template start time defines generated occurrence times");
         recurringTask.TemplateEndTime.Should().BeNull(because: "single-time recurring tasks do not need a separate template end time");
+        recurringTask.ScheduleTimeZoneId.Should().Be("Australia/Perth",
+            because: "recurring occurrences should resolve future offsets from the schedule timezone");
         recurringTask.Pattern.Frequency.Should().Be(RecurrenceFrequency.Daily, because: "the saved pattern should match the request frequency");
         recurringTask.Pattern.Interval.Should().Be(1, because: "the saved pattern should match the request interval");
         recurringTask.IsActive.Should().BeTrue(because: "new recurring tasks should be active by default");
@@ -72,6 +75,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Title = "Pay Rent",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 15, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Monthly,
             Interval = 1,
             StartDate = new DateOnly(2026, 6, 15)
@@ -92,6 +96,62 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_RecurringTaskWithoutScheduleTimezone_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Daily Focus",
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 2, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "  ",
+            Frequency = RecurrenceFrequency.Daily,
+            Interval = 1,
+            StartDate = new DateOnly(2026, 6, 2)
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "recurring schedule templates need a timezone id to generate future offsets correctly");
+    }
+
+    [Fact]
+    public async Task Handle_RecurringTaskWithInvalidScheduleTimezone_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Daily Focus",
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 2, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Invalid/Timezone",
+            Frequency = RecurrenceFrequency.Daily,
+            Interval = 1,
+            StartDate = new DateOnly(2026, 6, 2)
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "recurring schedule templates should reject timezone ids that cannot resolve offsets");
+    }
+
+    [Fact]
     public async Task Handle_RecurringDeadlineTask_StoresRelativeDeadlineTemplate()
     {
         // Arrange
@@ -101,6 +161,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Title = "Weekly Report",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Weekly,
             Interval = 1,
             DaysOfWeek = (int)WeeklyDayFlags.Monday,
@@ -140,6 +201,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Title = "Weekly Report",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Weekly,
             Interval = 1,
             DaysOfWeek = (int)WeeklyDayFlags.Monday,
@@ -170,6 +232,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Title = "Weekly Planning",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Weekly,
             Interval = 1,
             StartDate = new DateOnly(2026, 6, 1)
@@ -197,6 +260,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Title = "Long Session",
             TimeType = TaskTimeType.RangeTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 2, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Daily,
             Interval = 1,
             StartDate = new DateOnly(2026, 6, 2)
@@ -224,6 +288,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             Title = "Daily Focus",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Daily,
             Interval = 1,
             StartDate = new DateOnly(2026, 6, 2)
@@ -252,6 +317,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
             TimeType = TaskTimeType.RangeTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 2, 22, 0, 0, TimeSpan.Zero),
             TemplateEndTime = new DateTimeOffset(2026, 6, 3, 1, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
             Frequency = RecurrenceFrequency.Daily,
             Interval = 1,
             StartDate = new DateOnly(2026, 6, 2)

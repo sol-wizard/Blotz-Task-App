@@ -136,6 +136,7 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             Title = "New Weekly Report",
             TimeType = TaskTimeType.SingleTime,
             TemplateStartTime = new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(8)),
+            ScheduleTimeZoneId = "Australia/Perth",
             Pattern = new RecurrencePattern
             {
                 Frequency = RecurrenceFrequency.Weekly,

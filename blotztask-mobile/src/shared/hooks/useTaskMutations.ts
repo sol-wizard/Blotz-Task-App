@@ -38,6 +38,7 @@ type UpdateRecurringTaskFutureArgs = {
   dayOfMonth?: number | null;
   endDate?: string | null;
   endDateChanged: boolean;
+  scheduleTimeZoneId?: string | null;
   deadlineTimeZoneId?: string | null;
 };
 
@@ -153,6 +154,7 @@ const useTaskMutations = () => {
       dayOfMonth,
       endDate,
       endDateChanged,
+      scheduleTimeZoneId,
       deadlineTimeZoneId,
     }: UpdateRecurringTaskFutureArgs) =>
       updateRecurringTaskFuture({
@@ -166,6 +168,7 @@ const useTaskMutations = () => {
         dayOfMonth,
         endDate,
         endDateChanged,
+        scheduleTimeZoneId,
         deadlineTimeZoneId,
       }),
     onSuccess: (_data, task) => {

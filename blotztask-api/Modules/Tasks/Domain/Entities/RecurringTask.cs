@@ -37,12 +37,14 @@ public class RecurringTask
     public int? LabelId { get; set; }
     public Label? Label { get; set; }
 
-    // The time-of-day and timezone for generated tasks.
-    // Date part is irrelevant — only TimeOfDay and Offset are used at generation time.
+    // The date part is relevant only to the initial template date.
+    // Future occurrences use TimeOfDay plus ScheduleTimeZoneId to resolve the correct offset.
     public required DateTimeOffset TemplateStartTime { get; set; }
 
     // Only set for RangeTime tasks. Null means SingleTime (start == end).
     public DateTimeOffset? TemplateEndTime { get; set; }
+
+    public required string ScheduleTimeZoneId { get; set; }
 
     // Deadline template fields. When enabled, each occurrence gets a TaskDeadline
     // derived from its occurrence date plus this relative deadline template.

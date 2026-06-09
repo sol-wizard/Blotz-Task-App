@@ -39,7 +39,8 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             title: "Daily Focus",
             frequency: RecurrenceFrequency.Daily,
             startDate: new DateOnly(2026, 6, 1),
-            templateStartTime: templateTime);
+            templateStartTime: templateTime,
+            scheduleTimeZoneId: "UTC");
 
         // Act
         var taskItem = await _materializer.EnsureRecurringOccurrenceTaskItem(
@@ -378,6 +379,8 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
             because: "future edits should create a new template starting on the selected occurrence date");
         futureTemplate.Title.Should().Be("Future standup",
             because: "the new template should use the edited task fields for future virtual occurrences");
+        futureTemplate.ScheduleTimeZoneId.Should().Be(recurring.ScheduleTimeZoneId,
+            because: "future edits should preserve the schedule timezone when the request does not change it");
         futureTemplate.Pattern.Frequency.Should().Be(RecurrenceFrequency.Daily,
             because: "future edits without recurrence changes should inherit the previous recurrence rule");
         futureTemplate.TemplateStartTime.TimeOfDay.Should().Be(new TimeSpan(10, 0, 0),

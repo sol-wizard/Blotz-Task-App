@@ -35,6 +35,10 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
         builder.Property(r => r.IsDeadline)
             .HasDefaultValue(false);
 
+        builder.Property(r => r.ScheduleTimeZoneId)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.Property(r => r.DeadlineTimeZoneId)
             .HasMaxLength(100);
 

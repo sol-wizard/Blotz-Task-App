@@ -181,6 +181,7 @@ export default function TaskEditScreen() {
     recurrenceChanged: boolean,
   ) => {
     const recurrenceDetails = mapTaskRecurrenceToRecurringPattern(formValues, occurrenceDate);
+    const currentTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
     updateRecurringTaskFuture(
       {
         recurringTaskId: selectedRecurringTaskId,
@@ -193,9 +194,8 @@ export default function TaskEditScreen() {
         dayOfMonth: recurrenceDetails?.dayOfMonth,
         endDate: formValues.recurrenceEndDate ?? null,
         endDateChanged: recurrenceChanged,
-        deadlineTimeZoneId: formValues.isDeadline
-          ? Intl.DateTimeFormat().resolvedOptions().timeZone
-          : null,
+        scheduleTimeZoneId: currentTimeZoneId,
+        deadlineTimeZoneId: formValues.isDeadline ? currentTimeZoneId : null,
       },
       {
         onSuccess: () => {

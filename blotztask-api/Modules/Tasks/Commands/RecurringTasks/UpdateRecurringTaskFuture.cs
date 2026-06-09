@@ -23,6 +23,7 @@ public class UpdateRecurringTaskFutureRequest
     public int? DayOfMonth { get; init; }
     public DateOnly? EndDate { get; init; }
     public bool EndDateChanged { get; init; }
+    public string? ScheduleTimeZoneId { get; init; }
     public string? DeadlineTimeZoneId { get; init; }
 }
 
@@ -39,6 +40,7 @@ public class UpdateRecurringTaskFutureCommand
     public int? DayOfMonth { get; init; }
     public DateOnly? EndDate { get; init; }
     public bool EndDateChanged { get; init; }
+    public string? ScheduleTimeZoneId { get; init; }
     public string? DeadlineTimeZoneId { get; init; }
 }
 
@@ -232,6 +234,9 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
         var now = DateTime.UtcNow;
         var deadlineTemplate = BuildDeadlineTemplate(details, command.EffectiveDate, command.DeadlineTimeZoneId);
+        var scheduleTimeZoneId = ValidateTimeZoneId(
+            command.ScheduleTimeZoneId ?? oldTemplate.ScheduleTimeZoneId,
+            "ScheduleTimeZoneId");
 
         return new RecurringTask
         {
@@ -246,6 +251,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
             LabelId = details.LabelId,
             TemplateStartTime = details.StartTime,
             TemplateEndTime = details.TimeType == TaskTimeType.SingleTime ? null : details.EndTime,
+            ScheduleTimeZoneId = scheduleTimeZoneId,
             IsDeadline = deadlineTemplate.IsDeadline,
             DeadlineOffsetDays = deadlineTemplate.OffsetDays,
             DeadlineTimeOfDay = deadlineTemplate.TimeOfDay,
@@ -281,24 +287,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
             throw new ValidationException("DueAt cannot be before EffectiveDate.");
         }
 
-        var timeZoneId = deadlineTimeZoneId?.Trim();
-        if (string.IsNullOrWhiteSpace(timeZoneId))
-        {
-            throw new ValidationException("DeadlineTimeZoneId is required for recurring deadline tasks.");
-        }
-
-        try
-        {
-            TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            throw new ValidationException("DeadlineTimeZoneId is not valid.");
-        }
-        catch (InvalidTimeZoneException)
-        {
-            throw new ValidationException("DeadlineTimeZoneId is not valid.");
-        }
+        var timeZoneId = ValidateTimeZoneId(deadlineTimeZoneId, "DeadlineTimeZoneId");
 
         return new RecurringDeadlineTemplate(
             true,
@@ -366,4 +355,28 @@ public class UpdateRecurringTaskFutureCommandHandler(
         int? OffsetDays,
         TimeOnly? TimeOfDay,
         string? TimeZoneId);
+
+    private static string ValidateTimeZoneId(string? timeZoneId, string fieldName)
+    {
+        var trimmed = timeZoneId?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            throw new ValidationException($"{fieldName} is required for recurring tasks.");
+        }
+
+        try
+        {
+            TimeZoneInfo.FindSystemTimeZoneById(trimmed);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            throw new ValidationException($"{fieldName} is not valid.");
+        }
+        catch (InvalidTimeZoneException)
+        {
+            throw new ValidationException($"{fieldName} is not valid.");
+        }
+
+        return trimmed;
+    }
 }

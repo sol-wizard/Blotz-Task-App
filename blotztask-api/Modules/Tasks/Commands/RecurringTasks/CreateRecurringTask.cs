@@ -14,6 +14,7 @@ public class CreateRecurringTaskRequest
     public int? LabelId { get; init; }
     public required DateTimeOffset TemplateStartTime { get; init; }
     public DateTimeOffset? TemplateEndTime { get; init; }
+    public required string ScheduleTimeZoneId { get; init; }
     public required RecurrenceFrequency Frequency { get; init; }
     public int Interval { get; init; } = 1;
     public int? DaysOfWeek { get; init; }
@@ -59,6 +60,7 @@ public class CreateRecurringTaskCommandHandler(
         TaskTimeValidator.ValidateTaskTimes(details.TemplateStartTime, templateEndTime, details.TimeType);
         ValidateTemplateDates(details, templateEndTime!.Value);
         ValidateRecurrence(details);
+        var scheduleTimeZoneId = ValidateTimeZoneId(details.ScheduleTimeZoneId, "ScheduleTimeZoneId");
 
         var deadlineTemplate = BuildDeadlineTemplate(details, templateEndTime.Value);
 
@@ -88,6 +90,7 @@ public class CreateRecurringTaskCommandHandler(
             LabelId = details.LabelId,
             TemplateStartTime = details.TemplateStartTime,
             TemplateEndTime = details.TimeType == TaskTimeType.SingleTime ? null : details.TemplateEndTime,
+            ScheduleTimeZoneId = scheduleTimeZoneId,
             IsDeadline = deadlineTemplate.IsDeadline,
             DeadlineOffsetDays = deadlineTemplate.OffsetDays,
             DeadlineTimeOfDay = deadlineTemplate.TimeOfDay,
@@ -192,24 +195,7 @@ public class CreateRecurringTaskCommandHandler(
             throw new ValidationException("TemplateDueAt cannot be before the task end time.");
         }
 
-        var timeZoneId = details.DeadlineTimeZoneId?.Trim();
-        if (string.IsNullOrWhiteSpace(timeZoneId))
-        {
-            throw new ValidationException("DeadlineTimeZoneId is required for recurring deadline tasks.");
-        }
-
-        try
-        {
-            TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            throw new ValidationException("DeadlineTimeZoneId is not valid.");
-        }
-        catch (InvalidTimeZoneException)
-        {
-            throw new ValidationException("DeadlineTimeZoneId is not valid.");
-        }
+        var timeZoneId = ValidateTimeZoneId(details.DeadlineTimeZoneId, "DeadlineTimeZoneId");
 
         var deadlineOffsetDays =
             DateOnly.FromDateTime(templateDueAt.Date).DayNumber - details.StartDate.DayNumber;
@@ -231,4 +217,28 @@ public class CreateRecurringTaskCommandHandler(
         int? OffsetDays,
         TimeOnly? TimeOfDay,
         string? TimeZoneId);
+
+    private static string ValidateTimeZoneId(string? timeZoneId, string fieldName)
+    {
+        var trimmed = timeZoneId?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            throw new ValidationException($"{fieldName} is required for recurring tasks.");
+        }
+
+        try
+        {
+            TimeZoneInfo.FindSystemTimeZoneById(trimmed);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            throw new ValidationException($"{fieldName} is not valid.");
+        }
+        catch (InvalidTimeZoneException)
+        {
+            throw new ValidationException($"{fieldName} is not valid.");
+        }
+
+        return trimmed;
+    }
 }

@@ -142,6 +142,31 @@ public class RecurringTaskGeneratorServiceTests
         _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 3)).Should().BeTrue();
     }
 
+    [Fact]
+    public void BuildOccurrenceStartTime_AcrossSydneyDstBoundary_ShouldKeepLocalTimeAndResolveOffset()
+    {
+        // Arrange
+        var task = MakeRecurringTask(
+            RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            scheduleTimeZoneId: "Australia/Sydney",
+            templateStartTime: new DateTimeOffset(2026, 6, 1, 17, 0, 0, TimeSpan.FromHours(10)));
+
+        // Act
+        var winterOccurrence = _service.BuildOccurrenceStartTime(task, new DateOnly(2026, 6, 1));
+        var summerOccurrence = _service.BuildOccurrenceStartTime(task, new DateOnly(2026, 12, 1));
+
+        // Assert
+        winterOccurrence.TimeOfDay.Should().Be(new TimeSpan(17, 0, 0),
+            because: "recurring tasks should preserve the user's local wall-clock time before DST starts");
+        winterOccurrence.Offset.Should().Be(TimeSpan.FromHours(10),
+            because: "Sydney uses UTC+10 outside daylight saving time");
+        summerOccurrence.TimeOfDay.Should().Be(new TimeSpan(17, 0, 0),
+            because: "recurring tasks should preserve the user's local wall-clock time after DST starts");
+        summerOccurrence.Offset.Should().Be(TimeSpan.FromHours(11),
+            because: "Sydney uses UTC+11 during daylight saving time");
+    }
+
     // -----------------------------------------------------------------------
     // Helper
     // -----------------------------------------------------------------------
@@ -152,7 +177,9 @@ public class RecurringTaskGeneratorServiceTests
         int? daysOfWeek = null,
         int? dayOfMonth = null,
         DateOnly? startDate = null,
-        DateOnly? endDate = null)
+        DateOnly? endDate = null,
+        string scheduleTimeZoneId = "Australia/Perth",
+        DateTimeOffset? templateStartTime = null)
     {
         return new RecurringTask
         {
@@ -160,7 +187,8 @@ public class RecurringTaskGeneratorServiceTests
             Title = "Test Task",
             UserId = Guid.NewGuid(),
             TimeType = TaskTimeType.SingleTime,
-            TemplateStartTime = new DateTimeOffset(2026, 1, 1, 9, 0, 0, TimeSpan.Zero),
+            TemplateStartTime = templateStartTime ?? new DateTimeOffset(2026, 1, 1, 9, 0, 0, TimeSpan.FromHours(8)),
+            ScheduleTimeZoneId = scheduleTimeZoneId,
             StartDate = startDate ?? new DateOnly(2026, 1, 1),
             EndDate = endDate,
             IsActive = true,

@@ -55,6 +55,7 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
   if (!recurrence || recurrence === "never" || recurrence === "custom") {
     return null;
   }
+  const currentTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const frequencyMap = {
     daily: "Daily",
@@ -71,6 +72,7 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
     labelId: task.labelId,
     templateStartTime: task.startTime,
     templateEndTime: task.timeType === TaskTimeType.Single ? null : task.endTime,
+    scheduleTimeZoneId: currentTimeZoneId,
     frequency: frequencyMap[recurrence],
     interval: recurrence === "biweekly" ? 2 : 1,
     daysOfWeek:
@@ -82,9 +84,7 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
     endDate: task.recurrenceEndDate ?? null,
     isDeadline: task.isDeadline,
     templateDueAt: task.isDeadline ? task.dueAt ?? task.endTime : null,
-    deadlineTimeZoneId: task.isDeadline
-      ? Intl.DateTimeFormat().resolvedOptions().timeZone
-      : null,
+    deadlineTimeZoneId: task.isDeadline ? currentTimeZoneId : null,
   };
 }
 
