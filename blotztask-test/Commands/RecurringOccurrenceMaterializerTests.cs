@@ -690,6 +690,123 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_MaterializeOccurrence_StaleTemplateId_ResolvesLaterSegment()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Original standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        var laterRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 17),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Later standup",
+                StartTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        // Act
+        var taskItem = await _materializer.EnsureRecurringOccurrenceTaskItem(
+            recurring.Id,
+            new DateOnly(2026, 6, 18),
+            userId);
+
+        var recurringOverride = await _context.RecurringOccurrenceOverrides
+            .SingleAsync(o => o.Id == taskItem.RecurringOccurrenceOverrideId);
+
+        // Assert
+        recurringOverride.RecurringTaskId.Should().Be(laterRecurringTaskId,
+            because: "materializing with a stale template id should resolve the rule version that owns the occurrence date");
+        taskItem.Title.Should().Be("Later standup",
+            because: "the created task should use the resolved later segment template fields");
+        taskItem.StartTime.Should().Be(new DateTimeOffset(2026, 6, 18, 10, 0, 0, TimeSpan.FromHours(8)),
+            because: "the occurrence should be generated from the resolved segment time of day and timezone");
+    }
+
+    [Fact]
+    public async Task Handle_CompleteOccurrence_StaleTemplateId_ResolvesLaterSegment()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Original standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var updateFutureHandler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        var laterRecurringTaskId = await updateFutureHandler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 17),
+            UserId = userId,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Later standup",
+                StartTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 17, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+        var completeHandler = new SaveRecurringOccurrenceCommandHandler(
+            _context,
+            _materializer,
+            TestDbContextFactory.CreateLogger<SaveRecurringOccurrenceCommandHandler>());
+
+        // Act
+        var taskItemId = await completeHandler.Handle(new SaveRecurringOccurrenceCommand
+        {
+            RecurringTaskId = recurring.Id,
+            OccurrenceDate = new DateOnly(2026, 6, 19),
+            UserId = userId
+        }, CancellationToken.None);
+
+        var taskItem = await _context.TaskItems.SingleAsync(t => t.Id == taskItemId);
+        var recurringOverride = await _context.RecurringOccurrenceOverrides
+            .SingleAsync(o => o.Id == taskItem.RecurringOccurrenceOverrideId);
+
+        // Assert
+        taskItem.IsDone.Should().BeTrue(
+            because: "completing an occurrence should still mark the resolved task item done when the request uses a stale template id");
+        recurringOverride.RecurringTaskId.Should().Be(laterRecurringTaskId,
+            because: "complete occurrence should share materializer template resolution with explicit materialization");
+        recurringOverride.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 19),
+            because: "the stable occurrence identity should remain the requested date");
+    }
+
+    [Fact]
     public async Task Handle_UpdateRecurringTaskFuture_StopRepeating_TruncatesTemplateAndMaterializesEffectiveDate()
     {
         // Arrange
