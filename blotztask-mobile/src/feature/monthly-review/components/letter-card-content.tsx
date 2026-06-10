@@ -40,6 +40,9 @@ export function LetterCardContent({
       <>
         <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
         <LetterSignature />
+        <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
+          {t("monthlyReview.aiDisclosure")}
+        </Text>
       </>
     );
   }

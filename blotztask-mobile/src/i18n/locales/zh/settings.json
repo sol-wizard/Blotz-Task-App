@@ -94,7 +94,8 @@
     "lowActivityHint": "想让 Blotz 更懂你？🌱 多记录一些任务，下封信就会写得更有意思！✨",
     "comingSoonTitle": "你的第一封信正在路上 ✨",
     "comingSoonBody": "月度回顾会在你使用 Blotz 满一个整月后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
-    "defaultRecipient": "朋友"
+    "defaultRecipient": "朋友",
+    "aiDisclosure": "由AI根据您本月创建的任务生成"
   },
   "avatar": {
     "title": "头像"
