@@ -127,6 +127,17 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
         foreach (var recurringOverride in futureOverrides)
         {
+            if (!generatorService.IsOccurrenceOn(futureTemplate, recurringOverride.OccurrenceDate))
+            {
+                if (recurringOverride.TaskItem != null)
+                {
+                    db.TaskItems.Remove(recurringOverride.TaskItem);
+                }
+
+                db.RecurringOccurrenceOverrides.Remove(recurringOverride);
+                continue;
+            }
+
             if (recurringOverride.OverrideType == RecurringOccurrenceOverrideType.Materialized
                 && recurringOverride.TaskItem != null)
             {

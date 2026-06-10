@@ -394,6 +394,150 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_PrunesOverridesThatDoNotMatchNewRule()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily Standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+
+        var effectiveTask = await _seeder.CreateTaskAsync(
+            userId,
+            "Effective materialized standup",
+            new DateTimeOffset(2026, 6, 3, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 3, 9, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 3),
+            RecurringOccurrenceOverrideType.Materialized,
+            effectiveTask);
+
+        var prunedMaterialized = await _seeder.CreateTaskAsync(
+            userId,
+            "Pruned materialized standup",
+            new DateTimeOffset(2026, 6, 4, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 4, 9, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 4),
+            RecurringOccurrenceOverrideType.Materialized,
+            prunedMaterialized);
+
+        var prunedModified = await _seeder.CreateTaskAsync(
+            userId,
+            "Pruned modified standup",
+            new DateTimeOffset(2026, 6, 5, 11, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 5, 11, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 5),
+            RecurringOccurrenceOverrideType.Modified,
+            prunedModified);
+
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 6),
+            RecurringOccurrenceOverrideType.Skipped);
+
+        var detached = await _seeder.CreateTaskAsync(
+            userId,
+            "Detached standup",
+            new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 7, 12, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 7),
+            RecurringOccurrenceOverrideType.Detached,
+            detached);
+
+        var retainedWeeklyOccurrence = await _seeder.CreateTaskAsync(
+            userId,
+            "Retained weekly standup",
+            new DateTimeOffset(2026, 6, 10, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 10, 9, 0, 0, TimeSpan.Zero));
+        await _seeder.CreateRecurringOccurrenceOverrideAsync(
+            recurring,
+            new DateOnly(2026, 6, 10),
+            RecurringOccurrenceOverrideType.Materialized,
+            retainedWeeklyOccurrence);
+
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        // Act
+        var futureRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 3),
+            UserId = userId,
+            Frequency = RecurrenceFrequency.Weekly,
+            Interval = 1,
+            DaysOfWeek = (int)WeeklyDayFlags.Wednesday,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Weekly standup",
+                Description = "New weekly cadence",
+                StartTime = new DateTimeOffset(2026, 6, 3, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 3, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var futureTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == futureRecurringTaskId);
+        var effectiveOverride = await _context.RecurringOccurrenceOverrides
+            .Include(o => o.TaskItem)
+            .SingleAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == new DateOnly(2026, 6, 3));
+        var retainedOverride = await _context.RecurringOccurrenceOverrides
+            .Include(o => o.TaskItem)
+            .SingleAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == new DateOnly(2026, 6, 10));
+        var prunedMaterializedStillExists = await _context.TaskItems.AnyAsync(t => t.Id == prunedMaterialized.Id);
+        var prunedModifiedStillExists = await _context.TaskItems.AnyAsync(t => t.Id == prunedModified.Id);
+        var prunedSkippedStillExists = await _context.RecurringOccurrenceOverrides.AnyAsync(o =>
+            o.SeriesId == recurring.SeriesId && o.OccurrenceDate == new DateOnly(2026, 6, 6));
+        var detachedStillExists = await _context.TaskItems.AnyAsync(t => t.Id == detached.Id);
+        var detachedOverride = await _context.RecurringOccurrenceOverrides.SingleAsync(o =>
+            o.SeriesId == recurring.SeriesId && o.OccurrenceDate == new DateOnly(2026, 6, 7));
+
+        // Assert
+        futureTemplate.Pattern.Frequency.Should().Be(RecurrenceFrequency.Weekly,
+            because: "the future edit should replace the current segment with the requested weekly cadence");
+        effectiveOverride.RecurringTaskId.Should().Be(futureTemplate.Id,
+            because: "an occurrence that still matches the new rule should move to the replacement template");
+        effectiveOverride.TaskItem!.Title.Should().Be("Weekly standup",
+            because: "the effective occurrence should receive the edited fields");
+        retainedOverride.RecurringTaskId.Should().Be(futureTemplate.Id,
+            because: "future occurrences that still match the new weekly rule should stay in the recurring series");
+        retainedOverride.TaskItem!.StartTime.Should().Be(
+            new DateTimeOffset(2026, 6, 10, 10, 0, 0, TimeSpan.FromHours(8)),
+            because: "retained materialized occurrences should be refreshed from the new template time");
+        prunedMaterializedStillExists.Should().BeFalse(
+            because: "materialized occurrences that no longer match the new future rule should be deleted");
+        prunedModifiedStillExists.Should().BeFalse(
+            because: "modified occurrences that no longer match the new future rule should also be deleted within the edited segment");
+        prunedSkippedStillExists.Should().BeFalse(
+            because: "skipped overrides for dates outside the new rule are no longer meaningful");
+        detachedStillExists.Should().BeTrue(
+            because: "detached occurrences are concrete tasks and should not be managed by future recurrence edits");
+        detachedOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Detached,
+            because: "future recurrence edits should ignore already detached occurrences");
+    }
+
+    [Fact]
     public async Task Handle_UpdateRecurringTaskFuture_ExistingLaterSegment_PreservesLaterSegment()
     {
         // Arrange
