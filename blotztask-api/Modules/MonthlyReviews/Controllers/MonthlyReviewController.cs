@@ -36,8 +36,8 @@ public class MonthlyReviewController(
             ct);
     }
 
-    // TODO: temporary user-triggered generation for testing. Move to a scheduled
-    // backend trigger
+    // Generation is user-triggered by design for now — a scheduled backend
+    // trigger was considered and deliberately deferred.
     [HttpPost("generate")]
     public async Task<MonthlyReviewDto> Generate(
         [FromQuery] GenerateMonthlyReviewRequest request,

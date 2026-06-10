@@ -48,7 +48,6 @@ export function LetterCardContent({
   return (
     <>
       <LetterEmptyState />
-      {/* TODO: temporary test button — remove once PBI 8A scheduled trigger is in place. */}
       <View className="items-center mb-6">
         <Pressable
           onPress={onGenerate}

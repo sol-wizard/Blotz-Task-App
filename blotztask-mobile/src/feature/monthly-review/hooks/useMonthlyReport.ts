@@ -22,8 +22,6 @@ export function useMonthlyReport(selectedMonth: Date, enabled = true) {
     enabled,
   });
 
-  // TODO: temporary user-triggered generation for testing. Remove once PBI 8A
-  // scheduled backend trigger generates reports automatically.
   const generateMutation = useMutation<MonthlyReviewDTO, Error, void>({
     mutationFn: () => generateMonthlyReview(year, month),
     onSuccess: (data) => {
