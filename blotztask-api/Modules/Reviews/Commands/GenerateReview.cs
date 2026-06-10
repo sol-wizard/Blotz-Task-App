@@ -1,6 +1,5 @@
 using System.ClientModel;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text.Json;
 using Azure.AI.OpenAI;
 using BlotzTask.Extension;
@@ -20,15 +19,15 @@ namespace BlotzTask.Modules.Reviews.Commands;
 
 public class GenerateReviewRequest
 {
-    [BindRequired, Range(2000, 9999)] public int Year { get; set; }
-    [BindRequired, Range(1, 12)] public int Month { get; set; }
+    [BindRequired] public ReviewPeriodType PeriodType { get; set; }
+    [BindRequired] public DateTimeOffset PeriodStartUtc { get; set; }
 }
 
 public class GenerateReviewCommand
 {
     [Required] public required Guid UserId { get; init; }
-    [Range(2000, 9999)] public required int Year { get; init; }
-    [Range(1, 12)] public required int Month { get; init; }
+    public required ReviewPeriodType PeriodType { get; init; }
+    public required DateTimeOffset PeriodStartUtc { get; init; }
 }
 
 public class GenerateReviewCommandHandler(
@@ -41,7 +40,7 @@ public class GenerateReviewCommandHandler(
 {
     // TODO: Reusing the Breakdown deployment for v1. ReasoningEffortLevel is only honoured on
     // o-series reasoning models — if Breakdown points at a non-reasoning model (e.g. GPT-4o),
-    // the option is ignored. Revisit once we decide whether monthly review needs its own
+    // the option is ignored. Revisit once we decide whether review needs its own
     // deployment (likely a reasoning model for better reflection quality).
     private readonly string _deploymentId = aiOptions.BreakdownDeploymentId;
 
@@ -54,53 +53,46 @@ public class GenerateReviewCommandHandler(
         GenerateReviewCommand command,
         CancellationToken ct = default)
     {
-        // TODO: v1 uses a UTC month boundary. Tasks created within ~12h of a month edge in the
-        // user's local timezone will bucket into the wrong UTC month. Fix once UserPreference
-        // stores a TimeZoneId (mobile reports latest-known TZ on sync, scheduler reads it).
-        var monthStartUtc = new DateTimeOffset(command.Year, command.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        var nextMonthStartUtc = monthStartUtc.AddMonths(1);
+        // Validate alignment + derive bounds on the server (throws 400 on a bad start).
+        var period = ReviewPeriod.Create(command.PeriodType, command.PeriodStartUtc);
+        var threshold = ReviewConstants.LowActivityTaskThreshold(period.PeriodType);
 
         //TODO: Need to think how we want to handle duplicate reports. If we already have one and still trigger what should we do?
         var existingReport = await db.ReviewReports
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 r => r.UserId == command.UserId
-                     && r.PeriodType == ReviewPeriodType.Monthly
-                     && r.PeriodStartUtc == monthStartUtc,
+                     && r.PeriodType == period.PeriodType
+                     && r.PeriodStartUtc == period.StartUtc,
                 ct);
 
         if (existingReport is not null)
         {
             logger.LogInformation(
-                "Returning existing monthly review for user {UserId} ({Year}-{Month:D2})",
-                command.UserId, command.Year, command.Month);
+                "Returning existing {PeriodType} review for user {UserId} (start {PeriodStartUtc:o})",
+                period.PeriodType, command.UserId, period.StartUtc);
 
-            return new ReviewReportDto
-            {
-                Year = existingReport.PeriodStartUtc.Year,
-                Month = existingReport.PeriodStartUtc.Month,
-                AiGeneratedLetter = existingReport.AiGeneratedLetter,
-                CreatedAt = existingReport.CreatedAt,
-                IsLowActivity = existingReport.AiInputTaskCount != null
-                                && existingReport.AiInputTaskCount < ReviewConstants.LowActivityTaskThreshold,
-            };
+            return ToDto(existingReport, existingReport.AiInputTaskCount, threshold);
         }
 
-        // A monthly review is a month-end summary, so it is only available once the month has fully
-        // ended (defence-in-depth — the app shouldn't offer the current/future month). UTC granularity
-        // is fine for a whole-month gate; the timezone-edge nuance above doesn't matter here.
-        if (DateTimeOffset.UtcNow < nextMonthStartUtc)
-            throw new ArgumentException("A monthly review is only available after the month has ended.");
+        // A review is a period-end summary, so it is only available once the period has fully
+        // ended (defence-in-depth — the app shouldn't offer the current/future period).
+        // Period bounds carry the user's offset, so this gate is correct for their local week/month.
+        // TODO: a week/month spanning a DST change can be off by an hour — fix once UserPreference
+        // stores a TimeZoneId (mobile reports latest-known TZ on sync, scheduler reads it).
+        if (!period.HasEnded(DateTimeOffset.UtcNow))
+            throw new ArgumentException("A review is only available after the period has ended.");
 
-        var monthlyTasks = await LoadMonthlyTasksAsync(command.UserId, monthStartUtc, nextMonthStartUtc, ct);
-        var aiInputJson = JsonSerializer.Serialize(monthlyTasks, JsonOptions);
+        var tasks = await LoadTasksForPeriodAsync(command.UserId, period.StartUtc, period.EndUtc, ct);
+        var aiInputJson = JsonSerializer.Serialize(tasks, JsonOptions);
 
         var preferredLanguage = await LoadPreferredLanguageAsync(command.UserId, ct);
         await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
 
         var (letter, model, usage) = await GenerateLetterAsync(
+            period.PeriodType,
             preferredLanguage.ToDisplayName(),
-            monthStartUtc.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+            period.GetInvariantDisplayLabel(),
             aiInputJson,
             ct);
 
@@ -115,12 +107,12 @@ public class GenerateReviewCommandHandler(
         var report = new ReviewReport
         {
             UserId = command.UserId,
-            PeriodType = ReviewPeriodType.Monthly,
-            PeriodStartUtc = monthStartUtc,
-            PeriodEndUtc = nextMonthStartUtc,
+            PeriodType = period.PeriodType,
+            PeriodStartUtc = period.StartUtc,
+            PeriodEndUtc = period.EndUtc,
             AiGeneratedLetter = letter,
             AiInputJson = aiInputJson,
-            AiInputTaskCount = monthlyTasks.Count,
+            AiInputTaskCount = tasks.Count,
             AiModel = model,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -130,33 +122,37 @@ public class GenerateReviewCommandHandler(
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation(
-            "Saved monthly review {ReportId} for user {UserId} ({Year}-{Month:D2})",
-            report.Id, command.UserId, command.Year, command.Month);
+            "Saved {PeriodType} review {ReportId} for user {UserId} (start {PeriodStartUtc:o})",
+            period.PeriodType, report.Id, command.UserId, period.StartUtc);
 
-        return new ReviewReportDto
-        {
-            Year = report.PeriodStartUtc.Year,
-            Month = report.PeriodStartUtc.Month,
-            AiGeneratedLetter = report.AiGeneratedLetter,
-            CreatedAt = report.CreatedAt,
-            IsLowActivity = monthlyTasks.Count < ReviewConstants.LowActivityTaskThreshold,
-        };
+        return ToDto(report, tasks.Count, threshold);
     }
 
-    private Task<List<ReviewTaskDto>> LoadMonthlyTasksAsync(
+    private static ReviewReportDto ToDto(ReviewReport report, int? taskCount, int lowActivityThreshold) =>
+        new()
+        {
+            PeriodType = report.PeriodType,
+            PeriodStartUtc = report.PeriodStartUtc,
+            PeriodEndUtc = report.PeriodEndUtc,
+            AiGeneratedLetter = report.AiGeneratedLetter,
+            CreatedAt = report.CreatedAt,
+            IsLowActivity = taskCount != null && taskCount < lowActivityThreshold,
+        };
+
+    private Task<List<ReviewTaskDto>> LoadTasksForPeriodAsync(
         Guid userId,
-        DateTimeOffset monthStartUtc,
-        DateTimeOffset nextMonthStartUtc,
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
         CancellationToken ct)
     {
         return db.TaskItems
             .AsNoTracking()
-            // Include tasks that were planned in the month or completed in the month.
+            // Include tasks that were planned in the period or completed in the period. Half-open [start, end).
             .Where(t => t.UserId == userId
-                        && ((t.StartTime >= monthStartUtc && t.StartTime < nextMonthStartUtc)
+                        && ((t.StartTime >= periodStart && t.StartTime < periodEnd)
                             || (t.CompletedAt != null
-                                && t.CompletedAt >= monthStartUtc
-                                && t.CompletedAt < nextMonthStartUtc)))
+                                && t.CompletedAt >= periodStart
+                                && t.CompletedAt < periodEnd)))
             .OrderBy(t => t.StartTime)
             .Select(t => new ReviewTaskDto
             {
@@ -181,12 +177,13 @@ public class GenerateReviewCommandHandler(
     }
 
     private async Task<(string Letter, string Model, ChatTokenUsage? Usage)> GenerateLetterAsync(
+        ReviewPeriodType periodType,
         string preferredLanguage,
-        string displayMonth,
+        string displayPeriodLabel,
         string aiInputJson,
         CancellationToken ct)
     {
-        var prompt = ReviewPrompts.GetReviewPrompt(preferredLanguage, displayMonth, aiInputJson);
+        var prompt = ReviewPrompts.GetReviewPrompt(periodType, preferredLanguage, displayPeriodLabel, aiInputJson);
         var chatClient = azureOpenAIClient.GetChatClient(_deploymentId);
 
 #pragma warning disable OPENAI001 // ReasoningEffortLevel is experimental in Azure.AI.OpenAI 2.8.0-beta.
@@ -199,8 +196,8 @@ public class GenerateReviewCommandHandler(
         try
         {
             logger.LogInformation(
-                "Generating monthly review letter (deployment={DeploymentId}, language={Language}, month={Month})",
-                _deploymentId, preferredLanguage, displayMonth);
+                "Generating {PeriodType} review letter (deployment={DeploymentId}, language={Language}, period={Period})",
+                periodType, _deploymentId, preferredLanguage, displayPeriodLabel);
 
             var response = await chatClient.CompleteChatAsync(
                 new ChatMessage[] { new UserChatMessage(prompt) },
@@ -213,33 +210,33 @@ public class GenerateReviewCommandHandler(
 
             if (string.IsNullOrWhiteSpace(letter))
             {
-                logger.LogWarning("AI returned empty letter for monthly review (deployment={DeploymentId})", _deploymentId);
+                logger.LogWarning("AI returned empty letter for review (deployment={DeploymentId})", _deploymentId);
                 throw new AiTaskGenerationException(
                     AiErrorCode.EmptyResponse,
-                    "AI returned an empty monthly review letter.");
+                    "AI returned an empty review letter.");
             }
 
             logger.LogInformation(
-                "Monthly review generated (deployment={DeploymentId}, length={Length})",
+                "Review generated (deployment={DeploymentId}, length={Length})",
                 _deploymentId, letter.Length);
 
             return (letter, _deploymentId, response.Value.Usage);
         }
         catch (OperationCanceledException oce)
         {
-            logger.LogWarning(oce, "Monthly review generation canceled");
+            logger.LogWarning(oce, "Review generation canceled");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
         catch (ClientResultException ex) when (ex.Status == 429)
         {
-            logger.LogError(ex, "Azure AI rate limit hit while generating monthly review.");
+            logger.LogError(ex, "Azure AI rate limit hit while generating review.");
             throw new AzureAiException();
         }
         catch (ClientResultException ex) when (
             ex.Status == 400 &&
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogWarning(ex, "Content filter blocked monthly review generation.");
+            logger.LogWarning(ex, "Content filter blocked review generation.");
             throw new AiContentFilterException();
         }
         catch (AiTaskGenerationException)
@@ -248,10 +245,10 @@ public class GenerateReviewCommandHandler(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Unexpected error while generating monthly review");
+            logger.LogWarning(ex, "Unexpected error while generating review");
             throw new AiTaskGenerationException(
                 AiErrorCode.Unknown,
-                "An unhandled exception occurred during monthly review generation.",
+                "An unhandled exception occurred during review generation.",
                 ex);
         }
     }

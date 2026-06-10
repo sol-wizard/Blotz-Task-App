@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Enums;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -9,15 +10,15 @@ namespace BlotzTask.Modules.Reviews.Queries;
 
 public class GetReviewRequest
 {
-    [BindRequired, Range(2000, 9999)] public int Year { get; set; }
-    [BindRequired, Range(1, 12)] public int Month { get; set; }
+    [BindRequired] public ReviewPeriodType PeriodType { get; set; }
+    [BindRequired] public DateTimeOffset PeriodStartUtc { get; set; }
 }
 
 public class GetReviewQuery
 {
     [Required] public required Guid UserId { get; init; }
-    [Range(2000, 9999)] public required int Year { get; init; }
-    [Range(1, 12)] public required int Month { get; init; }
+    public required ReviewPeriodType PeriodType { get; init; }
+    public required DateTimeOffset PeriodStartUtc { get; init; }
 }
 
 public class GetReviewQueryHandler(
@@ -28,25 +29,29 @@ public class GetReviewQueryHandler(
         GetReviewQuery query,
         CancellationToken ct = default)
     {
-        logger.LogInformation(
-            "Fetching saved monthly review for user {UserId} ({Year}-{Month:D2})",
-            query.UserId, query.Year, query.Month);
+        // Validate alignment + derive bounds on the server (throws 400 on a bad start).
+        var period = ReviewPeriod.Create(query.PeriodType, query.PeriodStartUtc);
 
-        var periodStartUtc = new DateTimeOffset(query.Year, query.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        logger.LogInformation(
+            "Fetching saved {PeriodType} review for user {UserId} (start {PeriodStartUtc:o})",
+            period.PeriodType, query.UserId, period.StartUtc);
+
+        var threshold = ReviewConstants.LowActivityTaskThreshold(period.PeriodType);
 
         return await db.ReviewReports
             .AsNoTracking()
             .Where(r => r.UserId == query.UserId
-                        && r.PeriodType == ReviewPeriodType.Monthly
-                        && r.PeriodStartUtc == periodStartUtc)
+                        && r.PeriodType == period.PeriodType
+                        && r.PeriodStartUtc == period.StartUtc)
             .Select(r => new ReviewReportDto
             {
-                Year = r.PeriodStartUtc.Year,
-                Month = r.PeriodStartUtc.Month,
+                PeriodType = r.PeriodType,
+                PeriodStartUtc = r.PeriodStartUtc,
+                PeriodEndUtc = r.PeriodEndUtc,
                 AiGeneratedLetter = r.AiGeneratedLetter,
                 CreatedAt = r.CreatedAt,
                 IsLowActivity = r.AiInputTaskCount != null
-                                && r.AiInputTaskCount < ReviewConstants.LowActivityTaskThreshold,
+                                && r.AiInputTaskCount < threshold,
             })
             .FirstOrDefaultAsync(ct);
     }

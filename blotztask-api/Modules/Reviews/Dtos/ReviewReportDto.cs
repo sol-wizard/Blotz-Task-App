@@ -1,9 +1,12 @@
+using BlotzTask.Modules.Reviews.Enums;
+
 namespace BlotzTask.Modules.Reviews.Dtos;
 
 public class ReviewReportDto
 {
-    public int Year { get; set; }
-    public int Month { get; set; }
+    public ReviewPeriodType PeriodType { get; set; }
+    public DateTimeOffset PeriodStartUtc { get; set; }
+    public DateTimeOffset PeriodEndUtc { get; set; }
     public string AiGeneratedLetter { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public bool IsLowActivity { get; set; }

@@ -23,15 +23,15 @@ public class ReviewController(
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         logger.LogInformation(
-            "GetReview for user {UserId} ({Year}-{Month:D2})",
-            userId, request.Year, request.Month);
+            "GetReview for user {UserId} ({PeriodType}, start {PeriodStartUtc:o})",
+            userId, request.PeriodType, request.PeriodStartUtc);
 
         return await getReviewQueryHandler.Handle(
             new GetReviewQuery
             {
                 UserId = userId,
-                Year = request.Year,
-                Month = request.Month,
+                PeriodType = request.PeriodType,
+                PeriodStartUtc = request.PeriodStartUtc,
             },
             ct);
     }
@@ -47,15 +47,15 @@ public class ReviewController(
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         logger.LogInformation(
-            "Generate monthly review (manual) for user {UserId} ({Year}-{Month:D2})",
-            userId, request.Year, request.Month);
+            "Generate review (manual) for user {UserId} ({PeriodType}, start {PeriodStartUtc:o})",
+            userId, request.PeriodType, request.PeriodStartUtc);
 
         return await generateReviewCommandHandler.Handle(
             new GenerateReviewCommand
             {
                 UserId = userId,
-                Year = request.Year,
-                Month = request.Month,
+                PeriodType = request.PeriodType,
+                PeriodStartUtc = request.PeriodStartUtc,
             },
             ct);
     }
