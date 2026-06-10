@@ -6,37 +6,38 @@ using Azure.AI.OpenAI;
 using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Services;
-using BlotzTask.Modules.MonthlyReviews.Domain;
-using BlotzTask.Modules.MonthlyReviews.Dtos;
-using BlotzTask.Modules.MonthlyReviews.Prompts;
+using BlotzTask.Modules.Reviews.Domain;
+using BlotzTask.Modules.Reviews.Dtos;
+using BlotzTask.Modules.Reviews.Enums;
+using BlotzTask.Modules.Reviews.Prompts;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using OpenAI.Chat;
 
-namespace BlotzTask.Modules.MonthlyReviews.Commands;
+namespace BlotzTask.Modules.Reviews.Commands;
 
-public class GenerateMonthlyReviewRequest
+public class GenerateReviewRequest
 {
     [BindRequired, Range(2000, 9999)] public int Year { get; set; }
     [BindRequired, Range(1, 12)] public int Month { get; set; }
 }
 
-public class GenerateMonthlyReviewCommand
+public class GenerateReviewCommand
 {
     [Required] public required Guid UserId { get; init; }
     [Range(2000, 9999)] public required int Year { get; init; }
     [Range(1, 12)] public required int Month { get; init; }
 }
 
-public class GenerateMonthlyReviewCommandHandler(
+public class GenerateReviewCommandHandler(
     BlotzTaskDbContext db,
     AzureOpenAIClient azureOpenAIClient,
     AgentFrameworkServiceExtensions.AzureAIOptions aiOptions,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService,
-    ILogger<GenerateMonthlyReviewCommandHandler> logger)
+    ILogger<GenerateReviewCommandHandler> logger)
 {
     // TODO: Reusing the Breakdown deployment for v1. ReasoningEffortLevel is only honoured on
     // o-series reasoning models — if Breakdown points at a non-reasoning model (e.g. GPT-4o),
@@ -49,17 +50,23 @@ public class GenerateMonthlyReviewCommandHandler(
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public async Task<MonthlyReviewDto> Handle(
-        GenerateMonthlyReviewCommand command,
+    public async Task<ReviewReportDto> Handle(
+        GenerateReviewCommand command,
         CancellationToken ct = default)
     {
+        // TODO: v1 uses a UTC month boundary. Tasks created within ~12h of a month edge in the
+        // user's local timezone will bucket into the wrong UTC month. Fix once UserPreference
+        // stores a TimeZoneId (mobile reports latest-known TZ on sync, scheduler reads it).
+        var monthStartUtc = new DateTimeOffset(command.Year, command.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        var nextMonthStartUtc = monthStartUtc.AddMonths(1);
+
         //TODO: Need to think how we want to handle duplicate reports. If we already have one and still trigger what should we do?
-        var existingReport = await db.MonthlyReviewReports
+        var existingReport = await db.ReviewReports
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 r => r.UserId == command.UserId
-                     && r.Year == command.Year
-                     && r.Month == command.Month,
+                     && r.PeriodType == ReviewPeriodType.Monthly
+                     && r.PeriodStartUtc == monthStartUtc,
                 ct);
 
         if (existingReport is not null)
@@ -68,22 +75,16 @@ public class GenerateMonthlyReviewCommandHandler(
                 "Returning existing monthly review for user {UserId} ({Year}-{Month:D2})",
                 command.UserId, command.Year, command.Month);
 
-            return new MonthlyReviewDto
+            return new ReviewReportDto
             {
-                Year = existingReport.Year,
-                Month = existingReport.Month,
+                Year = existingReport.PeriodStartUtc.Year,
+                Month = existingReport.PeriodStartUtc.Month,
                 AiGeneratedLetter = existingReport.AiGeneratedLetter,
                 CreatedAt = existingReport.CreatedAt,
                 IsLowActivity = existingReport.AiInputTaskCount != null
-                                && existingReport.AiInputTaskCount < MonthlyReviewConstants.LowActivityTaskThreshold,
+                                && existingReport.AiInputTaskCount < ReviewConstants.LowActivityTaskThreshold,
             };
         }
-
-        // TODO: v1 uses a UTC month boundary. Tasks created within ~12h of a month edge in the
-        // user's local timezone will bucket into the wrong UTC month. Fix once UserPreference
-        // stores a TimeZoneId (mobile reports latest-known TZ on sync, scheduler reads it).
-        var monthStartUtc = new DateTimeOffset(command.Year, command.Month, 1, 0, 0, 0, TimeSpan.Zero);
-        var nextMonthStartUtc = monthStartUtc.AddMonths(1);
 
         // A monthly review is a month-end summary, so it is only available once the month has fully
         // ended (defence-in-depth — the app shouldn't offer the current/future month). UTC granularity
@@ -111,11 +112,12 @@ public class GenerateMonthlyReviewCommandHandler(
             TotalTokens = usage?.TotalTokenCount ?? 0,
         }, ct);
 
-        var report = new MonthlyReviewReport
+        var report = new ReviewReport
         {
             UserId = command.UserId,
-            Year = command.Year,
-            Month = command.Month,
+            PeriodType = ReviewPeriodType.Monthly,
+            PeriodStartUtc = monthStartUtc,
+            PeriodEndUtc = nextMonthStartUtc,
             AiGeneratedLetter = letter,
             AiInputJson = aiInputJson,
             AiInputTaskCount = monthlyTasks.Count,
@@ -124,24 +126,24 @@ public class GenerateMonthlyReviewCommandHandler(
             UpdatedAt = DateTime.UtcNow,
         };
 
-        db.MonthlyReviewReports.Add(report);
+        db.ReviewReports.Add(report);
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation(
             "Saved monthly review {ReportId} for user {UserId} ({Year}-{Month:D2})",
             report.Id, command.UserId, command.Year, command.Month);
 
-        return new MonthlyReviewDto
+        return new ReviewReportDto
         {
-            Year = report.Year,
-            Month = report.Month,
+            Year = report.PeriodStartUtc.Year,
+            Month = report.PeriodStartUtc.Month,
             AiGeneratedLetter = report.AiGeneratedLetter,
             CreatedAt = report.CreatedAt,
-            IsLowActivity = monthlyTasks.Count < MonthlyReviewConstants.LowActivityTaskThreshold,
+            IsLowActivity = monthlyTasks.Count < ReviewConstants.LowActivityTaskThreshold,
         };
     }
 
-    private Task<List<MonthlyReviewTaskDto>> LoadMonthlyTasksAsync(
+    private Task<List<ReviewTaskDto>> LoadMonthlyTasksAsync(
         Guid userId,
         DateTimeOffset monthStartUtc,
         DateTimeOffset nextMonthStartUtc,
@@ -156,7 +158,7 @@ public class GenerateMonthlyReviewCommandHandler(
                                 && t.CompletedAt >= monthStartUtc
                                 && t.CompletedAt < nextMonthStartUtc)))
             .OrderBy(t => t.StartTime)
-            .Select(t => new MonthlyReviewTaskDto
+            .Select(t => new ReviewTaskDto
             {
                 Title = t.Title,
                 Details = t.Description ?? string.Empty,
@@ -184,7 +186,7 @@ public class GenerateMonthlyReviewCommandHandler(
         string aiInputJson,
         CancellationToken ct)
     {
-        var prompt = MonthlyReviewPrompts.GetMonthlyReviewPrompt(preferredLanguage, displayMonth, aiInputJson);
+        var prompt = ReviewPrompts.GetReviewPrompt(preferredLanguage, displayMonth, aiInputJson);
         var chatClient = azureOpenAIClient.GetChatClient(_deploymentId);
 
 #pragma warning disable OPENAI001 // ReasoningEffortLevel is experimental in Azure.AI.OpenAI 2.8.0-beta.

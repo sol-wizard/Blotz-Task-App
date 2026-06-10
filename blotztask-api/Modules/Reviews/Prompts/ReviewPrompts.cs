@@ -1,8 +1,8 @@
-namespace BlotzTask.Modules.MonthlyReviews.Prompts;
+namespace BlotzTask.Modules.Reviews.Prompts;
 
-public static class MonthlyReviewPrompts
+public static class ReviewPrompts
 {
-    public static string GetMonthlyReviewPrompt(
+    public static string GetReviewPrompt(
         string preferredLanguage,
         string displayMonth,
         string taskJson)

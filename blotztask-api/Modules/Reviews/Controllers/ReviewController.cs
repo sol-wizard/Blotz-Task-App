@@ -1,33 +1,33 @@
-using BlotzTask.Modules.MonthlyReviews.Commands;
-using BlotzTask.Modules.MonthlyReviews.Dtos;
-using BlotzTask.Modules.MonthlyReviews.Queries;
+using BlotzTask.Modules.Reviews.Commands;
+using BlotzTask.Modules.Reviews.Dtos;
+using BlotzTask.Modules.Reviews.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlotzTask.Modules.MonthlyReviews.Controllers;
+namespace BlotzTask.Modules.Reviews.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class MonthlyReviewController(
-    GetMonthlyReviewQueryHandler getMonthlyReviewQueryHandler,
-    GenerateMonthlyReviewCommandHandler generateMonthlyReviewCommandHandler,
-    ILogger<MonthlyReviewController> logger) : ControllerBase
+public class ReviewController(
+    GetReviewQueryHandler getReviewQueryHandler,
+    GenerateReviewCommandHandler generateReviewCommandHandler,
+    ILogger<ReviewController> logger) : ControllerBase
 {
     [HttpGet]
-    public async Task<MonthlyReviewDto?> GetMonthlyReview(
-        [FromQuery] GetMonthlyReviewRequest request,
+    public async Task<ReviewReportDto?> GetReview(
+        [FromQuery] GetReviewRequest request,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         logger.LogInformation(
-            "GetMonthlyReview for user {UserId} ({Year}-{Month:D2})",
+            "GetReview for user {UserId} ({Year}-{Month:D2})",
             userId, request.Year, request.Month);
 
-        return await getMonthlyReviewQueryHandler.Handle(
-            new GetMonthlyReviewQuery
+        return await getReviewQueryHandler.Handle(
+            new GetReviewQuery
             {
                 UserId = userId,
                 Year = request.Year,
@@ -39,8 +39,8 @@ public class MonthlyReviewController(
     // Generation is user-triggered by design for now — a scheduled backend
     // trigger was considered and deliberately deferred.
     [HttpPost("generate")]
-    public async Task<MonthlyReviewDto> Generate(
-        [FromQuery] GenerateMonthlyReviewRequest request,
+    public async Task<ReviewReportDto> Generate(
+        [FromQuery] GenerateReviewRequest request,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
@@ -50,8 +50,8 @@ public class MonthlyReviewController(
             "Generate monthly review (manual) for user {UserId} ({Year}-{Month:D2})",
             userId, request.Year, request.Month);
 
-        return await generateMonthlyReviewCommandHandler.Handle(
-            new GenerateMonthlyReviewCommand
+        return await generateReviewCommandHandler.Handle(
+            new GenerateReviewCommand
             {
                 UserId = userId,
                 Year = request.Year,

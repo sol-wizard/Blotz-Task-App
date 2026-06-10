@@ -5,7 +5,7 @@ export const fetchMonthlyReview = async (
   year: number,
   month: number
 ): Promise<MonthlyReviewDTO | null> => {
-  const url = `/MonthlyReview?year=${year}&month=${month}`;
+  const url = `/Review?year=${year}&month=${month}`;
   return await apiClient.get<MonthlyReviewDTO | null>(url);
 };
 
@@ -13,6 +13,6 @@ export const generateMonthlyReview = async (
   year: number,
   month: number
 ): Promise<MonthlyReviewDTO> => {
-  const url = `/MonthlyReview/generate?year=${year}&month=${month}`;
+  const url = `/Review/generate?year=${year}&month=${month}`;
   return await apiClient.post<MonthlyReviewDTO>(url);
 };

@@ -1,6 +1,6 @@
-namespace BlotzTask.Modules.MonthlyReviews.Dtos;
+namespace BlotzTask.Modules.Reviews.Dtos;
 
-public class MonthlyReviewDto
+public class ReviewReportDto
 {
     public int Year { get; set; }
     public int Month { get; set; }
@@ -9,7 +9,7 @@ public class MonthlyReviewDto
     public bool IsLowActivity { get; set; }
 }
 
-public class MonthlyReviewTaskDto
+public class ReviewTaskDto
 {
     public string Title { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;
