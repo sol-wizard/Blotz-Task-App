@@ -11,7 +11,8 @@ description: Use when the developer is implementing, modifying, or fixing any AI
 - `AiTaskGenerateService.cs` — init, run, error mapping
 - `TaskGenerationTools.cs` — the tool methods the agent can invoke
 - `AiTaskGeneratorPrompts.cs` — system prompt
-- `.ai/decisions/001-ai-task-generation.md` — why GPT-5.4-mini, why tool-calling over structured output, why multi-item tools
+
+Product rationale and decision history for this feature live in the private repo — use the `private-context` skill to find and read it before making design decisions.
 
 ## Flow
 
