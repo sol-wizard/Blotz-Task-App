@@ -4,6 +4,7 @@ import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { MonthlyReviewDTO } from "../models/monthly-review-dto";
 import { LetterBody } from "./letter-body";
 import { LetterEmptyState } from "./letter-empty-state";
+import { LetterGeneratingState } from "./letter-generating-state";
 import { LetterSignature } from "./letter-signature";
 
 type Props = {
@@ -35,6 +36,10 @@ export function LetterCardContent({
     );
   }
 
+  if (isGenerating) {
+    return <LetterGeneratingState />;
+  }
+
   if (report) {
     return (
       <>
@@ -56,11 +61,8 @@ export function LetterCardContent({
           onPress={onGenerate}
           disabled={isGenerating}
           className="px-5 py-2 rounded-full bg-secondary"
-          style={{ opacity: isGenerating ? 0.6 : 1 }}
         >
-          <Text className="text-white font-balooBold">
-            {isGenerating ? t("monthlyReview.loading") : t("monthlyReview.generate")}
-          </Text>
+          <Text className="text-white font-balooBold">{t("monthlyReview.generate")}</Text>
         </Pressable>
       </View>
     </>

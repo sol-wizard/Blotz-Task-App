@@ -95,7 +95,10 @@
     "comingSoonTitle": "你的第一封信正在路上 ✨",
     "comingSoonBody": "月度回顾会在你使用 Blotz 满一个整月后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
     "defaultRecipient": "朋友",
-    "aiDisclosure": "由AI根据您本月创建的任务生成"
+    "aiDisclosure": "由AI根据您本月创建的任务生成",
+    "generatingStage1": "正在翻阅你的这个月… 📖",
+    "generatingStage2": "正在发现你的小规律… ✨",
+    "generatingStage3": "正在为你写信… 💌"
   },
   "avatar": {
     "title": "头像"
