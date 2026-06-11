@@ -34,6 +34,39 @@ public abstract class TaskOccurrenceDtoBase
 
 public static class TaskOccurrenceDtoHelpers
 {
+    private static bool ShouldExposeRecurringOccurrence(
+        RecurringOccurrenceOverride? recurringOverride)
+    {
+        return recurringOverride != null
+            && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached;
+    }
+
+    public static TaskOccurrenceKind ToOccurrenceKind(
+        RecurringOccurrenceOverride? recurringOverride)
+    {
+        return ShouldExposeRecurringOccurrence(recurringOverride)
+            ? TaskOccurrenceKind.MaterializedRecurringOccurrence
+            : TaskOccurrenceKind.NormalTaskItem;
+    }
+
+    public static RecurringOccurrenceIdentityDto? ToRecurringOccurrenceIdentityOrNull(
+        RecurringOccurrenceOverride? recurringOverride)
+    {
+        return ShouldExposeRecurringOccurrence(recurringOverride)
+            ? ToRecurringOccurrenceIdentity(recurringOverride!)
+            : null;
+    }
+
+    public static RecurringTaskEditMetadataDto? ToRecurringTaskMetadataOrNull(
+        RecurringOccurrenceOverride? recurringOverride,
+        RecurringTask? recurringTask)
+    {
+        return ShouldExposeRecurringOccurrence(recurringOverride)
+            && recurringTask != null
+            ? ToRecurringTaskMetadata(recurringTask)
+            : null;
+    }
+
     public static RecurringOccurrenceIdentityDto ToRecurringOccurrenceIdentity(
         RecurringOccurrenceOverride recurringOverride)
     {

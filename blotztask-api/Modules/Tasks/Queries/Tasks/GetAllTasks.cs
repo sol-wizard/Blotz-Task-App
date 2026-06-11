@@ -22,12 +22,9 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
             .Select(task => new AllTaskItemDto
             {
                 Id = task.Id,
-                OccurrenceKind = task.RecurringOccurrenceOverride == null
-                    ? TaskOccurrenceKind.NormalTaskItem
-                    : TaskOccurrenceKind.MaterializedRecurringOccurrence,
-                RecurringOccurrence = task.RecurringOccurrenceOverride != null
-                    ? TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(task.RecurringOccurrenceOverride)
-                    : null,
+                OccurrenceKind = TaskOccurrenceDtoHelpers.ToOccurrenceKind(task.RecurringOccurrenceOverride),
+                RecurringOccurrence = TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentityOrNull(
+                    task.RecurringOccurrenceOverride),
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,

@@ -23,15 +23,14 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
             .Select(task => new TaskByIdItemDto
             {
                 Id = task.Id,
-                OccurrenceKind = task.RecurringOccurrenceOverride == null
-                    ? TaskOccurrenceKind.NormalTaskItem
-                    : TaskOccurrenceKind.MaterializedRecurringOccurrence,
-                RecurringOccurrence = task.RecurringOccurrenceOverride != null
-                    ? TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentity(task.RecurringOccurrenceOverride)
-                    : null,
-                RecurringTask = task.RecurringOccurrenceOverride != null
-                    ? TaskOccurrenceDtoHelpers.ToRecurringTaskMetadata(task.RecurringOccurrenceOverride.RecurringTask)
-                    : null,
+                OccurrenceKind = TaskOccurrenceDtoHelpers.ToOccurrenceKind(task.RecurringOccurrenceOverride),
+                RecurringOccurrence = TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentityOrNull(
+                    task.RecurringOccurrenceOverride),
+                RecurringTask = TaskOccurrenceDtoHelpers.ToRecurringTaskMetadataOrNull(
+                    task.RecurringOccurrenceOverride,
+                    task.RecurringOccurrenceOverride == null
+                        ? null
+                        : task.RecurringOccurrenceOverride.RecurringTask),
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
