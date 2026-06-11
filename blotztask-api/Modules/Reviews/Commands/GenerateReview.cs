@@ -92,7 +92,7 @@ public class GenerateReviewCommandHandler(
         var (letter, model, usage) = await GenerateLetterAsync(
             period.PeriodType,
             preferredLanguage.ToDisplayName(),
-            period.GetInvariantDisplayLabel(),
+            period.ToDisplayLabel(),
             aiInputJson,
             ct);
 

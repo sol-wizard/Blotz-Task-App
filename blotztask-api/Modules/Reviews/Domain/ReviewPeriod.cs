@@ -70,7 +70,7 @@ public sealed class ReviewPeriod
     /// "June 2026"). The end is exclusive, so the weekly range shows the last included day.
     /// Mobile builds its own localized labels from the period bounds.
     /// </summary>
-    public string GetInvariantDisplayLabel() => PeriodType switch
+    public string ToDisplayLabel() => PeriodType switch
     {
         ReviewPeriodType.Weekly =>
             $"{StartUtc.ToString("MMM d", CultureInfo.InvariantCulture)} - " +
