@@ -17,6 +17,7 @@ public static class AgentFrameworkServiceExtensions
         public required string BreakdownDeploymentId { get; init; }
         public required string GroqApiKey { get; init; }
         public required string GroqSpeechModel { get; init; }
+        public required string GroqEndpoint { get; init; }
     }
 
     public static IServiceCollection AddAgentFrameworkServices(
@@ -36,6 +37,8 @@ public static class AgentFrameworkServiceExtensions
                 ?? throw new InvalidOperationException("Missing Groq:ApiKey"),
             GroqSpeechModel = configuration["Groq:SpeechModel"]
                 ?? throw new InvalidOperationException("Missing Groq:SpeechModel"),
+            GroqEndpoint = configuration["Groq:Endpoint"]
+                ?? throw new InvalidOperationException("Missing Groq:Endpoint"),
         };
 
         // AIProjectClient is shared — one client, multiple deployment targets.
@@ -51,7 +54,7 @@ public static class AgentFrameworkServiceExtensions
         {
             var groqClient = new OpenAIClient(
                 new ApiKeyCredential(options.GroqApiKey),
-                new OpenAIClientOptions { Endpoint = new Uri("https://api.groq.com/openai/v1") });
+                new OpenAIClientOptions { Endpoint = new Uri(options.GroqEndpoint) });
             return groqClient.GetAudioClient(options.GroqSpeechModel);
         });
 
