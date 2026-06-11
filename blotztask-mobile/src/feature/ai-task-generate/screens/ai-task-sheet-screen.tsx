@@ -40,8 +40,11 @@ export default function AiTaskSheetScreen() {
   const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
+  // Interface opens in voice mode by default; the keyboard toggle switches to text.
+  const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
   const longPressTriggered = useRef(false);
+  const textInputRef = useRef<TextInput>(null);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
 
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
@@ -76,6 +79,14 @@ export default function AiTaskSheetScreen() {
       }
     });
   }, []);
+
+  // Focus the text field after it mounts so the keyboard reliably opens in this modal sheet
+  // (autoFocus is unreliable here — it can fire before the modal animation settles).
+  useEffect(() => {
+    if (inputMode !== "text") return;
+    const id = requestAnimationFrame(() => textInputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [inputMode]);
 
   // --- Derived data ---
   const displayTasks = streamedTasks.map((task) =>
@@ -137,6 +148,16 @@ export default function AiTaskSheetScreen() {
     await stopAndUpload();
   };
 
+  const handleSwitchToText = () => {
+    setIsHoldHintVisible(false);
+    setInputMode("text"); // TextInput autoFocus pops the keyboard on mount
+  };
+
+  const handleSwitchToVoice = () => {
+    Keyboard.dismiss();
+    setInputMode("voice");
+  };
+
   return (
     <View className="flex-1 bg-transparent">
       <Pressable className="absolute inset-0" onPress={handleDismiss} pointerEvents="auto" />
@@ -194,49 +215,78 @@ export default function AiTaskSheetScreen() {
                 style={{ paddingBottom: bottomPadding }}
               >
                 <View className="flex-1 flex-row items-center gap-4">
-                  {/* Microphone hold-to-record */}
+                  {/* Mode toggle: keyboard icon (voice mode) / mic icon (text mode) */}
                   <Pressable
-                    onPressIn={() => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      longPressTriggered.current = false;
-                      handleMicPressIn();
-                    }}
-                    onPressOut={() => {
-                      if (!longPressTriggered.current) {
-                        setIsHoldHintVisible(true);
-                        cancelListening();
-                      } else {
-                        void handleMicPressOut();
-                      }
-                    }}
-                    onLongPress={() => {
-                      longPressTriggered.current = true;
-                    }}
-                    delayLongPress={1000}
+                    onPress={inputMode === "voice" ? handleSwitchToText : handleSwitchToVoice}
+                    accessibilityLabel={
+                      inputMode === "voice"
+                        ? "Switch to keyboard input"
+                        : "Switch to voice input"
+                    }
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
-                      backgroundColor: isRecording
-                        ? "rgba(255,255,255,0.5)"
-                        : "rgba(255,255,255,0.25)",
-                      opacity: isAiGenerating ? 0.4 : 1,
+                      backgroundColor: "rgba(255,255,255,0.25)",
+                      opacity: isAiGenerating || isRecording ? 0.4 : 1,
                     }}
-                    disabled={isAiGenerating}
+                    disabled={isAiGenerating || isRecording}
                   >
-                    <MaterialCommunityIcons name="microphone" size={28} color="white" />
+                    <MaterialCommunityIcons
+                      name={inputMode === "voice" ? "keyboard-outline" : "microphone"}
+                      size={28}
+                      color="white"
+                    />
                   </Pressable>
 
-                  {/* Text input / waveform */}
+                  {/* Voice mode: hold-to-talk pill (waveform while recording). Text mode: input. */}
                   <View className="flex-1 items-center justify-center">
-                    {isRecording ? (
-                      <LottieView
-                        source={LOTTIE_ANIMATIONS.voiceWave}
-                        loop
-                        autoPlay
-                        style={{ width: "100%", height: 40 }}
-                        resizeMode="contain"
-                      />
+                    {inputMode === "voice" ? (
+                      <Pressable
+                        onPressIn={() => {
+                          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                          longPressTriggered.current = false;
+                          handleMicPressIn();
+                        }}
+                        onPressOut={() => {
+                          if (!longPressTriggered.current) {
+                            setIsHoldHintVisible(true);
+                            cancelListening();
+                          } else {
+                            void handleMicPressOut();
+                          }
+                        }}
+                        onLongPress={() => {
+                          longPressTriggered.current = true;
+                        }}
+                        delayLongPress={1000}
+                        className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
+                        style={{
+                          backgroundColor: isRecording
+                            ? "rgba(255,255,255,0.5)"
+                            : "rgba(255,255,255,0.25)",
+                          opacity: isAiGenerating ? 0.4 : 1,
+                        }}
+                        disabled={isAiGenerating}
+                      >
+                        {isRecording ? (
+                          <LottieView
+                            source={LOTTIE_ANIMATIONS.voiceWave}
+                            loop
+                            autoPlay
+                            style={{ width: "100%", height: 40 }}
+                            resizeMode="contain"
+                          />
+                        ) : (
+                          <>
+                            <MaterialCommunityIcons name="microphone" size={24} color="white" />
+                            <Text className="text-white font-baloo text-base">
+                              {t("buttons.holdToTalk")}
+                            </Text>
+                          </>
+                        )}
+                      </Pressable>
                     ) : (
                       <TextInput
+                        ref={textInputRef}
                         value={textInput}
                         onChangeText={setTextInput}
                         onSubmitEditing={() => void handleSubmitText()}
