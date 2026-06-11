@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Platform } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
@@ -33,6 +33,13 @@ const SubtasksEditor = ({
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
+
+  useEffect(() => {
+    if (fetchedSubtasks) {
+      setDraggableSubtasks(fetchedSubtasks);
+    }
+  }, [fetchedSubtasks]);
+  
   const { bottom } = useSafeAreaInsets();
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
@@ -97,7 +104,7 @@ const SubtasksEditor = ({
             <TouchableOpacity
               onPress={async () => {
                 await onRefreshSubtasks();
-                setDraggableSubtasks(fetchedSubtasks ?? []);
+                // setDraggableSubtasks(fetchedSubtasks ?? []);
               }}
               className="p-2"
             >
