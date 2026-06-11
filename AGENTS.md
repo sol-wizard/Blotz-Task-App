@@ -4,6 +4,9 @@
 
 - If anything is unclear or ambiguous, always ask the user for clarification before proceeding.
 - Never make assumptions on your own — when in doubt, ask.
+- Before making any code change, check whether a project-local skill applies under `.claude/skills/`.
+- If a project-local skill applies, read its `SKILL.md` and follow it before editing files or running commands.
+- When explaining code changes, mention which relevant project-local skill was used.
 
 ## Backend & Frontend Judgement
 
@@ -15,6 +18,13 @@
 ## Code Changes
 
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
+- Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
+
+## Database Migrations
+
+- Never run `dotnet ef migrations add` or `dotnet ef database update` yourself.
+- If entity, DbContext, or relationship changes require a migration, stop after the code change and give the user the exact command to run.
+- The user should generate and apply EF Core migrations themselves from `blotztask-api/`.
 
 ## TypeScript
 

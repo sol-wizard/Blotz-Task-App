@@ -8,6 +8,8 @@ param openAiTaskGenerationDeploymentId string
 param openAiBreakdownDeploymentId string
 param openAiSpeechDeploymentId string
 param logAnalyticsWorkspaceId string
+param azureMonitorOpenTelemetryEnabled bool = false
+param enableAppServiceDiagnostics bool = false
 
 // Auth0 Configuration
 param auth0Domain string
@@ -59,6 +61,10 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'ApplicationInsights__ConnectionString'
           value: appInsightConnectionString
+        }
+        {
+          name: 'AzureMonitor__OpenTelemetryEnabled'
+          value: string(azureMonitorOpenTelemetryEnabled)
         }
         {
           name: 'Auth0__Domain'
@@ -121,7 +127,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
   }
 }
 
-resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (enableAppServiceDiagnostics) {
   name: 'diag-${appService.name}'
   scope: appService
   properties: {

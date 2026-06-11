@@ -50,9 +50,10 @@ interface TaskCardProps {
   isDeleting: boolean;
   selectedDay?: Date;
   onOpenMode?: () => void;
+  onRowOpen?: (refObject: React.RefObject<SwipeableMethods | null>) => void;
 }
 
-const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRowOpen }: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -111,6 +112,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleOpenTaskDetails = async () => {
     if (isLoading) return;
+
+    swipeRef.current?.close();
 
     if (hasTaskItemId(task)) {
       queryClient.setQueryData(taskKeys.byId(task.id), task);
@@ -225,14 +228,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     }
 
     onOpenMode?.();
-    swipeRef.current?.reset();
+    swipeRef.current?.close();
   };
 
   const handleConfirmSwitch = () => {
     if (pendingFocusTaskId == null) return;
 
     setShowSwitchModal(false);
-
+    swipeRef.current?.close();
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: pendingFocusTaskId } });
     setPendingFocusTaskId(null);
   };
@@ -246,6 +249,9 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     <>
       <ReanimatedSwipeable
         ref={swipeRef}
+        onSwipeableWillOpen={() => {
+          onRowOpen?.(swipeRef);
+        }}
         renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
           <TaskCardLeftActions
             progress={leftActionsProgress}

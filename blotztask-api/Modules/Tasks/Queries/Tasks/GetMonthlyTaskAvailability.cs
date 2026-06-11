@@ -52,9 +52,9 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             query.UserId,
             monthStart,
             monthEnd);
-        
+
         var queryStopwatch = Stopwatch.StartNew();
-        
+
         var tasks = await db.TaskItems
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
@@ -64,13 +64,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                                 t.StartTime < monthEnd
                                 && t.EndTime > monthStart
                             )
-                            ||
-                            // Overdue tasks for today/past views only.
-                            (
-                                includeOverdueTasks
-                                && !t.IsDone
-                                && t.EndTime < userNow
-                            )
+
                         ))
             .Select(t => new
             {

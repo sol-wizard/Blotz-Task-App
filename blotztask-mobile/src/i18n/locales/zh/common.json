@@ -36,7 +36,12 @@
   "update": {
     "title": "新版本来啦！",
     "message": "我们悄悄做了好多优化，快来体验全新的 Blotz 吧～",
-    "button": "马上去更新"
+    "button": "马上去更新",
+    "skip": "下次再说",
+    "forced": {
+      "title": "需要更新",
+      "message": "当前版本已不再受支持，请更新至最新版本已继续使用 Blotz。"
+    }
   },
   "crash": {
     "title": "哎呀，出问题了！",

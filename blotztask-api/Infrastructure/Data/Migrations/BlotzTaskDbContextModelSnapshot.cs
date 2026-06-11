@@ -203,8 +203,8 @@ namespace BlotzTask.Migrations
                     b.Property<int>("BadgeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("EarnedAtUtc")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("EarnedAtUtc")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("UserId", "BadgeId");
 
@@ -320,6 +320,9 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("AiInputTaskCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("AiModel")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -402,6 +405,9 @@ namespace BlotzTask.Migrations
                 {
                     b.Property<int>("Id")
                         .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -718,6 +724,9 @@ namespace BlotzTask.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTimeOffset?>("AlertTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<DateTime>("CreatedAt")

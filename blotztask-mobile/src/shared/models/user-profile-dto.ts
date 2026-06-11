@@ -4,4 +4,5 @@ export interface UserProfileDTO {
   email: string | null;
   phoneNumber: string | null;
   isOnBoarded: boolean;
+  signUpAt: string;
 }

@@ -21,14 +21,15 @@ public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskS
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} was not found.");
 
-        // If task.IsDone is null, set it to be false, otherwise, toggle the task.IsDone
         task.IsDone = command.IsDone ?? !task.IsDone;
+        task.CompletedAt = task.IsDone
+            ? task.CompletedAt ?? DateTimeOffset.UtcNow
+            : null;
         task.NotificationId = null;
 
         logger.LogInformation("The completion status of task {Id} was changed to {IsDone}", task.Id, task.IsDone);
 
         task.UpdatedAt = DateTime.UtcNow;
-        db.TaskItems.Update(task);
         await db.SaveChangesAsync(ct);
 
         return new TaskStatusResultDto

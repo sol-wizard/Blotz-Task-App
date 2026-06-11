@@ -1,26 +1,14 @@
-import React, { createElement } from "react";
+import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useRouter } from "expo-router";
-import { getLocalAvatarComponent } from "@/feature/settings/constants/local-avatar-catalog";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
-import { ASSETS, PNGIMAGES } from "@/shared/constants/assets";
+import { ASSETS } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/form-divider";
+import { UserAvatar } from "@/shared/components/user-avatar";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { useTranslation } from "react-i18next";
-import { Image } from "expo-image";
-
-const AvatarDisplay = ({ pictureValue }: { pictureValue: string | null | undefined }) => {
-  const LocalComp = getLocalAvatarComponent(pictureValue);
-  if (LocalComp) {
-    return createElement(LocalComp, { width: 96, height: 96 });
-  }
-  const source = pictureValue ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
-  return (
-    <Image source={source} style={{ width: 96, height: 96, borderRadius: 48 }} contentFit="cover" />
-  );
-};
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -33,6 +21,12 @@ export default function SettingsScreen() {
       label: t("menu.account"),
       icon: "account-outline",
       route: "/settings/account",
+    },
+    {
+      key: "monthly-review",
+      label: t("menu.monthlyReview"),
+      icon: "email-outline",
+      route: "/settings/monthly-review",
     },
     {
       key: "beta-features",
@@ -78,12 +72,12 @@ export default function SettingsScreen() {
 
       <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
         <View>
-          <AvatarDisplay pictureValue={userProfile?.pictureUrl} />
+          <UserAvatar pictureValue={userProfile?.pictureUrl} size={96} />
           <Pressable
             onPress={handleProfileEdit}
             className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
           >
-            <ASSETS.editIcon width={18} height={18} fill="#363853" />
+            <ASSETS.editIcon width={18} height={18} fill="#444964" />
           </Pressable>
         </View>
         <Text className="text-2xl font-balooBold text-secondary mt-5">

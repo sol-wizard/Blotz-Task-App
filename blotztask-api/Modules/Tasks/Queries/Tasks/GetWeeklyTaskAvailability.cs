@@ -45,7 +45,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
-        var includeOverdueTasks = weekStart.Date <= userNow.Date;
+
 
         logger.LogInformation(
             "Fetching weekly task availability for user {UserId} from {weekStart} to {weekEndExclusive}",
@@ -65,13 +65,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                                 t.StartTime < weekEndExclusive
                                 && t.EndTime > weekStart
                             )
-                            ||
-                            // Overdue tasks for today/past views only.
-                            (
-                                includeOverdueTasks
-                                && !t.IsDone
-                                && t.EndTime < userNow
-                            )
+
                         ))
             .Select(t => new
             {
@@ -128,19 +122,8 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             var hasTask = tasks.Any(t =>
             {
                 // Tasks in date range
-                if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
+                if (t.StartTime < dayEnd && t.EndTime >= dayStart && !t.IsDone) return true;
 
-                // Overdue tasks should only decorate today/past cells, using the selected day's cutoff.
-                if (
-                    includeOverdueTasks
-                    && autoRollover
-                    && dayStart < userTodayEnd
-                    && !t.IsDone
-                    && t.EndTime < overdueCutoff
-                    )
-                {
-                    return true;
-                }
                 return false;
             });
 

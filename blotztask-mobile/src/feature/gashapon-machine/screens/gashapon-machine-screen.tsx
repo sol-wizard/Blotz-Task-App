@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image } from "react-native";
+import { View, Image, Pressable } from "react-native";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { GameEngine } from "react-native-game-engine";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
+import { GashaponHelpModal } from "@/feature/gashapon-machine/components/gashapon-help-modal";
 import LoadingScreen from "@/shared/components/loading-screen";
+import { ReturnButton } from "@/shared/components/return-button";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
-import { router } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
@@ -23,11 +26,13 @@ export default function GashaponMachineScreen() {
   const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isHelpModalVisible, setHelpModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const { addNoteToTask, isConverting } = useAddNoteToTask();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
+  const { top } = useSafeAreaInsets();
 
   useEffect(() => {
     analytics.trackScreenViewed(SCREEN_NAMES.GASHAPON_MACHINE);
@@ -88,6 +93,10 @@ export default function GashaponMachineScreen() {
           onCancel={handleCancel}
           isDoNowLoading={isConverting}
         />
+        <GashaponHelpModal
+          visible={isHelpModalVisible}
+          onClose={() => setHelpModalVisible(false)}
+        />
         {!isAllLoaded && <LoadingScreen />}
         <View
           style={{
@@ -147,6 +156,21 @@ export default function GashaponMachineScreen() {
             setModalVisible(true);
           }}
         />
+
+        <View
+          pointerEvents="box-none"
+          className="absolute left-0 right-0 flex-row justify-between items-center px-4 h-11"
+          style={{ top, zIndex: 100 }}
+        >
+          <ReturnButton className="bg-white shadow-sm border-gray-50 w-9 h-9" />
+          <Pressable
+            hitSlop={10}
+            onPress={() => setHelpModalVisible(true)}
+            className="bg-white shadow-sm border border-gray-50 w-9 h-9 rounded-full items-center justify-center"
+          >
+            <MaterialCommunityIcons name="help" size={22} color="#6B7280" />
+          </Pressable>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );

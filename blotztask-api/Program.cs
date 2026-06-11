@@ -10,6 +10,7 @@ using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
+using BlotzTask.Modules.AppVersion;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using Serilog;
@@ -39,6 +40,7 @@ builder.Services.AddPomodoroModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
+builder.Services.AddAppVersionModule();
 
 // External integrations
 builder.Services.AddAgentFrameworkServices(builder.Configuration);

@@ -46,7 +46,7 @@
       "ios": {
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.0.5"
+          "APP_VERSION": "1.0.9"
         }
       },
       "env": {
@@ -69,14 +69,14 @@
       "ios": {
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.1.1"
+          "APP_VERSION": "1.1.2"
         }
       },
       "android": {
         "buildType": "app-bundle",
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.0.1"
+          "APP_VERSION": "1.1.0"
         }
       },
       "env": {
