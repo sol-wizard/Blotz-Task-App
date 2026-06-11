@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { ActivityIndicator, FlatList, View, Text, Pressable, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "@/shared/components/task-status-row";
 
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";

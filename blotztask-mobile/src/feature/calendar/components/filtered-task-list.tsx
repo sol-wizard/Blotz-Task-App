@@ -1,4 +1,4 @@
-import { FlatList, TouchableWithoutFeedback, Keyboard, Pressable } from "react-native";
+import { FlatList, Pressable } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
