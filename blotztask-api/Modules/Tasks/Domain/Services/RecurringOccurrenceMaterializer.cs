@@ -9,7 +9,8 @@ namespace BlotzTask.Modules.Tasks.Domain.Services;
 
 public class RecurringOccurrenceMaterializer(
     BlotzTaskDbContext db,
-    RecurringTaskGeneratorService generatorService)
+    RecurringTaskGeneratorService generatorService,
+    ILogger<RecurringOccurrenceMaterializer>? logger = null)
 {
     public async Task<TaskItem> EnsureRecurringOccurrenceTaskItem(
         int recurringTaskId,
@@ -56,9 +57,18 @@ public class RecurringOccurrenceMaterializer(
             UpdatedAt = DateTime.UtcNow
         };
 
+        if (existingOverride != null)
+        {
+            logger?.LogWarning(
+                "Recurring occurrence override {OverrideId} for series {SeriesId} on {OccurrenceDate} had no TaskItem. Reattaching a generated TaskItem while preserving OverrideType={OverrideType} and RecurringTaskId={RecurringTaskId}.",
+                existingOverride.Id,
+                existingOverride.SeriesId,
+                existingOverride.OccurrenceDate,
+                existingOverride.OverrideType,
+                existingOverride.RecurringTaskId);
+        }
+
         recurringOverride.TaskItem = taskItem;
-        recurringOverride.RecurringTaskId = template.Id;
-        recurringOverride.OverrideType = RecurringOccurrenceOverrideType.Materialized;
         recurringOverride.UpdatedAt = DateTime.UtcNow;
         taskItem.RecurringOccurrenceOverride = recurringOverride;
 
