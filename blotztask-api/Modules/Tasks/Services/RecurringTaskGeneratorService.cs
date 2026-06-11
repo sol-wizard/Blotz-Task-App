@@ -38,6 +38,14 @@ public class RecurringTaskGeneratorService
             return null;
         }
 
+        if (template.Pattern.Frequency == RecurrenceFrequency.Daily)
+        {
+            return GetCurrentDailyOccurrenceDate(template, cutoff);
+        }
+
+        // TODO: Weekly/monthly/yearly still walk forward from StartDate. Replace with
+        // frequency-specific backward lookups before long-running recurring deadlines
+        // make /api/deadline/all pay O(occurrences since start) per series.
         var occurrence = FirstOccurrenceOnOrAfter(template, template.StartDate);
         DateOnly? current = null;
 
@@ -55,6 +63,18 @@ public class RecurringTaskGeneratorService
         }
 
         return current;
+    }
+
+    private static DateOnly? GetCurrentDailyOccurrenceDate(RecurringTask template, DateOnly cutoff)
+    {
+        if (template.Pattern.Interval < 1)
+        {
+            return null;
+        }
+
+        var daysSinceStart = cutoff.DayNumber - template.StartDate.DayNumber;
+        var stepsSinceStart = daysSinceStart / template.Pattern.Interval;
+        return template.StartDate.AddDays(stepsSinceStart * template.Pattern.Interval);
     }
 
     public DateTimeOffset BuildOccurrenceDueAt(RecurringTask template, DateOnly occurrenceDate)
