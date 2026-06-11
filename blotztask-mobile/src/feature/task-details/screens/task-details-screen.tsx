@@ -73,6 +73,7 @@ export default function TaskDetailsScreen() {
     useTaskMutations();
 
   const { t } = useTranslation();
+  const recurringTaskId = selectedTask ? getRecurringTaskId(selectedTask) : null;
 
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
@@ -126,7 +127,6 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  const recurringTaskId = getRecurringTaskId(selectedTask);
   const isSaving = isUpdating || isUpdatingRecurringOccurrence;
 
   const getTranslatedLabelName = (labelName: string): string => {
