@@ -4,6 +4,7 @@ import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { MonthlyReviewDTO } from "../models/monthly-review-dto";
 import { LetterBody } from "./letter-body";
 import { LetterEmptyState } from "./letter-empty-state";
+import { LetterGeneratingState } from "./letter-generating-state";
 import { LetterSignature } from "./letter-signature";
 
 type Props = {
@@ -35,11 +36,18 @@ export function LetterCardContent({
     );
   }
 
+  if (isGenerating) {
+    return <LetterGeneratingState />;
+  }
+
   if (report) {
     return (
       <>
         <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
         <LetterSignature />
+        <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
+          {t("monthlyReview.aiDisclosure")}
+        </Text>
       </>
     );
   }
@@ -48,17 +56,13 @@ export function LetterCardContent({
   return (
     <>
       <LetterEmptyState />
-      {/* TODO: temporary test button — remove once PBI 8A scheduled trigger is in place. */}
       <View className="items-center mb-6">
         <Pressable
           onPress={onGenerate}
           disabled={isGenerating}
           className="px-5 py-2 rounded-full bg-secondary"
-          style={{ opacity: isGenerating ? 0.6 : 1 }}
         >
-          <Text className="text-white font-balooBold">
-            {isGenerating ? t("monthlyReview.loading") : t("monthlyReview.generate")}
-          </Text>
+          <Text className="text-white font-balooBold">{t("monthlyReview.generate")}</Text>
         </Pressable>
       </View>
     </>

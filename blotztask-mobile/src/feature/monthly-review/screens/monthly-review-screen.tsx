@@ -101,7 +101,11 @@ export default function MonthlyReviewScreen() {
                 collapsable={false}
                 className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
               >
-                <LetterHeader displayMonth={displayMonth} />
+                <LetterHeader
+                  displayMonth={displayMonth}
+                  recipientName={recipientName}
+                  pictureUrl={userProfile?.pictureUrl}
+                />
                 <LetterCardContent
                   isLoading={isLoading}
                   report={report}

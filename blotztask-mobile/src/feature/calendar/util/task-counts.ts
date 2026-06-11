@@ -61,7 +61,6 @@ function isTodo(task: TaskDetailDTO): boolean {
   const nowTime = Date.now();
 
   if (task.endTime && new Date(task.endTime).getTime() <= nowTime) return false;
-  if (task.startTime && new Date(task.startTime).getTime() <= nowTime) return false;
   return true;
 }
 

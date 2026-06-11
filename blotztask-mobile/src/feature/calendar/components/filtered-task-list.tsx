@@ -20,7 +20,7 @@ export const FilteredTaskList = ({
   selectedDay: Date;
   onOpenMode: () => void;
 }) => {
-  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("To Do");
 
   const { deleteTask, isDeleting } = useTaskMutations();
 
