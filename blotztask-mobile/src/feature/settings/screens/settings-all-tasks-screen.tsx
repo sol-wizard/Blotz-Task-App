@@ -35,12 +35,6 @@ export default function SettingsAllTasksScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <TouchableWithoutFeedback onPress={() => {
-          Keyboard.dismiss();
-          closeAllRows();
-        }}
-        accessible={false}
-      >
         <View className="flex-1">
           <View className="flex-row items-center px-5 pt-2">
           <ReturnButton />
@@ -90,7 +84,6 @@ export default function SettingsAllTasksScreen() {
           <TaskListPlaceholder selectedStatus={selectedStatus} />
         )}
         </View>
-      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

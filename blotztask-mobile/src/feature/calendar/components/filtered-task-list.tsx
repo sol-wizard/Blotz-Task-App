@@ -58,13 +58,6 @@ export const FilteredTaskList = ({
   );
 
   return (
-    <TouchableWithoutFeedback
-      onPress={() => {
-        Keyboard.dismiss();
-        closeAllRows();
-      }}
-      accessible={false}
-    >
       <Animated.View className="flex-1" layout={MotionAnimations.layout}>
         <Animated.View layout={MotionAnimations.layout}>
           <TaskStatusRow
@@ -100,6 +93,5 @@ export const FilteredTaskList = ({
           <TaskListPlaceholder selectedStatus={selectedStatus} />
         )}
       </Animated.View>
-    </TouchableWithoutFeedback>
   );
 };
