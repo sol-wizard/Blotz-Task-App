@@ -117,8 +117,7 @@ public class DeleteRecurringOccurrenceCommandHandler(
         Guid userId,
         CancellationToken ct)
     {
-        template.EndDate = occurrenceDate.AddDays(-1);
-        template.UpdatedAt = DateTime.UtcNow;
+        TruncateTemplate(template, occurrenceDate);
 
         var futureOverrides = await db.RecurringOccurrenceOverrides
             .Include(o => o.TaskItem)
@@ -138,6 +137,20 @@ public class DeleteRecurringOccurrenceCommandHandler(
 
             db.RecurringOccurrenceOverrides.Remove(recurringOverride);
         }
+    }
+
+    private static void TruncateTemplate(RecurringTask template, DateOnly occurrenceDate)
+    {
+        if (occurrenceDate <= template.StartDate)
+        {
+            template.EndDate = template.StartDate;
+            template.IsActive = false;
+            template.UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
+        template.EndDate = occurrenceDate.AddDays(-1);
+        template.UpdatedAt = DateTime.UtcNow;
     }
 
     private static void ValidateOccurrence(RecurringTask template, DateOnly occurrenceDate)

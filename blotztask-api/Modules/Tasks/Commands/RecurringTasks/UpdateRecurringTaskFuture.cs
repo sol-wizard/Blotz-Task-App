@@ -349,6 +349,14 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static void TruncateTemplate(RecurringTask template, DateOnly effectiveDate)
     {
+        if (effectiveDate <= template.StartDate)
+        {
+            template.EndDate = template.StartDate;
+            template.IsActive = false;
+            template.UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
         template.EndDate = effectiveDate.AddDays(-1);
         template.UpdatedAt = DateTime.UtcNow;
     }
