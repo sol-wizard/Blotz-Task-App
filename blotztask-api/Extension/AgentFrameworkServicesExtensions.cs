@@ -15,6 +15,8 @@ public static class AgentFrameworkServiceExtensions
         public required string ApiKey { get; init; }
         public required string TaskGenerationDeploymentId { get; init; }
         public required string BreakdownDeploymentId { get; init; }
+        public required string GroqApiKey { get; init; }
+        public required string GroqSpeechModel { get; init; }
     }
 
     public static IServiceCollection AddAgentFrameworkServices(
@@ -30,12 +32,11 @@ public static class AgentFrameworkServiceExtensions
                 ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId"),
             BreakdownDeploymentId = configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
                 ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId"),
+            GroqApiKey = configuration["Groq:ApiKey"]
+                ?? throw new InvalidOperationException("Missing Groq:ApiKey"),
+            GroqSpeechModel = configuration["Groq:SpeechModel"]
+                ?? throw new InvalidOperationException("Missing Groq:SpeechModel"),
         };
-
-        var groqApiKey = configuration["Groq:ApiKey"]
-            ?? throw new InvalidOperationException("Missing Groq:ApiKey");
-        var groqSpeechModel = configuration["Groq:SpeechModel"]
-            ?? throw new InvalidOperationException("Missing Groq:SpeechModel");
 
         // AIProjectClient is shared — one client, multiple deployment targets.
         // AIAgent is NOT created here because instructions are user-specific
@@ -49,9 +50,9 @@ public static class AgentFrameworkServiceExtensions
         services.AddSingleton(_ =>
         {
             var groqClient = new OpenAIClient(
-                new ApiKeyCredential(groqApiKey),
+                new ApiKeyCredential(options.GroqApiKey),
                 new OpenAIClientOptions { Endpoint = new Uri("https://api.groq.com/openai/v1") });
-            return groqClient.GetAudioClient(groqSpeechModel);
+            return groqClient.GetAudioClient(options.GroqSpeechModel);
         });
 
         return services;
