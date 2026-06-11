@@ -106,7 +106,10 @@ public class UpdateRecurringTaskFutureCommandHandler(
             return null;
         }
 
-        var newPattern = BuildPattern(template, command);
+        var targetFrequency = command.Frequency ?? template.Pattern.Frequency;
+        ValidateRecurrenceFieldUsage(command, targetFrequency);
+
+        var newPattern = BuildPattern(template, command, targetFrequency);
         var newEndDate = command.EndDateChanged ? command.EndDate : template.EndDate;
         ValidateRecurrence(newPattern, command.EffectiveDate, newEndDate);
 
@@ -222,9 +225,9 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static RecurrencePattern BuildPattern(
         RecurringTask template,
-        UpdateRecurringTaskFutureCommand command)
+        UpdateRecurringTaskFutureCommand command,
+        RecurrenceFrequency frequency)
     {
-        var frequency = command.Frequency ?? template.Pattern.Frequency;
         return new RecurrencePattern
         {
             Frequency = frequency,
@@ -236,6 +239,21 @@ public class UpdateRecurringTaskFutureCommandHandler(
                 ? command.DayOfMonth ?? command.EffectiveDate.Day
                 : null
         };
+    }
+
+    private static void ValidateRecurrenceFieldUsage(
+        UpdateRecurringTaskFutureCommand command,
+        RecurrenceFrequency frequency)
+    {
+        if (frequency != RecurrenceFrequency.Weekly && command.DaysOfWeek != null)
+        {
+            throw new ValidationException("DaysOfWeek can only be set for weekly recurring tasks.");
+        }
+
+        if (frequency != RecurrenceFrequency.Monthly && command.DayOfMonth != null)
+        {
+            throw new ValidationException("DayOfMonth can only be set for monthly recurring tasks.");
+        }
     }
 
     private static void ValidateRecurrence(
