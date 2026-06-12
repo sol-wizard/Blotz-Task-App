@@ -6,6 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Reviews.Controllers;
 
+// Timezone handling:
+//  Now   - the client sends its IANA timeZoneId per request; ReviewTimeZone.Resolve maps it
+//          (valid -> use, missing -> UTC, invalid -> 400) and we snap the anchorDate to local bounds.
+//          e.g. Sydney user opens the weekly review: anchorDate=2026-06-11 + timeZoneId=Australia/Sydney
+//          -> snapped to Mon 2026-06-08 local -> queried as a UTC range.
+//  Later - store TimeZoneId on the user (PBI), so resolution becomes request -> saved tz -> UTC
+//          and the client no longer needs to send it.
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
