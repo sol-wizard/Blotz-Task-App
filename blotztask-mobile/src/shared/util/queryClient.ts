@@ -2,6 +2,7 @@ import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import * as Sentry from "@sentry/react-native";
+import i18n from "@/i18n";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -71,7 +72,12 @@ export const queryClient = new QueryClient({
 
 function getErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
-    return error.response?.data?.message || "Something went wrong";
+    const status = error.response?.status;
+    if (!error.response) return i18n.t("errors.network");
+    if (status === 429) return i18n.t("errors.aiQuotaExceeded");
+    if (status && status >= 500) return i18n.t("errors.server");
+    if (status === 400 || status === 422) return i18n.t("errors.validation");
+    return i18n.t("errors.default");
   }
-  return "Something went wrong";
+  return i18n.t("errors.default");
 }

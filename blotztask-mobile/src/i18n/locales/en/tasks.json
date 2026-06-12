@@ -18,7 +18,7 @@
     "markAsDeadline": "Mark as deadline",
     "dueTime": "Due Time",
     "invalidTimeRange": "Start time cannot be later than end time",
-    "invalidDeadlineRange": "Just a heads up, your deadline is set before the task end time."
+    "invalidDeadlineRange": "DDL is before the task end time."
   },
   "details": {
     "notFound": "Selected Task not found.",
@@ -37,7 +37,7 @@
     "failedToRefreshSubtasks": "Failed to refresh subtasks. Please try again.",
     "failedToDeleteSubtask": "Failed to delete subtask.",
     "mustHaveTitleError": "Task must have a title",
-    "titleTooLongError": "Title is too long. Please keep it under 80 characters."
+    "titleTooLongError": "Title cannot exceed 80 characters"
   },
   "alerts": {
     "none": "None",

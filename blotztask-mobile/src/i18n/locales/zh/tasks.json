@@ -18,7 +18,7 @@
     "markAsDeadline": "设为截止任务",
     "dueTime": "截止时间",
     "invalidTimeRange": "开始时间不能晚于结束时间",
-    "invalidDeadlineRange": "提醒您：您的事件截止时间设置在任务结束时间之前。"
+    "invalidDeadlineRange": "截止时间早于任务结束时间"
   },
   "details": {
     "notFound": "未找到选定的任务。",
@@ -36,7 +36,7 @@
     "error": "错误",
     "failedToRefreshSubtasks": "刷新子任务失败。请重试。",
     "failedToDeleteSubtask": "删除子任务失败。",
-    "mustHaveTitleError": "任务必须有一个标题",
+    "mustHaveTitleError": "请添加任务标题",
     "titleTooLongError": "标题太长，请控制在 80 个字符以内。"
   },
   "alerts": {
@@ -58,7 +58,7 @@
     "health": "健康"
   },
   "success": {
-    "taskCreated": "任务创建成功"
+    "taskCreated": "任务添加成功"
   },
   "subtasks": {
     "done": "完成",
