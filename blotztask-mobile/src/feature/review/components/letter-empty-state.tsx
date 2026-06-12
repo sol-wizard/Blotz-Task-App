@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-import { ReviewPeriodType } from "../models/monthly-review-dto";
+import { ReviewPeriodType } from "../models/review-dto";
 
 type Props = {
   // Defaults to the monthly copy; weekly passes ReviewPeriodType.Weekly.

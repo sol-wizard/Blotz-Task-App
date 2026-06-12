@@ -13,9 +13,9 @@ import { MonthlyReviewHeader } from "../components/monthly-review-header";
 import { MonthlyReviewTipBanner } from "../components/monthly-review-tip-banner";
 import { ReviewTab, ReviewTabs } from "../components/review-tabs";
 import { WeeklyReviewView } from "../components/weekly-review-view";
-import { useReview } from "../hooks/useMonthlyReport";
+import { useReview } from "../hooks/useReviewReport";
 import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
-import { ReviewPeriodType } from "../models/monthly-review-dto";
+import { ReviewPeriodType } from "../models/review-dto";
 import { formatMonth } from "../utils/month-utils";
 
 export default function MonthlyReviewScreen() {

@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
-import { ReviewPeriodType, ReviewReportDTO } from "../models/monthly-review-dto";
+import { ReviewPeriodType, ReviewReportDTO } from "../models/review-dto";
 import { LetterBody } from "./letter-body";
 import { LetterEmptyState } from "./letter-empty-state";
 import { LetterGeneratingState } from "./letter-generating-state";

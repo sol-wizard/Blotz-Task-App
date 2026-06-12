@@ -6,11 +6,11 @@ import { reviewKeys } from "@/shared/constants/query-key-factory";
 import {
   fetchReview,
   generateReview,
-} from "@/feature/monthly-review/services/monthly-review-service";
+} from "@/feature/review/services/review-service";
 import {
   ReviewPeriodType,
   ReviewReportDTO,
-} from "@/feature/monthly-review/models/monthly-review-dto";
+} from "@/feature/review/models/review-dto";
 
 // anchorDate: any date inside the period ("YYYY-MM-DD"); the backend snaps it to the
 // canonical start. Callers normalize to the period start so the cache key is stable.

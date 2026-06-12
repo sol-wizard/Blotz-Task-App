@@ -2,7 +2,7 @@ import { apiClient } from "@/shared/services/api/client";
 import {
   ReviewPeriodType,
   ReviewReportDTO,
-} from "@/feature/monthly-review/models/monthly-review-dto";
+} from "@/feature/review/models/review-dto";
 
 // The device's IANA timezone (e.g. "Australia/Sydney"). The backend snaps the anchor
 // date to the local period boundary using this.

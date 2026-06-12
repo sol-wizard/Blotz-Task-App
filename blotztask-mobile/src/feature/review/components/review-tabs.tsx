@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { ReviewPeriodType } from "../models/monthly-review-dto";
+import { ReviewPeriodType } from "../models/review-dto";
 
 export type ReviewTab = ReviewPeriodType;
 

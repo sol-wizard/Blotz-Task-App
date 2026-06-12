@@ -8,8 +8,8 @@ import { LetterHeader } from "./letter-header";
 import { MonthlyReviewComingSoon } from "./monthly-review-coming-soon";
 import { MonthlyReviewTipBanner } from "./monthly-review-tip-banner";
 import { MonthSelector } from "./month-selector";
-import { useReview } from "../hooks/useMonthlyReport";
-import { ReviewPeriodType } from "../models/monthly-review-dto";
+import { useReview } from "../hooks/useReviewReport";
+import { ReviewPeriodType } from "../models/review-dto";
 import { formatWeek, startOfReviewWeek } from "../utils/week-utils";
 
 // Mon–Sun week (see week-utils). Matches date-fns weekStartsOn used there.
