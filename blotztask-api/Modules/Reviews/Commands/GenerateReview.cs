@@ -11,7 +11,6 @@ using BlotzTask.Modules.Reviews.Enums;
 using BlotzTask.Modules.Reviews.Prompts;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using OpenAI.Chat;
 
@@ -19,15 +18,17 @@ namespace BlotzTask.Modules.Reviews.Commands;
 
 public class GenerateReviewRequest
 {
-    [BindRequired] public ReviewPeriodType PeriodType { get; set; }
-    [BindRequired] public DateTimeOffset PeriodStartUtc { get; set; }
+    [Required] public ReviewPeriodType PeriodType { get; set; }
+    [Required] public DateOnly AnchorDate { get; set; }
+    public string? TimeZoneId { get; set; }
 }
 
 public class GenerateReviewCommand
 {
     [Required] public required Guid UserId { get; init; }
     public required ReviewPeriodType PeriodType { get; init; }
-    public required DateTimeOffset PeriodStartUtc { get; init; }
+    public required DateOnly AnchorDate { get; init; }
+    public string? TimeZoneId { get; init; }
 }
 
 public class GenerateReviewCommandHandler(
@@ -53,8 +54,10 @@ public class GenerateReviewCommandHandler(
         GenerateReviewCommand command,
         CancellationToken ct = default)
     {
-        // Validate alignment + derive bounds on the server (throws 400 on a bad start).
-        var period = ReviewPeriod.Create(command.PeriodType, command.PeriodStartUtc);
+        // Resolve the timezone, then snap the anchor date to the canonical period (server is the
+        // single source of truth — a non-Monday / non-1st anchor is canonicalized, not rejected).
+        var timeZone = ReviewTimeZone.Resolve(command.TimeZoneId);
+        var period = ReviewPeriod.CreateFromAnchor(command.PeriodType, command.AnchorDate, timeZone);
         var threshold = ReviewConstants.LowActivityTaskThreshold(period.PeriodType);
 
         //TODO: Need to think how we want to handle duplicate reports. If we already have one and still trigger what should we do?
@@ -69,17 +72,23 @@ public class GenerateReviewCommandHandler(
         if (existingReport is not null)
         {
             logger.LogInformation(
-                "Returning existing {PeriodType} review for user {UserId} (start {PeriodStartUtc:o})",
-                period.PeriodType, command.UserId, period.StartUtc);
+                "Returning existing {PeriodType} review for user {UserId} ({StartLocal}, {TimeZoneId})",
+                period.PeriodType, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-            return ToDto(existingReport, existingReport.AiInputTaskCount, threshold);
+            return new ReviewReportDto
+            {
+                PeriodType = period.PeriodType,
+                PeriodStartLocal = period.StartLocalDate,
+                PeriodEndLocalExclusive = period.EndLocalDateExclusive,
+                Letter = existingReport.AiGeneratedLetter,
+                GeneratedAtUtc = DateTime.SpecifyKind(existingReport.CreatedAt, DateTimeKind.Utc),
+                IsLowActivity = existingReport.AiInputTaskCount != null
+                                && existingReport.AiInputTaskCount < threshold,
+            };
         }
 
-        // A review is a period-end summary, so it is only available once the period has fully
-        // ended (defence-in-depth — the app shouldn't offer the current/future period).
-        // Period bounds carry the user's offset, so this gate is correct for their local week/month.
-        // TODO: a week/month spanning a DST change can be off by an hour — fix once UserPreference
-        // stores a TimeZoneId (mobile reports latest-known TZ on sync, scheduler reads it).
+        // A review is a period-end summary, so it is only available once the period has fully ended
+        // (defence-in-depth — the app shouldn't offer the current/future period).
         if (!period.HasEnded(DateTimeOffset.UtcNow))
             throw new ArgumentException("A review is only available after the period has ended.");
 
@@ -122,22 +131,19 @@ public class GenerateReviewCommandHandler(
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation(
-            "Saved {PeriodType} review {ReportId} for user {UserId} (start {PeriodStartUtc:o})",
-            period.PeriodType, report.Id, command.UserId, period.StartUtc);
+            "Saved {PeriodType} review {ReportId} for user {UserId} ({StartLocal}, {TimeZoneId})",
+            period.PeriodType, report.Id, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-        return ToDto(report, tasks.Count, threshold);
-    }
-
-    private static ReviewReportDto ToDto(ReviewReport report, int? taskCount, int lowActivityThreshold) =>
-        new()
+        return new ReviewReportDto
         {
-            PeriodType = report.PeriodType,
-            PeriodStartUtc = report.PeriodStartUtc,
-            PeriodEndUtc = report.PeriodEndUtc,
-            AiGeneratedLetter = report.AiGeneratedLetter,
-            CreatedAt = report.CreatedAt,
-            IsLowActivity = taskCount != null && taskCount < lowActivityThreshold,
+            PeriodType = period.PeriodType,
+            PeriodStartLocal = period.StartLocalDate,
+            PeriodEndLocalExclusive = period.EndLocalDateExclusive,
+            Letter = report.AiGeneratedLetter,
+            GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
+            IsLowActivity = tasks.Count < threshold,
         };
+    }
 
     private Task<List<ReviewTaskDto>> LoadTasksForPeriodAsync(
         Guid userId,

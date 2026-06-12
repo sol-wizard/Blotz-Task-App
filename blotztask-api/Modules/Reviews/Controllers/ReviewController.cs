@@ -15,7 +15,7 @@ public class ReviewController(
     ILogger<ReviewController> logger) : ControllerBase
 {
     [HttpGet]
-    public async Task<ReviewReportDto?> GetReview(
+    public async Task<ReviewReportDto> GetReview(
         [FromQuery] GetReviewRequest request,
         CancellationToken ct)
     {
@@ -23,15 +23,16 @@ public class ReviewController(
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         logger.LogInformation(
-            "GetReview for user {UserId} ({PeriodType}, start {PeriodStartUtc:o})",
-            userId, request.PeriodType, request.PeriodStartUtc);
+            "GetReview for user {UserId} ({PeriodType}, anchor {AnchorDate})",
+            userId, request.PeriodType, request.AnchorDate);
 
         return await getReviewQueryHandler.Handle(
             new GetReviewQuery
             {
                 UserId = userId,
                 PeriodType = request.PeriodType,
-                PeriodStartUtc = request.PeriodStartUtc,
+                AnchorDate = request.AnchorDate,
+                TimeZoneId = request.TimeZoneId,
             },
             ct);
     }
@@ -40,22 +41,23 @@ public class ReviewController(
     // trigger was considered and deliberately deferred.
     [HttpPost("generate")]
     public async Task<ReviewReportDto> Generate(
-        [FromQuery] GenerateReviewRequest request,
+        [FromBody] GenerateReviewRequest request,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         logger.LogInformation(
-            "Generate review (manual) for user {UserId} ({PeriodType}, start {PeriodStartUtc:o})",
-            userId, request.PeriodType, request.PeriodStartUtc);
+            "Generate review (manual) for user {UserId} ({PeriodType}, anchor {AnchorDate})",
+            userId, request.PeriodType, request.AnchorDate);
 
         return await generateReviewCommandHandler.Handle(
             new GenerateReviewCommand
             {
                 UserId = userId,
                 PeriodType = request.PeriodType,
-                PeriodStartUtc = request.PeriodStartUtc,
+                AnchorDate = request.AnchorDate,
+                TimeZoneId = request.TimeZoneId,
             },
             ct);
     }

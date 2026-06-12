@@ -4,79 +4,95 @@ using BlotzTask.Modules.Reviews.Enums;
 namespace BlotzTask.Modules.Reviews.Domain;
 
 /// <summary>
-/// A validated review period. The end is always derived on the server from the
-/// type + start, so the client can never widen or shift the window it asks for.
-/// Boundaries are half-open <c>[StartUtc, EndUtc)</c>.
-///
-/// The start is the user's *local* midnight and carries their UTC offset
-/// (e.g. <c>2026-06-08T00:00:00+08:00</c>), so the review covers their local
-/// week/month. Task times are stored as instants, and the period bounds are
-/// compared as instants, so the offset on the start is what makes the window local.
-/// (The <c>Utc</c> suffix matches the entity columns; the value is a UTC instant
-/// but is stored carrying the user's offset rather than normalized to +00:00.)
+/// A review period resolved server-side from an anchor date + timezone. Local boundaries
+/// are computed first (Monday/1st 00:00 local), then converted to UTC for DB queries, so
+/// DST/offset rules stay correct. Half-open: <c>[StartUtc, EndUtc)</c> /
+/// <c>[StartLocalDate, EndLocalDateExclusive)</c>.
 /// </summary>
 public sealed class ReviewPeriod
 {
     public ReviewPeriodType PeriodType { get; }
+    public string TimeZoneId { get; }
+    public DateOnly StartLocalDate { get; }
+    public DateOnly EndLocalDateExclusive { get; }
     public DateTimeOffset StartUtc { get; }
     public DateTimeOffset EndUtc { get; }
 
-    private ReviewPeriod(ReviewPeriodType periodType, DateTimeOffset startUtc, DateTimeOffset endUtc)
+    private ReviewPeriod(
+        ReviewPeriodType periodType,
+        string timeZoneId,
+        DateOnly startLocalDate,
+        DateOnly endLocalDateExclusive,
+        DateTimeOffset startUtc,
+        DateTimeOffset endUtc)
     {
         PeriodType = periodType;
+        TimeZoneId = timeZoneId;
+        StartLocalDate = startLocalDate;
+        EndLocalDateExclusive = endLocalDateExclusive;
         StartUtc = startUtc;
         EndUtc = endUtc;
     }
 
     /// <summary>
-    /// Validates the requested start against the period type and derives the end.
-    /// Throws <see cref="ArgumentException"/> (-> 400) when the start is misaligned.
+    /// Snaps any date inside the period to its canonical local start (Monday for weekly,
+    /// the 1st for monthly), derives the exclusive end, and converts both to UTC. Does not
+    /// reject a non-Monday / non-1st anchor — it canonicalizes.
     /// </summary>
-    public static ReviewPeriod Create(ReviewPeriodType periodType, DateTimeOffset periodStart)
+    public static ReviewPeriod CreateFromAnchor(
+        ReviewPeriodType periodType,
+        DateOnly anchorDate,
+        TimeZoneInfo timeZone)
     {
-        // Validate in the offset the client supplied (do NOT convert to UTC first):
-        // the start must be local midnight on a Monday / the 1st, so the window aligns
-        // to the user's local week/month rather than a UTC-shifted one.
-        if (periodStart.TimeOfDay != TimeSpan.Zero)
-            throw new ArgumentException("Review period start must be midnight in the user's local offset.");
-
-        // End preserves the start's offset. AddDays/AddMonths on a DateTimeOffset keeps the
-        // offset fixed, so a week/month spanning a DST change can be off by an hour — accepted
-        // for v1 (fully correct local boundaries need a stored IANA timezone, which is deferred).
-        var end = periodType switch
+        var startLocal = periodType switch
         {
-            ReviewPeriodType.Weekly when periodStart.DayOfWeek != DayOfWeek.Monday =>
-                throw new ArgumentException("A weekly review must start on a Monday."),
-            ReviewPeriodType.Weekly => periodStart.AddDays(7),
-
-            ReviewPeriodType.Monthly when periodStart.Day != 1 =>
-                throw new ArgumentException("A monthly review must start on the first day of the month."),
-            ReviewPeriodType.Monthly => periodStart.AddMonths(1),
-
+            ReviewPeriodType.Weekly => SnapToMonday(anchorDate),
+            ReviewPeriodType.Monthly => new DateOnly(anchorDate.Year, anchorDate.Month, 1),
             _ => throw new ArgumentException($"Unsupported review period type: {periodType}."),
         };
 
-        return new ReviewPeriod(periodType, periodStart, end);
+        var endLocalExclusive = periodType switch
+        {
+            ReviewPeriodType.Weekly => startLocal.AddDays(7),
+            ReviewPeriodType.Monthly => startLocal.AddMonths(1),
+            _ => throw new ArgumentException($"Unsupported review period type: {periodType}."),
+        };
+
+        return new ReviewPeriod(
+            periodType,
+            timeZone.Id,
+            startLocal,
+            endLocalExclusive,
+            ToUtc(startLocal, timeZone),
+            ToUtc(endLocalExclusive, timeZone));
     }
 
-    /// <summary>
-    /// A review is only available once its period has fully ended — the app must not
-    /// offer the current or a future period.
-    /// </summary>
+    /// <summary>A review is only available once its period has fully ended.</summary>
     public bool HasEnded(DateTimeOffset nowUtc) => nowUtc >= EndUtc;
 
     /// <summary>
-    /// An invariant-culture label for the AI prompt (weekly "Jun 3 - Jun 9", monthly
-    /// "June 2026"). The end is exclusive, so the weekly range shows the last included day.
+    /// Plain-English label for the AI prompt (weekly "Jun 8 - Jun 14", monthly "June 2026").
     /// Mobile builds its own localized labels from the period bounds.
     /// </summary>
     public string ToDisplayLabel() => PeriodType switch
     {
         ReviewPeriodType.Weekly =>
-            $"{StartUtc.ToString("MMM d", CultureInfo.InvariantCulture)} - " +
-            $"{EndUtc.AddDays(-1).ToString("MMM d", CultureInfo.InvariantCulture)}",
+            $"{StartLocalDate.ToString("MMM d", CultureInfo.InvariantCulture)} - " +
+            $"{EndLocalDateExclusive.AddDays(-1).ToString("MMM d", CultureInfo.InvariantCulture)}",
         ReviewPeriodType.Monthly =>
-            StartUtc.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
-        _ => StartUtc.ToString("o", CultureInfo.InvariantCulture),
+            StartLocalDate.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+        _ => StartLocalDate.ToString("o", CultureInfo.InvariantCulture),
     };
+
+    private static DateOnly SnapToMonday(DateOnly date)
+    {
+        var daysSinceMonday = ((int)date.DayOfWeek + 6) % 7; // Sun=6, Mon=0, ... Sat=5
+        return date.AddDays(-daysSinceMonday);
+    }
+
+    private static DateTimeOffset ToUtc(DateOnly localDate, TimeZoneInfo timeZone)
+    {
+        var localMidnight = localDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(localMidnight, timeZone), TimeSpan.Zero);
+    }
 }

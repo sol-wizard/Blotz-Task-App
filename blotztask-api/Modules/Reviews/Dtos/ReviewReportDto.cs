@@ -5,11 +5,15 @@ namespace BlotzTask.Modules.Reviews.Dtos;
 public class ReviewReportDto
 {
     public ReviewPeriodType PeriodType { get; set; }
-    public DateTimeOffset PeriodStartUtc { get; set; }
-    public DateTimeOffset PeriodEndUtc { get; set; }
-    public string AiGeneratedLetter { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+
+    // Date-only local calendar bounds the client displays and navigates by.
+    public DateOnly PeriodStartLocal { get; set; }
+    public DateOnly PeriodEndLocalExclusive { get; set; }
+
+    // Null until the review has been generated.
+    public string? Letter { get; set; }
     public bool IsLowActivity { get; set; }
+    public DateTime? GeneratedAtUtc { get; set; }
 }
 
 public class ReviewTaskDto
