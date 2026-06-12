@@ -100,6 +100,25 @@
     "generatingStage2": "正在发现你的小规律… ✨",
     "generatingStage3": "正在为你写信… 💌"
   },
+  "review": {
+    "title": "回顾",
+    "weeklyTab": "每周",
+    "monthlyTab": "每月"
+  },
+  "weeklyReview": {
+    "letterLabel": "每周信件",
+    "empty": "Blotz 为你准备好了一封信 💌",
+    "emptyHint": "点击下方按钮即可领取。",
+    "loading": "正在加载信件…",
+    "generate": "领取信件",
+    "lowActivityHint": "想让 Blotz 更懂你？🌱 多记录一些任务，下封信就会写得更有意思！✨",
+    "comingSoonTitle": "你的第一封信正在路上 ✨",
+    "comingSoonBody": "每周回顾会在你使用 Blotz 满一个完整周后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
+    "aiDisclosure": "由AI根据您本周创建的任务生成",
+    "generatingStage1": "正在翻阅你的这一周… 📖",
+    "generatingStage2": "正在发现你的小规律… ✨",
+    "generatingStage3": "正在为你写信… 💌"
+  },
   "avatar": {
     "title": "头像"
   }

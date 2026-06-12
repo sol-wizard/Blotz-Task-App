@@ -1,7 +1,14 @@
 import { Text, View } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
-export function MonthlyReviewComingSoon() {
+
+type Props = {
+  // Default to the monthly copy; weekly passes its own title/body.
+  title?: string;
+  body?: string;
+};
+
+export function MonthlyReviewComingSoon({ title, body }: Props) {
   const { t } = useTranslation("settings");
 
   return (
@@ -10,10 +17,10 @@ export function MonthlyReviewComingSoon() {
         <MaterialCommunityIcons name="email-outline" size={36} color="#9AD513" />
       </View>
       <Text className="mb-2 text-center text-xl font-balooBold text-secondary">
-        {t("monthlyReview.comingSoonTitle")}
+        {title ?? t("monthlyReview.comingSoonTitle")}
       </Text>
       <Text className="text-center text-base font-baloo leading-6 text-secondary/70">
-        {t("monthlyReview.comingSoonBody")}
+        {body ?? t("monthlyReview.comingSoonBody")}
       </Text>
     </View>
   );

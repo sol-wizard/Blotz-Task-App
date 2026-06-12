@@ -6,9 +6,11 @@ type Props = {
   showShare: boolean;
   isSharing: boolean;
   onShare: () => void;
+  // Defaults to the monthly title; the tabbed Review screen passes "Review".
+  title?: string;
 };
 
-export function MonthlyReviewHeader({ onBack, showShare, isSharing, onShare }: Props) {
+export function MonthlyReviewHeader({ onBack, showShare, isSharing, onShare, title }: Props) {
   const { t } = useTranslation("settings");
 
   return (
@@ -17,7 +19,7 @@ export function MonthlyReviewHeader({ onBack, showShare, isSharing, onShare }: P
         <MaterialCommunityIcons name="arrow-left" size={24} color={"#444964"} />
       </Pressable>
       <Text className="flex-1 text-2xl font-balooBold text-secondary">
-        {t("monthlyReview.title")}
+        {title ?? t("monthlyReview.title")}
       </Text>
       {showShare && (
         <Pressable

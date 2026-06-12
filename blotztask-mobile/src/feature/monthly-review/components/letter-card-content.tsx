@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
-import { MonthlyReviewDTO } from "../models/monthly-review-dto";
+import { ReviewReportDTO } from "../models/monthly-review-dto";
 import { LetterBody } from "./letter-body";
 import { LetterEmptyState } from "./letter-empty-state";
 import { LetterGeneratingState } from "./letter-generating-state";
@@ -9,7 +9,7 @@ import { LetterSignature } from "./letter-signature";
 
 type Props = {
   isLoading: boolean;
-  report: MonthlyReviewDTO | null;
+  report: ReviewReportDTO | null;
   recipientName: string;
   isGenerating: boolean;
   onGenerate: () => void;
@@ -43,7 +43,7 @@ export function LetterCardContent({
   if (report) {
     return (
       <>
-        <LetterBody recipientName={recipientName} body={report.aiGeneratedLetter} />
+        <LetterBody recipientName={recipientName} body={report.letter ?? ""} />
         <LetterSignature />
         <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
           {t("monthlyReview.aiDisclosure")}

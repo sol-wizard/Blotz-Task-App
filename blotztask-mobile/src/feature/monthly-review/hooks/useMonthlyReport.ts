@@ -2,30 +2,34 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
-import { monthlyReviewKeys } from "@/shared/constants/query-key-factory";
+import { reviewKeys } from "@/shared/constants/query-key-factory";
 import {
-  fetchMonthlyReview,
-  generateMonthlyReview,
+  fetchReview,
+  generateReview,
 } from "@/feature/monthly-review/services/monthly-review-service";
-import { MonthlyReviewDTO } from "@/feature/monthly-review/models/monthly-review-dto";
+import {
+  ReviewPeriodType,
+  ReviewReportDTO,
+} from "@/feature/monthly-review/models/monthly-review-dto";
 
-export function useMonthlyReport(selectedMonth: Date, enabled = true) {
+// anchorDate: any date inside the period ("YYYY-MM-DD"); the backend snaps it to the
+// canonical start. Callers normalize to the period start so the cache key is stable.
+export function useReview(periodType: ReviewPeriodType, anchorDate: string, enabled = true) {
   const queryClient = useQueryClient();
   const { t } = useTranslation("settings");
 
-  const year = selectedMonth.getFullYear();
-  const month = selectedMonth.getMonth() + 1;
+  const queryKey = reviewKeys.byPeriod(periodType, anchorDate);
 
-  const reportQuery = useQuery<MonthlyReviewDTO | null>({
-    queryKey: monthlyReviewKeys.byMonth(year, month),
-    queryFn: () => fetchMonthlyReview(year, month),
+  const reportQuery = useQuery<ReviewReportDTO>({
+    queryKey,
+    queryFn: () => fetchReview(periodType, anchorDate),
     enabled,
   });
 
-  const generateMutation = useMutation<MonthlyReviewDTO, Error, void>({
-    mutationFn: () => generateMonthlyReview(year, month),
+  const generateMutation = useMutation<ReviewReportDTO, Error, void>({
+    mutationFn: () => generateReview(periodType, anchorDate),
     onSuccess: (data) => {
-      queryClient.setQueryData(monthlyReviewKeys.byMonth(year, month), data);
+      queryClient.setQueryData(queryKey, data);
     },
     onError: (error) => {
       const quotaExceeded = isAxiosError(error) && error.response?.status === 429;
@@ -36,8 +40,11 @@ export function useMonthlyReport(selectedMonth: Date, enabled = true) {
     },
   });
 
+  // The endpoint always returns the resolved period; a review only exists once its letter is set.
+  const report = reportQuery.data?.letter != null ? reportQuery.data : null;
+
   return {
-    report: reportQuery.data ?? null,
+    report,
     isLoading: reportQuery.isLoading,
     generate: () => generateMutation.mutate(),
     isGenerating: generateMutation.isPending,

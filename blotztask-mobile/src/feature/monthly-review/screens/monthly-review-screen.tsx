@@ -3,7 +3,7 @@ import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { addMonths, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
+import { addMonths, format, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterCardContent } from "../components/letter-card-content";
 import { LetterHeader } from "../components/letter-header";
@@ -11,7 +11,9 @@ import { MonthSelector } from "../components/month-selector";
 import { MonthlyReviewComingSoon } from "../components/monthly-review-coming-soon";
 import { MonthlyReviewHeader } from "../components/monthly-review-header";
 import { MonthlyReviewTipBanner } from "../components/monthly-review-tip-banner";
-import { useMonthlyReport } from "../hooks/useMonthlyReport";
+import { ReviewTab, ReviewTabs } from "../components/review-tabs";
+import { WeeklyReviewView } from "../components/weekly-review-view";
+import { useReview } from "../hooks/useMonthlyReport";
 import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
 import { formatMonth } from "../utils/month-utils";
 
@@ -20,6 +22,8 @@ export default function MonthlyReviewScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
+  // Default to Weekly — it produces fresh content more often than Monthly.
+  const [activeTab, setActiveTab] = useState<ReviewTab>("weekly");
   // Latest viewable month is last month — the current one is still in progress.
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
@@ -28,6 +32,7 @@ export default function MonthlyReviewScreen() {
   const { isSharingImage, shareImage } = useMonthlyReviewShare({ captureTargetRef: shareCardRef });
 
   // — Derived values —————————————————————————————————————————————
+  const isMonthlyTab = activeTab === "monthly";
   // Don't let users page back before sign-up month — those months are always empty.
   const earliestReviewableMonth = userProfile?.signUpAt
     ? startOfMonth(new Date(userProfile.signUpAt))
@@ -37,10 +42,13 @@ export default function MonthlyReviewScreen() {
   const hasNoReviewableMonth =
     earliestReviewableMonth !== null && isAfter(earliestReviewableMonth, latestReviewableMonth);
 
-  // Nothing to review yet → skip the fetch entirely (the screen shows a coming-soon state instead).
-  const { report, isLoading, generate, isGenerating } = useMonthlyReport(
-    selectedMonth,
-    !hasNoReviewableMonth,
+  // Only fetch the monthly report while the Monthly tab is active and there's a month to review.
+  // anchorDate is the selected month's first day; the backend snaps it to the canonical period.
+  const anchorDate = format(selectedMonth, "yyyy-MM-dd");
+  const { report, isLoading, generate, isGenerating } = useReview(
+    "monthly",
+    anchorDate,
+    isMonthlyTab && !hasNoReviewableMonth,
   );
 
   const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
@@ -48,7 +56,7 @@ export default function MonthlyReviewScreen() {
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? t("monthlyReview.defaultRecipient");
-  const showShareButton = report !== null && !hasNoReviewableMonth;
+  const showShareButton = isMonthlyTab && report !== null && !hasNoReviewableMonth;
   const showLowActivityTip = report?.isLowActivity === true && !isTipDismissed;
 
   // — Handlers ———————————————————————————————————————————————————
@@ -68,13 +76,20 @@ export default function MonthlyReviewScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <MonthlyReviewHeader
+        title={t("review.title")}
         onBack={() => router.back()}
         showShare={showShareButton}
         isSharing={isSharingImage}
         onShare={handleShareMonthlyReview}
       />
 
-      {hasNoReviewableMonth ? (
+      <View className="px-5 mb-4">
+        <ReviewTabs activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+
+      {activeTab === "weekly" ? (
+        <WeeklyReviewView />
+      ) : hasNoReviewableMonth ? (
         <MonthlyReviewComingSoon />
       ) : (
         <>
@@ -102,7 +117,7 @@ export default function MonthlyReviewScreen() {
                 className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
               >
                 <LetterHeader
-                  displayMonth={displayMonth}
+                  displayPeriod={displayMonth}
                   recipientName={recipientName}
                   pictureUrl={userProfile?.pictureUrl}
                 />
