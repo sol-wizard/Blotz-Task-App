@@ -2,7 +2,7 @@
   "title": "Settings",
   "menu": {
     "account": "Account",
-    "monthlyReview": "Monthly Review",
+    "review": "Review",
     "MembershipPlan": "Membership Plan",
     "betaFeatures": "Beta Features",
     "taskHandling": "Task Handling",

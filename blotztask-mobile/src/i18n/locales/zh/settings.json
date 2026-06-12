@@ -2,7 +2,7 @@
   "title": "设置",
   "menu": {
     "account": "账户",
-    "monthlyReview": "月度回顾",
+    "review": "回顾",
     "MembershipPlan": "会员计划",
     "betaFeatures": "测试功能",
     "taskHandling": "任务处理",

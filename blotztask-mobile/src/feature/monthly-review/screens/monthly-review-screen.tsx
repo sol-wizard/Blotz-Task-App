@@ -29,11 +29,16 @@ export default function MonthlyReviewScreen() {
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const [isTipDismissed, setIsTipDismissed] = useState(false);
-  const shareCardRef = useRef<View>(null);
-  const { isSharingImage, shareImage } = useMonthlyReviewShare({ captureTargetRef: shareCardRef });
+  const [isWeeklyShareAvailable, setIsWeeklyShareAvailable] = useState(false);
+  const monthlyShareCardRef = useRef<View>(null);
+  const weeklyShareCardRef = useRef<View>(null);
 
   // — Derived values —————————————————————————————————————————————
   const isMonthlyTab = activeTab === ReviewPeriodType.Monthly;
+  const activeShareCardRef = isMonthlyTab ? monthlyShareCardRef : weeklyShareCardRef;
+  const { isSharingImage, shareImage } = useMonthlyReviewShare({
+    captureTargetRef: activeShareCardRef,
+  });
   // Don't let users page back before sign-up month — those months are always empty.
   const earliestReviewableMonth = userProfile?.signUpAt
     ? startOfMonth(new Date(userProfile.signUpAt))
@@ -57,12 +62,14 @@ export default function MonthlyReviewScreen() {
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? t("monthlyReview.defaultRecipient");
-  const showShareButton = isMonthlyTab && report !== null && !hasNoReviewableMonth;
+  const showShareButton = isMonthlyTab
+    ? report !== null && !hasNoReviewableMonth
+    : isWeeklyShareAvailable;
   const showLowActivityTip = report?.isLowActivity === true && !isTipDismissed;
 
   // — Handlers ———————————————————————————————————————————————————
-  const handleShareMonthlyReview = () => {
-    if (!report || isSharingImage) return;
+  const handleShareReview = () => {
+    if (!showShareButton || isSharingImage) return;
     void shareImage();
   };
 
@@ -81,7 +88,7 @@ export default function MonthlyReviewScreen() {
         onBack={() => router.back()}
         showShare={showShareButton}
         isSharing={isSharingImage}
-        onShare={handleShareMonthlyReview}
+        onShare={handleShareReview}
       />
 
       <View className="px-5 mb-4">
@@ -89,7 +96,10 @@ export default function MonthlyReviewScreen() {
       </View>
 
       {activeTab === ReviewPeriodType.Weekly ? (
-        <WeeklyReviewView />
+        <WeeklyReviewView
+          shareCardRef={weeklyShareCardRef}
+          onShareAvailableChange={setIsWeeklyShareAvailable}
+        />
       ) : hasNoReviewableMonth ? (
         <MonthlyReviewComingSoon />
       ) : (
@@ -113,7 +123,7 @@ export default function MonthlyReviewScreen() {
               )}
 
               <View
-                ref={shareCardRef}
+                ref={monthlyShareCardRef}
                 collapsable={false}
                 className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
               >

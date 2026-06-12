@@ -1,5 +1,5 @@
 import MonthlyReviewScreen from "@/feature/monthly-review/screens/monthly-review-screen";
 
-export default function MonthlyReviewRoute() {
+export default function ReviewRoute() {
   return <MonthlyReviewScreen />;
 }
