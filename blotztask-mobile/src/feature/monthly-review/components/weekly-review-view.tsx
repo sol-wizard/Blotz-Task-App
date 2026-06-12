@@ -6,8 +6,10 @@ import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterCardContent } from "./letter-card-content";
 import { LetterHeader } from "./letter-header";
 import { MonthlyReviewComingSoon } from "./monthly-review-coming-soon";
+import { MonthlyReviewTipBanner } from "./monthly-review-tip-banner";
 import { MonthSelector } from "./month-selector";
 import { useReview } from "../hooks/useMonthlyReport";
+import { ReviewPeriodType } from "../models/monthly-review-dto";
 import { formatWeek, startOfReviewWeek } from "../utils/week-utils";
 
 // Mon–Sun week (see week-utils). Matches date-fns weekStartsOn used there.
@@ -20,6 +22,7 @@ export function WeeklyReviewView() {
   // Latest viewable week is last week — the current one is still in progress.
   const latestReviewableWeek = startOfReviewWeek(subWeeks(new Date(), 1));
   const [selectedWeek, setSelectedWeek] = useState<Date>(() => latestReviewableWeek);
+  const [isTipDismissed, setIsTipDismissed] = useState(false);
 
   // Don't let users page back before sign-up week — those weeks are always empty.
   const earliestReviewableWeek = userProfile?.signUpAt
@@ -32,7 +35,7 @@ export function WeeklyReviewView() {
   // anchorDate is the selected week's Monday; the backend snaps it to the canonical period.
   const anchorDate = format(selectedWeek, "yyyy-MM-dd");
   const { report, isLoading, generate, isGenerating } = useReview(
-    "weekly",
+    ReviewPeriodType.Weekly,
     anchorDate,
     !hasNoReviewableWeek,
   );
@@ -43,6 +46,7 @@ export function WeeklyReviewView() {
     isSameWeek(selectedWeek, earliestReviewableWeek, WEEK_OPTIONS);
   const displayWeek = formatWeek(selectedWeek, i18n.language);
   const recipientName = userProfile?.displayName ?? t("monthlyReview.defaultRecipient");
+  const showLowActivityTip = report?.isLowActivity === true && !isTipDismissed;
 
   const handlePrevWeek = () => {
     if (!isAtEarliestWeek) setSelectedWeek((week) => subWeeks(week, 1));
@@ -75,6 +79,13 @@ export function WeeklyReviewView() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
+          {showLowActivityTip && (
+            <MonthlyReviewTipBanner
+              text={t("weeklyReview.lowActivityHint")}
+              onDismiss={() => setIsTipDismissed(true)}
+            />
+          )}
+
           <View className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8">
             <LetterHeader
               displayPeriod={displayWeek}
@@ -88,6 +99,7 @@ export function WeeklyReviewView() {
               recipientName={recipientName}
               isGenerating={isGenerating}
               onGenerate={generate}
+              period={ReviewPeriodType.Weekly}
             />
           </View>
         </View>

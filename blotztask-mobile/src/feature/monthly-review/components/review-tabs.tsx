@@ -1,7 +1,8 @@
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { ReviewPeriodType } from "../models/monthly-review-dto";
 
-export type ReviewTab = "weekly" | "monthly";
+export type ReviewTab = ReviewPeriodType;
 
 type Props = {
   activeTab: ReviewTab;
@@ -12,8 +13,8 @@ export function ReviewTabs({ activeTab, onChange }: Props) {
   const { t } = useTranslation("settings");
 
   const tabs: { key: ReviewTab; label: string }[] = [
-    { key: "weekly", label: t("review.weeklyTab") },
-    { key: "monthly", label: t("review.monthlyTab") },
+    { key: ReviewPeriodType.Weekly, label: t("review.weeklyTab") },
+    { key: ReviewPeriodType.Monthly, label: t("review.monthlyTab") },
   ];
 
   return (

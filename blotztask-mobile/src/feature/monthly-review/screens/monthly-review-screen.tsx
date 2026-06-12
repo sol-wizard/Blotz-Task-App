@@ -15,6 +15,7 @@ import { ReviewTab, ReviewTabs } from "../components/review-tabs";
 import { WeeklyReviewView } from "../components/weekly-review-view";
 import { useReview } from "../hooks/useMonthlyReport";
 import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
+import { ReviewPeriodType } from "../models/monthly-review-dto";
 import { formatMonth } from "../utils/month-utils";
 
 export default function MonthlyReviewScreen() {
@@ -23,7 +24,7 @@ export default function MonthlyReviewScreen() {
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   // Default to Weekly — it produces fresh content more often than Monthly.
-  const [activeTab, setActiveTab] = useState<ReviewTab>("weekly");
+  const [activeTab, setActiveTab] = useState<ReviewTab>(ReviewPeriodType.Weekly);
   // Latest viewable month is last month — the current one is still in progress.
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
@@ -32,7 +33,7 @@ export default function MonthlyReviewScreen() {
   const { isSharingImage, shareImage } = useMonthlyReviewShare({ captureTargetRef: shareCardRef });
 
   // — Derived values —————————————————————————————————————————————
-  const isMonthlyTab = activeTab === "monthly";
+  const isMonthlyTab = activeTab === ReviewPeriodType.Monthly;
   // Don't let users page back before sign-up month — those months are always empty.
   const earliestReviewableMonth = userProfile?.signUpAt
     ? startOfMonth(new Date(userProfile.signUpAt))
@@ -46,7 +47,7 @@ export default function MonthlyReviewScreen() {
   // anchorDate is the selected month's first day; the backend snaps it to the canonical period.
   const anchorDate = format(selectedMonth, "yyyy-MM-dd");
   const { report, isLoading, generate, isGenerating } = useReview(
-    "monthly",
+    ReviewPeriodType.Monthly,
     anchorDate,
     isMonthlyTab && !hasNoReviewableMonth,
   );
@@ -87,7 +88,7 @@ export default function MonthlyReviewScreen() {
         <ReviewTabs activeTab={activeTab} onChange={setActiveTab} />
       </View>
 
-      {activeTab === "weekly" ? (
+      {activeTab === ReviewPeriodType.Weekly ? (
         <WeeklyReviewView />
       ) : hasNoReviewableMonth ? (
         <MonthlyReviewComingSoon />
@@ -127,6 +128,7 @@ export default function MonthlyReviewScreen() {
                   recipientName={recipientName}
                   isGenerating={isGenerating}
                   onGenerate={generate}
+                  period={ReviewPeriodType.Monthly}
                 />
               </View>
             </View>

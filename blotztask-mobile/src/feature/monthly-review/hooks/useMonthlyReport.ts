@@ -35,7 +35,7 @@ export function useReview(periodType: ReviewPeriodType, anchorDate: string, enab
       const quotaExceeded = isAxiosError(error) && error.response?.status === 429;
       Toast.show({
         type: "error",
-        text1: t(quotaExceeded ? "monthlyReview.quotaError" : "monthlyReview.generateError"),
+        text1: t(quotaExceeded ? "review.quotaError" : "review.generateError"),
       });
     },
   });

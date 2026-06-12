@@ -95,15 +95,17 @@
     "comingSoonTitle": "你的第一封信正在路上 ✨",
     "comingSoonBody": "月度回顾会在你使用 Blotz 满一个整月后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
     "defaultRecipient": "朋友",
-    "aiDisclosure": "由AI根据您本月创建的任务生成",
-    "generatingStage1": "正在翻阅你的这个月… 📖",
-    "generatingStage2": "正在发现你的小规律… ✨",
-    "generatingStage3": "正在为你写信… 💌"
+    "aiDisclosure": "由AI根据您本月创建的任务生成"
   },
   "review": {
     "title": "回顾",
     "weeklyTab": "每周",
-    "monthlyTab": "每月"
+    "monthlyTab": "每月",
+    "generateError": "信件生成失败，请重试。",
+    "quotaError": "你已达到使用上限，请稍后再试。",
+    "generatingStage1": "正在翻阅你的任务… 📖",
+    "generatingStage2": "正在发现你的小规律… ✨",
+    "generatingStage3": "正在为你写信… 💌"
   },
   "weeklyReview": {
     "letterLabel": "每周信件",
@@ -114,10 +116,7 @@
     "lowActivityHint": "想让 Blotz 更懂你？🌱 多记录一些任务，下封信就会写得更有意思！✨",
     "comingSoonTitle": "你的第一封信正在路上 ✨",
     "comingSoonBody": "每周回顾会在你使用 Blotz 满一个完整周后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
-    "aiDisclosure": "由AI根据您本周创建的任务生成",
-    "generatingStage1": "正在翻阅你的这一周… 📖",
-    "generatingStage2": "正在发现你的小规律… ✨",
-    "generatingStage3": "正在为你写信… 💌"
+    "aiDisclosure": "由AI根据您本周创建的任务生成"
   },
   "avatar": {
     "title": "头像"
