@@ -25,7 +25,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       if (cancelRequested.current) return;
       recorder.record();
     } catch (error) {
-      Toast.show({ type: "warning", text1: t("errors.recordingFailed") });
+      Toast.show({ type: "error", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
@@ -44,7 +44,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
   const stopAndUpload = async (): Promise<void> => {
     if (!recorder.isRecording) {
-      Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
+      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
       console.warn("[Mic] stopAndUpload called but recorder is not recording.");
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
@@ -68,7 +68,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
     const uri = recorder.uri;
     if (!uri) {
-      Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
+      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "recording",
