@@ -23,10 +23,10 @@ export default function SettingsScreen() {
       route: "/settings/account",
     },
     {
-      key: "monthly-review",
-      label: t("menu.monthlyReview"),
+      key: "review",
+      label: t("menu.review"),
       icon: "email-outline",
-      route: "/settings/monthly-review",
+      route: "/settings/review",
     },
     {
       key: "beta-features",
