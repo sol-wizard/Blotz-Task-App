@@ -61,7 +61,7 @@ export default function MonthlyReviewScreen() {
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatMonth(selectedMonth, i18n.language);
-  const recipientName = userProfile?.displayName ?? t("monthlyReview.defaultRecipient");
+  const recipientName = userProfile?.displayName ?? t("review.defaultRecipient");
   const showShareButton = isMonthlyTab
     ? report !== null && !hasNoReviewableMonth
     : isWeeklyShareAvailable;

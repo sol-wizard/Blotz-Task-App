@@ -12,7 +12,7 @@ export function LetterBody({ recipientName, body }: Props) {
   return (
     <>
       <Text className="text-2xl font-balooBold text-secondary mb-5">
-        {t("monthlyReview.greeting", { name: recipientName })}
+        {t("review.greeting", { name: recipientName })}
       </Text>
       <Text
         className="text-[15px] font-baloo text-secondary mb-8"

@@ -6,7 +6,9 @@ import {
 
 // The device's IANA timezone (e.g. "Australia/Sydney"). The backend snaps the anchor
 // date to the local period boundary using this.
-const deviceTimeZoneId = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const deviceTimeZoneId = (): string => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+};
 
 // anchorDate: any date inside the target period ("YYYY-MM-DD"); the backend canonicalizes it.
 export const fetchReview = async (

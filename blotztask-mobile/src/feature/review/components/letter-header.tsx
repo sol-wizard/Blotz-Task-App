@@ -29,7 +29,7 @@ export function LetterHeader({ displayPeriod, recipientName, pictureUrl, letterL
         </View>
         <View className="items-end">
           <Text className="text-[10px] font-baloo text-secondary/50 uppercase tracking-[2px]">
-            {t("monthlyReview.dateLabel")}
+            {t("review.dateLabel")}
           </Text>
           <Text className="text-sm font-balooBold text-secondary">{displayPeriod}</Text>
         </View>

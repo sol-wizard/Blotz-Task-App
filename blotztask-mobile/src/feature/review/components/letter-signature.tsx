@@ -15,10 +15,10 @@ export function LetterSignature() {
       <View className="flex-row items-center">
         <View className="flex-1">
           <Text className="text-sm font-baloo text-secondary/60 italic">
-            {t("monthlyReview.signOff")}
+            {t("review.signOff")}
           </Text>
           <Text className="text-2xl font-balooBold text-secondary mt-1">
-            {t("monthlyReview.signature")}
+            {t("review.signature")}
           </Text>
         </View>
         <View

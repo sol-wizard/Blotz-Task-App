@@ -50,7 +50,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
     earliestReviewableWeek !== null &&
     isSameWeek(selectedWeek, earliestReviewableWeek, WEEK_OPTIONS);
   const displayWeek = formatWeek(selectedWeek, i18n.language);
-  const recipientName = userProfile?.displayName ?? t("monthlyReview.defaultRecipient");
+  const recipientName = userProfile?.displayName ?? t("review.defaultRecipient");
   const showLowActivityTip = report?.isLowActivity === true && !isTipDismissed;
   const canShare = report !== null && !hasNoReviewableWeek;
 
