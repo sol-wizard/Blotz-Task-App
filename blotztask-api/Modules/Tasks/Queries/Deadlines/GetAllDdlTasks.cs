@@ -158,6 +158,51 @@ public class GetAllDdlTasksQueryHandler(
 
         return ddlTasks;
     }
+
+    // TODO(Blotz-Org/Blotz-Task-App-Private#1417): Keep the original non-recurring-only implementation for comparison while recurring deadlines are finalized.
+    /*
+    public async Task<List<DeadlineTaskDto>> Handle(GetAllDdlTasksQuery query, CancellationToken ct = default)
+    {
+        logger.LogInformation("Fetching all DDL tasks for user {UserId}", query.UserId);
+
+        var ddlTasks = await db.TaskItems
+            .Include(t => t.Deadline)
+            .Include(t => t.Label)
+            .Where(t => t.UserId == query.UserId
+                        && t.Deadline != null
+                        && !t.IsDone)
+            .OrderByDescending(t => t.Deadline!.IsPinned)
+            .ThenBy(t => t.Deadline!.DueAt)
+            .ThenBy(t => t.Title)
+            .Select(task => new DeadlineTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                StartTime = task.StartTime,
+                EndTime = task.EndTime,
+                IsDone = task.IsDone,
+                DueAt = task.Deadline!.DueAt,
+                IsPinned = task.Deadline.IsPinned,
+                Label = task.Label != null
+                    ? new LabelDto
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    }
+                    : null
+            })
+            .AsNoTracking()
+            .ToListAsync(ct);
+
+        logger.LogInformation(
+            "Successfully fetched {TaskCount} DDL tasks for user {UserId}",
+            ddlTasks.Count,
+            query.UserId);
+
+        return ddlTasks;
+    }
+    */
 }
 
 public class DeadlineTaskDto : TaskOccurrenceDtoBase
