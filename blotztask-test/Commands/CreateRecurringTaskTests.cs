@@ -223,6 +223,37 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_RecurringDeadlineTaskWithoutTemplateDueAt_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Weekly Report",
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            ScheduleTimeZoneId = "Australia/Perth",
+            Frequency = RecurrenceFrequency.Weekly,
+            Interval = 1,
+            DaysOfWeek = (int)WeeklyDayFlags.Monday,
+            StartDate = new DateOnly(2026, 6, 8),
+            IsDeadline = true,
+            DeadlineTimeZoneId = "Australia/Perth"
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "recurring deadline templates should be fully validated before database constraints run");
+    }
+
+    [Fact]
     public async Task Handle_WeeklyRecurringTaskWithoutDaysOfWeek_ThrowsValidationException()
     {
         // Arrange

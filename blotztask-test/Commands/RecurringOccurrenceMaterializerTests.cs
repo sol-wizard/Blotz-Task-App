@@ -394,6 +394,50 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_DeadlineWithoutDueAt_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily Standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        // Act
+        var act = async () => await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 3),
+            UserId = userId,
+            DeadlineTimeZoneId = "Australia/Perth",
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Future standup",
+                StartTime = new DateTimeOffset(2026, 6, 3, 10, 0, 0, TimeSpan.Zero),
+                EndTime = new DateTimeOffset(2026, 6, 3, 10, 0, 0, TimeSpan.Zero),
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = true
+            }
+        }, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "future recurring deadline edits should be fully validated before database constraints run");
+    }
+
+    [Fact]
     public async Task Handle_UpdateRecurringTaskFuture_PrunesOverridesThatDoNotMatchNewRule()
     {
         // Arrange

@@ -144,11 +144,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 table: "RecurringTasks",
                 sql: "([DeadlineOffsetDays] IS NULL OR [DeadlineOffsetDays] >= 0)");
 
-            migrationBuilder.AddCheckConstraint(
-                name: "CK_RecurringTask_Deadline_Template_Complete",
-                table: "RecurringTasks",
-                sql: "(([IsDeadline] = 0 AND [DeadlineOffsetDays] IS NULL AND [DeadlineTimeOfDay] IS NULL AND [DeadlineTimeZoneId] IS NULL) OR ([IsDeadline] = 1 AND [DeadlineOffsetDays] IS NOT NULL AND [DeadlineTimeOfDay] IS NOT NULL AND [DeadlineTimeZoneId] IS NOT NULL))");
-
             migrationBuilder.CreateIndex(
                 name: "IX_RecurringOccurrenceOverrides_RecurringTaskId",
                 table: "RecurringOccurrenceOverrides",
@@ -222,10 +217,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
 
             migrationBuilder.DropCheckConstraint(
                 name: "CK_RecurringTask_Deadline_Offset_NonNegative",
-                table: "RecurringTasks");
-
-            migrationBuilder.DropCheckConstraint(
-                name: "CK_RecurringTask_Deadline_Template_Complete",
                 table: "RecurringTasks");
 
             migrationBuilder.DropColumn(

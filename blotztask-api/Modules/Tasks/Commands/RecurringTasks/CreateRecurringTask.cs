@@ -189,7 +189,12 @@ public class CreateRecurringTaskCommandHandler(
             return new RecurringDeadlineTemplate(false, null, null, null);
         }
 
-        var templateDueAt = details.TemplateDueAt ?? templateEndTime;
+        if (details.TemplateDueAt == null)
+        {
+            throw new ValidationException("TemplateDueAt is required when IsDeadline is true.");
+        }
+
+        var templateDueAt = details.TemplateDueAt.Value;
         if (templateDueAt < templateEndTime)
         {
             throw new ValidationException("TemplateDueAt cannot be before the task end time.");

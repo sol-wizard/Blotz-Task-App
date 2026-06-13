@@ -11,14 +11,6 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
         builder.ToTable("RecurringTasks", t =>
         {
             t.HasCheckConstraint(
-                "CK_RecurringTask_Deadline_Template_Complete",
-                "(" +
-                "([IsDeadline] = 0 AND [DeadlineOffsetDays] IS NULL AND [DeadlineTimeOfDay] IS NULL AND [DeadlineTimeZoneId] IS NULL)" +
-                " OR " +
-                "([IsDeadline] = 1 AND [DeadlineOffsetDays] IS NOT NULL AND [DeadlineTimeOfDay] IS NOT NULL AND [DeadlineTimeZoneId] IS NOT NULL)" +
-                ")");
-
-            t.HasCheckConstraint(
                 "CK_RecurringTask_Deadline_Offset_NonNegative",
                 "([DeadlineOffsetDays] IS NULL OR [DeadlineOffsetDays] >= 0)");
         });

@@ -344,7 +344,12 @@ public class UpdateRecurringTaskFutureCommandHandler(
             return new RecurringDeadlineTemplate(false, null, null, null);
         }
 
-        var dueAt = details.DueAt ?? details.EndTime;
+        if (details.DueAt == null)
+        {
+            throw new ValidationException("DueAt is required when IsDeadline is true.");
+        }
+
+        var dueAt = details.DueAt.Value;
         if (dueAt < details.EndTime)
         {
             throw new ValidationException("DueAt cannot be before the task end time.");
