@@ -33,12 +33,6 @@ const SubtasksEditor = ({
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
-
-  useEffect(() => {
-    if (fetchedSubtasks) {
-      setDraggableSubtasks(fetchedSubtasks);
-    }
-  }, [fetchedSubtasks]);
   
   const { bottom } = useSafeAreaInsets();
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
@@ -119,6 +113,7 @@ const SubtasksEditor = ({
             <TouchableOpacity
               onPress={async () => {
                 await onRefreshSubtasks();
+                setDraggableSubtasks(fetchedSubtasks ?? []);
               }}
               className="p-2"
             >
