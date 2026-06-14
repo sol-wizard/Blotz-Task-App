@@ -167,6 +167,28 @@ public class RecurringTaskGeneratorServiceTests
             because: "Sydney uses UTC+11 during daylight saving time");
     }
 
+    [Fact]
+    public void BuildOccurrenceEndTime_ForOvernightRange_ShouldPreserveEndDateOffset()
+    {
+        // Arrange
+        var task = MakeRecurringTask(
+            RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 2),
+            scheduleTimeZoneId: "Australia/Perth",
+            templateStartTime: new DateTimeOffset(2026, 6, 2, 22, 0, 0, TimeSpan.FromHours(8)),
+            templateEndTime: new DateTimeOffset(2026, 6, 3, 1, 0, 0, TimeSpan.FromHours(8)));
+
+        // Act
+        var occurrenceStart = _service.BuildOccurrenceStartTime(task, new DateOnly(2026, 6, 10));
+        var occurrenceEnd = _service.BuildOccurrenceEndTime(task, new DateOnly(2026, 6, 10));
+
+        // Assert
+        occurrenceStart.Should().Be(new DateTimeOffset(2026, 6, 10, 22, 0, 0, TimeSpan.FromHours(8)),
+            because: "the occurrence should start on the requested recurrence date");
+        occurrenceEnd.Should().Be(new DateTimeOffset(2026, 6, 11, 1, 0, 0, TimeSpan.FromHours(8)),
+            because: "overnight recurring events should preserve the template end-date offset");
+    }
+
     // -----------------------------------------------------------------------
     // Helper
     // -----------------------------------------------------------------------
@@ -179,15 +201,17 @@ public class RecurringTaskGeneratorServiceTests
         DateOnly? startDate = null,
         DateOnly? endDate = null,
         string scheduleTimeZoneId = "Australia/Perth",
-        DateTimeOffset? templateStartTime = null)
+        DateTimeOffset? templateStartTime = null,
+        DateTimeOffset? templateEndTime = null)
     {
         return new RecurringTask
         {
             SeriesId = 1,
             Title = "Test Task",
             UserId = Guid.NewGuid(),
-            TimeType = TaskTimeType.SingleTime,
+            TimeType = templateEndTime == null ? TaskTimeType.SingleTime : TaskTimeType.RangeTime,
             TemplateStartTime = templateStartTime ?? new DateTimeOffset(2026, 1, 1, 9, 0, 0, TimeSpan.FromHours(8)),
+            TemplateEndTime = templateEndTime,
             ScheduleTimeZoneId = scheduleTimeZoneId,
             StartDate = startDate ?? new DateOnly(2026, 1, 1),
             EndDate = endDate,

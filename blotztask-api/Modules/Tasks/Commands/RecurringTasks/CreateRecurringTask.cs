@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Shared;
 
@@ -173,10 +174,9 @@ public class CreateRecurringTaskCommandHandler(
             throw new ValidationException("TemplateStartTime date must match StartDate.");
         }
 
-        if (details.TimeType == TaskTimeType.RangeTime
-            && DateOnly.FromDateTime(templateEndTime.Date) != details.StartDate)
+        if (details.TimeType == TaskTimeType.RangeTime)
         {
-            throw new ValidationException("TemplateEndTime date must match StartDate.");
+            RecurringTaskGeneratorService.GetTemplateEndOffsetDays(details.TemplateStartTime, templateEndTime);
         }
     }
 

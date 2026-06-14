@@ -65,6 +65,37 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_OvernightRecurringOccurrence_CreatesTaskItemWithNextDayEndTime()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateStart = new DateTimeOffset(2026, 6, 1, 22, 0, 0, TimeSpan.Zero);
+        var templateEnd = new DateTimeOffset(2026, 6, 2, 1, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Night Shift",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateStart,
+            templateEndTime: templateEnd,
+            scheduleTimeZoneId: "UTC");
+
+        // Act
+        var taskItem = await _materializer.EnsureRecurringOccurrenceTaskItem(
+            recurring.Id,
+            new DateOnly(2026, 6, 3),
+            userId);
+
+        // Assert
+        taskItem.StartTime.Should().Be(new DateTimeOffset(2026, 6, 3, 22, 0, 0, TimeSpan.Zero),
+            because: "the materialized occurrence should start on its recurrence date");
+        taskItem.EndTime.Should().Be(new DateTimeOffset(2026, 6, 4, 1, 0, 0, TimeSpan.Zero),
+            because: "overnight recurring occurrences should preserve the template end-date offset");
+        taskItem.TimeType.Should().Be(TaskTimeType.RangeTime,
+            because: "overnight occurrences are range-time events");
+    }
+
+    [Fact]
     public async Task Handle_RecurringDeadlineOccurrence_CreatesTaskDeadline()
     {
         // Arrange

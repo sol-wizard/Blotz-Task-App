@@ -66,6 +66,7 @@
     "endDate": "结束日期",
     "endDateRequired": "请选择结束日期",
     "endDateBeforeStart": "结束日期不能早于首次重复日期",
+    "durationTooLong": "重复事件不能超过 31 天",
     "editTitle": "保存更改",
     "editMessage": "这些更改只应用到这一天，还是从这一天开始应用到将来？",
     "editThisDate": "仅此日期",

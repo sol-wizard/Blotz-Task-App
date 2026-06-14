@@ -130,7 +130,9 @@ public class GetTasksByDateQueryHandler(
             query.UserId,
             queryStopwatch.ElapsedMilliseconds);
 
-        // Step 2: Fetch active RecurringTasks for this user that could occur on requestedDate
+        var recurrenceLookbackStartDate = requestedDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
+
+        // Step 2: Fetch active RecurringTasks for this user that could overlap requestedDate
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
@@ -139,68 +141,77 @@ public class GetTasksByDateQueryHandler(
                 && r.IsActive
                 && !r.Series.IsDeleted
                 && r.StartDate <= requestedDate
-                && (r.EndDate == null || r.EndDate >= requestedDate))
+                && (r.EndDate == null || r.EndDate >= recurrenceLookbackStartDate))
             .ToListAsync(ct);
 
-        // Step 3: Find overrides that suppress or replace virtual occurrences on this date
-        var overrideMap = await db.RecurringOccurrenceOverrides
+        // Step 3: Find overrides that suppress or replace virtual occurrences that may overlap this date.
+        var overrides = await db.RecurringOccurrenceOverrides
             .AsNoTracking()
             .Where(o => o.Series.UserId == query.UserId
-                && o.OccurrenceDate == requestedDate)
-            .ToDictionaryAsync(o => o.SeriesId, o => o, ct);
+                && o.OccurrenceDate >= recurrenceLookbackStartDate
+                && o.OccurrenceDate <= requestedDate)
+            .ToListAsync(ct);
+
+        var overrideMap = overrides.ToDictionary(o => (o.SeriesId, o.OccurrenceDate), o => o);
 
         // Step 4: For each recurring task not yet saved, check if it occurs on this date
         foreach (var recurring in recurringTasks)
         {
-            if (overrideMap.TryGetValue(recurring.SeriesId, out var recurringOverride)
-                && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            var occurrenceWindows = generatorService.GetOccurrencesOverlappingWindow(
+                recurring,
+                requestedDate,
+                selectedDayStart,
+                selectedDayEnd);
+
+            foreach (var occurrenceWindow in occurrenceWindows)
             {
-                continue;
-            }
-
-            if (!generatorService.IsOccurrenceOn(recurring, requestedDate)) continue;
-
-            var startTime = generatorService.BuildOccurrenceStartTime(recurring, requestedDate);
-            var endTime = generatorService.BuildOccurrenceEndTime(recurring, requestedDate);
-
-            tasks.Add(new TaskByDateItemDto
-            {
-                Id = null,  // no DB row yet
-                OccurrenceKind = TaskOccurrenceKind.VirtualRecurringOccurrence,
-                RecurringOccurrence = new RecurringOccurrenceIdentityDto
+                if (overrideMap.TryGetValue(
+                        (recurring.SeriesId, occurrenceWindow.OccurrenceDate),
+                        out var recurringOverride)
+                    && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached)
                 {
-                    RecurringTaskId = recurring.Id,
-                    OccurrenceDate = requestedDate
-                },
-                RecurringTask = new RecurringTaskEditMetadataDto
+                    continue;
+                }
+
+                tasks.Add(new TaskByDateItemDto
                 {
-                    Frequency = recurring.Pattern.Frequency,
-                    Interval = recurring.Pattern.Interval,
-                    DaysOfWeek = recurring.Pattern.DaysOfWeek,
-                    DayOfMonth = recurring.Pattern.DayOfMonth,
-                    StartDate = recurring.StartDate,
-                    EndDate = recurring.EndDate
-                },
-                Title = recurring.Title,
-                Description = recurring.Description,
-                StartTime = startTime,
-                EndTime = endTime,
-                IsDone = false,
-                TimeType = recurring.TimeType,
-                Label = recurring.Label != null
-                    ? new LabelDto
+                    Id = null,  // no DB row yet
+                    OccurrenceKind = TaskOccurrenceKind.VirtualRecurringOccurrence,
+                    RecurringOccurrence = new RecurringOccurrenceIdentityDto
                     {
-                        LabelId = recurring.Label.LabelId,
-                        Name = recurring.Label.Name,
-                        Color = recurring.Label.Color
-                    }
-                    : null,
-                Subtasks = [],
-                IsDeadline = recurring.IsDeadline,
-                DueAt = recurring.IsDeadline
-                    ? generatorService.BuildOccurrenceDueAt(recurring, requestedDate)
-                    : null
-            });
+                        RecurringTaskId = recurring.Id,
+                        OccurrenceDate = occurrenceWindow.OccurrenceDate
+                    },
+                    RecurringTask = new RecurringTaskEditMetadataDto
+                    {
+                        Frequency = recurring.Pattern.Frequency,
+                        Interval = recurring.Pattern.Interval,
+                        DaysOfWeek = recurring.Pattern.DaysOfWeek,
+                        DayOfMonth = recurring.Pattern.DayOfMonth,
+                        StartDate = recurring.StartDate,
+                        EndDate = recurring.EndDate
+                    },
+                    Title = recurring.Title,
+                    Description = recurring.Description,
+                    StartTime = occurrenceWindow.StartTime,
+                    EndTime = occurrenceWindow.EndTime,
+                    IsDone = false,
+                    TimeType = recurring.TimeType,
+                    Label = recurring.Label != null
+                        ? new LabelDto
+                        {
+                            LabelId = recurring.Label.LabelId,
+                            Name = recurring.Label.Name,
+                            Color = recurring.Label.Color
+                        }
+                        : null,
+                    Subtasks = [],
+                    IsDeadline = recurring.IsDeadline,
+                    DueAt = recurring.IsDeadline
+                        ? generatorService.BuildOccurrenceDueAt(recurring, occurrenceWindow.OccurrenceDate)
+                        : null
+                });
+            }
         }
 
         // Step 5: Re-sort the merged list because virtual tasks from Step 4 were appended

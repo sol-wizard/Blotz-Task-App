@@ -39,6 +39,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         var monthEnd = query.FirstDate.AddMonths(1);
         var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
         var monthEndDate = DateOnly.FromDateTime(monthEnd.Date);
+        var recurrenceLookbackStartDate = monthStartDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
         
         
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.FirstDate.Offset);
@@ -79,7 +80,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         var recurringOverrides = await db.RecurringOccurrenceOverrides
             .AsNoTracking()
             .Where(o => o.Series.UserId == query.UserId
-                && o.OccurrenceDate >= monthStartDate
+                && o.OccurrenceDate >= recurrenceLookbackStartDate
                 && o.OccurrenceDate < monthEndDate
                 && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .Select(o => new
@@ -102,7 +103,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                         && r.IsActive
                         && !r.Series.IsDeleted
                         && r.StartDate <= monthEndDate
-                        && (r.EndDate == null || r.EndDate >= monthStartDate))
+                        && (r.EndDate == null || r.EndDate >= recurrenceLookbackStartDate))
             .ToListAsync(ct);
 
         logger.LogInformation(
@@ -143,8 +144,8 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             {
                 var offset = 4 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
-                    .Where(r => !recurringOverrideKeys.Contains((r.SeriesId, dayDate))
-                        && generatorService.IsOccurrenceOn(r, dayDate))
+                    .Where(r => generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
+                        .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))))
                     .OrderBy(r => r.TemplateStartTime)
                     .Select(r => new TaskThumbnailDto
                     {

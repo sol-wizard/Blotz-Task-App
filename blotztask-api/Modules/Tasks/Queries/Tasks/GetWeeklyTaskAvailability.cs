@@ -41,6 +41,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var weekEndExclusive = query.Monday.AddDays(7);
         var weekStartDate = DateOnly.FromDateTime(weekStart.Date);
         var weekEndDate = DateOnly.FromDateTime(weekEndExclusive.Date);
+        var recurrenceLookbackStartDate = weekStartDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
 
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
@@ -78,7 +79,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var recurringOverrides = await db.RecurringOccurrenceOverrides
             .AsNoTracking()
             .Where(o => o.Series.UserId == query.UserId
-                && o.OccurrenceDate >= weekStartDate
+                && o.OccurrenceDate >= recurrenceLookbackStartDate
                 && o.OccurrenceDate < weekEndDate
                 && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .Select(o => new
@@ -100,7 +101,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 && r.IsActive
                 && !r.Series.IsDeleted
                 && r.StartDate <= weekEndDate
-                && (r.EndDate == null || r.EndDate >= weekStartDate))
+                && (r.EndDate == null || r.EndDate >= recurrenceLookbackStartDate))
             .ToListAsync(ct);
 
         logger.LogInformation(
@@ -131,8 +132,8 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             if (!hasTask)
             {
                 hasTask = recurringTasks.Any(r =>
-                    !recurringOverrideKeys.Contains((r.SeriesId, dayDate))
-                    && generatorService.IsOccurrenceOn(r, dayDate));
+                    generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
+                        .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))));
             }
 
             result.Add(new DailyTaskIndicatorDto

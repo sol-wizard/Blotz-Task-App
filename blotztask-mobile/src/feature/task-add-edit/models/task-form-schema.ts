@@ -14,6 +14,9 @@ export const recurrenceValues = [
 
 export const recurrenceEndModeValues = ["never", "onDate"] as const;
 
+const MAX_RECURRING_EVENT_DURATION_DAYS = 31;
+const MAX_RECURRING_EVENT_DURATION_MS = MAX_RECURRING_EVENT_DURATION_DAYS * 24 * 60 * 60 * 1000;
+
 export const taskFormSchema = z
   .object({
     title: z
@@ -51,6 +54,21 @@ export const taskFormSchema = z
   .refine(
     (data) => {
       if (data.recurrence === "never" || data.recurrence === "custom") return true;
+
+      const start = combineDateTime(data.startDate, data.startTime);
+      const end = combineDateTime(data.endDate, data.endTime);
+      if (!start || !end) return false;
+
+      return end.getTime() - start.getTime() <= MAX_RECURRING_EVENT_DURATION_MS;
+    },
+    {
+      message: "recurrence.durationTooLong",
+      path: ["endTime"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.recurrence === "never" || data.recurrence === "custom") return true;
       if (data.recurrenceEndMode === "never") return true;
 
       return data.recurrenceEndDate != null;
@@ -69,8 +87,7 @@ export const taskFormSchema = z
       const recurrenceEndDate = startOfDay(data.recurrenceEndDate);
 
       return (
-        isBefore(firstRepeatDate, recurrenceEndDate) ||
-        isEqual(firstRepeatDate, recurrenceEndDate)
+        isBefore(firstRepeatDate, recurrenceEndDate) || isEqual(firstRepeatDate, recurrenceEndDate)
       );
     },
     {

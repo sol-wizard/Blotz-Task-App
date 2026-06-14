@@ -338,7 +338,7 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
-    public async Task Handle_RangeTemplateEndTimeDateDoesNotMatchStartDate_ThrowsValidationException()
+    public async Task Handle_OvernightRangeTemplateEndTime_CreatesRecurringTask()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
@@ -355,6 +355,39 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
         };
 
         // Act
+        var result = await _handler.Handle(new CreateRecurringTaskCommand
+        {
+            UserId = userId,
+            TaskDetails = request
+        });
+
+        var recurringTask = await _context.RecurringTasks.SingleAsync(r => r.Id == result.RecurringTaskId);
+
+        // Assert
+        recurringTask.TemplateStartTime.Should().Be(request.TemplateStartTime,
+            because: "the recurring template should keep the original local start date and time");
+        recurringTask.TemplateEndTime.Should().Be(request.TemplateEndTime,
+            because: "overnight recurring templates must preserve the end-date offset for future occurrences");
+    }
+
+    [Fact]
+    public async Task Handle_RangeTemplateLongerThanThirtyOneDays_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var request = new CreateRecurringTaskRequest
+        {
+            Title = "Very Long Session",
+            TimeType = TaskTimeType.RangeTime,
+            TemplateStartTime = new DateTimeOffset(2026, 6, 2, 22, 0, 0, TimeSpan.Zero),
+            TemplateEndTime = new DateTimeOffset(2026, 7, 4, 1, 0, 0, TimeSpan.Zero),
+            ScheduleTimeZoneId = "Australia/Perth",
+            Frequency = RecurrenceFrequency.Daily,
+            Interval = 1,
+            StartDate = new DateOnly(2026, 6, 2)
+        };
+
+        // Act
         var act = async () => await _handler.Handle(new CreateRecurringTaskCommand
         {
             UserId = userId,
@@ -363,6 +396,6 @@ public class CreateRecurringTaskTests : IClassFixture<DatabaseFixture>
 
         // Assert
         await act.Should().ThrowAsync<ValidationException>(
-            because: "range-time recurring task templates should keep their date part aligned with the recurrence start date");
+            because: "the first version supports recurring events up to 31 days long");
     }
 }

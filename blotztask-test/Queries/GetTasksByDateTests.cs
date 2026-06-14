@@ -267,6 +267,48 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_OvernightRecurringOccurrence_ShouldAppearOnFollowingDayWithOriginalOccurrenceDate()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateStart = new DateTimeOffset(2026, 6, 1, 22, 0, 0, TimeSpan.Zero);
+        var templateEnd = new DateTimeOffset(2026, 6, 2, 1, 0, 0, TimeSpan.Zero);
+
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Night Shift",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateStart,
+            templateEndTime: templateEnd,
+            scheduleTimeZoneId: "UTC");
+
+        var followingDayQuery = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = new DateTimeOffset(2026, 6, 2, 0, 0, 0, TimeSpan.Zero),
+            IncludeFloatingForToday = false
+        };
+
+        // Act
+        var result = await _handler.Handle(followingDayQuery);
+
+        // Assert
+        var overnightContinuation = result.SingleOrDefault(t =>
+            t.Title == "Night Shift"
+            && t.RecurringOccurrence != null
+            && t.RecurringOccurrence.OccurrenceDate == new DateOnly(2026, 6, 1));
+        overnightContinuation.Should().NotBeNull(
+            because: "the following-day view should include the previous night's recurring occurrence");
+        overnightContinuation!.StartTime.Should().Be(templateStart,
+            because: "the following-day view should show the occurrence that started the previous night");
+        overnightContinuation.EndTime.Should().Be(templateEnd,
+            because: "the following-day view should keep the actual overnight end time");
+        overnightContinuation.RecurringOccurrence!.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 1),
+            because: "editing or deleting the continuation must target the original recurrence date");
+    }
+
+    [Fact]
     public async Task Handle_ShouldReturnStoredRow_NotVirtual_WhenOccurrenceAlreadySaved()
     {
         // Scenario: User has "Morning Run" as a daily recurring task.
@@ -406,7 +448,8 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             frequency: RecurrenceFrequency.Weekly,
             startDate: new DateOnly(2026, 3, 16),
             templateStartTime: templateTime,
-            daysOfWeek: (int)WeeklyDayFlags.Monday);
+            daysOfWeek: (int)WeeklyDayFlags.Monday,
+            scheduleTimeZoneId: "UTC");
 
         var mondayQuery = new GetTasksByDateQuery { UserId = userId, StartDate = monday, IncludeFloatingForToday = false };
         var tuesdayQuery = new GetTasksByDateQuery { UserId = userId, StartDate = tuesday, IncludeFloatingForToday = false };
@@ -436,7 +479,8 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             title: "Pay Rent",
             frequency: RecurrenceFrequency.Monthly,
             startDate: new DateOnly(2026, 1, 1),
-            templateStartTime: templateTime);
+            templateStartTime: templateTime,
+            scheduleTimeZoneId: "UTC");
 
         var march1Query = new GetTasksByDateQuery { UserId = userId, StartDate = march1, IncludeFloatingForToday = false };
         var march2Query = new GetTasksByDateQuery { UserId = userId, StartDate = march2, IncludeFloatingForToday = false };
@@ -466,7 +510,8 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             title: "Annual Health Checkup",
             frequency: RecurrenceFrequency.Yearly,
             startDate: new DateOnly(2025, 3, 14),
-            templateStartTime: templateTime);
+            templateStartTime: templateTime,
+            scheduleTimeZoneId: "UTC");
 
         var anniversaryQuery = new GetTasksByDateQuery { UserId = userId, StartDate = anniversary, IncludeFloatingForToday = false };
         var dayAfterQuery = new GetTasksByDateQuery { UserId = userId, StartDate = dayAfter, IncludeFloatingForToday = false };

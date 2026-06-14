@@ -65,6 +65,7 @@
     "endDate": "End date",
     "endDateRequired": "Choose an end date",
     "endDateBeforeStart": "End date cannot be before the first repeat date",
+    "durationTooLong": "Repeating events cannot be longer than 31 days",
     "editTitle": "Save Changes",
     "editMessage": "Apply these changes only to this date, or to this and future dates?",
     "editThisDate": "Only This Date",

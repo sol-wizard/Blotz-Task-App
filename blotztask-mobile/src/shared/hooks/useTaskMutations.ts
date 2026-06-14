@@ -66,7 +66,7 @@ const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: ddlKeys.all });
       invalidateSelectedDayTask(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
-      invalidateTaskAvailability(queryClient, task.templateStartTime);
+      invalidateTaskAvailability(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
     },
   });
 
@@ -141,7 +141,7 @@ const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.byId(data.taskItemId) });
       queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
-      invalidateTaskAvailability(queryClient, task.occurrenceDate);
+      invalidateTaskAvailability(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });
 
@@ -178,7 +178,7 @@ const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
-      invalidateTaskAvailability(queryClient, task.effectiveDate);
+      invalidateTaskAvailability(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });
   return {
@@ -233,14 +233,25 @@ export function invalidateSelectedDayTask(
   }
 }
 
-function invalidateTaskAvailability(queryClient: QueryClient, dateTime: string) {
-  const date = parseISO(dateTime);
-  const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
-  const monthKey = format(startOfMonth(date), "yyyy-MM");
+function invalidateTaskAvailability(queryClient: QueryClient, startTime: string, endTime = startTime) {
+  const start = parseISO(startTime);
+  const end = parseISO(endTime);
+  const mondayKeys = new Set([
+    format(startOfWeek(start, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    format(startOfWeek(end, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+  ]);
+  const monthKeys = new Set([
+    format(startOfMonth(start), "yyyy-MM"),
+    format(startOfMonth(end), "yyyy-MM"),
+  ]);
 
   return Promise.all([
-    queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) }),
-    queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) }),
+    ...Array.from(mondayKeys).map((key) =>
+      queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(key) }),
+    ),
+    ...Array.from(monthKeys).map((key) =>
+      queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(key) }),
+    ),
   ]);
 }
 
