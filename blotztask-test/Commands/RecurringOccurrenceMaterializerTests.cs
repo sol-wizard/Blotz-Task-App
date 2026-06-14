@@ -967,6 +967,61 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task Handle_UpdateRecurringTaskFuture_StopRepeatingFromStartDate_MarksSeriesDeleted()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily standup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+        var handler = new UpdateRecurringTaskFutureCommandHandler(
+            _context,
+            new RecurringTaskGeneratorService(),
+            _materializer,
+            new TaskItemUpdater(_context),
+            TestDbContextFactory.CreateLogger<UpdateRecurringTaskFutureCommandHandler>());
+
+        // Act
+        await handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 6, 1),
+            UserId = userId,
+            StopRepeating = true,
+            TaskDetails = new EditTaskItemDto
+            {
+                Title = "Final standup",
+                Description = "Last one",
+                StartTime = templateTime,
+                EndTime = templateTime,
+                TimeType = TaskTimeType.SingleTime,
+                LabelId = null,
+                NotificationId = null,
+                AlertTime = null,
+                IsDeadline = false
+            }
+        }, CancellationToken.None);
+
+        var template = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var series = await _context.RecurringTaskSeries.SingleAsync(s => s.Id == recurring.SeriesId);
+        var detachedOverride = await _context.RecurringOccurrenceOverrides
+            .SingleAsync(o => o.SeriesId == recurring.SeriesId
+                && o.OccurrenceDate == new DateOnly(2026, 6, 1));
+
+        // Assert
+        template.IsActive.Should().BeFalse(
+            because: "stopping repetition from the template start date deactivates the only rule version");
+        series.IsDeleted.Should().BeTrue(
+            because: "a recurring series should be marked deleted when no active template remains");
+        detachedOverride.OverrideType.Should().Be(RecurringOccurrenceOverrideType.Detached,
+            because: "the selected occurrence should still be preserved as a concrete task when repetition stops");
+    }
+
+    [Fact]
     public async Task Handle_UpdateRecurringTaskFuture_StopRepeatingWithLaterSegment_PreservesLaterSegment()
     {
         // Arrange

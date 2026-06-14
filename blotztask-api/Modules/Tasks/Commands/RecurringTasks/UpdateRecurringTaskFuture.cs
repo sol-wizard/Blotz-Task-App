@@ -94,6 +94,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
             await RemoveFutureRecurringOverrides(template, command.EffectiveDate, command.UserId, ct);
             TruncateTemplate(template, command.EffectiveDate);
+            await MarkSeriesDeletedIfNoActiveTemplates(template, ct);
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
@@ -408,6 +409,27 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
             db.RecurringOccurrenceOverrides.Remove(recurringOverride);
         }
+    }
+
+    private async Task MarkSeriesDeletedIfNoActiveTemplates(RecurringTask template, CancellationToken ct)
+    {
+        if (template.IsActive)
+        {
+            return;
+        }
+
+        var hasOtherActiveTemplate = await db.RecurringTasks
+            .AnyAsync(r => r.SeriesId == template.SeriesId
+                && r.Id != template.Id
+                && r.IsActive, ct);
+
+        if (hasOtherActiveTemplate)
+        {
+            return;
+        }
+
+        template.Series.IsDeleted = true;
+        template.Series.UpdatedAt = DateTime.UtcNow;
     }
 
     private static EditTaskItemDto BuildOccurrenceTaskDetails(

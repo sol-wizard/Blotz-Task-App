@@ -118,6 +118,7 @@ public class DeleteRecurringOccurrenceCommandHandler(
         CancellationToken ct)
     {
         TruncateTemplate(template, occurrenceDate);
+        await MarkSeriesDeletedIfNoActiveTemplates(template, ct);
 
         var futureOverrides = await db.RecurringOccurrenceOverrides
             .Include(o => o.TaskItem)
@@ -137,6 +138,27 @@ public class DeleteRecurringOccurrenceCommandHandler(
 
             db.RecurringOccurrenceOverrides.Remove(recurringOverride);
         }
+    }
+
+    private async Task MarkSeriesDeletedIfNoActiveTemplates(RecurringTask template, CancellationToken ct)
+    {
+        if (template.IsActive)
+        {
+            return;
+        }
+
+        var hasOtherActiveTemplate = await db.RecurringTasks
+            .AnyAsync(r => r.SeriesId == template.SeriesId
+                && r.Id != template.Id
+                && r.IsActive, ct);
+
+        if (hasOtherActiveTemplate)
+        {
+            return;
+        }
+
+        template.Series.IsDeleted = true;
+        template.Series.UpdatedAt = DateTime.UtcNow;
     }
 
     private static void TruncateTemplate(RecurringTask template, DateOnly occurrenceDate)

@@ -205,7 +205,10 @@ public class TaskController(
     [HttpDelete("{id}")]
     public async Task<string> DeleteTaskById(int id, CancellationToken ct)
     {
-        var command = new DeleteTaskCommand { TaskId = id };
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var command = new DeleteTaskCommand { TaskId = id, UserId = userId };
 
         return await deleteTaskCommandHandler.Handle(command, ct);
     }

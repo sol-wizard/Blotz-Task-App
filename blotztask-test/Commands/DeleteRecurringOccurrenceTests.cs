@@ -178,6 +178,38 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_DeleteFuture_FromStartDate_MarksSeriesDeleted()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var templateTime = new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.Zero);
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily cleanup",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: templateTime);
+
+        // Act
+        await _handler.Handle(new DeleteRecurringOccurrenceCommand
+        {
+            RecurringTaskId = recurring.Id,
+            OccurrenceDate = new DateOnly(2026, 6, 1),
+            DeleteFuture = true,
+            UserId = userId
+        }, CancellationToken.None);
+
+        var template = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
+        var series = await _context.RecurringTaskSeries.SingleAsync(s => s.Id == recurring.SeriesId);
+
+        // Assert
+        template.IsActive.Should().BeFalse(
+            because: "deleting future occurrences from the template start date deactivates the only rule version");
+        series.IsDeleted.Should().BeTrue(
+            because: "a series with no remaining active template should no longer be treated as an active recurring series");
+    }
+
+    [Fact]
     public async Task Handle_DeleteFuture_ExistingLaterSegment_PreservesLaterSegment()
     {
         // Arrange
