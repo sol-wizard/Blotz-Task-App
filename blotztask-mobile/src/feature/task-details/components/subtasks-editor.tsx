@@ -33,6 +33,7 @@ const SubtasksEditor = ({
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
+  
   const { bottom } = useSafeAreaInsets();
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
@@ -53,10 +54,25 @@ const SubtasksEditor = ({
     deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
   };
 
+  const getNextSubtaskNumber = () => {
+    if (!fetchedSubtasks?.length) return 1;
+
+    const numbers = fetchedSubtasks
+      .map((s) => {
+        const match = s.title.match(/^New subtask (\d+)$/);
+        return match ? Number(match[1]) : 0;
+      })
+      .filter(Boolean);
+
+    return numbers.length ? Math.max(...numbers) + 1 : 1;
+  };
+
   const handleAddSubtask = async () => {
+    const nextNumber = getNextSubtaskNumber();
+    
     addSubtask({
       parentTaskId: parentTask.id!,
-      title: "New subtask",
+      title: `New subtask ${nextNumber}`,
       duration: "00:00:00",
       order: (fetchedSubtasks?.length ?? 0) + 1,
     });
