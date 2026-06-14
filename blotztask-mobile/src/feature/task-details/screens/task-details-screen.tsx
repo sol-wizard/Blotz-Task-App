@@ -44,6 +44,7 @@ function selectTaskByRouteMode({
   return undefined;
 }
 
+// TODO: This part may need optimization in the future.
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
