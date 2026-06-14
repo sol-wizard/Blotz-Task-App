@@ -1,6 +1,6 @@
-using Azure;
 using BlotzTask.Shared.Exceptions;
 using OpenAI.Audio;
+using System.ClientModel;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -32,12 +32,12 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
 
             return transcriptionResult.Trim();
         }
-        catch (RequestFailedException ex)
+        catch (ClientResultException ex)
         {
             logger.LogWarning(ex,
-                "Whisper API request failed. Status: {Status}, ErrorCode: {ErrorCode}",
-                ex.Status, ex.ErrorCode);
-            throw new AiTranscriptionException("Whisper API request failed.", ex);
+                "Groq transcription request failed. Status: {Status}, Message: {Message}",
+                ex.Status, ex.Message);
+            throw new AiTranscriptionException("Groq transcription request failed.", ex);
         }
         catch (Exception ex)
         {
