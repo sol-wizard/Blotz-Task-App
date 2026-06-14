@@ -4,16 +4,19 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610121937_GeneralizeMonthlyReviewReportsToReviewReports")]
+    partial class GeneralizeMonthlyReviewReportsToReviewReports
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -464,46 +467,6 @@ namespace BlotzTask.Migrations
                         });
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringOccurrenceOverride", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.Property<DateOnly>("OccurrenceDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("OverrideType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RecurringTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SeriesId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RecurringTaskId");
-
-                    b.HasIndex("SeriesId", "OccurrenceDate")
-                        .IsUnique();
-
-                    b.ToTable("RecurringOccurrenceOverrides", (string)null);
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", b =>
                 {
                     b.Property<int>("Id")
@@ -517,16 +480,6 @@ namespace BlotzTask.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
-                    b.Property<int?>("DeadlineOffsetDays")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly?>("DeadlineTimeOfDay")
-                        .HasColumnType("time");
-
-                    b.Property<string>("DeadlineTimeZoneId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -538,23 +491,7 @@ namespace BlotzTask.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<bool>("IsDeadline")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<int?>("LabelId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PreviousRecurringTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ScheduleTimeZoneId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("SeriesId")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("StartDate")
@@ -586,49 +523,9 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("LabelId");
 
-                    b.HasIndex("PreviousRecurringTaskId");
-
                     b.HasIndex("UserId", "IsActive");
 
-                    b.HasIndex("SeriesId", "StartDate", "EndDate");
-
-                    b.ToTable("RecurringTasks", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_RecurringTask_Deadline_Offset_NonNegative", "([DeadlineOffsetDays] IS NULL OR [DeadlineOffsetDays] >= 0)");
-                        });
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTaskSeries", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "IsDeleted");
-
-                    b.ToTable("RecurringTaskSeries", (string)null);
+                    b.ToTable("RecurringTasks", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
@@ -750,7 +647,7 @@ namespace BlotzTask.Migrations
                     b.Property<string>("NotificationId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RecurringOccurrenceOverrideId")
+                    b.Property<int?>("RecurringTaskId")
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("StartTime")
@@ -773,9 +670,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("LabelId");
 
-                    b.HasIndex("RecurringOccurrenceOverrideId")
-                        .IsUnique()
-                        .HasFilter("[RecurringOccurrenceOverrideId] IS NOT NULL");
+                    b.HasIndex("RecurringTaskId");
 
                     b.HasIndex("UserId", "StartTime", "EndTime");
 
@@ -1060,41 +955,11 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringOccurrenceOverride", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "RecurringTask")
-                        .WithMany()
-                        .HasForeignKey("RecurringTaskId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTaskSeries", "Series")
-                        .WithMany("Overrides")
-                        .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RecurringTask");
-
-                    b.Navigation("Series");
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
                         .WithMany()
                         .HasForeignKey("LabelId");
-
-                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "PreviousRecurringTask")
-                        .WithMany()
-                        .HasForeignKey("PreviousRecurringTaskId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTaskSeries", "Series")
-                        .WithMany("Versions")
-                        .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
                         .WithMany()
@@ -1138,21 +1003,6 @@ namespace BlotzTask.Migrations
                     b.Navigation("Pattern")
                         .IsRequired();
 
-                    b.Navigation("PreviousRecurringTask");
-
-                    b.Navigation("Series");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTaskSeries", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("User");
                 });
 
@@ -1184,9 +1034,9 @@ namespace BlotzTask.Migrations
                         .WithMany("TaskItems")
                         .HasForeignKey("LabelId");
 
-                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringOccurrenceOverride", "RecurringOccurrenceOverride")
-                        .WithOne("TaskItem")
-                        .HasForeignKey("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", "RecurringOccurrenceOverrideId")
+                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "RecurringTask")
+                        .WithMany()
+                        .HasForeignKey("RecurringTaskId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
@@ -1197,7 +1047,7 @@ namespace BlotzTask.Migrations
 
                     b.Navigation("Label");
 
-                    b.Navigation("RecurringOccurrenceOverride");
+                    b.Navigation("RecurringTask");
 
                     b.Navigation("User");
                 });
@@ -1230,18 +1080,6 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Navigation("TaskItems");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringOccurrenceOverride", b =>
-                {
-                    b.Navigation("TaskItem");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTaskSeries", b =>
-                {
-                    b.Navigation("Overrides");
-
-                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>

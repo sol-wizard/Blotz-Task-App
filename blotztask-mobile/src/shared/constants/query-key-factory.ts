@@ -53,8 +53,9 @@ export const aiUsageKeys = {
   summary: () => [...aiUsageKeys.all, "summary"] as const,
 };
 
-export const monthlyReviewKeys = {
-  all: ["monthlyReview"] as const,
-  byMonth: (year: number, month: number) =>
-    [...monthlyReviewKeys.all, year, month] as const,
+export const reviewKeys = {
+  all: ["review"] as const,
+  // anchorDate is normalized to the period start before use, so this is 1:1 with a period.
+  byPeriod: (periodType: string, anchorDate: string) =>
+    [...reviewKeys.all, periodType, anchorDate] as const,
 } as const;
