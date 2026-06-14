@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
@@ -46,5 +47,39 @@ public class GetMonthlyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         var indicator = result.Single(day => day.Date.Date == scheduledDay.Date);
         indicator.TaskThumbnails.Should().Contain(t => t.TaskTitle == "Future Scheduled Task",
             because: "future month views should still include tasks scheduled in that month");
+    }
+
+    [Fact]
+    public async Task Handle_OvernightRecurringOccurrence_ShouldShowThumbnailOnFollowingDay()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var monthStart = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Night Shift",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: new DateTimeOffset(2026, 6, 1, 22, 0, 0, TimeSpan.Zero),
+            templateEndTime: new DateTimeOffset(2026, 6, 2, 1, 0, 0, TimeSpan.Zero),
+            daysOfWeek: (int)WeeklyDayFlags.Monday,
+            scheduleTimeZoneId: "UTC");
+
+        var query = new GetMonthlyTaskAvailabilityQuery
+        {
+            UserId = userId,
+            FirstDate = monthStart
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+
+        // Assert
+        var startDay = result.Single(day => day.Date.Date == new DateTime(2026, 6, 1));
+        var followingDay = result.Single(day => day.Date.Date == new DateTime(2026, 6, 2));
+        startDay.TaskThumbnails.Should().Contain(t => t.TaskTitle == "Night Shift",
+            because: "the monthly calendar should show the recurring event on its start day");
+        followingDay.TaskThumbnails.Should().Contain(t => t.TaskTitle == "Night Shift",
+            because: "the monthly calendar should show overnight recurring continuations on following days");
     }
 }

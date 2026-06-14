@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { FormTextInput } from "@/shared/components/form-text-input";
@@ -15,7 +15,11 @@ import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
 import { getTaskFormDefaults } from "./util/get-task-form-defaults";
 import { getTaskNotification } from "./util/get-task-notification";
-import { buildTaskTimePayload, calculateAlertTime } from "./util/time-convertion";
+import { RecurrenceSelect } from "./components/recurrence-select";
+import {
+  buildTaskTimePayload,
+  calculateAlertTime,
+} from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -25,13 +29,19 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
-import { addHours } from "date-fns";
+import { addHours, format } from "date-fns";
+import { RecurrenceEndSection } from "./components/recurrence-end-section";
+
+export type TaskFormDirtyFields = Readonly<Partial<Record<keyof TaskFormField, boolean>>>;
 
 export type TaskFormProps = {
-  onSubmit: (data: TaskUpsertDTO) => void;
-} & ({ mode: "create"; dto?: undefined } | { mode: "edit"; dto: TaskUpsertDTO });
+  onSubmit: (data: TaskUpsertDTO, dirtyFields: TaskFormDirtyFields) => void;
+} & (
+  | { mode: "create"; dto?: undefined; recurrenceEditMode?: undefined }
+  | { mode: "edit"; dto: TaskUpsertDTO; recurrenceEditMode?: "hidden" | "futureOnly" }
+);
 
-const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) => {
   // Queries
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
   const { labels = [], isLoading } = useAllLabels();
@@ -54,6 +64,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue, clearErrors, getValues } = form;
   const { isSubmitting } = formState;
+  const shouldShowRecurrence = mode === "create" || recurrenceEditMode === "futureOnly";
+  const recurrence = useWatch({ control, name: "recurrence" });
+  const isRecurringTaskForm =
+    shouldShowRecurrence && recurrence !== "never" && recurrence !== "custom";
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -61,6 +75,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   // Handlers
   const handleFormSubmit = async (data: TaskFormField) => {
+    const isRecurringCreate =
+      mode === "create" && data.recurrence !== "never" && data.recurrence !== "custom";
     const isReminderTab = isActiveTab === SegmentButtonValue.Reminder;
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
@@ -70,13 +86,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     );
 
     const newAlertTime = calculateAlertTime(startTime!, data.alert);
-    const notificationId = await getTaskNotification({
-      mode,
-      dto,
-      upcomingNotification: userPreferences?.upcomingNotification,
-      newAlertTime,
-      newTaskTitle: data.title,
-    });
+    const notificationId = isRecurringCreate
+      ? null
+      : await getTaskNotification({
+          mode,
+          dto,
+          upcomingNotification: userPreferences?.upcomingNotification,
+          newAlertTime,
+          newTaskTitle: data.title,
+        });
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
@@ -87,13 +105,27 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       endTime: convertToDateTimeOffset(endTime!),
       labelId: data.labelId ?? undefined,
       timeType,
-      alertTime: notificationId && newAlertTime ? convertToDateTimeOffset(newAlertTime) : undefined,
+      alertTime:
+        !isRecurringCreate && notificationId && newAlertTime
+          ? convertToDateTimeOffset(newAlertTime)
+          : undefined,
       notificationId,
       isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
+      recurrence: shouldShowRecurrence ? data.recurrence : undefined,
+      recurrenceEndMode: shouldShowRecurrence ? data.recurrenceEndMode : undefined,
+      recurrenceEndDate:
+        shouldShowRecurrence
+          ? data.recurrence !== "never" &&
+            data.recurrence !== "custom" &&
+            data.recurrenceEndMode === "onDate" &&
+            data.recurrenceEndDate
+            ? format(data.recurrenceEndDate, "yyyy-MM-dd")
+            : null
+          : undefined,
     };
 
-    onSubmit(submitTask);
+    onSubmit(submitTask, formState.dirtyFields);
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
@@ -170,9 +202,20 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
+        {shouldShowRecurrence && (
+          <>
+            <RecurrenceSelect control={control} />
+            <RecurrenceEndSection control={control} />
+            <FormDivider />
+          </>
+        )}
 
-        <AlertSelect control={control} />
-        <FormDivider />
+        {!isRecurringTaskForm && (
+          <>
+            <AlertSelect control={control} />
+            <FormDivider />
+          </>
+        )}
 
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>

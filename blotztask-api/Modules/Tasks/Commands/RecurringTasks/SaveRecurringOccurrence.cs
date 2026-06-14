@@ -1,59 +1,44 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Services;
-using BlotzTask.Shared.Exceptions;
-using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 
-public class SaveRecurringOccurrenceCommand
+public class SaveRecurringOccurrenceRequest
 {
     public required int RecurringTaskId { get; init; }
     public required DateOnly OccurrenceDate { get; init; }
 }
 
+public class SaveRecurringOccurrenceCommand
+{
+    public required int RecurringTaskId { get; init; }
+    public required DateOnly OccurrenceDate { get; init; }
+    public required Guid UserId { get; init; }
+}
+
 public class SaveRecurringOccurrenceCommandHandler(
     BlotzTaskDbContext db,
-    RecurringTaskGeneratorService generatorService,
+    RecurringOccurrenceMaterializer materializer,
     ILogger<SaveRecurringOccurrenceCommandHandler> logger)
 {
     public async Task<int> Handle(SaveRecurringOccurrenceCommand command, CancellationToken ct)
     {
-        var template = await db.RecurringTasks
-            .FirstOrDefaultAsync(r => r.Id == command.RecurringTaskId, ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
-        if (template == null)
-            throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
-
-
-        // Check if a row already exists for this (RecurringTaskId, date) — avoid duplicates.
-        // Use the exact StartTime value that CreateTaskItem would produce for idempotency.
-        var expectedStartTime = new DateTimeOffset(
+        var taskItem = await materializer.EnsureRecurringOccurrenceTaskItem(
+            command.RecurringTaskId,
             command.OccurrenceDate,
-            TimeOnly.FromTimeSpan(template.TemplateStartTime.TimeOfDay),
-            template.TemplateStartTime.Offset);
+            command.UserId,
+            ct);
 
-        var existingId = await db.TaskItems
-            .Where(t => t.RecurringTaskId == command.RecurringTaskId
-                        && t.StartTime == expectedStartTime)
-            .Select(t => (int?)t.Id)
-            .FirstOrDefaultAsync(ct);
-
-        if (existingId.HasValue)
-        {
-            logger.LogInformation(
-                "Occurrence for RecurringTask {RecurringTaskId} on {Date} already exists as TaskItem {TaskItemId}",
-                command.RecurringTaskId, command.OccurrenceDate, existingId.Value);
-            return existingId.Value;
-        }
-
-        var taskItem = RecurringTaskGeneratorService.CreateTaskItem(template, command.OccurrenceDate);
         taskItem.IsDone = true;
+        taskItem.UpdatedAt = DateTime.UtcNow;
 
-        db.TaskItems.Add(taskItem);
         await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
 
         logger.LogInformation(
-            "Saved occurrence for RecurringTask {RecurringTaskId} on {Date} as TaskItem {TaskItemId}",
+            "Completed occurrence for RecurringTask {RecurringTaskId} on {Date} as TaskItem {TaskItemId}",
             command.RecurringTaskId, command.OccurrenceDate, taskItem.Id);
 
         return taskItem.Id;

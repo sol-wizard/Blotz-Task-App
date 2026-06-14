@@ -5,6 +5,7 @@ using BlotzTask.Modules.Tasks.Domain.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using BlotzTask.Modules.Labels.Domain;
+using BlotzTask.Modules.Tasks.Enums;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
@@ -38,6 +39,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         var monthEnd = query.FirstDate.AddMonths(1);
         var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
         var monthEndDate = DateOnly.FromDateTime(monthEnd.Date);
+        var recurrenceLookbackStartDate = monthStartDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
         
         
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.FirstDate.Offset);
@@ -51,9 +53,9 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             query.UserId,
             monthStart,
             monthEnd);
-        
+
         var queryStopwatch = Stopwatch.StartNew();
-        
+
         var tasks = await db.TaskItems
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
@@ -63,7 +65,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                                 t.StartTime < monthEnd
                                 && t.EndTime > monthStart
                             )
-                            
+
                         ))
             .Select(t => new
             {
@@ -74,15 +76,34 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 t.Label
             })
             .ToListAsync(ct);
+
+        var recurringOverrides = await db.RecurringOccurrenceOverrides
+            .AsNoTracking()
+            .Where(o => o.Series.UserId == query.UserId
+                && o.OccurrenceDate >= recurrenceLookbackStartDate
+                && o.OccurrenceDate < monthEndDate
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            .Select(o => new
+            {
+                o.SeriesId,
+                o.OccurrenceDate
+            })
+            .ToListAsync(ct);
+
+        var recurringOverrideKeys = recurringOverrides
+            .Select(o => (o.SeriesId, o.OccurrenceDate))
+            .ToHashSet();
         
         
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                         && r.IsActive
+                        && !r.Series.IsDeleted
                         && r.StartDate <= monthEndDate
-                        && (r.EndDate == null || r.EndDate >= monthStartDate))
+                        && (r.EndDate == null || r.EndDate >= recurrenceLookbackStartDate))
             .ToListAsync(ct);
 
         logger.LogInformation(
@@ -123,7 +144,8 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             {
                 var offset = 4 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
-                    .Where(r => generatorService.IsOccurrenceOn(r, dayDate))
+                    .Where(r => generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
+                        .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))))
                     .OrderBy(r => r.TemplateStartTime)
                     .Select(r => new TaskThumbnailDto
                     {

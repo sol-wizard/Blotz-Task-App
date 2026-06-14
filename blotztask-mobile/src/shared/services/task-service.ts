@@ -1,4 +1,8 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import {
+  CreateRecurringTaskResultDTO,
+  RecurringTaskCreateDTO,
+} from "@/shared/models/recurring-task-create-dto";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { apiClient } from "./api/client";
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
@@ -44,12 +48,58 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 
 export const addTaskItem = async (addTaskForm: TaskUpsertDTO): Promise<number> => {
   const url = `/Task`;
-  return await apiClient.post(url, addTaskForm);
+  const {
+    recurrence: _recurrence,
+    recurrenceEndMode: _recurrenceEndMode,
+    recurrenceEndDate: _recurrenceEndDate,
+    ...taskPayload
+  } = addTaskForm;
+  return await apiClient.post(url, taskPayload);
+};
+
+export const createRecurringTask = async (
+  recurringTask: RecurringTaskCreateDTO,
+): Promise<CreateRecurringTaskResultDTO> => {
+  const url = `/RecurringTask`;
+  return await apiClient.post(url, recurringTask);
 };
 
 export async function updateTaskItem(taskId: number, updatedTask: TaskUpsertDTO): Promise<void> {
   const url = `/Task/${taskId}`;
   return await apiClient.put(url, updatedTask);
+}
+
+export async function updateRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  taskDetails: TaskUpsertDTO;
+}): Promise<{ taskItemId: number }> {
+  return await apiClient.put<{ taskItemId: number }>("/RecurringTask/occurrence", payload);
+}
+
+export async function updateRecurringTaskFuture(payload: {
+  recurringTaskId: number;
+  effectiveDate: string;
+  taskDetails: TaskUpsertDTO;
+  stopRepeating: boolean;
+  frequency?: RecurringTaskCreateDTO["frequency"];
+  interval?: number;
+  daysOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  endDate?: string | null;
+  endDateChanged: boolean;
+  scheduleTimeZoneId?: string | null;
+  deadlineTimeZoneId?: string | null;
+}): Promise<{ recurringTaskId: number | null }> {
+  return await apiClient.put<{ recurringTaskId: number | null }>("/RecurringTask/future", payload);
+}
+
+export async function deleteRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  deleteFuture: boolean;
+}): Promise<void> {
+  return await apiClient.post<void>("/RecurringTask/occurrence/delete", payload);
 }
 
 export async function deleteTask(taskId: number): Promise<void> {
@@ -67,5 +117,15 @@ export async function saveRecurringOccurrence(payload: {
   recurringTaskId: number;
   occurrenceDate: string;
 }): Promise<{ taskItemId: number }> {
-  return await apiClient.post("/RecurringTask/occurrence/complete", payload);
+  return await apiClient.post<{ taskItemId: number }>("/RecurringTask/occurrence/complete", payload);
+}
+
+export async function materializeRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+}): Promise<{ taskItemId: number }> {
+  return await apiClient.post<{ taskItemId: number }>(
+    "/RecurringTask/occurrence/materialize",
+    payload,
+  );
 }
