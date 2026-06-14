@@ -8,6 +8,7 @@
     "event": "Event",
     "alert": "Alert",
     "repeat": "Repeat",
+    "repeatBeta": "Beta",
     "category": "Category",
     "noCategory": "No Category",
     "date": "Date",
