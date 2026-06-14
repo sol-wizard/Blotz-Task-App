@@ -5,9 +5,9 @@ import { addWeeks, format, isAfter, isSameWeek, subWeeks } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterCardContent } from "./letter-card-content";
 import { LetterHeader } from "./letter-header";
-import { MonthlyReviewComingSoon } from "./monthly-review-coming-soon";
-import { MonthlyReviewTipBanner } from "./monthly-review-tip-banner";
-import { MonthSelector } from "./month-selector";
+import { ReviewComingSoon } from "./review-coming-soon";
+import { ReviewTipBanner } from "./review-tip-banner";
+import { PeriodSelector } from "./period-selector";
 import { useReview } from "../hooks/useReviewReport";
 import { ReviewPeriodType } from "../models/review-dto";
 import { formatWeek, startOfReviewWeek } from "../utils/week-utils";
@@ -68,7 +68,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
 
   if (hasNoReviewableWeek) {
     return (
-      <MonthlyReviewComingSoon
+      <ReviewComingSoon
         title={t("weeklyReview.comingSoonTitle")}
         body={t("weeklyReview.comingSoonBody")}
       />
@@ -78,7 +78,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
   return (
     <>
       <View className="px-5 mb-4">
-        <MonthSelector
+        <PeriodSelector
           label={displayWeek}
           onPrev={handlePrevWeek}
           onNext={handleNextWeek}
@@ -90,7 +90,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
           {showLowActivityTip && (
-            <MonthlyReviewTipBanner
+            <ReviewTipBanner
               text={t("weeklyReview.lowActivityHint")}
               onDismiss={() => setIsTipDismissed(true)}
             />
