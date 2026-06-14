@@ -10,7 +10,7 @@ type Props = {
   title?: string;
 };
 
-export function MonthlyReviewHeader({ onBack, showShare, isSharing, onShare, title }: Props) {
+export function ReviewHeader({ onBack, showShare, isSharing, onShare, title }: Props) {
   const { t } = useTranslation("settings");
 
   return (

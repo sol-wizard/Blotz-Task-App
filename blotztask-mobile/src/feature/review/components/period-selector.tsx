@@ -8,7 +8,7 @@ type Props = {
   disableNext: boolean;
 };
 
-export function MonthSelector({ label, onPrev, onNext, disablePrev, disableNext }: Props) {
+export function PeriodSelector({ label, onPrev, onNext, disablePrev, disableNext }: Props) {
   return (
     <View className="bg-white rounded-full flex-row items-center justify-between px-2 py-2">
       <Pressable

@@ -6,7 +6,7 @@ type Props = {
   onDismiss?: () => void;
 };
 
-export function MonthlyReviewTipBanner({ text, onDismiss }: Props) {
+export function ReviewTipBanner({ text, onDismiss }: Props) {
   return (
     <View className="mb-4 w-full flex-row items-start rounded-2xl border border-[#DCEFC9] bg-[#F2F9EA] px-3.5 py-3 shadow-sm shadow-black/[.03]">
       <View className="mt-0.5 h-7 w-7 items-center justify-center rounded-full bg-[#DDF1CB]">
