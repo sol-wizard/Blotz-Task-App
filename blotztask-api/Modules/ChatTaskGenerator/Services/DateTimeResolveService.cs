@@ -78,6 +78,9 @@ public class DateTimeResolveService
 
         var selectedTime = values[0];
 
+        if (selectedTime.TryGetValue("type", out var type) && type == "duration")
+            return null;
+
         if (selectedTime.TryGetValue("value", out var v) && !string.IsNullOrWhiteSpace(v))
             return v;
 
