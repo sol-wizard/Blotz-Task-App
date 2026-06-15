@@ -44,7 +44,6 @@ export default function AiTaskSheetScreen() {
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
   const longPressTriggered = useRef(false);
-  const textInputRef = useRef<TextInput>(null);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
 
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
@@ -79,14 +78,6 @@ export default function AiTaskSheetScreen() {
       }
     });
   }, []);
-
-  // Focus the text field after it mounts so the keyboard reliably opens in this modal sheet
-  // (autoFocus is unreliable here — it can fire before the modal animation settles).
-  useEffect(() => {
-    if (inputMode !== "text") return;
-    const id = requestAnimationFrame(() => textInputRef.current?.focus());
-    return () => cancelAnimationFrame(id);
-  }, [inputMode]);
 
   // --- Derived data ---
   const displayTasks = streamedTasks.map((task) =>
@@ -218,11 +209,6 @@ export default function AiTaskSheetScreen() {
                   {/* Mode toggle: keyboard icon (voice mode) / mic icon (text mode) */}
                   <Pressable
                     onPress={inputMode === "voice" ? handleSwitchToText : handleSwitchToVoice}
-                    accessibilityLabel={
-                      inputMode === "voice"
-                        ? "Switch to keyboard input"
-                        : "Switch to voice input"
-                    }
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.25)",
@@ -286,7 +272,7 @@ export default function AiTaskSheetScreen() {
                       </Pressable>
                     ) : (
                       <TextInput
-                        ref={textInputRef}
+                        autoFocus
                         value={textInput}
                         onChangeText={setTextInput}
                         onSubmitEditing={() => void handleSubmitText()}

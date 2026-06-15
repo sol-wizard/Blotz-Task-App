@@ -3,14 +3,7 @@
     "placeholder": "在这里输入..."
   },
   "buttons": {
-    "speak": "说话",
-    "send": "发送",
-    "tapToSpeak": "点击说话",
     "holdToTalk": "长按说话",
-    "generateTask": "+ 生成任务",
-    "addToTasks": "添加到任务",
-    "addToNotes": "添加到笔记",
-    "addAll": "全部添加",
     "goBack": "返回"
   },
   "labels": {
