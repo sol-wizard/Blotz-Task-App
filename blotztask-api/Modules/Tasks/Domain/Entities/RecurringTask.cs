@@ -22,6 +22,11 @@ public class RecurringTask
 {
     public int Id { get; set; }
 
+    public required int SeriesId { get; set; }
+    public RecurringTaskSeries Series { get; set; } = null!;
+    public int? PreviousRecurringTaskId { get; set; }
+    public RecurringTask? PreviousRecurringTask { get; set; }
+
     public required Guid UserId { get; set; }
     public AppUser User { get; set; } = null!;
 
@@ -32,12 +37,21 @@ public class RecurringTask
     public int? LabelId { get; set; }
     public Label? Label { get; set; }
 
-    // The time-of-day and timezone for generated tasks.
-    // Date part is irrelevant — only TimeOfDay and Offset are used at generation time.
+    // The date part is relevant only to the initial template date.
+    // Future occurrences use TimeOfDay plus ScheduleTimeZoneId to resolve the correct offset.
     public required DateTimeOffset TemplateStartTime { get; set; }
 
     // Only set for RangeTime tasks. Null means SingleTime (start == end).
     public DateTimeOffset? TemplateEndTime { get; set; }
+
+    public required string ScheduleTimeZoneId { get; set; }
+
+    // Deadline template fields. When enabled, each occurrence gets a TaskDeadline
+    // derived from its occurrence date plus this relative deadline template.
+    public bool IsDeadline { get; set; } = false;
+    public int? DeadlineOffsetDays { get; set; }
+    public TimeOnly? DeadlineTimeOfDay { get; set; }
+    public string? DeadlineTimeZoneId { get; set; }
 
     // How the task repeats
     public required RecurrencePattern Pattern { get; set; }

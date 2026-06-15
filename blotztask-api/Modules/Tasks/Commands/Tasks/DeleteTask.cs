@@ -1,7 +1,9 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Shared.Exceptions;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
@@ -9,6 +11,9 @@ public class DeleteTaskCommand
 {
     [Required]
     public int TaskId { get; init; }
+
+    [Required]
+    public required Guid UserId { get; init; }
 }
 
 public class DeleteTaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteTaskCommandHandler> logger)
@@ -17,7 +22,9 @@ public class DeleteTaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteTaskC
     {
         logger.LogInformation("Deleting task {TaskId}", command.TaskId);
 
-        var taskItem = await db.TaskItems.FindAsync(command.TaskId, ct);
+        var taskItem = await db.TaskItems
+            .Include(t => t.RecurringOccurrenceOverride)
+            .FirstOrDefaultAsync(t => t.Id == command.TaskId && t.UserId == command.UserId, ct);
 
         if (taskItem == null)
         {
@@ -40,6 +47,18 @@ public class DeleteTaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteTaskC
             UserId = taskItem.UserId,
             LabelId = taskItem.LabelId,
         };
+
+        var recurringOverride = taskItem.RecurringOccurrenceOverride;
+        if (recurringOverride?.OverrideType is RecurringOccurrenceOverrideType.Materialized
+            or RecurringOccurrenceOverrideType.Modified)
+        {
+            recurringOverride.OverrideType = RecurringOccurrenceOverrideType.Skipped;
+            recurringOverride.UpdatedAt = DateTime.UtcNow;
+        }
+        else if (recurringOverride?.OverrideType == RecurringOccurrenceOverrideType.Detached)
+        {
+            db.RecurringOccurrenceOverrides.Remove(recurringOverride);
+        }
 
         db.DeletedTaskItems.Add(deletedTask);
         db.TaskItems.Remove(taskItem);

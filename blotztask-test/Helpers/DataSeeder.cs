@@ -42,19 +42,43 @@ public class DataSeeder
         RecurrenceFrequency frequency,
         DateOnly startDate,
         DateTimeOffset templateStartTime,
+        DateTimeOffset? templateEndTime = null,
         int interval = 1,
         int? daysOfWeek = null,
-        DateOnly? endDate = null)
+        DateOnly? endDate = null,
+        string scheduleTimeZoneId = "Australia/Perth",
+        bool isDeadline = false,
+        int? deadlineOffsetDays = null,
+        TimeOnly? deadlineTimeOfDay = null,
+        string? deadlineTimeZoneId = null)
     {
-        var recurring = new RecurringTask
+        var series = new RecurringTaskSeries
         {
             UserId = userId,
+            IsDeleted = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.RecurringTaskSeries.Add(series);
+        await _context.SaveChangesAsync();
+
+        var recurring = new RecurringTask
+        {
+            SeriesId = series.Id,
+            UserId = userId,
             Title = title,
-            TimeType = TaskTimeType.SingleTime,
+            TimeType = templateEndTime == null ? TaskTimeType.SingleTime : TaskTimeType.RangeTime,
             TemplateStartTime = templateStartTime,
+            TemplateEndTime = templateEndTime,
+            ScheduleTimeZoneId = scheduleTimeZoneId,
             StartDate = startDate,
             EndDate = endDate,
             IsActive = true,
+            IsDeadline = isDeadline,
+            DeadlineOffsetDays = deadlineOffsetDays,
+            DeadlineTimeOfDay = deadlineTimeOfDay,
+            DeadlineTimeZoneId = deadlineTimeZoneId,
             Pattern = new RecurrencePattern
             {
                 Frequency = frequency,
@@ -66,6 +90,33 @@ public class DataSeeder
         _context.RecurringTasks.Add(recurring);
         await _context.SaveChangesAsync();
         return recurring;
+    }
+
+    public async Task<RecurringOccurrenceOverride> CreateRecurringOccurrenceOverrideAsync(
+        RecurringTask recurringTask,
+        DateOnly occurrenceDate,
+        RecurringOccurrenceOverrideType overrideType,
+        TaskItem? taskItem = null)
+    {
+        var recurringOverride = new RecurringOccurrenceOverride
+        {
+            SeriesId = recurringTask.SeriesId,
+            RecurringTaskId = recurringTask.Id,
+            OccurrenceDate = occurrenceDate,
+            OverrideType = overrideType,
+            TaskItem = taskItem,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        if (taskItem != null)
+        {
+            taskItem.RecurringOccurrenceOverride = recurringOverride;
+        }
+
+        _context.RecurringOccurrenceOverrides.Add(recurringOverride);
+        await _context.SaveChangesAsync();
+        return recurringOverride;
     }
 
     public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null)

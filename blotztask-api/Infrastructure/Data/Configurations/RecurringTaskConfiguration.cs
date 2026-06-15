@@ -8,7 +8,12 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
 {
     public void Configure(EntityTypeBuilder<RecurringTask> builder)
     {
-        builder.ToTable("RecurringTasks");
+        builder.ToTable("RecurringTasks", t =>
+        {
+            t.HasCheckConstraint(
+                "CK_RecurringTask_Deadline_Offset_NonNegative",
+                "([DeadlineOffsetDays] IS NULL OR [DeadlineOffsetDays] >= 0)");
+        });
 
         builder.HasKey(r => r.Id);
 
@@ -18,6 +23,16 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
 
         builder.Property(r => r.IsActive)
             .HasDefaultValue(true);
+
+        builder.Property(r => r.IsDeadline)
+            .HasDefaultValue(false);
+
+        builder.Property(r => r.ScheduleTimeZoneId)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(r => r.DeadlineTimeZoneId)
+            .HasMaxLength(100);
 
         builder.Property(r => r.CreatedAt)
             .HasDefaultValueSql("SYSUTCDATETIME()")
@@ -32,6 +47,16 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne(r => r.Series)
+            .WithMany(s => s.Versions)
+            .HasForeignKey(r => r.SeriesId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasOne(r => r.PreviousRecurringTask)
+            .WithMany()
+            .HasForeignKey(r => r.PreviousRecurringTaskId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         // RecurrencePattern is stored in the same RecurringTasks table row.
         // Column names are set explicitly to avoid the default "Pattern_X" prefix.
         builder.OwnsOne(r => r.Pattern, pattern =>
@@ -43,5 +68,6 @@ public class RecurringTaskConfiguration : IEntityTypeConfiguration<RecurringTask
         });
 
         builder.HasIndex(r => new { r.UserId, r.IsActive });
+        builder.HasIndex(r => new { r.SeriesId, r.StartDate, r.EndDate });
     }
 }

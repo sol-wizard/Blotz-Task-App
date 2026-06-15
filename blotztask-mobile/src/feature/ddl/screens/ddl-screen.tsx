@@ -32,7 +32,11 @@ export default function DdlScreen() {
 
         <FlatList
           data={sortedTasks}
-          keyExtractor={(item: DeadlineTaskDTO) => item.id.toString()}
+          keyExtractor={(item: DeadlineTaskDTO) =>
+            item.id != null
+              ? item.id.toString()
+              : `recurring-${item.recurringOccurrence?.recurringTaskId}-${item.recurringOccurrence?.occurrenceDate}`
+          }
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingTop: 8,

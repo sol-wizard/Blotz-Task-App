@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Services;
+using BlotzTask.Modules.Tasks.Enums;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,11 +41,12 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var weekEndExclusive = query.Monday.AddDays(7);
         var weekStartDate = DateOnly.FromDateTime(weekStart.Date);
         var weekEndDate = DateOnly.FromDateTime(weekEndExclusive.Date);
+        var recurrenceLookbackStartDate = weekStartDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
 
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
-        
+
 
         logger.LogInformation(
             "Fetching weekly task availability for user {UserId} from {weekStart} to {weekEndExclusive}",
@@ -64,7 +66,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                                 t.StartTime < weekEndExclusive
                                 && t.EndTime > weekStart
                             )
-                            
+
                         ))
             .Select(t => new
             {
@@ -74,13 +76,32 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             })
             .ToListAsync(ct);
 
+        var recurringOverrides = await db.RecurringOccurrenceOverrides
+            .AsNoTracking()
+            .Where(o => o.Series.UserId == query.UserId
+                && o.OccurrenceDate >= recurrenceLookbackStartDate
+                && o.OccurrenceDate < weekEndDate
+                && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
+            .Select(o => new
+            {
+                o.SeriesId,
+                o.OccurrenceDate
+            })
+            .ToListAsync(ct);
+
+        var recurringOverrideKeys = recurringOverrides
+            .Select(o => (o.SeriesId, o.OccurrenceDate))
+            .ToHashSet();
+
         // Fetch active RecurringTasks that could have occurrences in this week
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                 && r.IsActive
+                && !r.Series.IsDeleted
                 && r.StartDate <= weekEndDate
-                && (r.EndDate == null || r.EndDate >= weekStartDate))
+                && (r.EndDate == null || r.EndDate >= recurrenceLookbackStartDate))
             .ToListAsync(ct);
 
         logger.LogInformation(
@@ -104,14 +125,15 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 // Tasks in date range
                 if (t.StartTime < dayEnd && t.EndTime >= dayStart && !t.IsDone) return true;
 
-                
                 return false;
             });
 
             // If no stored task found, check if any recurring task occurs on this day
             if (!hasTask)
             {
-                hasTask = recurringTasks.Any(r => generatorService.IsOccurrenceOn(r, dayDate));
+                hasTask = recurringTasks.Any(r =>
+                    generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
+                        .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))));
             }
 
             result.Add(new DailyTaskIndicatorDto

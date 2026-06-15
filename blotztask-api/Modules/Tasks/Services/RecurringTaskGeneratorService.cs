@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 
@@ -5,13 +6,95 @@ namespace BlotzTask.Modules.Tasks.Domain.Services;
 
 public class RecurringTaskGeneratorService
 {
+    public const int MaxRecurringEventDurationDays = 31;
+
     /// <summary>
     /// Returns true if the recurring task has a valid occurrence on the given date.
     /// </summary>
     public bool IsOccurrenceOn(RecurringTask template, DateOnly date)
     {
+        if (!template.IsActive
+            || template.StartDate > date
+            || (template.EndDate != null && template.EndDate < date))
+        {
+            return false;
+        }
+
         var first = FirstOccurrenceOnOrAfter(template, date);
         return first.HasValue && first.Value == date;
+    }
+
+    public DateOnly? GetCurrentOccurrenceDate(RecurringTask template, DateOnly today)
+    {
+        if (!template.IsActive || template.StartDate > today)
+        {
+            return null;
+        }
+
+        var cutoff = template.EndDate is { } endDate && endDate < today
+            ? endDate
+            : today;
+
+        if (cutoff < template.StartDate)
+        {
+            return null;
+        }
+
+        if (template.Pattern.Frequency == RecurrenceFrequency.Daily)
+        {
+            return GetCurrentDailyOccurrenceDate(template, cutoff);
+        }
+
+        // TODO: Weekly/monthly/yearly still walk forward from StartDate. Replace with
+        // frequency-specific backward lookups before long-running recurring deadlines
+        // make /api/deadline/all pay O(occurrences since start) per series.
+        var occurrence = FirstOccurrenceOnOrAfter(template, template.StartDate);
+        DateOnly? current = null;
+
+        while (occurrence.HasValue && occurrence.Value <= cutoff)
+        {
+            current = occurrence.Value;
+
+            var next = NextOccurrence(template, occurrence.Value);
+            if (next == null || next.Value <= occurrence.Value)
+            {
+                break;
+            }
+
+            occurrence = next;
+        }
+
+        return current;
+    }
+
+    private static DateOnly? GetCurrentDailyOccurrenceDate(RecurringTask template, DateOnly cutoff)
+    {
+        if (template.Pattern.Interval < 1)
+        {
+            return null;
+        }
+
+        var daysSinceStart = cutoff.DayNumber - template.StartDate.DayNumber;
+        var stepsSinceStart = daysSinceStart / template.Pattern.Interval;
+        return template.StartDate.AddDays(stepsSinceStart * template.Pattern.Interval);
+    }
+
+    public DateTimeOffset BuildOccurrenceDueAt(RecurringTask template, DateOnly occurrenceDate)
+    {
+        if (!template.IsDeadline
+            || template.DeadlineOffsetDays == null
+            || template.DeadlineTimeOfDay == null
+            || string.IsNullOrWhiteSpace(template.DeadlineTimeZoneId))
+        {
+            throw new ValidationException("Recurring deadline template is incomplete.");
+        }
+
+        var dueDate = occurrenceDate.AddDays(template.DeadlineOffsetDays.Value);
+        var localDueDateTime = dueDate.ToDateTime(template.DeadlineTimeOfDay.Value);
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(template.DeadlineTimeZoneId);
+        var offset = timeZone.GetUtcOffset(localDueDateTime);
+
+        return new DateTimeOffset(localDueDateTime, offset);
     }
 
     private static DateOnly? FirstOccurrenceOnOrAfter(RecurringTask template, DateOnly from)
@@ -189,21 +272,12 @@ public class RecurringTaskGeneratorService
     // Helpers
     // -----------------------------------------------------------------------
 
-    public static TaskItem CreateTaskItem(RecurringTask template, DateOnly date)
+    public TaskItem CreateTaskItem(RecurringTask template, DateOnly date)
     {
-        var startTime = new DateTimeOffset(
-            date,
-            TimeOnly.FromTimeSpan(template.TemplateStartTime.TimeOfDay),
-            template.TemplateStartTime.Offset);
+        var startTime = BuildOccurrenceStartTime(template, date);
+        var endTime = BuildOccurrenceEndTime(template, date);
 
-        var endTime = template.TimeType == TaskTimeType.SingleTime
-            ? startTime
-            : new DateTimeOffset(
-                date,
-                TimeOnly.FromTimeSpan(template.TemplateEndTime!.Value.TimeOfDay),
-                template.TemplateEndTime.Value.Offset);
-
-        return new TaskItem
+        var taskItem = new TaskItem
         {
             Title           = template.Title,
             Description     = template.Description,
@@ -212,9 +286,121 @@ public class RecurringTaskGeneratorService
             TimeType        = template.TimeType,
             UserId          = template.UserId,
             LabelId         = template.LabelId,
-            RecurringTaskId = template.Id,
             IsDone          = false,
         };
+
+        if (template.IsDeadline)
+        {
+            taskItem.Deadline = new TaskDeadline
+            {
+                TaskItem = taskItem,
+                DueAt = BuildOccurrenceDueAt(template, date),
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsPinned = false
+            };
+        }
+
+        return taskItem;
+    }
+
+    public DateTimeOffset BuildOccurrenceStartTime(RecurringTask template, DateOnly date)
+    {
+        return BuildOccurrenceTime(
+            date,
+            TimeOnly.FromTimeSpan(template.TemplateStartTime.TimeOfDay),
+            template.ScheduleTimeZoneId);
+    }
+
+    public DateTimeOffset BuildOccurrenceEndTime(RecurringTask template, DateOnly date)
+    {
+        if (template.TimeType == TaskTimeType.SingleTime)
+        {
+            return BuildOccurrenceStartTime(template, date);
+        }
+
+        var endOffsetDays = GetTemplateEndOffsetDays(template);
+
+        return BuildOccurrenceTime(
+            date.AddDays(endOffsetDays),
+            TimeOnly.FromTimeSpan(template.TemplateEndTime!.Value.TimeOfDay),
+            template.ScheduleTimeZoneId);
+    }
+
+    public IReadOnlyList<RecurringOccurrenceWindow> GetOccurrencesOverlappingWindow(
+        RecurringTask template,
+        DateOnly windowDate,
+        DateTimeOffset windowStart,
+        DateTimeOffset windowEnd)
+    {
+        var startDate = windowDate.AddDays(-GetTemplateEndOffsetDays(template));
+        var occurrences = new List<RecurringOccurrenceWindow>();
+
+        for (var occurrenceDate = startDate; occurrenceDate <= windowDate; occurrenceDate = occurrenceDate.AddDays(1))
+        {
+            if (!IsOccurrenceOn(template, occurrenceDate))
+            {
+                continue;
+            }
+
+            var startTime = BuildOccurrenceStartTime(template, occurrenceDate);
+            var endTime = BuildOccurrenceEndTime(template, occurrenceDate);
+
+            if (startTime < windowEnd && endTime >= windowStart)
+            {
+                occurrences.Add(new RecurringOccurrenceWindow(occurrenceDate, startTime, endTime));
+            }
+        }
+
+        return occurrences;
+    }
+
+    public static int GetTemplateEndOffsetDays(RecurringTask template)
+    {
+        if (template.TimeType == TaskTimeType.SingleTime)
+        {
+            return 0;
+        }
+
+        if (template.TemplateEndTime == null)
+        {
+            throw new ValidationException("Recurring range-time template end time is incomplete.");
+        }
+
+        return GetTemplateEndOffsetDays(template.TemplateStartTime, template.TemplateEndTime.Value);
+    }
+
+    public static int GetTemplateEndOffsetDays(DateTimeOffset templateStartTime, DateTimeOffset templateEndTime)
+    {
+        if (templateEndTime - templateStartTime > TimeSpan.FromDays(MaxRecurringEventDurationDays))
+        {
+            throw new ValidationException($"Recurring event duration cannot exceed {MaxRecurringEventDurationDays} days.");
+        }
+
+        var startDate = DateOnly.FromDateTime(templateStartTime.Date);
+        var endDate = DateOnly.FromDateTime(templateEndTime.Date);
+        var offsetDays = endDate.DayNumber - startDate.DayNumber;
+
+        if (offsetDays < 0)
+        {
+            throw new ValidationException("TemplateEndTime date cannot be before TemplateStartTime date.");
+        }
+
+        return offsetDays;
+    }
+
+    private static DateTimeOffset BuildOccurrenceTime(DateOnly date, TimeOnly timeOfDay, string timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            throw new ValidationException("Recurring schedule timezone is incomplete.");
+        }
+
+        var localDateTime = date.ToDateTime(timeOfDay);
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        var offset = timeZone.GetUtcOffset(localDateTime);
+
+        return new DateTimeOffset(localDateTime, offset);
     }
 
     /// Returns day offsets from Monday (0=Mon, 1=Tue, …, 6=Sun) for set flags, sorted ascending.
@@ -234,3 +420,8 @@ public class RecurringTaskGeneratorService
     private static int MondayOffset(DayOfWeek day) =>
         ((int)day - (int)DayOfWeek.Monday + 7) % 7;
 }
+
+public sealed record RecurringOccurrenceWindow(
+    DateOnly OccurrenceDate,
+    DateTimeOffset StartTime,
+    DateTimeOffset EndTime);
