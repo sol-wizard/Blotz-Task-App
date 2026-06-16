@@ -9,6 +9,7 @@ import { analytics } from "@/shared/services/analytics";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
 import { TaskTimeType } from "@/shared/models/base-task-dto";
+import { getWeeklyDayFlag } from "@/feature/task-add-edit/util/get-weekly-day-flag";
 
 export default function TaskCreateScreen() {
   const router = useRouter();
@@ -90,11 +91,4 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
 
 function toDateOnly(dateTimeOffset: string): string {
   return dateTimeOffset.slice(0, 10);
-}
-
-function getWeeklyDayFlag(dateOnly: string): number {
-  const [year, month, dayOfMonth] = dateOnly.split("-").map(Number);
-  const day = new Date(year, month - 1, dayOfMonth).getDay();
-  const dayFlags = [64, 1, 2, 4, 8, 16, 32] as const;
-  return dayFlags[day];
 }
