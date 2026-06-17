@@ -48,7 +48,8 @@ public class UpdateUserProfileCommandHandler(
         if (!string.IsNullOrWhiteSpace(profileCommand.Timezone))
         {
             try { TimeZoneInfo.FindSystemTimeZoneById(profileCommand.Timezone); }
-            catch (Exception) { throw new ValidationException($"Invalid timezone: {profileCommand.Timezone}"); }
+            catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+            { throw new ValidationException($"Invalid timezone: {profileCommand.Timezone}"); }
             user.Timezone = profileCommand.Timezone;
             hasChange = true;
         }
