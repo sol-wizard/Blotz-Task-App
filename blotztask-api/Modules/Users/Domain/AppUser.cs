@@ -16,4 +16,6 @@ public class AppUser
     public DateTime? LoginAt { get; set; }
     public PomodoroSetting PomodoroSetting { get; set; } = null!;
     public bool IsOnboarded { get; set; } = false;
+    
+    public string? Timezone { get; set; }
 }

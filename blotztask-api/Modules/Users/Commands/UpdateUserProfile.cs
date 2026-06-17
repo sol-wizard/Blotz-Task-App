@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Shared.Exceptions;
 
@@ -9,6 +10,7 @@ public class UpdateUserProfileCommand
     public string? DisplayName { get; set; }
     public string? PictureUrl { get; set; }
     public bool? IsOnboarded { get; set; }
+    public string? Timezone { get; set; }
 }
 
 public class UpdateUserProfileCommandHandler(
@@ -43,6 +45,14 @@ public class UpdateUserProfileCommandHandler(
             hasChange = true;
         }
 
+        if (!string.IsNullOrWhiteSpace(profileCommand.Timezone))
+        {
+            try { TimeZoneInfo.FindSystemTimeZoneById(profileCommand.Timezone); }
+            catch (Exception) { throw new ValidationException($"Invalid timezone: {profileCommand.Timezone}"); }
+            user.Timezone = profileCommand.Timezone;
+            hasChange = true;
+        }
+
         if (hasChange)
         {
             user.UpdatedAt = DateTime.UtcNow;
@@ -59,4 +69,6 @@ public class UpdateUserProfileDto
     public string? DisplayName { get; set; }
     public string? PictureUrl { get; set; }
     public bool? IsOnboarded { get; set; }
+    
+    public string? Timezone { get; set; }
 }
