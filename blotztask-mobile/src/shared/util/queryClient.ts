@@ -74,7 +74,6 @@ function getErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
     const status = error.response?.status;
     if (!error.response) return i18n.t("errors.network");
-    if (status === 429) return i18n.t("errors.aiQuotaExceeded");
     if (status && status >= 500) return i18n.t("errors.server");
     if (status === 400 || status === 422) return i18n.t("errors.validation");
     return i18n.t("errors.default");
