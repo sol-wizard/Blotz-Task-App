@@ -8,7 +8,7 @@ type Props = {
   body?: string;
 };
 
-export function MonthlyReviewComingSoon({ title, body }: Props) {
+export function ReviewComingSoon({ title, body }: Props) {
   const { t } = useTranslation("settings");
 
   return (

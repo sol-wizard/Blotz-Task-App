@@ -7,18 +7,18 @@ import { addMonths, format, isAfter, isSameMonth, startOfMonth, subMonths } from
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterCardContent } from "../components/letter-card-content";
 import { LetterHeader } from "../components/letter-header";
-import { MonthSelector } from "../components/month-selector";
-import { MonthlyReviewComingSoon } from "../components/monthly-review-coming-soon";
-import { MonthlyReviewHeader } from "../components/monthly-review-header";
-import { MonthlyReviewTipBanner } from "../components/monthly-review-tip-banner";
+import { PeriodSelector } from "../components/period-selector";
+import { ReviewComingSoon } from "../components/review-coming-soon";
+import { ReviewHeader } from "../components/review-header";
+import { ReviewTipBanner } from "../components/review-tip-banner";
 import { ReviewTab, ReviewTabs } from "../components/review-tabs";
 import { WeeklyReviewView } from "../components/weekly-review-view";
 import { useReview } from "../hooks/useReviewReport";
-import { useMonthlyReviewShare } from "../hooks/useMonthlyReviewShare";
+import { useReviewShare } from "../hooks/useReviewShare";
 import { ReviewPeriodType } from "../models/review-dto";
 import { formatMonth } from "../utils/month-utils";
 
-export default function MonthlyReviewScreen() {
+export default function ReviewScreen() {
   // — Hooks ——————————————————————————————————————————————————————
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
@@ -36,7 +36,7 @@ export default function MonthlyReviewScreen() {
   // — Derived values —————————————————————————————————————————————
   const isMonthlyTab = activeTab === ReviewPeriodType.Monthly;
   const activeShareCardRef = isMonthlyTab ? monthlyShareCardRef : weeklyShareCardRef;
-  const { isSharingImage, shareImage } = useMonthlyReviewShare({
+  const { isSharingImage, shareImage } = useReviewShare({
     captureTargetRef: activeShareCardRef,
   });
   // Don't let users page back before sign-up month — those months are always empty.
@@ -83,7 +83,7 @@ export default function MonthlyReviewScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <MonthlyReviewHeader
+      <ReviewHeader
         title={t("review.title")}
         onBack={() => router.back()}
         showShare={showShareButton}
@@ -101,11 +101,11 @@ export default function MonthlyReviewScreen() {
           onShareAvailableChange={setIsWeeklyShareAvailable}
         />
       ) : hasNoReviewableMonth ? (
-        <MonthlyReviewComingSoon />
+        <ReviewComingSoon />
       ) : (
         <>
           <View className="px-5 mb-4">
-            <MonthSelector
+            <PeriodSelector
               label={displayMonth}
               onPrev={handlePrevMonth}
               onNext={handleNextMonth}
@@ -116,7 +116,7 @@ export default function MonthlyReviewScreen() {
           <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
             <View className="px-5">
               {showLowActivityTip && (
-                <MonthlyReviewTipBanner
+                <ReviewTipBanner
                   text={t("monthlyReview.lowActivityHint")}
                   onDismiss={() => setIsTipDismissed(true)}
                 />
