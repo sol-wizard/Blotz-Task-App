@@ -75,16 +75,7 @@ public class GenerateReviewCommandHandler(
                 "Returning existing {PeriodType} review for user {UserId} ({StartLocal}, {TimeZoneId})",
                 period.PeriodType, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-            return new ReviewReportDto
-            {
-                PeriodType = period.PeriodType,
-                PeriodStartLocal = period.StartLocalDate,
-                PeriodEndLocalExclusive = period.EndLocalDateExclusive,
-                Letter = existingReport.AiGeneratedLetter,
-                GeneratedAtUtc = DateTime.SpecifyKind(existingReport.CreatedAt, DateTimeKind.Utc),
-                IsLowActivity = existingReport.AiInputTaskCount != null
-                                && existingReport.AiInputTaskCount < threshold,
-            };
+            return MapToDto(existingReport, period, threshold);
         }
 
         // A review is a period-end summary, so it is only available once the period has fully ended
@@ -128,22 +119,52 @@ public class GenerateReviewCommandHandler(
         };
 
         db.ReviewReports.Add(report);
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrency guard: two simultaneous requests can both pass the existence check above
+            // and generate, but the unique index (UserId, PeriodType, PeriodStartUtc) lets only one
+            // insert win. Rather than surface a 500 to the loser, detach our rejected row and return
+            // the winner's report. (We accept the rare duplicate AI call — it's cheap.)
+            db.Entry(report).State = EntityState.Detached;
+
+            var winningReport = await db.ReviewReports
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    r => r.UserId == command.UserId
+                         && r.PeriodType == period.PeriodType
+                         && r.PeriodStartUtc == period.StartUtc,
+                    ct);
+
+            if (winningReport is null) throw;
+
+            logger.LogInformation(
+                "Concurrent {PeriodType} review insert for user {UserId} lost the race; returning the existing report",
+                period.PeriodType, command.UserId);
+
+            return MapToDto(winningReport, period, threshold);
+        }
 
         logger.LogInformation(
             "Saved {PeriodType} review {ReportId} for user {UserId} ({StartLocal}, {TimeZoneId})",
             period.PeriodType, report.Id, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-        return new ReviewReportDto
+        return MapToDto(report, period, threshold);
+    }
+
+    private static ReviewReportDto MapToDto(ReviewReport report, ReviewPeriod period, int threshold) =>
+        new()
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
             Letter = report.AiGeneratedLetter,
             GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
-            IsLowActivity = tasks.Count < threshold,
+            IsLowActivity = report.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
         };
-    }
 
     private Task<List<ReviewTaskDto>> LoadTasksForPeriodAsync(
         Guid userId,
