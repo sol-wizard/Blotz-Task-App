@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { updateUserProfile } from "@/shared/services/user-service";
 import { Pressable, Text, View } from "react-native";
 import {
   createAnimatedComponent,
@@ -36,6 +37,13 @@ export default function GetStartedButton() {
 
       await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
+
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        await updateUserProfile({ timezone });
+      } catch (e) {
+        console.error("Timezone sync failed:", e);
+      }
 
       refreshAuthState();
       router.replace("/(protected)");
