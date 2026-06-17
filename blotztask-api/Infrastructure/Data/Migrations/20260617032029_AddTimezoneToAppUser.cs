@@ -16,13 +16,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 table: "AppUsers",
                 type: "nvarchar(max)",
                 nullable: true);
-
-            migrationBuilder.UpdateData(
-                table: "AppUsers",
-                keyColumn: "Id",
-                keyValue: new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                column: "Timezone",
-                value: null);
         }
 
         /// <inheritdoc />
