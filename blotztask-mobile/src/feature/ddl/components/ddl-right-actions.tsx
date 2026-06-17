@@ -10,6 +10,7 @@ type DdlRightActionsProps = {
   isPinned: boolean;
   isUpdatingPin: boolean;
   isDeletingTask: boolean;
+  canDelete?: boolean;
 };
 
 const DdlRightActions = ({
@@ -19,6 +20,7 @@ const DdlRightActions = ({
   isPinned,
   isUpdatingPin,
   isDeletingTask,
+  canDelete = true,
 }: DdlRightActionsProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: 120 * (1 - progress.value) }],
@@ -48,10 +50,10 @@ const DdlRightActions = ({
       </Pressable>
 
       <Pressable
-        disabled={isDeletingTask}
+        disabled={isDeletingTask || !canDelete}
         onPress={onDelete}
         className={`${isPinned ? "h-32" : "h-20"} w-20 items-center justify-center rounded-2xl ${
-          isDeletingTask ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
+          isDeletingTask || !canDelete ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
         }`}
       >
         {isDeletingTask ? (

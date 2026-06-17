@@ -1,8 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePin, deleteDeadlineTask } from "../services/ddl-services";
-import { toggleTaskCompletion } from "@/shared/services/task-service";
+import {
+  materializeRecurringOccurrence,
+  saveRecurringOccurrence,
+  toggleTaskCompletion,
+} from "@/shared/services/task-service";
 import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
+
+type UpdatePinArgs = {
+  task: DeadlineTaskDTO;
+  isPinned: boolean;
+};
 
 const useDdlMutation = () => {
   const queryClient = useQueryClient();
@@ -13,23 +22,44 @@ const useDdlMutation = () => {
   };
 
   const updatePinMutation = useMutation({
-    mutationFn: ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) =>
-      updatePin(taskId, isPinned),
+    mutationFn: async ({ task, isPinned }: UpdatePinArgs) => {
+      const taskId = await ensureDeadlineTaskId(task);
+      await updatePin(taskId, isPinned);
+    },
     onSettled: () => {
       invalidateAll();
     },
   });
 
   const deleteDeadlineTaskMutation = useMutation({
-    mutationFn: (taskId: number) => deleteDeadlineTask(taskId),
+    mutationFn: (task: DeadlineTaskDTO) => {
+      if (task.id == null) {
+        return Promise.resolve();
+      }
+
+      return deleteDeadlineTask(task.id);
+    },
     onSettled: () => {
       invalidateAll();
     },
   });
 
   const markAsDoneMutation = useMutation({
-    mutationFn: (taskId: number) => toggleTaskCompletion(taskId),
-    onMutate: async (taskId) => {
+    mutationFn: async (task: DeadlineTaskDTO) => {
+      if (task.id != null) {
+        await toggleTaskCompletion(task.id);
+        return;
+      }
+
+      const recurringOccurrence = task.recurringOccurrence;
+      if (!recurringOccurrence) return;
+
+      await saveRecurringOccurrence({
+        recurringTaskId: recurringOccurrence.recurringTaskId,
+        occurrenceDate: recurringOccurrence.occurrenceDate,
+      });
+    },
+    onMutate: async (task) => {
       await queryClient.cancelQueries({ queryKey: ddlKeys.all });
       await queryClient.cancelQueries({ queryKey: taskKeys.all });
 
@@ -37,7 +67,9 @@ const useDdlMutation = () => {
 
       if (previousDdlTasks) {
         queryClient.setQueryData<DeadlineTaskDTO[]>(ddlKeys.all, (old) =>
-          old?.map((t) => (t.id === taskId ? { ...t, isDone: !t.isDone } : t)),
+          old?.map((t) =>
+            isSameDeadlineTask(t, task) ? { ...t, isDone: !t.isDone } : t,
+          ),
         );
       }
 
@@ -60,3 +92,32 @@ const useDdlMutation = () => {
 };
 
 export default useDdlMutation;
+
+async function ensureDeadlineTaskId(task: DeadlineTaskDTO): Promise<number> {
+  if (task.id != null) {
+    return task.id;
+  }
+
+  const recurringOccurrence = task.recurringOccurrence;
+  if (!recurringOccurrence) {
+    throw new Error("Recurring occurrence identity is required.");
+  }
+
+  const result = await materializeRecurringOccurrence({
+    recurringTaskId: recurringOccurrence.recurringTaskId,
+    occurrenceDate: recurringOccurrence.occurrenceDate,
+  });
+
+  return result.taskItemId;
+}
+
+function isSameDeadlineTask(left: DeadlineTaskDTO, right: DeadlineTaskDTO): boolean {
+  if (left.id != null && right.id != null) {
+    return left.id === right.id;
+  }
+
+  return (
+    left.recurringOccurrence?.recurringTaskId === right.recurringOccurrence?.recurringTaskId &&
+    left.recurringOccurrence?.occurrenceDate === right.recurringOccurrence?.occurrenceDate
+  );
+}

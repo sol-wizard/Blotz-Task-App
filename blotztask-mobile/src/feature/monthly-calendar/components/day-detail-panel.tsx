@@ -4,6 +4,8 @@ import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { theme } from "@/shared/constants/theme";
 import i18n from "@/i18n";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { getRecurringOccurrenceIdentity } from "@/shared/util/task-occurrence-identity";
 
 export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
@@ -26,7 +28,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
 
               return (
                 <View
-                  key={task.id || index}
+                  key={getTaskRowKey(task, index)}
                   className="flex-row items-center bg-white border border-gray-100 rounded-2xl mb-2 py-3 px-4 shadow-xs"
                 >
                   {/* Column 1: Time */}
@@ -76,3 +78,16 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
     </View>
   );
 };
+
+function getTaskRowKey(task: TaskDetailDTO, index: number): string {
+  const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+  if (recurringOccurrence) {
+    return `recurring-${recurringOccurrence.recurringTaskId}-${recurringOccurrence.occurrenceDate}`;
+  }
+
+  if (task.id != null) {
+    return `task-${task.id}`;
+  }
+
+  return `task-row-${index}`;
+}

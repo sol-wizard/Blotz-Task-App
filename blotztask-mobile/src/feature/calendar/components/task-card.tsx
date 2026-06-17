@@ -1,4 +1,4 @@
-import React, { RefObject, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
@@ -27,6 +27,21 @@ import { useTranslation } from "react-i18next";
 import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 import { SwitchTaskModal } from "./pomodoro-switch-modal";
 import Toast from "react-native-toast-message";
+import { ensureTaskItemForTaskCard } from "../util/ensure-task-item-for-task-card";
+import { taskKeys } from "@/shared/constants/query-key-factory";
+import {
+  createVirtualTaskDetailCacheKey,
+  virtualTaskDetailKeys,
+} from "@/feature/task-details/util/virtual-task-detail-cache";
+import { TASK_DETAIL_ROUTE_MODE } from "@/feature/task-details/util/task-detail-route-mode";
+import {
+  getRecurringOccurrenceIdentity,
+  getRecurringOccurrenceDate,
+  getRecurringTaskId,
+  hasTaskItemId,
+  isVirtualRecurringOccurrence,
+} from "@/shared/util/task-occurrence-identity";
+import { ActionChoiceSheet } from "@/shared/components/action-choice-sheet";
 
 // Props
 interface TaskCardProps {
@@ -50,10 +65,22 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   const isPaused = isThisTaskActive ? (session?.isPaused ?? true) : true;
   const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
   const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [showRecurringDeleteSheet, setShowRecurringDeleteSheet] = useState(false);
+  const [isBreakdownPending, setIsBreakdownPending] = useState(false);
+  const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
-  const { toggleTask, isToggling } = useTaskMutations();
-  const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
+  const {
+    toggleTask,
+    deleteRecurringOccurrence,
+    isToggling,
+    isDeletingRecurringOccurrence,
+  } = useTaskMutations();
+  const {
+    completeOccurrence,
+    materializeOccurrenceAsync,
+    isPending: isRecurringTaskPending,
+  } = useRecurringTaskMutations();
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
 
   // Derived values
@@ -65,34 +92,85 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   });
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
   const isLoading =
-    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
+    isToggling ||
+    isDeleting ||
+    isDeletingRecurringOccurrence ||
+    isBreakdownPending ||
+    isBreakingDownAndReplacingSubtasks ||
+    isRecurringTaskPending;
 
-  const { t } = useTranslation("pomodoro");
+  const { t: tPomodoro } = useTranslation("pomodoro");
+  const { t: tTasks } = useTranslation("tasks");
 
   // Functions
-  const handleOpenTaskDetails = () => {
-    if (task.id == null) return;
+  const ensureTaskItemId = (invalidateOnMaterializeSuccess = true) =>
+    ensureTaskItemForTaskCard({
+      task,
+      materializeOccurrence: materializeOccurrenceAsync,
+      invalidateOnMaterializeSuccess,
+    });
+
+  const handleOpenTaskDetails = async () => {
+    if (isLoading) return;
 
     swipeRef.current?.close();
 
-    queryClient.setQueryData(["taskId", task.id], task);
-    router.push({ pathname: "/(protected)/task-details", params: { taskId: task.id } });
-  };
+    if (hasTaskItemId(task)) {
+      queryClient.setQueryData(taskKeys.byId(task.id), task);
+      router.push({
+        pathname: "/(protected)/task-details",
+        params: { mode: TASK_DETAIL_ROUTE_MODE.Persisted, taskId: task.id },
+      });
+      return;
+    }
 
-  const handleBreakdown = () => {
-    if (isLoading || task.id == null) return;
-    breakDownAndReplaceSubtasks(task.id, {
-      onSuccess: (result) => {
-        if (result?.subtasks?.length) {
-          setIsExpanded(true);
-          swipeRef.current?.close();
-        }
+    if (!isVirtualRecurringOccurrence(task)) return;
+
+    const occurrenceDate = getRecurringOccurrenceDate(task);
+    const recurringTaskId = getRecurringTaskId(task);
+    if (recurringTaskId == null || !occurrenceDate) return;
+
+    const virtualTaskCacheKey = createVirtualTaskDetailCacheKey(task, occurrenceDate);
+    queryClient.setQueryData(virtualTaskDetailKeys.byKey(virtualTaskCacheKey), task);
+    router.push({
+      pathname: "/(protected)/task-details",
+      params: {
+        mode: TASK_DETAIL_ROUTE_MODE.Virtual,
+        recurringTaskId,
+        occurrenceDate,
+        virtualTaskCacheKey,
       },
     });
   };
 
+  const handleBreakdown = async () => {
+    if (isLoading) return;
+
+    setIsBreakdownPending(true);
+
+    try {
+      const taskId = await ensureTaskItemId(false);
+      const result = await breakDownAndReplaceSubtasks(taskId);
+
+      if (result?.subtasks?.length) {
+        setIsExpanded(true);
+        swipeRef.current?.close();
+      }
+    } finally {
+      setIsBreakdownPending(false);
+    }
+  };
+
   const handleDelete = async () => {
-    if (isLoading || task.id == null) return;
+    if (isLoading) return;
+
+    const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+    if (recurringOccurrence) {
+      setShowRecurringDeleteSheet(true);
+      return;
+    }
+
+    if (!hasTaskItemId(task)) return;
 
     await deleteTask(task);
 
@@ -101,23 +179,48 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
     }
   };
 
-  const handleOpenFocus = () => {
-    if (!task.id) return;
-    
-    swipeRef.current?.close();
+  const deleteRecurringTaskOccurrence = (deleteFuture: boolean) => {
+    const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+    if (!recurringOccurrence) return;
 
-    if (session && session.taskId !== String(task.id)) {
+    setShowRecurringDeleteSheet(false);
+    deleteRecurringOccurrence(
+      {
+        recurringTaskId: recurringOccurrence.recurringTaskId,
+        occurrenceDate: recurringOccurrence.occurrenceDate,
+        deleteFuture,
+      },
+      {
+        onSuccess: () => {
+          if (task.alertTime && new Date(task.alertTime) > new Date()) {
+            void cancelNotification({ notificationId: task.notificationId });
+          }
+          swipeRef.current?.close();
+        },
+      },
+    );
+  };
+
+  const handleOpenFocus = async () => {
+    if (isLoading) return;
+
+    const taskId = await ensureTaskItemId();
+
+    if (session && session.taskId !== String(taskId)) {
+      setPendingFocusTaskId(taskId);
       setShowSwitchModal(true);
     } else {
-      router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+      router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId } });
     }
+
+    swipeRef.current?.close();
   };
 
   const handleOpenMode = () => {
     if (session) {
       Toast.show({
         type: "warning",
-        text1: t("focusMode.modeLockedWhileRunning"),
+        text1: tPomodoro("focusMode.modeLockedWhileRunning"),
         visibilityTime: 2500,
       });
       swipeRef.current?.close();
@@ -129,9 +232,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   };
 
   const handleConfirmSwitch = () => {
+    if (pendingFocusTaskId == null) return;
+
     setShowSwitchModal(false);
     swipeRef.current?.close();
-    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: pendingFocusTaskId } });
+    setPendingFocusTaskId(null);
   };
 
   const handleTogglePause = () => {
@@ -164,8 +270,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
             progress={rightActionsProgress}
             onBreakdown={handleBreakdown}
             onDelete={handleDelete}
-            isDeleting={isDeleting}
-            isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+            isDeleting={isDeleting || isDeletingRecurringOccurrence}
+            isRefreshingSubtasks={isBreakdownPending || isBreakingDownAndReplacingSubtasks}
           />
         )}
         rightThreshold={12}
@@ -182,14 +288,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                 checked={task.isDone}
                 disabled={isLoading}
                 onChange={async () => {
-                  if (!task.id) {
+                  if (isVirtualRecurringOccurrence(task)) {
+                    const occurrenceDate = getRecurringOccurrenceDate(task);
+                    const recurringTaskId = getRecurringTaskId(task);
+                    if (recurringTaskId == null || !occurrenceDate) return;
+
                     completeOccurrence({
-                      recurringTaskId: task.recurringTaskId!,
-                      occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                      recurringTaskId,
+                      occurrenceDate,
                     });
                     return;
                   }
-                  toggleTask({ taskId: task.id!, selectedDay });
+                  if (!hasTaskItemId(task)) return;
+                  toggleTask({ taskId: task.id, selectedDay });
                   if (task.alertTime && new Date(task.alertTime) > new Date()) {
                     await cancelNotification({ notificationId: task?.notificationId });
                   }
@@ -228,7 +339,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                   >
                     {task.title}
                   </Text>
-                  {task.recurringTaskId && (
+                  {getRecurringTaskId(task) && (
                     <View className="ml-1.5">
                       <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
                     </View>
@@ -273,8 +384,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                 <View className="flex-row items-center">
                   <Text className="text-gray-400 font-inter text-[12px] mr-0.5">
                     {isPaused
-                      ? t("focusMode.paused", "Paused")
-                      : t(`focusMode.milestones.${getMilestoneKey(elapsedSeconds)}.subtitle`)}
+                      ? tPomodoro("focusMode.paused", "Paused")
+                      : tPomodoro(
+                          `focusMode.milestones.${getMilestoneKey(elapsedSeconds)}.subtitle`,
+                        )}
                   </Text>
                   <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />
                 </View>
@@ -287,8 +400,36 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
       </ReanimatedSwipeable>
       <SwitchTaskModal
         isVisible={showSwitchModal}
-        onClose={() => setShowSwitchModal(false)}
+        onClose={() => {
+          setShowSwitchModal(false);
+          setPendingFocusTaskId(null);
+        }}
         onConfirm={handleConfirmSwitch}
+      />
+      <ActionChoiceSheet
+        visible={showRecurringDeleteSheet}
+        title={tTasks("recurrence.deleteTitle")}
+        message={tTasks("recurrence.deleteMessage")}
+        cancelText={tTasks("recurrence.deleteCancel")}
+        onClose={() => setShowRecurringDeleteSheet(false)}
+        actions={[
+          {
+            key: "this-date",
+            title: tTasks("recurrence.deleteThisDate"),
+            description: tTasks("recurrence.deleteThisDateDescription"),
+            icon: "calendar-remove",
+            destructive: true,
+            onPress: () => deleteRecurringTaskOccurrence(false),
+          },
+          {
+            key: "future-dates",
+            title: tTasks("recurrence.deleteFutureDates"),
+            description: tTasks("recurrence.deleteFutureDatesDescription"),
+            icon: "calendar-remove",
+            destructive: true,
+            onPress: () => deleteRecurringTaskOccurrence(true),
+          },
+        ]}
       />
     </>
   );

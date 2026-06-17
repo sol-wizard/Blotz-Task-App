@@ -85,7 +85,14 @@ public class GetTasksByDateQueryHandler(
             .Select(task => new TaskByDateItemDto
             {
                 Id = task.Id,
-                RecurringTaskId = task.RecurringTaskId,
+                OccurrenceKind = TaskOccurrenceDtoHelpers.ToOccurrenceKind(task.RecurringOccurrenceOverride),
+                RecurringOccurrence = TaskOccurrenceDtoHelpers.ToRecurringOccurrenceIdentityOrNull(
+                    task.RecurringOccurrenceOverride),
+                RecurringTask = TaskOccurrenceDtoHelpers.ToRecurringTaskMetadataOrNull(
+                    task.RecurringOccurrenceOverride,
+                    task.RecurringOccurrenceOverride == null
+                        ? null
+                        : task.RecurringOccurrenceOverride.RecurringTask),
                 Title = task.Title,
                 Description = task.Description,
                 StartTime = task.StartTime,
@@ -94,7 +101,8 @@ public class GetTasksByDateQueryHandler(
                 TimeType = task.TimeType,
                 NotificationId = task.NotificationId,
                 AlertTime = task.AlertTime,
-                IsDeadline = db.TaskDeadlines.Any(td => td.TaskItemId == task.Id),
+                IsDeadline = task.Deadline != null,
+                DueAt = task.Deadline == null ? null : task.Deadline.DueAt,
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -122,61 +130,88 @@ public class GetTasksByDateQueryHandler(
             query.UserId,
             queryStopwatch.ElapsedMilliseconds);
 
-        // Step 2: Fetch active RecurringTasks for this user that could occur on requestedDate
+        var recurrenceLookbackStartDate = requestedDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
+
+        // Step 2: Fetch active RecurringTasks for this user that could overlap requestedDate
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
+            .Include(r => r.Series)
             .Where(r => r.UserId == query.UserId
                 && r.IsActive
+                && !r.Series.IsDeleted
                 && r.StartDate <= requestedDate
-                && (r.EndDate == null || r.EndDate >= requestedDate))
+                && (r.EndDate == null || r.EndDate >= recurrenceLookbackStartDate))
             .ToListAsync(ct);
 
-        // Step 3: Find which recurring templates already have a stored row for this date
-        var alreadySavedIds = tasks
-            .Where(t => t.RecurringTaskId != null && t.StartTime?.Date == requestedDate.ToDateTime(TimeOnly.MinValue))
-            .Select(t => t.RecurringTaskId!.Value)
-            .ToHashSet();
+        // Step 3: Find overrides that suppress or replace virtual occurrences that may overlap this date.
+        var overrides = await db.RecurringOccurrenceOverrides
+            .AsNoTracking()
+            .Where(o => o.Series.UserId == query.UserId
+                && o.OccurrenceDate >= recurrenceLookbackStartDate
+                && o.OccurrenceDate <= requestedDate)
+            .ToListAsync(ct);
+
+        var overrideMap = overrides.ToDictionary(o => (o.SeriesId, o.OccurrenceDate), o => o);
 
         // Step 4: For each recurring task not yet saved, check if it occurs on this date
         foreach (var recurring in recurringTasks)
         {
-            if (alreadySavedIds.Contains(recurring.Id)) continue;
-            if (!generatorService.IsOccurrenceOn(recurring, requestedDate)) continue;
-
-            var startTime = new DateTimeOffset(
+            var occurrenceWindows = generatorService.GetOccurrencesOverlappingWindow(
+                recurring,
                 requestedDate,
-                TimeOnly.FromTimeSpan(recurring.TemplateStartTime.TimeOfDay),
-                recurring.TemplateStartTime.Offset);
+                selectedDayStart,
+                selectedDayEnd);
 
-            var endTime = recurring.TimeType == TaskTimeType.SingleTime
-                ? startTime
-                : new DateTimeOffset(
-                    requestedDate,
-                    TimeOnly.FromTimeSpan(recurring.TemplateEndTime!.Value.TimeOfDay),
-                    recurring.TemplateEndTime.Value.Offset);
-
-            tasks.Add(new TaskByDateItemDto
+            foreach (var occurrenceWindow in occurrenceWindows)
             {
-                Id = null,  // no DB row yet
-                RecurringTaskId = recurring.Id,
-                Title = recurring.Title,
-                Description = recurring.Description,
-                StartTime = startTime,
-                EndTime = endTime,
-                IsDone = false,
-                TimeType = recurring.TimeType,
-                Label = recurring.Label != null
-                    ? new LabelDto
+                if (overrideMap.TryGetValue(
+                        (recurring.SeriesId, occurrenceWindow.OccurrenceDate),
+                        out var recurringOverride)
+                    && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached)
+                {
+                    continue;
+                }
+
+                tasks.Add(new TaskByDateItemDto
+                {
+                    Id = null,  // no DB row yet
+                    OccurrenceKind = TaskOccurrenceKind.VirtualRecurringOccurrence,
+                    RecurringOccurrence = new RecurringOccurrenceIdentityDto
                     {
-                        LabelId = recurring.Label.LabelId,
-                        Name = recurring.Label.Name,
-                        Color = recurring.Label.Color
-                    }
-                    : null,
-                Subtasks = [],
-                IsDeadline = false
-            });
+                        RecurringTaskId = recurring.Id,
+                        OccurrenceDate = occurrenceWindow.OccurrenceDate
+                    },
+                    RecurringTask = new RecurringTaskEditMetadataDto
+                    {
+                        Frequency = recurring.Pattern.Frequency,
+                        Interval = recurring.Pattern.Interval,
+                        DaysOfWeek = recurring.Pattern.DaysOfWeek,
+                        DayOfMonth = recurring.Pattern.DayOfMonth,
+                        StartDate = recurring.StartDate,
+                        EndDate = recurring.EndDate
+                    },
+                    Title = recurring.Title,
+                    Description = recurring.Description,
+                    StartTime = occurrenceWindow.StartTime,
+                    EndTime = occurrenceWindow.EndTime,
+                    IsDone = false,
+                    TimeType = recurring.TimeType,
+                    Label = recurring.Label != null
+                        ? new LabelDto
+                        {
+                            LabelId = recurring.Label.LabelId,
+                            Name = recurring.Label.Name,
+                            Color = recurring.Label.Color
+                        }
+                        : null,
+                    Subtasks = [],
+                    IsDeadline = recurring.IsDeadline,
+                    DueAt = recurring.IsDeadline
+                        ? generatorService.BuildOccurrenceDueAt(recurring, occurrenceWindow.OccurrenceDate)
+                        : null
+                });
+            }
         }
 
         // Step 5: Re-sort the merged list because virtual tasks from Step 4 were appended
@@ -202,10 +237,9 @@ public class GetTasksByDateQueryHandler(
     }
 }
 
-public class TaskByDateItemDto
+public class TaskByDateItemDto : TaskOccurrenceDtoBase
 {
     public int? Id { get; set; }           // null = virtual occurrence (no DB row yet)
-    public int? RecurringTaskId { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
@@ -217,4 +251,5 @@ public class TaskByDateItemDto
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
     public bool IsDeadline { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
 }

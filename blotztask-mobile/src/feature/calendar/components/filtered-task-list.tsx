@@ -11,6 +11,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
+import { getRecurringOccurrenceIdentity } from "@/shared/util/task-occurrence-identity";
 import { useSwipeableManager } from "@/feature/notes/hooks/useSwipeableManager";
 
 export const FilteredTaskList = ({
@@ -58,40 +59,43 @@ export const FilteredTaskList = ({
   );
 
   return (
-      <Animated.View className="flex-1" layout={MotionAnimations.layout}>
-        <Animated.View layout={MotionAnimations.layout}>
-          <TaskStatusRow
-            allTaskCount={findStatusCount("All")}
-            todoTaskCount={findStatusCount("To Do")}
-            inProgressTaskCount={findStatusCount("In Progress")}
-            overdueTaskCount={findStatusCount("Overdue")}
-            doneTaskCount={findStatusCount("Done")}
-            selectedStatus={selectedStatus}
-            onChange={setSelectedStatus}
-            selectedDay={selectedDay}
-          />
-        </Animated.View>
-
-        {isLoading ? (
-          <LoadingScreen />
-        ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
-          <FlatList
-            className="flex-1"
-            data={tasksOfSelectedStatus}
-            contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12, flexGrow: 1 }}
-            renderItem={renderTask}
-            keyExtractor={(task) =>
-              task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
-            }
-            onScrollBeginDrag={closeAllRows}
-            keyboardShouldPersistTaps="handled"
-            ListFooterComponent={
-              <Pressable className="flex-1 min-h-96" onPress={closeAllRows} />
-            }
-          />
-        ) : (
-          <TaskListPlaceholder selectedStatus={selectedStatus} />
-        )}
+    <Animated.View className="flex-1" layout={MotionAnimations.layout}>
+      <Animated.View layout={MotionAnimations.layout}>
+        <TaskStatusRow
+          allTaskCount={findStatusCount("All")}
+          todoTaskCount={findStatusCount("To Do")}
+          inProgressTaskCount={findStatusCount("In Progress")}
+          overdueTaskCount={findStatusCount("Overdue")}
+          doneTaskCount={findStatusCount("Done")}
+          selectedStatus={selectedStatus}
+          onChange={setSelectedStatus}
+          selectedDay={selectedDay}
+        />
       </Animated.View>
+
+      {isLoading ? (
+        <LoadingScreen />
+      ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
+        <FlatList
+          className="flex-1"
+          data={tasksOfSelectedStatus}
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12, flexGrow: 1 }}
+          renderItem={renderTask}
+          keyExtractor={(task, index) => {
+            if (task.id != null) return `task-${task.id}`;
+            const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+            if (recurringOccurrence) {
+              return `virtual-${recurringOccurrence.recurringTaskId}-${recurringOccurrence.occurrenceDate}`;
+            }
+            return `task-fallback-${index}`;
+          }}
+          onScrollBeginDrag={closeAllRows}
+          keyboardShouldPersistTaps="handled"
+          ListFooterComponent={<Pressable className="flex-1 min-h-96" onPress={closeAllRows} />}
+        />
+      ) : (
+        <TaskListPlaceholder selectedStatus={selectedStatus} />
+      )}
+    </Animated.View>
   );
 };

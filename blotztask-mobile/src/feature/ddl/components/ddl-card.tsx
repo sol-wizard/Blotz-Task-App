@@ -32,26 +32,28 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
+  const canDelete = task.id != null;
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
       <DdlRightActions
         progress={progress}
         onPin={() =>
           updatePin(
-            { taskId: task.id, isPinned: !task.isPinned },
+            { task, isPinned: !task.isPinned },
             {
               onSuccess: () => swipeRef.current?.close(),
             },
           )
         }
         onDelete={() => {
-          deleteDeadlineTask(task.id, {
+          deleteDeadlineTask(task, {
             onSuccess: () => swipeRef.current?.close(),
           });
         }}
         isPinned={isPinned}
         isUpdatingPin={isUpdatingPin}
         isDeletingTask={isDeletingDeadlineTask}
+        canDelete={canDelete}
       />
     );
   };
@@ -85,7 +87,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
           )}
 
           <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-            <TasksCheckbox type="task" checked={task.isDone} onChange={() => markAsDone(task.id)} />
+            <TasksCheckbox type="task" checked={task.isDone} onChange={() => markAsDone(task)} />
           </View>
 
           <View

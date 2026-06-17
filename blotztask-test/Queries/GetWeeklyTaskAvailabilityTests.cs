@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
@@ -99,5 +100,37 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
             "future week views should show a dot for tasks scheduled during that week");
         futureWeekResult[0].HasTask.Should().BeFalse(
             "future week views must not show a dot for tasks that are not scheduled in that week");
+    }
+
+    [Fact]
+    public async Task Handle_OvernightRecurringOccurrence_ShouldShowDotOnFollowingDay()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var monday = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Night Shift",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 6, 1),
+            templateStartTime: new DateTimeOffset(2026, 6, 1, 22, 0, 0, TimeSpan.Zero),
+            templateEndTime: new DateTimeOffset(2026, 6, 2, 1, 0, 0, TimeSpan.Zero),
+            daysOfWeek: (int)WeeklyDayFlags.Monday,
+            scheduleTimeZoneId: "UTC");
+
+        var query = new GetWeeklyTaskAvailabilityQuery
+        {
+            UserId = userId,
+            Monday = monday
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+
+        // Assert
+        result[0].HasTask.Should().BeTrue(
+            "the weekly indicator should show the recurring event on its start day");
+        result[1].HasTask.Should().BeTrue(
+            "the weekly indicator should also show the overnight continuation on the following day");
     }
 }

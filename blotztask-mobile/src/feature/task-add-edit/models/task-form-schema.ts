@@ -1,6 +1,21 @@
 import { z } from "zod";
 import { combineDateTime } from "../util/combine-date-time";
-import { isBefore, isEqual } from "date-fns";
+import { isBefore, isEqual, startOfDay } from "date-fns";
+
+export const recurrenceValues = [
+  "never",
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+  "yearly",
+  "custom",
+] as const;
+
+export const recurrenceEndModeValues = ["never", "onDate"] as const;
+
+const MAX_RECURRING_EVENT_DURATION_DAYS = 31;
+const MAX_RECURRING_EVENT_DURATION_MS = MAX_RECURRING_EVENT_DURATION_DAYS * 24 * 60 * 60 * 1000;
 
 export const taskFormSchema = z
   .object({
@@ -16,6 +31,9 @@ export const taskFormSchema = z
     endTime: z.date(),
     labelId: z.number().nullable(),
     alert: z.number().nullable(),
+    recurrence: z.enum(recurrenceValues),
+    recurrenceEndMode: z.enum(recurrenceEndModeValues),
+    recurrenceEndDate: z.date().nullable(),
     isDeadline: z.boolean(),
     deadlineDate: z.date().nullable(),
     deadlineTime: z.date().nullable(),
@@ -31,6 +49,50 @@ export const taskFormSchema = z
     {
       message: "form.invalidTimeRange",
       path: ["endTime"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.recurrence === "never" || data.recurrence === "custom") return true;
+
+      const start = combineDateTime(data.startDate, data.startTime);
+      const end = combineDateTime(data.endDate, data.endTime);
+      if (!start || !end) return false;
+
+      return end.getTime() - start.getTime() <= MAX_RECURRING_EVENT_DURATION_MS;
+    },
+    {
+      message: "recurrence.durationTooLong",
+      path: ["endTime"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.recurrence === "never" || data.recurrence === "custom") return true;
+      if (data.recurrenceEndMode === "never") return true;
+
+      return data.recurrenceEndDate != null;
+    },
+    {
+      message: "recurrence.endDateRequired",
+      path: ["recurrenceEndDate"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.recurrence === "never" || data.recurrence === "custom") return true;
+      if (data.recurrenceEndMode === "never" || !data.recurrenceEndDate) return true;
+
+      const firstRepeatDate = startOfDay(data.startDate);
+      const recurrenceEndDate = startOfDay(data.recurrenceEndDate);
+
+      return (
+        isBefore(firstRepeatDate, recurrenceEndDate) || isEqual(firstRepeatDate, recurrenceEndDate)
+      );
+    },
+    {
+      message: "recurrence.endDateBeforeStart",
+      path: ["recurrenceEndDate"],
     },
   );
 
