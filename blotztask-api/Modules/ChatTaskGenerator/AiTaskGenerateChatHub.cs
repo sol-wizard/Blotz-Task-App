@@ -64,6 +64,8 @@ public class AiTaskGenerateChatHub(
             Message = message,
             TimeZone = chatContext.TimeZone
         });
+        logger.LogDebug("Received message from user {UserId}: {OriginalMessage}. Resolved message: {ResolvedMessage}",
+            userId, message, resolvedMessage);
 
         // 2. Wire streaming callbacks so each tool call pushes items to the client in real time
         WireStreamingCallbacks(chatContext, ct);
