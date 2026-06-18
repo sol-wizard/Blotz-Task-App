@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.Pomodoro.Domain;
 
 namespace BlotzTask.Modules.Users.Domain;
@@ -16,4 +17,7 @@ public class AppUser
     public DateTime? LoginAt { get; set; }
     public PomodoroSetting PomodoroSetting { get; set; } = null!;
     public bool IsOnboarded { get; set; } = false;
+    
+    [MaxLength(100)]
+    public string? Timezone { get; set; }
 }
