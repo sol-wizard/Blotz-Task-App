@@ -25,6 +25,7 @@ import { RecurrenceFrequency } from "@/shared/models/recurring-task-create-dto";
 import { ActionChoiceSheet } from "@/shared/components/action-choice-sheet";
 import { labelKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import { LabelDTO } from "@/shared/models/label-dto";
+import { getWeeklyDayFlag } from "@/feature/task-add-edit/util/get-weekly-day-flag";
 
 function selectTaskByRouteMode({
   mode,
@@ -462,11 +463,4 @@ function mapFormValuesToRecurringMetadata(
     startDate: currentTask.recurringTask?.startDate ?? currentTask.startTime,
     endDate: formValues.recurrenceEndDate ?? null,
   };
-}
-
-function getWeeklyDayFlag(dateOnly: string): number {
-  const [year, month, dayOfMonth] = dateOnly.split("-").map(Number);
-  const day = new Date(year, month - 1, dayOfMonth).getDay();
-  const dayFlags = [64, 1, 2, 4, 8, 16, 32] as const;
-  return dayFlags[day];
 }
