@@ -9,7 +9,7 @@ type Params = {
   captureTargetRef: RefObject<View | null>;
 };
 
-export function useMonthlyReviewShare({ captureTargetRef }: Params) {
+export function useReviewShare({ captureTargetRef }: Params) {
   const { t } = useTranslation("settings");
 
   const [isSharingImage, setIsSharingImage] = useState(false);

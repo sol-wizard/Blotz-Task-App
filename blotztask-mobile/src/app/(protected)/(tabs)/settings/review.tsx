@@ -1,5 +1,5 @@
-import MonthlyReviewScreen from "@/feature/review/screens/monthly-review-screen";
+import ReviewScreen from "@/feature/review/screens/review-screen";
 
 export default function ReviewRoute() {
-  return <MonthlyReviewScreen />;
+  return <ReviewScreen />;
 }
