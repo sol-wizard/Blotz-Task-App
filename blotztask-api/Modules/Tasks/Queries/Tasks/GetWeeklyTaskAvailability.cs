@@ -10,6 +10,10 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetWeeklyTaskAvailabilityRequest
 {
+    // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 7.
+    // Weekly task availability is a current-location feature; replace Monday DateTimeOffset
+    // with local week anchor date + request/device timeZoneId, then resolve week boundaries
+    // server-side from the timezone instead of carrying one fixed offset across the week.
     [BindRequired] public DateTimeOffset Monday { get; set; }
 }
 
