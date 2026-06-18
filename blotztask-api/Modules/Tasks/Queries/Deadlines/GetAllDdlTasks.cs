@@ -11,6 +11,10 @@ namespace BlotzTask.Modules.Tasks.Queries.Deadlines;
 public class GetAllDdlTasksQuery
 {
     public required Guid UserId { get; init; }
+    // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 6.
+    // Deadline "today" is local calendar meaning; replace Now DateTimeOffset with
+    // request/device timeZoneId and derive today server-side via the timezone helper.
+    // Do not fall back to UTC for user-local deadline occurrence selection.
     public DateTimeOffset? Now { get; init; }
 }
 

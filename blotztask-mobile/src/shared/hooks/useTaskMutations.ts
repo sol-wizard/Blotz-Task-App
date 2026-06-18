@@ -215,6 +215,9 @@ export function invalidateSelectedDayTask(
   startTime: string,
   endTime: string,
 ) {
+  // TIMEZONE TODO: Align with timezone-handling.md Rule 8.
+  // This helper currently accepts strings that may be UTC ISO values. Refactor it to accept
+  // Date objects or explicit local date keys, then derive selected-day cache keys locally.
   const start = startOfDay(new Date(startTime));
   const end = startOfDay(new Date(endTime));
   if (isSameDay(start, end)) {
