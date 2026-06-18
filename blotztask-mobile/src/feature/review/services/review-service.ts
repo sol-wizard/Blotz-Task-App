@@ -4,6 +4,9 @@ import {
   ReviewReportDTO,
 } from "@/feature/review/models/review-dto";
 
+// TIMEZONE TODO: Align with timezone-handling.md Rule 5.
+// Reviews/reports should prefer stored user timezone. Keep request/device timeZoneId
+// only as a fallback until the backend can resolve AppUser.TimeZoneId.
 // The device's IANA timezone (e.g. "Australia/Sydney"). The backend snaps the anchor
 // date to the local period boundary using this.
 const deviceTimeZoneId = (): string => {
