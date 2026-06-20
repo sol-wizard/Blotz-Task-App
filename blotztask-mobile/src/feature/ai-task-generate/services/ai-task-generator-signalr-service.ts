@@ -1,6 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
+import { getAuthToken } from "@/shared/services/api/token-manager";
 
 const config = {
   API_BASE_URL: process.env.EXPO_PUBLIC_URL,
@@ -10,10 +9,9 @@ const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
 export const signalRService = {
   createConnection: async () => {
     console.log("Attempting to create SignalR connection to:", SIGNALR_HUBS_CHAT);
-    const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-    // TODO: Add error handling
+    const token = await getAuthToken();
     if (!token) {
-      throw new Error("No token found in SecureStore.");
+      throw new Error("No valid Auth0 credentials available.");
     }
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

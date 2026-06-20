@@ -1,60 +1,42 @@
-import * as SecureStore from "expo-secure-store";
-import Auth0 from "react-native-auth0";
-import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
-import { AUTH_CONFIG } from "./config";
+import { auth0 } from "./auth0-client";
 
-const auth0 = new Auth0(AUTH_CONFIG);
-
+/**
+ * Returns a valid access token, transparently refreshing it via the Auth0 SDK
+ * when the cached one is expired. The SDK owns the refresh token and handles
+ * rotation, so this is the single source of truth for tokens.
+ */
 export async function getAuthToken(): Promise<string | null> {
-  return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+  try {
+    const credentials = await auth0.credentialsManager.getCredentials();
+    return credentials.accessToken;
+  } catch {
+    // No stored credentials, or the session was revoked/expired.
+    return null;
+  }
 }
 
-export async function setAuthToken(token: string): Promise<void> {
-  await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
-}
-
-export async function getRefreshToken(): Promise<string | null> {
-  return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+/**
+ * Forces a refresh that bypasses the cached access token. Used to retry once
+ * after a 401 in case the access token was stale.
+ */
+export async function forceRefreshAuthToken(): Promise<string | null> {
+  try {
+    const credentials = await auth0.credentialsManager.getCredentials(
+      undefined,
+      0,
+      undefined,
+      true, // forceRefresh
+    );
+    return credentials.accessToken;
+  } catch {
+    return null;
+  }
 }
 
 export async function clearTokens(): Promise<void> {
-  await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
-  await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-}
-
-let refreshTokenPromise: Promise<string> | null = null;
-
-export async function refreshToken(): Promise<string> {
-  if (refreshTokenPromise) {
-    console.log("wait for ongoing refresh token");
-    return refreshTokenPromise;
-  }
-
-  refreshTokenPromise = (async () => {
-    console.log("starts refresh token!");
-
-    const refreshTokenValue = await getRefreshToken();
-    if (!refreshTokenValue) {
-      throw new Error("No refresh token available");
-    }
-
-    const credentials = await auth0.auth.refreshToken({
-      refreshToken: refreshTokenValue,
-    });
-
-    console.log("get new tokens");
-
-    await setAuthToken(credentials.accessToken);
-    if (credentials.refreshToken) {
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, credentials.refreshToken);
-    }
-
-    return credentials.accessToken;
-  })();
-
   try {
-    return await refreshTokenPromise;
-  } finally {
-    refreshTokenPromise = null;
+    await auth0.credentialsManager.clearCredentials();
+  } catch {
+    // Nothing stored — ignore.
   }
 }
