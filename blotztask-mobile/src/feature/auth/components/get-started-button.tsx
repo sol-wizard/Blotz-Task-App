@@ -33,9 +33,6 @@ export default function GetStartedButton() {
         return;
       }
 
-      // No manual token storage: `authorize()` already saved credentials to the
-      // Auth0 SDK credentials manager, which is the single source of truth.
-
       try {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         await updateUserProfile({ timezone });
