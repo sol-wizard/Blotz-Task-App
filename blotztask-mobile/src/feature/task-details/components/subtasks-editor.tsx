@@ -32,8 +32,9 @@ const SubtasksEditor = ({
     useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
-  
+  const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[] | null>(null);
+  const listData = draggableSubtasks ?? fetchedSubtasks ?? [];
+
   const { bottom } = useSafeAreaInsets();
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
@@ -50,29 +51,15 @@ const SubtasksEditor = ({
     </ScaleDecorator>
   );
 
-  const handleDelete = (id: number) => {
-    deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
-  };
-
-  const getNextSubtaskNumber = () => {
-    if (!fetchedSubtasks?.length) return 1;
-
-    const numbers = fetchedSubtasks
-      .map((s) => {
-        const match = s.title.match(/^New subtask (\d+)$/);
-        return match ? Number(match[1]) : 0;
-      })
-      .filter(Boolean);
-
-    return numbers.length ? Math.max(...numbers) + 1 : 1;
+  const handleDelete = async (id: number) => {
+    await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
+    setDraggableSubtasks(null);
   };
 
   const handleAddSubtask = async () => {
-    const nextNumber = getNextSubtaskNumber();
-    
     addSubtask({
       parentTaskId: parentTask.id!,
-      title: `New subtask ${nextNumber}`,
+      title: `New subtask`,
       duration: "00:00:00",
       order: (fetchedSubtasks?.length ?? 0) + 1,
     });
@@ -113,7 +100,7 @@ const SubtasksEditor = ({
             <TouchableOpacity
               onPress={async () => {
                 await onRefreshSubtasks();
-                setDraggableSubtasks(fetchedSubtasks ?? []);
+                setDraggableSubtasks(null);
               }}
               className="p-2"
             >
@@ -145,9 +132,11 @@ const SubtasksEditor = ({
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableFlatList
-          data={draggableSubtasks}
+          data={listData}
           onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setDraggableSubtasks(newData)}
-          keyExtractor={(item: SubtaskDTO) => item.title.toString()}
+          keyExtractor={(item: SubtaskDTO, index: number) =>
+            item.id != null ? item.id.toString() : `temp-${index}`
+          }
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: listBottomPadding }}
           autoscrollThreshold={40}
