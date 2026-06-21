@@ -1,42 +1,37 @@
 import { auth0 } from "./auth0-client";
 
-/**
- * Returns a valid access token, transparently refreshing it via the Auth0 SDK
- * when the cached one is expired. The SDK owns the refresh token and handles
- * rotation, so this is the single source of truth for tokens.
- */
+// Returns a valid access token; the SDK refreshes/rotates it when expired.
 export async function getAuthToken(): Promise<string | null> {
   try {
-    const credentials = await auth0.credentialsManager.getCredentials();
-    return credentials.accessToken;
+    const { accessToken } = await auth0.credentialsManager.getCredentials();
+    return accessToken;
   } catch {
-    // No stored credentials, or the session was revoked/expired.
     return null;
   }
 }
 
-/**
- * Forces a refresh that bypasses the cached access token. Used to retry once
- * after a 401 in case the access token was stale.
- */
-export async function forceRefreshAuthToken(): Promise<string | null> {
+async function refresh(): Promise<string | null> {
   try {
-    const credentials = await auth0.credentialsManager.getCredentials(
-      undefined,
-      0,
-      undefined,
-      true, // forceRefresh
-    );
-    return credentials.accessToken;
+    const { accessToken } = await auth0.credentialsManager.getCredentials(undefined, 0, undefined, true);
+    return accessToken;
   } catch {
     return null;
   }
+}
+
+// Force a refresh after a 401, sharing one request across concurrent callers
+// so parallel 401s can't trigger multiple token rotations.
+let inFlightRefresh: Promise<string | null> | null = null;
+
+export function forceRefreshAuthToken(): Promise<string | null> {
+  if (!inFlightRefresh) {
+    inFlightRefresh = refresh().finally(() => {
+      inFlightRefresh = null;
+    });
+  }
+  return inFlightRefresh;
 }
 
 export async function clearTokens(): Promise<void> {
-  try {
-    await auth0.credentialsManager.clearCredentials();
-  } catch {
-    // Nothing stored — ignore.
-  }
+  await auth0.credentialsManager.clearCredentials();
 }
