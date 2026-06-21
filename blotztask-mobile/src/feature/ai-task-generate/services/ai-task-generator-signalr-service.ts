@@ -9,17 +9,19 @@ const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
 export const signalRService = {
   createConnection: async () => {
     console.log("Attempting to create SignalR connection to:", SIGNALR_HUBS_CHAT);
-    const token = await getAuthToken();
-    if (!token) {
-      throw new Error("No valid Auth0 credentials available.");
-    }
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const url = `${SIGNALR_HUBS_CHAT}?timeZone=${encodeURIComponent(timeZone)}`;
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(url, {
-        accessTokenFactory: () => token,
+        accessTokenFactory: async () => {
+          const token = await getAuthToken();
+          if (!token) {
+            throw new Error("No valid Auth0 credentials available.");
+          }
+          return token;
+        },
       })
       .withAutomaticReconnect()
       .build();
