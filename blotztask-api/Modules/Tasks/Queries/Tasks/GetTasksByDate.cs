@@ -12,6 +12,12 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetTasksByDateRequest
 {
+    // TIMEZONE TODO: Align with timezone-handling.md Core Rule, Rule 2, Rule 4, and Rule 7.
+    // Replace startDate DateTimeOffset calendar queries with local date + request/device timeZoneId.
+    // Backend should resolve the local day boundaries from timeZoneId, convert them to UTC,
+    // keep the existing overlap logic, and add DST/travel/exact-midnight tests.
+    // TIMEZONE TODO: Remove IncludeFloatingForToday from the API/mobile call path because floating
+    // task support is no longer used.
     [BindRequired] public DateTimeOffset StartDate { get; set; }
 
     [BindRequired] public bool IncludeFloatingForToday { get; set; }
