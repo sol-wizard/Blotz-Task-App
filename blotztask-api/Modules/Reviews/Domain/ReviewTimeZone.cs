@@ -4,10 +4,13 @@ public static class ReviewTimeZone
 {
     /// <summary>
     /// Resolves the IANA timezone id used to snap the review period.
-    /// Fallback: request id -> UTC. A missing id is fine (UTC); an invalid id is a 400.
+    /// Current behavior resolves a request timezone or falls back to UTC until users store a timezone.
+    /// Target behavior is stored user timezone, then request fallback, then reject.
     /// </summary>
-    // TODO: per the stored-timezone PBI, insert the user's saved TimeZoneId between the
-    // request id and the UTC fallback once UserPreference stores one.
+    // TIMEZONE TODO: Align with timezone-handling.md Rule 5.
+    // Reviews/reports should prefer the stored user timezone, use request timeZoneId only
+    // when the stored timezone is missing, and reject instead of silently using UTC when
+    // neither timezone is available.
     public static TimeZoneInfo Resolve(string? timeZoneId)
     {
         if (string.IsNullOrWhiteSpace(timeZoneId))

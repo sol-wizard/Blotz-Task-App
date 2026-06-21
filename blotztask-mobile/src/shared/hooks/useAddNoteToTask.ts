@@ -24,6 +24,9 @@ export const useAddNoteToTask = () => {
     onSuccess: (_taskId, variables) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: noteKeys.all });
+      // TIMEZONE TODO: Align with timezone-handling.md Rule 8.
+      // Do not pass UTC strings from toISOString() into selected-day invalidation.
+      // Pass Date objects or local date keys so tasks near midnight invalidate the correct calendar days.
       invalidateSelectedDayTask(
         queryClient,
         variables.startTime.toISOString(),

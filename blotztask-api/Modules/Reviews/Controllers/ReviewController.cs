@@ -11,8 +11,8 @@ namespace BlotzTask.Modules.Reviews.Controllers;
 //          (valid -> use, missing -> UTC, invalid -> 400) and we snap the anchorDate to local bounds.
 //          e.g. Sydney user opens the weekly review: anchorDate=2026-06-11 + timeZoneId=Australia/Sydney
 //          -> snapped to Mon 2026-06-08 local -> queried as a UTC range.
-//  Later - store TimeZoneId on the user (PBI), so resolution becomes request -> saved tz -> UTC
-//          and the client no longer needs to send it.
+//  Later - store TimeZoneId on the user (PBI), so review resolution becomes
+//          saved timezone -> request fallback -> reject.
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]

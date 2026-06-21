@@ -12,6 +12,8 @@ public class UserProfileDTO
     public string? PhoneNumber { get; set; }
     public bool IsOnBoarded { get; set; }
     public DateTime SignUpAt { get; set; }
+    
+    public string? Timezone { get; set; }
 }
 
 public class GetUserProfileQuery
@@ -41,7 +43,8 @@ public class GetUserProfileQueryHandler(BlotzTaskDbContext db, ILogger<GetUserPr
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
             IsOnBoarded = user.IsOnboarded,
-            SignUpAt = user.SignUpAt
+            SignUpAt = user.SignUpAt,
+            Timezone = user.Timezone
         };
 
 

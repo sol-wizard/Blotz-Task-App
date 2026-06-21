@@ -14,6 +14,9 @@ export async function fetchTasksForDate(
   date: Date,
   includeFloatingForToday: boolean,
 ): Promise<TaskDetailDTO[]> {
+  // TIMEZONE TODO: Align with timezone-handling.md Core Rule, Rule 2, Rule 4, and Rule 7.
+  // Calendar requests should send local date + request/device timeZoneId instead of a
+  // precomputed startDate DateTimeOffset. Remove includeFloatingForToday with the API cleanup.
   const startDate = convertToDateTimeOffset(startOfDay(date));
 
   const url = `/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
@@ -21,6 +24,9 @@ export async function fetchTasksForDate(
 }
 
 export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
+  // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 7.
+  // Weekly availability should send local week anchor date + request/device timeZoneId,
+  // letting the backend resolve timezone-aware boundaries.
   const monday = convertToDateTimeOffset(startOfDay(date));
 
   const url = `/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
@@ -28,6 +34,9 @@ export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTask
 }
 
 export async function fetchMonthlyTaskAvailability(date: Date): Promise<MonthlyTaskIndicatorDTO[]> {
+  // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 7.
+  // Monthly view page availability should send local month anchor date + request/device timeZoneId,
+  // letting the backend resolve timezone-aware boundaries.
   const firstDate = convertToDateTimeOffset(startOfDay(date));
 
   const url = `/Task/monthly-task-availability?firstDate=${encodeURIComponent(firstDate)}`;
