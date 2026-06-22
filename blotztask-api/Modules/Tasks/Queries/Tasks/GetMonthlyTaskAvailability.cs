@@ -2,26 +2,28 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Services;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.EntityFrameworkCore;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Shared.Time;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetMonthlyTaskAvailabilityRequest
 {
-    // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 7.
-    // Monthly view page availability is a current-location feature; replace FirstDate DateTimeOffset
-    // with local month anchor date + request/device timeZoneId, then resolve month boundaries
-    // server-side from the timezone instead of carrying one fixed offset across the month.
-    [BindRequired] public DateTimeOffset FirstDate { get; set; }
+    [BindRequired] public DateOnly FirstDate { get; set; }
+
+    [BindRequired] public string TimeZoneId { get; set; } = string.Empty;
 }
 
 public class GetMonthlyTaskAvailabilityQuery
 {
     [Required] public required Guid UserId { get; init; }
-    [BindRequired] public DateTimeOffset FirstDate { get; set; }
+
+    [Required] public required DateOnly FirstDate { get; init; }
+
+    [Required] public required string TimeZoneId { get; init; }
 }
 
 public class GetMonthlyTaskAvailabilityQueryHandler(
@@ -33,44 +35,34 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         CancellationToken ct = default)
     {
         var stopwatch = Stopwatch.StartNew();
+
+        var tz = TimeZoneClock.ResolveOrThrow(query.TimeZoneId);
+        var monthStartDate = query.FirstDate;
+        var monthEndDate = monthStartDate.AddMonths(1);
+        var monthStart = TimeZoneClock.StartOfDayUtc(monthStartDate, tz);
+        var monthEnd = TimeZoneClock.StartOfDayUtc(monthEndDate, tz);
+        var recurrenceLookbackStartDate = monthStartDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
+        var userToday = TimeZoneClock.Today(tz);
+        var includeOverdueTasks = monthStartDate <= userToday;
+
         bool? autoRolloverEnabled = await db.UserPreferences
             .AsNoTracking()
             .Where(p => p.UserId == query.UserId)
             .Select(p => p.AutoRollover)
             .FirstOrDefaultAsync(ct);
         var autoRollover = autoRolloverEnabled ?? true;
-        var monthStart = query.FirstDate;
-        var monthEnd = query.FirstDate.AddMonths(1);
-        var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
-        var monthEndDate = DateOnly.FromDateTime(monthEnd.Date);
-        var recurrenceLookbackStartDate = monthStartDate.AddDays(-RecurringTaskGeneratorService.MaxRecurringEventDurationDays);
-        
-        
-        var userNow = DateTimeOffset.UtcNow.ToOffset(query.FirstDate.Offset);
-        var userTodayStart = new DateTimeOffset(userNow.Date, query.FirstDate.Offset);
-        var userTodayEnd = userTodayStart.AddDays(1);
-        var includeOverdueTasks = monthStart.Date <= userNow.Date;
-        
-        
+
         logger.LogInformation(
-            "Fetching monthly task availability for user {UserId} from {MonthStart} to {MonthEnd}",
-            query.UserId,
-            monthStart,
-            monthEnd);
+            "Fetching monthly task availability for user {UserId} from {MonthStart} to {MonthEnd} (timezone {TimeZoneId})",
+            query.UserId, monthStartDate, monthEndDate, query.TimeZoneId);
 
         var queryStopwatch = Stopwatch.StartNew();
 
         var tasks = await db.TaskItems
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
-                        (
-                            // Tasks in date range
-                            (
-                                t.StartTime < monthEnd
-                                && t.EndTime > monthStart
-                            )
-
-                        ))
+                        t.StartTime < monthEnd &&
+                        t.EndTime > monthStart)
             .Select(t => new
             {
                 t.Title,
@@ -97,8 +89,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         var recurringOverrideKeys = recurringOverrides
             .Select(o => (o.SeriesId, o.OccurrenceDate))
             .ToHashSet();
-        
-        
+
         var recurringTasks = await db.RecurringTasks
             .AsNoTracking()
             .Include(r => r.Label)
@@ -112,26 +103,23 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
 
         logger.LogInformation(
             "Fetched {TaskCount} stored tasks, {RecurringCount} recurring templates for user {UserId} (DB query {DbElapsedMs}ms)",
-            tasks.Count,
-            recurringTasks.Count,
-            query.UserId,
-            queryStopwatch.ElapsedMilliseconds);
-        
+            tasks.Count, recurringTasks.Count, query.UserId, queryStopwatch.ElapsedMilliseconds);
+
         var result = new List<MonthlyTaskIndicatorDto>();
 
-        for (var dayStart = monthStart; dayStart < monthEnd; dayStart = dayStart.AddDays(1))
+        for (var dayDate = monthStartDate; dayDate < monthEndDate; dayDate = dayDate.AddDays(1))
         {
-            var dayEnd = dayStart.AddDays(1);
-            var dayDate = DateOnly.FromDateTime(dayStart.Date);
-            var isToday = dayStart.Date == userNow.Date;
-            var overdueCutoff = isToday ? userNow : dayEnd;
+            var dayStart = TimeZoneClock.StartOfDayUtc(dayDate, tz);
+            var dayEnd = TimeZoneClock.StartOfDayUtc(dayDate.AddDays(1), tz);
+            var isToday = dayDate == userToday;
+            var overdueCutoff = isToday ? DateTimeOffset.UtcNow : dayEnd;
 
             var dayTasks = tasks
                 .Where(t =>
                     (t.StartTime < dayEnd && t.EndTime >= dayStart) ||
                     (
                         includeOverdueTasks && autoRollover &&
-                        dayStart < userTodayEnd &&
+                        dayDate <= userToday &&
                         !t.IsDone &&
                         t.EndTime < overdueCutoff
                     ))
@@ -143,10 +131,10 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 })
                 .Take(4)
                 .ToList();
-            
+
             if (dayTasks.Count < 4)
             {
-                var offset = 4 -  dayTasks.Count;
+                var offset = 4 - dayTasks.Count;
                 var recurringThumbnails = recurringTasks
                     .Where(r => generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
                         .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))))
@@ -161,32 +149,30 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
 
                 dayTasks.AddRange(recurringThumbnails);
             }
-            
+
             result.Add(new MonthlyTaskIndicatorDto
             {
                 TaskThumbnails = dayTasks,
-                Date = dayStart,
+                Date = dayDate,
             });
         }
 
         logger.LogInformation(
             "Computed monthly task availability for user {UserId} in {ElapsedMs}ms",
-            query.UserId,
-            stopwatch.ElapsedMilliseconds);
-        
+            query.UserId, stopwatch.ElapsedMilliseconds);
+
         return result;
     }
-    
 }
 
 public class MonthlyTaskIndicatorDto
 {
-    public DateTimeOffset Date { get; set; }
-    public List<TaskThumbnailDto> TaskThumbnails { get; set; }
+    public DateOnly Date { get; set; }
+    public List<TaskThumbnailDto> TaskThumbnails { get; set; } = [];
 }
 
 public class TaskThumbnailDto
 {
-    public string TaskTitle { get; set; }
+    public string TaskTitle { get; set; } = string.Empty;
     public Label? Label { get; set; }
 }
