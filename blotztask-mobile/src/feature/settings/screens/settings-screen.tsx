@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useRouter } from "expo-router";
@@ -71,7 +71,11 @@ export default function SettingsScreen() {
         {t("title")}
       </Text>
 
-      <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
+      <ScrollView
+        className="flex-1 mt-2"
+        contentContainerStyle={{ paddingHorizontal: 32, alignItems: "center", paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View>
           <UserAvatar pictureValue={userProfile?.pictureUrl} size={96} />
           <Pressable
@@ -102,7 +106,7 @@ export default function SettingsScreen() {
             </View>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
