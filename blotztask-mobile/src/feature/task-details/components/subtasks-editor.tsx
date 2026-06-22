@@ -36,6 +36,7 @@ const SubtasksEditor = ({
   const listData = draggableSubtasks ?? fetchedSubtasks ?? [];
 
   const { bottom } = useSafeAreaInsets();
+  
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
   const renderItem = ({ item, drag }: RenderItemParams<SubtaskDTO>) => (
@@ -132,7 +133,7 @@ const SubtasksEditor = ({
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableFlatList
-          data={listData}
+          data={listData} 
           onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setDraggableSubtasks(newData)}
           keyExtractor={(item: SubtaskDTO, index: number) =>
             item.id != null ? item.id.toString() : `temp-${index}`
