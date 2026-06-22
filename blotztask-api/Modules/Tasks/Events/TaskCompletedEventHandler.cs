@@ -17,12 +17,18 @@ public class TaskCompletedEventHandler(
     {
         logger.LogInformation("[TaskCompletedEventHandler] Started — TaskId {TaskId}", taskCompletedEvent.TaskId);
 
+        if (Random.Shared.NextDouble() >= 0.5)
+        {
+            logger.LogInformation("[TaskCompletedEventHandler] Skipped badge award (50% chance) — TaskId {TaskId}", taskCompletedEvent.TaskId);
+            return;
+        }
+
         var task = await db.TaskItems
             .FirstOrDefaultAsync(t => t.Id == taskCompletedEvent.TaskId, ct);
 
         int completeOffsetMinutes = 0;
-        if (task != null)
-            completeOffsetMinutes = (int)(DateTimeOffset.UtcNow - task.EndTime).TotalMinutes;
+        if (task?.CompletedAt != null)
+            completeOffsetMinutes = (int)(task.CompletedAt.Value - task.EndTime).TotalMinutes;
 
         await badgeAwardService.ProcessAsync(new BadgeAwardCommand
         {
