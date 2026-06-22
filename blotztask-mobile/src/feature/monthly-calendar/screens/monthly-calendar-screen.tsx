@@ -34,8 +34,7 @@ export default function MonthlyCalendarScreen() {
 
   const dataByDate: Record<string, TaskThumbnailDTO[]> = {};
   monthlyTaskAvailability.forEach((item) => {
-    const dateKey = item.date.split("T")[0];
-    dataByDate[dateKey] = item.taskThumbnails;
+    dataByDate[item.date] = item.taskThumbnails;
   });
 
   // Functions

@@ -52,7 +52,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
                         t.StartTime < weekEndExclusive &&
-                        t.EndTime > weekStart)
+                        t.EndTime >= weekStart)
             .Select(t => new
             {
                 t.StartTime,

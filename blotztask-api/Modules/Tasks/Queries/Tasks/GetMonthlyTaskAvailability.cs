@@ -62,7 +62,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
                         t.StartTime < monthEnd &&
-                        t.EndTime > monthStart)
+                        t.EndTime >= monthStart)
             .Select(t => new
             {
                 t.Title,
