@@ -1,10 +1,10 @@
 using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Infrastructure.Data.SeedData;
 using BlotzTask.Modules.Badges.Domain;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
-using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
@@ -91,56 +91,12 @@ public class BlotzTaskDbContext : DbContext
             }
         );
 
-        modelBuilder.Entity<AppUser>()
-            .HasData(new AppUser
-            {
-                Id = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                Auth0UserId = "auth0|68c03ab7a093c0727999a791",
-                Email = "blotztest1@gmail.com",
-                DisplayName = "blotztest1@gmail.com",
-                PictureUrl =
-                    "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
-                CreationAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
-                SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
-                LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
-                IsOnboarded = false
-            });
-
-        modelBuilder.Entity<UserPreference>()
-            .HasData(new UserPreference
-            {
-                UserId = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                AutoRollover = true,
-                UpcomingNotification = true,
-                OverdueNotification = true,
-                DailyPlanningNotification = false,
-                EveningWrapUpNotification = false,
-                PreferredLanguage = Language.Zh
-            });
-
-        modelBuilder.Entity<PomodoroSetting>()
-            .HasData(new PomodoroSetting
-            {
-                UserId = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                Timing = 25,
-                Sound = null,
-                IsCountdown = false
-            });
-
         modelBuilder.Entity<SubscriptionPlan>()
             .HasData(
                 new SubscriptionPlan { Id = 1, Name = "Free", MonthlyTokenLimit = 300_000 },
                 new SubscriptionPlan { Id = 2, Name = "Pro", MonthlyTokenLimit = 3_000_000 }
             );
 
-        modelBuilder.Entity<UserSubscription>()
-            .HasData(new UserSubscription
-            {
-                Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
-                UserId = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                PlanId = 1,
-                CreatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
-            });
+        TestUserSeedData.Apply(modelBuilder);
     }
 }
