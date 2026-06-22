@@ -119,10 +119,28 @@ public class BlotzTaskDbContext : DbContext
                 PreferredLanguage = Language.Zh
             });
 
+        modelBuilder.Entity<PomodoroSetting>()
+            .HasData(new PomodoroSetting
+            {
+                UserId = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
+                Timing = 25,
+                Sound = null,
+                IsCountdown = false
+            });
+
         modelBuilder.Entity<SubscriptionPlan>()
             .HasData(
                 new SubscriptionPlan { Id = 1, Name = "Free", MonthlyTokenLimit = 300_000 },
                 new SubscriptionPlan { Id = 2, Name = "Pro", MonthlyTokenLimit = 3_000_000 }
             );
+
+        modelBuilder.Entity<UserSubscription>()
+            .HasData(new UserSubscription
+            {
+                Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+                UserId = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
+                PlanId = 1,
+                CreatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
+            });
     }
 }
