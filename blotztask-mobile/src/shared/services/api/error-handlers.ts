@@ -1,5 +1,5 @@
 import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { clearTokens, refreshToken } from "./token-manager";
+import { clearTokens, forceRefreshAuthToken } from "./token-manager";
 import { router } from "expo-router";
 import { queryClient } from "@/shared/util/queryClient";
 import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
@@ -12,12 +12,14 @@ export function handleAuthError(
   // 401 which we attempt to refresh
   if (error.response?.status === 401 && !originalRequest._retry) {
     originalRequest._retry = true;
-    return refreshToken()
+    return forceRefreshAuthToken()
       .then((newToken) => {
+        if (!newToken) {
+          throw new Error("Unable to refresh Auth0 credentials");
+        }
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
-        console.log("get new tokens");
         return api(originalRequest);
       })
       .catch(() => {
