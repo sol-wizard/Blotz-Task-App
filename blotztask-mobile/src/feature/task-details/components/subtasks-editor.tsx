@@ -32,8 +32,11 @@ const SubtasksEditor = ({
     useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[]>(fetchedSubtasks ?? []);
+  const [draggableSubtasks, setDraggableSubtasks] = useState<SubtaskDTO[] | null>(null);
+  const listData = draggableSubtasks ?? fetchedSubtasks ?? [];
+
   const { bottom } = useSafeAreaInsets();
+  
   const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
   const renderItem = ({ item, drag }: RenderItemParams<SubtaskDTO>) => (
@@ -49,14 +52,15 @@ const SubtasksEditor = ({
     </ScaleDecorator>
   );
 
-  const handleDelete = (id: number) => {
-    deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
+  const handleDelete = async (id: number) => {
+    await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
+    setDraggableSubtasks(null);
   };
 
   const handleAddSubtask = async () => {
     addSubtask({
       parentTaskId: parentTask.id!,
-      title: "New subtask",
+      title: `New subtask`,
       duration: "00:00:00",
       order: (fetchedSubtasks?.length ?? 0) + 1,
     });
@@ -97,7 +101,7 @@ const SubtasksEditor = ({
             <TouchableOpacity
               onPress={async () => {
                 await onRefreshSubtasks();
-                setDraggableSubtasks(fetchedSubtasks ?? []);
+                setDraggableSubtasks(null);
               }}
               className="p-2"
             >
@@ -129,9 +133,11 @@ const SubtasksEditor = ({
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableFlatList
-          data={draggableSubtasks}
+          data={listData} 
           onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setDraggableSubtasks(newData)}
-          keyExtractor={(item: SubtaskDTO) => item.title.toString()}
+          keyExtractor={(item: SubtaskDTO, index: number) =>
+            item.id != null ? item.id.toString() : `temp-${index}`
+          }
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: listBottomPadding }}
           autoscrollThreshold={40}
