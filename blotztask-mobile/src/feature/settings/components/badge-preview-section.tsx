@@ -19,7 +19,7 @@ export function BadgePreviewSection() {
 
   return (
     <Pressable
-      onPress={() => router.push("/settings/badge-wall")}
+      onPress={() => router.push("/badge-wall")}
       className="bg-white w-full rounded-2xl mt-4 px-4 py-4"
     >
       <GradientColor className="self-center mb-3">

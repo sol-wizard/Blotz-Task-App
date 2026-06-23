@@ -41,10 +41,17 @@ export default function BadgeWallScreen() {
         data={gridItems}
         keyExtractor={(item) => item.key}
         numColumns={NUM_COLUMNS}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 16 }}
-        columnWrapperStyle={{ gap: 16 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        columnWrapperStyle={{
+          gap: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: "rgba(68, 73, 100, 0.12)",
+        }}
         renderItem={({ item }) => (
-          <View className="flex-1">{item.badge ? <BadgeCard badge={item.badge} /> : null}</View>
+          <View className="flex-1">
+            {item.badge ? <BadgeCard badge={item.badge} transparent /> : null}
+          </View>
         )}
       />
     </SafeAreaView>
