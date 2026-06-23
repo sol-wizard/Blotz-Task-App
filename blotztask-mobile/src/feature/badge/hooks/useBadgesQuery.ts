@@ -6,8 +6,6 @@ export const useBadgesQuery = () => {
   const { data: badges, isLoading } = useQuery({
     queryKey: badgeKeys.all,
     queryFn: () => fetchAllBadges(),
-    staleTime: Infinity,
-    gcTime: Infinity,
   });
 
   return {

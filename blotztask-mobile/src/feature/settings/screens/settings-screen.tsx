@@ -8,7 +8,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/form-divider";
 import { UserAvatar } from "@/shared/components/user-avatar";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
-import { BadgePreviewSection } from "@/feature/badge/components/badge-preview-section";
+import { BadgePreviewSection } from "@/feature/settings/components/badge-preview-section";
 import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
@@ -66,14 +66,14 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background py-4">
+    <SafeAreaView className="flex-1 bg-background pt-4" edges={["top"]}>
       <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">
         {t("title")}
       </Text>
 
       <ScrollView
         className="flex-1 mt-2"
-        contentContainerStyle={{ paddingHorizontal: 32, alignItems: "center", paddingBottom: 24 }}
+        contentContainerStyle={{ paddingHorizontal: 32, alignItems: "center", paddingBottom: 12 }}
         showsVerticalScrollIndicator={false}
       >
         <View>

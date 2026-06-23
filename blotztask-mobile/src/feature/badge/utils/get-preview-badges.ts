@@ -1,4 +1,4 @@
-import { BadgeDTO } from "../models/badge-dto";
+import { BadgeDTO } from "../models/badge-preview-dto";
 
 const PREVIEW_DISPLAY_ORDERS = [0, 1, 2];
 

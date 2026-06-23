@@ -1,11 +1,10 @@
-import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { GradientColor } from "@/shared/components/gradient-color";
-import { useBadgesQuery } from "../hooks/useBadgesQuery";
-import { getPreviewBadges } from "../utils/get-preview-badges";
-import { BadgeCard } from "./badge-card";
+import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
+import { getPreviewBadges } from "@/feature/badge/utils/get-preview-badges";
+import { BadgeCard } from "@/feature/badge/components/badge-card";
 
 export function BadgePreviewSection() {
   const router = useRouter();
@@ -24,9 +23,7 @@ export function BadgePreviewSection() {
       className="bg-white w-full rounded-2xl mt-4 px-4 py-4"
     >
       <GradientColor className="self-center mb-3">
-        <Text className="text-xl font-balooBold text-center">
-          {t("preview.title")}
-        </Text>
+        <Text className="text-xl font-balooBold text-center">{t("preview.title")}</Text>
       </GradientColor>
 
       <View className="flex-row" style={{ gap: 12 }}>

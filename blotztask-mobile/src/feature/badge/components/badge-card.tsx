@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
-import { BadgeDTO } from "../models/badge-dto";
+import { BadgeDTO } from "../models/badge-preview-dto";
 
 interface BadgeCardProps {
   badge: BadgeDTO;
@@ -17,10 +17,7 @@ export function BadgeCard({ badge }: BadgeCardProps) {
           contentFit="contain"
         />
       </View>
-      <Text
-        className="text-sm font-baloo text-secondary text-center mt-2"
-        numberOfLines={1}
-      >
+      <Text className="text-sm font-baloo text-secondary text-center mt-2" numberOfLines={1}>
         {badge.title}
       </Text>
     </View>

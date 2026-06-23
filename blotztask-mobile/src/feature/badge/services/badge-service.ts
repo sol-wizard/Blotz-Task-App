@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import { BadgeDTO } from "../models/badge-dto";
+import { BadgeDTO } from "../models/badge-preview-dto";
 
 const BADGE_ICON_BASE =
   "https://stgblotztaskstag.blob.core.windows.net/badge/TaskCompletion/overdue";
@@ -45,6 +45,13 @@ const MOCK_BADGES: MockBadge[] = [
     titleZh: "自在地球",
     iconUrl: `${BADGE_ICON_BASE}/free-earth.png`,
     displayOrder: 4,
+  },
+  {
+    id: 4,
+    titleEn: "Slow Pound Time",
+    titleZh: "慢捣时光",
+    iconUrl: `${BADGE_ICON_BASE}/slow-pound-time.png`,
+    displayOrder: 5,
   },
 ];
 
