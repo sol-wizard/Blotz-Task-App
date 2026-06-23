@@ -32,9 +32,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
   useEffect(() => {
     if (badgeId == null) return;
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {
-      // Haptics unsupported on this device - degrade gracefully.
-    });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     try {
       rewardSound.seekTo(0);
@@ -42,7 +40,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
     } catch {
       // Audio failure must never block the popup.
     }
-  }, [badgeId, rewardSound]);
+  }, [badgeId]);
 
   if (!badge) return null;
 
