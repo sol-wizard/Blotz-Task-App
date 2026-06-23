@@ -10,7 +10,6 @@ import {
   isBefore,
   isEqual,
 } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
 import { useController, useFormContext } from "react-hook-form";
 import { TimeFormValues } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
@@ -18,6 +17,7 @@ import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { combineDateTime } from "../util/combine-date-time";
 
 export const EventTab = () => {
@@ -33,9 +33,6 @@ export const EventTab = () => {
     }
   };
   const { t, i18n } = useTranslation("tasks");
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-  const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
   const [activeSelector, setActiveSelector] = useState<
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
@@ -91,7 +88,7 @@ export const EventTab = () => {
             >
               <Text className="text-xl font-balooThin text-secondary">
                 {startDateValue
-                  ? format(startDateValue, dateFormat, { locale })
+                  ? formatLocalizedDate(startDateValue, "formDate", i18n.language)
                   : t("form.selectDate")}
               </Text>
             </Pressable>
@@ -154,7 +151,9 @@ export const EventTab = () => {
                       : "text-secondary"
                 }`}
               >
-                {endDateValue ? format(endDateValue, dateFormat, { locale }) : t("form.selectDate")}
+                {endDateValue
+                  ? formatLocalizedDate(endDateValue, "formDate", i18n.language)
+                  : t("form.selectDate")}
               </Text>
             </Pressable>
 

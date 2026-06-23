@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { addMonths, format, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { LetterCardContent } from "../components/letter-card-content";
 import { LetterHeader } from "../components/letter-header";
 import { PeriodSelector } from "../components/period-selector";
@@ -16,7 +17,6 @@ import { WeeklyReviewView } from "../components/weekly-review-view";
 import { useReview } from "../hooks/useReviewReport";
 import { useReviewShare } from "../hooks/useReviewShare";
 import { ReviewPeriodType } from "../models/review-dto";
-import { formatMonth } from "../utils/month-utils";
 
 export default function ReviewScreen() {
   // — Hooks ——————————————————————————————————————————————————————
@@ -60,7 +60,7 @@ export default function ReviewScreen() {
   const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
-  const displayMonth = formatMonth(selectedMonth, i18n.language);
+  const displayMonth = formatLocalizedDate(selectedMonth, "yearMonth", i18n.language);
   const recipientName = userProfile?.displayName ?? t("review.defaultRecipient");
   const showShareButton = isMonthlyTab
     ? report !== null && !hasNoReviewableMonth
