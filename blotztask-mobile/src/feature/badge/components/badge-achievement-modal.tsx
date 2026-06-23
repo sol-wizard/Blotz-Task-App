@@ -1,8 +1,11 @@
+import { BadgeShareCard } from "@/feature/badge/components/badge-share-card";
+import { useBadgeShare } from "@/feature/badge/hooks/useBadgeShare";
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { GradientColor } from "@/shared/components/gradient-color";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { Image } from "expo-image";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, Text, View } from "react-native";
 
@@ -13,6 +16,9 @@ interface BadgeAchievementModalProps {
 
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
   const { t } = useTranslation("badge");
+
+  const shareCardRef = useRef<View>(null);
+  const { isSharingImage, shareImage } = useBadgeShare({ captureTargetRef: shareCardRef });
 
   if (!badge) return null;
 
@@ -53,8 +59,32 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           <Text className="text-white text-xl font-baloo mt-4">
             {t("obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
           </Text>
+
+          <View className="flex-row items-center justify-center gap-3 mt-8">
+            <Pressable
+              onPress={() => console.log("Badge view pressed", badge.badgeId)}
+              className="h-12 px-6 rounded-full bg-white/20 items-center justify-center"
+            >
+              <Text className="text-white text-lg font-balooBold">{t("view")}</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={shareImage}
+              disabled={isSharingImage}
+              className={`h-12 px-6 rounded-full bg-lime-100 flex-row items-center justify-center ${
+                isSharingImage ? "opacity-60" : "opacity-100"
+              }`}
+            >
+              <MaterialIcons name="share" size={18} color="#444964" />
+              <Text className="ml-1 text-secondary text-lg font-balooBold">
+                {isSharingImage ? t("sharing") : t("shareReward")}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
+
+      <BadgeShareCard ref={shareCardRef} badge={badge} />
     </Modal>
   );
 }

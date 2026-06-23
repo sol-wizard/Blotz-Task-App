@@ -1,4 +1,8 @@
 {
   "achievementUnlocked": "Achievement unlocked!",
-  "obtainedOn": "Obtained on {{date}}"
+  "obtainedOn": "Obtained on {{date}}",
+  "view": "View",
+  "shareReward": "Share Reward",
+  "sharing": "Sharing...",
+  "shareError": "Failed to share. Please try again."
 }
