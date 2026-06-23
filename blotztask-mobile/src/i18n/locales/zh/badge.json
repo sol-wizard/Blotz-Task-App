@@ -3,6 +3,5 @@
   "obtainedOn": "获得于 {{date}}",
   "view": "查看",
   "shareReward": "分享奖励",
-  "sharing": "分享中…",
-  "shareError": "分享失败，请重试。"
+  "sharing": "分享中…"
 }

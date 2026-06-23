@@ -93,7 +93,7 @@
     "monthlyTab": "Monthly",
     "share": "Share",
     "sharing": "Sharing...",
-    "shareError": "Couldn't share this letter.",
+    "shareError": "Couldn't share. Please try again.",
     "greeting": "Dear {{name}},",
     "dateLabel": "Date",
     "signOff": "Warmly,",
