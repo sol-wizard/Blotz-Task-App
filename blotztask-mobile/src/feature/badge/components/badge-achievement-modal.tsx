@@ -12,7 +12,7 @@ interface BadgeAchievementModalProps {
 }
 
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
-  const { t, i18n } = useTranslation("badge");
+  const { t } = useTranslation("badge");
 
   if (!badge) return null;
 
@@ -52,7 +52,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
 
           <Text className="text-white text-xl font-baloo mt-4">
             {t("obtainedOn", {
-              date: formatLocalizedDate(badge.obtainedAt, "longDate", i18n.language),
+              date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
             })}
           </Text>
         </View>

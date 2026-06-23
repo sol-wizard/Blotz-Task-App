@@ -1,16 +1,17 @@
 import { format } from "date-fns";
 import { enUS, zhCN } from "date-fns/locale";
+import i18n from "@/i18n";
 
 const DATE_FORMAT_PATTERNS = {
-  formDate: {
+  abbrevMonthDayYear: {
     en: "MMM d, yyyy",
     zh: "yyyy年M月d日",
   },
-  longDate: {
+  fullMonthDayYear: {
     en: "MMMM d, yyyy",
     zh: "yyyy年M月d日",
   },
-  dateWithWeekday: {
+  weekdayDayMonthYear: {
     en: "E, d MMM yyyy",
     zh: "yyyy年M月d日 EEE",
   },
@@ -26,12 +27,8 @@ const DATE_FORMAT_PATTERNS = {
 
 type LocalizedDateFormatPreset = keyof typeof DATE_FORMAT_PATTERNS;
 
-export const formatLocalizedDate = (
-  date: Date,
-  dateFormat: LocalizedDateFormatPreset,
-  language: string,
-) => {
-  const userLanguage = language.toLowerCase().startsWith("zh") ? "zh" : "en";
+export const formatLocalizedDate = (date: Date, dateFormat: LocalizedDateFormatPreset) => {
+  const userLanguage = i18n.language.toLowerCase().startsWith("zh") ? "zh" : "en";
 
   return format(date, DATE_FORMAT_PATTERNS[dateFormat][userLanguage], {
     locale: userLanguage === "zh" ? zhCN : enUS,

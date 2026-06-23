@@ -21,7 +21,7 @@ import { ReviewPeriodType } from "../models/review-dto";
 export default function ReviewScreen() {
   // — Hooks ——————————————————————————————————————————————————————
   const router = useRouter();
-  const { t, i18n } = useTranslation("settings");
+  const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   // Default to Weekly — it produces fresh content more often than Monthly.
   const [activeTab, setActiveTab] = useState<ReviewTab>(ReviewPeriodType.Weekly);
@@ -60,7 +60,7 @@ export default function ReviewScreen() {
   const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
-  const displayMonth = formatLocalizedDate(selectedMonth, "yearMonth", i18n.language);
+  const displayMonth = formatLocalizedDate(selectedMonth, "yearMonth");
   const recipientName = userProfile?.displayName ?? t("review.defaultRecipient");
   const showShareButton = isMonthlyTab
     ? report !== null && !hasNoReviewableMonth

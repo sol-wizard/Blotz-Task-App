@@ -15,7 +15,7 @@ type RecurrenceEndSectionProps = {
 };
 
 export const RecurrenceEndSection = ({ control }: RecurrenceEndSectionProps) => {
-  const { t, i18n } = useTranslation("tasks");
+  const { t } = useTranslation("tasks");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const {
@@ -64,7 +64,7 @@ export const RecurrenceEndSection = ({ control }: RecurrenceEndSectionProps) => 
   ];
 
   const recurrenceEndDateDisplayText = recurrenceEndDate
-    ? formatLocalizedDate(recurrenceEndDate, "formDate", i18n.language)
+    ? formatLocalizedDate(recurrenceEndDate, "abbrevMonthDayYear")
     : t("form.selectDate");
 
   return (

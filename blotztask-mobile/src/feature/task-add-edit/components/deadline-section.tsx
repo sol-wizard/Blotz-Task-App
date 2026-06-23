@@ -22,7 +22,7 @@ interface DeadlineSectionProps {
 }
 
 export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSectionProps) => {
-  const { t, i18n } = useTranslation("tasks");
+  const { t } = useTranslation("tasks");
 
   const [activeSelector, setActiveSelector] = useState<"deadlineDate" | "deadlineTime" | null>(
     null,
@@ -72,7 +72,7 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
   }, [deadlineDate, deadlineTime]);
 
   const deadlineDateDisplayText = deadlineDate
-    ? formatLocalizedDate(deadlineDate, "formDate", i18n.language)
+    ? formatLocalizedDate(deadlineDate, "abbrevMonthDayYear")
     : t("form.selectDate");
   const deadlineTimeDisplayText = deadlineTime
     ? format(deadlineTime, "hh:mm a")

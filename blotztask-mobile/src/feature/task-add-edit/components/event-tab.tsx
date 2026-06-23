@@ -32,7 +32,7 @@ export const EventTab = () => {
       trigger("endTime");
     }
   };
-  const { t, i18n } = useTranslation("tasks");
+  const { t } = useTranslation("tasks");
   const [activeSelector, setActiveSelector] = useState<
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
@@ -88,7 +88,7 @@ export const EventTab = () => {
             >
               <Text className="text-xl font-balooThin text-secondary">
                 {startDateValue
-                  ? formatLocalizedDate(startDateValue, "formDate", i18n.language)
+                  ? formatLocalizedDate(startDateValue, "abbrevMonthDayYear")
                   : t("form.selectDate")}
               </Text>
             </Pressable>
@@ -152,7 +152,7 @@ export const EventTab = () => {
                 }`}
               >
                 {endDateValue
-                  ? formatLocalizedDate(endDateValue, "formDate", i18n.language)
+                  ? formatLocalizedDate(endDateValue, "abbrevMonthDayYear")
                   : t("form.selectDate")}
               </Text>
             </Pressable>

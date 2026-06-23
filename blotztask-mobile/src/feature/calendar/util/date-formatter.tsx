@@ -57,7 +57,7 @@ export const formatCalendarDate = (
 export const renderCalendarHeader = (date?: unknown) => {
   if (!date) return null;
   const dateObj = date instanceof Date ? date : new Date(date.toString());
-  const dateText = formatLocalizedDate(dateObj, "monthYear", i18n.language);
+  const dateText = formatLocalizedDate(dateObj, "monthYear");
   return (
     <Text
       style={{
@@ -69,15 +69,4 @@ export const renderCalendarHeader = (date?: unknown) => {
       {dateText}
     </Text>
   );
-};
-
-/**
- * Formats a date for the Monthly Calendar BottomSheet display
- * @param date - Date object or date string
- * @returns Formatted date string (English: Mon, 15 Apr 2026 | Chinese: 4月15日)
- */
-export const formatBottomSheetDate = (date?: unknown) => {
-  if (!date) return "";
-  const dateObj = date instanceof Date ? date : new Date(date.toString());
-  return formatLocalizedDate(dateObj, "dateWithWeekday", i18n.language);
 };

@@ -28,9 +28,9 @@ export const ReminderTab = () => {
     name: "startTime",
   });
 
-  const { t, i18n } = useTranslation("tasks");
+  const { t } = useTranslation("tasks");
   const dateDisplayText = startDate
-    ? formatLocalizedDate(startDate, "formDate", i18n.language)
+    ? formatLocalizedDate(startDate, "abbrevMonthDayYear")
     : t("form.selectDate");
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
 
