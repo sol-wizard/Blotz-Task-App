@@ -3,11 +3,15 @@ import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-
 import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
 import { GradientColor } from "@/shared/components/gradient-color";
+import { ASSETS } from "@/shared/constants/assets";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { useRef } from "react";
+import LottieView from "lottie-react-native";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface BadgeAchievementModalProps {
   badge?: BadgeNotificationDTO;
@@ -20,11 +24,39 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
 
+  const rewardSound = useAudioPlayer(ASSETS.badgeReward);
+
+  const badgeId = badge?.badgeId;
+
+  // Fire celebration feedback once per badge (re-fires for the next queued badge).
+  useEffect(() => {
+    if (badgeId == null) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {
+      // Haptics unsupported on this device - degrade gracefully.
+    });
+
+    try {
+      rewardSound.seekTo(0);
+      rewardSound.play();
+    } catch {
+      // Audio failure must never block the popup.
+    }
+  }, [badgeId, rewardSound]);
+
   if (!badge) return null;
 
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={onDismiss}>
       <View className="flex-1 bg-black/50 items-center justify-center px-8">
+        <LottieView
+          key={badge.badgeId}
+          source={ASSETS.badgeCelebration}
+          autoPlay
+          loop={false}
+          resizeMode="cover"
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+        />
         <View className="w-full items-center">
           <View className="w-full items-end mb-1">
             <Pressable onPress={onDismiss} hitSlop={12}>
