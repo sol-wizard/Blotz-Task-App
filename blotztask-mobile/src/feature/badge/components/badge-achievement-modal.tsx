@@ -4,6 +4,7 @@ import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
 import { GradientColor } from "@/shared/components/gradient-color";
 import { ASSETS } from "@/shared/constants/assets";
+import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
@@ -20,6 +21,8 @@ interface BadgeAchievementModalProps {
 
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
   const { t } = useTranslation("badge");
+
+  const { userProfile } = useUserProfile();
 
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
@@ -93,19 +96,19 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           <View className="flex-row items-center justify-center gap-4 mt-8">
             <Pressable
               onPress={() => console.log("Badge view pressed", badge.badgeId)}
-              className="h-11 px-7 rounded-full border-2 border-highlight items-center justify-center"
+              className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
             >
-              <Text className="text-highlight text-base font-balooBold">{t("view")}</Text>
+              <Text className="text-highlight text-base font-balooBold pt-1">{t("view")}</Text>
             </Pressable>
 
             <Pressable
               onPress={shareImage}
               disabled={isSharingImage}
-              className={`h-11 px-7 rounded-full bg-highlight items-center justify-center ${
+              className={`min-h-[44px] px-7 py-2.5 rounded-full border-2 border-transparent bg-highlight items-center justify-center ${
                 isSharingImage ? "opacity-60" : "opacity-100"
               }`}
             >
-              <Text className="text-white text-base font-balooBold">
+              <Text className="text-white text-base font-balooBold pt-1">
                 {isSharingImage ? t("sharing") : t("shareReward")}
               </Text>
             </Pressable>
@@ -113,7 +116,11 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
         </View>
       </View>
 
-      <BadgeShareCard ref={shareCardRef} badge={badge} />
+      <BadgeShareCard
+        ref={shareCardRef}
+        badge={badge}
+        userDisplayName={userProfile?.displayName}
+      />
     </Modal>
   );
 }
