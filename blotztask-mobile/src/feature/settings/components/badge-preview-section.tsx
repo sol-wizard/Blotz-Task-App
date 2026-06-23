@@ -6,6 +6,8 @@ import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
 import { getPreviewBadges } from "@/feature/badge/utils/get-preview-badges";
 import { BadgeCard } from "@/feature/badge/components/badge-card";
 
+const PREVIEW_SLOTS = 3;
+
 export function BadgePreviewSection() {
   const router = useRouter();
   const { t } = useTranslation("badge");
@@ -13,9 +15,7 @@ export function BadgePreviewSection() {
 
   const previewBadges = getPreviewBadges(badges);
 
-  if (previewBadges.length === 0) {
-    return null;
-  }
+  const slots = Array.from({ length: PREVIEW_SLOTS }, (_, i) => previewBadges[i] ?? null);
 
   return (
     <Pressable
@@ -27,9 +27,9 @@ export function BadgePreviewSection() {
       </GradientColor>
 
       <View className="flex-row" style={{ gap: 12 }}>
-        {previewBadges.map((badge) => (
-          <View key={badge.id} className="flex-1">
-            <BadgeCard badge={badge} />
+        {slots.map((badge, i) => (
+          <View key={badge ? badge.id : `empty-${i}`} className="flex-1">
+            {badge ? <BadgeCard badge={badge} /> : null}
           </View>
         ))}
       </View>
