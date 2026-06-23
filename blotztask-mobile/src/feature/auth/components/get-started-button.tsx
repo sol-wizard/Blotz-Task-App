@@ -1,8 +1,6 @@
 import React from "react";
 import { useAuth0 } from "react-native-auth0";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { updateUserProfile } from "@/shared/services/user-service";
@@ -34,9 +32,6 @@ export default function GetStartedButton() {
         console.error("No access token received from Auth0");
         return;
       }
-
-      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
 
       try {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

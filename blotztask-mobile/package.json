@@ -49,7 +49,6 @@
     "expo-localization": "~56.0.6",
     "expo-notifications": "~56.0.13",
     "expo-router": "~56.2.6",
-    "expo-secure-store": "~56.0.4",
     "expo-sensors": "~56.0.5",
     "expo-sharing": "~56.0.14",
     "expo-splash-screen": "~56.0.10",
