@@ -1,4 +1,10 @@
 {
   "achievementUnlocked": "成就解锁！",
-  "obtainedOn": "获得于 {{date}}"
+  "obtainedOn": "获得于 {{date}}",
+  "preview": {
+    "title": "成就"
+  },
+  "wall": {
+    "title": "徽章墙"
+  }
 }
