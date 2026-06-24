@@ -37,13 +37,11 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    try {
-      rewardSound.seekTo(0);
-      rewardSound.play();
-    } catch {
-      // Audio failure must never block the popup.
-    }
-  }, [badgeId]);
+    void rewardSound
+      .seekTo(0)
+      .then(() => rewardSound.play())
+      .catch(() => undefined);
+  }, [badgeId, rewardSound]);
 
   if (!badge) return null;
 
@@ -119,7 +117,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
       <BadgeShareCard
         ref={shareCardRef}
         badge={badge}
-        userDisplayName={userProfile?.displayName}
+        userDisplayName={userProfile?.displayName ?? undefined}
       />
     </Modal>
   );
