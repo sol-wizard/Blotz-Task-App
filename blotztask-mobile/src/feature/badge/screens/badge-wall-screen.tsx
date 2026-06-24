@@ -45,8 +45,6 @@ export default function BadgeWallScreen() {
         columnWrapperStyle={{
           gap: 16,
           paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: "rgba(68, 73, 100, 0.12)",
         }}
         renderItem={({ item }) => (
           <View className="flex-1">
