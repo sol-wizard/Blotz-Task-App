@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
+import { auth0 } from "@/shared/services/api/auth0-client";
 
 /**
  * Authentication state hook that provides a single source of truth for auth status.
@@ -25,8 +24,7 @@ const AUTH_QUERY_KEY = ["auth", "status"] as const;
 
 async function checkAuthStatus(): Promise<boolean> {
   try {
-    const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-    return !!token;
+    return await auth0.credentialsManager.hasValidCredentials();
   } catch (error) {
     console.error("Error checking auth status:", error);
     return false;
