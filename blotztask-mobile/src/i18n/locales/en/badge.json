@@ -1,4 +1,10 @@
 {
   "achievementUnlocked": "Achievement unlocked!",
-  "obtainedOn": "Obtained on {{date}}"
+  "obtainedOn": "Obtained on {{date}}",
+  "preview": {
+    "title": "Achievement"
+  },
+  "wall": {
+    "title": "Badge Wall"
+  }
 }

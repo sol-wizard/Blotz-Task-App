@@ -1,6 +1,6 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
-import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { GradientColor } from "@/shared/components/gradient-color";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -51,7 +51,9 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </Text>
 
           <Text className="text-white text-xl font-baloo mt-4">
-            {t("obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
+            {t("obtainedOn", {
+              date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
+            })}
           </Text>
         </View>
       </View>

@@ -11,9 +11,9 @@ import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 import { SelectedDayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { formatBottomSheetDate } from "@/feature/calendar/util/date-formatter";
 import i18n from "@/i18n";
 import { ReturnButton } from "@/shared/components/return-button";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 
 const SNAP_L1 = "10%";
 const SNAP_L2 = "50%";
@@ -128,7 +128,7 @@ export default function MonthlyCalendarScreen() {
             />
             <View className="w-full items-start">
               <Text className="text-base font-baloo text-secondary">
-                {formatBottomSheetDate(selectedDay)}
+                {formatLocalizedDate(selectedDay, "weekdayDayMonthYear")}
               </Text>
             </View>
           </View>
