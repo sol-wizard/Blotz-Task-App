@@ -20,6 +20,7 @@ export type TaskWidgetSnapshotItem = {
 export type TodayTasksWidgetSnapshot = {
   state: TaskWidgetSnapshotState;
   generatedAt: string;
+  snapshotDate: string;
   title: string;
   subtitle: string;
   message: string;
@@ -33,7 +34,8 @@ export function buildTodayTasksWidgetSnapshot(
   tasks: TaskDetailDTO[],
   generatedAt = new Date(),
 ): TodayTasksWidgetSnapshot {
-  const visibleTasks = tasks
+  const todayTasks = tasks.filter((task) => isTaskForDay(task, generatedAt));
+  const visibleTasks = todayTasks
     .filter((task) => !task.isDone)
     .sort(compareTasksByStartTime)
     .slice(0, MAX_WIDGET_TASKS)
@@ -43,11 +45,12 @@ export function buildTodayTasksWidgetSnapshot(
     return {
       state: "empty",
       generatedAt: generatedAt.toISOString(),
+      snapshotDate: format(generatedAt, "yyyy-MM-dd"),
       title: "Today",
       subtitle: "No unfinished tasks",
       message: "Open BlotzTask to plan your day.",
       openAppDeepLink: TASK_WIDGET_OPEN_APP_DEEP_LINK,
-      totalTaskCount: tasks.length,
+      totalTaskCount: todayTasks.length,
       visibleTaskCount: 0,
       tasks: [],
     };
@@ -56,11 +59,12 @@ export function buildTodayTasksWidgetSnapshot(
   return {
     state: "content",
     generatedAt: generatedAt.toISOString(),
+    snapshotDate: format(generatedAt, "yyyy-MM-dd"),
     title: "Today",
     subtitle: `${visibleTasks.length} task${visibleTasks.length === 1 ? "" : "s"} left`,
     message: "",
     openAppDeepLink: TASK_WIDGET_OPEN_APP_DEEP_LINK,
-    totalTaskCount: tasks.length,
+    totalTaskCount: todayTasks.length,
     visibleTaskCount: visibleTasks.length,
     tasks: visibleTasks,
   };
@@ -72,6 +76,7 @@ export function buildTodayTasksWidgetPlaceholderSnapshot(
   return {
     state: "placeholder",
     generatedAt: generatedAt.toISOString(),
+    snapshotDate: format(generatedAt, "yyyy-MM-dd"),
     title: "Today",
     subtitle: "Loading tasks",
     message: "Open BlotzTask to load today's tasks.",
@@ -89,6 +94,7 @@ export function buildTodayTasksWidgetFallbackSnapshot(
   return {
     state: "fallback",
     generatedAt: generatedAt.toISOString(),
+    snapshotDate: format(generatedAt, "yyyy-MM-dd"),
     title: "Today",
     subtitle: "Tasks unavailable",
     message,
@@ -97,6 +103,13 @@ export function buildTodayTasksWidgetFallbackSnapshot(
     visibleTaskCount: 0,
     tasks: [],
   };
+}
+
+export function isTodayTasksWidgetSnapshotStale(
+  snapshot: TodayTasksWidgetSnapshot,
+  now = new Date(),
+): boolean {
+  return snapshot.snapshotDate !== format(now, "yyyy-MM-dd");
 }
 
 function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotItem {
@@ -112,6 +125,21 @@ function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotIte
 
 function compareTasksByStartTime(first: TaskDetailDTO, second: TaskDetailDTO): number {
   return getTimeOrMax(first.startTime) - getTimeOrMax(second.startTime);
+}
+
+function isTaskForDay(task: TaskDetailDTO, day: Date): boolean {
+  if (task.recurringOccurrence?.occurrenceDate) {
+    const occurrenceDate = parseDate(task.recurringOccurrence.occurrenceDate);
+    return occurrenceDate ? isSameDay(occurrenceDate, day) : false;
+  }
+
+  if (task.isDeadline && task.dueAt) {
+    const dueAt = parseDate(task.dueAt);
+    return dueAt ? isSameDay(dueAt, day) : false;
+  }
+
+  const startTime = parseDate(task.startTime);
+  return startTime ? isSameDay(startTime, day) : false;
 }
 
 function buildTaskDetailDeepLink(taskId: number): string {

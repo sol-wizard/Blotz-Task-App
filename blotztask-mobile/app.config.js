@@ -1,6 +1,21 @@
 const bundleIdentifier = process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask";
 const widgetBundleIdentifier = `${bundleIdentifier}.ExpoWidgetsTarget`;
 const appGroupIdentifier = `group.${bundleIdentifier}`;
+const androidWidgetConfig = {
+  widgets: [
+    {
+      name: "TodayTasksWidget",
+      label: "Today",
+      description: "Shows today's BlotzTask tasks",
+      minWidth: "250dp",
+      minHeight: "110dp",
+      targetCellWidth: 4,
+      targetCellHeight: 2,
+      resizeMode: "horizontal|vertical",
+      updatePeriodMillis: 1800000,
+    },
+  ],
+};
 
 export default {
   expo: {
@@ -112,6 +127,8 @@ export default {
           ],
         },
       ],
+      ["react-native-android-widget", androidWidgetConfig],
+      "./plugins/withAndroidWorkManagerFix",
     ],
     experiments: {
       typedRoutes: true,
