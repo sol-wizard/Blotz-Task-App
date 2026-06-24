@@ -1,6 +1,6 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
-import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { ASSETS } from "@/shared/constants/assets";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { forwardRef } from "react";
@@ -53,7 +53,9 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
             </Text>
 
             <Text className="text-white/80 text-sm font-baloo mb-6">
-              {t("obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
+              {t("obtainedOn", {
+                date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
+              })}
             </Text>
 
             <View className="w-full flex-row items-center justify-between px-1">

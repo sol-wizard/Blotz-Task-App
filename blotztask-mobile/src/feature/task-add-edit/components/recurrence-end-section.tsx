@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text } from "react-native";
 import { Control, useController } from "react-hook-form";
 import { format } from "date-fns";
-import { enUS, zhCN } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { AnimatedDropdown, DropdownOption } from "@/shared/components/animated-dropdown";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { SingleDateCalendar } from "./single-date-calendar";
 
@@ -15,10 +15,7 @@ type RecurrenceEndSectionProps = {
 };
 
 export const RecurrenceEndSection = ({ control }: RecurrenceEndSectionProps) => {
-  const { t, i18n } = useTranslation("tasks");
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-  const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
+  const { t } = useTranslation("tasks");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const {
@@ -67,7 +64,7 @@ export const RecurrenceEndSection = ({ control }: RecurrenceEndSectionProps) => 
   ];
 
   const recurrenceEndDateDisplayText = recurrenceEndDate
-    ? format(recurrenceEndDate, dateFormat, { locale })
+    ? formatLocalizedDate(recurrenceEndDate, "abbrevMonthDayYear")
     : t("form.selectDate");
 
   return (

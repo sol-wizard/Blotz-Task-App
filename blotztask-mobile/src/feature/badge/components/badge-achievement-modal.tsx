@@ -1,10 +1,10 @@
 import { BadgeShareCard } from "@/feature/badge/components/badge-share-card";
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
-import { formatBadgeDate } from "@/feature/badge/utils/format-badge-date";
 import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
 import { GradientColor } from "@/shared/components/gradient-color";
 import { ASSETS } from "@/shared/constants/assets";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
@@ -88,7 +88,9 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </Text>
 
           <Text className="text-white text-xl font-baloo mt-4">
-            {t("obtainedOn", { date: formatBadgeDate(badge.obtainedAt) })}
+            {t("obtainedOn", {
+              date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
+            })}
           </Text>
 
           <View className="flex-row items-center justify-center gap-4 mt-8">
