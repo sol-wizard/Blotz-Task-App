@@ -36,11 +36,8 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
     if (badgeId == null) return;
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-    void rewardSound
-      .seekTo(0)
-      .then(() => rewardSound.play())
-      .catch(() => undefined);
+    rewardSound.seekTo(0);
+    rewardSound.play();
   }, [badgeId, rewardSound]);
 
   if (!badge) return null;
@@ -94,10 +91,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </Text>
 
           <View className="flex-row items-center justify-center gap-4 mt-8">
-            <Pressable
-              onPress={() => console.log("Badge view pressed", badge.badgeId)}
-              className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
-            >
+            <Pressable className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center">
               <Text className="text-highlight text-base font-balooBold pt-1">{t("view")}</Text>
             </Pressable>
 
@@ -116,11 +110,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
         </View>
       </View>
 
-      <BadgeShareCard
-        ref={shareCardRef}
-        badge={badge}
-        userDisplayName={userProfile?.displayName ?? undefined}
-      />
+      <BadgeShareCard ref={shareCardRef} badge={badge} userDisplayName={userProfile?.displayName} />
     </Modal>
   );
 }

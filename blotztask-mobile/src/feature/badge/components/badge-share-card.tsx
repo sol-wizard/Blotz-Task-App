@@ -9,12 +9,9 @@ import { Text, View } from "react-native";
 
 interface BadgeShareCardProps {
   badge: BadgeNotificationDTO;
-  userDisplayName?: string;
+  userDisplayName?: string | null;
 }
 
-// Rendered off-screen and captured via react-native-view-shot. Uses an opaque
-// LinearGradient border plus solid inner fill (captures reliably across
-// iOS/Android) instead of the masked gradient text used in the live modal.
 export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function BadgeShareCard(
   { badge, userDisplayName },
   ref,
@@ -25,7 +22,6 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
     <View ref={ref} collapsable={false} className="absolute left-[-9999px] top-0 w-[340px]">
       <LinearGradient
         colors={["#9AD93E", "#57C785", "#399FB7"]}
-        locations={[0, 0.5, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ borderRadius: 32, padding: 4 }}
