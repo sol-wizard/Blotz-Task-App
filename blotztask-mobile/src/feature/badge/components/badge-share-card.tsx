@@ -5,11 +5,107 @@ import { Image } from "expo-image";
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 interface BadgeShareCardProps {
   badge: BadgeNotificationDTO;
   userDisplayName?: string | null;
 }
+
+function ShareCardSquiggle({ color }: { color: string }) {
+  return (
+    <Svg width={24} height={44} viewBox="0 0 24 44" fill="none">
+      <Path
+        d="M4 2C0 8 2 14 8 16C14 18 10 25 14 29C17 32 21 30 21 36C21 39 22 41 24 42"
+        stroke={color}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ShareCardTriangle({
+  left,
+  top,
+  size,
+  rotation,
+}: {
+  left: number;
+  top: number;
+  size: number;
+  rotation: number;
+}) {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left,
+        top,
+        borderLeftWidth: size / 2,
+        borderRightWidth: size / 2,
+        borderBottomWidth: size,
+        borderLeftColor: "transparent",
+        borderRightColor: "transparent",
+        borderBottomColor: "#BCD8FF",
+        transform: [{ rotate: `${rotation}deg` }],
+      }}
+    />
+  );
+}
+
+function ShareCardStar({ left, top, size }: { left: number; top: number; size: number }) {
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", left, top }}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M12 1.6 L15.09 7.86 L22 8.87 L17 13.74 L18.18 20.62 L12 17.37 L5.82 20.62 L7 13.74 L2 8.87 L8.91 7.86 Z"
+          fill="#F5CB4D"
+        />
+      </Svg>
+    </View>
+  );
+}
+
+// Pixel-mapped from the 星际漫游 reference (795x1024 -> 326x412 card).
+const BG_TRIANGLES = [
+  { left: 33, top: 33, size: 9, rotation: 72 },
+  { left: 233, top: 36, size: 15, rotation: 88 },
+  { left: 138, top: 49, size: 9, rotation: 49 },
+  { left: 279, top: 73, size: 5, rotation: -112 },
+  { left: 201, top: 69, size: 13, rotation: -99 },
+  { left: 26, top: 82, size: 11, rotation: -84 },
+  { left: 97, top: 94, size: 8, rotation: 42 },
+  { left: 235, top: 138, size: 8, rotation: 53 },
+  { left: 238, top: 229, size: 10, rotation: 154 },
+  { left: 56, top: 229, size: 11, rotation: 154 },
+  { left: 177, top: 243, size: 11, rotation: 142 },
+  { left: 278, top: 251, size: 8, rotation: 118 },
+  { left: 122, top: 288, size: 9, rotation: -172 },
+  { left: 25, top: 315, size: 12, rotation: -110 },
+  { left: 248, top: 338, size: 8, rotation: 65 },
+];
+
+const BG_STARS = [
+  { left: 137, top: 10, size: 12 },
+  { left: 303, top: 18, size: 15 },
+  { left: 211, top: 115, size: 22 },
+  { left: 246, top: 298, size: 12 },
+];
+
+const BG_BLUE_SQUIGGLES = [
+  { left: 61, top: 4 },
+  { left: 285, top: 77 },
+  { left: 30, top: 264 },
+];
+
+const BG_PEACH_SQUIGGLES = [
+  { left: 16, top: 189 },
+  { left: 244, top: 185 },
+  { left: 302, top: 300 },
+];
 
 export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function BadgeShareCard(
   { badge, userDisplayName },
@@ -20,66 +116,95 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
   return (
     <View ref={ref} collapsable={false} className="absolute left-[-9999px] top-0 w-[326px]">
       <View
-        className="min-h-[435px] overflow-hidden rounded-2xl px-6 pt-7 pb-5"
+        className="h-[412px] overflow-hidden rounded-2xl"
         style={{ backgroundColor: "#F3FAFB" }}
       >
-        <View pointerEvents="none" style={{ position: "absolute", left: -48, top: 56 }}>
-          <ASSETS.whiteBun width={150} height={130} />
-        </View>
-        <View pointerEvents="none" style={{ position: "absolute", right: -56, top: 176 }}>
-          <ASSETS.whiteBun width={150} height={130} />
-        </View>
-        <View
-          className="absolute left-9 top-14 h-2 w-2 rotate-45 bg-[#B8D7F6]"
-          pointerEvents="none"
-        />
-        <View
-          className="absolute right-12 top-12 h-3 w-3 rotate-45 bg-[#F9D96E]"
-          pointerEvents="none"
-        />
-        <View
-          className="absolute left-9 bottom-24 h-3 w-3 rotate-45 bg-[#B8D7F6]"
-          pointerEvents="none"
-        />
-        <View className="flex-1 items-center">
-          <Text className="text-secondary/55 text-lg font-balooBold text-center leading-6">
-            {t("shareCardHeadline")}
-          </Text>
+        <View pointerEvents="none" style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          <View style={{ position: "absolute", left: -55, top: 50, transform: [{ scaleX: -1 }] }}>
+            <ASSETS.whiteBun width={143} height={124} />
+          </View>
+          <View style={{ position: "absolute", left: 234, top: 136 }}>
+            <ASSETS.whiteBun width={143} height={124} />
+          </View>
 
+          {BG_TRIANGLES.map((tri, i) => (
+            <ShareCardTriangle key={`tri-${i}`} {...tri} />
+          ))}
+
+          {BG_STARS.map((star, i) => (
+            <ShareCardStar key={`star-${i}`} {...star} />
+          ))}
+
+          {BG_BLUE_SQUIGGLES.map((s, i) => (
+            <View key={`sqb-${i}`} style={{ position: "absolute", left: s.left, top: s.top }}>
+              <ShareCardSquiggle color="#DDEAFF" />
+            </View>
+          ))}
+          {BG_PEACH_SQUIGGLES.map((s, i) => (
+            <View key={`sqp-${i}`} style={{ position: "absolute", left: s.left, top: s.top }}>
+              <ShareCardSquiggle color="#FFCFC3" />
+            </View>
+          ))}
+        </View>
+
+        {/* Figma order: icon → headline → title → description → date */}
+        <View
+          pointerEvents="none"
+          className="absolute inset-x-0 top-0 z-[1] items-center px-4 pb-12 pt-6"
+          style={{ zIndex: 1, elevation: 1 }}
+        >
           <Image
             source={{ uri: badge.iconUrl }}
-            style={{ width: 124, height: 124, marginTop: 8, marginBottom: 8 }}
+            className="h-[136px] w-[136px]"
             contentFit="contain"
           />
 
-          <Text className="text-secondary text-[25px] font-balooBold text-center leading-8 px-4">
+          <Text className="mt-2 text-secondary/55 text-lg font-balooBold text-center leading-6">
+            {t("shareCardHeadline")}
+          </Text>
+
+          <Text
+            className="mt-4 w-full text-secondary text-[25px] font-balooBold text-center leading-9"
+            numberOfLines={2}
+          >
             {badge.name}
           </Text>
 
-          <Text className="text-secondary/60 text-[15px] font-baloo text-center leading-5 mt-3 px-2">
+          <Text className="mt-3 w-full text-secondary/60 text-[15px] font-baloo text-center leading-5">
             {badge.description}
           </Text>
 
-          <Text className="text-secondary/40 text-sm font-baloo mt-4">
+          <Text
+            className="mt-4 text-secondary/40 text-sm font-baloo text-center"
+            style={{ transform: [{ scale: 1.1 }] }}
+          >
             {t("obtainedOn", {
               date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
             })}
           </Text>
         </View>
 
-        <View className="w-full flex-row items-center justify-between px-1 pt-3">
-          <View className="flex-row items-center">
-            <Image
-              source={ASSETS.blotzIcon}
-              style={{ width: 18, height: 18, marginRight: 4 }}
-              contentFit="contain"
-            />
-            <Text className="text-[#94C933] text-sm font-balooBold">Blotz task</Text>
-          </View>
-          {userDisplayName ? (
-            <Text className="text-secondary/40 text-sm font-balooBold">@ {userDisplayName}</Text>
-          ) : null}
+        <View
+          pointerEvents="none"
+          className="absolute bottom-3 left-0 right-0 z-[2] flex-row items-center justify-center"
+          style={{ transform: [{ scale: 1.1 }], zIndex: 2, elevation: 2 }}
+        >
+          <Image
+            source={ASSETS.blotzIcon}
+            contentFit="contain"
+            style={{ width: 18, height: 18, marginRight: 4 }}
+          />
+          <Text className="text-[#94C933] text-sm font-balooBold">Blotz task</Text>
         </View>
+
+        {userDisplayName ? (
+          <Text
+            className="absolute bottom-3 right-6 z-[2] text-secondary/40 text-sm font-balooBold"
+            style={{ zIndex: 2, elevation: 2 }}
+          >
+            @ {userDisplayName}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

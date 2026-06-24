@@ -4,5 +4,11 @@
   "obtainedOn": "获得于 {{date}}",
   "view": "查看",
   "shareReward": "分享奖励",
-  "sharing": "分享中…"
+  "sharing": "分享中…",
+  "preview": {
+    "title": "成就"
+  },
+  "wall": {
+    "title": "徽章墙"
+  }
 }

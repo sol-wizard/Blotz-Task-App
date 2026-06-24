@@ -4,5 +4,11 @@
   "obtainedOn": "Obtained on {{date}}",
   "view": "View",
   "shareReward": "Share reward",
-  "sharing": "Sharing..."
+  "sharing": "Sharing...",
+  "preview": {
+    "title": "Achievement"
+  },
+  "wall": {
+    "title": "Badge Wall"
+  }
 }
