@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
+import { getTestBadge, useBadgeQueue } from "@/feature/badge/context/badge-queue-context";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +8,7 @@ import { useTranslation } from "react-i18next";
 export default function SettingsBetaFeaturesScreen() {
   const router = useRouter();
   const { t } = useTranslation("settings");
+  const { enqueueTestBadge } = useBadgeQueue();
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -14,9 +16,7 @@ export default function SettingsBetaFeaturesScreen() {
         <Pressable onPress={() => router.back()} className="mr-4">
           <MaterialCommunityIcons name="arrow-left" size={24} color="#444964" />
         </Pressable>
-        <Text className="text-2xl font-balooBold text-secondary">
-          {t("betaFeatures.title")}
-        </Text>
+        <Text className="text-2xl font-balooBold text-secondary">{t("betaFeatures.title")}</Text>
       </View>
 
       <View className="px-5 mt-4">
@@ -36,7 +36,7 @@ export default function SettingsBetaFeaturesScreen() {
 
           <Pressable
             onPress={() => router.push("/settings/membership-plan")}
-            className="flex-row items-center justify-between px-6 py-4"
+            className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100"
           >
             <View className="flex-row items-center">
               <MaterialCommunityIcons name="brain" size={22} color="#444964" />
@@ -46,6 +46,21 @@ export default function SettingsBetaFeaturesScreen() {
             </View>
             <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
           </Pressable>
+
+          {__DEV__ ? (
+            <Pressable
+              onPress={() => enqueueTestBadge(getTestBadge())}
+              className="flex-row items-center justify-between px-6 py-4"
+            >
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons name="trophy-outline" size={22} color="#444964" />
+                <Text className="text-lg font-baloo text-secondary ml-3">
+                  Test badge achievement popup
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </SafeAreaView>

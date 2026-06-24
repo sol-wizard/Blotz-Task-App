@@ -56,5 +56,9 @@ export function usePushNotificationSetup() {
 
   const dismissBadge = () => setBadgeQueue((prev) => prev.slice(1));
 
-  return { badgeQueue, dismissBadge };
+  const enqueueTestBadge = (badge: BadgeNotificationDTO) => {
+    setBadgeQueue((prev) => [...prev, badge]);
+  };
+
+  return { badgeQueue, dismissBadge, enqueueTestBadge };
 }

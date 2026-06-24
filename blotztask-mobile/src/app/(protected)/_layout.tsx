@@ -1,13 +1,21 @@
 import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
+import { BadgeQueueProvider, useBadgeQueue } from "@/feature/badge/context/badge-queue-context";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
-import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
 import { useAuth0 } from "react-native-auth0";
 import { useEffect } from "react";
 
 export default function ProtectedLayout() {
+  return (
+    <BadgeQueueProvider>
+      <ProtectedLayoutContent />
+    </BadgeQueueProvider>
+  );
+}
+
+function ProtectedLayoutContent() {
   const { user, getCredentials } = useAuth0();
 
   useEffect(() => {
@@ -23,7 +31,7 @@ export default function ProtectedLayout() {
 
   useLanguageInit();
   useTrackActiveUser5s();
-  const { badgeQueue, dismissBadge } = usePushNotificationSetup();
+  const { badgeQueue, dismissBadge } = useBadgeQueue();
 
   return (
     <>

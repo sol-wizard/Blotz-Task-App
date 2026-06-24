@@ -1,15 +1,13 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { ASSETS } from "@/shared/constants/assets";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
-import { Image } from "expo-image";
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 interface BadgeShareCardProps {
   badge: BadgeNotificationDTO;
-  userDisplayName?: string | null;
 }
 
 function ShareCardSquiggle({ color }: { color: string }) {
@@ -108,17 +106,14 @@ const BG_PEACH_SQUIGGLES = [
 ];
 
 export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function BadgeShareCard(
-  { badge, userDisplayName },
+  { badge },
   ref,
 ) {
   const { t } = useTranslation("badge");
 
   return (
     <View ref={ref} collapsable={false} className="absolute left-[-9999px] top-0 w-[326px]">
-      <View
-        className="h-[412px] overflow-hidden rounded-2xl"
-        style={{ backgroundColor: "#F3FAFB" }}
-      >
+      <View className="h-[412px] overflow-hidden rounded-2xl bg-share-card">
         <View pointerEvents="none" style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <View style={{ position: "absolute", left: -55, top: 50, transform: [{ scaleX: -1 }] }}>
             <ASSETS.whiteBun width={143} height={124} />
@@ -156,7 +151,7 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
           <Image
             source={{ uri: badge.iconUrl }}
             className="h-[136px] w-[136px]"
-            contentFit="contain"
+            resizeMode="contain"
           />
 
           <Text className="mt-2 text-secondary/55 text-lg font-balooBold text-center leading-6">
@@ -191,20 +186,11 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
         >
           <Image
             source={ASSETS.blotzIcon}
-            contentFit="contain"
+            resizeMode="contain"
             style={{ width: 18, height: 18, marginRight: 4 }}
           />
           <Text className="text-[#94C933] text-sm font-balooBold">Blotz task</Text>
         </View>
-
-        {userDisplayName ? (
-          <Text
-            className="absolute bottom-3 right-6 z-[2] text-secondary/40 text-sm font-balooBold"
-            style={{ zIndex: 2, elevation: 2 }}
-          >
-            @ {userDisplayName}
-          </Text>
-        ) : null}
       </View>
     </View>
   );

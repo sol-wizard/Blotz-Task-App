@@ -3,13 +3,13 @@ import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-
 import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
 import { GradientColor } from "@/shared/components/gradient-color";
 import { ASSETS } from "@/shared/constants/assets";
-import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import LottieView from "lottie-react-native";
+import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
@@ -21,8 +21,7 @@ interface BadgeAchievementModalProps {
 
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
   const { t } = useTranslation("badge");
-
-  const { userProfile } = useUserProfile();
+  const router = useRouter();
 
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
@@ -91,7 +90,13 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           </Text>
 
           <View className="flex-row items-center justify-center gap-4 mt-8">
-            <Pressable className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center">
+            <Pressable
+              onPress={() => {
+                onDismiss();
+                router.push("/badge-wall");
+              }}
+              className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
+            >
               <Text className="text-highlight text-base font-balooBold pt-1">{t("view")}</Text>
             </Pressable>
 
@@ -110,7 +115,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
         </View>
       </View>
 
-      <BadgeShareCard ref={shareCardRef} badge={badge} userDisplayName={userProfile?.displayName} />
+      <BadgeShareCard ref={shareCardRef} badge={badge} />
     </Modal>
   );
 }
