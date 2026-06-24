@@ -1,8 +1,9 @@
 import { isSameDay, format } from "date-fns";
-import { enUS, zhCN } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import i18n from "@/i18n";
 import { Text } from "react-native";
 import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 
 /**
  * Formats a date string for calendar display
@@ -56,9 +57,7 @@ export const formatCalendarDate = (
 export const renderCalendarHeader = (date?: unknown) => {
   if (!date) return null;
   const dateObj = date instanceof Date ? date : new Date(date.toString());
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-  const dateText = format(dateObj, "MMMM yyyy", { locale });
+  const dateText = formatLocalizedDate(dateObj, "monthYear");
   return (
     <Text
       style={{
@@ -70,21 +69,4 @@ export const renderCalendarHeader = (date?: unknown) => {
       {dateText}
     </Text>
   );
-};
-
-/**
- * Formats a date for the Monthly Calendar BottomSheet display
- * @param date - Date object or date string
- * @returns Formatted date string (English: Mon, 15 Apr 2026 | Chinese: 4月15日)
- */
-export const formatBottomSheetDate = (date?: unknown) => {
-  if (!date) return "";
-  const dateObj = date instanceof Date ? date : new Date(date.toString());
-  const isChinese = i18n.language === "zh";
-
-  if (isChinese) {
-    return format(dateObj, "yyyy年M月d日 EEE", { locale: zhCN });
-  }
-
-  return format(dateObj, "E, d MMM yyyy", { locale: enUS });
 };
