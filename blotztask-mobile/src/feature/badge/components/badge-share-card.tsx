@@ -38,16 +38,13 @@ function ShareCardTriangle({
   return (
     <View
       pointerEvents="none"
+      className="absolute border-x-transparent border-b-[#BCD8FF]"
       style={{
-        position: "absolute",
         left,
         top,
         borderLeftWidth: size / 2,
         borderRightWidth: size / 2,
         borderBottomWidth: size,
-        borderLeftColor: "transparent",
-        borderRightColor: "transparent",
-        borderBottomColor: "#BCD8FF",
         transform: [{ rotate: `${rotation}deg` }],
       }}
     />
@@ -56,7 +53,7 @@ function ShareCardTriangle({
 
 function ShareCardStar({ left, top, size }: { left: number; top: number; size: number }) {
   return (
-    <View pointerEvents="none" style={{ position: "absolute", left, top }}>
+    <View pointerEvents="none" className="absolute" style={{ left, top }}>
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Path
           d="M12 1.6 L15.09 7.86 L22 8.87 L17 13.74 L18.18 20.62 L12 17.37 L5.82 20.62 L7 13.74 L2 8.87 L8.91 7.86 Z"
@@ -114,11 +111,11 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
   return (
     <View ref={ref} collapsable={false} className="absolute left-[-9999px] top-0 w-[326px]">
       <View className="h-[412px] overflow-hidden rounded-2xl bg-share-card">
-        <View pointerEvents="none" style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <View style={{ position: "absolute", left: -55, top: 50, transform: [{ scaleX: -1 }] }}>
+        <View pointerEvents="none" className="absolute inset-0 z-0">
+          <View className="absolute left-[-55px] top-[50px] -scale-x-100">
             <ASSETS.whiteBun width={143} height={124} />
           </View>
-          <View style={{ position: "absolute", left: 234, top: 136 }}>
+          <View className="absolute left-[234px] top-[136px]">
             <ASSETS.whiteBun width={143} height={124} />
           </View>
 
@@ -131,12 +128,12 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
           ))}
 
           {BG_BLUE_SQUIGGLES.map((s, i) => (
-            <View key={`sqb-${i}`} style={{ position: "absolute", left: s.left, top: s.top }}>
+            <View key={`sqb-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
               <ShareCardSquiggle color="#DDEAFF" />
             </View>
           ))}
           {BG_PEACH_SQUIGGLES.map((s, i) => (
-            <View key={`sqp-${i}`} style={{ position: "absolute", left: s.left, top: s.top }}>
+            <View key={`sqp-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
               <ShareCardSquiggle color="#FFCFC3" />
             </View>
           ))}
@@ -146,15 +143,15 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
         <View
           pointerEvents="none"
           className="absolute inset-x-0 top-0 z-[1] items-center px-4 pb-12 pt-6"
-          style={{ zIndex: 1, elevation: 1 }}
+          style={{ elevation: 1 }}
         >
           <Image
             source={{ uri: badge.iconUrl }}
-            className="h-[136px] w-[136px]"
+            className="h-[179px] w-[179px]"
             resizeMode="contain"
           />
 
-          <Text className="mt-2 text-secondary/55 text-lg font-balooBold text-center leading-6">
+          <Text className="mt-6 text-secondary/55 text-lg font-balooBold text-center leading-6">
             {t("shareCardHeadline")}
           </Text>
 
@@ -165,14 +162,11 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
             {badge.name}
           </Text>
 
-          <Text className="mt-3 w-full text-secondary/60 text-[15px] font-baloo text-center leading-5">
+          <Text className="mt-3 w-full text-secondary/60 text-[15px] font-baloo text-center leading-[18px]">
             {badge.description}
           </Text>
 
-          <Text
-            className="mt-4 text-secondary/40 text-sm font-baloo text-center"
-            style={{ transform: [{ scale: 1.1 }] }}
-          >
+          <Text className="mt-4 scale-110 text-secondary/40 text-sm font-baloo text-center">
             {t("obtainedOn", {
               date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
             })}
@@ -181,13 +175,13 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
 
         <View
           pointerEvents="none"
-          className="absolute bottom-3 left-0 right-0 z-[2] flex-row items-center justify-center"
-          style={{ transform: [{ scale: 1.1 }], zIndex: 2, elevation: 2 }}
+          className="absolute bottom-3 left-0 right-0 z-[2] scale-110 flex-row items-center justify-center"
+          style={{ elevation: 2 }}
         >
           <Image
             source={ASSETS.blotzIcon}
             resizeMode="contain"
-            style={{ width: 18, height: 18, marginRight: 4 }}
+            className="mr-1 h-[18px] w-[18px]"
           />
           <Text className="text-[#94C933] text-sm font-balooBold">Blotz task</Text>
         </View>
