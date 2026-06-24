@@ -1,3 +1,7 @@
+const bundleIdentifier = process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask";
+const widgetBundleIdentifier = `${bundleIdentifier}.ExpoWidgetsTarget`;
+const appGroupIdentifier = `group.${bundleIdentifier}`;
+
 export default {
   expo: {
     name: "BlotzTask",
@@ -11,7 +15,7 @@ export default {
     userInterfaceStyle: "light",
     ios: {
       supportsTablet: false,
-      bundleIdentifier: process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask",
+      bundleIdentifier,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         CFBundleDevelopmentRegion: "en",
@@ -92,6 +96,22 @@ export default {
         },
       ],
       "expo-status-bar",
+      [
+        "expo-widgets",
+        {
+          enableAndroid: false,
+          bundleIdentifier: widgetBundleIdentifier,
+          groupIdentifier: appGroupIdentifier,
+          widgets: [
+            {
+              name: "TodayTasksWidget",
+              displayName: "Today's Tasks",
+              description: "Shows a lightweight summary of today's BlotzTask tasks.",
+              supportedFamilies: ["systemSmall", "systemMedium", "systemLarge"],
+            },
+          ],
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,
