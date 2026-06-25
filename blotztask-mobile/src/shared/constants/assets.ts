@@ -15,6 +15,7 @@ export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../../assets/animations/empty-box.json"),
   spinner: require("../../../assets/animations/spinner.json"),
   voiceWave: require("../../../assets/animations/voice-wave.json"),
+  badgeCelebration: require("../../../assets/animations/badge-celebration.json"),
 } as const;
 
 // Images
@@ -66,6 +67,7 @@ export const SVGIMAGES = {
 
 export const SOUNDS = {
   buttonSpin: require("../../../assets/sounds/button-spin.mp3"),
+  badgeReward: require("../../../assets/sounds/badge-reward.mp3"),
   pomodoroStreamWhisper: require("../../../assets/sounds/pomodoro-streamWhisper.mp3"),
   pomodoroPineFocus: require("../../../assets/sounds/pomodoro-pineFocus.mp3"),
   pomodoroNightGlow: require("../../../assets/sounds/pomodoro-nightGlow.mp3"),
