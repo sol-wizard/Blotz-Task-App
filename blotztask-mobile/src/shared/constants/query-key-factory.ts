@@ -13,6 +13,7 @@ export const labelKeys = {
 
 export const badgeKeys = {
   all: ["badges"] as const,
+  detail: (id: number) => [...badgeKeys.all, "detail", id] as const,
 } as const;
 
 export const taskKeys = {

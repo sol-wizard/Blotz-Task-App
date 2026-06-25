@@ -6,5 +6,9 @@
   },
   "wall": {
     "title": "Badge Wall"
+  },
+  "details": {
+    "category": "Category: {{category}}",
+    "notFound": "Badge not found"
   }
 }

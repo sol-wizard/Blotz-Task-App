@@ -1,4 +1,5 @@
-import { View, Text, FlatList } from "react-native";
+import { useRouter } from "expo-router";
+import { View, Text, FlatList, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
@@ -18,6 +19,7 @@ interface BadgeGridItem {
 export default function BadgeWallScreen() {
   const { t } = useTranslation("badge");
   const { badges } = useBadgesQuery();
+  const router = useRouter();
 
   const gridItems: BadgeGridItem[] = [...badges]
     .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -46,11 +48,26 @@ export default function BadgeWallScreen() {
           gap: 16,
           paddingVertical: 12,
         }}
-        renderItem={({ item }) => (
-          <View className="flex-1">
-            {item.badge ? <BadgeCard badge={item.badge} transparent /> : null}
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const badge = item.badge;
+
+          return (
+            <View className="flex-1">
+              {badge ? (
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/badge-details",
+                      params: { badgeId: badge.id },
+                    })
+                  }
+                >
+                  <BadgeCard badge={badge} transparent />
+                </Pressable>
+              ) : null}
+            </View>
+          );
+        }}
       />
     </SafeAreaView>
   );

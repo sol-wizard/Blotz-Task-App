@@ -6,5 +6,9 @@
   },
   "wall": {
     "title": "徽章墙"
+  },
+  "details": {
+    "category": "类别：{{category}}",
+    "notFound": "未找到徽章"
   }
 }
