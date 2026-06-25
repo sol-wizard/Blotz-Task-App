@@ -14,24 +14,27 @@ is intentionally not enabled in this PR.
 
 The app does not expose React Query cache directly to the widget. Instead:
 
-1. `useSelectedDayTasks` loads task data through the existing task API query.
-2. When the selected day is today, the app builds a lightweight widget snapshot.
-3. The iOS sync layer calls `TodayTasksWidget.updateSnapshot(snapshot)`.
-4. `expo-widgets` stores the layout and timeline props in the App Group used by the
-   widget extension.
-5. The iOS widget renders the latest snapshot.
+1. `useSyncTodayTasksWidget` requests today plus the next seven days with the same
+   `taskKeys.selectedDay(...)` keys used by Calendar.
+2. React Query reuses any day already loaded by Calendar and only requests missing days.
+3. The API response already contains the selected day's recurring occurrences and server
+   ordering. The cache builder reuses Calendar's `To Do` filtering and time label.
+4. `buildWidgetTaskCache` creates `days["yyyy-MM-dd"]` entries.
+5. The iOS sync layer writes one Expo Widgets timeline entry per day, effective at local
+   midnight.
+6. The widget renders the timeline entry for the current day.
 
-The widget-owned snapshot layer lives in
-`src/feature/widget/models/today-tasks-widget-snapshot.ts` and is platform-neutral.
-It stores only display fields:
+The platform-neutral cache and daily presentation models live in
+`src/feature/widget/models/task-widget-cache.ts` and
+`src/feature/widget/models/today-tasks-widget-snapshot.ts`. They store only display fields:
 
 - task id
 - title
 - short due label
 - existing task label name/color
 - task detail deep link when the task has a persisted id
-- generated timestamp
-- widget state
+- generated timestamp at cache level
+- daily widget state
 
 It does not store full task API responses, auth tokens, or user profile data.
 
@@ -46,9 +49,8 @@ The widget supports:
 
 ## Implemented Behavior
 
-The current POC displays today's unfinished tasks after the app loads the existing
-selected-day task query. It supports small, medium, and large iOS home screen widget
-families.
+The current POC displays Calendar's `To Do` tasks for the local day and preloads seven
+future days. It supports small, medium, and large iOS home screen widget families.
 
 Implemented:
 
@@ -120,16 +122,15 @@ After the native target has been generated and the app has been rebuilt:
 6. Tap the widget background to open BlotzTask.
 7. Tap a persisted task row to open the task detail screen.
 
-If the widget shows stale data, reopen the app and revisit today's task screen. The
-POC writes a new snapshot when that query loads or refreshes, but WidgetKit still
-controls the final refresh timing.
+If the widget shows stale data, reopen the app. The authenticated app layout refreshes
+the rolling cache, but WidgetKit still controls the final timeline reload timing.
 
 ## Current Limits
 
 - iOS only.
 - Requires a development build or native build; it does not work in Expo Go.
-- Widget updates are not real-time. The app writes a snapshot when today's task query
-  loads or refreshes, and WidgetKit controls actual reload timing.
+- Widget updates are not real-time. The app writes a rolling cache when its task queries
+  load or refresh, and WidgetKit controls actual reload timing.
 - The widget does not mutate tasks. No complete/edit/create actions are implemented.
 - Task detail deep links are limited to persisted task ids.
 - The widget may need the app to be opened once after install so `expo-widgets` can

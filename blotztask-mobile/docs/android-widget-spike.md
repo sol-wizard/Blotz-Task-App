@@ -67,11 +67,11 @@ Fallback if the library is not stable enough in this build:
 Target flow:
 
 ```text
-React Query today task data
-  -> build TodayTasksWidgetSnapshot
-  -> persist lightweight snapshot
+React Query selected-day data for today + 7 future days
+  -> build TaskWidgetCache with days["yyyy-MM-dd"]
+  -> persist lightweight rolling cache
   -> request Android widget update
-  -> Android widget task handler reads snapshot
+  -> Android widget task handler reads days[todayKey]
   -> render placeholder / empty / content / fallback
 ```
 
@@ -79,7 +79,7 @@ For the spike, `@react-native-async-storage/async-storage` is enough for the JS-
 
 For a native fallback, prefer Android `SharedPreferences` or Jetpack DataStore instead. Native RemoteViews/Glance should not depend on React Query or RN AsyncStorage internals.
 
-Do not write full task API responses, auth tokens, user profile data, descriptions, subtasks, or note content into the widget snapshot.
+Do not write full task API responses, auth tokens, user profile data, descriptions, subtasks, or note content into the widget cache.
 
 ## Click behavior
 
@@ -104,10 +104,12 @@ Important limitation: virtual recurring occurrences are not good deep-link targe
 Android supports a few update paths:
 
 - App-open update: write snapshot and call `requestWidgetUpdate`.
-- Widget add/update/resize: widget task handler reads the last persisted snapshot and renders it.
+- Widget add/update/resize: widget task handler reads the rolling cache, selects the current local date, and renders it.
 - Periodic update: `updatePeriodMillis`, but Android does not deliver these more often than every 30 minutes.
 
-This still does not guarantee real-time task freshness. If the user never opens the app, the widget can only show the last local snapshot unless we add background fetch/push/native scheduling.
+This still does not guarantee real-time task freshness. If the user never opens the app,
+the widget can switch through the preloaded days, but it cannot discover later server-side
+changes unless we add background fetch/push/native scheduling.
 
 Recommended stale behavior:
 

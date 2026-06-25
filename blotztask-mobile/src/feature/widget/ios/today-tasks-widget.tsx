@@ -11,16 +11,14 @@ import {
   widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
-import {
-  TODAY_TASKS_WIDGET_NAME,
-  type TodayTasksWidgetSnapshot,
-} from "@/feature/widget/models/today-tasks-widget-snapshot";
+import { type TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import { TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
 
-const TodayTasksWidgetView = (props: TodayTasksWidgetSnapshot, environment: WidgetEnvironment) => {
+const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnvironment) => {
   "widget";
 
   const isSmall = environment.widgetFamily === "systemSmall";
-  const maxVisibleTasks = environment.widgetFamily === "systemLarge" ? 5 : isSmall ? 3 : 4;
+  const maxVisibleTasks = environment.widgetFamily === "systemLarge" ? 5 : 3;
   const visibleTasks = props.tasks.slice(0, maxVisibleTasks);
 
   return (
@@ -52,7 +50,7 @@ const TodayTasksWidgetView = (props: TodayTasksWidgetSnapshot, environment: Widg
         >
           {visibleTasks.map((task) => (
             <Link
-              key={`${task.taskId ?? task.title}-${task.dueLabel ?? "none"}`}
+              key={`${task.taskId ?? task.title}-${task.timeLabel ?? "none"}`}
               destination={task.deepLink || props.openAppDeepLink}
             >
               <HStack
@@ -109,7 +107,4 @@ const TodayTasksWidgetView = (props: TodayTasksWidgetSnapshot, environment: Widg
   );
 };
 
-export default createWidget<TodayTasksWidgetSnapshot>(
-  TODAY_TASKS_WIDGET_NAME,
-  TodayTasksWidgetView,
-);
+export default createWidget<TasksWidgetSnapshot>(TODAY_TASKS_WIDGET_NAME, TodayTasksWidgetView);

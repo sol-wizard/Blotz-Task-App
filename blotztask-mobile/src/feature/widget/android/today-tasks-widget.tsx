@@ -2,15 +2,14 @@
 
 import React from "react";
 import { FlexWidget, TextWidget, type WidgetInfo } from "react-native-android-widget";
-import {
-  TASK_WIDGET_OPEN_APP_DEEP_LINK,
-  isTodayTasksWidgetSnapshotStale,
-  type TaskWidgetSnapshotItem,
-  type TodayTasksWidgetSnapshot,
+import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
+import type {
+  TaskWidgetSnapshotItem,
+  TasksWidgetSnapshot,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 type TodayTasksWidgetProps = {
-  snapshot: TodayTasksWidgetSnapshot;
+  snapshot: TasksWidgetSnapshot;
   widgetInfo?: WidgetInfo;
 };
 
@@ -23,12 +22,10 @@ const COLORS = {
   white: "#FFFFFF",
 } as const;
 
-export function TodayTasksWidget({ snapshot }: TodayTasksWidgetProps) {
-  const isStale = isTodayTasksWidgetSnapshotStale(snapshot);
-  const state = isStale ? "fallback" : snapshot.state;
-  const message = isStale ? "Open BlotzTask to refresh today's tasks." : snapshot.message;
-  const visibleTasks = snapshot.tasks.slice(0, 3);
-  const shouldShowTasks = state === "content" && visibleTasks.length > 0;
+export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps) {
+  const maxVisibleTasks = widgetInfo && widgetInfo.height >= 180 ? 5 : 3;
+  const visibleTasks = snapshot.tasks.slice(0, maxVisibleTasks);
+  const shouldShowTasks = snapshot.state === "content" && visibleTasks.length > 0;
 
   return (
     <FlexWidget
@@ -84,7 +81,7 @@ export function TodayTasksWidget({ snapshot }: TodayTasksWidgetProps) {
           }}
         >
           <TextWidget
-            text={message || "Open BlotzTask to load today's tasks."}
+            text={snapshot.message || "Open BlotzTask to load today's tasks."}
             maxLines={2}
             truncate="END"
             style={{
@@ -160,9 +157,9 @@ function TaskRow({ task }: { task: TaskWidgetSnapshotItem }) {
             }}
           />
         </FlexWidget>
-        {task.dueLabel ? (
+        {task.timeLabel ? (
           <TextWidget
-            text={task.dueLabel}
+            text={task.timeLabel}
             maxLines={1}
             truncate="END"
             style={{

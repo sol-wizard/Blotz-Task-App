@@ -1,44 +1,46 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  buildTodayTasksWidgetFallbackSnapshot,
-  type TaskWidgetSnapshotItem,
-  type TaskWidgetSnapshotState,
-  type TodayTasksWidgetSnapshot,
+import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
+import type {
+  TaskWidgetSnapshotItem,
+  TaskWidgetSnapshotState,
+  TasksWidgetSnapshot,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
-const TODAY_TASKS_WIDGET_SNAPSHOT_KEY = "blotztask.widget.todayTasksSnapshot.v1";
+const TODAY_TASKS_WIDGET_CACHE_KEY = "blotztask.widget.todayTasksCache.v2";
 
-export async function writeTodayTasksWidgetSnapshot(
-  snapshot: TodayTasksWidgetSnapshot,
-): Promise<void> {
-  await AsyncStorage.setItem(TODAY_TASKS_WIDGET_SNAPSHOT_KEY, JSON.stringify(snapshot));
+export async function writeTodayTasksWidgetCache(cache: TaskWidgetCache): Promise<void> {
+  await AsyncStorage.setItem(TODAY_TASKS_WIDGET_CACHE_KEY, JSON.stringify(cache));
 }
 
-export async function readTodayTasksWidgetSnapshot(): Promise<TodayTasksWidgetSnapshot | null> {
+export async function readTodayTasksWidgetCache(): Promise<TaskWidgetCache | null> {
   try {
-    const rawSnapshot = await AsyncStorage.getItem(TODAY_TASKS_WIDGET_SNAPSHOT_KEY);
-    if (!rawSnapshot) return null;
+    const rawCache = await AsyncStorage.getItem(TODAY_TASKS_WIDGET_CACHE_KEY);
+    if (!rawCache) return null;
 
-    const parsed: unknown = JSON.parse(rawSnapshot);
-    return isTodayTasksWidgetSnapshot(parsed) ? parsed : buildTodayTasksWidgetFallbackSnapshot();
+    const parsed: unknown = JSON.parse(rawCache);
+    return isTaskWidgetCache(parsed) ? parsed : null;
   } catch {
-    return buildTodayTasksWidgetFallbackSnapshot();
+    return null;
   }
 }
 
-function isTodayTasksWidgetSnapshot(value: unknown): value is TodayTasksWidgetSnapshot {
+function isTaskWidgetCache(value: unknown): value is TaskWidgetCache {
+  if (!isRecord(value) || typeof value.generatedAt !== "string" || !isRecord(value.days)) {
+    return false;
+  }
+
+  return Object.values(value.days).every(isTodayTasksWidgetSnapshot);
+}
+
+function isTodayTasksWidgetSnapshot(value: unknown): value is TasksWidgetSnapshot {
   if (!isRecord(value)) return false;
 
   return (
     isTaskWidgetSnapshotState(value.state) &&
-    typeof value.generatedAt === "string" &&
-    typeof value.snapshotDate === "string" &&
+    typeof value.dateKey === "string" &&
     typeof value.title === "string" &&
-    typeof value.subtitle === "string" &&
     typeof value.message === "string" &&
     typeof value.openAppDeepLink === "string" &&
-    typeof value.totalTaskCount === "number" &&
-    typeof value.visibleTaskCount === "number" &&
     Array.isArray(value.tasks) &&
     value.tasks.every(isTaskWidgetSnapshotItem)
   );
@@ -48,11 +50,9 @@ function isTaskWidgetSnapshotItem(value: unknown): value is TaskWidgetSnapshotIt
   if (!isRecord(value)) return false;
 
   return (
-    typeof value.taskId === "number" &&
+    (typeof value.taskId === "number" || value.taskId === null) &&
     typeof value.title === "string" &&
-    typeof value.dueLabel === "string" &&
-    typeof value.labelName === "string" &&
-    typeof value.labelColor === "string" &&
+    typeof value.timeLabel === "string" &&
     typeof value.deepLink === "string"
   );
 }

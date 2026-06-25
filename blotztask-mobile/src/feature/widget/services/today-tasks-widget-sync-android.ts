@@ -1,25 +1,25 @@
 import React from "react";
 import { requestWidgetUpdate } from "react-native-android-widget";
+import { TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
 import {
-  TODAY_TASKS_WIDGET_NAME,
-  type TodayTasksWidgetSnapshot,
-} from "@/feature/widget/models/today-tasks-widget-snapshot";
+  selectTodayTasksWidgetSnapshot,
+  type TaskWidgetCache,
+} from "@/feature/widget/models/task-widget-cache";
 import { TodayTasksWidget } from "@/feature/widget/android/today-tasks-widget";
-import { writeTodayTasksWidgetSnapshot } from "@/feature/widget/services/today-tasks-widget-cache";
+import { writeTodayTasksWidgetCache } from "@/feature/widget/services/today-tasks-widget-cache";
 
-export function syncTodayTasksWidgetSnapshot(snapshot: TodayTasksWidgetSnapshot): void {
-  void syncTodayTasksWidgetSnapshotAsync(snapshot);
+export function syncTodayTasksWidgetCache(cache: TaskWidgetCache): void {
+  void syncTodayTasksWidgetCacheAsync(cache);
 }
 
-async function syncTodayTasksWidgetSnapshotAsync(
-  snapshot: TodayTasksWidgetSnapshot,
-): Promise<void> {
+async function syncTodayTasksWidgetCacheAsync(cache: TaskWidgetCache): Promise<void> {
   try {
-    await writeTodayTasksWidgetSnapshot(snapshot);
+    await writeTodayTasksWidgetCache(cache);
+    const snapshot = selectTodayTasksWidgetSnapshot(cache);
 
     if (__DEV__) {
       console.info(
-        `[TodayTasksWidget] Wrote ${snapshot.tasks.length} task(s), state=${snapshot.state}`,
+        `[TodayTasksWidget] Wrote ${Object.keys(cache.days).length} cached day(s), today=${snapshot.state}`,
       );
     }
 
@@ -33,7 +33,7 @@ async function syncTodayTasksWidgetSnapshotAsync(
     });
   } catch (error: unknown) {
     if (__DEV__) {
-      console.warn("[TodayTasksWidget] Failed to update Android widget snapshot", error);
+      console.warn("[TodayTasksWidget] Failed to update Android widget cache", error);
     }
   }
 }
