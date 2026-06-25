@@ -4,24 +4,9 @@ import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
 
 interface BadgeShareCardProps {
   badge: BadgeNotificationDTO;
-}
-
-function ShareCardSquiggle({ color }: { color: string }) {
-  return (
-    <Svg width={24} height={44} viewBox="0 0 24 44" fill="none">
-      <Path
-        d="M4 2C0 8 2 14 8 16C14 18 10 25 14 29C17 32 21 30 21 36C21 39 22 41 24 42"
-        stroke={color}
-        strokeWidth={3}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
 }
 
 function ShareCardTriangle({
@@ -51,19 +36,6 @@ function ShareCardTriangle({
   );
 }
 
-function ShareCardStar({ left, top, size }: { left: number; top: number; size: number }) {
-  return (
-    <View pointerEvents="none" className="absolute" style={{ left, top }}>
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        <Path
-          d="M12 1.6 L15.09 7.86 L22 8.87 L17 13.74 L18.18 20.62 L12 17.37 L5.82 20.62 L7 13.74 L2 8.87 L8.91 7.86 Z"
-          fill="#F5CB4D"
-        />
-      </Svg>
-    </View>
-  );
-}
-
 // Decorative positions mapped from the Figma share-card background reference
 // (795x1024 source scaled to the 326x412 captured card).
 const BG_TRIANGLES = [
@@ -84,25 +56,6 @@ const BG_TRIANGLES = [
   { left: 248, top: 338, size: 8, rotation: 65 },
 ];
 
-const BG_STARS = [
-  { left: 137, top: 10, size: 12 },
-  { left: 303, top: 18, size: 15 },
-  { left: 211, top: 115, size: 22 },
-  { left: 246, top: 298, size: 12 },
-];
-
-const BG_BLUE_SQUIGGLES = [
-  { left: 61, top: 4 },
-  { left: 285, top: 77 },
-  { left: 30, top: 264 },
-];
-
-const BG_PEACH_SQUIGGLES = [
-  { left: 16, top: 189 },
-  { left: 244, top: 185 },
-  { left: 302, top: 300 },
-];
-
 function ShareCardBackground() {
   return (
     <View pointerEvents="none" className="absolute inset-0 z-0">
@@ -115,21 +68,6 @@ function ShareCardBackground() {
 
       {BG_TRIANGLES.map((tri, i) => (
         <ShareCardTriangle key={`tri-${i}`} {...tri} />
-      ))}
-
-      {BG_STARS.map((star, i) => (
-        <ShareCardStar key={`star-${i}`} {...star} />
-      ))}
-
-      {BG_BLUE_SQUIGGLES.map((s, i) => (
-        <View key={`sqb-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
-          <ShareCardSquiggle color="#DDEAFF" />
-        </View>
-      ))}
-      {BG_PEACH_SQUIGGLES.map((s, i) => (
-        <View key={`sqp-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
-          <ShareCardSquiggle color="#FFCFC3" />
-        </View>
       ))}
     </View>
   );
