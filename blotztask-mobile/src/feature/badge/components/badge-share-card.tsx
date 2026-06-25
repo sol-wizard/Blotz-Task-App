@@ -51,7 +51,6 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
 
           <Text
             className="mt-4 w-full text-secondary text-[25px] font-balooBold text-center leading-9"
-            numberOfLines={2}
           >
             {badge.name}
           </Text>
