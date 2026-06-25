@@ -110,7 +110,7 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
 
   return (
     <View ref={ref} collapsable={false} className="absolute left-[-9999px] top-0 w-[326px]">
-      <View className="h-[412px] overflow-hidden rounded-2xl bg-share-card">
+      <View className="h-[412px] overflow-hidden rounded-2xl bg-[#F3FAFB]">
         <View pointerEvents="none" className="absolute inset-0 z-0">
           <View className="absolute left-[-55px] top-[50px] -scale-x-100">
             <ASSETS.whiteBun width={143} height={124} />

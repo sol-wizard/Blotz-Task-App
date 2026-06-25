@@ -13,7 +13,6 @@ module.exports = {
         highlight: "#9AD513",
         info: "#3D8DE0",
         checked: "#84CC16",
-        "share-card": "#F3FAFB",
       },
       fontFamily: {
         balooThin: ["BalooThin"],
