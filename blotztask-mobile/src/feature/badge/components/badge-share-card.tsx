@@ -9,53 +9,6 @@ interface BadgeShareCardProps {
   badge: BadgeNotificationDTO;
 }
 
-function ShareCardTriangle({
-  left,
-  top,
-  size,
-  rotation,
-}: {
-  left: number;
-  top: number;
-  size: number;
-  rotation: number;
-}) {
-  return (
-    <View
-      pointerEvents="none"
-      className="absolute border-x-transparent border-b-[#BCD8FF]"
-      style={{
-        left,
-        top,
-        borderLeftWidth: size / 2,
-        borderRightWidth: size / 2,
-        borderBottomWidth: size,
-        transform: [{ rotate: `${rotation}deg` }],
-      }}
-    />
-  );
-}
-
-// Decorative positions mapped from the Figma share-card background reference
-// (795x1024 source scaled to the 326x412 captured card).
-const BG_TRIANGLES = [
-  { left: 33, top: 33, size: 9, rotation: 72 },
-  { left: 233, top: 36, size: 15, rotation: 88 },
-  { left: 138, top: 49, size: 9, rotation: 49 },
-  { left: 279, top: 73, size: 5, rotation: -112 },
-  { left: 201, top: 69, size: 13, rotation: -99 },
-  { left: 26, top: 82, size: 11, rotation: -84 },
-  { left: 97, top: 94, size: 8, rotation: 42 },
-  { left: 235, top: 138, size: 8, rotation: 53 },
-  { left: 238, top: 229, size: 10, rotation: 154 },
-  { left: 56, top: 229, size: 11, rotation: 154 },
-  { left: 177, top: 243, size: 11, rotation: 142 },
-  { left: 278, top: 251, size: 8, rotation: 118 },
-  { left: 122, top: 288, size: 9, rotation: -172 },
-  { left: 25, top: 315, size: 12, rotation: -110 },
-  { left: 248, top: 338, size: 8, rotation: 65 },
-];
-
 function ShareCardBackground() {
   return (
     <View pointerEvents="none" className="absolute inset-0 z-0">
@@ -65,10 +18,6 @@ function ShareCardBackground() {
       <View className="absolute left-[234px] top-[136px]">
         <ASSETS.whiteBun width={143} height={124} />
       </View>
-
-      {BG_TRIANGLES.map((tri, i) => (
-        <ShareCardTriangle key={`tri-${i}`} {...tri} />
-      ))}
     </View>
   );
 }
