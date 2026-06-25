@@ -9,7 +9,6 @@ import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import LottieView from "lottie-react-native";
-import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
@@ -21,7 +20,6 @@ interface BadgeAchievementModalProps {
 
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
   const { t } = useTranslation("badge");
-  const router = useRouter();
 
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
@@ -92,8 +90,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           <View className="flex-row items-center justify-center gap-4 mt-8">
             <Pressable
               onPress={() => {
-                onDismiss();
-                router.push("/badge-wall");
+                console.log("Badge view pressed", badge.badgeId);
               }}
               className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
             >
