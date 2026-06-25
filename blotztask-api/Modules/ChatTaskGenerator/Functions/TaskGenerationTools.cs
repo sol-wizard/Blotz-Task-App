@@ -65,7 +65,7 @@ public class TaskGenerationTools()
         return "Task added.";
     }
 
-    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one note.")]
+    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item.")]
     public async Task<string> CreateNotes(
         [Description("Array of note texts")] string[] texts)
     {
@@ -83,7 +83,7 @@ public class TaskGenerationTools()
         return $"{texts.Length} note(s) added.";
     }
 
-    [Description("Add a single note for an idea or something to remember. Use this when no date or time is mentioned.")]
+    [Description("Add a single note for an idea, intention, or reminder with no time anchor. Use this when scheduling the item would require inventing a time the user never mentioned — even vaguely.")]
     public async Task<string> CreateNote(
         [Description("Note content")] string text)
     {
