@@ -64,7 +64,8 @@ function ShareCardStar({ left, top, size }: { left: number; top: number; size: n
   );
 }
 
-// Pixel-mapped from the 星际漫游 reference (795x1024 -> 326x412 card).
+// Decorative positions mapped from the Figma share-card background reference
+// (795x1024 source scaled to the 326x412 captured card).
 const BG_TRIANGLES = [
   { left: 33, top: 33, size: 9, rotation: 72 },
   { left: 233, top: 36, size: 15, rotation: 88 },
@@ -102,6 +103,38 @@ const BG_PEACH_SQUIGGLES = [
   { left: 302, top: 300 },
 ];
 
+function ShareCardBackground() {
+  return (
+    <View pointerEvents="none" className="absolute inset-0 z-0">
+      <View className="absolute left-[-55px] top-[50px] -scale-x-100">
+        <ASSETS.whiteBun width={143} height={124} />
+      </View>
+      <View className="absolute left-[234px] top-[136px]">
+        <ASSETS.whiteBun width={143} height={124} />
+      </View>
+
+      {BG_TRIANGLES.map((tri, i) => (
+        <ShareCardTriangle key={`tri-${i}`} {...tri} />
+      ))}
+
+      {BG_STARS.map((star, i) => (
+        <ShareCardStar key={`star-${i}`} {...star} />
+      ))}
+
+      {BG_BLUE_SQUIGGLES.map((s, i) => (
+        <View key={`sqb-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
+          <ShareCardSquiggle color="#DDEAFF" />
+        </View>
+      ))}
+      {BG_PEACH_SQUIGGLES.map((s, i) => (
+        <View key={`sqp-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
+          <ShareCardSquiggle color="#FFCFC3" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function BadgeShareCard(
   { badge },
   ref,
@@ -111,33 +144,7 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
   return (
     <View ref={ref} collapsable={false} className="absolute left-[-9999px] top-0 w-[326px]">
       <View className="h-[412px] overflow-hidden rounded-2xl bg-[#F3FAFB]">
-        <View pointerEvents="none" className="absolute inset-0 z-0">
-          <View className="absolute left-[-55px] top-[50px] -scale-x-100">
-            <ASSETS.whiteBun width={143} height={124} />
-          </View>
-          <View className="absolute left-[234px] top-[136px]">
-            <ASSETS.whiteBun width={143} height={124} />
-          </View>
-
-          {BG_TRIANGLES.map((tri, i) => (
-            <ShareCardTriangle key={`tri-${i}`} {...tri} />
-          ))}
-
-          {BG_STARS.map((star, i) => (
-            <ShareCardStar key={`star-${i}`} {...star} />
-          ))}
-
-          {BG_BLUE_SQUIGGLES.map((s, i) => (
-            <View key={`sqb-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
-              <ShareCardSquiggle color="#DDEAFF" />
-            </View>
-          ))}
-          {BG_PEACH_SQUIGGLES.map((s, i) => (
-            <View key={`sqp-${i}`} className="absolute" style={{ left: s.left, top: s.top }}>
-              <ShareCardSquiggle color="#FFCFC3" />
-            </View>
-          ))}
-        </View>
+        <ShareCardBackground />
 
         {/* Figma order: icon → headline → title → description → date */}
         <View
