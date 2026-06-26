@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import { BreakdownResultDTO } from "../models/breakdown-result-dto";
 import { analytics } from "@/shared/services/analytics";
-import { useSubtaskFirework } from "@/feature/firework-animation/hooks/useSubtaskFirework";
+import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 
 type ToggleSubtaskStatusVariables = {
   subtaskId: number;
@@ -20,7 +20,7 @@ type ToggleSubtaskStatusVariables = {
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
-  const { playSubtaskFirework } = useSubtaskFirework();
+  const { subtask: subtaskFirework } = useFirework();
 
   const breakDownAndReplaceSubtasksMutation = useMutation<
     BreakdownResultDTO | undefined,
@@ -82,12 +82,8 @@ export const useSubtaskMutations = () => {
 
   const toggleSubtaskStatusMutation = useMutation({
     mutationFn: ({ subtaskId }: ToggleSubtaskStatusVariables) => toggleSubtaskStatus(subtaskId),
-    onMutate: (variables) => {
-      if (!variables.wasDone) {
-        playSubtaskFirework();
-      }
-    },
     onSuccess: (_, variables) => {
+      subtaskFirework.playIfCompleting(variables.wasDone);
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },

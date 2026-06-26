@@ -296,11 +296,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                     completeOccurrence({
                       recurringTaskId,
                       occurrenceDate,
+                      wasDone: task.isDone,
                     });
                     return;
                   }
                   if (!hasTaskItemId(task)) return;
-                  toggleTask({ taskId: task.id, selectedDay });
+                  toggleTask({ taskId: task.id, selectedDay, wasDone: task.isDone });
                   if (task.alertTime && new Date(task.alertTime) > new Date()) {
                     await cancelNotification({ notificationId: task?.notificationId });
                   }

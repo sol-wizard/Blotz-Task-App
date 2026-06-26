@@ -1,7 +1,7 @@
 import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
-import { SubtaskFireworkOverlay } from "@/feature/firework-animation/components/subtask-firework-overlay";
-import { SubtaskFireworkProvider } from "@/feature/firework-animation/hooks/useSubtaskFirework";
+import { FireworkOverlays } from "@/feature/firework-animation/components/firework-overlay";
+import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { analytics } from "@/shared/services/analytics";
@@ -28,7 +28,7 @@ export default function ProtectedLayout() {
   const { badgeQueue, dismissBadge } = usePushNotificationSetup();
 
   return (
-    <SubtaskFireworkProvider>
+    <FireworkProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -85,8 +85,8 @@ export default function ProtectedLayout() {
         <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
       </Stack>
 
-      <SubtaskFireworkOverlay />
+      <FireworkOverlays />
       <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
-    </SubtaskFireworkProvider>
+    </FireworkProvider>
   );
 }
