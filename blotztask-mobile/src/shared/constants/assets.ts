@@ -16,6 +16,7 @@ export const LOTTIE_ANIMATIONS = {
   spinner: require("../../../assets/animations/spinner.json"),
   voiceWave: require("../../../assets/animations/voice-wave.json"),
   badgeCelebration: require("../../../assets/animations/badge-celebration.json"),
+  fireworkSubtask: require("../../../assets/animations/firework-subtask.json"),
 } as const;
 
 // Images
