@@ -1,4 +1,14 @@
 {
   "achievementUnlocked": "成就解锁！",
-  "obtainedOn": "获得于 {{date}}"
+  "shareCardHeadline": "成就解锁！",
+  "obtainedOn": "获得于 {{date}}",
+  "view": "查看",
+  "shareReward": "分享奖励",
+  "sharing": "分享中…",
+  "preview": {
+    "title": "成就"
+  },
+  "wall": {
+    "title": "徽章墙"
+  }
 }

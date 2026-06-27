@@ -1,13 +1,13 @@
 import { useController, useFormContext } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
 import { useState } from "react";
 import TimePicker from "./time-picker";
 import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { TimeFormValues } from "../models/task-form-schema";
 
 export const ReminderTab = () => {
@@ -28,12 +28,9 @@ export const ReminderTab = () => {
     name: "startTime",
   });
 
-  const { t, i18n } = useTranslation("tasks");
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-  const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
+  const { t } = useTranslation("tasks");
   const dateDisplayText = startDate
-    ? format(startDate, dateFormat, { locale })
+    ? formatLocalizedDate(startDate, "abbrevMonthDayYear")
     : t("form.selectDate");
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
 
