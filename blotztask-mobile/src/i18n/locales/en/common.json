@@ -47,5 +47,14 @@
     "title": "Something went wrong",
     "message": "Sorry about that! The app ran into an unexpected issue. Reloading usually fixes it.",
     "button": "Reload App"
+  },
+  "errors": {
+    "network": "No internet connection.",
+    "aiQuotaExceeded": "You've used all AI for this period.",
+    "server": "Something went wrong on our end. Please try again later.",
+    "validation": "That didn't work. Please check your input.",
+    "default": "Something went wrong. Please try again.",
+    "pushTokenFailed": "Push notifications are not available on this device.",
+    "physicalDeviceRequired": "Push notifications require a physical device."
   }
 }
