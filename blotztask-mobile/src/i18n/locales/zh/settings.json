@@ -94,7 +94,7 @@
     "monthlyTab": "每月",
     "share": "分享",
     "sharing": "分享中...",
-    "shareError": "分享信件失败。",
+    "shareError": "分享失败，请重试。",
     "greeting": "亲爱的 {{name}}，",
     "dateLabel": "日期",
     "signOff": "温暖地，",

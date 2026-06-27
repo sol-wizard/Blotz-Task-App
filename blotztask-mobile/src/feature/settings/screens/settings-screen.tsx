@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useRouter } from "expo-router";
@@ -8,6 +8,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/form-divider";
 import { UserAvatar } from "@/shared/components/user-avatar";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
+import { BadgePreviewSection } from "@/feature/settings/components/badge-preview-section";
 import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
@@ -65,12 +66,16 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background py-4">
+    <SafeAreaView className="flex-1 bg-background pt-4" edges={["top"]}>
       <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">
         {t("title")}
       </Text>
 
-      <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
+      <ScrollView
+        className="flex-1 mt-2"
+        contentContainerStyle={{ paddingHorizontal: 32, alignItems: "center", paddingBottom: 12 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View>
           <UserAvatar pictureValue={userProfile?.pictureUrl} size={96} />
           <Pressable
@@ -83,6 +88,7 @@ export default function SettingsScreen() {
         <Text className="text-2xl font-balooBold text-secondary mt-5">
           {userProfile?.displayName}
         </Text>
+        <BadgePreviewSection />
         <View className="bg-white w-full pl-4 rounded-2xl mt-4">
           {menuItems.map((item, index) => (
             <View key={item.key} className="w-11/12">
@@ -100,7 +106,7 @@ export default function SettingsScreen() {
             </View>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

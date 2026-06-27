@@ -46,5 +46,33 @@
         "label": "Work"
       }
     ]
+  },
+  {
+    "id": "pure-note-intention",
+    "input": "I want to learn guitar",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1,
+    "expectations": []
+  },
+  {
+    "id": "mixed-task-and-note",
+    "input": "Coffee with Sarah tomorrow at 9am and I should read more books",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 1,
+    "expectations": [
+      {
+        "titleContains": ["coffee", "Sarah"],
+        "startTimeHour": 9,
+        "startDateOffset": 1,
+        "label": "Life"
+      }
+    ]
+  },
+  {
+    "id": "multiple-notes-no-tasks",
+    "input": "Remember to water the plants, buy sunglasses, and look into learning Spanish",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 3,
+    "expectations": []
   }
 ]
