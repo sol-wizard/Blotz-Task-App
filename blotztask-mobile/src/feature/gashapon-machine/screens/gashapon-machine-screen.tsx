@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Image, Pressable } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { GameEngine } from "react-native-game-engine";
@@ -57,12 +57,15 @@ export default function GashaponMachineScreen() {
     });
   };
 
-  const handleStarDropped = (starIndex: number) => {
-    const droppedNote = limitedNotes[starIndex];
-    setRandomTask(droppedNote);
-    setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
-    setDropStarTrigger((prev) => prev + 1);
-  };
+  const handleStarDropped = useCallback(
+    (starIndex: number) => {
+      const droppedNote = limitedNotes[starIndex];
+      setRandomTask(droppedNote);
+      setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
+      setDropStarTrigger((prev) => prev + 1);
+    },
+    [limitedNotes],
+  );
 
   const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,

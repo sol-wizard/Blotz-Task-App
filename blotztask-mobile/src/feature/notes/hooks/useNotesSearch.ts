@@ -2,6 +2,9 @@ import { useDebounce } from "use-debounce";
 import { noteKeys } from "@/shared/constants/query-key-factory";
 import { useQuery } from "@tanstack/react-query";
 import { searchNotes } from "../services/notes-service";
+import { NoteDTO } from "../models/note-dto";
+
+const EMPTY_NOTES: NoteDTO[] = [];
 
 export const useNotesSearch = ({
   searchQuery,
@@ -19,7 +22,7 @@ export const useNotesSearch = ({
     queryFn: () => searchNotes(debouncedQuery),
   });
 
-  const notesSearchResult = allNotes ?? [];
+  const notesSearchResult = allNotes ?? EMPTY_NOTES;
   const showLoading = isLoading;
 
   return {

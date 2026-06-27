@@ -1,5 +1,5 @@
 import Matter from "matter-js";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
@@ -8,6 +8,8 @@ import { Accelerometer } from "expo-sensors";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 import { Platform } from "react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
+
+const getStarEntityKey = (idx: number) => `star-${idx}`;
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -23,20 +25,22 @@ export const useGashaponMachineConfig = ({
   const worldRef = useRef<Matter.World | null>(null);
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
+  const isDispensingRef = useRef(false);
   const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
+  const onStarDroppedRef = useRef(onStarDropped);
 
-  const getStarEntityKey = (idx: number) => `star-${idx}`;
+  useEffect(() => {
+    onStarDroppedRef.current = onStarDropped;
+  }, [onStarDropped]);
 
-  const handleRelease = (deltaThisTurn: number) => {
-    if (Math.abs(deltaThisTurn) > 60) {
-      if (gateRef.current && !isGateOpenRef.current) {
-        // Only allow spinning/opening the gate when we're not in the middle of returning.
-        Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
-        isGateOpenRef.current = true;
-        console.log("gate is opened");
-      }
+  const openGate = () => {
+    if (gateRef.current && !isGateOpenRef.current) {
+      Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
+      isGateOpenRef.current = true;
+      console.log("gate is opened");
     }
   };
+
   const closeGate = () => {
     if (gateRef.current && isGateOpenRef.current) {
       console.log("close gate");
@@ -45,16 +49,65 @@ export const useGashaponMachineConfig = ({
     }
   };
 
+  const getAvailableStarIndexes = () => {
+    const world = worldRef.current;
+    if (!world) return [];
+
+    return starsRef.current
+      .map((star, idx) => ({ star, idx }))
+      .filter(({ star }) => world.bodies.includes(star))
+      .map(({ idx }) => idx);
+  };
+
+  const removeStarEntity = useCallback((starIndex: number) => {
+    const entityKey = getStarEntityKey(starIndex);
+
+    setEntities((prevEntities) => {
+      if (!prevEntities[entityKey]) return prevEntities;
+
+      const nextEntities = { ...prevEntities };
+      delete nextEntities[entityKey];
+      return nextEntities;
+    });
+  }, []);
+
+  const dispenseStar = () => {
+    const world = worldRef.current;
+    if (!world || isDispensingRef.current) return;
+
+    const availableStarIndexes = getAvailableStarIndexes();
+    if (availableStarIndexes.length === 0) return;
+
+    isDispensingRef.current = true;
+    openGate();
+
+    const selectedStarIndex =
+      availableStarIndexes[Math.floor(Math.random() * availableStarIndexes.length)];
+    const selectedStar = starsRef.current[selectedStarIndex];
+
+    droppedStarIndexRef.current = selectedStarIndex;
+    Matter.World.remove(world, selectedStar);
+    removeStarEntity(selectedStarIndex);
+    closeGate();
+    onStarDroppedRef.current(selectedStarIndex);
+  };
+
+  const handleRelease = (deltaThisTurn: number) => {
+    if (Math.abs(deltaThisTurn) > 60) {
+      dispenseStar();
+    }
+  };
+
   const resetStarsPhysics = () => {
     if (!worldRef.current) return;
 
     if (droppedStarIndexRef.current < 0) {
       console.warn("No dropped star index recorded; skipping reset.");
+      isDispensingRef.current = false;
       return;
     }
 
     const world = worldRef.current;
-    const starRadius = 15;
 
     if (droppedStarIndexRef.current >= 0) {
       const idx = droppedStarIndexRef.current;
@@ -85,15 +138,18 @@ export const useGashaponMachineConfig = ({
 
       setEntities((prevEntities) => {
         const note = notes[idx];
-        prevEntities[entityKey] = {
-          body: star,
-          texture: getStarIconAsBefore(note?.id ?? idx),
-          renderer: CapsuleToyRenderer,
+        return {
+          ...prevEntities,
+          [entityKey]: {
+            body: star,
+            texture: getStarIconAsBefore(note?.id ?? idx),
+            renderer: CapsuleToyRenderer,
+          },
         };
-        return prevEntities;
       });
     }
     droppedStarIndexRef.current = -1;
+    isDispensingRef.current = false;
   };
 
   useEffect(() => {
@@ -204,7 +260,8 @@ export const useGashaponMachineConfig = ({
             : null;
         const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
 
-        if (star && sensor) {
+        if (star && sensor && !isDispensingRef.current) {
+          isDispensingRef.current = true;
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
 
@@ -212,10 +269,11 @@ export const useGashaponMachineConfig = ({
           droppedStarIndexRef.current = starIndex;
 
           closeGate();
-          onStarDropped(starIndex);
+          onStarDroppedRef.current(starIndex);
           // Remove the star from physics world
           if (worldRef.current && starsRef.current.includes(star)) {
             Matter.World.remove(worldRef.current, star);
+            removeStarEntity(starIndex);
           }
         }
       });
@@ -253,8 +311,10 @@ export const useGashaponMachineConfig = ({
       Matter.Events.off(engine, "collisionStart");
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
+      isDispensingRef.current = false;
+      droppedStarIndexRef.current = -1;
     };
-  }, [notes]);
+  }, [notes, removeStarEntity, starRadius]);
 
   return { entities, handleRelease, resetStarsPhysics };
 };
