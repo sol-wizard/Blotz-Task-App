@@ -7,7 +7,7 @@ import {
   buildWidgetTaskCache,
   getTaskWidgetDateKey,
   type TaskWidgetDaySource,
-} from "@/feature/widget/models/task-widget-cache";
+} from "@/feature/widget/util/task-widget-cache-util";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import { fetchTasksForDate } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";

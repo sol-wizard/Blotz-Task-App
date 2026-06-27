@@ -1,20 +1,16 @@
 import React from "react";
 import { requestWidgetUpdate } from "react-native-android-widget";
+
 import { TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
-import {
-  selectTodayTasksWidgetSnapshot,
-  type TaskWidgetCache,
-} from "@/feature/widget/models/task-widget-cache";
-import { TodayTasksWidget } from "@/feature/widget/android/today-tasks-widget";
-import { writeTodayTasksWidgetCache } from "@/feature/widget/services/today-tasks-widget-cache";
+import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
+import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
+import { TodayTasksWidget } from "@/feature/widget/android/components/today-tasks-widget";
+import { writeTodayTasksWidgetCache } from "@/feature/widget/android/services/today-tasks-widget-cache-storage";
 
-export function syncTodayTasksWidgetCache(cache: TaskWidgetCache): void {
-  void syncTodayTasksWidgetCacheAsync(cache);
-}
-
-async function syncTodayTasksWidgetCacheAsync(cache: TaskWidgetCache): Promise<void> {
+export async function syncAndroidTodayTasksWidgetCache(cache: TaskWidgetCache): Promise<void> {
   try {
     await writeTodayTasksWidgetCache(cache);
+
     const snapshot = selectTodayTasksWidgetSnapshot(cache);
 
     if (__DEV__) {

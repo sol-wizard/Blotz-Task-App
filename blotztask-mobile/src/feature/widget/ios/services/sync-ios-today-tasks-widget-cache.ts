@@ -1,14 +1,10 @@
 import { parseISO } from "date-fns";
+import TodayTasksWidget from "@/feature/widget/ios/components/today-tasks-widget";
 import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
 
-export function syncTodayTasksWidgetCache(cache: TaskWidgetCache): void {
-  void syncTodayTasksWidgetCacheAsync(cache);
-}
-
-async function syncTodayTasksWidgetCacheAsync(cache: TaskWidgetCache): Promise<void> {
+export async function syncIosTodayTasksWidgetCache(cache: TaskWidgetCache): Promise<void> {
   try {
-    const widgetModule = await import("@/feature/widget/ios/today-tasks-widget");
-    widgetModule.default.updateTimeline(
+    await TodayTasksWidget.updateTimeline(
       Object.values(cache.days)
         .sort((first, second) => first.dateKey.localeCompare(second.dateKey))
         .map((snapshot) => ({
@@ -18,7 +14,7 @@ async function syncTodayTasksWidgetCacheAsync(cache: TaskWidgetCache): Promise<v
     );
   } catch (error: unknown) {
     if (__DEV__) {
-      console.warn("[TodayTasksWidget] Failed to update widget cache", error);
+      console.warn("[TodayTasksWidget] Failed to update iOS widget cache", error);
     }
   }
 }
