@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import Modal from "react-native-modal";
-import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 import { theme } from "@/shared/constants/theme";
 import { SubtaskDTO } from "../models/subtask-dto";
@@ -62,26 +61,35 @@ export default function EditSubtaskSheet({
       animationOut="slideOutDown"
       avoidKeyboard
       useNativeDriver
-      style={{ margin: 0 }}
+      style={{ justifyContent: "center", margin: 10 }}
     >
-      <View className="mt-auto bg-white rounded-t-3xl px-6 pt-4 pb-2">
-        <View className="h-1.5 w-12 self-center rounded-full bg-[#D1D5DB] mb-5" />
-
-        <View className="flex-row items-center justify-between mb-5">
+      <View className="mx-8 bg-white px-5 pt-7 pb-7" style={{ borderRadius: 30 }}>
+        <View className="flex-row items-center justify-between mb-6">
           <Text className="font-balooBold text-2xl" style={{ color: theme.colors.onSurface }}>
             {t("subtasks.edit")}
           </Text>
+          <Pressable
+            onPress={handleSave}
+            disabled={isSaving}
+            hitSlop={12}
+            className="min-w-16 items-end justify-center"
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color={theme.colors.highlight} />
+            ) : (
+              <Text className="font-balooBold text-xl" style={{ color: theme.colors.highlight }}>
+                {t("subtasks.done")}
+              </Text>
+            )}
+          </Pressable>
         </View>
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 32 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
-          <View className="mb-5">
-            <Text className="font-balooBold text-sm mb-2" style={{ color: theme.colors.disabled }}>
-              {t("subtasks.title")}
-            </Text>
+          <View className="mb-6">
             <TextInput
               value={title}
               onChangeText={setTitle}
@@ -89,71 +97,67 @@ export default function EditSubtaskSheet({
               submitBehavior="blurAndSubmit"
               multiline
               autoFocus
-              className="rounded-2xl border border-gray-950 px-4 py-3 text-base font-balooBold"
+              className="rounded-2xl border border-[#E2E4EA] px-4 py-4 text-xl font-balooBold"
               style={{
-                minHeight: 96,
+                minHeight: 54,
                 color: theme.colors.onSurface,
                 textAlignVertical: "top",
               }}
             />
           </View>
 
-          <View className="mb-4">
-            <Text className="font-balooBold text-sm mb-1" style={{ color: theme.colors.disabled }}>
+          <View>
+            <Text className="font-balooBold text-lg mb-2" style={{ color: "#B7BBC7" }}>
               {t("subtasks.duration")}
             </Text>
-            <View className="rounded-2xl px-3 py-1.5">
+            <View className="px-3">
               <View className="flex-row items-center justify-center">
                 <WheelPicker
                   data={hourItems}
                   value={selectedHours}
-                  width={52}
-                  itemHeight={30}
+                  width={72}
+                  itemHeight={44}
                   visibleItemCount={3}
                   enableScrollByTapOnItem
+                  overlayItemStyle={{
+                    backgroundColor: "#F1F7E8",
+                    borderBottomLeftRadius: 18,
+                    borderTopLeftRadius: 18,
+                  }}
                   onValueChanged={({ item }) => setSelectedHours(item.value as number)}
                   itemTextStyle={{
                     color: theme.colors.highlight,
-                    fontSize: 18,
+                    fontSize: 34,
                     fontWeight: "700",
                   }}
                 />
 
-                <Text className="text-[#B7BBC7] text-sm font-bold mx-1.5">h</Text>
+                <View className="h-11 items-center justify-center bg-[#F1F7E8] px-1">
+                  <Text className="text-[#B7BBC7] text-base font-bold">h</Text>
+                </View>
 
                 <WheelPicker
                   data={minuteItems}
                   value={selectedMinutes}
-                  width={58}
-                  itemHeight={30}
+                  width={72}
+                  itemHeight={44}
                   visibleItemCount={3}
                   enableScrollByTapOnItem
+                  overlayItemStyle={{ backgroundColor: "#F1F7E8" }}
                   onValueChanged={({ item }) => setSelectedMinutes(item.value as number)}
                   itemTextStyle={{
                     color: theme.colors.highlight,
-                    fontSize: 18,
+                    fontSize: 34,
                     fontWeight: "700",
                   }}
                 />
 
-                <Text className="text-[#B7BBC7] text-sm font-bold ml-1.5">min</Text>
+                <View className="h-11 items-center justify-center rounded-r-[18px] bg-[#F1F7E8] pl-1 pr-5">
+                  <Text className="text-[#B7BBC7] text-base font-bold">min</Text>
+                </View>
               </View>
             </View>
           </View>
-
-          <Pressable
-            onPress={handleSave}
-            disabled={isSaving}
-            className={`rounded-xl py-3.5 px-4 items-center justify-center ${
-              isSaving ? "bg-[#F3F4F6]" : "bg-lime-300"
-            }`}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color={theme.colors.onSurface} />
-            ) : (
-              <Text className="font-balooBold text-lg text-black">{t("subtasks.done")}</Text>
-            )}
-          </Pressable>
         </ScrollView>
       </View>
     </Modal>
