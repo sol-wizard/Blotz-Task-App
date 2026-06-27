@@ -53,7 +53,14 @@ interface TaskCardProps {
   onRowOpen?: (refObject: React.RefObject<SwipeableMethods | null>) => void;
 }
 
-const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRowOpen }: TaskCardProps) => {
+const TaskCard = ({
+  task,
+  deleteTask,
+  isDeleting,
+  selectedDay,
+  onOpenMode,
+  onRowOpen,
+}: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -70,12 +77,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
-  const {
-    toggleTask,
-    deleteRecurringOccurrence,
-    isToggling,
-    isDeletingRecurringOccurrence,
-  } = useTaskMutations();
+  const { toggleTask, deleteRecurringOccurrence, isToggling, isDeletingRecurringOccurrence } =
+    useTaskMutations();
   const {
     completeOccurrence,
     materializeOccurrenceAsync,
@@ -236,11 +239,15 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
 
     setShowSwitchModal(false);
     swipeRef.current?.close();
-    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: pendingFocusTaskId } });
+    router.push({
+      pathname: "/(protected)/pomodoro-focus",
+      params: { taskId: pendingFocusTaskId },
+    });
     setPendingFocusTaskId(null);
   };
 
   const handleTogglePause = () => {
+    console.log("handleTogglePause called");
     togglePause();
     swipeRef.current?.close();
   };

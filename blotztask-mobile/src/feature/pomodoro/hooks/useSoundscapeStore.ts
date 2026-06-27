@@ -41,7 +41,7 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     }
     const player = await initPlayer();
 
-    const source = SOUNDSCAPES[type].music;
+    const source = SOUNDSCAPES[type]?.music;
     if (!source) return;
 
     if (get().currentSoundscapeType !== type) {

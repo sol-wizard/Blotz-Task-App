@@ -126,7 +126,7 @@ export const ModeBottomSheet = ({
   };
 
   return (
-    <Modal visible={isOpen} transparent animationType="slide">
+    <Modal visible={isOpen} transparent animationType="fade">
       <View className="flex-1 bg-black/50 justify-end">
         <View className="bg-background rounded-t-3xl pt-4 pb-12">
           {/* Header */}
