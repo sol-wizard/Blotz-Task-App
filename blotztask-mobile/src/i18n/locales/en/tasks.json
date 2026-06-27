@@ -102,7 +102,6 @@
     "done": "Done",
     "delete": "Delete",
     "edit": "Edit subtask",
-    "title": "Subtask name",
     "titlePlaceholder": "Subtask name",
     "duration": "Duration"
   }
