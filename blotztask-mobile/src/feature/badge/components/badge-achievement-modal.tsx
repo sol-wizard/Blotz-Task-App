@@ -1,10 +1,17 @@
+import { BadgeShareCard } from "@/feature/badge/components/badge-share-card";
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
+import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
 import { GradientColor } from "@/shared/components/gradient-color";
+import { ASSETS } from "@/shared/constants/assets";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import LottieView from "lottie-react-native";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface BadgeAchievementModalProps {
   badge?: BadgeNotificationDTO;
@@ -14,11 +21,35 @@ interface BadgeAchievementModalProps {
 export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModalProps) {
   const { t } = useTranslation("badge");
 
+  const shareCardRef = useRef<View>(null);
+  const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
+
+  const rewardSound = useAudioPlayer(ASSETS.badgeReward);
+
+  const badgeId = badge?.badgeId;
+
+  // Fire celebration feedback once per badge (re-fires for the next queued badge).
+  useEffect(() => {
+    if (badgeId == null) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    rewardSound.seekTo(0);
+    rewardSound.play();
+  }, [badgeId, rewardSound]);
+
   if (!badge) return null;
 
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={onDismiss}>
       <View className="flex-1 bg-black/50 items-center justify-center px-8">
+        <LottieView
+          key={badge.badgeId}
+          source={ASSETS.badgeCelebration}
+          autoPlay
+          loop={false}
+          resizeMode="cover"
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+        />
         <View className="w-full items-center">
           <View className="w-full items-end mb-1">
             <Pressable onPress={onDismiss} hitSlop={12}>
@@ -55,8 +86,33 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
               date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
             })}
           </Text>
+
+          <View className="flex-row items-center justify-center gap-4 mt-8">
+            <Pressable
+              onPress={() => {
+                console.log("Badge view pressed", badge.badgeId);
+              }}
+              className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
+            >
+              <Text className="text-highlight text-base font-balooBold pt-1">{t("view")}</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={shareImage}
+              disabled={isSharingImage}
+              className={`min-h-[44px] px-7 py-2.5 rounded-full border-2 border-transparent bg-highlight items-center justify-center ${
+                isSharingImage ? "opacity-60" : "opacity-100"
+              }`}
+            >
+              <Text className="text-white text-base font-balooBold pt-1">
+                {isSharingImage ? t("sharing") : t("shareReward")}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
+
+      <BadgeShareCard ref={shareCardRef} badge={badge} />
     </Modal>
   );
 }

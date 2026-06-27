@@ -11,6 +11,10 @@ export const labelKeys = {
   all: ["label"] as const,
 } as const;
 
+export const badgeKeys = {
+  all: ["badges"] as const,
+} as const;
+
 export const taskKeys = {
   all: ["tasks"] as const,
   selectedDay: (date: string) => [...taskKeys.all, "selectedDay", date] as const,
