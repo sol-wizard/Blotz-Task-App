@@ -97,11 +97,13 @@ export default function EditSubtaskSheet({
               submitBehavior="blurAndSubmit"
               multiline
               autoFocus
-              className="rounded-2xl border border-[#E2E4EA] px-4 py-4 text-xl font-balooBold"
+              className="rounded-2xl border border-[#6B7280] px-4 py-4 text-xl font-balooBold"
               style={{
                 minHeight: 54,
                 color: theme.colors.onSurface,
                 textAlignVertical: "top",
+                borderWidth: 1,
+                borderColor: "#B7BBC7",
               }}
             />
           </View>
