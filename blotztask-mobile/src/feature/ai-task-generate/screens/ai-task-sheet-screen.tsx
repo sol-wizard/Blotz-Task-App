@@ -22,7 +22,7 @@ import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceInput } from "../hooks/useVoiceRecorder";
+import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
@@ -44,6 +44,7 @@ export default function AiTaskSheetScreen() {
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
+  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
 
   const {
     transcript,
@@ -56,16 +57,9 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const {
-    state: voiceInputState,
-    isRecording,
-    isBusy: isVoiceBusy,
-    isHoldHintVisible,
-    handlePressIn: handleVoicePressIn,
-    handlePressOut: handleVoicePressOut,
-  } = useVoiceInput({
-    submitAudio: submitAudioForTranscription,
-  });
+  const { isRecording, startListening, stopAndUpload } = useVoiceRecorder(
+    submitAudioForTranscription,
+  );
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
@@ -90,8 +84,6 @@ export default function AiTaskSheetScreen() {
   );
   const displayNotes = streamedNotes;
   const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
-  const isVoiceSubmitDisabled =
-    isAiGenerating || voiceInputState === "stopping" || voiceInputState === "sending";
 
   // --- Handlers ---
   const handleDismiss = () => {
@@ -137,17 +129,19 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
-    handleVoicePressIn();
+    setIsHoldHintVisible(false);
+    void startListening();
   };
 
   const handleMicPressOut = async () => {
-    const didSubmit = await handleVoicePressOut();
+    const didSubmit = await stopAndUpload();
     if (didSubmit) {
       hasSubmittedAiRequest.current = true;
     }
   };
 
   const handleSwitchToText = () => {
+    setIsHoldHintVisible(false);
     setInputMode("text"); // TextInput autoFocus pops the keyboard on mount
   };
 
@@ -219,9 +213,9 @@ export default function AiTaskSheetScreen() {
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.25)",
-                      opacity: isAiGenerating || isVoiceBusy ? 0.4 : 1,
+                      opacity: isAiGenerating || isRecording ? 0.4 : 1,
                     }}
-                    disabled={isAiGenerating || isVoiceBusy}
+                    disabled={isAiGenerating || isRecording}
                   >
                     <MaterialCommunityIcons
                       name={inputMode === "voice" ? "keyboard-outline" : "microphone"}
@@ -246,9 +240,9 @@ export default function AiTaskSheetScreen() {
                           backgroundColor: isRecording
                             ? "rgba(255,255,255,0.5)"
                             : "rgba(255,255,255,0.25)",
-                          opacity: isVoiceSubmitDisabled ? 0.4 : 1,
+                          opacity: isAiGenerating ? 0.4 : 1,
                         }}
-                        disabled={isVoiceSubmitDisabled}
+                        disabled={isAiGenerating}
                       >
                         {isRecording ? (
                           <LottieView
