@@ -36,6 +36,15 @@ export function useVoiceInput({ submitAudio }: UseVoiceInputOptions) {
     });
   };
 
+  const releasePreparedRecording = async (): Promise<void> => {
+    try {
+      await recorder.stop();
+    } catch (error) {
+      console.warn("[Mic] Error releasing prepared recording.", error);
+      trackRecordingFailure("RecordingCancelFailed");
+    }
+  };
+
   const handlePressIn = () => {
     setIsHoldHintVisible(false);
     if (stateRef.current !== "idle" && stateRef.current !== "error") return;
@@ -53,6 +62,7 @@ export function useVoiceInput({ submitAudio }: UseVoiceInputOptions) {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       if (!pressActiveRef.current) {
+        await releasePreparedRecording();
         setVoiceState("idle");
         return;
       }
