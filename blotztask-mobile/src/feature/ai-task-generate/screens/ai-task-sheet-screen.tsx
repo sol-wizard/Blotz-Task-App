@@ -50,7 +50,6 @@ export default function AiTaskSheetScreen() {
     turns,
     streamedTasks,
     streamedNotes,
-    isConnectionReady,
     submitAudioForTranscription,
     sendTextMessage,
   } = useAiTaskGenerator({
@@ -58,6 +57,7 @@ export default function AiTaskSheetScreen() {
   });
   const { labels } = useAllLabels();
   const {
+    state: voiceInputState,
     isRecording,
     isBusy: isVoiceBusy,
     isHoldHintVisible,
@@ -65,7 +65,6 @@ export default function AiTaskSheetScreen() {
     handlePressOut: handleVoicePressOut,
   } = useVoiceInput({
     submitAudio: submitAudioForTranscription,
-    canSubmit: isConnectionReady,
   });
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
@@ -91,6 +90,8 @@ export default function AiTaskSheetScreen() {
   );
   const displayNotes = streamedNotes;
   const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
+  const isVoiceSubmitDisabled =
+    isAiGenerating || voiceInputState === "stopping" || voiceInputState === "sending";
 
   // --- Handlers ---
   const handleDismiss = () => {
@@ -186,7 +187,7 @@ export default function AiTaskSheetScreen() {
               {/* Task / note cards (streamed or final) */}
               {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
-              {!!transcript && (
+              {isAiGenerating && !!transcript && (
                 <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
                   &ldquo;{transcript}&rdquo;
                 </Text>
@@ -245,9 +246,9 @@ export default function AiTaskSheetScreen() {
                           backgroundColor: isRecording
                             ? "rgba(255,255,255,0.5)"
                             : "rgba(255,255,255,0.25)",
-                          opacity: isAiGenerating ? 0.4 : 1,
+                          opacity: isVoiceSubmitDisabled ? 0.4 : 1,
                         }}
-                        disabled={isAiGenerating}
+                        disabled={isVoiceSubmitDisabled}
                       >
                         {isRecording ? (
                           <LottieView

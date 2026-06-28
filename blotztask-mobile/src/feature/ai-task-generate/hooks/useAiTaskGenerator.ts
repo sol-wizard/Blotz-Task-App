@@ -23,6 +23,15 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   NoTasksExtracted: "errors.noTasksExtracted",
 };
 
+const CONNECTION_READY_TIMEOUT_MS = 10_000;
+const CONNECTION_NOT_READY_ERROR_CODE = "ConnectionNotReady";
+
+type ConnectionReadyWaiter = {
+  resolve: (connection: signalR.HubConnection) => void;
+  reject: (error: Error) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
+};
+
 export function useAiTaskGenerator({
   setIsAiGenerating,
 }: {
@@ -37,15 +46,47 @@ export function useAiTaskGenerator({
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const connectionReadyWaitersRef = useRef<ConnectionReadyWaiter[]>([]);
+
+  const resolveConnectionReadyWaiters = useCallback((readyConnection: signalR.HubConnection) => {
+    const waiters = connectionReadyWaitersRef.current;
+    connectionReadyWaitersRef.current = [];
+    waiters.forEach((waiter) => {
+      clearTimeout(waiter.timeoutId);
+      waiter.resolve(readyConnection);
+    });
+  }, []);
+
+  const rejectConnectionReadyWaiters = useCallback((error: Error) => {
+    const waiters = connectionReadyWaitersRef.current;
+    connectionReadyWaitersRef.current = [];
+    waiters.forEach((waiter) => {
+      clearTimeout(waiter.timeoutId);
+      waiter.reject(error);
+    });
+  }, []);
+
+  const waitForConnectionReady = useCallback((): Promise<signalR.HubConnection> => {
+    const readyConnection = connectionRef.current;
+    if (readyConnection?.state === signalR.HubConnectionState.Connected) {
+      return Promise.resolve(readyConnection);
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        connectionReadyWaitersRef.current = connectionReadyWaitersRef.current.filter(
+          (waiter) => waiter.timeoutId !== timeoutId,
+        );
+        reject(new Error(CONNECTION_NOT_READY_ERROR_CODE));
+      }, CONNECTION_READY_TIMEOUT_MS);
+
+      connectionReadyWaitersRef.current.push({ resolve, reject, timeoutId });
+    });
+  }, []);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
-    if (
-      !connection ||
-      !isConnectionReady ||
-      connection.state !== signalR.HubConnectionState.Connected
-    ) {
-      throw new Error("Cannot submit audio: not connected.");
-    }
+    const readyConnection = await waitForConnectionReady();
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
@@ -56,7 +97,7 @@ export function useAiTaskGenerator({
     pendingInputModeRef.current = "voice";
 
     try {
-      await signalRService.invoke(connection, "TranscribeAudio", base64);
+      await signalRService.invoke(readyConnection, "TranscribeAudio", base64);
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
@@ -108,6 +149,7 @@ export function useAiTaskGenerator({
 
   const generationCompleteHandler = useCallback(
     (result: AiResultMessageDTO) => {
+      setTranscript(undefined);
       setIsAiGenerating(false);
       requestStartedAtRef.current = null;
       const inputMode = pendingInputModeRef.current;
@@ -127,6 +169,7 @@ export function useAiTaskGenerator({
 
   const generationErrorHandler = useCallback(
     (error: AiGenerationErrorDTO) => {
+      setTranscript(undefined);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
       requestStartedAtRef.current = null;
@@ -159,6 +202,7 @@ export function useAiTaskGenerator({
       .createConnection()
       .then(async (newConn) => {
         conn = newConn;
+        connectionRef.current = conn;
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
         conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
@@ -178,9 +222,13 @@ export function useAiTaskGenerator({
         });
         conn.onreconnected(() => {
           setIsConnectionReady(true);
+          if (conn) {
+            resolveConnectionReadyWaiters(conn);
+          }
         });
         conn.onclose(() => {
           setIsConnectionReady(false);
+          rejectConnectionReadyWaiters(new Error(CONNECTION_NOT_READY_ERROR_CODE));
         });
 
         await conn.start();
@@ -191,12 +239,18 @@ export function useAiTaskGenerator({
 
         setConnection(conn);
         setIsConnectionReady(true);
+        resolveConnectionReadyWaiters(conn);
       })
-      .catch((error) => console.error("Error connecting to SignalR:", error));
+      .catch((error) => {
+        console.error("Error connecting to SignalR:", error);
+        rejectConnectionReadyWaiters(new Error(CONNECTION_NOT_READY_ERROR_CODE));
+      });
 
     return () => {
       isDisposed = true;
       setIsConnectionReady(false);
+      connectionRef.current = null;
+      rejectConnectionReadyWaiters(new Error(CONNECTION_NOT_READY_ERROR_CODE));
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);
@@ -206,7 +260,12 @@ export function useAiTaskGenerator({
         conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
-  }, [generationCompleteHandler, generationErrorHandler]);
+  }, [
+    generationCompleteHandler,
+    generationErrorHandler,
+    rejectConnectionReadyWaiters,
+    resolveConnectionReadyWaiters,
+  ]);
 
   return {
     transcript,

@@ -7,12 +7,13 @@ import { analytics } from "@/shared/services/analytics";
 
 export type VoiceInputState = "idle" | "preparing" | "recording" | "stopping" | "sending" | "error";
 
+const CONNECTION_NOT_READY_ERROR_CODE = "ConnectionNotReady";
+
 type UseVoiceInputOptions = {
   submitAudio: (uri: string) => Promise<void>;
-  canSubmit: boolean;
 };
 
-export function useVoiceInput({ submitAudio, canSubmit }: UseVoiceInputOptions) {
+export function useVoiceInput({ submitAudio }: UseVoiceInputOptions) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [state, setState] = useState<VoiceInputState>("idle");
@@ -38,17 +39,6 @@ export function useVoiceInput({ submitAudio, canSubmit }: UseVoiceInputOptions) 
   const handlePressIn = () => {
     setIsHoldHintVisible(false);
     if (stateRef.current !== "idle" && stateRef.current !== "error") return;
-
-    if (!canSubmit) {
-      setVoiceState("error");
-      Toast.show({ type: "error", text1: t("errors.default") });
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "send",
-        errorCode: "ConnectionNotReady",
-      });
-      return;
-    }
 
     pressActiveRef.current = true;
     recordingStartedRef.current = false;
@@ -144,10 +134,14 @@ export function useVoiceInput({ submitAudio, canSubmit }: UseVoiceInputOptions) 
     } catch (error) {
       setVoiceState("error");
       console.warn("[Mic] Error submitting audio for transcription.", error);
+      Toast.show({ type: "error", text1: t("errors.default") });
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "send",
-        errorCode: "AudioSubmitFailed",
+        errorCode:
+          error instanceof Error && error.message === CONNECTION_NOT_READY_ERROR_CODE
+            ? CONNECTION_NOT_READY_ERROR_CODE
+            : "AudioSubmitFailed",
       });
       return false;
     }
