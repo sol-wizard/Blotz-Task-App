@@ -20,6 +20,25 @@ export const toastConfig = {
       </TouchableOpacity>
     </View>
   ),
+  success: (props: ToastConfigParams<unknown>) => (
+    <Animated.View
+      entering={MotionAnimations.rightEntering}
+      exiting={MotionAnimations.rightExiting}
+      style={{ elevation: 0, backgroundColor: "#E6F9ED", alignSelf: "center" }}
+      className="flex-row items-center rounded-xl px-3 py-2 shadow-none"
+    >
+      <Text style={{ color: "#34C759" }} className="font-baloo text-sm">
+        {props.text1}
+      </Text>
+      <TouchableOpacity
+        onPress={() => Toast.hide()}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        className="ml-2"
+      >
+        <MaterialCommunityIcons name="close" size={16} color="#34C759" />
+      </TouchableOpacity>
+    </Animated.View>
+  ),
   warning: (props: ToastConfigParams<unknown>) => (
     <Animated.View
       entering={MotionAnimations.rightEntering}

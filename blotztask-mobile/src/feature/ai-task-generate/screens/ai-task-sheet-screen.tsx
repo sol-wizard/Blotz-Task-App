@@ -124,7 +124,7 @@ export default function AiTaskSheetScreen() {
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
-      requestIdleCallback(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }));
+      requestIdleCallback(() => Toast.show({ type: "success", text1: t("success.taskAdded") }));
     }
     // Failed mutations are already handled by the global mutationCache.onError (toast + Sentry).
   };
