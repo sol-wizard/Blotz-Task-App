@@ -10,6 +10,7 @@ import { Platform } from "react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 const getStarEntityKey = (idx: number) => `star-${idx}`;
+const DISPENSE_FALLBACK_DELAY_MS = 1200;
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -26,6 +27,8 @@ export const useGashaponMachineConfig = ({
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
   const isDispensingRef = useRef(false);
+  const isDispensePendingRef = useRef(false);
+  const dispenseFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
   const onStarDroppedRef = useRef(onStarDropped);
 
@@ -33,23 +36,30 @@ export const useGashaponMachineConfig = ({
     onStarDroppedRef.current = onStarDropped;
   }, [onStarDropped]);
 
-  const openGate = () => {
+  const openGate = useCallback(() => {
     if (gateRef.current && !isGateOpenRef.current) {
       Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
       isGateOpenRef.current = true;
       console.log("gate is opened");
     }
-  };
+  }, []);
 
-  const closeGate = () => {
+  const closeGate = useCallback(() => {
     if (gateRef.current && isGateOpenRef.current) {
       console.log("close gate");
       Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
     }
-  };
+  }, []);
 
-  const getAvailableStarIndexes = () => {
+  const clearDispenseFallback = useCallback(() => {
+    if (dispenseFallbackTimeoutRef.current) {
+      clearTimeout(dispenseFallbackTimeoutRef.current);
+      dispenseFallbackTimeoutRef.current = null;
+    }
+  }, []);
+
+  const getAvailableStarIndexes = useCallback(() => {
     const world = worldRef.current;
     if (!world) return [];
 
@@ -57,7 +67,7 @@ export const useGashaponMachineConfig = ({
       .map((star, idx) => ({ star, idx }))
       .filter(({ star }) => world.bodies.includes(star))
       .map(({ idx }) => idx);
-  };
+  }, []);
 
   const removeStarEntity = useCallback((starIndex: number) => {
     const entityKey = getStarEntityKey(starIndex);
@@ -71,30 +81,63 @@ export const useGashaponMachineConfig = ({
     });
   }, []);
 
-  const dispenseStar = () => {
-    const world = worldRef.current;
-    if (!world || isDispensingRef.current) return;
+  const completeDispense = useCallback(
+    (starIndex: number) => {
+      const world = worldRef.current;
+      const selectedStar = starsRef.current[starIndex];
+      if (!world || !selectedStar || isDispensingRef.current) return;
 
+      clearDispenseFallback();
+      isDispensingRef.current = true;
+      isDispensePendingRef.current = false;
+      droppedStarIndexRef.current = starIndex;
+      closeGate();
+      onStarDroppedRef.current(starIndex);
+
+      if (world.bodies.includes(selectedStar)) {
+        Matter.World.remove(world, selectedStar);
+        removeStarEntity(starIndex);
+      }
+    },
+    [clearDispenseFallback, closeGate, removeStarEntity],
+  );
+
+  const fallbackDispenseStar = useCallback(() => {
     const availableStarIndexes = getAvailableStarIndexes();
-    if (availableStarIndexes.length === 0) return;
-
-    isDispensingRef.current = true;
-    openGate();
+    if (availableStarIndexes.length === 0) {
+      isDispensePendingRef.current = false;
+      closeGate();
+      return;
+    }
 
     const selectedStarIndex =
       availableStarIndexes[Math.floor(Math.random() * availableStarIndexes.length)];
-    const selectedStar = starsRef.current[selectedStarIndex];
 
-    droppedStarIndexRef.current = selectedStarIndex;
-    Matter.World.remove(world, selectedStar);
-    removeStarEntity(selectedStarIndex);
-    closeGate();
-    onStarDroppedRef.current(selectedStarIndex);
-  };
+    completeDispense(selectedStarIndex);
+  }, [closeGate, completeDispense, getAvailableStarIndexes]);
+
+  const scheduleFallbackDispense = useCallback(() => {
+    clearDispenseFallback();
+    dispenseFallbackTimeoutRef.current = setTimeout(() => {
+      dispenseFallbackTimeoutRef.current = null;
+      fallbackDispenseStar();
+    }, DISPENSE_FALLBACK_DELAY_MS);
+  }, [clearDispenseFallback, fallbackDispenseStar]);
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
-      dispenseStar();
+      const availableStarIndexes = getAvailableStarIndexes();
+      if (
+        availableStarIndexes.length === 0 ||
+        isDispensingRef.current ||
+        isDispensePendingRef.current
+      ) {
+        return;
+      }
+
+      isDispensePendingRef.current = true;
+      openGate();
+      scheduleFallbackDispense();
     }
   };
 
@@ -104,6 +147,8 @@ export const useGashaponMachineConfig = ({
     if (droppedStarIndexRef.current < 0) {
       console.warn("No dropped star index recorded; skipping reset.");
       isDispensingRef.current = false;
+      isDispensePendingRef.current = false;
+      clearDispenseFallback();
       return;
     }
 
@@ -150,6 +195,8 @@ export const useGashaponMachineConfig = ({
     }
     droppedStarIndexRef.current = -1;
     isDispensingRef.current = false;
+    isDispensePendingRef.current = false;
+    clearDispenseFallback();
   };
 
   useEffect(() => {
@@ -261,19 +308,11 @@ export const useGashaponMachineConfig = ({
         const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
 
         if (star && sensor && !isDispensingRef.current) {
-          isDispensingRef.current = true;
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
 
-          // Save the index of the star for later reset
-          droppedStarIndexRef.current = starIndex;
-
-          closeGate();
-          onStarDroppedRef.current(starIndex);
-          // Remove the star from physics world
-          if (worldRef.current && starsRef.current.includes(star)) {
-            Matter.World.remove(worldRef.current, star);
-            removeStarEntity(starIndex);
+          if (starIndex >= 0) {
+            completeDispense(starIndex);
           }
         }
       });
@@ -311,10 +350,12 @@ export const useGashaponMachineConfig = ({
       Matter.Events.off(engine, "collisionStart");
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
+      clearDispenseFallback();
       isDispensingRef.current = false;
+      isDispensePendingRef.current = false;
       droppedStarIndexRef.current = -1;
     };
-  }, [notes, removeStarEntity, starRadius]);
+  }, [clearDispenseFallback, completeDispense, notes, starRadius]);
 
   return { entities, handleRelease, resetStarsPhysics };
 };
