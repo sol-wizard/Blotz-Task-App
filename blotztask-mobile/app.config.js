@@ -1,6 +1,4 @@
 const bundleIdentifier = process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask";
-const widgetBundleIdentifier = `${bundleIdentifier}.ExpoWidgetsTarget`;
-const appGroupIdentifier = `group.${bundleIdentifier}`;
 const androidWidgetConfig = {
   widgets: [
     {
@@ -114,9 +112,8 @@ export default {
       [
         "expo-widgets",
         {
-          enableAndroid: false,
-          bundleIdentifier: widgetBundleIdentifier,
-          groupIdentifier: appGroupIdentifier,
+          bundleIdentifier: `${bundleIdentifier}.ExpoWidgetsTarget`,
+          groupIdentifier: `group.${bundleIdentifier}`,
           widgets: [
             {
               name: "TodayTasksWidget",
