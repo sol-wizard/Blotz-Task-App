@@ -62,8 +62,8 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
         var tasks = await queryHandler.Handle(new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = new DateTimeOffset(2026, 6, 2, 0, 0, 0, TimeSpan.Zero),
-            IncludeFloatingForToday = false
+            Date = new DateOnly(2026, 6, 2),
+            TimeZoneId = "UTC"
         }, CancellationToken.None);
 
         // Assert
@@ -161,8 +161,8 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
         var tasks = await queryHandler.Handle(new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = new DateTimeOffset(2026, 6, 4, 0, 0, 0, TimeSpan.Zero),
-            IncludeFloatingForToday = false
+            Date = new DateOnly(2026, 6, 4),
+            TimeZoneId = "UTC"
         }, CancellationToken.None);
 
         // Assert

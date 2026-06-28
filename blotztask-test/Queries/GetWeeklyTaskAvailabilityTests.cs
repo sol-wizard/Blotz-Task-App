@@ -26,80 +26,95 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
-        var userNow = DateTimeOffset.Now;
-        var localOffset = userNow.Offset;
-        var daysSinceMonday = ((int)userNow.DayOfWeek + 6) % 7;
-        var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), localOffset).AddDays(14);
+
+        // Pick a Monday 2 weeks from now so the window is safely in the future and won't collide with other tests.
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var daysSinceMonday = ((int)today.DayOfWeek + 6) % 7;
+        var monday = today.AddDays(-daysSinceMonday + 14);
+
+        var mondayUtc = monday.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
 
         // 1. Completed Task on Monday
-        var completedTask = await _seeder.CreateTaskAsync(userId, "Completed Task", monday.AddHours(9), monday.AddHours(10));
+        var completedTask = await _seeder.CreateTaskAsync(
+            userId, "Completed Task",
+            new DateTimeOffset(mondayUtc.AddHours(9), TimeSpan.Zero),
+            new DateTimeOffset(mondayUtc.AddHours(10), TimeSpan.Zero));
         completedTask.IsDone = true;
-        await _context.SaveChangesAsync(); // Update the IsDone status
+        await _context.SaveChangesAsync();
 
         // 2. Incomplete Task on Tuesday
-        await _seeder.CreateTaskAsync(userId, "Incomplete Task", monday.AddDays(1).AddHours(10), monday.AddDays(1).AddHours(11));
-        
+        var tuesdayUtc = mondayUtc.AddDays(1);
+        await _seeder.CreateTaskAsync(
+            userId, "Incomplete Task",
+            new DateTimeOffset(tuesdayUtc.AddHours(10), TimeSpan.Zero),
+            new DateTimeOffset(tuesdayUtc.AddHours(11), TimeSpan.Zero));
+
         var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
-            Monday = monday
+            WeekStart = monday,
+            TimeZoneId = "UTC"
         };
 
         // Act
         var result = await _handler.Handle(query);
 
         // Assert
-        // Monday (Index 0) - Has a COMPLETED task -> Should NOT show dot (False)
-        // Completed tasks are excluded from the weekly dot indicator so users only see pending work.
-        result[0].HasTask.Should().BeFalse("A completed task is not counted for the weekly dot indicator — only incomplete tasks trigger the dot.");
+        // Monday (Index 0) - Has a COMPLETED task -> should NOT show dot
+        result[0].HasTask.Should().BeFalse(
+            because: "a completed task is not counted for the weekly dot indicator — only incomplete tasks trigger the dot");
 
-        // Tuesday (Index 1) - Has an INCOMPLETE task -> Should show dot (True)
-        result[1].HasTask.Should().BeTrue("An incomplete task exists on Tuesday, so the green dot should appear below the date.");
-        
-        // Wednesday (Index 2) - Has a FLOATING task created that day -> Should NOT show dot (False)
-        // Floating tasks will be shown in a separate Reminder UI, not on the calendar page
-        result[2].HasTask.Should().BeFalse("Floating tasks will be shown in a separate Reminder UI, so no green dot should appear for them on the calendar.");
-        
-        // Thursday (Index 3) - No task -> No dot (False)
-        result[3].HasTask.Should().BeFalse("No tasks exist for Thursday, so no green dot should appear.");
+        // Tuesday (Index 1) - Has an INCOMPLETE task -> should show dot
+        result[1].HasTask.Should().BeTrue(
+            because: "an incomplete task exists on Tuesday, so the green dot should appear");
+
+        // Wednesday (Index 2) - No task
+        result[2].HasTask.Should().BeFalse(
+            because: "no tasks exist for Wednesday, so no green dot should appear");
+
+        // Thursday (Index 3) - No task
+        result[3].HasTask.Should().BeFalse(
+            because: "no tasks exist for Thursday, so no green dot should appear");
     }
 
     [Fact]
     public async Task Handle_ShouldShowDot_ForFutureScheduledTasks_AndNotForUnrelatedPastTasks()
     {
+        // Arrange
         var userId = await _seeder.CreateUserAsync();
-        var userNow = DateTimeOffset.Now;
-        var localOffset = userNow.Offset;
-        var daysSinceMonday = ((int)userNow.DayOfWeek + 6) % 7;
-        var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), localOffset);
-        var nextMonday = monday.AddDays(7);
 
-        var sevenDaysAgo = new DateTimeOffset(userNow.Date, localOffset).AddDays(-7);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var daysSinceMonday = ((int)today.DayOfWeek + 6) % 7;
+        var thisMonday = today.AddDays(-daysSinceMonday);
+        var nextMonday = thisMonday.AddDays(7);
+
+        var sevenDaysAgo = today.AddDays(-7).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         await _seeder.CreateTaskAsync(
-            userId,
-            "Old Past Task",
-            new DateTimeOffset(sevenDaysAgo.Date.AddHours(9), localOffset),
-            new DateTimeOffset(sevenDaysAgo.Date.AddHours(10), localOffset));
+            userId, "Old Past Task",
+            new DateTimeOffset(sevenDaysAgo.AddHours(9), TimeSpan.Zero),
+            new DateTimeOffset(sevenDaysAgo.AddHours(10), TimeSpan.Zero));
 
-        var scheduledFutureDay = nextMonday.AddDays(2);
+        var wednesday = nextMonday.AddDays(2).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         await _seeder.CreateTaskAsync(
-            userId,
-            "Future Scheduled Task",
-            scheduledFutureDay.AddHours(9),
-            scheduledFutureDay.AddHours(10));
+            userId, "Future Scheduled Task",
+            new DateTimeOffset(wednesday.AddHours(9), TimeSpan.Zero),
+            new DateTimeOffset(wednesday.AddHours(10), TimeSpan.Zero));
 
-        var futureWeekQuery = new GetWeeklyTaskAvailabilityQuery
+        var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
-            Monday = nextMonday
+            WeekStart = nextMonday,
+            TimeZoneId = "UTC"
         };
 
-        var futureWeekResult = await _handler.Handle(futureWeekQuery);
+        // Act
+        var result = await _handler.Handle(query);
 
-        futureWeekResult[2].HasTask.Should().BeTrue(
-            "future week views should show a dot for tasks scheduled during that week");
-        futureWeekResult[0].HasTask.Should().BeFalse(
-            "future week views must not show a dot for tasks that are not scheduled in that week");
+        // Assert
+        result[2].HasTask.Should().BeTrue(
+            because: "future week views should show a dot for tasks scheduled during that week");
+        result[0].HasTask.Should().BeFalse(
+            because: "future week views must not show a dot for tasks not scheduled in that week");
     }
 
     [Fact]
@@ -107,12 +122,13 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
-        var monday = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        var monday = new DateOnly(2026, 6, 1);
+
         await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Night Shift",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 1),
+            startDate: monday,
             templateStartTime: new DateTimeOffset(2026, 6, 1, 22, 0, 0, TimeSpan.Zero),
             templateEndTime: new DateTimeOffset(2026, 6, 2, 1, 0, 0, TimeSpan.Zero),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
@@ -121,7 +137,8 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
-            Monday = monday
+            WeekStart = monday,
+            TimeZoneId = "UTC"
         };
 
         // Act
@@ -129,8 +146,8 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
 
         // Assert
         result[0].HasTask.Should().BeTrue(
-            "the weekly indicator should show the recurring event on its start day");
+            because: "the weekly indicator should show the recurring event on its start day (Monday)");
         result[1].HasTask.Should().BeTrue(
-            "the weekly indicator should also show the overnight continuation on the following day");
+            because: "the weekly indicator should also show the overnight continuation on the following day (Tuesday)");
     }
 }
