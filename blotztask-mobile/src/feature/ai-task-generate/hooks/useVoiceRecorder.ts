@@ -1,92 +1,155 @@
-import {
-  RecordingPresets,
-  setAudioModeAsync,
-  useAudioRecorder,
-  useAudioRecorderState,
-} from "expo-audio";
-import { useRef } from "react";
+import { RecordingPresets, setAudioModeAsync, useAudioRecorder } from "expo-audio";
+import { useRef, useState } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
 
-export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
+export type VoiceInputState = "idle" | "preparing" | "recording" | "stopping" | "sending" | "error";
+
+type UseVoiceInputOptions = {
+  submitAudio: (uri: string) => Promise<void>;
+  canSubmit: boolean;
+};
+
+export function useVoiceInput({ submitAudio, canSubmit }: UseVoiceInputOptions) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const { isRecording } = useAudioRecorderState(recorder);
-  // Prevents race condition between startListening and cancelListening.
-  const cancelRequested = useRef(false);
+  const [state, setState] = useState<VoiceInputState>("idle");
+  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+  const stateRef = useRef<VoiceInputState>("idle");
+  const startPromiseRef = useRef<Promise<void> | null>(null);
+  const pressActiveRef = useRef(false);
+  const recordingStartedRef = useRef(false);
 
-  const startListening = async () => {
-    cancelRequested.current = false;
+  const setVoiceState = (nextState: VoiceInputState) => {
+    stateRef.current = nextState;
+    setState(nextState);
+  };
+
+  const trackRecordingFailure = (errorCode: string) => {
+    analytics.trackAiTaskGenerationFailed({
+      inputMode: "voice",
+      stage: "recording",
+      errorCode,
+    });
+  };
+
+  const handlePressIn = () => {
+    setIsHoldHintVisible(false);
+    if (stateRef.current !== "idle" && stateRef.current !== "error") return;
+
+    if (!canSubmit) {
+      setVoiceState("error");
+      Toast.show({ type: "error", text1: t("errors.default") });
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "send",
+        errorCode: "ConnectionNotReady",
+      });
+      return;
+    }
+
+    pressActiveRef.current = true;
+    recordingStartedRef.current = false;
+    setVoiceState("preparing");
+
+    const startPromise = startRecording();
+    startPromiseRef.current = startPromise;
+  };
+
+  const startRecording = async (): Promise<void> => {
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
-      if (cancelRequested.current) return;
+      if (!pressActiveRef.current) {
+        setVoiceState("idle");
+        return;
+      }
       recorder.record();
+      recordingStartedRef.current = true;
+      setVoiceState("recording");
     } catch (error) {
+      setVoiceState("error");
       Toast.show({ type: "error", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "RecordingStartFailed",
-      });
+      trackRecordingFailure("RecordingStartFailed");
+    } finally {
+      startPromiseRef.current = null;
     }
   };
 
-  const cancelListening = async (): Promise<void> => {
-    cancelRequested.current = true;
-    if (recorder.isRecording) {
-      await recorder.stop();
+  const cancel = async (): Promise<void> => {
+    pressActiveRef.current = false;
+    await startPromiseRef.current;
+
+    if (recordingStartedRef.current) {
+      try {
+        await recorder.stop();
+      } catch (error) {
+        console.warn("[Mic] Error cancelling recording.", error);
+        trackRecordingFailure("RecordingCancelFailed");
+      }
     }
+
+    recordingStartedRef.current = false;
+    startPromiseRef.current = null;
+    setVoiceState("idle");
   };
 
-  const stopAndUpload = async (): Promise<void> => {
-    if (!recorder.isRecording) {
-      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
-      console.warn("[Mic] stopAndUpload called but recorder is not recording.");
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "NotRecording",
-      });
-      return;
+  const handlePressOut = async (): Promise<boolean> => {
+    if (stateRef.current === "error" && !pressActiveRef.current && !recordingStartedRef.current) {
+      return false;
     }
 
+    pressActiveRef.current = false;
+    await startPromiseRef.current;
+
+    if (stateRef.current === "error") {
+      return false;
+    }
+
+    if (!recordingStartedRef.current) {
+      startPromiseRef.current = null;
+      setIsHoldHintVisible(true);
+      setVoiceState("idle");
+      return false;
+    }
+
+    setVoiceState("stopping");
     try {
       await recorder.stop();
     } catch (error) {
+      setVoiceState("error");
       console.warn("[Mic] Error stopping recording.", error);
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "RecordingStopFailed",
-      });
-      return;
+      trackRecordingFailure("RecordingStopFailed");
+      return false;
     }
+
+    recordingStartedRef.current = false;
+    startPromiseRef.current = null;
 
     const uri = recorder.uri;
     if (!uri) {
+      setVoiceState("error");
       Toast.show({ type: "error", text1: t("errors.emptyAudio") });
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "EmptyAudio",
-      });
-      return;
+      trackRecordingFailure("EmptyAudio");
+      return false;
     }
 
+    setVoiceState("sending");
     try {
-      await submitAudioForTranscription(uri);
+      await submitAudio(uri);
+      setVoiceState("idle");
     } catch (error) {
+      setVoiceState("error");
       console.warn("[Mic] Error submitting audio for transcription.", error);
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "send",
         errorCode: "AudioSubmitFailed",
       });
-      return;
+      return false;
     }
 
     // Best-effort cleanup of the temp recording; failure here shouldn't surface as an AI failure.
@@ -95,7 +158,18 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     } catch (error) {
       console.warn("[Mic] Failed to delete temp recording file.", error);
     }
+
+    return true;
   };
 
-  return { isRecording, startListening, stopAndUpload, cancelListening };
+  return {
+    state,
+    isRecording: state === "recording",
+    isBusy:
+      state === "preparing" || state === "recording" || state === "stopping" || state === "sending",
+    isHoldHintVisible,
+    handlePressIn,
+    handlePressOut,
+    cancel,
+  };
 }

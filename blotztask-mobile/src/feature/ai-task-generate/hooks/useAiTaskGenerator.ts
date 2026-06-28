@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
@@ -30,6 +30,7 @@ export function useAiTaskGenerator({
 }) {
   const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
+  const [isConnectionReady, setIsConnectionReady] = useState(false);
   const [transcript, setTranscript] = useState<string | undefined>();
   const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
   const [streamedNotes, setStreamedNotes] = useState<AiNoteDTO[]>([]);
@@ -38,7 +39,13 @@ export function useAiTaskGenerator({
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
-    if (!connection) throw new Error("Cannot submit audio: not connected.");
+    if (
+      !connection ||
+      !isConnectionReady ||
+      connection.state !== signalR.HubConnectionState.Connected
+    ) {
+      throw new Error("Cannot submit audio: not connected.");
+    }
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
@@ -53,18 +60,28 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "transcription",
         errorCode: "NetworkError",
-        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
   const sendTextMessage = async (text: string) => {
-    if (!text.trim() || !connection) return;
+    if (
+      !text.trim() ||
+      !connection ||
+      !isConnectionReady ||
+      connection.state !== signalR.HubConnectionState.Connected
+    ) {
+      return;
+    }
 
     setTranscript(undefined);
     setIsAiGenerating(true);
@@ -76,65 +93,72 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "text",
         stage: "send",
         errorCode: "NetworkError",
-        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
-  const generationCompleteHandler = (result: AiResultMessageDTO) => {
-    setTranscript(undefined);
-    setIsAiGenerating(false);
-    requestStartedAtRef.current = null;
-    const inputMode = pendingInputModeRef.current;
-    pendingInputModeRef.current = null;
-    const inputText = result.userInput;
+  const generationCompleteHandler = useCallback(
+    (result: AiResultMessageDTO) => {
+      setIsAiGenerating(false);
+      requestStartedAtRef.current = null;
+      const inputMode = pendingInputModeRef.current;
+      pendingInputModeRef.current = null;
+      const inputText = result.userInput;
 
-    if (inputMode && inputText) {
-      setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
-    }
+      if (inputMode && inputText) {
+        setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
+      }
 
-    // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
-    setStreamedTasks(result.extractedTasks ?? []);
-    setStreamedNotes(result.extractedNotes ?? []);
-  };
+      // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
+      setStreamedTasks(result.extractedTasks ?? []);
+      setStreamedNotes(result.extractedNotes ?? []);
+    },
+    [setIsAiGenerating],
+  );
 
-  const generationErrorHandler = (error: AiGenerationErrorDTO) => {
-    setTranscript(undefined);
-    setIsAiGenerating(false);
-    const startedAt = requestStartedAtRef.current;
-    requestStartedAtRef.current = null;
-    const inputMode = pendingInputModeRef.current;
-    pendingInputModeRef.current = null;
-    setStreamedTasks([]);
-    setStreamedNotes([]);
+  const generationErrorHandler = useCallback(
+    (error: AiGenerationErrorDTO) => {
+      setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      const inputMode = pendingInputModeRef.current;
+      pendingInputModeRef.current = null;
+      setStreamedTasks([]);
+      setStreamedNotes([]);
 
-    analytics.trackAiTaskGenerationFailed({
-      inputMode: inputMode ?? "unknown",
-      stage:
-        error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
-          ? "transcription"
-          : "generation",
-      errorCode: error.errorCode,
-      durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
-    });
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: inputMode ?? "unknown",
+        stage:
+          error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
+            ? "transcription"
+            : "generation",
+        errorCode: error.errorCode,
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
+      });
 
-    const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
-    Toast.show({ type: "error", text1: t(i18nKey) });
-  };
+      const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
+      Toast.show({ type: "error", text1: t(i18nKey) });
+    },
+    [setIsAiGenerating, t],
+  );
 
   useEffect(() => {
     let conn: signalR.HubConnection | null = null;
+    let isDisposed = false;
 
     signalRService
       .createConnection()
-      .then((newConn) => {
+      .then(async (newConn) => {
         conn = newConn;
-        setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
         conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
@@ -148,11 +172,31 @@ export function useAiTaskGenerator({
           if (requestStartedAtRef.current == null) return;
           setStreamedNotes((prev) => [...prev, note]);
         });
-        return conn.start();
+
+        conn.onreconnecting(() => {
+          setIsConnectionReady(false);
+        });
+        conn.onreconnected(() => {
+          setIsConnectionReady(true);
+        });
+        conn.onclose(() => {
+          setIsConnectionReady(false);
+        });
+
+        await conn.start();
+        if (isDisposed) {
+          await conn.stop();
+          return;
+        }
+
+        setConnection(conn);
+        setIsConnectionReady(true);
       })
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
     return () => {
+      isDisposed = true;
+      setIsConnectionReady(false);
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);
@@ -162,13 +206,14 @@ export function useAiTaskGenerator({
         conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
-  }, []);
+  }, [generationCompleteHandler, generationErrorHandler]);
 
   return {
     transcript,
     streamedTasks,
     streamedNotes,
     turns,
+    isConnectionReady,
     submitAudioForTranscription,
     sendTextMessage,
   };

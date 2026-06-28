@@ -22,7 +22,7 @@ import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { useVoiceInput } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
@@ -43,24 +43,30 @@ export default function AiTaskSheetScreen() {
   // Interface opens in voice mode by default; the keyboard toggle switches to text.
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
-  const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
 
-  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
   const {
     transcript,
     turns,
     streamedTasks,
     streamedNotes,
+    isConnectionReady,
     submitAudioForTranscription,
     sendTextMessage,
   } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
-    submitAudioForTranscription,
-  );
+  const {
+    isRecording,
+    isBusy: isVoiceBusy,
+    isHoldHintVisible,
+    handlePressIn: handleVoicePressIn,
+    handlePressOut: handleVoicePressOut,
+  } = useVoiceInput({
+    submitAudio: submitAudioForTranscription,
+    canSubmit: isConnectionReady,
+  });
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
@@ -130,17 +136,17 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
-    setIsHoldHintVisible(false);
-    void startListening();
+    handleVoicePressIn();
   };
 
   const handleMicPressOut = async () => {
-    hasSubmittedAiRequest.current = true;
-    await stopAndUpload();
+    const didSubmit = await handleVoicePressOut();
+    if (didSubmit) {
+      hasSubmittedAiRequest.current = true;
+    }
   };
 
   const handleSwitchToText = () => {
-    setIsHoldHintVisible(false);
     setInputMode("text"); // TextInput autoFocus pops the keyboard on mount
   };
 
@@ -180,7 +186,7 @@ export default function AiTaskSheetScreen() {
               {/* Task / note cards (streamed or final) */}
               {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
-              {isAiGenerating && !!transcript && (
+              {!!transcript && (
                 <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
                   &ldquo;{transcript}&rdquo;
                 </Text>
@@ -212,9 +218,9 @@ export default function AiTaskSheetScreen() {
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.25)",
-                      opacity: isAiGenerating || isRecording ? 0.4 : 1,
+                      opacity: isAiGenerating || isVoiceBusy ? 0.4 : 1,
                     }}
-                    disabled={isAiGenerating || isRecording}
+                    disabled={isAiGenerating || isVoiceBusy}
                   >
                     <MaterialCommunityIcons
                       name={inputMode === "voice" ? "keyboard-outline" : "microphone"}
@@ -229,21 +235,11 @@ export default function AiTaskSheetScreen() {
                       <Pressable
                         onPressIn={() => {
                           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          longPressTriggered.current = false;
                           handleMicPressIn();
                         }}
                         onPressOut={() => {
-                          if (!longPressTriggered.current) {
-                            setIsHoldHintVisible(true);
-                            cancelListening();
-                          } else {
-                            void handleMicPressOut();
-                          }
+                          void handleMicPressOut();
                         }}
-                        onLongPress={() => {
-                          longPressTriggered.current = true;
-                        }}
-                        delayLongPress={1000}
                         className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
                         style={{
                           backgroundColor: isRecording
