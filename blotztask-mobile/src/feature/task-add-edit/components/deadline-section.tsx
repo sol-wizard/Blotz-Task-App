@@ -4,11 +4,11 @@ import { View, Text, Pressable } from "react-native";
 import Toast from "react-native-toast-message";
 import { Control, UseFormGetValues, useController } from "react-hook-form";
 import { format } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import TaskFormField, { hasDeadlineWarning } from "../models/task-form-schema";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { ToggleSwitch } from "../../settings/components/toggle-switch";
 import { SingleDateCalendar } from "./single-date-calendar";
 import TimePicker from "./time-picker";
@@ -22,10 +22,7 @@ interface DeadlineSectionProps {
 }
 
 export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSectionProps) => {
-  const { t, i18n } = useTranslation("tasks");
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-  const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
+  const { t } = useTranslation("tasks");
 
   const [activeSelector, setActiveSelector] = useState<"deadlineDate" | "deadlineTime" | null>(
     null,
@@ -75,7 +72,7 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
   }, [deadlineDate, deadlineTime]);
 
   const deadlineDateDisplayText = deadlineDate
-    ? format(deadlineDate, dateFormat, { locale })
+    ? formatLocalizedDate(deadlineDate, "abbrevMonthDayYear")
     : t("form.selectDate");
   const deadlineTimeDisplayText = deadlineTime
     ? format(deadlineTime, "hh:mm a")

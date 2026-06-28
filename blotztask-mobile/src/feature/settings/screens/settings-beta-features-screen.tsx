@@ -14,9 +14,7 @@ export default function SettingsBetaFeaturesScreen() {
         <Pressable onPress={() => router.back()} className="mr-4">
           <MaterialCommunityIcons name="arrow-left" size={24} color="#444964" />
         </Pressable>
-        <Text className="text-2xl font-balooBold text-secondary">
-          {t("betaFeatures.title")}
-        </Text>
+        <Text className="text-2xl font-balooBold text-secondary">{t("betaFeatures.title")}</Text>
       </View>
 
       <View className="px-5 mt-4">
