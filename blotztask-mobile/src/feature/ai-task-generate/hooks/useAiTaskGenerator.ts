@@ -147,7 +147,6 @@ export function useAiTaskGenerator({
 
   useEffect(() => {
     let conn: signalR.HubConnection | null = null;
-    let isDisposed = false;
 
     signalRService
       .createConnection()
@@ -168,17 +167,11 @@ export function useAiTaskGenerator({
         });
 
         await conn.start();
-        if (isDisposed) {
-          await conn.stop();
-          return;
-        }
-
         setConnection(conn);
       })
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
     return () => {
-      isDisposed = true;
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);
