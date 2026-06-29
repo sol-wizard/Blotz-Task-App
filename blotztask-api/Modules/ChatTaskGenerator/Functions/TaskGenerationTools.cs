@@ -15,7 +15,7 @@ public class TaskGenerationTools()
 
     public void ResetCallCount() => ToolCallCount = 0;
 
-    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task.")]
+    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends.")]
     public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,
         [Description("Array of descriptions (empty string if none)")] string[] descriptions,
@@ -65,7 +65,7 @@ public class TaskGenerationTools()
         return "Task added.";
     }
 
-    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one note.")]
+    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item.")]
     public async Task<string> CreateNotes(
         [Description("Array of note texts")] string[] texts)
     {
@@ -83,7 +83,7 @@ public class TaskGenerationTools()
         return $"{texts.Length} note(s) added.";
     }
 
-    [Description("Add a single note for an idea or something to remember. Use this when no date or time is mentioned.")]
+    [Description("Add a single note for an idea, intention, or reminder with no time anchor. Use this when scheduling the item would require inventing a time the user never mentioned — even vaguely.")]
     public async Task<string> CreateNote(
         [Description("Note content")] string text)
     {
@@ -110,7 +110,7 @@ public class TaskGenerationTools()
         return "Task removed.";
     }
 
-    [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task.")]
+    [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task. When updating times, ensure the result does not overlap with other tasks — adjust sequentially if needed.")]
     public string UpdateTask(
         [Description("Current title")] string existingTitle,
         [Description("New title")] string title,

@@ -36,7 +36,7 @@
         "subtitle": "Time for a longer break."
       }
     },
-    "modeLockedWhileRunning": "Pomodoro settings can’t be changed while a Pomodoro is running."
+    "modeLockedWhileRunning": "You can’t change settings during focus mode"
   },
   "soundscape": {
     "streamWhisper": "Stream\nWhisper",
