@@ -14,6 +14,15 @@ import Toast from "react-native-toast-message";
 import type { AiTaskGenerationTurn, AiTaskInputMode } from "@/shared/constants/posthog-events";
 import { analytics } from "@/shared/services/analytics";
 
+const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
+  TranscriptionFailed: "errors.transcriptionFailed",
+  EmptyAudio: "errors.emptyAudio",
+  TokenLimited: "errors.tokenLimited",
+  BlockedByContentFilter: "errors.contentFilter",
+  Canceled: "errors.canceled",
+  NoTasksExtracted: "errors.noTasksExtracted",
+};
+
 const CONNECTION_NOT_READY_ERROR_CODE = "ConnectionNotReady";
 
 export function useAiTaskGenerator({
@@ -125,6 +134,9 @@ export function useAiTaskGenerator({
       errorCode: error.errorCode,
       durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
     });
+
+    const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
+    Toast.show({ type: "error", text1: t(i18nKey) });
   };
 
   useEffect(() => {

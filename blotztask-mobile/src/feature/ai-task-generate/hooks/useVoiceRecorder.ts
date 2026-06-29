@@ -16,6 +16,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const { isRecording } = useAudioRecorderState(recorder);
   // Release handlers wait on this so they never race ahead of async recorder setup.
   const startPromiseRef = useRef<Promise<void> | null>(null);
+  const cancelRequested = useRef(false);
 
   const trackRecordingFailure = (errorCode: string) => {
     analytics.trackAiTaskGenerationFailed({
@@ -26,6 +27,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const startListening = () => {
+    cancelRequested.current = false;
     const startPromise = startRecording();
     startPromiseRef.current = startPromise;
     void startPromise.finally(() => {
@@ -39,6 +41,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
+      if (cancelRequested.current) return;
       recorder.record();
     } catch (error) {
       Toast.show({ type: "error", text1: t("errors.recordingFailed") });
@@ -48,6 +51,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const cancelListening = async (): Promise<void> => {
+    cancelRequested.current = true;
     await startPromiseRef.current;
 
     if (recorder.isRecording) {
@@ -80,7 +84,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
     const uri = recorder.uri;
     if (!uri) {
-      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
       trackRecordingFailure("EmptyAudio");
       return false;
     }
