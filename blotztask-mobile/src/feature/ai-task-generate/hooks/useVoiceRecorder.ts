@@ -92,7 +92,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       await submitAudioForTranscription(uri);
     } catch (error) {
       console.warn("[Mic] Error submitting audio for transcription.", error);
-      Toast.show({ type: "error", text1: t("errors.default") });
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "send",
