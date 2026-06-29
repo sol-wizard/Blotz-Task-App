@@ -10,13 +10,10 @@ type TodayTasksWidgetProps = {
   widgetInfo?: WidgetInfo;
 };
 
-const MAX_VISIBLE_TASKS = 3;
-const WIDE_WIDGET_MIN_WIDTH = 220;
-
 export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps) {
   const isCompact = isCompactWidget(widgetInfo);
   const showTime = !isCompact;
-  const visibleTasks = snapshot.tasks.slice(0, MAX_VISIBLE_TASKS);
+  const visibleTasks = snapshot.tasks.slice(0, 3);
   const shouldShowTasks = snapshot.state === "content" && visibleTasks.length > 0;
 
   return (
@@ -109,5 +106,5 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
 function isCompactWidget(widgetInfo?: WidgetInfo): boolean {
   if (!widgetInfo) return false;
 
-  return widgetInfo.width < WIDE_WIDGET_MIN_WIDTH;
+  return widgetInfo.width < 220;
 }
