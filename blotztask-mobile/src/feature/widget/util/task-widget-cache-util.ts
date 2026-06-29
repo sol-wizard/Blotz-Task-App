@@ -4,12 +4,15 @@ import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import { formatTaskEndTime } from "@/feature/calendar/util/format-task-end-time";
 import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
 import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
+import type {
+  TaskWidgetSnapshotItem,
+  TasksWidgetSnapshot,
+  TodayTasksWidgetMessage,
+} from "@/feature/widget/models/today-tasks-widget-snapshot";
 import {
   buildTodayTasksWidgetFallbackSnapshot,
   buildTodayTasksWidgetSnapshot,
-  type TaskWidgetSnapshotItem,
-  type TasksWidgetSnapshot,
-} from "@/feature/widget/models/today-tasks-widget-snapshot";
+} from "@/feature/widget/util/today-tasks-widget-snapshot-util";
 import type { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export type TaskWidgetDaySource =
@@ -25,6 +28,7 @@ export type TaskWidgetDaySource =
 
 export function buildWidgetTaskCache(
   daySources: TaskWidgetDaySource[],
+  widgetMessage: TodayTasksWidgetMessage,
   generatedAt = new Date(),
 ): TaskWidgetCache {
   const days = Object.fromEntries(
@@ -32,7 +36,7 @@ export function buildWidgetTaskCache(
       const dateKey = getTaskWidgetDateKey(source.date);
 
       if (source.status === "error") {
-        return [dateKey, buildTodayTasksWidgetFallbackSnapshot(dateKey)];
+        return [dateKey, buildTodayTasksWidgetFallbackSnapshot(dateKey, widgetMessage)];
       }
 
       const todoTasks =
@@ -42,7 +46,11 @@ export function buildWidgetTaskCache(
 
       return [
         dateKey,
-        buildTodayTasksWidgetSnapshot(dateKey, todoTasks.map(buildTaskWidgetSnapshotItem)),
+        buildTodayTasksWidgetSnapshot(
+          dateKey,
+          todoTasks.map(buildTaskWidgetSnapshotItem),
+          widgetMessage,
+        ),
       ];
     }),
   );
@@ -55,10 +63,11 @@ export function buildWidgetTaskCache(
 
 export function selectTodayTasksWidgetSnapshot(
   cache: TaskWidgetCache | null,
+  widgetMessage: TodayTasksWidgetMessage,
   now = new Date(),
 ): TasksWidgetSnapshot {
   const todayKey = getTaskWidgetDateKey(now);
-  return cache?.days[todayKey] ?? buildTodayTasksWidgetFallbackSnapshot(todayKey);
+  return cache?.days[todayKey] ?? buildTodayTasksWidgetFallbackSnapshot(todayKey, widgetMessage);
 }
 
 export function getTaskWidgetDateKey(date: Date): string {

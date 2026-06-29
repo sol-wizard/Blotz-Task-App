@@ -102,12 +102,12 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
               lineLimit(2),
             ]}
           >
-            {props.message || "Open BlotzTask to refresh."}
+            {props.message}
           </Text>
 
           {showTime && (
             <Text modifiers={[font({ size: 11, weight: "medium" }), foregroundStyle("#64748B")]}>
-              Tap to open the app
+              {props.footerText}
             </Text>
           )}
         </VStack>

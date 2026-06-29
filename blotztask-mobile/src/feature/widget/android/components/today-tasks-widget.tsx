@@ -75,7 +75,7 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
           }}
         >
           <TextWidget
-            text={snapshot.message || "Open BlotzTask to load today's tasks."}
+            text={snapshot.message}
             maxLines={isCompact ? 2 : undefined}
             truncate="END"
             style={{
@@ -87,7 +87,7 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
 
           {showTime && !isCompact ? (
             <TextWidget
-              text="Tap to open the app"
+              text={snapshot.footerText}
               maxLines={1}
               truncate="END"
               style={{

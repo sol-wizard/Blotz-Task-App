@@ -41,6 +41,7 @@ function isTasksWidgetSnapshot(value: unknown): value is TasksWidgetSnapshot {
     typeof value.dateKey === "string" &&
     typeof value.title === "string" &&
     typeof value.message === "string" &&
+    typeof value.footerText === "string" &&
     typeof value.openAppDeepLink === "string" &&
     Array.isArray(value.tasks) &&
     value.tasks.every(isTaskWidgetSnapshotItem)

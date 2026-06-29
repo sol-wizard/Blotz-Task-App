@@ -1,0 +1,9 @@
+{
+  "today": {
+    "title": "今天",
+    "emptyMessage": "打开 BlotzTask 来规划今天。",
+    "placeholderMessage": "打开 BlotzTask 加载今天的任务。",
+    "fallbackMessage": "打开 BlotzTask 刷新今天的任务。",
+    "footerText": "点按打开应用"
+  }
+}

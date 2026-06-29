@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueries } from "@tanstack/react-query";
 import { addDays, parseISO, startOfDay } from "date-fns";
 
@@ -12,6 +13,7 @@ import { taskKeys } from "@/shared/constants/query-key-factory";
 import { fetchTasksForDate } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { syncTodayTasksWidgetCache } from "@/feature/widget/services/today-tasks-widget-sync";
+import { getTodayTasksWidgetMessage } from "@/feature/widget/util/today-tasks-widget-message";
 
 type WidgetTaskQueryCollection = {
   isPending: boolean;
@@ -25,6 +27,7 @@ type UseSyncTodayTasksWidgetParams = {
 export function useSyncTodayTasksWidget({
   enabled = true,
 }: UseSyncTodayTasksWidgetParams = {}): void {
+  const { i18n } = useTranslation("widget");
   const todayKey = getTaskWidgetDateKey(new Date());
   const dates = useMemo(() => {
     const today = startOfDay(parseISO(todayKey));
@@ -54,6 +57,7 @@ export function useSyncTodayTasksWidget({
     if (!enabled) return;
     if (widgetTasks.isPending) return;
 
-    syncTodayTasksWidgetCache(buildWidgetTaskCache(widgetTasks.daySources));
-  }, [enabled, widgetTasks]);
+    const widgetMessage = getTodayTasksWidgetMessage();
+    syncTodayTasksWidgetCache(buildWidgetTaskCache(widgetTasks.daySources, widgetMessage));
+  }, [enabled, i18n.language, widgetTasks]);
 }
