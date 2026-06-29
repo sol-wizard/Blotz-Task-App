@@ -47,12 +47,8 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  const waitForStartAfterRelease = async (): Promise<void> => {
-    await startPromiseRef.current;
-  };
-
   const cancelListening = async (): Promise<void> => {
-    await waitForStartAfterRelease();
+    await startPromiseRef.current;
 
     if (recorder.isRecording) {
       try {
@@ -65,7 +61,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const stopAndUpload = async (): Promise<boolean> => {
-    await waitForStartAfterRelease();
+    await startPromiseRef.current;
 
     if (!recorder.isRecording) {
       Toast.show({ type: "error", text1: t("errors.emptyAudio") });
