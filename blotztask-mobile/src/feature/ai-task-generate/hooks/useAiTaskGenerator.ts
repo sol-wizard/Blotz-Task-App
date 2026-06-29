@@ -173,7 +173,6 @@ export function useAiTaskGenerator({
 
     return () => {
       isDisposed = true;
-      setConnection(null);
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);
