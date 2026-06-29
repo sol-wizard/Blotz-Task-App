@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
@@ -98,52 +98,46 @@ export function useAiTaskGenerator({
     }
   };
 
-  const generationCompleteHandler = useCallback(
-    (result: AiResultMessageDTO) => {
-      setTranscript(undefined);
-      setIsAiGenerating(false);
-      requestStartedAtRef.current = null;
-      const inputMode = pendingInputModeRef.current;
-      pendingInputModeRef.current = null;
-      const inputText = result.userInput;
+  const generationCompleteHandler = (result: AiResultMessageDTO) => {
+    setTranscript(undefined);
+    setIsAiGenerating(false);
+    requestStartedAtRef.current = null;
+    const inputMode = pendingInputModeRef.current;
+    pendingInputModeRef.current = null;
+    const inputText = result.userInput;
 
-      if (inputMode && inputText) {
-        setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
-      }
+    if (inputMode && inputText) {
+      setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
+    }
 
-      // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
-      setStreamedTasks(result.extractedTasks ?? []);
-      setStreamedNotes(result.extractedNotes ?? []);
-    },
-    [setIsAiGenerating],
-  );
+    // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
+    setStreamedTasks(result.extractedTasks ?? []);
+    setStreamedNotes(result.extractedNotes ?? []);
+  };
 
-  const generationErrorHandler = useCallback(
-    (error: AiGenerationErrorDTO) => {
-      setTranscript(undefined);
-      setIsAiGenerating(false);
-      const startedAt = requestStartedAtRef.current;
-      requestStartedAtRef.current = null;
-      const inputMode = pendingInputModeRef.current;
-      pendingInputModeRef.current = null;
-      setStreamedTasks([]);
-      setStreamedNotes([]);
+  const generationErrorHandler = (error: AiGenerationErrorDTO) => {
+    setTranscript(undefined);
+    setIsAiGenerating(false);
+    const startedAt = requestStartedAtRef.current;
+    requestStartedAtRef.current = null;
+    const inputMode = pendingInputModeRef.current;
+    pendingInputModeRef.current = null;
+    setStreamedTasks([]);
+    setStreamedNotes([]);
 
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: inputMode ?? "unknown",
-        stage:
-          error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
-            ? "transcription"
-            : "generation",
-        errorCode: error.errorCode,
-        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
-      });
+    analytics.trackAiTaskGenerationFailed({
+      inputMode: inputMode ?? "unknown",
+      stage:
+        error.errorCode === "TranscriptionFailed" || error.errorCode === "EmptyAudio"
+          ? "transcription"
+          : "generation",
+      errorCode: error.errorCode,
+      durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
+    });
 
-      const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
-      Toast.show({ type: "error", text1: t(i18nKey) });
-    },
-    [setIsAiGenerating, t],
-  );
+    const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
+    Toast.show({ type: "error", text1: t(i18nKey) });
+  };
 
   useEffect(() => {
     let conn: signalR.HubConnection | null = null;
@@ -181,7 +175,7 @@ export function useAiTaskGenerator({
         conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
-  }, [generationCompleteHandler, generationErrorHandler]);
+  }, []);
 
   return {
     transcript,
