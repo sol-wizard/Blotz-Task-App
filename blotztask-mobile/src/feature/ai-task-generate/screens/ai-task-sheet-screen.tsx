@@ -45,8 +45,8 @@ export default function AiTaskSheetScreen() {
   const hasSubmittedAiRequest = useRef(false);
   const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
-
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+
   const {
     transcript,
     turns,
@@ -135,8 +135,10 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressOut = async () => {
-    hasSubmittedAiRequest.current = true;
-    await stopAndUpload();
+    const didSubmit = await stopAndUpload();
+    if (didSubmit) {
+      hasSubmittedAiRequest.current = true;
+    }
   };
 
   const handleSwitchToText = () => {
@@ -235,7 +237,7 @@ export default function AiTaskSheetScreen() {
                         onPressOut={() => {
                           if (!longPressTriggered.current) {
                             setIsHoldHintVisible(true);
-                            cancelListening();
+                            void cancelListening();
                           } else {
                             void handleMicPressOut();
                           }

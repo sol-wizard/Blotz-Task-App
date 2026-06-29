@@ -23,6 +23,8 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   NoTasksExtracted: "errors.noTasksExtracted",
 };
 
+const CONNECTION_NOT_READY_ERROR_CODE = "ConnectionNotReady";
+
 export function useAiTaskGenerator({
   setIsAiGenerating,
 }: {
@@ -38,7 +40,9 @@ export function useAiTaskGenerator({
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
-    if (!connection) throw new Error("Cannot submit audio: not connected.");
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+      throw new Error(CONNECTION_NOT_READY_ERROR_CODE);
+    }
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
@@ -53,18 +57,23 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "transcription",
         errorCode: "NetworkError",
-        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
   const sendTextMessage = async (text: string) => {
-    if (!text.trim() || !connection) return;
+    if (!text.trim() || !connection || connection.state !== signalR.HubConnectionState.Connected) {
+      return;
+    }
 
     setTranscript(undefined);
     setIsAiGenerating(true);
@@ -76,11 +85,14 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "text",
         stage: "send",
         errorCode: "NetworkError",
-        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
@@ -132,9 +144,8 @@ export function useAiTaskGenerator({
 
     signalRService
       .createConnection()
-      .then((newConn) => {
+      .then(async (newConn) => {
         conn = newConn;
-        setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
         conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
@@ -148,7 +159,9 @@ export function useAiTaskGenerator({
           if (requestStartedAtRef.current == null) return;
           setStreamedNotes((prev) => [...prev, note]);
         });
-        return conn.start();
+
+        await conn.start();
+        setConnection(conn);
       })
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
