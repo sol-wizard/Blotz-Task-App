@@ -14,12 +14,6 @@ export async function syncAndroidTodayTasksWidgetCache(cache: TaskWidgetCache): 
 
     const snapshot = selectTodayTasksWidgetSnapshot(cache, getTodayTasksWidgetMessage());
 
-    if (__DEV__) {
-      console.info(
-        `[TodayTasksWidget] Wrote ${Object.keys(cache.days).length} cached day(s), today=${snapshot.state}`,
-      );
-    }
-
     for (const widgetName of ANDROID_TODAY_TASKS_WIDGET_NAMES) {
       await requestWidgetUpdate({
         widgetName,
@@ -30,9 +24,7 @@ export async function syncAndroidTodayTasksWidgetCache(cache: TaskWidgetCache): 
           }),
       });
     }
-  } catch (error: unknown) {
-    if (__DEV__) {
-      console.warn("[TodayTasksWidget] Failed to update Android widget cache", error);
-    }
+  } catch {
+    // Widget cache updates are best-effort.
   }
 }

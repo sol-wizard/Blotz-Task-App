@@ -21,7 +21,7 @@ export async function readTodayTasksWidgetCache(): Promise<TaskWidgetCache | nul
     const parsed: unknown = JSON.parse(rawCache);
     return isTaskWidgetCache(parsed) ? parsed : null;
   } catch {
-    return null; // may need to throw error
+    return null;
   }
 }
 

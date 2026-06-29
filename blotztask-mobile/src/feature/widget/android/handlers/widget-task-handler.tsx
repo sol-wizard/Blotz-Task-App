@@ -15,9 +15,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<
     const snapshot = selectTodayTasksWidgetSnapshot(cache, getTodayTasksWidgetMessage());
 
     props.renderWidget(<TodayTasksWidget snapshot={snapshot} widgetInfo={props.widgetInfo} />);
-  } catch (error: unknown) {
-    if (__DEV__) {
-      console.warn("[TodayTasksWidget] Failed to render Android widget task", error);
-    }
+  } catch {
+    // Widget rendering is best-effort.
   }
 }

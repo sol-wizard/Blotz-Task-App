@@ -12,9 +12,7 @@ export async function syncIosTodayTasksWidgetCache(cache: TaskWidgetCache): Prom
           props: snapshot,
         })),
     );
-  } catch (error: unknown) {
-    if (__DEV__) {
-      console.warn("[TodayTasksWidget] Failed to update iOS widget cache", error);
-    }
+  } catch {
+    // Widget timeline updates are best-effort.
   }
 }
