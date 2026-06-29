@@ -43,6 +43,7 @@ export default function AiTaskSheetScreen() {
   // Interface opens in voice mode by default; the keyboard toggle switches to text.
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
+  const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
 
@@ -57,7 +58,7 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isRecording, startListening, stopAndUpload } = useVoiceRecorder(
+  const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -230,11 +231,21 @@ export default function AiTaskSheetScreen() {
                       <Pressable
                         onPressIn={() => {
                           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                          longPressTriggered.current = false;
                           handleMicPressIn();
                         }}
                         onPressOut={() => {
-                          void handleMicPressOut();
+                          if (!longPressTriggered.current) {
+                            setIsHoldHintVisible(true);
+                            void cancelListening();
+                          } else {
+                            void handleMicPressOut();
+                          }
                         }}
+                        onLongPress={() => {
+                          longPressTriggered.current = true;
+                        }}
+                        delayLongPress={1000}
                         className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
                         style={{
                           backgroundColor: isRecording

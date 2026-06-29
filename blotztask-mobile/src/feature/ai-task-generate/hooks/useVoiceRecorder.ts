@@ -28,11 +28,15 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     });
   };
 
-  const startListening = async () => {
+  const startListening = () => {
     releaseRequestedRef.current = false;
     const startPromise = startRecording();
     startPromiseRef.current = startPromise;
-    await startPromise;
+    void startPromise.finally(() => {
+      if (startPromiseRef.current === startPromise) {
+        startPromiseRef.current = null;
+      }
+    });
   };
 
   const startRecording = async (): Promise<void> => {
@@ -44,8 +48,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       Toast.show({ type: "error", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
       trackRecordingFailure("RecordingStartFailed");
-    } finally {
-      startPromiseRef.current = null;
     }
   };
 
