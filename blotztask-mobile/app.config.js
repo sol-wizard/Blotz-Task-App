@@ -12,6 +12,17 @@ const androidWidgetConfig = {
       resizeMode: "horizontal|vertical",
       updatePeriodMillis: 1800000,
     },
+    {
+      name: "TodayTasksSmallWidget",
+      label: "Today 2x2",
+      description: "Shows today's BlotzTask tasks in a compact widget",
+      minWidth: "110dp",
+      minHeight: "110dp",
+      targetCellWidth: 2,
+      targetCellHeight: 2,
+      resizeMode: "horizontal|vertical",
+      updatePeriodMillis: 1800000,
+    },
   ],
 };
 

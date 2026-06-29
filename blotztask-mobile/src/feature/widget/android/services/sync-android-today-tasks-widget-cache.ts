@@ -1,7 +1,7 @@
 import React from "react";
 import { requestWidgetUpdate } from "react-native-android-widget";
 
-import { TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
+import { ANDROID_TODAY_TASKS_WIDGET_NAMES } from "@/feature/widget/config/widget-config";
 import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
 import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
 import { TodayTasksWidget } from "@/feature/widget/android/components/today-tasks-widget";
@@ -19,14 +19,16 @@ export async function syncAndroidTodayTasksWidgetCache(cache: TaskWidgetCache): 
       );
     }
 
-    await requestWidgetUpdate({
-      widgetName: TODAY_TASKS_WIDGET_NAME,
-      renderWidget: (widgetInfo) =>
-        React.createElement(TodayTasksWidget, {
-          snapshot,
-          widgetInfo,
-        }),
-    });
+    for (const widgetName of ANDROID_TODAY_TASKS_WIDGET_NAMES) {
+      await requestWidgetUpdate({
+        widgetName,
+        renderWidget: (widgetInfo) =>
+          React.createElement(TodayTasksWidget, {
+            snapshot,
+            widgetInfo,
+          }),
+      });
+    }
   } catch (error: unknown) {
     if (__DEV__) {
       console.warn("[TodayTasksWidget] Failed to update Android widget cache", error);
