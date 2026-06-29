@@ -10,8 +10,6 @@ import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
 
-const CONNECTION_NOT_READY_ERROR_CODE = "ConnectionNotReady";
-
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -99,10 +97,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "send",
-        errorCode:
-          error instanceof Error && error.message === CONNECTION_NOT_READY_ERROR_CODE
-            ? CONNECTION_NOT_READY_ERROR_CODE
-            : "AudioSubmitFailed",
+        errorCode: "AudioSubmitFailed",
       });
       return false;
     }

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
@@ -98,11 +98,8 @@ export function useAiTaskGenerator({
     }
   };
 
-  useEffect(() => {
-    let conn: signalR.HubConnection | null = null;
-    let isDisposed = false;
-
-    const generationCompleteHandler = (result: AiResultMessageDTO) => {
+  const generationCompleteHandler = useCallback(
+    (result: AiResultMessageDTO) => {
       setTranscript(undefined);
       setIsAiGenerating(false);
       requestStartedAtRef.current = null;
@@ -117,9 +114,12 @@ export function useAiTaskGenerator({
       // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
       setStreamedTasks(result.extractedTasks ?? []);
       setStreamedNotes(result.extractedNotes ?? []);
-    };
+    },
+    [setIsAiGenerating],
+  );
 
-    const generationErrorHandler = (error: AiGenerationErrorDTO) => {
+  const generationErrorHandler = useCallback(
+    (error: AiGenerationErrorDTO) => {
       setTranscript(undefined);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
@@ -141,7 +141,13 @@ export function useAiTaskGenerator({
 
       const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
       Toast.show({ type: "error", text1: t(i18nKey) });
-    };
+    },
+    [setIsAiGenerating, t],
+  );
+
+  useEffect(() => {
+    let conn: signalR.HubConnection | null = null;
+    let isDisposed = false;
 
     signalRService
       .createConnection()
@@ -182,7 +188,7 @@ export function useAiTaskGenerator({
         conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
-  }, [setIsAiGenerating, t]);
+  }, [generationCompleteHandler, generationErrorHandler]);
 
   return {
     transcript,
