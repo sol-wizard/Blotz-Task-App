@@ -23,8 +23,6 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   NoTasksExtracted: "errors.noTasksExtracted",
 };
 
-const CONNECTION_NOT_READY_ERROR_CODE = "ConnectionNotReady";
-
 export function useAiTaskGenerator({
   setIsAiGenerating,
 }: {
@@ -41,7 +39,7 @@ export function useAiTaskGenerator({
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      throw new Error(CONNECTION_NOT_READY_ERROR_CODE);
+      throw new Error("Cannot submit audio: not connected.");
     }
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
