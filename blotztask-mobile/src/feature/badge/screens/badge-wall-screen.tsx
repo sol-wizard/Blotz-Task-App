@@ -57,7 +57,7 @@ export default function BadgeWallScreen() {
                 <Pressable
                   onPress={() =>
                     router.push({
-                      pathname: "/badge-details",
+                      pathname: "/(protected)/badge-details",
                       params: { badgeId: badge.id },
                     })
                   }

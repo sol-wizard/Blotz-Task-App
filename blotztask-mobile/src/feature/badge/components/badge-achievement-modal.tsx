@@ -94,7 +94,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
               onPress={() => {
                 onDismiss();
                 router.push({
-                  pathname: "/badge-details",
+                  pathname: "/(protected)/badge-details",
                   params: { badgeId: badge.badgeId },
                 });
               }}
