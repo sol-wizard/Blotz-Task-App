@@ -10,7 +10,8 @@ public class UserBadgeConfiguration : IEntityTypeConfiguration<UserBadge>
     public void Configure(EntityTypeBuilder<UserBadge> builder)
     {
         builder.ToTable("UserBadges");
-        builder.HasKey(ub => new { ub.UserId, ub.BadgeId });
+        builder.HasKey(ub => ub.Id);
+        builder.Property(ub => ub.Id).ValueGeneratedOnAdd();
         builder.HasOne<AppUser>()
             .WithMany()
             .HasForeignKey(ub => ub.UserId)
@@ -19,6 +20,7 @@ public class UserBadgeConfiguration : IEntityTypeConfiguration<UserBadge>
             .WithMany()
             .HasForeignKey(ub => ub.BadgeId)
             .OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(ub => new { ub.UserId, ub.BadgeId }).IsUnique();
         builder.HasIndex(ub => ub.UserId);
         builder.HasIndex(ub => ub.BadgeId);
     }

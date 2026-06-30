@@ -11,12 +11,12 @@
     "notesSection": "笔记"
   },
   "success": {
-    "taskAdded": "太棒了！任务已添加！"
+    "taskAdded": "任务添加成功"
   },
   "errors": {
     "default": "哎呀，我有点搞不定了。请再试一次。",
     "transcriptionFailed": "无法理解音频，请再试一次。",
-    "emptyAudio": "未录制到音频，请再试一次。",
+    "emptyAudio": "未检测到声音，请再试一次。",
     "tokenLimited": "您已达到使用限制，请稍后再试。",
     "contentFilter": "您的消息被系统拦截，请换一种说法再试。",
     "canceled": "请求已取消。",
