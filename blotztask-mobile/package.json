@@ -1,6 +1,6 @@
 {
   "name": "blotztask",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
@@ -14,6 +14,7 @@
   "dependencies": {
     "@expo-google-fonts/baloo-2": "^0.4.2",
     "@expo-google-fonts/inter": "^0.4.2",
+    "@expo/ui": "~56.0.18",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.1.1",
     "@microsoft/signalr": "^8.0.7",
@@ -57,6 +58,7 @@
     "expo-system-ui": "~56.0.5",
     "expo-updates": "~56.0.16",
     "expo-web-browser": "~56.0.5",
+    "expo-widgets": "~56.0.19",
     "i18next": "^26.2.0",
     "jwt-decode": "^4.0.0",
     "lottie-react-native": "~7.3.1",
@@ -69,6 +71,7 @@
     "react-hook-form": "^7.60.0",
     "react-i18next": "^17.0.8",
     "react-native": "0.85.3",
+    "react-native-android-widget": "^0.20.3",
     "react-native-auth0": "^5.5.0",
     "react-native-calendars": "https://codeload.github.com/craftworkco/react-native-calendars/tar.gz/ae19e2af74ecdb29d6117ca41fbf41977a10cc23",
     "react-native-draggable-flatlist": "^4.0.3",

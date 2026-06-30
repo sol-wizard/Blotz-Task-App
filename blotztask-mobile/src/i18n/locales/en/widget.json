@@ -1,0 +1,9 @@
+{
+  "today": {
+    "title": "Today",
+    "emptyMessage": "Open BlotzTask to plan your day.",
+    "placeholderMessage": "Open BlotzTask to load today's tasks.",
+    "fallbackMessage": "Open BlotzTask to refresh today's tasks.",
+    "footerText": "Tap to open the app"
+  }
+}

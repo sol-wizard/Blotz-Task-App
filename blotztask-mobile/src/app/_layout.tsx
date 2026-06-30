@@ -27,6 +27,7 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
 import "@/shared/util/typography";
 import { CrashScreen } from "@/shared/components/crash-screen";
+import { registerTodayTasksWidgetLayout } from "@/feature/widget/services/register-today-tasks-widget-layout";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -43,6 +44,10 @@ Sentry.init({
 function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
+
+  React.useEffect(() => {
+    registerTodayTasksWidgetLayout();
+  }, []);
 
   /* eslint-disable camelcase */
   useFonts({
