@@ -33,7 +33,6 @@ export default function SubtaskItem({
 
   // State
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [editSheetVersion, setEditSheetVersion] = useState(0);
 
   // Derived values
   const isChecked = subtask?.isDone;
@@ -52,7 +51,6 @@ export default function SubtaskItem({
   const handleOpenEditSheet = () => {
     if (isEditMode) return;
 
-    setEditSheetVersion((current) => current + 1);
     setIsEditSheetOpen(true);
   };
 
@@ -142,7 +140,6 @@ export default function SubtaskItem({
         </TouchableOpacity>
       </Swipeable>
       <EditSubtaskSheet
-        key={`${subtask.subTaskId}-${editSheetVersion}`}
         visible={isEditSheetOpen}
         subtask={subtask}
         isSaving={isUpdatingSubtask}
