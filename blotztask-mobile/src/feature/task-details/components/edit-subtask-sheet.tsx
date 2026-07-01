@@ -134,7 +134,7 @@ export default function EditSubtaskSheet({
                   }}
                 />
 
-                <View className="h-11 items-center justify-center bg-[#F1F7E8] px-1">
+                <View className="h-11 items-center justify-center px-1">
                   <Text className="text-[#B7BBC7] text-base font-bold">h</Text>
                 </View>
 
@@ -154,7 +154,7 @@ export default function EditSubtaskSheet({
                   }}
                 />
 
-                <View className="h-11 items-center justify-center rounded-r-[18px] bg-[#F1F7E8] pl-1 pr-5">
+                <View className="h-11 items-center justify-center pl-1 pr-5">
                   <Text className="text-[#B7BBC7] text-base font-bold">min</Text>
                 </View>
               </View>
