@@ -31,9 +31,13 @@ const SubtaskList = ({ task, progress }: Props) => {
     overflow: "hidden",
   }));
 
-  const handleToggleSubtask = (subtaskId: number) => {
+  const handleToggleSubtask = (subtask: SubtaskDTO) => {
     if (task.id == null) return;
-    toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
+    toggleSubtaskStatus({
+      subtaskId: subtask.subTaskId,
+      parentTaskId: task.id,
+      wasDone: subtask.isDone,
+    });
   };
 
   const onSubtaskContentLayout = (e: LayoutChangeEvent) => {
@@ -46,7 +50,7 @@ const SubtaskList = ({ task, progress }: Props) => {
   const subtaskItems = task.subtasks?.map((subtask: SubtaskDTO) => (
     <Pressable
       key={subtask.subTaskId}
-      onPress={() => handleToggleSubtask(subtask.subTaskId)}
+      onPress={() => handleToggleSubtask(subtask)}
       disabled={isTogglingSubtaskStatus}
       className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
     >
@@ -55,7 +59,7 @@ const SubtaskList = ({ task, progress }: Props) => {
         checked={subtask.isDone}
         disabled={isTogglingSubtaskStatus}
         className="mr-3"
-        onChange={() => handleToggleSubtask(subtask.subTaskId)}
+        onChange={() => handleToggleSubtask(subtask)}
       />
       <Text
         className={`flex-1 text-base font-inner ${
