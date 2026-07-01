@@ -1,6 +1,7 @@
 import { apiClient } from "@/shared/services/api/client";
 import { BadgeDTO } from "../models/badge-preview-dto";
 import { BadgeDetailDTO } from "../models/badge-detail-dto";
+import i18n from "@/i18n";
 
 const BADGE_ICON_BASE =
   "https://stgblotztaskstag.blob.core.windows.net/badge/TaskCompletion/overdue";
@@ -102,15 +103,8 @@ const MOCK_BADGES: MockBadge[] = [
 const localizeTitle = (badge: MockBadge): string =>
   i18n.language.startsWith("zh") ? badge.titleZh : badge.titleEn;
 
-// TODO: Replace this mock with the real "Get All Badges" endpoint once it ships:
-//   return await apiClient.get("/Badge");
 export const fetchAllBadges = async (): Promise<BadgeDTO[]> => {
-  return MOCK_BADGES.map((badge) => ({
-    id: badge.id,
-    title: localizeTitle(badge),
-    iconUrl: badge.iconUrl,
-    displayOrder: badge.displayOrder,
-  }));
+  return await apiClient.get<BadgeDTO[]>("/Badge");
 };
 
 const localizeDescription = (badge: MockBadge): string =>
@@ -119,7 +113,7 @@ const localizeDescription = (badge: MockBadge): string =>
 const localizeCategory = (badge: MockBadge): string =>
   i18n.language.startsWith("zh") ? badge.categoryZh : badge.categoryEn;
 
-// will need to be replace by the backend as well.
+// Need to be replace by the backend as well.
 export const fetchBadgeDetailById = async (
   badgeId: number,
 ): Promise<BadgeDetailDTO | undefined> => {
