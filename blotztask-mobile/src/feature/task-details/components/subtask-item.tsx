@@ -92,7 +92,6 @@ export default function SubtaskItem({
       >
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={handleOpenEditSheet}
           onLongPress={isEditMode ? drag : undefined}
           style={{
             borderRadius: 16,
