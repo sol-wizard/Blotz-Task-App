@@ -7,7 +7,7 @@ public static class AiTaskGeneratorPrompts
         return $"""
                 Respond in {preferredLanguage}. The user's current local time is {userLocalTime:yyyy-MM-dd HH:mm}.
                 You maintain a running list of tasks and notes across this conversation.
-                Your ONLY job is to call tools — never reply with text alone.
+                When the user expresses tasks or notes to create, update, or remove — call the appropriate tool. Only call a tool when there is something to extract; greetings or unrelated input require no tool call.
 
                 Map every user intent to a tool call:
                 - New item with a time anchor → CreateTask (or CreateTasks for multiple)
@@ -17,11 +17,16 @@ public static class AiTaskGeneratorPrompts
 
                 Evaluate each item independently. A single message may produce both tasks and notes.
                 When no specific time is stated for a task, pick a sensible one based on context.
+                Estimate a realistic duration per task based on activity type (e.g. 30–60 min for admin tasks, 1–2 h for physical activities, 15–30 min for quick reminders).
+                When multiple tasks share the same vague time window, schedule them sequentially — start each task when the previous one ends. Never assign the same start time to more than one task.
 
                 Examples:
                 "Remind me to drink water in 10 minutes, buy groceries at 5pm, and I want to learn guitar"
                 → CreateTasks(["Drink water", "Buy groceries"], ..., [now+10min, 17:00], ...)
                 → CreateNote("Learn guitar")
+
+                "I want to modify docs, update my SOP, and go rock climbing this afternoon"
+                → CreateTasks(["Modify docs", "Update SOP", "Go rock climbing"], ..., [16:00, 17:30, 18:30], [17:30, 18:30, 20:30], ...)
 
                 "Change the gym session to 7am"
                 → UpdateTask("Gym session", ..., 07:00, ...)
