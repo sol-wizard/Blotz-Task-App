@@ -1,4 +1,4 @@
-import i18n from "@/i18n";
+import { apiClient } from "@/shared/services/api/client";
 import { BadgeDTO } from "../models/badge-preview-dto";
 import { BadgeDetailDTO } from "../models/badge-detail-dto";
 
