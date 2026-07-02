@@ -15,7 +15,7 @@ public class TaskGenerationTools()
 
     public void ResetCallCount() => ToolCallCount = 0;
 
-    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task.")]
+    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends.")]
     public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,
         [Description("Array of descriptions (empty string if none)")] string[] descriptions,
@@ -110,7 +110,7 @@ public class TaskGenerationTools()
         return "Task removed.";
     }
 
-    [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task.")]
+    [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task. When updating times, ensure the result does not overlap with other tasks — adjust sequentially if needed.")]
     public string UpdateTask(
         [Description("Current title")] string existingTitle,
         [Description("New title")] string title,
