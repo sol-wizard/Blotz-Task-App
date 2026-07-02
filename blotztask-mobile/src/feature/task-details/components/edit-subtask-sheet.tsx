@@ -45,22 +45,35 @@ export default function EditSubtaskSheet({
   const [selectedHours, setSelectedHours] = useState(initialDuration.hours);
   const [selectedMinutes, setSelectedMinutes] = useState(initialDuration.minutes);
 
+  const resetFormValues = () => {
+    const nextDuration = parseDuration(subtask.duration);
+    setTitle(subtask.title);
+    setSelectedHours(nextDuration.hours);
+    setSelectedMinutes(nextDuration.minutes);
+  };
+
   const handleSave = () => {
     const hours = selectedHours.toString().padStart(2, "0");
     const minutes = selectedMinutes.toString().padStart(2, "0");
     onSave(title.trim() || subtask.title, `${hours}:${minutes}:00`);
   };
 
+  const handleCancel = () => {
+    resetFormValues();
+    onClose();
+  };
+
   return (
     <Modal
       isVisible={visible}
-      onBackdropPress={onClose}
-      onBackButtonPress={onClose}
+      onBackdropPress={handleCancel}
+      onBackButtonPress={handleCancel}
       backdropOpacity={0.4}
       animationIn="slideInUp"
       animationOut="slideOutDown"
       avoidKeyboard
       useNativeDriver
+      onModalWillShow={resetFormValues}
       style={{ justifyContent: "center", margin: 10 }}
     >
       <View className="mx-8 bg-white px-5 pt-7 pb-7" style={{ borderRadius: 30 }}>
