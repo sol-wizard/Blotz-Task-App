@@ -6,9 +6,6 @@ import { useBadgesQuery } from "../hooks/useBadgesQuery";
 import { BadgeCard } from "../components/badge-card";
 import { BadgeDTO } from "../models/badge-preview-dto";
 
-import { useEffect } from "react";
-import { apiClient } from "@/shared/services/api/client"; // 临时测试用
-
 const NUM_COLUMNS = 3;
 
 // `badge: null` is an invisible spacer that keeps the last row's cards at 1/3
@@ -21,14 +18,6 @@ interface BadgeGridItem {
 export default function BadgeWallScreen() {
   const { t } = useTranslation("badge");
   const { badges } = useBadgesQuery();
-
-  // 临时测试用,验证完删掉
-  useEffect(() => {
-    (async () => {
-      const res = await apiClient.get("/Badge/999"); // 3 = 慢即是快
-      console.log("badge detail:", res);
-    })();
-  }, []);
 
   const gridItems: BadgeGridItem[] = [...badges]
     .sort((a, b) => a.displayOrder - b.displayOrder)
