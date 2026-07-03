@@ -28,10 +28,10 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         // Arrange
         var userId = await _seeder.CreateUserAsync();
 
-        // Simulate a user in UTC+8 selecting "2024-11-21".
-        // Their "Start of Day" is 2024-11-21 00:00:00 +08:00 -> 2024-11-20 16:00:00 UTC.
-        // Window: Nov 20 16:00 UTC -> Nov 21 16:00 UTC
-        var dayStartUtc = new DateTimeOffset(2024, 11, 20, 16, 0, 0, TimeSpan.Zero);
+        // Simulate a Sydney user (UTC+10) selecting "2024-11-21".
+        // Their "Start of Day" is 2024-11-21 00:00:00 +10:00 -> 2024-11-20 14:00:00 UTC.
+        // Window: Nov 20 14:00 UTC -> Nov 21 14:00 UTC
+        var dayStartUtc = new DateTimeOffset(2024, 11, 20, 14, 0, 0, TimeSpan.Zero);
 
         // 1. Task Inside Window: Clearly inside
         await _seeder.CreateTaskAsync(userId, "Task Inside Window", dayStartUtc.AddHours(2), dayStartUtc.AddHours(3));
@@ -57,7 +57,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         {
             UserId = userId,
             Date = new DateOnly(2024, 11, 21),
-            TimeZoneId = "Asia/Shanghai"
+            TimeZoneId = "Australia/Sydney"
         };
 
         // Act
