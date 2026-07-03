@@ -17,6 +17,9 @@ public class NoteConfiguration : IEntityTypeConfiguration<Note>
                      .IsRequired();
               builder.Property(n => n.UpdatedAt)
                      .IsRequired();
+              builder.Property(n => n.IsPersistent)
+                     .IsRequired()
+                     .HasDefaultValue(false);
               builder.Property(n => n.UserId)
                      .IsRequired();
               builder.HasIndex(n => n.UserId);
@@ -30,5 +33,3 @@ public class NoteConfiguration : IEntityTypeConfiguration<Note>
 
        }
 }
-
-

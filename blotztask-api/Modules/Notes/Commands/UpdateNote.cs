@@ -13,6 +13,7 @@ public class UpdateNoteCommand
   [Required] public required Guid NoteId { get; set; }
   [Required] public required string Text { get; set; }
   [Required] public required Guid UserId { get; set; }
+  public bool IsPersistent { get; set; }
 
 }
 public class UpdateNoteCommandHandler(BlotzTaskDbContext db, ILogger<UpdateNoteCommandHandler> logger)
@@ -30,6 +31,7 @@ public class UpdateNoteCommandHandler(BlotzTaskDbContext db, ILogger<UpdateNoteC
     if (text.Length > 2000)
       throw new ArgumentException("Text max length is 2000");
     note.Text = text;
+    note.IsPersistent = command.IsPersistent;
     note.UpdatedAt = DateTime.UtcNow;
     await db.SaveChangesAsync(ct);
     return new NoteDto
@@ -37,7 +39,8 @@ public class UpdateNoteCommandHandler(BlotzTaskDbContext db, ILogger<UpdateNoteC
       Id = note.Id,
       Text = note.Text,
       CreatedAt = note.CreatedAt,
-      UpdatedAt = note.UpdatedAt
+      UpdatedAt = note.UpdatedAt,
+      IsPersistent = note.IsPersistent
     };
   }
 }
