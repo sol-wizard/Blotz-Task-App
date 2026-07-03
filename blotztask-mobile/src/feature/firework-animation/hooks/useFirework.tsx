@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 export type FireworkVariant = "task" | "subtask";
 
@@ -18,37 +18,31 @@ function useFireworkSlot(): FireworkSlot {
   const [playbackKey, setPlaybackKey] = useState(0);
   const [visible, setVisible] = useState(false);
 
-  const play = useCallback(() => {
+  const play = () => {
     setPlaybackKey((key) => key + 1);
     setVisible(true);
-  }, []);
+  };
 
-  const dismiss = useCallback(() => {
+  const dismiss = () => {
     setVisible(false);
-  }, []);
+  };
 
-  const playIfCompleting = useCallback(
-    (wasDone: boolean) => {
-      if (!wasDone) {
-        play();
-      }
-    },
-    [play],
-  );
+  const playIfCompleting = (wasDone: boolean) => {
+    if (!wasDone) {
+      play();
+    }
+  };
 
-  return useMemo(
-    () => ({ visible, playbackKey, play, dismiss, playIfCompleting }),
-    [visible, playbackKey, play, dismiss, playIfCompleting],
-  );
+  return { visible, playbackKey, play, dismiss, playIfCompleting };
 }
 
 export function FireworkProvider({ children }: { children: ReactNode }) {
   const task = useFireworkSlot();
   const subtask = useFireworkSlot();
 
-  const value = useMemo(() => ({ task, subtask }), [task, subtask]);
-
-  return <FireworkContext.Provider value={value}>{children}</FireworkContext.Provider>;
+  return (
+    <FireworkContext.Provider value={{ task, subtask }}>{children}</FireworkContext.Provider>
+  );
 }
 
 export function useFirework() {

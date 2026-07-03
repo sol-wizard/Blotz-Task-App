@@ -8,6 +8,7 @@ import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
 import { useAuth0 } from "react-native-auth0";
 import { useEffect } from "react";
+import { View } from "react-native";
 
 export default function ProtectedLayout() {
   const { user, getCredentials } = useAuth0();
@@ -29,7 +30,8 @@ export default function ProtectedLayout() {
 
   return (
     <FireworkProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+      <View className="flex-1">
+        <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -83,10 +85,11 @@ export default function ProtectedLayout() {
         />
         <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
         <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
-      </Stack>
+        </Stack>
 
-      <FireworkOverlays />
-      <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
+        <FireworkOverlays />
+        <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
+      </View>
     </FireworkProvider>
   );
 }

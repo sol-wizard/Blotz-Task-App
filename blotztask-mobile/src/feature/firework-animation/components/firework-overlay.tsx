@@ -1,13 +1,13 @@
 import { useFirework, type FireworkVariant } from "@/feature/firework-animation/hooks/useFirework";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import LottieView from "lottie-react-native";
-import { Modal, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 
 type FireworkOverlayConfig = {
   source: (typeof LOTTIE_ANIMATIONS)[keyof typeof LOTTIE_ANIMATIONS];
   resizeMode: "cover" | "contain";
   containerClassName: string;
-  getSize: (width: number, height: number) => { width: number; height: number };
+  getAnimationSize: (width: number, height: number) => { width: number; height: number };
 };
 
 const FIREWORK_OVERLAY_CONFIG: Record<FireworkVariant, FireworkOverlayConfig> = {
@@ -15,13 +15,13 @@ const FIREWORK_OVERLAY_CONFIG: Record<FireworkVariant, FireworkOverlayConfig> = 
     source: LOTTIE_ANIMATIONS.fireworkTask,
     resizeMode: "cover",
     containerClassName: "flex-1",
-    getSize: (width, height) => ({ width, height }),
+    getAnimationSize: (width, height) => ({ width, height }),
   },
   subtask: {
     source: LOTTIE_ANIMATIONS.fireworkSubtask,
     resizeMode: "contain",
     containerClassName: "flex-1 items-center justify-center",
-    getSize: (width, height) => {
+    getAnimationSize: (width, height) => {
       const size = Math.min(width, height) * 0.55;
       return { width: size, height: size };
     },
@@ -32,17 +32,13 @@ function FireworkOverlay({ variant }: { variant: FireworkVariant }) {
   const { width, height } = useWindowDimensions();
   const { visible, playbackKey, dismiss } = useFirework()[variant];
   const config = FIREWORK_OVERLAY_CONFIG[variant];
-  const animationSize = config.getSize(width, height);
+  const animationSize = config.getAnimationSize(width, height);
+
+  if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={dismiss}
-    >
-      <View pointerEvents="box-none" className={config.containerClassName}>
+    <View pointerEvents="box-none" className={config.containerClassName}>
+      <View pointerEvents="none">
         <LottieView
           key={playbackKey}
           source={config.source}
@@ -53,15 +49,15 @@ function FireworkOverlay({ variant }: { variant: FireworkVariant }) {
           style={animationSize}
         />
       </View>
-    </Modal>
+    </View>
   );
 }
 
 export function FireworkOverlays() {
   return (
-    <>
+    <View pointerEvents="box-none" className="absolute inset-0 z-50">
       <FireworkOverlay variant="task" />
       <FireworkOverlay variant="subtask" />
-    </>
+    </View>
   );
 }
