@@ -9,7 +9,7 @@ public class CreateNoteCommand
 {
   [Required] public Guid UserId { get; set; }
   [Required] public string Text { get; set; } = string.Empty;
-  public bool IsPersistent { get; set; }
+  [Required] public bool IsPersistent { get; set; }
 }
 public class CreateNoteCommandHandler(BlotzTaskDbContext db, ILogger<CreateNoteCommandHandler> logger)
 {
