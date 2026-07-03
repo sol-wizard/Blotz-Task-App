@@ -13,7 +13,7 @@ public class UpdateNoteCommand
   [Required] public required Guid NoteId { get; set; }
   [Required] public required string Text { get; set; }
   [Required] public required Guid UserId { get; set; }
-  public bool IsPersistent { get; set; }
+  [Required] public bool IsPersistent { get; set; }
 
 }
 public class UpdateNoteCommandHandler(BlotzTaskDbContext db, ILogger<UpdateNoteCommandHandler> logger)
