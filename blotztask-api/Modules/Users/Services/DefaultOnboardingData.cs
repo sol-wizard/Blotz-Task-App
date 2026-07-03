@@ -93,7 +93,6 @@ public static class DefaultOnboardingData
                 {
                     Text = "欢迎使用 BlotzTask！这是你的第一条笔记。",
                     UserId = userId,
-                    IsPersistent = true,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 },
@@ -101,7 +100,6 @@ public static class DefaultOnboardingData
                 {
                     Text = "你可以用笔记快速记录想法和灵感。",
                     UserId = userId,
-                    IsPersistent = true,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 },
@@ -109,7 +107,6 @@ public static class DefaultOnboardingData
                 {
                     Text = "笔记适合记录那些暂时不需要截止日期的事情。",
                     UserId = userId,
-                    IsPersistent = true,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 },
@@ -117,7 +114,6 @@ public static class DefaultOnboardingData
                 {
                     Text = "试着创建一条属于你的笔记吧！",
                     UserId = userId,
-                    IsPersistent = true,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 }
@@ -130,7 +126,6 @@ public static class DefaultOnboardingData
             {
                 Text = "Welcome to BlotzTask! This is your first note.",
                 UserId = userId,
-                IsPersistent = true,
                 CreatedAt = utcNow,
                 UpdatedAt = utcNow
             },
@@ -138,7 +133,6 @@ public static class DefaultOnboardingData
             {
                 Text = "You can use notes to capture quick thoughts and ideas.",
                 UserId = userId,
-                IsPersistent = true,
                 CreatedAt = utcNow,
                 UpdatedAt = utcNow
             },
@@ -146,7 +140,6 @@ public static class DefaultOnboardingData
             {
                 Text = "Notes are perfect for things that don't need a due date.",
                 UserId = userId,
-                IsPersistent = true,
                 CreatedAt = utcNow,
                 UpdatedAt = utcNow
             },
@@ -154,7 +147,6 @@ public static class DefaultOnboardingData
             {
                 Text = "Try creating your own note!",
                 UserId = userId,
-                IsPersistent = true,
                 CreatedAt = utcNow,
                 UpdatedAt = utcNow
             }
