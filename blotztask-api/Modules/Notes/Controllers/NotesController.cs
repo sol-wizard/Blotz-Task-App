@@ -27,7 +27,7 @@ public class NotesController(
         {
             UserId = userId,
             Text = request.Text,
-            IsPersistent = request.IsPersistent
+            IsPersistent = request.IsPersistent ?? false
         };
         return await createNoteCommandHandler.Handle(command, ct);
     }

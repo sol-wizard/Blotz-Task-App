@@ -5,5 +5,5 @@ namespace BlotzTask.Modules.Notes.DTOs;
 public class NoteRequestDto
 {
   [Required] public string Text { get; set; } = string.Empty;
-  [Required] public bool IsPersistent { get; set; }
+  public bool? IsPersistent { get; set; }
 }
