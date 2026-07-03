@@ -14,67 +14,78 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const { isRecording } = useAudioRecorderState(recorder);
-  // Prevents race condition between startListening and cancelListening.
+  // Release handlers wait on this so they never race ahead of async recorder setup.
+  const startPromiseRef = useRef<Promise<void> | null>(null);
   const cancelRequested = useRef(false);
 
-  const startListening = async () => {
+  const trackRecordingFailure = (errorCode: string) => {
+    analytics.trackAiTaskGenerationFailed({
+      inputMode: "voice",
+      stage: "recording",
+      errorCode,
+    });
+  };
+
+  const startListening = () => {
     cancelRequested.current = false;
+    const startPromise = startRecording();
+    startPromiseRef.current = startPromise;
+    void startPromise.finally(() => {
+      if (startPromiseRef.current === startPromise) {
+        startPromiseRef.current = null;
+      }
+    });
+  };
+
+  const startRecording = async (): Promise<void> => {
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       if (cancelRequested.current) return;
       recorder.record();
     } catch (error) {
-      Toast.show({ type: "warning", text1: t("errors.recordingFailed") });
+      Toast.show({ type: "error", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "RecordingStartFailed",
-      });
+      trackRecordingFailure("RecordingStartFailed");
     }
   };
 
   const cancelListening = async (): Promise<void> => {
     cancelRequested.current = true;
+    await startPromiseRef.current;
+
     if (recorder.isRecording) {
-      await recorder.stop();
+      try {
+        await recorder.stop();
+      } catch (error) {
+        console.warn("[Mic] Error cancelling recording.", error);
+        trackRecordingFailure("RecordingCancelFailed");
+      }
     }
   };
 
-  const stopAndUpload = async (): Promise<void> => {
+  const stopAndUpload = async (): Promise<boolean> => {
+    await startPromiseRef.current;
+
     if (!recorder.isRecording) {
-      Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
+      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
       console.warn("[Mic] stopAndUpload called but recorder is not recording.");
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "NotRecording",
-      });
-      return;
+      trackRecordingFailure("NotRecording");
+      return false;
     }
 
     try {
       await recorder.stop();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "RecordingStopFailed",
-      });
-      return;
+      trackRecordingFailure("RecordingStopFailed");
+      return false;
     }
 
     const uri = recorder.uri;
     if (!uri) {
-      Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "recording",
-        errorCode: "EmptyAudio",
-      });
-      return;
+      trackRecordingFailure("EmptyAudio");
+      return false;
     }
 
     try {
@@ -86,7 +97,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
         stage: "send",
         errorCode: "AudioSubmitFailed",
       });
-      return;
+      return false;
     }
 
     // Best-effort cleanup of the temp recording; failure here shouldn't surface as an AI failure.
@@ -95,7 +106,14 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     } catch (error) {
       console.warn("[Mic] Failed to delete temp recording file.", error);
     }
+
+    return true;
   };
 
-  return { isRecording, startListening, stopAndUpload, cancelListening };
+  return {
+    isRecording,
+    startListening,
+    stopAndUpload,
+    cancelListening,
+  };
 }
