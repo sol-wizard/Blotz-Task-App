@@ -49,24 +49,20 @@ public class TaskController(
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         _logger.LogInformation(
-            "Handling GetTaskByDate for user {UserId} starting at {StartDate} (IncludeFloatingForToday: {IncludeFloatingForToday})",
-            userId,
-            getTasksByDateRequest.StartDate,
-            getTasksByDateRequest.IncludeFloatingForToday);
+            "Handling GetTaskByDate for user {UserId} on date {Date} (timezone {TimeZoneId})",
+            userId, getTasksByDateRequest.Date, getTasksByDateRequest.TimeZoneId);
 
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = getTasksByDateRequest.StartDate,
-            IncludeFloatingForToday = getTasksByDateRequest.IncludeFloatingForToday
+            Date = getTasksByDateRequest.Date,
+            TimeZoneId = getTasksByDateRequest.TimeZoneId
         };
 
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
         _logger.LogInformation(
             "GetTaskByDate finished for user {UserId}. Returned {TaskCount} tasks in {ElapsedMs}ms",
-            userId,
-            result.Count(),
-            stopwatch.ElapsedMilliseconds);
+            userId, result.Count(), stopwatch.ElapsedMilliseconds);
         return result;
     }
 
@@ -84,14 +80,13 @@ public class TaskController(
         var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
-            Monday = getWeeklyTaskAvailabilityRequest.Monday
+            WeekStart = getWeeklyTaskAvailabilityRequest.WeekStart,
+            TimeZoneId = getWeeklyTaskAvailabilityRequest.TimeZoneId
         };
 
         _logger.LogInformation(
-            "Timing GetWeeklyTaskAvailability for user {UserId} at Monday {Monday}; elapsed so far {ElapsedMs}ms",
-            userId,
-            getWeeklyTaskAvailabilityRequest.Monday,
-            stopwatch.ElapsedMilliseconds);
+            "Timing GetWeeklyTaskAvailability for user {UserId} week starting {WeekStart} (timezone {TimeZoneId}); elapsed so far {ElapsedMs}ms",
+            userId, getWeeklyTaskAvailabilityRequest.WeekStart, getWeeklyTaskAvailabilityRequest.TimeZoneId, stopwatch.ElapsedMilliseconds);
 
         var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
         _logger.LogInformation(
@@ -115,14 +110,13 @@ public class TaskController(
         var query = new GetMonthlyTaskAvailabilityQuery
         {
             UserId = userId,
-            FirstDate = getMonthlyTaskAvailabilityRequest.FirstDate
+            FirstDate = getMonthlyTaskAvailabilityRequest.FirstDate,
+            TimeZoneId = getMonthlyTaskAvailabilityRequest.TimeZoneId
         };
-    
+
         _logger.LogInformation(
-            "Timing GetMonthlyTaskAvailability for user {UserId} at date {Firstdate}; elapsed so far {ElapsedMs}ms",
-            userId,
-            getMonthlyTaskAvailabilityRequest.FirstDate,
-            stopwatch.ElapsedMilliseconds);
+            "Timing GetMonthlyTaskAvailability for user {UserId} at date {FirstDate} (timezone {TimeZoneId}); elapsed so far {ElapsedMs}ms",
+            userId, getMonthlyTaskAvailabilityRequest.FirstDate, getMonthlyTaskAvailabilityRequest.TimeZoneId, stopwatch.ElapsedMilliseconds);
     
         var result = await getMonthlyTaskAvailabilityQueryHandler.Handle(query, ct);
         _logger.LogInformation(
