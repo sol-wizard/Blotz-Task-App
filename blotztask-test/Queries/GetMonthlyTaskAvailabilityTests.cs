@@ -24,27 +24,32 @@ public class GetMonthlyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     [Fact]
     public async Task Handle_ShouldShowTasksScheduledInFutureMonth()
     {
+        // Arrange
         var userId = await _seeder.CreateUserAsync();
-        var userNow = DateTimeOffset.Now;
-        var localOffset = userNow.Offset;
-        var nextMonthStart = new DateTimeOffset(userNow.Year, userNow.Month, 1, 0, 0, 0, localOffset).AddMonths(1);
 
-        var scheduledDay = nextMonthStart.AddDays(4);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var nextMonthFirst = new DateOnly(today.Year, today.Month, 1).AddMonths(1);
+        var scheduledDay = nextMonthFirst.AddDays(4);
+
+        var scheduledDayUtc = scheduledDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         await _seeder.CreateTaskAsync(
             userId,
             "Future Scheduled Task",
-            scheduledDay.AddHours(10),
-            scheduledDay.AddHours(11));
+            new DateTimeOffset(scheduledDayUtc.AddHours(10), TimeSpan.Zero),
+            new DateTimeOffset(scheduledDayUtc.AddHours(11), TimeSpan.Zero));
 
         var query = new GetMonthlyTaskAvailabilityQuery
         {
             UserId = userId,
-            FirstDate = nextMonthStart
+            FirstDate = nextMonthFirst,
+            TimeZoneId = "UTC"
         };
 
+        // Act
         var result = await _handler.Handle(query);
 
-        var indicator = result.Single(day => day.Date.Date == scheduledDay.Date);
+        // Assert
+        var indicator = result.Single(day => day.Date == scheduledDay);
         indicator.TaskThumbnails.Should().Contain(t => t.TaskTitle == "Future Scheduled Task",
             because: "future month views should still include tasks scheduled in that month");
     }
@@ -54,12 +59,13 @@ public class GetMonthlyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
-        var monthStart = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        var monthStart = new DateOnly(2026, 6, 1);
+
         await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Night Shift",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 1),
+            startDate: monthStart,
             templateStartTime: new DateTimeOffset(2026, 6, 1, 22, 0, 0, TimeSpan.Zero),
             templateEndTime: new DateTimeOffset(2026, 6, 2, 1, 0, 0, TimeSpan.Zero),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
@@ -68,18 +74,20 @@ public class GetMonthlyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         var query = new GetMonthlyTaskAvailabilityQuery
         {
             UserId = userId,
-            FirstDate = monthStart
+            FirstDate = monthStart,
+            TimeZoneId = "UTC"
         };
 
         // Act
         var result = await _handler.Handle(query);
 
         // Assert
-        var startDay = result.Single(day => day.Date.Date == new DateTime(2026, 6, 1));
-        var followingDay = result.Single(day => day.Date.Date == new DateTime(2026, 6, 2));
+        var startDay = result.Single(day => day.Date == new DateOnly(2026, 6, 1));
+        var followingDay = result.Single(day => day.Date == new DateOnly(2026, 6, 2));
+
         startDay.TaskThumbnails.Should().Contain(t => t.TaskTitle == "Night Shift",
             because: "the monthly calendar should show the recurring event on its start day");
         followingDay.TaskThumbnails.Should().Contain(t => t.TaskTitle == "Night Shift",
-            because: "the monthly calendar should show overnight recurring continuations on following days");
+            because: "the monthly calendar should show overnight recurring continuations on the following day");
     }
 }
