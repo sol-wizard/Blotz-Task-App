@@ -10,7 +10,7 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
-import { TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
+import { IOS_TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
 import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnvironment) => {
@@ -116,4 +116,4 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
   );
 };
 
-export default createWidget<TasksWidgetSnapshot>(TODAY_TASKS_WIDGET_NAME, TodayTasksWidgetView);
+export default createWidget<TasksWidgetSnapshot>(IOS_TODAY_TASKS_WIDGET_NAME, TodayTasksWidgetView);

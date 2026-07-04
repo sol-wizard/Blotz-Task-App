@@ -2,9 +2,8 @@ const bundleIdentifier = process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask";
 const androidWidgetConfig = {
   widgets: [
     {
-      name: "TodayTasksWidget",
-      label: "Today",
-      description: "Shows today's BlotzTask tasks",
+      name: "TodayTasksMedianWidget",
+      label: "BlotzTask",
       minWidth: "250dp",
       minHeight: "110dp",
       targetCellWidth: 4,
@@ -14,8 +13,7 @@ const androidWidgetConfig = {
     },
     {
       name: "TodayTasksSmallWidget",
-      label: "Today 2x2",
-      description: "Shows today's BlotzTask tasks in a compact widget",
+      label: "BlotzTask",
       minWidth: "110dp",
       minHeight: "110dp",
       targetCellWidth: 2,
