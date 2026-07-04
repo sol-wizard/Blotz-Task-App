@@ -9,7 +9,7 @@ public class CreateNoteCommand
 {
   [Required] public Guid UserId { get; set; }
   [Required] public string Text { get; set; } = string.Empty;
-  [Required] public bool IsPersistent { get; set; }
+  public bool? IsPersistent { get; set; }
 }
 public class CreateNoteCommandHandler(BlotzTaskDbContext db, ILogger<CreateNoteCommandHandler> logger)
 {
@@ -26,7 +26,7 @@ public class CreateNoteCommandHandler(BlotzTaskDbContext db, ILogger<CreateNoteC
     {
       Id = Guid.NewGuid(),
       Text = text,
-      IsPersistent = command.IsPersistent,
+      IsPersistent = command.IsPersistent ?? false,
       CreatedAt = utcNow,
       UpdatedAt = utcNow,
       UserId = command.UserId
