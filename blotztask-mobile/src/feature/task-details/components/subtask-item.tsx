@@ -106,12 +106,7 @@ export default function SubtaskItem({
             <View className="flex-1 ml-1">
               {duration && (
                 <Text
-                  className="text-3 font-bold"
-                  style={{
-                    color: isChecked ? "#BDE6A3" : theme.colors.highlight,
-                    marginBottom: -2,
-                    fontWeight: "700",
-                  }}
+                  className={`mb-[-2px] text-[12px] font-bold text-highlight`}
                 >
                   {convertDurationToText(duration)}
                 </Text>

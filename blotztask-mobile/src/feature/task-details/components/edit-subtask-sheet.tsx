@@ -76,25 +76,19 @@ export default function EditSubtaskSheet({
       onModalWillShow={resetFormValues}
       style={{ justifyContent: "center", margin: 10 }}
     >
-      <View className="mx-8 bg-white px-5 pt-7 pb-7" style={{ borderRadius: 30 }}>
+      <View className="mx-8 bg-white px-5 pt-7 pb-7 rounded-3xl">
         <View className="flex-row items-center justify-between mb-6">
-          <Text className="font-balooBold text-2xl" style={{ color: theme.colors.onSurface }}>
-            {t("subtasks.edit")}
-          </Text>
-          <Pressable
-            onPress={handleSave}
-            disabled={isSaving}
-            hitSlop={12}
-            className="min-w-16 items-end justify-center"
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color={theme.colors.highlight} />
-            ) : (
-              <Text className="font-balooBold text-xl" style={{ color: theme.colors.highlight }}>
-                {t("subtasks.done")}
-              </Text>
-            )}
-          </Pressable>
+            <Text className="font-balooBold text-2xl" style={{ color: theme.colors.onSurface }}>
+                {t("subtasks.edit")}
+            </Text>
+            <Pressable
+                onPress={handleSave}
+                disabled={isSaving}
+            >
+                <Text className="font-balooBold text-xl text-highlight">
+                    {t("subtasks.done")}
+                </Text>
+            </Pressable>
         </View>
 
         <ScrollView
@@ -110,10 +104,9 @@ export default function EditSubtaskSheet({
               submitBehavior="blurAndSubmit"
               multiline
               autoFocus
-              className="rounded-2xl border border-[#6B7280] px-4 py-4 text-xl font-balooBold"
+              className="rounded-2xl px-4 py-4 text-xl font-balooBold text-onSurface"
               style={{
                 minHeight: 54,
-                color: theme.colors.onSurface,
                 textAlignVertical: "top",
                 borderWidth: 1,
                 borderColor: "#B7BBC7",
