@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useQueryClient } from "@tanstack/react-query";
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { TASK_OCCURRENCE_KIND, TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { virtualTaskDetailKeys } from "@/feature/task-details/util/virtual-task-detail-cache";
 import {
   getRecurringOccurrenceIdentity,
@@ -235,9 +235,23 @@ export default function TaskEditScreen() {
         ? (labels.find((candidate) => candidate.labelId === formValues.labelId) ??
           currentTask.label)
         : undefined;
+      const isRecurrenceCleared = recurrenceDetails === null;
+      const recurringOccurrence = isRecurrenceCleared
+        ? null
+        : recurringTaskId == null || !currentTask.recurringOccurrence
+          ? currentTask.recurringOccurrence
+          : {
+              ...currentTask.recurringOccurrence,
+              recurringTaskId,
+              occurrenceDate:
+                recurrenceDetails?.anchorDate ?? currentTask.recurringOccurrence.occurrenceDate,
+            };
 
       return {
         ...currentTask,
+        occurrenceKind: isRecurrenceCleared
+          ? TASK_OCCURRENCE_KIND.NormalTaskItem
+          : currentTask.occurrenceKind,
         title: formValues.title,
         description: formValues.description,
         startTime: formValues.startTime,
@@ -248,15 +262,7 @@ export default function TaskEditScreen() {
         alertTime: formValues.alertTime,
         isDeadline: formValues.isDeadline,
         dueAt: formValues.dueAt,
-        recurringOccurrence:
-          recurringTaskId == null || !currentTask.recurringOccurrence
-            ? currentTask.recurringOccurrence
-            : {
-                ...currentTask.recurringOccurrence,
-                recurringTaskId,
-                occurrenceDate:
-                  recurrenceDetails?.anchorDate ?? currentTask.recurringOccurrence.occurrenceDate,
-              },
+        recurringOccurrence,
         recurringTask:
           recurrenceDetails === undefined
             ? recurrenceEndDateChanged && currentTask.recurringTask
