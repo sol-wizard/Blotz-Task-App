@@ -62,7 +62,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
             throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
         }
 
-        template = await ResolveTemplateForEffectiveDate(template, command.EffectiveDate, command.UserId, ct);
+        ValidateEffectiveDate(template, command.EffectiveDate);
         TaskTimeValidator.ValidateTaskTimes(
             command.TaskDetails.StartTime,
             command.TaskDetails.EndTime,
@@ -183,45 +183,10 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static void ValidateEffectiveDate(RecurringTask template, DateOnly effectiveDate)
     {
-        if (!IsTemplateEffectiveOn(template, effectiveDate))
+        if (template.Series.IsDeleted || !IsTemplateEffectiveOn(template, effectiveDate))
         {
             throw new ValidationException("EffectiveDate is outside recurring task range.");
         }
-    }
-
-    private async Task<RecurringTask> ResolveTemplateForEffectiveDate(
-        RecurringTask requestedTemplate,
-        DateOnly effectiveDate,
-        Guid userId,
-        CancellationToken ct)
-    {
-        if (requestedTemplate.Series.IsDeleted)
-        {
-            throw new ValidationException("EffectiveDate is outside recurring task range.");
-        }
-
-        if (IsTemplateEffectiveOn(requestedTemplate, effectiveDate))
-        {
-            return requestedTemplate;
-        }
-
-        var effectiveTemplate = await db.RecurringTasks
-            .Include(r => r.Series)
-            .Where(r => r.SeriesId == requestedTemplate.SeriesId
-                && r.UserId == userId
-                && r.IsActive
-                && r.StartDate <= effectiveDate
-                && (r.EndDate == null || r.EndDate >= effectiveDate))
-            .OrderByDescending(r => r.StartDate)
-            .ThenByDescending(r => r.Id)
-            .FirstOrDefaultAsync(ct);
-
-        if (effectiveTemplate == null || effectiveTemplate.Series.IsDeleted)
-        {
-            ValidateEffectiveDate(requestedTemplate, effectiveDate);
-        }
-
-        return effectiveTemplate!;
     }
 
     private static bool IsTemplateEffectiveOn(RecurringTask template, DateOnly effectiveDate)

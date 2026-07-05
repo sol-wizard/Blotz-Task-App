@@ -337,6 +337,44 @@ public class UpdateRecurringTaskFutureTests : IClassFixture<DatabaseFixture>
             because: "overrides on or after the effective date move to the future template");
     }
 
+    [Fact]
+    public async Task Handle_RequestedTemplateNotEffectiveOnDate_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var oldTemplate = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Daily review",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 7, 2),
+            endDate: new DateOnly(2026, 7, 3),
+            templateStartTime: new DateTimeOffset(2026, 7, 2, 9, 0, 0, TimeSpan.FromHours(8)));
+
+        await _seeder.CreateRecurringTaskVersionAsync(
+            oldTemplate,
+            title: "Daily review v2",
+            startDate: new DateOnly(2026, 7, 4),
+            templateStartTime: new DateTimeOffset(2026, 7, 4, 9, 0, 0, TimeSpan.FromHours(8)));
+
+        // Act
+        var act = () => _handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = oldTemplate.Id,
+            EffectiveDate = new DateOnly(2026, 7, 4),
+            UserId = userId,
+            Frequency = RecurrenceFrequency.Daily,
+            Interval = 1,
+            TaskDetails = BuildTaskDetails(
+                "Daily review shifted",
+                new DateTimeOffset(2026, 7, 4, 10, 0, 0, TimeSpan.FromHours(8)))
+        }, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+                because: "future edits must use the concrete recurring template id for the edited occurrence")
+            .WithMessage("EffectiveDate is outside recurring task range.");
+    }
+
     private static EditTaskItemDto BuildTaskDetails(string title, DateTimeOffset startTime)
     {
         return new EditTaskItemDto
