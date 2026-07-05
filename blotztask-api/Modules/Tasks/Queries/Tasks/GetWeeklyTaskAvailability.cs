@@ -88,13 +88,13 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .Select(o => new
             {
-                o.SeriesId,
+                o.RecurringTaskId,
                 o.OccurrenceDate
             })
             .ToListAsync(ct);
 
         var recurringOverrideKeys = recurringOverrides
-            .Select(o => (o.SeriesId, o.OccurrenceDate))
+            .Select(o => (o.RecurringTaskId, o.OccurrenceDate))
             .ToHashSet();
 
         // Fetch active RecurringTasks that could have occurrences in this week
@@ -137,7 +137,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             {
                 hasTask = recurringTasks.Any(r =>
                     generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
-                        .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))));
+                        .Any(o => !recurringOverrideKeys.Contains((r.Id, o.OccurrenceDate))));
             }
 
             result.Add(new DailyTaskIndicatorDto

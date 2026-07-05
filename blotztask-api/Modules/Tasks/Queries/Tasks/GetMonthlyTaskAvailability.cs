@@ -89,13 +89,13 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 && o.OverrideType != RecurringOccurrenceOverrideType.Detached)
             .Select(o => new
             {
-                o.SeriesId,
+                o.RecurringTaskId,
                 o.OccurrenceDate
             })
             .ToListAsync(ct);
 
         var recurringOverrideKeys = recurringOverrides
-            .Select(o => (o.SeriesId, o.OccurrenceDate))
+            .Select(o => (o.RecurringTaskId, o.OccurrenceDate))
             .ToHashSet();
         
         
@@ -149,7 +149,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 var offset = 4 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
                     .Where(r => generatorService.GetOccurrencesOverlappingWindow(r, dayDate, dayStart, dayEnd)
-                        .Any(o => !recurringOverrideKeys.Contains((r.SeriesId, o.OccurrenceDate))))
+                        .Any(o => !recurringOverrideKeys.Contains((r.Id, o.OccurrenceDate))))
                     .OrderBy(r => r.TemplateStartTime)
                     .Select(r => new TaskThumbnailDto
                     {

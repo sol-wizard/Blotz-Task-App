@@ -158,7 +158,7 @@ public class GetTasksByDateQueryHandler(
                 && o.OccurrenceDate <= requestedDate)
             .ToListAsync(ct);
 
-        var overrideMap = overrides.ToDictionary(o => (o.SeriesId, o.OccurrenceDate), o => o);
+        var overrideMap = overrides.ToDictionary(o => (o.RecurringTaskId, o.OccurrenceDate), o => o);
 
         // Step 4: For each recurring task not yet saved, check if it occurs on this date
         foreach (var recurring in recurringTasks)
@@ -172,7 +172,7 @@ public class GetTasksByDateQueryHandler(
             foreach (var occurrenceWindow in occurrenceWindows)
             {
                 if (overrideMap.TryGetValue(
-                        (recurring.SeriesId, occurrenceWindow.OccurrenceDate),
+                        (recurring.Id, occurrenceWindow.OccurrenceDate),
                         out var recurringOverride)
                     && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached)
                 {
