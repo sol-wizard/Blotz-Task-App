@@ -40,7 +40,7 @@ public class GetAllDdlTasksRecurringOverlapTests : IClassFixture<DatabaseFixture
             deadlineOffsetDays: 0,
             deadlineTimeOfDay: new TimeOnly(18, 0),
             deadlineTimeZoneId: "Australia/Perth");
-        await _seeder.CreateRecurringTaskVersionAsync(
+        var newTemplate = await _seeder.CreateRecurringTaskVersionAsync(
             oldTemplate,
             title: "Pay bill shifted",
             startDate: new DateOnly(2026, 7, 2),
@@ -54,8 +54,15 @@ public class GetAllDdlTasksRecurringOverlapTests : IClassFixture<DatabaseFixture
         });
 
         // Assert
-        result.Where(t => t.RecurringOccurrence?.OccurrenceDate == new DateOnly(2026, 7, 2))
-            .Should().HaveCount(2,
+        var sameDateRows = result
+            .Where(t => t.RecurringOccurrence?.OccurrenceDate == new DateOnly(2026, 7, 2))
+            .ToList();
+
+        sameDateRows.Should().HaveCount(2,
                 because: "same-series overlapping deadline templates each expose their current occurrence");
+        sameDateRows.Select(t => t.RecurringOccurrence?.RecurringTaskId)
+            .Should()
+            .BeEquivalentTo([oldTemplate.Id, newTemplate.Id],
+                because: "same-date virtual deadline rows should be identified by their concrete recurring template");
     }
 }
