@@ -99,7 +99,7 @@ public class DataSeeder
         DateTimeOffset templateStartTime,
         DateTimeOffset? templateEndTime = null,
         RecurrenceFrequency? frequency = null,
-        int interval = 1,
+        int? interval = null,
         int? daysOfWeek = null,
         int? dayOfMonth = null,
         DateOnly? endDate = null)
@@ -121,9 +121,9 @@ public class DataSeeder
             Pattern = new RecurrencePattern
             {
                 Frequency = frequency ?? previousTemplate.Pattern.Frequency,
-                Interval = interval,
-                DaysOfWeek = daysOfWeek,
-                DayOfMonth = dayOfMonth
+                Interval = interval ?? previousTemplate.Pattern.Interval,
+                DaysOfWeek = daysOfWeek ?? previousTemplate.Pattern.DaysOfWeek,
+                DayOfMonth = dayOfMonth ?? previousTemplate.Pattern.DayOfMonth
             },
             StartDate = startDate,
             EndDate = endDate,

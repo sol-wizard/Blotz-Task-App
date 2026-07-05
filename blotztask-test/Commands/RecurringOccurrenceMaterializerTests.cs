@@ -29,6 +29,41 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
+    public async Task DataSeeder_CreateRecurringTaskVersionAsync_CopiesRecurrencePatternDefaults()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var previousTemplate = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Weekly planning",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 7, 1),
+            templateStartTime: new DateTimeOffset(2026, 7, 1, 9, 0, 0, TimeSpan.Zero),
+            interval: 2,
+            daysOfWeek: (int)WeeklyDayFlags.Wednesday,
+            scheduleTimeZoneId: "UTC");
+        previousTemplate.Pattern.DayOfMonth = 15;
+        await _context.SaveChangesAsync();
+
+        // Act
+        var futureTemplate = await _seeder.CreateRecurringTaskVersionAsync(
+            previousTemplate,
+            title: "Weekly planning shifted",
+            startDate: new DateOnly(2026, 7, 8),
+            templateStartTime: new DateTimeOffset(2026, 7, 8, 10, 0, 0, TimeSpan.Zero));
+
+        // Assert
+        futureTemplate.Pattern.Frequency.Should().Be(previousTemplate.Pattern.Frequency,
+            because: "omitting the frequency override should preserve the previous recurrence pattern");
+        futureTemplate.Pattern.Interval.Should().Be(previousTemplate.Pattern.Interval,
+            because: "omitting the interval override should preserve non-default intervals");
+        futureTemplate.Pattern.DaysOfWeek.Should().Be(previousTemplate.Pattern.DaysOfWeek,
+            because: "omitting the weekday override should preserve weekly day flags");
+        futureTemplate.Pattern.DayOfMonth.Should().Be(previousTemplate.Pattern.DayOfMonth,
+            because: "omitting the day-of-month override should preserve existing day-of-month values");
+    }
+
+    [Fact]
     public async Task EnsureRecurringOccurrenceTaskItem_SameSeriesSameDateDifferentTemplates_CreatesSeparateTaskItems()
     {
         // Arrange
