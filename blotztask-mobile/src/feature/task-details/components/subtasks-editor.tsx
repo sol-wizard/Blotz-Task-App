@@ -43,7 +43,14 @@ const SubtasksEditor = ({
     <ScaleDecorator>
       <SubtaskItem
         item={item}
-        onToggle={(id) => toggleSubtaskStatus({ subtaskId: id, parentTaskId: parentTask.id! })}
+        onToggle={(id) => {
+          const subtask = listData.find((item) => item.subTaskId === id);
+          toggleSubtaskStatus({
+            subtaskId: id,
+            parentTaskId: parentTask.id!,
+            wasDone: subtask?.isDone ?? false,
+          });
+        }}
         isEditMode={isEditMode}
         onDelete={handleDelete}
         drag={drag}

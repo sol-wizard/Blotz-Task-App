@@ -31,7 +31,8 @@ public class SearchNotesQueryHandler(BlotzTaskDbContext db, ILogger<SearchNotesQ
                         Id = n.Id,
                         Text = n.Text,
                         CreatedAt = n.CreatedAt,
-                        UpdatedAt = n.UpdatedAt
+                        UpdatedAt = n.UpdatedAt,
+                        IsPersistent = n.IsPersistent
                       })
                       .ToListAsync(ct);
 

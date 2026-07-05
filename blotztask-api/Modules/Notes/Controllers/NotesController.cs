@@ -26,7 +26,8 @@ public class NotesController(
         var command = new CreateNoteCommand
         {
             UserId = userId,
-            Text = request.Text
+            Text = request.Text,
+            IsPersistent = request.IsPersistent
         };
         return await createNoteCommandHandler.Handle(command, ct);
     }
@@ -65,7 +66,8 @@ public class NotesController(
         {
             NoteId = id,
             UserId = userId,
-            Text = dto.Text
+            Text = dto.Text,
+            IsPersistent = dto.IsPersistent
         };
         return await updateNoteCommandHandler.Handle(command, ct);
     }

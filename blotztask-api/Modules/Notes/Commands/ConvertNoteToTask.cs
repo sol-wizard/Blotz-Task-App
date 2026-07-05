@@ -86,9 +86,11 @@ public class ConvertNoteToTaskCommandHandler(
         db.TaskItems.Add(newTask);
         await db.SaveChangesAsync(ct);
         
-        // 4. delete original note
-        db.Notes.Remove(note);
-        await db.SaveChangesAsync(ct);
+        if (!note.IsPersistent)
+        {
+            db.Notes.Remove(note);
+            await db.SaveChangesAsync(ct);
+        }
         
         await transaction.CommitAsync(ct);
         
