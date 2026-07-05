@@ -117,6 +117,11 @@ public class UpdateRecurringTaskFutureCommandHandler(
         ValidateRecurrence(newPattern, futureStartDate, newEndDate);
 
         var futureTemplate = BuildFutureTemplate(template, command, newPattern, futureStartDate, newEndDate);
+        if (!generatorService.IsOccurrenceOn(futureTemplate, futureStartDate))
+        {
+            throw new ValidationException("Future task start date must be a valid occurrence date for the updated recurring task.");
+        }
+
         TruncateTemplate(template, command.EffectiveDate);
 
         db.RecurringTasks.Add(futureTemplate);
@@ -341,7 +346,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static RecurringDeadlineTemplate BuildDeadlineTemplate(
         EditTaskItemDto details,
-        DateOnly effectiveDate,
+        DateOnly templateStartDate,
         string? deadlineTimeZoneId)
     {
         if (details.IsDeadline != true)
@@ -360,10 +365,10 @@ public class UpdateRecurringTaskFutureCommandHandler(
             throw new ValidationException("DueAt cannot be before the task end time.");
         }
 
-        var offsetDays = DateOnly.FromDateTime(dueAt.Date).DayNumber - effectiveDate.DayNumber;
+        var offsetDays = DateOnly.FromDateTime(dueAt.Date).DayNumber - templateStartDate.DayNumber;
         if (offsetDays < 0)
         {
-            throw new ValidationException("DueAt cannot be before EffectiveDate.");
+            throw new ValidationException("DueAt cannot be before the recurring task start date.");
         }
 
         var timeZoneId = ValidateTimeZoneId(deadlineTimeZoneId, "DeadlineTimeZoneId");

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -69,6 +70,38 @@ public class UpdateRecurringTaskFutureTests : IClassFixture<DatabaseFixture>
             because: "future weekly edits should use the newly selected task date as the rule anchor");
         futureTemplate.Pattern.DaysOfWeek.Should().Be((int)WeeklyDayFlags.Sunday,
             because: "moving a weekly task to Sunday should persist the new weekly day flag");
+    }
+
+    [Fact]
+    public async Task Handle_WeeklyFutureEditWithOmittedDaysOfWeekAndMovedAnchor_ThrowsValidationException()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Weekend planning",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 7, 4),
+            templateStartTime: new DateTimeOffset(2026, 7, 4, 9, 0, 0, TimeSpan.FromHours(8)),
+            daysOfWeek: (int)WeeklyDayFlags.Saturday);
+
+        // Act
+        var act = () => _handler.Handle(new UpdateRecurringTaskFutureCommand
+        {
+            RecurringTaskId = recurring.Id,
+            EffectiveDate = new DateOnly(2026, 7, 4),
+            UserId = userId,
+            Frequency = RecurrenceFrequency.Weekly,
+            Interval = 1,
+            TaskDetails = BuildTaskDetails(
+                "Weekend planning",
+                new DateTimeOffset(2026, 7, 5, 9, 0, 0, TimeSpan.FromHours(8)))
+        }, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+                because: "omitting DaysOfWeek should not allow a moved anchor date outside the weekly pattern")
+            .WithMessage("Future task start date must be a valid occurrence date for the updated recurring task.");
     }
 
     [Fact]
@@ -248,7 +281,7 @@ public class UpdateRecurringTaskFutureTests : IClassFixture<DatabaseFixture>
 
         // Assert
         futureTemplate.StartDate.Should().Be(new DateOnly(2026, 7, 5),
-            because: "yearly rules currently derive month and day from the template start date");
+            because: "moving a yearly task should use the selected task date as the new yearly anniversary");
         _generatorService.IsOccurrenceOn(futureTemplate, new DateOnly(2027, 7, 5)).Should().BeTrue(
             because: "the moved yearly rule should repeat on the new month and day");
         _generatorService.IsOccurrenceOn(futureTemplate, new DateOnly(2027, 7, 4)).Should().BeFalse(
