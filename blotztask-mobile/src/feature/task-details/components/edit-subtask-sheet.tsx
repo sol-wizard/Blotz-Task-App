@@ -104,9 +104,8 @@ export default function EditSubtaskSheet({
               submitBehavior="blurAndSubmit"
               multiline
               autoFocus
-              className="rounded-2xl px-4 py-4 text-xl font-balooBold text-onSurface"
+              className="min-h-[54px] rounded-2xl px-4 py-4 text-xl font-balooBold text-onSurface"
               style={{
-                minHeight: 54,
                 textAlignVertical: "top",
                 borderWidth: 1,
                 borderColor: "#B7BBC7",
