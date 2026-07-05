@@ -17,7 +17,6 @@
 
 ## Code Changes
 
-- Any code change must be as minimal as possible while still solving the task.
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 - Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
 
