@@ -62,6 +62,7 @@ type RecurringPatternDetails = {
   interval: number;
   daysOfWeek: number | null;
   dayOfMonth: number | null;
+  anchorDate: string;
 };
 
 export default function TaskEditScreen() {
@@ -187,11 +188,9 @@ export default function TaskEditScreen() {
     selectedRecurringTaskId: number,
     occurrenceDate: string,
   ) => {
-    const recurrencePatternChanged = hasRecurrencePatternChanged(selectedTask, formValues);
     const endDateChanged = hasRecurrenceEndChanged(selectedTask, formValues);
-    const recurrenceDetails = recurrencePatternChanged
-      ? mapTaskRecurrenceToRecurringPattern(formValues, occurrenceDate)
-      : undefined;
+    const recurrenceDetails =
+      formValues.recurrence === "never" ? null : mapTaskRecurrenceToRecurringPattern(formValues);
     const currentTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
     updateRecurringTaskFuture(
       {
@@ -203,7 +202,7 @@ export default function TaskEditScreen() {
         interval: recurrenceDetails?.interval,
         daysOfWeek: recurrenceDetails?.daysOfWeek,
         dayOfMonth: recurrenceDetails?.dayOfMonth,
-        endDate: formValues.recurrenceEndDate ?? null,
+        endDate: getRecurringEndDate(formValues),
         endDateChanged,
         scheduleTimeZoneId: currentTimeZoneId,
         deadlineTimeZoneId: formValues.isDeadline ? currentTimeZoneId : null,
@@ -255,16 +254,18 @@ export default function TaskEditScreen() {
             : {
                 ...currentTask.recurringOccurrence,
                 recurringTaskId,
+                occurrenceDate:
+                  recurrenceDetails?.anchorDate ?? currentTask.recurringOccurrence.occurrenceDate,
               },
         recurringTask:
           recurrenceDetails === undefined
             ? recurrenceEndDateChanged && currentTask.recurringTask
               ? {
                   ...currentTask.recurringTask,
-                  endDate: formValues.recurrenceEndDate ?? null,
+                  endDate: getRecurringEndDate(formValues),
                 }
               : currentTask.recurringTask
-            : mapFormValuesToRecurringMetadata(currentTask, formValues, recurrenceDetails),
+            : mapFormValuesToRecurringMetadata(formValues, recurrenceDetails),
       };
     };
 
@@ -406,7 +407,7 @@ function hasRecurrenceEndChanged(task: TaskDetailDTO, formValues: TaskUpsertDTO)
 
   const currentEndMode = recurringTask.endDate ? "onDate" : "never";
   const currentEndDate = recurringTask.endDate ?? null;
-  const nextEndDate = formValues.recurrenceEndDate ?? null;
+  const nextEndDate = getRecurringEndDate(formValues);
 
   return Boolean(formValues.recurrenceEndMode !== currentEndMode || nextEndDate !== currentEndDate);
 }
@@ -422,12 +423,10 @@ function mapRecurringMetadataToTaskRecurrence(
   return "never";
 }
 
-function mapTaskRecurrenceToRecurringPattern(
-  task: TaskUpsertDTO,
-  occurrenceDate: string,
-): RecurringPatternDetails | null {
+function mapTaskRecurrenceToRecurringPattern(task: TaskUpsertDTO): RecurringPatternDetails | null {
   const recurrence = task.recurrence;
   if (!recurrence || recurrence === "never" || recurrence === "custom") return null;
+  const anchorDate = toDateOnly(task.startTime);
 
   const frequencyMap = {
     daily: "Daily",
@@ -441,15 +440,13 @@ function mapTaskRecurrenceToRecurringPattern(
     frequency: frequencyMap[recurrence],
     interval: recurrence === "biweekly" ? 2 : 1,
     daysOfWeek:
-      recurrence === "weekly" || recurrence === "biweekly"
-        ? getWeeklyDayFlag(occurrenceDate)
-        : null,
-    dayOfMonth: recurrence === "monthly" ? Number(occurrenceDate.slice(8, 10)) : null,
+      recurrence === "weekly" || recurrence === "biweekly" ? getWeeklyDayFlag(anchorDate) : null,
+    dayOfMonth: recurrence === "monthly" ? Number(anchorDate.slice(8, 10)) : null,
+    anchorDate,
   };
 }
 
 function mapFormValuesToRecurringMetadata(
-  currentTask: TaskDetailDTO,
   formValues: TaskUpsertDTO,
   recurrenceDetails: RecurringPatternDetails | null,
 ): TaskDetailDTO["recurringTask"] {
@@ -460,7 +457,15 @@ function mapFormValuesToRecurringMetadata(
     interval: recurrenceDetails.interval,
     daysOfWeek: recurrenceDetails.daysOfWeek,
     dayOfMonth: recurrenceDetails.dayOfMonth,
-    startDate: currentTask.recurringTask?.startDate ?? currentTask.startTime,
-    endDate: formValues.recurrenceEndDate ?? null,
+    startDate: recurrenceDetails.anchorDate,
+    endDate: getRecurringEndDate(formValues),
   };
+}
+
+function toDateOnly(dateTimeOffset: string): string {
+  return dateTimeOffset.slice(0, 10);
+}
+
+function getRecurringEndDate(formValues: TaskUpsertDTO): string | null {
+  return formValues.recurrenceEndMode === "onDate" ? (formValues.recurrenceEndDate ?? null) : null;
 }
