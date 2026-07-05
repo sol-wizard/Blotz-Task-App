@@ -773,7 +773,7 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
     }
 
     [Fact]
-    public async Task Handle_UpdateRecurringTaskFuture_StaleTemplateId_ResolvesTemplateForEffectiveDate()
+    public async Task Handle_UpdateRecurringTaskFuture_StaleTemplateId_ThrowsOutsideRangeValidationException()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
@@ -810,7 +810,7 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
         }, CancellationToken.None);
 
         // Act
-        var resolvedRecurringTaskId = await handler.Handle(new UpdateRecurringTaskFutureCommand
+        var act = () => handler.Handle(new UpdateRecurringTaskFutureCommand
         {
             RecurringTaskId = recurring.Id,
             EffectiveDate = new DateOnly(2026, 6, 18),
@@ -830,19 +830,15 @@ public class RecurringOccurrenceMaterializerTests : IClassFixture<DatabaseFixtur
 
         var oldTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == recurring.Id);
         var laterTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == laterRecurringTaskId);
-        var resolvedTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == resolvedRecurringTaskId);
 
         // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+                because: "future edits should not redirect a stale template id to another same-series template")
+            .WithMessage("EffectiveDate is outside recurring task range.");
         oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 16),
-            because: "a stale template id should not be split again when it does not contain the effective date");
-        laterTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 17),
-            because: "the handler should resolve and split the later segment that actually contains the effective date");
-        resolvedTemplate.StartDate.Should().Be(new DateOnly(2026, 6, 18),
-            because: "the replacement segment should start from the requested effective date");
-        resolvedTemplate.Title.Should().Be("Resolved later standup",
-            because: "the future edit should still apply after resolving a stale recurring task id");
-        resolvedTemplate.PreviousRecurringTaskId.Should().Be(laterTemplate.Id,
-            because: "the new segment should be chained from the resolved template rather than the stale request template");
+            because: "a stale template id should leave the originally requested template unchanged");
+        laterTemplate.EndDate.Should().BeNull(
+            because: "a stale template id should not mutate the later same-series template");
     }
 
     [Fact]
