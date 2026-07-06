@@ -1,11 +1,14 @@
 import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
+import { FireworkOverlays } from "@/feature/firework-animation/components/firework-overlay";
+import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
 import { useAuth0 } from "react-native-auth0";
 import { useEffect } from "react";
+import { View } from "react-native";
 
 export default function ProtectedLayout() {
   const { user, getCredentials } = useAuth0();
@@ -26,65 +29,68 @@ export default function ProtectedLayout() {
   const { badgeQueue, dismissBadge } = usePushNotificationSetup();
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+    <FireworkProvider>
+      <View className="flex-1">
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
-        <Stack.Screen name="task-details" options={{ headerShown: false }} />
+          <Stack.Screen name="task-details" options={{ headerShown: false }} />
 
-        <Stack.Screen name="ddl" options={{ headerShown: false }} />
+          <Stack.Screen name="ddl" options={{ headerShown: false }} />
 
-        <Stack.Screen
-          name="task-edit"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="task-create"
-          options={{
-            headerShown: true,
-            headerShadowVisible: false,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerTintColor: "#000000",
-            headerBackButtonDisplayMode: "minimal",
-            headerStyle: {
-              backgroundColor: "white",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="note-editor"
-          options={{
-            headerShown: false,
-          }}
-        />
+          <Stack.Screen
+            name="task-edit"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="task-create"
+            options={{
+              headerShown: true,
+              headerShadowVisible: false,
+              headerTitle: "",
+              headerBackVisible: true,
+              headerTintColor: "#000000",
+              headerBackButtonDisplayMode: "minimal",
+              headerStyle: {
+                backgroundColor: "white",
+              },
+            }}
+          />
+          <Stack.Screen
+            name="note-editor"
+            options={{
+              headerShown: false,
+            }}
+          />
 
-        <Stack.Screen name="gashapon-machine" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="ai-task-sheet"
-          options={{
-            headerShown: false,
-            presentation: "transparentModal",
-            animation: "fade",
-            contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
-            gestureEnabled: false,
-            fullScreenGestureEnabled: false,
-          }}
-        />
-        <Stack.Screen
-          name="monthly-calendar"
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
-        <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
-        <Stack.Screen name="badge-details" options={{ headerShown: false }} />
-      </Stack>
+          <Stack.Screen name="gashapon-machine" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="ai-task-sheet"
+            options={{
+              headerShown: false,
+              presentation: "transparentModal",
+              animation: "fade",
+              contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
+              gestureEnabled: false,
+              fullScreenGestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="monthly-calendar"
+            options={{ headerShown: false, gestureEnabled: false }}
+          />
+          <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
+          <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
+          <Stack.Screen name="badge-details" options={{ headerShown: false }} />
+        </Stack>
 
-      <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
-    </>
+        <FireworkOverlays />
+        <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
+      </View>
+    </FireworkProvider>
   );
 }

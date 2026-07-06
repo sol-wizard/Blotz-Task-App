@@ -6,6 +6,13 @@ import {
   saveRecurringOccurrence,
 } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
+
+type CompleteRecurringOccurrenceArgs = {
+  recurringTaskId: number;
+  occurrenceDate: string;
+  wasDone: boolean;
+};
 
 type MaterializeRecurringOccurrenceArgs = {
   recurringTaskId: number;
@@ -15,10 +22,13 @@ type MaterializeRecurringOccurrenceArgs = {
 
 export function useRecurringTaskMutations() {
   const queryClient = useQueryClient();
+  const { task: taskFirework } = useFirework();
 
   const { mutate: completeOccurrence, isPending: isCompletingOccurrence } = useMutation({
-    mutationFn: saveRecurringOccurrence,
+    mutationFn: ({ recurringTaskId, occurrenceDate }: CompleteRecurringOccurrenceArgs) =>
+      saveRecurringOccurrence({ recurringTaskId, occurrenceDate }),
     onSuccess: (_data, variables) => {
+      taskFirework.playIfCompleting(variables.wasDone);
       invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
     },
   });
