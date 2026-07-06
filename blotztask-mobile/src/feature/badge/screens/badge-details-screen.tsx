@@ -1,7 +1,6 @@
 import { GradientColor } from "@/shared/components/gradient-color";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { ReturnButton } from "@/shared/components/return-button";
-import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -54,7 +53,7 @@ export default function BadgeDetailsScreen() {
             />
 
             <Text className="text-3xl font-balooExtraBold text-secondary text-center mb-4">
-              {badgeDetail.name}
+              {badgeDetail.title}
             </Text>
 
             <Text className="text-lg font-balooBold text-gray-500 text-center leading-8 mb-7">
@@ -66,12 +65,6 @@ export default function BadgeDetailsScreen() {
                 {t("details.category", { category: badgeDetail.category })}
               </Text>
             </View>
-
-            <Text className="text-base font-baloo text-gray-400 text-center">
-              {t("obtainedOn", {
-                date: formatLocalizedDate(badgeDetail.obtainedAt, "fullMonthDayYear"),
-              })}
-            </Text>
           </View>
 
           <View className="mt-8 flex-row items-center justify-center gap-4">
