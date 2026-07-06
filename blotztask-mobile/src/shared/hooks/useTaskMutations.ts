@@ -12,15 +12,7 @@ import {
   updateTaskItem,
 } from "../services/task-service";
 import { ddlKeys, taskKeys } from "../constants/query-key-factory";
-import {
-  addDays,
-  format,
-  isSameDay,
-  parseISO,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
+import { addDays, format, isSameDay, parseISO, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 
@@ -73,16 +65,8 @@ const useTaskMutations = () => {
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: ddlKeys.all });
-      invalidateSelectedDayTask(
-        queryClient,
-        task.templateStartTime,
-        task.templateEndTime ?? task.templateStartTime,
-      );
-      invalidateTaskAvailability(
-        queryClient,
-        task.templateStartTime,
-        task.templateEndTime ?? task.templateStartTime,
-      );
+      invalidateSelectedDayTask(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
+      invalidateTaskAvailability(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
     },
   });
 
@@ -257,11 +241,7 @@ export function invalidateSelectedDayTask(
   }
 }
 
-function invalidateTaskAvailability(
-  queryClient: QueryClient,
-  startTime: string,
-  endTime = startTime,
-) {
+function invalidateTaskAvailability(queryClient: QueryClient, startTime: string, endTime = startTime) {
   const start = parseISO(startTime);
   const end = parseISO(endTime);
   const mondayKeys = new Set([
