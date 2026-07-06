@@ -1,4 +1,5 @@
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
@@ -79,6 +80,12 @@ public class AiTaskGenerateChatHub(
         // 5. Stamp the original user message and send the authoritative final result for reconciliation
         resultMessage.UserInput = message;
         await Clients.Caller.SendAsync("ReceiveGenerationResult", resultMessage, ct);
+    }
+
+    public Task<AiGenerateMessage> RejectDraftTask(Guid taskId)
+    {
+        var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
+        return Task.FromResult(chatContext.RejectDraftTask(taskId));
     }
 
     public async Task TranscribeAudio(byte[] audioData)

@@ -36,6 +36,18 @@ export function useAiTaskGenerator({
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
+  const streamedTasksRef = useRef<ExtractedTaskDTO[]>([]);
+  const isAiGeneratingRef = useRef(false);
+
+  const updateStreamedTasks = (
+    next: ExtractedTaskDTO[] | ((prev: ExtractedTaskDTO[]) => ExtractedTaskDTO[]),
+  ) => {
+    setStreamedTasks((prev) => {
+      const value = typeof next === "function" ? next(prev) : next;
+      streamedTasksRef.current = value;
+      return value;
+    });
+  };
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -47,6 +59,7 @@ export function useAiTaskGenerator({
 
     setTranscript(undefined);
     setIsAiGenerating(true);
+    isAiGeneratingRef.current = true;
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "voice";
 
@@ -55,6 +68,7 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
+      isAiGeneratingRef.current = false;
       const startedAt = requestStartedAtRef.current;
       requestStartedAtRef.current = null;
       pendingInputModeRef.current = null;
@@ -75,6 +89,7 @@ export function useAiTaskGenerator({
 
     setTranscript(undefined);
     setIsAiGenerating(true);
+    isAiGeneratingRef.current = true;
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "text";
 
@@ -83,6 +98,7 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      isAiGeneratingRef.current = false;
       const startedAt = requestStartedAtRef.current;
       requestStartedAtRef.current = null;
       pendingInputModeRef.current = null;
@@ -99,6 +115,7 @@ export function useAiTaskGenerator({
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
+    isAiGeneratingRef.current = false;
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
@@ -109,18 +126,19 @@ export function useAiTaskGenerator({
     }
 
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
-    setStreamedTasks(result.extractedTasks ?? []);
+    updateStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
   };
 
   const generationErrorHandler = (error: AiGenerationErrorDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
+    isAiGeneratingRef.current = false;
     const startedAt = requestStartedAtRef.current;
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    setStreamedTasks([]);
+    updateStreamedTasks([]);
     setStreamedNotes([]);
 
     analytics.trackAiTaskGenerationFailed({
@@ -137,6 +155,33 @@ export function useAiTaskGenerator({
     Toast.show({ type: "error", text1: t(i18nKey) });
   };
 
+  const rejectDraftTask = async (taskId: string): Promise<void> => {
+    if (
+      isAiGeneratingRef.current ||
+      !connection ||
+      connection.state !== signalR.HubConnectionState.Connected
+    ) {
+      return;
+    }
+
+    const previousTasks = streamedTasksRef.current;
+    updateStreamedTasks((prev) => prev.filter((task) => task.id !== taskId));
+
+    try {
+      const result = await signalRService.invoke<AiResultMessageDTO>(
+        connection,
+        "RejectDraftTask",
+        taskId,
+      );
+      updateStreamedTasks(result.extractedTasks ?? []);
+      setStreamedNotes(result.extractedNotes ?? []);
+    } catch (error) {
+      console.error("RejectDraftTask invocation failed:", error);
+      updateStreamedTasks(previousTasks);
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
+  };
+
   useEffect(() => {
     let conn: signalR.HubConnection | null = null;
 
@@ -151,7 +196,7 @@ export function useAiTaskGenerator({
         });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
           if (requestStartedAtRef.current == null) return;
-          setStreamedTasks((prev) => [...prev, task]);
+          updateStreamedTasks((prev) => [...prev, task]);
         });
         conn.on("ReceiveNoteExtracted", (note: AiNoteDTO) => {
           if (requestStartedAtRef.current == null) return;
@@ -182,6 +227,7 @@ export function useAiTaskGenerator({
     turns,
     submitAudioForTranscription,
     sendTextMessage,
+    rejectDraftTask,
   };
 }
 

@@ -1,4 +1,5 @@
 using Microsoft.Agents.AI;
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
@@ -22,4 +23,46 @@ public class AiChatContext
 
     /// <summary>The user's local time zone, used to resolve relative date/time references in their input.</summary>
     public required TimeZoneInfo TimeZone { get; init; }
+
+    public List<RejectedDraftTask> RejectedDraftTasks { get; } = [];
+
+    public AiGenerateMessage RejectDraftTask(Guid taskId)
+    {
+        var rejectedTask = Tools.RemoveTaskById(taskId);
+        if (rejectedTask != null)
+            RejectedDraftTasks.Add(RejectedDraftTask.From(rejectedTask));
+
+        return ToGenerateMessage();
+    }
+
+    public AiGenerateMessage ToGenerateMessage(int inputTokens = 0, int outputTokens = 0, int totalTokens = 0)
+    {
+        return new AiGenerateMessage
+        {
+            ExtractedTasks = Tools.Tasks,
+            ExtractedNotes = Tools.Notes,
+            InputTokens = inputTokens,
+            OutputTokens = outputTokens,
+            TotalTokens = totalTokens
+        };
+    }
+}
+
+public class RejectedDraftTask
+{
+    public required Guid Id { get; init; }
+    public required string Title { get; init; }
+    public required DateTime StartTime { get; init; }
+    public required DateTime EndTime { get; init; }
+
+    public static RejectedDraftTask From(ExtractedTask task)
+    {
+        return new RejectedDraftTask
+        {
+            Id = task.Id,
+            Title = task.Title,
+            StartTime = task.StartTime,
+            EndTime = task.EndTime
+        };
+    }
 }

@@ -15,6 +15,14 @@ public class TaskGenerationTools()
 
     public void ResetCallCount() => ToolCallCount = 0;
 
+    public ExtractedTask? RemoveTaskById(Guid id)
+    {
+        var task = Tasks.FirstOrDefault(t => t.Id == id);
+        if (task == null) return null;
+        Tasks.Remove(task);
+        return task;
+    }
+
     [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends.")]
     public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,

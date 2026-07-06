@@ -82,7 +82,10 @@ public class AiChatService(
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             var runSw = Stopwatch.StartNew();
-            var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            var response = await context.Agent.RunAsync(
+                BuildRunMessages(userMessage, context),
+                context.Session,
+                cancellationToken: ct);
             runSw.Stop();
 
             inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
@@ -128,13 +131,36 @@ public class AiChatService(
         if (context.Tools.ToolCallCount <= 0)
             throw new AiTaskGenerationException(AiErrorCode.NoTasksExtracted, "No tasks or notes were extracted.");
 
-        return new AiGenerateMessage
-        {
-            ExtractedTasks = context.Tools.Tasks,
-            ExtractedNotes = context.Tools.Notes,
-            InputTokens = inputTokens,
-            OutputTokens = outputTokens,
-            TotalTokens = totalTokens
-        };
+        return context.ToGenerateMessage(inputTokens, outputTokens, totalTokens);
+    }
+
+    private static ChatMessage[] BuildRunMessages(string userMessage, AiChatContext context)
+    {
+        var userMessageChat = new ChatMessage(ChatRole.User, userMessage);
+        if (context.RejectedDraftTasks.Count == 0)
+            return [userMessageChat];
+
+        return
+        [
+            new ChatMessage(ChatRole.User, BuildRejectedDraftContextMessage(context.RejectedDraftTasks)),
+            userMessageChat
+        ];
+    }
+
+    private static string BuildRejectedDraftContextMessage(IReadOnlyCollection<RejectedDraftTask> rejectedDraftTasks)
+    {
+        var rejectedTaskLines = rejectedDraftTasks
+            .Select(task =>
+            {
+                var title = task.Title.ReplaceLineEndings(" ").Trim();
+                return $"- Id: {task.Id}; Title: {title}; Start: {task.StartTime:yyyy-MM-ddTHH:mm:ss}; End: {task.EndTime:yyyy-MM-ddTHH:mm:ss}";
+            });
+
+        return $"""
+                Context from the app UI:
+                The user has rejected these unsaved draft tasks in this AI sheet session. Do not update or recreate them unless the user explicitly asks to add them again.
+                Rejected draft tasks:
+                {string.Join(Environment.NewLine, rejectedTaskLines)}
+                """;
     }
 }
