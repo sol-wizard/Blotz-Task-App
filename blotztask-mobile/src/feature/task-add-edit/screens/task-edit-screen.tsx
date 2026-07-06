@@ -10,7 +10,10 @@ import { View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { TASK_OCCURRENCE_KIND, TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { virtualTaskDetailKeys } from "@/feature/task-details/util/virtual-task-detail-cache";
+import {
+  createVirtualTaskDetailCacheKey,
+  virtualTaskDetailKeys,
+} from "@/feature/task-details/util/virtual-task-detail-cache";
 import {
   getRecurringOccurrenceIdentity,
   hasTaskItemId,
@@ -175,9 +178,23 @@ export default function TaskEditScreen() {
         dto: formValues,
       },
       {
-        onSuccess: () => {
-          updateTaskDetailCache(formValues);
-          router.back();
+        onSuccess: (data) => {
+          const updatedTask = updateTaskDetailCache(formValues);
+          if (updatedTask) {
+            queryClient.setQueryData<TaskDetailDTO>(taskKeys.byId(data.taskItemId), {
+              ...updatedTask,
+              id: data.taskItemId,
+              occurrenceKind: TASK_OCCURRENCE_KIND.MaterializedRecurringOccurrence,
+            });
+          }
+
+          router.replace({
+            pathname: "/(protected)/task-details",
+            params: {
+              mode: TASK_DETAIL_ROUTE_MODE.Persisted,
+              taskId: data.taskItemId,
+            },
+          });
         },
       },
     );
@@ -189,8 +206,7 @@ export default function TaskEditScreen() {
     occurrenceDate: string,
   ) => {
     const endDateChanged = hasRecurrenceEndChanged(selectedTask, formValues);
-    const recurrenceDetails =
-      formValues.recurrence === "never" ? null : mapTaskRecurrenceToRecurringPattern(formValues);
+    const recurrenceDetails = getFutureRecurrenceDetails(selectedTask, formValues);
     const currentTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
     updateRecurringTaskFuture(
       {
@@ -209,12 +225,35 @@ export default function TaskEditScreen() {
       },
       {
         onSuccess: (data) => {
-          updateTaskDetailCache(
+          const updatedTask = updateTaskDetailCache(
             formValues,
             recurrenceDetails,
             data.recurringTaskId,
             endDateChanged,
           );
+          const recurringOccurrence = updatedTask?.recurringOccurrence;
+          if (updatedTask && recurringOccurrence) {
+            const virtualTaskCacheKey = createVirtualTaskDetailCacheKey(
+              updatedTask,
+              recurringOccurrence.occurrenceDate,
+            );
+            queryClient.setQueryData(
+              virtualTaskDetailKeys.byKey(virtualTaskCacheKey),
+              updatedTask,
+            );
+
+            router.replace({
+              pathname: "/(protected)/task-details",
+              params: {
+                mode: TASK_DETAIL_ROUTE_MODE.Virtual,
+                recurringTaskId: recurringOccurrence.recurringTaskId,
+                occurrenceDate: recurringOccurrence.occurrenceDate,
+                virtualTaskCacheKey,
+              },
+            });
+            return;
+          }
+
           router.back();
         },
       },
@@ -226,7 +265,7 @@ export default function TaskEditScreen() {
     recurrenceDetails?: RecurringPatternDetails | null,
     recurringTaskId?: number | null,
     recurrenceEndDateChanged = false,
-  ) => {
+  ): TaskDetailDTO | undefined => {
     const labels = queryClient.getQueryData<LabelDTO[]>(labelKeys.all) ?? [];
     const updateCachedTask = (currentTask: TaskDetailDTO | undefined) => {
       if (!currentTask) return currentTask;
@@ -275,6 +314,8 @@ export default function TaskEditScreen() {
       };
     };
 
+    const updatedSelectedTask = updateCachedTask(selectedTask);
+
     if (params.virtualTaskCacheKey) {
       queryClient.setQueryData<TaskDetailDTO>(
         virtualTaskDetailKeys.byKey(params.virtualTaskCacheKey),
@@ -285,6 +326,8 @@ export default function TaskEditScreen() {
     if (hasTaskItemId(selectedTask)) {
       queryClient.setQueryData<TaskDetailDTO>(taskKeys.byId(selectedTask.id), updateCachedTask);
     }
+
+    return updatedSelectedTask;
   };
 
   const closeRecurringScopeSheet = () => setRecurringScopeSheet(null);
@@ -450,6 +493,75 @@ function mapTaskRecurrenceToRecurringPattern(task: TaskUpsertDTO): RecurringPatt
     dayOfMonth: recurrence === "monthly" ? Number(anchorDate.slice(8, 10)) : null,
     anchorDate,
   };
+}
+
+function getFutureRecurrenceDetails(
+  task: TaskDetailDTO,
+  formValues: TaskUpsertDTO,
+): RecurringPatternDetails | null | undefined {
+  if (formValues.recurrence === "never") return null;
+
+  if (hasRecurrencePatternChanged(task, formValues) || !task.recurringTask) {
+    return mapTaskRecurrenceToRecurringPattern(formValues) ?? undefined;
+  }
+
+  return mapExistingRecurrenceToFuturePattern(task, formValues);
+}
+
+function mapExistingRecurrenceToFuturePattern(
+  task: TaskDetailDTO,
+  formValues: TaskUpsertDTO,
+): RecurringPatternDetails {
+  const recurringTask = task.recurringTask;
+  if (!recurringTask) {
+    throw new Error("Recurring task metadata is required for future recurrence updates.");
+  }
+
+  const anchorDate = toDateOnly(formValues.startTime);
+  const occurrenceDate = task.recurringOccurrence?.occurrenceDate;
+  const currentDaysOfWeek = recurringTask.daysOfWeek ?? getWeeklyDayFlag(recurringTask.startDate);
+
+  return {
+    frequency: recurringTask.frequency,
+    interval: recurringTask.interval,
+    daysOfWeek:
+      recurringTask.frequency === "Weekly"
+        ? getFutureWeeklyDayFlags(currentDaysOfWeek, occurrenceDate, anchorDate)
+        : null,
+    dayOfMonth:
+      recurringTask.frequency === "Monthly"
+        ? getFutureMonthlyDayOfMonth(recurringTask.dayOfMonth, occurrenceDate, anchorDate)
+        : null,
+    anchorDate,
+  };
+}
+
+function getFutureWeeklyDayFlags(
+  currentDaysOfWeek: number,
+  occurrenceDate: string | undefined,
+  anchorDate: string,
+): number {
+  if (occurrenceDate === anchorDate || !isSingleWeeklyDay(currentDaysOfWeek)) {
+    return currentDaysOfWeek;
+  }
+
+  return getWeeklyDayFlag(anchorDate);
+}
+
+function getFutureMonthlyDayOfMonth(
+  currentDayOfMonth: number | null | undefined,
+  occurrenceDate: string | undefined,
+  anchorDate: string,
+): number {
+  if (occurrenceDate === anchorDate && currentDayOfMonth != null) {
+    return currentDayOfMonth;
+  }
+
+  return Number(anchorDate.slice(8, 10));
+}
+
+function isSingleWeeklyDay(daysOfWeek: number): boolean {
+  return daysOfWeek > 0 && (daysOfWeek & (daysOfWeek - 1)) === 0;
 }
 
 function mapFormValuesToRecurringMetadata(
