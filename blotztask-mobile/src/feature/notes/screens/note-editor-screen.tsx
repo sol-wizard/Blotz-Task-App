@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { ReturnButton } from "@/shared/components/return-button";
 import { theme } from "@/shared/constants/theme";
+import { analytics } from "@/shared/services/analytics";
 
 type NoteEditorParams = {
   noteId?: string;
@@ -45,6 +46,7 @@ export default function NoteEditorScreen() {
 
     createNote(trimmedText, {
       onSuccess: () => {
+        analytics.trackNoteCreated({ source: "manual" });
         router.back();
       },
     });
