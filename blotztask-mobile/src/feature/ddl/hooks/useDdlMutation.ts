@@ -7,6 +7,7 @@ import {
 } from "@/shared/services/task-service";
 import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
+import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 
 type UpdatePinArgs = {
   task: DeadlineTaskDTO;
@@ -15,6 +16,7 @@ type UpdatePinArgs = {
 
 const useDdlMutation = () => {
   const queryClient = useQueryClient();
+  const { task: taskFirework } = useFirework();
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ddlKeys.all });
@@ -74,6 +76,10 @@ const useDdlMutation = () => {
       }
 
       return { previousDdlTasks };
+    },
+
+    onSuccess: (_data, task) => {
+      taskFirework.playIfCompleting(task.isDone);
     },
 
     onSettled: () => {
