@@ -95,7 +95,6 @@ export default function SubtaskItem({
             borderRadius: 16,
             borderWidth: 1,
             borderColor: "#E5E7EB",
-            backgroundColor: "#FFFFFF",
           }}
         >
           <View className="flex-row items-center px-4 py-1" style={{ minHeight: 60 }}>

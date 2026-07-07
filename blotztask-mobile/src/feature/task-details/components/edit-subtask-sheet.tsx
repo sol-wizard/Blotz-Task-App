@@ -69,8 +69,6 @@ export default function EditSubtaskSheet({
       onBackdropPress={handleCancel}
       onBackButtonPress={handleCancel}
       backdropOpacity={0.4}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
       avoidKeyboard
       useNativeDriver
       onModalWillShow={resetFormValues}
@@ -114,7 +112,7 @@ export default function EditSubtaskSheet({
           </View>
 
           <View>
-            <Text className="font-balooBold text-lg mb-2" style={{ color: "#B7BBC7" }}>
+            <Text className="font-balooBold text-lg mb-2 text-[#B7BBC7]">
               {t("subtasks.duration")}
             </Text>
             <View className="px-3">
