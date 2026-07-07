@@ -32,59 +32,60 @@ export default function ProtectedLayout() {
     <FireworkProvider>
       <View className="flex-1">
         <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
-        <Stack.Screen name="task-details" options={{ headerShown: false }} />
+          <Stack.Screen name="task-details" options={{ headerShown: false }} />
 
-        <Stack.Screen name="ddl" options={{ headerShown: false }} />
+          <Stack.Screen name="ddl" options={{ headerShown: false }} />
 
-        <Stack.Screen
-          name="task-edit"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="task-create"
-          options={{
-            headerShown: true,
-            headerShadowVisible: false,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerTintColor: "#000000",
-            headerBackButtonDisplayMode: "minimal",
-            headerStyle: {
-              backgroundColor: "white",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="note-editor"
-          options={{
-            headerShown: false,
-          }}
-        />
+          <Stack.Screen
+            name="task-edit"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="task-create"
+            options={{
+              headerShown: true,
+              headerShadowVisible: false,
+              headerTitle: "",
+              headerBackVisible: true,
+              headerTintColor: "#000000",
+              headerBackButtonDisplayMode: "minimal",
+              headerStyle: {
+                backgroundColor: "white",
+              },
+            }}
+          />
+          <Stack.Screen
+            name="note-editor"
+            options={{
+              headerShown: false,
+            }}
+          />
 
-        <Stack.Screen name="gashapon-machine" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="ai-task-sheet"
-          options={{
-            headerShown: false,
-            presentation: "transparentModal",
-            animation: "fade",
-            contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
-            gestureEnabled: false,
-            fullScreenGestureEnabled: false,
-          }}
-        />
-        <Stack.Screen
-          name="monthly-calendar"
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
-        <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
+          <Stack.Screen name="gashapon-machine" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="ai-task-sheet"
+            options={{
+              headerShown: false,
+              presentation: "transparentModal",
+              animation: "fade",
+              contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
+              gestureEnabled: false,
+              fullScreenGestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="monthly-calendar"
+            options={{ headerShown: false, gestureEnabled: false }}
+          />
+          <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
+          <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
+          <Stack.Screen name="badge-details" options={{ headerShown: false }} />
         </Stack>
 
         <FireworkOverlays />
