@@ -121,6 +121,7 @@ export default function AiTaskSheetScreen() {
     const allSucceeded = results.every((r) => r.status === "fulfilled");
 
     if (allSucceeded) {
+      displayNotes.forEach(() => analytics.trackNoteCreated({ source: "ai" }));
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed

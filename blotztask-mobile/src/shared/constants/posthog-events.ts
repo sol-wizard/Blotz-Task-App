@@ -5,6 +5,7 @@ export const EVENTS = {
   ACTIVE_USER_5S: "active_user_5s",
   BREAKDOWN_TASK: "breakdown_task",
   SCREEN_VIEWED: "screen_viewed",
+  NOTE_CREATED: "note_created",
 } as const;
 
 export const SCREEN_NAMES = {
