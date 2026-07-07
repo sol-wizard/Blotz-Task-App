@@ -70,7 +70,6 @@ export default function EditSubtaskSheet({
       onBackButtonPress={handleCancel}
       backdropOpacity={0.4}
       avoidKeyboard
-      useNativeDriver
       onModalWillShow={resetFormValues}
       style={{ justifyContent: "center", margin: 10 }}
     >
