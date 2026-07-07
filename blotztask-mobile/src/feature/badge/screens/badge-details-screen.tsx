@@ -10,8 +10,8 @@ import { useBadgeDetailQuery } from "../hooks/useBadgeDetailQuery";
 
 export default function BadgeDetailsScreen() {
   const { t } = useTranslation("badge");
-  const params = useLocalSearchParams<{ badgeId?: string }>();
-  const badgeId = params.badgeId ? Number(params.badgeId) : null;
+  const params = useLocalSearchParams<{ badgeId: string }>();
+  const badgeId = Number(params.badgeId);
   const { badgeDetail, isBadgeDetailLoading, isBadgeDetailError } = useBadgeDetailQuery(badgeId);
 
   return (
