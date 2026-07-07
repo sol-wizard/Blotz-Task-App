@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNote, deleteNote, updateNote } from "../services/notes-service";
 import { EditNoteDTO } from "../models/edit-note-dto";
 import { noteKeys } from "@/shared/constants/query-key-factory";
+import { CreateNoteDTO } from "../models/create-note-dto";
 
 export const useNotesMutation = () => {
   const queryClient = useQueryClient();
@@ -14,7 +15,7 @@ export const useNotesMutation = () => {
   });
 
   const createNoteMutation = useMutation({
-    mutationFn: (text: string) => createNote(text),
+    mutationFn: (createNoteDto: CreateNoteDTO) => createNote(createNoteDto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.all });
     },

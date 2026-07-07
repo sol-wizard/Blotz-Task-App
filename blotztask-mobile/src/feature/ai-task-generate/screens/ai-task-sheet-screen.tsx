@@ -115,7 +115,7 @@ export default function AiTaskSheetScreen() {
 
     const results = await Promise.allSettled([
       ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
-      ...displayNotes.map((n) => createNoteAsync(n.text)),
+      ...displayNotes.map((n) => createNoteAsync({ text: n.text, isPersistent: false })),
     ]);
 
     const allSucceeded = results.every((r) => r.status === "fulfilled");
