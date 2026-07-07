@@ -90,6 +90,7 @@ export default function SubtaskItem({
       >
         <TouchableOpacity
           activeOpacity={0.8}
+          onPress={() => !isEditMode && handleToggle()}
           onLongPress={isEditMode ? drag : undefined}
           style={{
             borderRadius: 16,
