@@ -26,7 +26,7 @@ export async function syncAndroidTodayTasksWidgetCache(
         renderWidget: (widgetInfo) =>
           React.createElement(TodayTasksWidget, {
             snapshot,
-            widgetInfo,
+            isSmallWidget: widgetInfo.width < 220,
           }),
       });
     }

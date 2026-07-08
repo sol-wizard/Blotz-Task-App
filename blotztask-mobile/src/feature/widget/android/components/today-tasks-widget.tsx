@@ -1,5 +1,5 @@
 import React from "react";
-import { FlexWidget, TextWidget, type WidgetInfo } from "react-native-android-widget";
+import { FlexWidget, TextWidget } from "react-native-android-widget";
 
 import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
@@ -7,11 +7,10 @@ import { TodayTaskRow } from "@/feature/widget/android/components/today-task-row
 
 type TodayTasksWidgetProps = {
   snapshot: TasksWidgetSnapshot;
-  widgetInfo?: WidgetInfo;
+  isSmallWidget: boolean;
 };
 
-export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps) {
-  const isSmallWidget = getIsSmallWidget(widgetInfo);
+export function TodayTasksWidget({ snapshot, isSmallWidget }: TodayTasksWidgetProps) {
   const visibleTasks = snapshot.tasks.slice(0, 3);
   const shouldShowTasks = visibleTasks.length > 0;
 
@@ -95,10 +94,4 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
       )}
     </FlexWidget>
   );
-}
-
-function getIsSmallWidget(widgetInfo?: WidgetInfo): boolean {
-  if (!widgetInfo) return false;
-
-  return widgetInfo.width < 220;
 }

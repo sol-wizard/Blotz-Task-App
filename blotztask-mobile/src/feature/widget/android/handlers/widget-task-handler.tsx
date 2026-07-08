@@ -16,7 +16,9 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<
       footerText: i18n.t("widget:today.footerText"),
     });
 
-    props.renderWidget(<TodayTasksWidget snapshot={snapshot} widgetInfo={props.widgetInfo} />);
+    props.renderWidget(
+      <TodayTasksWidget snapshot={snapshot} isSmallWidget={props.widgetInfo.width < 220} />,
+    );
   } catch {
     // Widget rendering is best-effort.
   }
