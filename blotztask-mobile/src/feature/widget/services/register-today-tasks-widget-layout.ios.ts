@@ -1,5 +1,5 @@
-import { registerIosTodayTasksWidgetLayout } from "@/feature/widget/ios/services/register-ios-today-tasks-widget-layout";
-
 export function registerTodayTasksWidgetLayout(): void {
-  registerIosTodayTasksWidgetLayout();
+  void import("@/feature/widget/ios/components/today-tasks-widget").catch(() => {
+    // Widget layout registration is best-effort.
+  });
 }
