@@ -1,4 +1,4 @@
-import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
+import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type {
   TaskWidgetSnapshotItem,
   TasksWidgetSnapshot,
@@ -16,7 +16,7 @@ export function buildTodayTasksWidgetSnapshot(
       title: widgetMessage.title,
       message: widgetMessage.emptyMessage,
       footerText: widgetMessage.footerText,
-      openAppDeepLink: TASK_WIDGET_OPEN_APP_DEEP_LINK,
+      appLink: APP_LINK,
       tasks: [],
     };
   }
@@ -26,7 +26,7 @@ export function buildTodayTasksWidgetSnapshot(
     title: widgetMessage.title,
     message: "",
     footerText: widgetMessage.footerText,
-    openAppDeepLink: TASK_WIDGET_OPEN_APP_DEEP_LINK,
+    appLink: APP_LINK,
     tasks,
   };
 }

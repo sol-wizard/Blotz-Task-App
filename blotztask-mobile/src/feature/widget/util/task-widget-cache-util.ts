@@ -2,7 +2,7 @@ import { format } from "date-fns";
 
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import { formatTaskEndTime } from "@/feature/calendar/util/format-task-end-time";
-import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
+import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
 import type {
   TaskWidgetSnapshotItem,
@@ -76,9 +76,9 @@ function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotIte
     taskId: task.id,
     title: task.title,
     timeLabel: formatTaskEndTime(task.endTime),
-    deepLink:
+    link:
       task.id == null
-        ? TASK_WIDGET_OPEN_APP_DEEP_LINK
-        : `blotztask://task-details?mode=persisted&taskId=${encodeURIComponent(String(task.id))}`,
+        ? APP_LINK
+        : `${APP_LINK}task-details?mode=persisted&taskId=${encodeURIComponent(String(task.id))}`,
   };
 }

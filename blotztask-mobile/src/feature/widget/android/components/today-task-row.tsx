@@ -1,7 +1,7 @@
 import React from "react";
 import { FlexWidget, TextWidget } from "react-native-android-widget";
 
-import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
+import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type { TaskWidgetSnapshotItem } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 type TodayTaskRowProps = {
@@ -17,7 +17,7 @@ export function TodayTaskRow({ task, showTime = true, compact = false }: TodayTa
   return (
     <FlexWidget
       clickAction="OPEN_URI"
-      clickActionData={{ uri: task.deepLink || TASK_WIDGET_OPEN_APP_DEEP_LINK }}
+      clickActionData={{ uri: task.link || APP_LINK }}
       accessibilityLabel={`Open ${task.title}`}
       style={{
         width: "match_parent",

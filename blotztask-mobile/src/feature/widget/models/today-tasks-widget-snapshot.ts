@@ -2,7 +2,7 @@ export type TaskWidgetSnapshotItem = {
   taskId: number | null;
   title: string;
   timeLabel: string;
-  deepLink: string;
+  link: string;
 };
 
 export type TasksWidgetSnapshot = {
@@ -10,7 +10,7 @@ export type TasksWidgetSnapshot = {
   title: string;
   message: string;
   footerText: string;
-  openAppDeepLink: string;
+  appLink: string;
   tasks: TaskWidgetSnapshotItem[];
 };
 

@@ -27,7 +27,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
         containerBackground("#F5F9FA", "widget"),
         frame({ maxWidth: 360, alignment: "topLeading" }),
         padding({ top: 15, bottom: 15, leading: 16, trailing: 12 }),
-        widgetURL(props.openAppDeepLink),
+        widgetURL(props.appLink),
       ]}
     >
       <Text
@@ -47,7 +47,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
           modifiers={[frame({ maxWidth: 360, alignment: "leading" })]}
         >
           {visibleTasks.map((task, index) => (
-            <Link key={`task-${index}`} destination={task.deepLink || props.openAppDeepLink}>
+            <Link key={`task-${index}`} destination={task.link || props.appLink}>
               <HStack
                 spacing={10}
                 alignment="center"

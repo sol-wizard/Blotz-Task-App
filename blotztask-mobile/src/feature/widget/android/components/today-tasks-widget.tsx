@@ -1,7 +1,7 @@
 import React from "react";
 import { FlexWidget, TextWidget, type WidgetInfo } from "react-native-android-widget";
 
-import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
+import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
 import { TodayTaskRow } from "@/feature/widget/android/components/today-task-row";
 
@@ -19,7 +19,7 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
   return (
     <FlexWidget
       clickAction="OPEN_URI"
-      clickActionData={{ uri: snapshot.openAppDeepLink || TASK_WIDGET_OPEN_APP_DEEP_LINK }}
+      clickActionData={{ uri: snapshot.appLink || APP_LINK }}
       accessibilityLabel="Open BlotzTask"
       style={{
         width: "match_parent",

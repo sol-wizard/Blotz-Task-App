@@ -40,7 +40,7 @@ function isTasksWidgetSnapshot(value: unknown): value is TasksWidgetSnapshot {
     typeof value.title === "string" &&
     typeof value.message === "string" &&
     typeof value.footerText === "string" &&
-    typeof value.openAppDeepLink === "string" &&
+    typeof value.appLink === "string" &&
     Array.isArray(value.tasks) &&
     value.tasks.every(isTaskWidgetSnapshotItem)
   );
@@ -53,7 +53,7 @@ function isTaskWidgetSnapshotItem(value: unknown): value is TaskWidgetSnapshotIt
     (typeof value.taskId === "number" || value.taskId === null) &&
     typeof value.title === "string" &&
     typeof value.timeLabel === "string" &&
-    typeof value.deepLink === "string"
+    typeof value.link === "string"
   );
 }
 
