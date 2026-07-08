@@ -12,7 +12,7 @@ type TodayTasksWidgetProps = {
 
 export function TodayTasksWidget({ snapshot, isSmallWidget }: TodayTasksWidgetProps) {
   const visibleTasks = snapshot.tasks.slice(0, 3);
-  const shouldShowTasks = visibleTasks.length > 0;
+  const hasTasks = visibleTasks.length > 0;
 
   return (
     <FlexWidget
@@ -42,7 +42,7 @@ export function TodayTasksWidget({ snapshot, isSmallWidget }: TodayTasksWidgetPr
         }}
       />
 
-      {shouldShowTasks ? (
+      {hasTasks ? (
         <FlexWidget
           style={{
             width: "match_parent",
