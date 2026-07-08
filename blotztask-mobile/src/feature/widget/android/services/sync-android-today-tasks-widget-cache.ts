@@ -6,7 +6,7 @@ import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache"
 import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
 import { getTodayTasksWidgetMessage } from "@/feature/widget/util/today-tasks-widget-message";
 import { TodayTasksWidget } from "@/feature/widget/android/components/today-tasks-widget";
-import { writeTodayTasksWidgetCache } from "@/feature/widget/android/services/today-tasks-widget-cache-storage";
+import { writeTodayTasksWidgetCache } from "@/feature/widget/android/services/today-tasks-widget-cache-service";
 
 export async function syncAndroidTodayTasksWidgetCache(cache: TaskWidgetCache): Promise<void> {
   try {

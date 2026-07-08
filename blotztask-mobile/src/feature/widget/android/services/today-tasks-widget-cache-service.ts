@@ -36,7 +36,7 @@ function isTasksWidgetSnapshot(value: unknown): value is TasksWidgetSnapshot {
   if (!isRecord(value)) return false;
 
   return (
-    typeof value.dateKey === "string" &&
+    typeof value.cacheDate === "string" &&
     typeof value.title === "string" &&
     typeof value.message === "string" &&
     typeof value.footerText === "string" &&
@@ -52,7 +52,7 @@ function isTaskWidgetSnapshotItem(value: unknown): value is TaskWidgetSnapshotIt
   return (
     (typeof value.taskId === "number" || value.taskId === null) &&
     typeof value.title === "string" &&
-    typeof value.timeLabel === "string" &&
+    typeof value.time === "string" &&
     typeof value.link === "string"
   );
 }

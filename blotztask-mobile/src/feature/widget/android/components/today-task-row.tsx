@@ -6,13 +6,12 @@ import type { TaskWidgetSnapshotItem } from "@/feature/widget/models/today-tasks
 
 type TodayTaskRowProps = {
   task: TaskWidgetSnapshotItem;
-  showTime?: boolean;
-  compact?: boolean;
+  isSmallWidget: boolean;
 };
 
-export function TodayTaskRow({ task, showTime = true, compact = false }: TodayTaskRowProps) {
-  const rowHeight = compact ? 27 : 29;
-  const circleSize = compact ? 23 : 25;
+export function TodayTaskRow({ task, isSmallWidget }: TodayTaskRowProps) {
+  const rowHeight = isSmallWidget ? 27 : 29;
+  const circleSize = isSmallWidget ? 23 : 25;
 
   return (
     <FlexWidget
@@ -61,15 +60,15 @@ export function TodayTaskRow({ task, showTime = true, compact = false }: TodayTa
             truncate="END"
             style={{
               color: "#202124",
-              fontSize: compact ? 17 : 18,
+              fontSize: isSmallWidget ? 17 : 18,
               fontWeight: "500",
             }}
           />
         </FlexWidget>
 
-        {showTime && task.timeLabel ? (
+        {!isSmallWidget ? (
           <TextWidget
-            text={task.timeLabel}
+            text={task.time}
             maxLines={1}
             truncate="END"
             style={{

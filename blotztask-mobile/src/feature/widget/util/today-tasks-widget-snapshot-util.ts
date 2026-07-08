@@ -6,13 +6,13 @@ import type {
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 export function buildTodayTasksWidgetSnapshot(
-  dateKey: string,
+  cacheDate: string,
   tasks: TaskWidgetSnapshotItem[],
   widgetMessage: TodayTasksWidgetMessage,
 ): TasksWidgetSnapshot {
   if (tasks.length === 0) {
     return {
-      dateKey,
+      cacheDate,
       title: widgetMessage.title,
       message: widgetMessage.emptyMessage,
       footerText: widgetMessage.footerText,
@@ -22,7 +22,7 @@ export function buildTodayTasksWidgetSnapshot(
   }
 
   return {
-    dateKey,
+    cacheDate,
     title: widgetMessage.title,
     message: "",
     footerText: widgetMessage.footerText,

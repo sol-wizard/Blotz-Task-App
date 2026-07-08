@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueries } from "@tanstack/react-query";
-import { addDays, parseISO, startOfDay } from "date-fns";
+import { addDays, startOfDay } from "date-fns";
 
 import {
   buildWidgetTaskCache,
-  getTaskWidgetDateKey,
   type TaskWidgetDaySource,
 } from "@/feature/widget/util/task-widget-cache-util";
 import { taskKeys } from "@/shared/constants/query-key-factory";
@@ -27,8 +26,7 @@ export function useSyncTodayTasksWidget({
   enabled = true,
 }: UseSyncTodayTasksWidgetParams = {}): void {
   const { i18n } = useTranslation("widget");
-  const todayKey = getTaskWidgetDateKey(new Date());
-  const today = startOfDay(parseISO(todayKey));
+  const today = startOfDay(new Date());
   const dates = Array.from({ length: 8 }, (_, index) => addDays(today, index));
 
   const widgetTasks = useQueries({

@@ -16,7 +16,7 @@ import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-wi
 const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnvironment) => {
   "widget";
 
-  const showTime = environment.widgetFamily !== "systemSmall";
+  const isSmallWidget = environment.widgetFamily === "systemSmall";
   const visibleTasks = props.tasks.slice(0, 3);
 
   return (
@@ -70,7 +70,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
                   {task.title}
                 </Text>
 
-                {showTime && task.timeLabel ? (
+                {!isSmallWidget ? (
                   <>
                     <Spacer minLength={0} />
 
@@ -81,7 +81,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
                         lineLimit(1),
                       ]}
                     >
-                      {task.timeLabel}
+                      {task.time}
                     </Text>
                   </>
                 ) : null}
@@ -105,11 +105,11 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
             {props.message}
           </Text>
 
-          {showTime && (
+          {!isSmallWidget ? (
             <Text modifiers={[font({ size: 11, weight: "medium" }), foregroundStyle("#64748B")]}>
               {props.footerText}
             </Text>
-          )}
+          ) : null}
         </VStack>
       )}
     </VStack>

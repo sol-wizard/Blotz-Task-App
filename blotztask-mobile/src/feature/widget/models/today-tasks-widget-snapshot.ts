@@ -1,12 +1,12 @@
 export type TaskWidgetSnapshotItem = {
   taskId: number | null;
   title: string;
-  timeLabel: string;
+  time: string;
   link: string;
 };
 
 export type TasksWidgetSnapshot = {
-  dateKey: string;
+  cacheDate: string;
   title: string;
   message: string;
   footerText: string;

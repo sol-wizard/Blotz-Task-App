@@ -30,10 +30,10 @@ export function buildWidgetTaskCache(
 ): TaskWidgetCache {
   const days = Object.fromEntries(
     daySources.map((source) => {
-      const dateKey = getTaskWidgetDateKey(source.date);
+      const cacheDate = format(source.date, "yyyy-MM-dd");
 
       if (source.status === "error") {
-        return [dateKey, buildTodayTasksWidgetSnapshot(dateKey, [], widgetMessage)];
+        return [cacheDate, buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage)];
       }
 
       const todoTasks =
@@ -42,9 +42,9 @@ export function buildWidgetTaskCache(
         )?.tasks ?? [];
 
       return [
-        dateKey,
+        cacheDate,
         buildTodayTasksWidgetSnapshot(
-          dateKey,
+          cacheDate,
           todoTasks.map(buildTaskWidgetSnapshotItem),
           widgetMessage,
         ),
@@ -61,21 +61,16 @@ export function buildWidgetTaskCache(
 export function selectTodayTasksWidgetSnapshot(
   cache: TaskWidgetCache | null,
   widgetMessage: TodayTasksWidgetMessage,
-  now = new Date(),
 ): TasksWidgetSnapshot {
-  const todayKey = getTaskWidgetDateKey(now);
-  return cache?.days[todayKey] ?? buildTodayTasksWidgetSnapshot(todayKey, [], widgetMessage);
-}
-
-export function getTaskWidgetDateKey(date: Date): string {
-  return format(date, "yyyy-MM-dd");
+  const cacheDate = format(new Date(), "yyyy-MM-dd");
+  return cache?.days[cacheDate] ?? buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
 }
 
 function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotItem {
   return {
     taskId: task.id,
     title: task.title,
-    timeLabel: formatTaskEndTime(task.endTime),
+    time: formatTaskEndTime(task.endTime),
     link:
       task.id == null
         ? APP_LINK

@@ -6,9 +6,9 @@ export async function syncIosTodayTasksWidgetCache(cache: TaskWidgetCache): Prom
   try {
     await TodayTasksWidget.updateTimeline(
       Object.values(cache.days)
-        .sort((first, second) => first.dateKey.localeCompare(second.dateKey))
+        .sort((first, second) => first.cacheDate.localeCompare(second.cacheDate))
         .map((snapshot) => ({
-          date: parseISO(snapshot.dateKey),
+          date: parseISO(snapshot.cacheDate),
           props: snapshot,
         })),
     );

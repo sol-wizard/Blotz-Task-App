@@ -11,8 +11,7 @@ type TodayTasksWidgetProps = {
 };
 
 export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps) {
-  const isCompact = isCompactWidget(widgetInfo);
-  const showTime = !isCompact;
+  const isSmallWidget = getIsSmallWidget(widgetInfo);
   const visibleTasks = snapshot.tasks.slice(0, 3);
   const shouldShowTasks = visibleTasks.length > 0;
 
@@ -29,8 +28,8 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
         justifyContent: "flex-start",
         backgroundColor: "#F5F9FA",
         borderRadius: 24,
-        paddingHorizontal: isCompact ? 18 : 22,
-        paddingVertical: isCompact ? 20 : 20,
+        paddingHorizontal: isSmallWidget ? 18 : 22,
+        paddingVertical: 20,
       }}
     >
       <TextWidget
@@ -51,17 +50,12 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
             flexDirection: "column",
             alignItems: "flex-start",
             justifyContent: "flex-start",
-            marginTop: isCompact ? 14 : 16,
-            flexGap: isCompact ? 13 : 15,
+            marginTop: isSmallWidget ? 14 : 16,
+            flexGap: isSmallWidget ? 13 : 15,
           }}
         >
           {visibleTasks.map((task, index) => (
-            <TodayTaskRow
-              key={`task-${index}`}
-              task={task}
-              showTime={showTime}
-              compact={isCompact}
-            />
+            <TodayTaskRow key={`task-${index}`} task={task} isSmallWidget={isSmallWidget} />
           ))}
         </FlexWidget>
       ) : (
@@ -76,7 +70,7 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
         >
           <TextWidget
             text={snapshot.message}
-            maxLines={isCompact ? 2 : undefined}
+            maxLines={isSmallWidget ? 2 : undefined}
             truncate="END"
             style={{
               color: "#202124",
@@ -85,7 +79,7 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
             }}
           />
 
-          {showTime && !isCompact ? (
+          {!isSmallWidget ? (
             <TextWidget
               text={snapshot.footerText}
               maxLines={1}
@@ -103,7 +97,7 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
   );
 }
 
-function isCompactWidget(widgetInfo?: WidgetInfo): boolean {
+function getIsSmallWidget(widgetInfo?: WidgetInfo): boolean {
   if (!widgetInfo) return false;
 
   return widgetInfo.width < 220;
