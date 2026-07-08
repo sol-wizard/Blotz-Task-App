@@ -155,4 +155,10 @@ public class TaskGenerationTools()
         note.Text = newText;
         return "Note updated.";
     }
+
+    // Swipe-to-delete removal by Id. Not AI tools: unregistered, and left out of ToolCallCount
+    // and the streaming callbacks on purpose.
+    public bool RemoveDraftTaskById(Guid id) => Tasks.RemoveAll(t => t.Id == id) > 0;
+
+    public bool RemoveDraftNoteById(Guid id) => Notes.RemoveAll(n => n.Id == id) > 0;
 }

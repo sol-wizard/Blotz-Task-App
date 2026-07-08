@@ -54,6 +54,8 @@ export default function AiTaskSheetScreen() {
     streamedNotes,
     submitAudioForTranscription,
     sendTextMessage,
+    deleteDraftTask,
+    deleteDraftNote,
   } = useAiTaskGenerator({
     setIsAiGenerating,
   });
@@ -180,7 +182,15 @@ export default function AiTaskSheetScreen() {
               )}
 
               {/* Task / note cards (streamed or final) */}
-              {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
+              {hasContent && (
+                <AiResultList
+                  aiTasks={displayTasks}
+                  aiNotes={displayNotes}
+                  onDeleteTask={deleteDraftTask}
+                  onDeleteNote={deleteDraftNote}
+                  isGenerating={isAiGenerating}
+                />
+              )}
 
               {isAiGenerating && !!transcript && (
                 <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
