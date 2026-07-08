@@ -15,7 +15,7 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PostHogProvider } from "posthog-react-native";
 import "../../global.css";
-import React from "react";
+import { useEffect } from "react";
 import { Auth0Provider } from "react-native-auth0";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
@@ -45,7 +45,7 @@ function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
 
-  React.useEffect(() => {
+  useEffect(() => {
     registerTodayTasksWidgetLayout();
   }, []);
 

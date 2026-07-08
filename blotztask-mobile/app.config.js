@@ -1,28 +1,6 @@
-const bundleIdentifier = process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask";
-const androidWidgetConfig = {
-  widgets: [
-    {
-      name: "TodayTasksMedianWidget",
-      label: "BlotzTask",
-      minWidth: "250dp",
-      minHeight: "110dp",
-      targetCellWidth: 4,
-      targetCellHeight: 2,
-      resizeMode: "horizontal|vertical",
-      updatePeriodMillis: 1800000,
-    },
-    {
-      name: "TodayTasksSmallWidget",
-      label: "BlotzTask",
-      minWidth: "110dp",
-      minHeight: "110dp",
-      targetCellWidth: 2,
-      targetCellHeight: 2,
-      resizeMode: "horizontal|vertical",
-      updatePeriodMillis: 1800000,
-    },
-  ],
-};
+import widgetConfig from "./app-widget.config.cjs";
+
+const { androidWidgetConfig, iosWidgetConfig } = widgetConfig;
 
 export default {
   expo: {
@@ -37,7 +15,7 @@ export default {
     userInterfaceStyle: "light",
     ios: {
       supportsTablet: false,
-      bundleIdentifier,
+      bundleIdentifier: process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         CFBundleDevelopmentRegion: "en",
@@ -120,18 +98,7 @@ export default {
       "expo-status-bar",
       [
         "expo-widgets",
-        {
-          bundleIdentifier: `${bundleIdentifier}.ExpoWidgetsTarget`,
-          groupIdentifier: `group.${bundleIdentifier}`,
-          widgets: [
-            {
-              name: "TodayTasksWidget",
-              displayName: "Today's Tasks",
-              description: "Shows a lightweight summary of today's BlotzTask tasks.",
-              supportedFamilies: ["systemSmall", "systemMedium", "systemLarge"],
-            },
-          ],
-        },
+        iosWidgetConfig,
       ],
       ["react-native-android-widget", androidWidgetConfig],
       "./plugins/withAndroidWorkManagerFix",
