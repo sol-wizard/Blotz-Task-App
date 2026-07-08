@@ -1,7 +1,7 @@
 import React from "react";
 import { requestWidgetUpdate } from "react-native-android-widget";
 
-import { ANDROID_TODAY_TASKS_WIDGET_NAMES } from "@/feature/widget/config/widget-config";
+import { ANDROID_TASK_WIDGET_NAMES } from "@/feature/widget/config/widget-config";
 import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
 import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
 import { getTodayTasksWidgetMessage } from "@/feature/widget/util/today-tasks-widget-message";
@@ -14,7 +14,7 @@ export async function syncAndroidTodayTasksWidgetCache(cache: TaskWidgetCache): 
 
     const snapshot = selectTodayTasksWidgetSnapshot(cache, getTodayTasksWidgetMessage());
 
-    for (const widgetName of ANDROID_TODAY_TASKS_WIDGET_NAMES) {
+    for (const widgetName of ANDROID_TASK_WIDGET_NAMES) {
       await requestWidgetUpdate({
         widgetName,
         renderWidget: (widgetInfo) =>

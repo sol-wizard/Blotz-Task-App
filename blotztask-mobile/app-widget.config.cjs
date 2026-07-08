@@ -1,7 +1,7 @@
 const iosWidgetConfig = {
   widgets: [
     {
-      name: "TodayTasksWidget",
+      name: "BlotzTaskIOSTaskWidget",
       displayName: "Today's Tasks",
       description: "Shows a lightweight summary of today's BlotzTask tasks.",
       supportedFamilies: ["systemSmall", "systemMedium"],
@@ -12,7 +12,7 @@ const iosWidgetConfig = {
 const androidWidgetConfig = {
   widgets: [
     {
-      name: "TodayTasksMedianWidget",
+      name: "BlotzTaskAndroidTaskMediumWidget",
       label: "BlotzTask",
       minWidth: "250dp",
       minHeight: "110dp",
@@ -22,7 +22,7 @@ const androidWidgetConfig = {
       updatePeriodMillis: 1800000,
     },
     {
-      name: "TodayTasksSmallWidget",
+      name: "BlotzTaskAndroidTaskSmallWidget",
       label: "BlotzTask",
       minWidth: "110dp",
       minHeight: "110dp",
