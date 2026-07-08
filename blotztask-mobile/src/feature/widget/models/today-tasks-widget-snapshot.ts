@@ -1,10 +1,3 @@
-export enum TaskWidgetSnapshotState {
-  Placeholder = "placeholder",
-  Content = "content",
-  Empty = "empty",
-  Fallback = "fallback",
-}
-
 export type TaskWidgetSnapshotItem = {
   taskId: number | null;
   title: string;
@@ -13,7 +6,6 @@ export type TaskWidgetSnapshotItem = {
 };
 
 export type TasksWidgetSnapshot = {
-  state: TaskWidgetSnapshotState;
   dateKey: string;
   title: string;
   message: string;
@@ -25,7 +17,5 @@ export type TasksWidgetSnapshot = {
 export type TodayTasksWidgetMessage = {
   title: string;
   emptyMessage: string;
-  placeholderMessage: string;
-  fallbackMessage: string;
   footerText: string;
 };

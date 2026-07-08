@@ -1,10 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
-import {
-  TaskWidgetSnapshotState,
-  type TaskWidgetSnapshotItem,
-  type TasksWidgetSnapshot,
+import type {
+  TaskWidgetSnapshotItem,
+  TasksWidgetSnapshot,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 const TODAY_TASKS_WIDGET_CACHE_KEY = "blotztask.widget.todayTasksCache.v1";
@@ -37,7 +36,6 @@ function isTasksWidgetSnapshot(value: unknown): value is TasksWidgetSnapshot {
   if (!isRecord(value)) return false;
 
   return (
-    isTaskWidgetSnapshotState(value.state) &&
     typeof value.dateKey === "string" &&
     typeof value.title === "string" &&
     typeof value.message === "string" &&
@@ -57,10 +55,6 @@ function isTaskWidgetSnapshotItem(value: unknown): value is TaskWidgetSnapshotIt
     typeof value.timeLabel === "string" &&
     typeof value.deepLink === "string"
   );
-}
-
-function isTaskWidgetSnapshotState(value: unknown): value is TaskWidgetSnapshotState {
-  return Object.values(TaskWidgetSnapshotState).some((state) => state === value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

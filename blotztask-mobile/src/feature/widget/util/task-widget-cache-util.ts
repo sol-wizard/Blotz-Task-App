@@ -9,10 +9,7 @@ import type {
   TasksWidgetSnapshot,
   TodayTasksWidgetMessage,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
-import {
-  buildTodayTasksWidgetFallbackSnapshot,
-  buildTodayTasksWidgetSnapshot,
-} from "@/feature/widget/util/today-tasks-widget-snapshot-util";
+import { buildTodayTasksWidgetSnapshot } from "@/feature/widget/util/today-tasks-widget-snapshot-util";
 import type { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export type TaskWidgetDaySource =
@@ -36,7 +33,7 @@ export function buildWidgetTaskCache(
       const dateKey = getTaskWidgetDateKey(source.date);
 
       if (source.status === "error") {
-        return [dateKey, buildTodayTasksWidgetFallbackSnapshot(dateKey, widgetMessage)];
+        return [dateKey, buildTodayTasksWidgetSnapshot(dateKey, [], widgetMessage)];
       }
 
       const todoTasks =
@@ -67,7 +64,7 @@ export function selectTodayTasksWidgetSnapshot(
   now = new Date(),
 ): TasksWidgetSnapshot {
   const todayKey = getTaskWidgetDateKey(now);
-  return cache?.days[todayKey] ?? buildTodayTasksWidgetFallbackSnapshot(todayKey, widgetMessage);
+  return cache?.days[todayKey] ?? buildTodayTasksWidgetSnapshot(todayKey, [], widgetMessage);
 }
 
 export function getTaskWidgetDateKey(date: Date): string {
