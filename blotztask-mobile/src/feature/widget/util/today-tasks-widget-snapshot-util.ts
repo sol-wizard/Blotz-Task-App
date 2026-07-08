@@ -2,13 +2,16 @@ import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type {
   TaskWidgetSnapshotItem,
   TasksWidgetSnapshot,
-  TodayTasksWidgetMessage,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 export function buildTodayTasksWidgetSnapshot(
   cacheDate: string,
   tasks: TaskWidgetSnapshotItem[],
-  widgetMessage: TodayTasksWidgetMessage,
+  widgetMessage: {
+    title: string;
+    emptyMessage: string;
+    footerText: string;
+  },
 ): TasksWidgetSnapshot {
   if (tasks.length === 0) {
     return {

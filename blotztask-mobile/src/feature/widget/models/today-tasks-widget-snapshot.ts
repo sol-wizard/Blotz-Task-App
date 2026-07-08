@@ -13,9 +13,3 @@ export type TasksWidgetSnapshot = {
   appLink: string;
   tasks: TaskWidgetSnapshotItem[];
 };
-
-export type TodayTasksWidgetMessage = {
-  title: string;
-  emptyMessage: string;
-  footerText: string;
-};

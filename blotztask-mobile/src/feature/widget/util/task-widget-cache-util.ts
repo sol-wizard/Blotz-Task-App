@@ -3,11 +3,9 @@ import { format } from "date-fns";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import { formatTaskEndTime } from "@/feature/calendar/util/format-task-end-time";
 import { APP_LINK } from "@/feature/widget/config/widget-config";
-import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
 import type {
   TaskWidgetSnapshotItem,
   TasksWidgetSnapshot,
-  TodayTasksWidgetMessage,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 import { buildTodayTasksWidgetSnapshot } from "@/feature/widget/util/today-tasks-widget-snapshot-util";
 import type { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -21,14 +19,17 @@ export type TaskWidgetDaySource =
   | {
       date: Date;
       status: "error";
-    };
+};
 
-export function buildWidgetTaskCache(
+export function buildTodayTasksWidgetCache(
   daySources: TaskWidgetDaySource[],
-  widgetMessage: TodayTasksWidgetMessage,
-  generatedAt = new Date(),
-): TaskWidgetCache {
-  const days = Object.fromEntries(
+  widgetMessage: {
+    title: string;
+    emptyMessage: string;
+    footerText: string;
+  },
+): Record<string, TasksWidgetSnapshot> {
+  return Object.fromEntries(
     daySources.map((source) => {
       const cacheDate = format(source.date, "yyyy-MM-dd");
 
@@ -51,19 +52,18 @@ export function buildWidgetTaskCache(
       ];
     }),
   );
-
-  return {
-    generatedAt: generatedAt.toISOString(),
-    days,
-  };
 }
 
 export function selectTodayTasksWidgetSnapshot(
-  cache: TaskWidgetCache | null,
-  widgetMessage: TodayTasksWidgetMessage,
+  cache: Record<string, TasksWidgetSnapshot> | null,
+  widgetMessage: {
+    title: string;
+    emptyMessage: string;
+    footerText: string;
+  },
 ): TasksWidgetSnapshot {
   const cacheDate = format(new Date(), "yyyy-MM-dd");
-  return cache?.days[cacheDate] ?? buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
+  return cache?.[cacheDate] ?? buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
 }
 
 function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotItem {

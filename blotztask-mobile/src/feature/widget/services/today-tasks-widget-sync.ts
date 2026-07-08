@@ -1,7 +1,9 @@
 import { Platform } from "react-native";
-import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
+import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
-export async function syncTodayTasksWidgetCache(cache: TaskWidgetCache): Promise<void> {
+export async function syncTodayTasksWidgetCache(
+  cache: Record<string, TasksWidgetSnapshot>,
+): Promise<void> {
   if (Platform.OS === "ios") {
     const { syncIosTodayTasksWidgetCache } =
       await import("@/feature/widget/ios/services/sync-ios-today-tasks-widget-cache");

@@ -4,36 +4,27 @@ import { useQueries } from "@tanstack/react-query";
 import { addDays, startOfDay } from "date-fns";
 
 import {
-  buildWidgetTaskCache,
+  buildTodayTasksWidgetCache,
   type TaskWidgetDaySource,
 } from "@/feature/widget/util/task-widget-cache-util";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import { fetchTasksForDate } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { syncTodayTasksWidgetCache } from "@/feature/widget/services/today-tasks-widget-sync";
-import { getTodayTasksWidgetMessage } from "@/feature/widget/util/today-tasks-widget-message";
 
 type WidgetTaskQueryCollection = {
   isPending: boolean;
   daySources: TaskWidgetDaySource[];
 };
 
-type UseSyncTodayTasksWidgetParams = {
-  enabled?: boolean;
-};
-
-export function useSyncTodayTasksWidget({
-  enabled = true,
-}: UseSyncTodayTasksWidgetParams = {}): void {
-  const { i18n } = useTranslation("widget");
-  const today = startOfDay(new Date());
-  const dates = Array.from({ length: 8 }, (_, index) => addDays(today, index));
+export function useSyncTodayTasksWidget(): void {
+  const { i18n, t } = useTranslation("widget");
+  const dates = Array.from({ length: 8 }, (_, index) => addDays(startOfDay(new Date()), index));
 
   const widgetTasks = useQueries({
     queries: dates.map((date) => ({
       queryKey: taskKeys.selectedDay(convertToDateTimeOffset(date)),
       queryFn: () => fetchTasksForDate(date, true),
-      enabled,
       meta: { silent: true },
     })),
     combine: (results): WidgetTaskQueryCollection => ({
@@ -47,10 +38,14 @@ export function useSyncTodayTasksWidget({
   });
 
   useEffect(() => {
-    if (!enabled) return;
     if (widgetTasks.isPending) return;
 
-    const widgetMessage = getTodayTasksWidgetMessage();
-    syncTodayTasksWidgetCache(buildWidgetTaskCache(widgetTasks.daySources, widgetMessage));
-  }, [enabled, i18n.language, widgetTasks]);
+    syncTodayTasksWidgetCache(
+      buildTodayTasksWidgetCache(widgetTasks.daySources, {
+        title: t("today.title"),
+        emptyMessage: t("today.emptyMessage"),
+        footerText: t("today.footerText"),
+      }),
+    );
+  }, [i18n.language, t, widgetTasks]);
 }

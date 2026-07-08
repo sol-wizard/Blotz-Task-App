@@ -1,11 +1,13 @@
 import { parseISO } from "date-fns";
 import TodayTasksWidget from "@/feature/widget/ios/components/today-tasks-widget";
-import type { TaskWidgetCache } from "@/feature/widget/models/task-widget-cache";
+import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
-export async function syncIosTodayTasksWidgetCache(cache: TaskWidgetCache): Promise<void> {
+export async function syncIosTodayTasksWidgetCache(
+  cache: Record<string, TasksWidgetSnapshot>,
+): Promise<void> {
   try {
     await TodayTasksWidget.updateTimeline(
-      Object.values(cache.days)
+      Object.values(cache)
         .sort((first, second) => first.cacheDate.localeCompare(second.cacheDate))
         .map((snapshot) => ({
           date: parseISO(snapshot.cacheDate),
