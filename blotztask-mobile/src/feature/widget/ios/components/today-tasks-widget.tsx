@@ -11,7 +11,10 @@ import {
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
 import { IOS_TODAY_TASKS_WIDGET_NAME } from "@/feature/widget/config/widget-config";
-import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import {
+  TaskWidgetSnapshotState,
+  type TasksWidgetSnapshot,
+} from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnvironment) => {
   "widget";
@@ -40,7 +43,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
         {props.title}
       </Text>
 
-      {props.state === "content" ? (
+      {props.state === TaskWidgetSnapshotState.Content ? (
         <VStack
           alignment="leading"
           spacing={10}

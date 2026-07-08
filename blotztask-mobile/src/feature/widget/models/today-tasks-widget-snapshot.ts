@@ -1,4 +1,9 @@
-export type TaskWidgetSnapshotState = "placeholder" | "content" | "empty" | "fallback";
+export enum TaskWidgetSnapshotState {
+  Placeholder = "placeholder",
+  Content = "content",
+  Empty = "empty",
+  Fallback = "fallback",
+}
 
 export type TaskWidgetSnapshotItem = {
   taskId: number | null;

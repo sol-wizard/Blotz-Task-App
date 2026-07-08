@@ -2,7 +2,10 @@ import React from "react";
 import { FlexWidget, TextWidget, type WidgetInfo } from "react-native-android-widget";
 
 import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
-import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import {
+  TaskWidgetSnapshotState,
+  type TasksWidgetSnapshot,
+} from "@/feature/widget/models/today-tasks-widget-snapshot";
 import { TodayTaskRow } from "@/feature/widget/android/components/today-task-row";
 
 type TodayTasksWidgetProps = {
@@ -14,7 +17,8 @@ export function TodayTasksWidget({ snapshot, widgetInfo }: TodayTasksWidgetProps
   const isCompact = isCompactWidget(widgetInfo);
   const showTime = !isCompact;
   const visibleTasks = snapshot.tasks.slice(0, 3);
-  const shouldShowTasks = snapshot.state === "content" && visibleTasks.length > 0;
+  const shouldShowTasks =
+    snapshot.state === TaskWidgetSnapshotState.Content && visibleTasks.length > 0;
 
   return (
     <FlexWidget

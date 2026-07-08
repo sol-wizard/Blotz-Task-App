@@ -1,8 +1,9 @@
 import { TASK_WIDGET_OPEN_APP_DEEP_LINK } from "@/feature/widget/config/widget-config";
-import type {
-  TaskWidgetSnapshotItem,
-  TasksWidgetSnapshot,
-  TodayTasksWidgetMessage,
+import {
+  TaskWidgetSnapshotState,
+  type TaskWidgetSnapshotItem,
+  type TasksWidgetSnapshot,
+  type TodayTasksWidgetMessage,
 } from "@/feature/widget/models/today-tasks-widget-snapshot";
 
 export function buildTodayTasksWidgetSnapshot(
@@ -12,7 +13,7 @@ export function buildTodayTasksWidgetSnapshot(
 ): TasksWidgetSnapshot {
   if (tasks.length === 0) {
     return {
-      state: "empty",
+      state: TaskWidgetSnapshotState.Empty,
       dateKey,
       title: widgetMessage.title,
       message: widgetMessage.emptyMessage,
@@ -23,7 +24,7 @@ export function buildTodayTasksWidgetSnapshot(
   }
 
   return {
-    state: "content",
+    state: TaskWidgetSnapshotState.Content,
     dateKey,
     title: widgetMessage.title,
     message: "",
@@ -39,7 +40,7 @@ export function buildTodayTasksWidgetFallbackSnapshot(
   fallbackMessage = widgetMessage.fallbackMessage,
 ): TasksWidgetSnapshot {
   return {
-    state: "fallback",
+    state: TaskWidgetSnapshotState.Fallback,
     dateKey,
     title: widgetMessage.title,
     message: fallbackMessage,
