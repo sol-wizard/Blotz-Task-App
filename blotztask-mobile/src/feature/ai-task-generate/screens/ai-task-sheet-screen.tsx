@@ -117,12 +117,13 @@ export default function AiTaskSheetScreen() {
 
     const results = await Promise.allSettled([
       ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
-      ...displayNotes.map((n) => createNoteAsync(n.text)),
+      ...displayNotes.map((n) => createNoteAsync({ text: n.text, isPersistent: false })),
     ]);
 
     const allSucceeded = results.every((r) => r.status === "fulfilled");
 
     if (allSucceeded) {
+      displayNotes.forEach(() => analytics.trackNoteCreated({ source: "ai" }));
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed

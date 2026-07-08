@@ -53,6 +53,7 @@ export default function NotesScreen() {
       params: {
         noteId: note.id,
         noteText: note.text,
+        isPersistent: String(note.isPersistent),
       },
     });
   };

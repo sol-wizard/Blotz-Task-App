@@ -6,22 +6,27 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
 import { ReturnButton } from "@/shared/components/return-button";
 import { theme } from "@/shared/constants/theme";
+import { analytics } from "@/shared/services/analytics";
 
 type NoteEditorParams = {
   noteId?: string;
   noteText?: string;
+  isPersistent?: string;
 };
 
 export default function NoteEditorScreen() {
   const router = useRouter();
   const { t } = useTranslation("notes");
 
-  const { noteId, noteText: initialTextParam } = useLocalSearchParams<NoteEditorParams>();
+  const { noteId, noteText: initialTextParam, isPersistent: initialIsPersistentParam } =
+    useLocalSearchParams<NoteEditorParams>();
   const initialText = initialTextParam ?? "";
 
   const [noteText, setNoteText] = useState(initialText);
+  const [isPersistent, setIsPersistent] = useState(initialIsPersistentParam === "true");
   const { createNote, isNoteCreating, updateNote, isNoteUpdating } = useNotesMutation();
 
   const isSaving = noteId ? isNoteUpdating : isNoteCreating;
@@ -33,7 +38,7 @@ export default function NoteEditorScreen() {
 
     if (noteId) {
       updateNote(
-        { id: noteId, text: trimmedText },
+        { id: noteId, text: trimmedText, isPersistent },
         {
           onSuccess: () => {
             router.back();
@@ -43,8 +48,9 @@ export default function NoteEditorScreen() {
       return;
     }
 
-    createNote(trimmedText, {
+    createNote({ text: trimmedText, isPersistent }, {
       onSuccess: () => {
+        analytics.trackNoteCreated({ source: "manual" });
         router.back();
       },
     });
@@ -87,6 +93,11 @@ export default function NoteEditorScreen() {
             textAlignVertical="top"
             className="mt-4 flex-1 rounded-3xl bg-white px-5 py-5 font-baloo text-lg text-black"
           />
+
+          <View className="mt-4 flex-row items-center justify-between rounded-2xl bg-white px-5 py-4">
+            <Text className="font-baloo text-lg text-black">{t("persistentNote")}</Text>
+            <ToggleSwitch value={isPersistent} onChange={() => setIsPersistent(!isPersistent)} />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
