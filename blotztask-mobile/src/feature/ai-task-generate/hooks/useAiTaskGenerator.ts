@@ -96,6 +96,53 @@ export function useAiTaskGenerator({
     }
   };
 
+  // Optimistic swipe-to-delete: drop the card immediately, tell the backend to remove it from its
+  // draft basket, and roll the card back if the invoke fails (otherwise the next turn's snapshot
+  // would resurrect it). No-op when the id is gone or the connection is down.
+  const deleteDraftTask = async (id: string) => {
+    const index = streamedTasks.findIndex((task) => task.id === id);
+    if (index === -1) return;
+    const removed = streamedTasks[index];
+
+    setStreamedTasks((prev) => prev.filter((task) => task.id !== id));
+
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+    try {
+      await signalRService.invoke(connection, "DeleteDraftTask", id);
+    } catch (error) {
+      console.error("DeleteDraftTask invocation failed:", error);
+      setStreamedTasks((prev) => {
+        const next = [...prev];
+        next.splice(index, 0, removed);
+        return next;
+      });
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
+  };
+
+  const deleteDraftNote = async (id: string) => {
+    const index = streamedNotes.findIndex((note) => note.id === id);
+    if (index === -1) return;
+    const removed = streamedNotes[index];
+
+    setStreamedNotes((prev) => prev.filter((note) => note.id !== id));
+
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+    try {
+      await signalRService.invoke(connection, "DeleteDraftNote", id);
+    } catch (error) {
+      console.error("DeleteDraftNote invocation failed:", error);
+      setStreamedNotes((prev) => {
+        const next = [...prev];
+        next.splice(index, 0, removed);
+        return next;
+      });
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
+  };
+
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
@@ -182,6 +229,8 @@ export function useAiTaskGenerator({
     turns,
     submitAudioForTranscription,
     sendTextMessage,
+    deleteDraftTask,
+    deleteDraftNote,
   };
 }
 
