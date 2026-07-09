@@ -10,7 +10,6 @@ export function buildTodayTasksWidgetSnapshot(
   widgetMessage: {
     title: string;
     emptyMessage: string;
-    footerText: string;
   },
 ): TasksWidgetSnapshot {
   if (tasks.length === 0) {
@@ -18,7 +17,6 @@ export function buildTodayTasksWidgetSnapshot(
       cacheDate,
       title: widgetMessage.title,
       message: widgetMessage.emptyMessage,
-      footerText: widgetMessage.footerText,
       appLink: APP_LINK,
       tasks: [],
     };
@@ -28,7 +26,6 @@ export function buildTodayTasksWidgetSnapshot(
     cacheDate,
     title: widgetMessage.title,
     message: "",
-    footerText: widgetMessage.footerText,
     appLink: APP_LINK,
     tasks,
   };

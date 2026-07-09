@@ -1,7 +1,6 @@
 {
   "today": {
     "title": "Today",
-    "emptyMessage": "Open BlotzTask to plan your day.",
-    "footerText": "Tap to open the app"
+    "emptyMessage": "Open BlotzTask to plan your day."
   }
 }

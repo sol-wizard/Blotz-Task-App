@@ -1,7 +1,6 @@
 {
   "today": {
     "title": "今天",
-    "emptyMessage": "打开 BlotzTask 来规划今天。",
-    "footerText": "点按打开应用"
+    "emptyMessage": "打开 BlotzTask 来规划今天。"
   }
 }

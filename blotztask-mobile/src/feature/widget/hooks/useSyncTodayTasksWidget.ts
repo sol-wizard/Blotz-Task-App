@@ -44,7 +44,6 @@ export function useSyncTodayTasksWidget(): void {
       buildTodayTasksWidgetCache(widgetTasks.daySources, {
         title: t("today.title"),
         emptyMessage: t("today.emptyMessage"),
-        footerText: t("today.footerText"),
       }),
     );
   }, [i18n.language, t, widgetTasks]);

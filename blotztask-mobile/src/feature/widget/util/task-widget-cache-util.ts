@@ -26,7 +26,6 @@ export function buildTodayTasksWidgetCache(
   widgetMessage: {
     title: string;
     emptyMessage: string;
-    footerText: string;
   },
 ): Record<string, TasksWidgetSnapshot> {
   return Object.fromEntries(
@@ -59,7 +58,6 @@ export function selectTodayTasksWidgetSnapshot(
   widgetMessage: {
     title: string;
     emptyMessage: string;
-    footerText: string;
   },
 ): TasksWidgetSnapshot {
   const cacheDate = format(new Date(), "yyyy-MM-dd");

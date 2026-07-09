@@ -104,12 +104,6 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
           >
             {props.message}
           </Text>
-
-          {!isSmallWidget ? (
-            <Text modifiers={[font({ size: 11, weight: "medium" }), foregroundStyle("#64748B")]}>
-              {props.footerText}
-            </Text>
-          ) : null}
         </VStack>
       )}
     </VStack>

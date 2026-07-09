@@ -77,19 +77,6 @@ export function TodayTasksWidget({ snapshot, isSmallWidget }: TodayTasksWidgetPr
               fontWeight: "500",
             }}
           />
-
-          {!isSmallWidget ? (
-            <TextWidget
-              text={snapshot.footerText}
-              maxLines={1}
-              truncate="END"
-              style={{
-                color: "#64748B",
-                fontSize: 11,
-                marginTop: 8,
-              }}
-            />
-          ) : null}
         </FlexWidget>
       )}
     </FlexWidget>

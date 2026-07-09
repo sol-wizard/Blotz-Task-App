@@ -17,7 +17,6 @@ export async function syncAndroidTodayTasksWidgetCache(
     const snapshot = selectTodayTasksWidgetSnapshot(cache, {
       title: i18n.t("widget:today.title"),
       emptyMessage: i18n.t("widget:today.emptyMessage"),
-      footerText: i18n.t("widget:today.footerText"),
     });
 
     for (const widgetName of ANDROID_TASK_WIDGET_NAMES) {
