@@ -4,7 +4,7 @@ import { useQueries } from "@tanstack/react-query";
 import { addDays, startOfDay } from "date-fns";
 
 import {
-  buildTodayTasksWidgetCache,
+  buildTaskWidgetCache,
   type TaskWidgetDaySource,
 } from "@/feature/widget/util/task-widget-cache-util";
 import { taskKeys } from "@/shared/constants/query-key-factory";
@@ -41,7 +41,7 @@ export function useSyncTodayTasksWidget(): void {
     if (widgetTasks.isPending) return;
 
     syncTodayTasksWidgetCache(
-      buildTodayTasksWidgetCache(widgetTasks.daySources, {
+      buildTaskWidgetCache(widgetTasks.daySources, {
         title: t("today.title"),
         emptyMessage: t("today.emptyMessage"),
       }),

@@ -21,7 +21,7 @@ export type TaskWidgetDaySource =
       status: "error";
 };
 
-export function buildTodayTasksWidgetCache(
+export function buildTaskWidgetCache(
   daySources: TaskWidgetDaySource[],
   widgetMessage: {
     title: string;
