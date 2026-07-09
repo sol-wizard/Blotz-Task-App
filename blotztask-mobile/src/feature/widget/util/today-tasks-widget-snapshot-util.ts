@@ -2,7 +2,7 @@ import { APP_LINK } from "@/feature/widget/config/widget-config";
 import type {
   TaskWidgetSnapshotItem,
   TasksWidgetSnapshot,
-} from "@/feature/widget/models/today-tasks-widget-snapshot";
+} from "@/feature/widget/models/tasks-widget-snapshot";
 
 export function buildTodayTasksWidgetSnapshot(
   cacheDate: string,

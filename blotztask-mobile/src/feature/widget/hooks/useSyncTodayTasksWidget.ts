@@ -10,7 +10,7 @@ import {
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import { fetchTasksForDate } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
-import { syncTodayTasksWidgetCache } from "@/feature/widget/services/today-tasks-widget-sync";
+import { syncTodayTasksWidgetCache } from "@/feature/widget/services/tasks-widget-sync";
 
 type WidgetTaskQueryCollection = {
   isPending: boolean;

@@ -11,7 +11,7 @@ import {
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
 import { IOS_TASK_WIDGET_NAME } from "@/feature/widget/config/widget-config";
-import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 
 const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnvironment) => {
   "widget";

@@ -2,7 +2,7 @@ import React from "react";
 import type { WidgetTaskHandlerProps } from "react-native-android-widget";
 import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
 import { readTodayTasksWidgetCache } from "@/feature/widget/android/services/today-tasks-widget-cache-service";
-import { TodayTasksWidget } from "@/feature/widget/android/components/today-tasks-widget";
+import { TodayTasksWidget } from "@/feature/widget/android/components/android-tasks-widget";
 import i18n from "@/i18n";
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<void> {

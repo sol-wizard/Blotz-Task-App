@@ -2,7 +2,7 @@ import React from "react";
 import { FlexWidget, TextWidget } from "react-native-android-widget";
 
 import { APP_LINK } from "@/feature/widget/config/widget-config";
-import type { TaskWidgetSnapshotItem } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import type { TaskWidgetSnapshotItem } from "@/feature/widget/models/tasks-widget-snapshot";
 
 type TodayTaskRowProps = {
   task: TaskWidgetSnapshotItem;

@@ -2,9 +2,9 @@ import React from "react";
 import { requestWidgetUpdate } from "react-native-android-widget";
 
 import { ANDROID_TASK_WIDGET_NAMES } from "@/feature/widget/config/widget-config";
-import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
-import { TodayTasksWidget } from "@/feature/widget/android/components/today-tasks-widget";
+import { TodayTasksWidget } from "@/feature/widget/android/components/android-tasks-widget";
 import { writeTodayTasksWidgetCache } from "@/feature/widget/android/services/today-tasks-widget-cache-service";
 import i18n from "@/i18n";
 

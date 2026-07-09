@@ -48,7 +48,7 @@ function RootLayout() {
   useEffect(() => {
     if (Platform.OS !== "ios") return;
 
-    void import("@/feature/widget/ios/components/today-tasks-widget").catch(() => {
+    void import("@/feature/widget/ios/components/ios-tasks-widget").catch(() => {
       // Widget layout registration is best-effort.
     });
   }, []);

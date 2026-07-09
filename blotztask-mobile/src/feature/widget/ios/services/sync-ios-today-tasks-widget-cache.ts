@@ -1,6 +1,6 @@
 import { parseISO } from "date-fns";
-import TodayTasksWidget from "@/feature/widget/ios/components/today-tasks-widget";
-import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import TodayTasksWidget from "@/feature/widget/ios/components/ios-tasks-widget";
+import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 
 export async function syncIosTodayTasksWidgetCache(
   cache: Record<string, TasksWidgetSnapshot>,

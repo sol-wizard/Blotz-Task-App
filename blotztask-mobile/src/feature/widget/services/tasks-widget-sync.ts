@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import type { TasksWidgetSnapshot } from "@/feature/widget/models/today-tasks-widget-snapshot";
+import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 
 export async function syncTodayTasksWidgetCache(
   cache: Record<string, TasksWidgetSnapshot>,
