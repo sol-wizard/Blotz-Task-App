@@ -66,7 +66,6 @@ export function selectTodayTasksWidgetSnapshot(
 
 function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotItem {
   return {
-    taskId: task.id,
     title: task.title,
     time: formatTaskEndTime(task.endTime),
     link:

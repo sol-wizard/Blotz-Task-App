@@ -15,8 +15,7 @@ export async function readTodayTasksWidgetCache(): Promise<Record<string, TasksW
     const rawCache = await AsyncStorage.getItem(TODAY_TASKS_WIDGET_CACHE_KEY);
     if (!rawCache) return null;
 
-    const parsed: unknown = JSON.parse(rawCache);
-    return parsed as Record<string, TasksWidgetSnapshot>;
+    return JSON.parse(rawCache) as Record<string, TasksWidgetSnapshot>;
   } catch {
     return null;
   }

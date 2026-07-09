@@ -1,5 +1,4 @@
 export type TaskWidgetSnapshotItem = {
-  taskId: number | null;
   title: string;
   time: string;
   link: string;
