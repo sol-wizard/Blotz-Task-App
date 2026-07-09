@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PostHogProvider } from "posthog-react-native";
 import "../../global.css";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { Auth0Provider } from "react-native-auth0";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
@@ -27,7 +28,6 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
 import "@/shared/util/typography";
 import { CrashScreen } from "@/shared/components/crash-screen";
-import { registerTodayTasksWidgetLayout } from "@/feature/widget/services/register-today-tasks-widget-layout";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -46,7 +46,11 @@ function RootLayout() {
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
 
   useEffect(() => {
-    registerTodayTasksWidgetLayout();
+    if (Platform.OS !== "ios") return;
+
+    void import("@/feature/widget/ios/components/today-tasks-widget").catch(() => {
+      // Widget layout registration is best-effort.
+    });
   }, []);
 
   /* eslint-disable camelcase */
