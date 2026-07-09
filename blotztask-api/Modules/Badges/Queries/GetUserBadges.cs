@@ -38,7 +38,7 @@ public class GetUserBadgesQueryHandler(BlotzTaskDbContext db, ILogger<GetUserBad
             .Select((badge, index) => new BadgeDto
             {
                 Id = badge.Id,
-                Title = language == Language.Zh ? badge.NameZh : badge.NameEn,
+                Name = language == Language.Zh ? badge.NameZh : badge.NameEn,
                 IconUrl = badge.IconUrl,
                 DisplayOrder = index
             })
@@ -52,7 +52,7 @@ public class GetUserBadgesQueryHandler(BlotzTaskDbContext db, ILogger<GetUserBad
 public class BadgeDto
 {
     public int Id { get; set; }
-    public required string Title { get; set; }
+    public required string Name { get; set; }
     public required string IconUrl { get; set; }
     public int DisplayOrder { get; set; }
 }
