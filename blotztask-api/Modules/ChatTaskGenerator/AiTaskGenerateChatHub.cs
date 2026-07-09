@@ -100,6 +100,25 @@ public class AiTaskGenerateChatHub(
         await SendMessage(transcript);
     }
 
+    // Swipe-to-delete: drop the draft from the basket so the next turn's snapshot can't resurrect it.
+    // Fire-and-forget, so no-op if the context is gone or the id is unknown. Lock-free relies on
+    // MaximumParallelInvocationsPerClient = 1 (no overlap with SendMessage).
+    public Task DeleteDraftTask(Guid taskId)
+    {
+        if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
+            chatContext.Tools.RemoveDraftTaskById(taskId);
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteDraftNote(Guid noteId)
+    {
+        if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
+            chatContext.Tools.RemoveDraftNoteById(noteId);
+
+        return Task.CompletedTask;
+    }
+
     #endregion
 
     #region Private Helpers

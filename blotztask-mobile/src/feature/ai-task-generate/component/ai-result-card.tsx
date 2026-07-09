@@ -27,7 +27,7 @@ export function AiResultCard({ text, label, startTime, endTime }: Props) {
       entering={MotionAnimations.upEntering}
       exiting={MotionAnimations.outExiting}
       layout={MotionAnimations.layout}
-      className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] justify-between pl-6 pr-4 pt-4 pb-3 my-4"
+      className="bg-white rounded-2xl flex-row items-center w-[88%] justify-between pl-6 pr-4 pt-4 pb-3 my-4"
     >
       {isTask && (
         <View

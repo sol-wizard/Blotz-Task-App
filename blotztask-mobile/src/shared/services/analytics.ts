@@ -56,8 +56,11 @@ export const analytics = {
    * Tracks when a user creates a task via the manual form (not AI).
    * Used to compare manual vs AI task creation volume.
    */
-  trackManualTaskCreated() {
-    posthog.capture(EVENTS.CREATE_TASK_MANUALLY);
+  trackManualTaskCreated(params?: { is_recurring?: boolean; is_deadline?: boolean }) {
+    posthog.capture(EVENTS.CREATE_TASK_MANUALLY, {
+      is_recurring: params?.is_recurring ?? false,
+      is_deadline: params?.is_deadline ?? false,
+    });
   },
 
   /**
@@ -65,10 +68,7 @@ export const analytics = {
    * Each turn pairs the user's prompt with the generated task/note state
    * returned by the AI after that prompt.
    */
-  trackAiTaskGenerationSession(params: {
-    outcome: AiTaskOutcome;
-    turns: AiTaskGenerationTurn[];
-  }) {
+  trackAiTaskGenerationSession(params: { outcome: AiTaskOutcome; turns: AiTaskGenerationTurn[] }) {
     // Avoid logging empty input to PostHog — empty input is usually caused by a backend failure or similar.
     if (params.turns.length === 0) return;
 
@@ -114,5 +114,9 @@ export const analytics = {
       duration_ms: params.durationMs,
       subtask_count: params.generatedSubtaskCount,
     });
+  },
+
+  trackNoteCreated(params: { source: "manual" | "ai" }) {
+    posthog.capture(EVENTS.NOTE_CREATED, { source: params.source });
   },
 };

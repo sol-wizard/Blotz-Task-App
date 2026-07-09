@@ -12,6 +12,7 @@ import LottieView from "lottie-react-native";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
 interface BadgeAchievementModalProps {
   badge?: BadgeNotificationDTO;
@@ -27,6 +28,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
   const rewardSound = useAudioPlayer(ASSETS.badgeReward);
 
   const badgeId = badge?.badgeId;
+  const router = useRouter();
 
   // Fire celebration feedback once per badge (re-fires for the next queued badge).
   useEffect(() => {
@@ -90,7 +92,11 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
           <View className="flex-row items-center justify-center gap-4 mt-8">
             <Pressable
               onPress={() => {
-                console.log("Badge view pressed", badge.badgeId);
+                onDismiss();
+                router.push({
+                  pathname: "/(protected)/badge-details",
+                  params: { badgeId: badge.badgeId },
+                });
               }}
               className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
             >

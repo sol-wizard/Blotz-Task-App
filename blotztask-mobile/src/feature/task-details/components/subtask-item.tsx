@@ -7,17 +7,15 @@ import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
 import { useState } from "react";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
-import SubtaskInlineEditor from "./subtask-inline-editor";
-import { useTranslation } from "react-i18next";
 import { SubtaskDTO } from "../models/subtask-dto";
 import { ASSETS } from "@/shared/constants/assets";
+import EditSubtaskSheet from "./edit-subtask-sheet";
 
 type SubtaskItemProps = {
   item: SubtaskDTO;
   onToggle: (id: number) => void;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
-  onDurationChange?: (id: number, duration: string) => void;
   parentTaskId: number;
   drag?: () => void;
 };
@@ -27,22 +25,19 @@ export default function SubtaskItem({
   onToggle,
   isEditMode = false,
   onDelete,
-  onDurationChange,
   parentTaskId,
   drag,
 }: SubtaskItemProps) {
   // Mutations
-  const { updateSubtask } = useSubtaskMutations();
+  const { updateSubtask, isUpdatingSubtask } = useSubtaskMutations();
 
   // State
-  const [isInlineEditing, setIsInlineEditing] = useState(false);
-  const [titleValue, setTitleValue] = useState(subtask.title);
-  const [localDuration, setLocalDuration] = useState(subtask.duration ?? "00:00:00");
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
   // Derived values
   const isChecked = subtask?.isDone;
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
-  const { t } = useTranslation(["tasks"]);
+  const duration = subtask.duration ?? "00:00:00";
 
   // Functions
   const handleToggle = () => {
@@ -53,22 +48,22 @@ export default function SubtaskItem({
     onDelete?.(subtask.subTaskId);
   };
 
-  const handleInlineEditToggle = () => {
-    if (isInlineEditing) {
-      updateSubtask?.({
-        subTaskId: subtask.subTaskId,
-        parentTaskId: parentTaskId,
-        title: titleValue,
-        duration: localDuration,
-        order: subtask.order,
-        isDone: subtask.isDone,
-      });
-    } else {
-      const duration = subtask.duration ?? "00:00:00";
-      setTitleValue(subtask.title);
-      setLocalDuration(duration);
-    }
-    setIsInlineEditing((prev) => !prev);
+  const handleOpenEditSheet = () => {
+    if (isEditMode) return;
+
+    setIsEditSheetOpen(true);
+  };
+
+  const handleSaveSubtask = (title: string, duration: string) => {
+    setIsEditSheetOpen(false);
+    updateSubtask?.({
+      subTaskId: subtask.subTaskId,
+      parentTaskId: parentTaskId,
+      title,
+      duration,
+      order: subtask.order,
+      isDone: subtask.isDone,
+    });
   };
 
   const renderRightActions = () => {
@@ -101,7 +96,6 @@ export default function SubtaskItem({
             borderRadius: 16,
             borderWidth: 1,
             borderColor: "#E5E7EB",
-            backgroundColor: "#FFFFFF",
           }}
         >
           <View className="flex-row items-center px-4 py-1" style={{ minHeight: 60 }}>
@@ -110,39 +104,20 @@ export default function SubtaskItem({
             </View>
 
             <View className="flex-1 ml-1">
-              {isInlineEditing ? (
-                <SubtaskInlineEditor
-                  titleValue={titleValue}
-                  localDuration={localDuration}
-                  onTitleChange={setTitleValue}
-                  onDurationClose={(duration) => {
-                    setLocalDuration(duration);
-                    onDurationChange?.(subtask.subTaskId, duration);
-                  }}
-                />
-              ) : (
-                <>
-                  {localDuration && (
-                    <Text
-                      className="text-3 font-bold"
-                      style={{
-                        color: isChecked ? "#BDE6A3" : theme.colors.highlight,
-                        marginBottom: -2,
-                        fontWeight: "700",
-                      }}
-                    >
-                      {convertDurationToText(localDuration)}
-                    </Text>
-                  )}
-                  <Text
-                    numberOfLines={2}
-                    className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
-                    style={{ color: textColor }}
-                  >
-                    {titleValue}
-                  </Text>
-                </>
+              {duration && (
+                <Text
+                  className={`mb-[-2px] text-[12px] font-bold text-highlight`}
+                >
+                  {convertDurationToText(duration)}
+                </Text>
               )}
+              <Text
+                numberOfLines={2}
+                className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
+                style={{ color: textColor }}
+              >
+                {subtask.title}
+              </Text>
             </View>
 
             <View className="w-10 items-center justify-center">
@@ -150,14 +125,8 @@ export default function SubtaskItem({
                 <TouchableOpacity onPressIn={drag} activeOpacity={1}>
                   <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
                 </TouchableOpacity>
-              ) : isInlineEditing ? (
-                <TouchableOpacity onPress={handleInlineEditToggle}>
-                  <Text className="text-sm font-bold" style={{ color: theme.colors.highlight }}>
-                    {t("subtasks.done")}
-                  </Text>
-                </TouchableOpacity>
               ) : (
-                <TouchableOpacity onPress={handleInlineEditToggle}>
+                <TouchableOpacity onPress={handleOpenEditSheet}>
                   <ASSETS.editIcon width={28} height={22} fill={theme.colors.disabled} />
                 </TouchableOpacity>
               )}
@@ -165,6 +134,13 @@ export default function SubtaskItem({
           </View>
         </TouchableOpacity>
       </Swipeable>
+      <EditSubtaskSheet
+        visible={isEditSheetOpen}
+        subtask={subtask}
+        isSaving={isUpdatingSubtask}
+        onClose={() => setIsEditSheetOpen(false)}
+        onSave={handleSaveSubtask}
+      />
     </>
   );
 }

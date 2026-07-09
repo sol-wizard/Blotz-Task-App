@@ -1,6 +1,7 @@
 import { apiClient } from "@/shared/services/api/client";
 import { NoteDTO } from "../models/note-dto";
 import { EditNoteDTO } from "../models/edit-note-dto";
+import { CreateNoteDTO } from "../models/create-note-dto";
 
 export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
   const url = `/notes`;
@@ -15,16 +16,22 @@ export const deleteNote = async (noteId: string): Promise<void> => {
   return await apiClient.delete(url);
 };
 
-export const createNote = async (text: string): Promise<NoteDTO> => {
+export const createNote = async (createNoteDto: CreateNoteDTO): Promise<NoteDTO> => {
   const url = `/notes`;
 
-  return await apiClient.post(url, { text });
+  return await apiClient.post(url, {
+    text: createNoteDto.text,
+    isPersistent: createNoteDto.isPersistent,
+  });
 };
 
 export const updateNote = async (editNoteDto: EditNoteDTO): Promise<NoteDTO> => {
   const url = `/notes/${editNoteDto.id}`;
 
-  return await apiClient.put(url, { text: editNoteDto.text });
+  return await apiClient.put(url, {
+    text: editNoteDto.text,
+    isPersistent: editNoteDto.isPersistent,
+  });
 };
 
 export const convertNoteToTask = async (

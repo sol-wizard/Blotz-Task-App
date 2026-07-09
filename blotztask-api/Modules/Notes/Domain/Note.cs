@@ -11,6 +11,7 @@ public class Note
   public string Text { get; set; } = string.Empty;
   public DateTime CreatedAt { get; set; }
   public DateTime UpdatedAt { get; set; }
+  public bool IsPersistent { get; set; }
   public Guid UserId { get; set; }
   public AppUser? User { get; set; }
 

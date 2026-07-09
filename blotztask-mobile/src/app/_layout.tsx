@@ -61,7 +61,7 @@ function RootLayout() {
     >
       <Auth0Provider domain={domain} clientId={clientId}>
         <PostHogProvider client={posthog} autocapture={false}>
-          <GestureHandlerRootView>
+          <GestureHandlerRootView className="flex-1">
             <QueryClientProvider client={queryClient}>
               <SafeAreaProvider>
                 <KeyboardProvider>

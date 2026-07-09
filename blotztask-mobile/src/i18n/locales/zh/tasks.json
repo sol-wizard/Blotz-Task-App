@@ -101,6 +101,9 @@
   },
   "subtasks": {
     "done": "完成",
-    "delete": "删除"
+    "delete": "删除",
+    "edit": "编辑子任务",
+    "titlePlaceholder": "子任务名称",
+    "duration": "时长"
   }
 }
