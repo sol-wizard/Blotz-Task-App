@@ -23,6 +23,10 @@ param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 30
 param alertEmail = 'benjaminneoh2928@gmail.com'
 
+// App Insights.
+param azureMonitorOpenTelemetryEnabled = true
+param appInsightsSamplingPercentage = 4
+
 // App Service SKU (Free tier for staging)
 param appServiceSkuName = 'F1'
 param appServiceSkuTier = 'Free'
