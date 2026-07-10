@@ -5,6 +5,7 @@ const config = {
   API_BASE_URL: process.env.EXPO_PUBLIC_URL,
 };
 const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
+const RECONNECT_DELAYS_MS = [0, 2_000, 10_000, 30_000] as const;
 
 export const signalRService = {
   createConnection: async () => {
@@ -23,7 +24,10 @@ export const signalRService = {
           return token;
         },
       })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: ({ previousRetryCount }) =>
+          RECONNECT_DELAYS_MS[Math.min(previousRetryCount, RECONNECT_DELAYS_MS.length - 1)],
+      })
       .build();
     return connection;
   },

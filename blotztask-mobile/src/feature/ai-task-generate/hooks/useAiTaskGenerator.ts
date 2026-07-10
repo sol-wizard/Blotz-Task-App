@@ -186,6 +186,7 @@ export function useAiTaskGenerator({
 
   useEffect(() => {
     let conn: signalR.HubConnection | null = null;
+    let disposed = false;
 
     signalRService
       .createConnection()
@@ -204,13 +205,38 @@ export function useAiTaskGenerator({
           if (requestStartedAtRef.current == null) return;
           setStreamedNotes((prev) => [...prev, note]);
         });
+        conn.onreconnecting((error) => {
+          if (disposed) return;
+
+          console.warn("SignalR reconnecting:", error);
+
+          if (requestStartedAtRef.current !== null) {
+            requestStartedAtRef.current = null;
+            pendingInputModeRef.current = null;
+            setTranscript(undefined);
+            setStreamedTasks([]);
+            setStreamedNotes([]);
+            setIsAiGenerating(false);
+            Toast.show({ type: "error", text1: t("errors.default") });
+          }
+        });
+        conn.onreconnected((connectionId) => {
+          if (disposed) return;
+          console.log("SignalR reconnected. Connection ID:", connectionId);
+        });
+        conn.onclose((error) => {
+          if (disposed) return;
+          console.warn("SignalR connection closed:", error);
+        });
 
         await conn.start();
+        console.log("SignalR connected. Connection ID:", conn.connectionId);
         setConnection(conn);
       })
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
     return () => {
+      disposed = true;
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);
