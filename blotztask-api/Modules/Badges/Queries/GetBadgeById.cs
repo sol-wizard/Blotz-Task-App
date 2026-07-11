@@ -28,7 +28,7 @@ public class GetBadgeByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetBadgeByI
         return new BadgeByIdItemDto
         {
             Id = badge.Id,
-            Title = language == Language.Zh ? badge.NameZh : badge.NameEn,
+            Name = language == Language.Zh ? badge.NameZh : badge.NameEn,
             Description = language == Language.Zh ? badge.DescriptionZh : badge.DescriptionEn,
             IconUrl = badge.IconUrl,
             Category = badge.Category.ToString(),
@@ -39,7 +39,7 @@ public class GetBadgeByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetBadgeByI
 public class BadgeByIdItemDto
 {
     public int Id { get; set; }
-    public required string Title { get; set; }      
+    public required string Name { get; set; }
     public required string Description { get; set; }
     public required string IconUrl { get; set; }
     public required string Category { get; set; }

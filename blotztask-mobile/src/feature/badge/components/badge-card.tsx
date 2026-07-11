@@ -23,7 +23,7 @@ export function BadgeCard({ badge, transparent = false }: BadgeCardProps) {
         />
       </View>
       <Text className="text-sm font-baloo text-secondary text-center mt-2" numberOfLines={1}>
-        {badge.title}
+        {badge.name}
       </Text>
     </View>
   );
