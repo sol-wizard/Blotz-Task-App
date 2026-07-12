@@ -46,7 +46,7 @@ function RootLayout() {
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
 
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS === "android") return;
 
     void import("@/feature/widget/ios/components/ios-tasks-widget").catch(() => {
       // Widget layout registration is best-effort.

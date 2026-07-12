@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import { requestWidgetUpdate } from "react-native-android-widget";
 
@@ -5,14 +6,14 @@ import { ANDROID_TASK_WIDGET_NAMES } from "@/feature/widget/config/widget-config
 import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 import { selectTodayTasksWidgetSnapshot } from "@/feature/widget/util/task-widget-cache-util";
 import { TodayTasksWidget } from "@/feature/widget/android/components/android-tasks-widget";
-import { writeTodayTasksWidgetCache } from "@/feature/widget/android/services/today-tasks-widget-cache-service";
+import { TODAY_TASKS_WIDGET_CACHE_KEY } from "@/feature/widget/android/services/today-tasks-widget-cache-service";
 import i18n from "@/i18n";
 
 export async function syncAndroidTodayTasksWidgetCache(
   cache: Record<string, TasksWidgetSnapshot>,
 ): Promise<void> {
   try {
-    await writeTodayTasksWidgetCache(cache);
+    await AsyncStorage.setItem(TODAY_TASKS_WIDGET_CACHE_KEY, JSON.stringify(cache));
 
     const snapshot = selectTodayTasksWidgetSnapshot(cache, {
       title: i18n.t("widget:today.title"),
