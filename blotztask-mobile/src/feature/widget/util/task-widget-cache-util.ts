@@ -33,7 +33,8 @@ export function buildTaskWidgetCache(
       const cacheDate = format(source.date, "yyyy-MM-dd");
 
       if (source.status === "error") {
-        return [cacheDate, buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage)];
+        const snapshot = buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
+        return [snapshot.cacheDate, snapshot];
       }
 
       const todoTasks =
@@ -41,14 +42,13 @@ export function buildTaskWidgetCache(
           (group) => group.status === "To Do",
         )?.tasks ?? [];
 
-      return [
+      const snapshot = buildTodayTasksWidgetSnapshot(
         cacheDate,
-        buildTodayTasksWidgetSnapshot(
-          cacheDate,
-          todoTasks.map(buildTaskWidgetSnapshotItem),
-          widgetMessage,
-        ),
-      ];
+        todoTasks.map(buildTaskWidgetSnapshotItem),
+        widgetMessage,
+      );
+
+      return [snapshot.cacheDate, snapshot];
     }),
   );
 }
