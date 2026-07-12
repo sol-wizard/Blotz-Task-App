@@ -54,6 +54,8 @@ export default function AiTaskSheetScreen() {
     streamedNotes,
     submitAudioForTranscription,
     sendTextMessage,
+    deleteDraftTask,
+    deleteDraftNote,
   } = useAiTaskGenerator({
     setIsAiGenerating,
   });
@@ -115,12 +117,13 @@ export default function AiTaskSheetScreen() {
 
     const results = await Promise.allSettled([
       ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
-      ...displayNotes.map((n) => createNoteAsync(n.text)),
+      ...displayNotes.map((n) => createNoteAsync({ text: n.text, isPersistent: false })),
     ]);
 
     const allSucceeded = results.every((r) => r.status === "fulfilled");
 
     if (allSucceeded) {
+      displayNotes.forEach(() => analytics.trackNoteCreated({ source: "ai" }));
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
@@ -180,7 +183,15 @@ export default function AiTaskSheetScreen() {
               )}
 
               {/* Task / note cards (streamed or final) */}
-              {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
+              {hasContent && (
+                <AiResultList
+                  aiTasks={displayTasks}
+                  aiNotes={displayNotes}
+                  onDeleteTask={deleteDraftTask}
+                  onDeleteNote={deleteDraftNote}
+                  isGenerating={isAiGenerating}
+                />
+              )}
 
               {isAiGenerating && !!transcript && (
                 <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>

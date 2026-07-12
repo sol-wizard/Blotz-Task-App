@@ -333,6 +333,11 @@ namespace BlotzTask.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsPersistent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(2000)
