@@ -50,8 +50,8 @@ public class GetTasksByDateRecurringOverlapTests : IClassFixture<DatabaseFixture
         var result = await _handler.Handle(new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = new DateTimeOffset(2026, 7, 2, 0, 0, 0, TimeSpan.FromHours(8)),
-            IncludeFloatingForToday = false
+            Date = new DateOnly(2026, 7, 2),
+            TimeZoneId = "Australia/Perth"
         });
 
         // Assert
