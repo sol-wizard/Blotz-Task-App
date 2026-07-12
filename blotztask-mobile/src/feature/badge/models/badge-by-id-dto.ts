@@ -1,6 +1,6 @@
 export interface BadgeDetailDTO {
   id: number;
-  title: string;
+  name: string;
   iconUrl: string;
   category: string;
   description: string;
