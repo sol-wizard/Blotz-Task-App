@@ -12,14 +12,14 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<
   if (props.widgetAction === "WIDGET_DELETED") return;
 
   try {
-    let cache: Record<string, TasksWidgetSnapshot> | null = null;
+    let snapshots: TasksWidgetSnapshot[] | null = null;
     const rawCache = await AsyncStorage.getItem(TODAY_TASKS_WIDGET_CACHE_KEY).catch(() => null);
 
     if (rawCache) {
       try {
-        cache = JSON.parse(rawCache) as Record<string, TasksWidgetSnapshot>;
+        snapshots = JSON.parse(rawCache) as TasksWidgetSnapshot[];
       } catch {
-        cache = null;
+        snapshots = null;
       }
     }
 
@@ -29,7 +29,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps): Promise<
       emptyMessage: i18n.t("widget:today.emptyMessage"),
     };
     const snapshot =
-      cache?.[cacheDate] ?? buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
+      snapshots?.find((cachedSnapshot) => cachedSnapshot.cacheDate === cacheDate) ??
+      buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
 
     props.renderWidget(
       <TodayTasksWidget snapshot={snapshot} isSmallWidget={props.widgetInfo.width < 220} />,

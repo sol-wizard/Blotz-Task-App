@@ -13,10 +13,10 @@ import { TodayTasksWidget } from "@/feature/widget/android/components/android-ta
 import i18n from "@/i18n";
 
 export async function syncAndroidTodayTasksWidgetCache(
-  cache: Record<string, TasksWidgetSnapshot>,
+  snapshots: TasksWidgetSnapshot[],
 ): Promise<void> {
   try {
-    await AsyncStorage.setItem(TODAY_TASKS_WIDGET_CACHE_KEY, JSON.stringify(cache));
+    await AsyncStorage.setItem(TODAY_TASKS_WIDGET_CACHE_KEY, JSON.stringify(snapshots));
 
     const cacheDate = format(new Date(), "yyyy-MM-dd");
     const widgetMessage = {
@@ -24,7 +24,8 @@ export async function syncAndroidTodayTasksWidgetCache(
       emptyMessage: i18n.t("widget:today.emptyMessage"),
     };
     const snapshot =
-      cache[cacheDate] ?? buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
+      snapshots.find((cachedSnapshot) => cachedSnapshot.cacheDate === cacheDate) ??
+      buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
 
     for (const widgetName of ANDROID_TASK_WIDGET_NAMES) {
       await requestWidgetUpdate({

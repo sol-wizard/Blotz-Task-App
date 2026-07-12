@@ -2,13 +2,13 @@ import { Platform } from "react-native";
 import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 
 export async function syncTodayTasksWidgetCache(
-  cache: Record<string, TasksWidgetSnapshot>,
+  snapshots: TasksWidgetSnapshot[],
 ): Promise<void> {
   if (Platform.OS === "ios") {
     const { syncIosTodayTasksWidgetCache } =
       await import("@/feature/widget/ios/services/sync-ios-today-tasks-widget-cache");
 
-    await syncIosTodayTasksWidgetCache(cache);
+    await syncIosTodayTasksWidgetCache(snapshots);
     return;
   }
 
@@ -16,6 +16,6 @@ export async function syncTodayTasksWidgetCache(
     const { syncAndroidTodayTasksWidgetCache } =
       await import("@/feature/widget/android/services/sync-android-today-tasks-widget-cache");
 
-    await syncAndroidTodayTasksWidgetCache(cache);
+    await syncAndroidTodayTasksWidgetCache(snapshots);
   }
 }

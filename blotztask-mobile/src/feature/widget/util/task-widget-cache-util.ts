@@ -21,36 +21,31 @@ export type TaskWidgetDaySource =
       status: "error";
     };
 
-export function buildTaskWidgetCache(
+export function buildTaskWidgetSnapshots(
   daySources: TaskWidgetDaySource[],
   widgetMessage: {
     title: string;
     emptyMessage: string;
   },
-): Record<string, TasksWidgetSnapshot> {
-  return Object.fromEntries(
-    daySources.map((source) => {
-      const cacheDate = format(source.date, "yyyy-MM-dd");
+): TasksWidgetSnapshot[] {
+  return daySources.map((source) => {
+    const cacheDate = format(source.date, "yyyy-MM-dd");
 
-      if (source.status === "error") {
-        const snapshot = buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
-        return [snapshot.cacheDate, snapshot];
-      }
+    if (source.status === "error") {
+      return buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
+    }
 
-      const todoTasks =
-        filterSelectedTask({ selectedDayTasks: source.tasks }).find(
-          (group) => group.status === "To Do",
-        )?.tasks ?? [];
+    const todoTasks =
+      filterSelectedTask({ selectedDayTasks: source.tasks }).find(
+        (group) => group.status === "To Do",
+      )?.tasks ?? [];
 
-      const snapshot = buildTodayTasksWidgetSnapshot(
-        cacheDate,
-        todoTasks.map(buildTaskWidgetSnapshotItem),
-        widgetMessage,
-      );
-
-      return [snapshot.cacheDate, snapshot];
-    }),
-  );
+    return buildTodayTasksWidgetSnapshot(
+      cacheDate,
+      todoTasks.map(buildTaskWidgetSnapshotItem),
+      widgetMessage,
+    );
+  });
 }
 
 function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotItem {
