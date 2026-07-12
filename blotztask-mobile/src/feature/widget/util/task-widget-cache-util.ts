@@ -53,17 +53,6 @@ export function buildTaskWidgetCache(
   );
 }
 
-export function selectTodayTasksWidgetSnapshot(
-  cache: Record<string, TasksWidgetSnapshot> | null,
-  widgetMessage: {
-    title: string;
-    emptyMessage: string;
-  },
-): TasksWidgetSnapshot {
-  const cacheDate = format(new Date(), "yyyy-MM-dd");
-  return cache?.[cacheDate] ?? buildTodayTasksWidgetSnapshot(cacheDate, [], widgetMessage);
-}
-
 function buildTaskWidgetSnapshotItem(task: TaskDetailDTO): TaskWidgetSnapshotItem {
   return {
     title: task.title,
