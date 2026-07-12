@@ -27,11 +27,6 @@ param taskGenerationModelName string
 param taskGenerationModelVersion string
 param taskGenerationDeploymentCapacity int
 
-param speechDeploymentName string
-param speechModelName string
-param speechModelVersion string
-param speechDeploymentCapacity int
-
 param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
 param alertEmail string
@@ -112,7 +107,6 @@ module webAppForAPI 'modules/appService.bicep' = {
     openAiEndpoint: openAi.outputs.endpoint
     openAiTaskGenerationDeploymentId: openAi.outputs.taskGenerationDeploymentId
     openAiBreakdownDeploymentId: openAi.outputs.breakdownDeploymentId
-    openAiSpeechDeploymentId: openAi.outputs.speechDeploymentId
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
     azureMonitorOpenTelemetryEnabled: azureMonitorOpenTelemetryEnabled
     enableAppServiceDiagnostics: appServiceDiagnosticsEnabled
@@ -182,10 +176,6 @@ module openAi 'modules/openAi.bicep' = {
     taskGenerationModelName: taskGenerationModelName
     taskGenerationModelVersion: taskGenerationModelVersion
     taskGenerationDeploymentCapacity: taskGenerationDeploymentCapacity
-    speechDeploymentName: speechDeploymentName
-    speechModelName: speechModelName
-    speechModelVersion: speechModelVersion
-    speechDeploymentCapacity: speechDeploymentCapacity
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {
