@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
-import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
+import WheelPicker, { type PickerItem, withVirtualized } from "@quidone/react-native-wheel-picker";
+
+const VirtualizedWheelPicker = withVirtualized(WheelPicker);
 
 type Meridiem = "AM" | "PM";
 
@@ -13,13 +15,17 @@ type Props = {
 
 const pad2 = (n: number) => n.toString().padStart(2, "0");
 
-const HOURS: PickerItem<number>[] = Array.from({ length: 12 }, (_, i) => {
-  const h = i + 1; // 1..12
-  return { value: h, label: pad2(h) };
-});
-const MINUTES: PickerItem<number>[] = Array.from({ length: 60 }, (_, i) => ({
+const PICKER_CYCLES = 21;
+const PICKER_MIDDLE_CYCLE = Math.floor(PICKER_CYCLES / 2);
+
+const HOURS: PickerItem<number>[] = Array.from({ length: 12 * PICKER_CYCLES }, (_, i) => ({
   value: i,
-  label: pad2(i),
+  label: pad2((i % 12) + 1), //01..12
+}));
+
+const MINUTES: PickerItem<number>[] = Array.from({ length: 60 * PICKER_CYCLES }, (_, i) => ({
+  value: i,
+  label: pad2(i % 60), //00...59
 }));
 const MERIDIEMS: PickerItem<Meridiem>[] = [
   { value: "AM", label: "AM" },
@@ -50,19 +56,28 @@ export default function TimePicker({
 }: Props) {
   const initial = value ?? new Date();
 
-  const [hour12, setHour12] = useState<number>(splitTo12h(initial).hour12);
-  const [minute, setMinute] = useState<number>(splitTo12h(initial).minute);
+  const [hour12Index, setHour12Index] = useState<number>(
+    PICKER_MIDDLE_CYCLE * 12 + splitTo12h(initial).hour12 - 1,
+  );
+  const [minuteIndex, setMinuteIndex] = useState<number>(
+    PICKER_MIDDLE_CYCLE * 60 + splitTo12h(initial).minute,
+  );
   const [meridiem, setMeridiem] = useState<Meridiem>(splitTo12h(initial).meridiem);
 
   const combineWheelValue = (
-    next: Partial<{ hour12: number; minute: number; meridiem: Meridiem }>,
+    next: Partial<{ hour12Index: number; minuteIndex: number; meridiem: Meridiem }>,
   ) => {
-    const h = next.hour12 ?? hour12;
-    const m = next.minute ?? minute;
+    const h = next.hour12Index ?? hour12Index;
+    const m = next.minuteIndex ?? minuteIndex;
     const md = next.meridiem ?? meridiem;
 
     const base = value ?? new Date();
-    const out = mergeToDate(base, h, m, md);
+
+    // Convert indexes to actual hours/minutes
+    const selectedHour = (h % 12) + 1;
+    const selectedMinute = m % 60;
+
+    const out = mergeToDate(base, selectedHour, selectedMinute, md);
     onChange?.(out);
   };
 
@@ -72,33 +87,33 @@ export default function TimePicker({
       style={{ height: itemHeight * visibleItemCount }}
     >
       <View className="flex-1 flex-row items-center justify-center">
-        <WheelPicker
+        <VirtualizedWheelPicker
           data={HOURS}
-          value={hour12}
+          value={hour12Index}
           width={96}
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
           onValueChanged={({ item }) => {
             const h = item.value as number;
-            setHour12(h);
-            combineWheelValue({ hour12: h });
+            setHour12Index(h);
+            combineWheelValue({ hour12Index: h });
           }}
         />
 
         <Text className="text-[22px] font-semibold text-[#2e3654] w-6 text-center">:</Text>
 
-        <WheelPicker
+        <VirtualizedWheelPicker
           data={MINUTES}
-          value={minute}
+          value={minuteIndex}
           width={96}
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
           onValueChanged={({ item }) => {
             const m = item.value as number;
-            setMinute(m);
-            combineWheelValue({ minute: m });
+            setMinuteIndex(m);
+            combineWheelValue({ minuteIndex: m });
           }}
         />
 
