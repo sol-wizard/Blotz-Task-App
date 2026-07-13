@@ -56,7 +56,13 @@ public class GenerateReviewCommandHandler(
     {
         // Resolve the timezone, then snap the anchor date to the canonical period (server is the
         // single source of truth — a non-Monday / non-1st anchor is canonicalized, not rejected).
-        var timeZone = ReviewTimeZone.Resolve(command.TimeZoneId);
+        var storedTimezone = await db.AppUsers
+            .AsNoTracking()
+            .Where(u => u.Id == command.UserId)
+            .Select(u => u.Timezone)
+            .FirstOrDefaultAsync(ct);
+
+        var timeZone = ReviewTimeZone.Resolve(storedTimezone, command.TimeZoneId);
         var period = ReviewPeriod.CreateFromAnchor(command.PeriodType, command.AnchorDate, timeZone);
         var threshold = ReviewConstants.LowActivityTaskThreshold(period.PeriodType);
 

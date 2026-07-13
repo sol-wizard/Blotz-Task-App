@@ -31,7 +31,13 @@ public class GetReviewQueryHandler(
         GetReviewQuery query,
         CancellationToken ct = default)
     {
-        var timeZone = ReviewTimeZone.Resolve(query.TimeZoneId);
+        var storedTimezone = await db.AppUsers
+            .AsNoTracking()
+            .Where(u => u.Id == query.UserId)
+            .Select(u => u.Timezone)
+            .FirstOrDefaultAsync(ct);
+
+        var timeZone = ReviewTimeZone.Resolve(storedTimezone, query.TimeZoneId);
         var period = ReviewPeriod.CreateFromAnchor(query.PeriodType, query.AnchorDate, timeZone);
 
         logger.LogInformation(
