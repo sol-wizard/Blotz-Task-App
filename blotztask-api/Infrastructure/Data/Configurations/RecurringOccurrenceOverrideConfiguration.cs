@@ -33,7 +33,7 @@ public class RecurringOccurrenceOverrideConfiguration : IEntityTypeConfiguration
             .HasForeignKey(o => o.RecurringTaskId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasIndex(o => new { o.SeriesId, o.OccurrenceDate })
+        builder.HasIndex(o => new { o.RecurringTaskId, o.OccurrenceDate })
             .IsUnique();
     }
 }
