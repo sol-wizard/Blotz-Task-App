@@ -21,6 +21,7 @@
     "contentFilter": "Your message was flagged. Please rephrase and try again.",
     "canceled": "The request was canceled.",
     "noTasksExtracted": "I couldn't find any tasks in that. Please try again.",
+    "quotaExceeded": "You've reached your AI usage limit. Your generated items have been kept.",
     "holdLonger": "Hold the mic a little longer to record.",
     "recordingFailed": "Failed to start recording. Please try again."
   },
