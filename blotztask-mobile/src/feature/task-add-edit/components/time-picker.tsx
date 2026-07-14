@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
-import WheelPicker, { type PickerItem, withVirtualized } from "@quidone/react-native-wheel-picker";
-
-const VirtualizedWheelPicker = withVirtualized(WheelPicker);
+import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 
 type Meridiem = "AM" | "PM";
 
@@ -15,7 +13,7 @@ type Props = {
 
 const pad2 = (n: number) => n.toString().padStart(2, "0");
 
-const PICKER_CYCLES = 21;
+const PICKER_CYCLES = 3;
 const PICKER_MIDDLE_CYCLE = Math.floor(PICKER_CYCLES / 2);
 
 const HOURS: PickerItem<number>[] = Array.from({ length: 12 * PICKER_CYCLES }, (_, i) => ({
@@ -87,7 +85,7 @@ export default function TimePicker({
       style={{ height: itemHeight * visibleItemCount }}
     >
       <View className="flex-1 flex-row items-center justify-center">
-        <VirtualizedWheelPicker
+        <WheelPicker
           data={HOURS}
           value={hour12Index}
           width={96}
@@ -103,7 +101,7 @@ export default function TimePicker({
 
         <Text className="text-[22px] font-semibold text-[#2e3654] w-6 text-center">:</Text>
 
-        <VirtualizedWheelPicker
+        <WheelPicker
           data={MINUTES}
           value={minuteIndex}
           width={96}
