@@ -198,11 +198,16 @@ const useTaskMutations = () => {
         scheduleTimeZoneId,
         deadlineTimeZoneId,
       }),
-    onSuccess: (_data, task) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      queryClient.invalidateQueries({ queryKey: ["ddl"] });
-      invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
-      invalidateTaskAvailability(queryClient, task.dto.startTime, task.dto.endTime);
+    onSuccess: async (_data, task) => {
+      queryClient.removeQueries({ queryKey: ["virtualTaskDetail"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: taskKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ddlKeys.all }),
+        invalidateSelectedDayByDateOnly(queryClient, task.effectiveDate),
+        invalidateTaskAvailability(queryClient, task.effectiveDate),
+        invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime),
+        invalidateTaskAvailability(queryClient, task.dto.startTime, task.dto.endTime),
+      ]);
     },
   });
   return {
