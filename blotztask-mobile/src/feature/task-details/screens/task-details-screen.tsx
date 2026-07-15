@@ -33,6 +33,7 @@ import {
   isTaskDetailRouteMode,
   TaskDetailRouteMode,
 } from "@/feature/task-details/util/task-detail-route-mode";
+import { BreakdownTaskTarget } from "@/feature/task-details/services/subtask-service";
 
 function selectTaskByRouteMode({
   mode,
@@ -143,6 +144,29 @@ export default function TaskDetailsScreen() {
       dto,
     });
   };
+
+  const handleBreakdownComplete = React.useCallback(
+    (parentTaskId: number) => {
+      if (!selectedTask || hasTaskItemId(selectedTask)) return;
+
+      router.replace({
+        pathname: "/(protected)/task-details",
+        params: {
+          mode: TASK_DETAIL_ROUTE_MODE.Persisted,
+          taskId: parentTaskId,
+        },
+      });
+    },
+    [router, selectedTask],
+  );
+
+  const breakdownTarget: BreakdownTaskTarget | undefined = !selectedTask
+    ? undefined
+    : hasTaskItemId(selectedTask)
+      ? { taskId: selectedTask.id }
+      : recurringTaskId != null && occurrenceDate
+        ? { recurringTaskId, occurrenceDate }
+        : undefined;
 
   if (mode === TASK_DETAIL_ROUTE_MODE.Persisted && isLoading) {
     return <LoadingScreen />;
@@ -266,7 +290,11 @@ export default function TaskDetailsScreen() {
         </View>
 
         <View className="flex-1 px-4">
-          {hasTaskItemId(selectedTask) && <SubtasksView parentTask={selectedTask} />}
+          <SubtasksView
+            parentTask={selectedTask}
+            breakdownTarget={breakdownTarget}
+            onBreakdownComplete={handleBreakdownComplete}
+          />
         </View>
       </View>
     </SafeAreaView>
