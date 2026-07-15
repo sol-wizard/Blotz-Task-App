@@ -22,6 +22,8 @@ export function AiResultRow({ onDelete, onRowOpen, enabled = true, children }: P
     <ReanimatedSwipeable
       ref={swipeRef}
       enabled={enabled}
+      containerStyle={{ width: "100%" }}
+      childrenContainerStyle={{ alignItems: "center" }}
       renderRightActions={() => (
         <View className="h-full items-center justify-center pr-6">
           <ActionButton type={ActionButtonType.Delete} onPress={onDelete} />

@@ -92,6 +92,51 @@ public class DataSeeder
         return recurring;
     }
 
+    public async Task<RecurringTask> CreateRecurringTaskVersionAsync(
+        RecurringTask previousTemplate,
+        string title,
+        DateOnly startDate,
+        DateTimeOffset templateStartTime,
+        DateTimeOffset? templateEndTime = null,
+        RecurrenceFrequency? frequency = null,
+        int? interval = null,
+        int? daysOfWeek = null,
+        int? dayOfMonth = null,
+        DateOnly? endDate = null)
+    {
+        var recurring = new RecurringTask
+        {
+            UserId = previousTemplate.UserId,
+            SeriesId = previousTemplate.SeriesId,
+            PreviousRecurringTaskId = previousTemplate.Id,
+            Title = title,
+            TimeType = templateEndTime == null ? TaskTimeType.SingleTime : TaskTimeType.RangeTime,
+            TemplateStartTime = templateStartTime,
+            TemplateEndTime = templateEndTime,
+            ScheduleTimeZoneId = previousTemplate.ScheduleTimeZoneId,
+            IsDeadline = previousTemplate.IsDeadline,
+            DeadlineOffsetDays = previousTemplate.DeadlineOffsetDays,
+            DeadlineTimeOfDay = previousTemplate.DeadlineTimeOfDay,
+            DeadlineTimeZoneId = previousTemplate.DeadlineTimeZoneId,
+            Pattern = new RecurrencePattern
+            {
+                Frequency = frequency ?? previousTemplate.Pattern.Frequency,
+                Interval = interval ?? previousTemplate.Pattern.Interval,
+                DaysOfWeek = daysOfWeek ?? previousTemplate.Pattern.DaysOfWeek,
+                DayOfMonth = dayOfMonth ?? previousTemplate.Pattern.DayOfMonth
+            },
+            StartDate = startDate,
+            EndDate = endDate,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.RecurringTasks.Add(recurring);
+        await _context.SaveChangesAsync();
+        return recurring;
+    }
+
     public async Task<RecurringOccurrenceOverride> CreateRecurringOccurrenceOverrideAsync(
         RecurringTask recurringTask,
         DateOnly occurrenceDate,

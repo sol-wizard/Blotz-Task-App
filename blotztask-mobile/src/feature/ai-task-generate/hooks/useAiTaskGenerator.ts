@@ -21,6 +21,7 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   BlockedByContentFilter: "errors.contentFilter",
   Canceled: "errors.canceled",
   NoTasksExtracted: "errors.noTasksExtracted",
+  QuotaExceeded: "errors.quotaExceeded",
 };
 
 export function useAiTaskGenerator({
@@ -167,8 +168,10 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    setStreamedTasks([]);
-    setStreamedNotes([]);
+    if (error.errorCode !== "QuotaExceeded") {
+      setStreamedTasks([]);
+      setStreamedNotes([]);
+    }
 
     analytics.trackAiTaskGenerationFailed({
       inputMode: inputMode ?? "unknown",
