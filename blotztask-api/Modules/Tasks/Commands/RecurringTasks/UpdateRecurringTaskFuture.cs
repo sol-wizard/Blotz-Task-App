@@ -62,11 +62,13 @@ public class UpdateRecurringTaskFutureCommandHandler(
             throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
         }
 
-        template = await ResolveTemplateForEffectiveDate(template, command.EffectiveDate, command.UserId, ct);
+        ValidateEffectiveDate(template, command.EffectiveDate);
         TaskTimeValidator.ValidateTaskTimes(
             command.TaskDetails.StartTime,
             command.TaskDetails.EndTime,
             command.TaskDetails.TimeType);
+
+        var futureStartDate = DateOnly.FromDateTime(command.TaskDetails.StartTime.Date);
 
         if (!generatorService.IsOccurrenceOn(template, command.EffectiveDate))
         {
@@ -110,11 +112,16 @@ public class UpdateRecurringTaskFutureCommandHandler(
         var targetFrequency = command.Frequency ?? template.Pattern.Frequency;
         ValidateRecurrenceFieldUsage(command, targetFrequency);
 
-        var newPattern = BuildPattern(template, command, targetFrequency);
+        var newPattern = BuildPattern(template, command, targetFrequency, futureStartDate);
         var newEndDate = command.EndDateChanged ? command.EndDate : template.EndDate;
-        ValidateRecurrence(newPattern, command.EffectiveDate, newEndDate);
+        ValidateRecurrence(newPattern, futureStartDate, newEndDate);
 
-        var futureTemplate = BuildFutureTemplate(template, command, newPattern, newEndDate);
+        var futureTemplate = BuildFutureTemplate(template, command, newPattern, futureStartDate, newEndDate);
+        if (!generatorService.IsOccurrenceOn(futureTemplate, futureStartDate))
+        {
+            throw new ValidationException("Future task start date must be a valid occurrence date for the updated recurring task.");
+        }
+
         TruncateTemplate(template, command.EffectiveDate);
 
         db.RecurringTasks.Add(futureTemplate);
@@ -176,45 +183,10 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static void ValidateEffectiveDate(RecurringTask template, DateOnly effectiveDate)
     {
-        if (!IsTemplateEffectiveOn(template, effectiveDate))
+        if (template.Series.IsDeleted || !IsTemplateEffectiveOn(template, effectiveDate))
         {
             throw new ValidationException("EffectiveDate is outside recurring task range.");
         }
-    }
-
-    private async Task<RecurringTask> ResolveTemplateForEffectiveDate(
-        RecurringTask requestedTemplate,
-        DateOnly effectiveDate,
-        Guid userId,
-        CancellationToken ct)
-    {
-        if (requestedTemplate.Series.IsDeleted)
-        {
-            throw new ValidationException("EffectiveDate is outside recurring task range.");
-        }
-
-        if (IsTemplateEffectiveOn(requestedTemplate, effectiveDate))
-        {
-            return requestedTemplate;
-        }
-
-        var effectiveTemplate = await db.RecurringTasks
-            .Include(r => r.Series)
-            .Where(r => r.SeriesId == requestedTemplate.SeriesId
-                && r.UserId == userId
-                && r.IsActive
-                && r.StartDate <= effectiveDate
-                && (r.EndDate == null || r.EndDate >= effectiveDate))
-            .OrderByDescending(r => r.StartDate)
-            .ThenByDescending(r => r.Id)
-            .FirstOrDefaultAsync(ct);
-
-        if (effectiveTemplate == null || effectiveTemplate.Series.IsDeleted)
-        {
-            ValidateEffectiveDate(requestedTemplate, effectiveDate);
-        }
-
-        return effectiveTemplate!;
     }
 
     private static bool IsTemplateEffectiveOn(RecurringTask template, DateOnly effectiveDate)
@@ -227,7 +199,8 @@ public class UpdateRecurringTaskFutureCommandHandler(
     private static RecurrencePattern BuildPattern(
         RecurringTask template,
         UpdateRecurringTaskFutureCommand command,
-        RecurrenceFrequency frequency)
+        RecurrenceFrequency frequency,
+        DateOnly futureStartDate)
     {
         return new RecurrencePattern
         {
@@ -237,7 +210,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
                 ? command.DaysOfWeek ?? template.Pattern.DaysOfWeek
                 : null,
             DayOfMonth = frequency == RecurrenceFrequency.Monthly
-                ? command.DayOfMonth ?? command.EffectiveDate.Day
+                ? command.DayOfMonth ?? futureStartDate.Day
                 : null
         };
     }
@@ -269,7 +242,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
         if (endDate != null && endDate < startDate)
         {
-            throw new ValidationException("EndDate must be later than or equal to EffectiveDate.");
+            throw new ValidationException("EndDate must be later than or equal to the recurring task start date.");
         }
 
         if (pattern.DaysOfWeek is < 0 or > 127)
@@ -293,6 +266,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
         RecurringTask oldTemplate,
         UpdateRecurringTaskFutureCommand command,
         RecurrencePattern pattern,
+        DateOnly futureStartDate,
         DateOnly? endDate)
     {
         var details = command.TaskDetails;
@@ -303,7 +277,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
         }
 
         var now = DateTime.UtcNow;
-        var deadlineTemplate = BuildDeadlineTemplate(details, command.EffectiveDate, command.DeadlineTimeZoneId);
+        var deadlineTemplate = BuildDeadlineTemplate(details, futureStartDate, command.DeadlineTimeZoneId);
         var scheduleTimeZoneId = ValidateTimeZoneId(
             command.ScheduleTimeZoneId ?? oldTemplate.ScheduleTimeZoneId,
             "ScheduleTimeZoneId");
@@ -327,7 +301,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
             DeadlineTimeOfDay = deadlineTemplate.TimeOfDay,
             DeadlineTimeZoneId = deadlineTemplate.TimeZoneId,
             Pattern = pattern,
-            StartDate = command.EffectiveDate,
+            StartDate = futureStartDate,
             EndDate = endDate,
             IsActive = true,
             CreatedAt = now,
@@ -337,7 +311,7 @@ public class UpdateRecurringTaskFutureCommandHandler(
 
     private static RecurringDeadlineTemplate BuildDeadlineTemplate(
         EditTaskItemDto details,
-        DateOnly effectiveDate,
+        DateOnly templateStartDate,
         string? deadlineTimeZoneId)
     {
         if (details.IsDeadline != true)
@@ -356,10 +330,10 @@ public class UpdateRecurringTaskFutureCommandHandler(
             throw new ValidationException("DueAt cannot be before the task end time.");
         }
 
-        var offsetDays = DateOnly.FromDateTime(dueAt.Date).DayNumber - effectiveDate.DayNumber;
+        var offsetDays = DateOnly.FromDateTime(dueAt.Date).DayNumber - templateStartDate.DayNumber;
         if (offsetDays < 0)
         {
-            throw new ValidationException("DueAt cannot be before EffectiveDate.");
+            throw new ValidationException("DueAt cannot be before the recurring task start date.");
         }
 
         var timeZoneId = ValidateTimeZoneId(deadlineTimeZoneId, "DeadlineTimeZoneId");

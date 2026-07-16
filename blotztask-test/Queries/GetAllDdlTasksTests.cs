@@ -112,7 +112,7 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
-    public async Task Handle_RecurringDeadlineSeriesWithMultipleVersions_ReturnsLatestCurrentOccurrenceForSeries()
+    public async Task Handle_RecurringDeadlineSeriesWithMultipleVersions_ReturnsCurrentOccurrenceForEachTemplateVersion()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
@@ -165,13 +165,16 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
         var result = await _handler.Handle(query);
 
         // Assert
-        var task = result.Should().ContainSingle().Subject;
-        task.Title.Should().Be("New Weekly Report",
-            because: "a recurring deadline series should show the current occurrence from the active version for this cycle");
-        task.RecurringOccurrence!.RecurringTaskId.Should().Be(newTemplate.Id,
-            because: "the DDL item still needs the concrete recurring template version for occurrence actions");
-        task.RecurringOccurrence.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 15),
-            because: "the series should not also show the previous version's older current occurrence");
+        result.Should().HaveCount(2,
+            because: "same-series recurring deadline template versions can each contribute their current DDL occurrence");
+        result.Select(t => t.RecurringOccurrence?.RecurringTaskId)
+            .Should()
+            .BeEquivalentTo([oldTemplate.Id, newTemplate.Id],
+                because: "recurring deadline occurrence identity is the concrete recurring template plus occurrence date, not the series");
+        result.Select(t => t.RecurringOccurrence?.OccurrenceDate)
+            .Should()
+            .BeEquivalentTo([new DateOnly(2026, 6, 8), new DateOnly(2026, 6, 15)],
+                because: "each recurring template version should keep its own current occurrence date");
     }
 
     [Fact]

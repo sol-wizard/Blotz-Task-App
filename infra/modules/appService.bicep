@@ -6,7 +6,6 @@ param keyVaultUri string
 param openAiEndpoint string
 param openAiTaskGenerationDeploymentId string
 param openAiBreakdownDeploymentId string
-param openAiSpeechDeploymentId string
 param logAnalyticsWorkspaceId string
 param azureMonitorOpenTelemetryEnabled bool = false
 param enableAppServiceDiagnostics bool = false
@@ -97,10 +96,6 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'AzureOpenAI__AiModels__Breakdown__DeploymentId'
           value: openAiBreakdownDeploymentId
-        }
-        {
-          name: 'AzureOpenAI__AiModels__Speech__DeploymentId'
-          value: openAiSpeechDeploymentId
         }
         {
           name: 'ApiKeys__UserSync'
