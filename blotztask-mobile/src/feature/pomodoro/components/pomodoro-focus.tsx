@@ -9,7 +9,8 @@ import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
 import { getMilestoneKey } from "../utils/getMilestoneKey";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 import { formatDuration } from "../utils/format-duration";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
 
@@ -18,10 +19,14 @@ export const PomodoroFocus = () => {
   const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
 
-  const { session, stopTimer, togglePause } = usePomodoroTimer();
+  const { session, stopTimer, togglePause, lastCompletion } = usePomodoroTimer();
   const elapsedSeconds = session?.taskId === taskId ? session.elapsedSeconds : 0;
 
   const { isPlaying, toggleSoundscape, stopSoundscape } = useSoundscapeStore();
+
+  const { task: taskFirework } = useFirework();
+  // Baseline at mount: the overlay is global, so only completions this screen was present for count.
+  const seenCompletionIdRef = useRef(usePomodoroTimer.getState().lastCompletion?.completionId ?? 0);
 
   useEffect(() => {
     if (!taskId || !settings) return;
@@ -35,6 +40,15 @@ export const PomodoroFocus = () => {
       }
     }
   }, [taskId, settings]);
+
+  useEffect(() => {
+    if (!lastCompletion || lastCompletion.completionId <= seenCompletionIdRef.current) return;
+
+    seenCompletionIdRef.current = lastCompletion.completionId;
+    if (lastCompletion.taskId !== taskId) return;
+
+    taskFirework.play();
+  }, [lastCompletion, taskId, taskFirework]);
 
   if (!settings || !taskId) return null;
 
