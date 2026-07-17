@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -62,8 +63,8 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
         var tasks = await queryHandler.Handle(new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = new DateTimeOffset(2026, 6, 2, 0, 0, 0, TimeSpan.Zero),
-            IncludeFloatingForToday = false
+            Date = new DateOnly(2026, 6, 2),
+            TimeZoneId = "UTC"
         }, CancellationToken.None);
 
         // Assert
@@ -161,8 +162,8 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
         var tasks = await queryHandler.Handle(new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = new DateTimeOffset(2026, 6, 4, 0, 0, 0, TimeSpan.Zero),
-            IncludeFloatingForToday = false
+            Date = new DateOnly(2026, 6, 4),
+            TimeZoneId = "UTC"
         }, CancellationToken.None);
 
         // Assert
@@ -283,7 +284,7 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
-    public async Task Handle_DeleteFuture_StaleTemplateId_ResolvesTemplateForOccurrenceDate()
+    public async Task Handle_DeleteFuture_StaleTemplateId_ThrowsOutsideRangeValidationException()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
@@ -314,7 +315,7 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
         }, CancellationToken.None);
 
         // Act
-        await _handler.Handle(new DeleteRecurringOccurrenceCommand
+        var act = () => _handler.Handle(new DeleteRecurringOccurrenceCommand
         {
             RecurringTaskId = recurring.Id,
             OccurrenceDate = new DateOnly(2026, 6, 18),
@@ -326,12 +327,15 @@ public class DeleteRecurringOccurrenceTests : IClassFixture<DatabaseFixture>
         var laterTemplate = await _context.RecurringTasks.SingleAsync(r => r.Id == laterRecurringTaskId);
 
         // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+                because: "deleting future occurrences should not redirect a stale template id to another same-series template")
+            .WithMessage("OccurrenceDate is outside recurring task range.");
         oldTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 16),
-            because: "a stale template id should not be truncated again when it does not contain the selected date");
-        laterTemplate.EndDate.Should().Be(new DateOnly(2026, 6, 17),
-            because: "the handler should resolve and truncate the segment that actually contains the selected date");
+            because: "a stale template id should leave the originally requested template unchanged");
+        laterTemplate.EndDate.Should().BeNull(
+            because: "a stale template id should leave the later same-series template unchanged");
         laterTemplate.IsActive.Should().BeTrue(
-            because: "resolving a stale id should preserve the active later segment instead of deactivating it");
+            because: "rejecting a stale id should preserve the active later segment");
     }
 
     private UpdateRecurringTaskFutureCommandHandler CreateUpdateFutureHandler()

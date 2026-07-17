@@ -206,8 +206,11 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserBadge", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BadgeId")
                         .HasColumnType("int");
@@ -215,11 +218,17 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset>("EarnedAtUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.HasKey("UserId", "BadgeId");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("BadgeId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "BadgeId")
+                        .IsUnique();
 
                     b.ToTable("UserBadges", (string)null);
                 });
@@ -323,6 +332,11 @@ namespace BlotzTask.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPersistent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -513,9 +527,9 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RecurringTaskId");
+                    b.HasIndex("SeriesId");
 
-                    b.HasIndex("SeriesId", "OccurrenceDate")
+                    b.HasIndex("RecurringTaskId", "OccurrenceDate")
                         .IsUnique();
 
                     b.ToTable("RecurringOccurrenceOverrides", (string)null);

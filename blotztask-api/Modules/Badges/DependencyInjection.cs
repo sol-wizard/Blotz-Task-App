@@ -1,4 +1,5 @@
 using BlotzTask.Modules.Badges.Commands;
+using BlotzTask.Modules.Badges.Queries;
 using BlotzTask.Modules.Badges.Services;
 
 namespace BlotzTask.Modules.Badges;
@@ -9,7 +10,9 @@ public static class DependencyInjection
     {
         services.AddScoped<FindMatchingBadgesHandler>();
         services.AddScoped<AwardNewBadgesToUserHandler>();
+        services.AddScoped<GetUserBadgesQueryHandler>();
         services.AddScoped<BadgeAwardService>();
+        services.AddScoped<GetBadgeByIdQueryHandler>();
 
         services.AddHttpClient("Expo", client =>
         {

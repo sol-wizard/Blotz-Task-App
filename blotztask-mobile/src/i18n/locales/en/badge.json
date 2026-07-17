@@ -1,4 +1,19 @@
 {
   "achievementUnlocked": "Achievement unlocked!",
-  "obtainedOn": "Obtained on {{date}}"
+  "shareCardHeadline": "I've unlocked:",
+  "obtainedOn": "Obtained on {{date}}",
+  "view": "View",
+  "shareReward": "Share reward",
+  "sharing": "Sharing...",
+  "preview": {
+    "title": "Achievement"
+  },
+  "wall": {
+    "title": "Badge Wall"
+  },
+  "details": {
+    "category": "Category: {{category}}",
+    "equipReward": "Equip reward",
+    "notFound": "Badge not found"
+  }
 }

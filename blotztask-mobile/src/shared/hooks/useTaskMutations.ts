@@ -12,9 +12,24 @@ import {
   updateTaskItem,
 } from "../services/task-service";
 import { ddlKeys, taskKeys } from "../constants/query-key-factory";
-import { addDays, format, isSameDay, parseISO, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import {
+  addDays,
+  format,
+  isSameDay,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
+import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
+
+type ToggleTaskVariables = {
+  taskId: number;
+  selectedDay?: Date;
+  wasDone: boolean;
+};
 
 type UpdateTaskArgs = {
   taskId: number;
@@ -50,6 +65,7 @@ type DeleteRecurringOccurrenceArgs = {
 
 const useTaskMutations = () => {
   const queryClient = useQueryClient();
+  const { task: taskFirework } = useFirework();
 
   const addTaskMutation = useMutation({
     mutationFn: (task: TaskUpsertDTO) => addTaskItem(task),
@@ -65,14 +81,21 @@ const useTaskMutations = () => {
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: ddlKeys.all });
-      invalidateSelectedDayTask(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
-      invalidateTaskAvailability(queryClient, task.templateStartTime, task.templateEndTime ?? task.templateStartTime);
+      invalidateSelectedDayTask(
+        queryClient,
+        task.templateStartTime,
+        task.templateEndTime ?? task.templateStartTime,
+      );
+      invalidateTaskAvailability(
+        queryClient,
+        task.templateStartTime,
+        task.templateEndTime ?? task.templateStartTime,
+      );
     },
   });
 
   const toggleTaskMutation = useMutation({
-    mutationFn: ({ taskId, selectedDay }: { taskId: number; selectedDay?: Date }) =>
-      toggleTaskCompletion(taskId),
+    mutationFn: ({ taskId }: ToggleTaskVariables) => toggleTaskCompletion(taskId),
     onMutate: async (data) => {
       if (!data?.selectedDay) return;
       const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
@@ -87,7 +110,8 @@ const useTaskMutations = () => {
       if (!context) return;
       queryClient.setQueryData(taskKeys.all, context.prevSelectedDayData);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      taskFirework.playIfCompleting(variables.wasDone);
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
@@ -174,11 +198,16 @@ const useTaskMutations = () => {
         scheduleTimeZoneId,
         deadlineTimeZoneId,
       }),
-    onSuccess: (_data, task) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      queryClient.invalidateQueries({ queryKey: ["ddl"] });
-      invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
-      invalidateTaskAvailability(queryClient, task.dto.startTime, task.dto.endTime);
+    onSuccess: async (_data, task) => {
+      queryClient.removeQueries({ queryKey: ["virtualTaskDetail"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: taskKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ddlKeys.all }),
+        invalidateSelectedDayByDateOnly(queryClient, task.effectiveDate),
+        invalidateTaskAvailability(queryClient, task.effectiveDate),
+        invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime),
+        invalidateTaskAvailability(queryClient, task.dto.startTime, task.dto.endTime),
+      ]);
     },
   });
   return {
@@ -236,7 +265,11 @@ export function invalidateSelectedDayTask(
   }
 }
 
-function invalidateTaskAvailability(queryClient: QueryClient, startTime: string, endTime = startTime) {
+function invalidateTaskAvailability(
+  queryClient: QueryClient,
+  startTime: string,
+  endTime = startTime,
+) {
   const start = parseISO(startTime);
   const end = parseISO(endTime);
   const mondayKeys = new Set([

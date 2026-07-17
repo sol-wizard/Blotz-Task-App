@@ -47,5 +47,14 @@
     "title": "哎呀，出问题了！",
     "message": "出了点小问题，重启App试试看！",
     "button": "重启应用"
+  },
+  "errors": {
+    "network": "网络好像断开了",
+    "aiQuotaExceeded": "本周期 AI 用量已达上限。",
+    "server": "服务出了点问题，请稍后再试。",
+    "validation": "请检查输入内容",
+    "default": "出了点问题，请稍后再试。",
+    "pushTokenFailed": "该设备不支持推送通知。",
+    "physicalDeviceRequired": "推送通知需要在真机上运行。"
   }
 }

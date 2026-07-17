@@ -21,6 +21,7 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   BlockedByContentFilter: "errors.contentFilter",
   Canceled: "errors.canceled",
   NoTasksExtracted: "errors.noTasksExtracted",
+  QuotaExceeded: "errors.quotaExceeded",
 };
 
 export function useAiTaskGenerator({
@@ -38,7 +39,9 @@ export function useAiTaskGenerator({
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
-    if (!connection) throw new Error("Cannot submit audio: not connected.");
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+      throw new Error("Cannot submit audio: not connected.");
+    }
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
@@ -53,18 +56,23 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "transcription",
         errorCode: "NetworkError",
-        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
   const sendTextMessage = async (text: string) => {
-    if (!text.trim() || !connection) return;
+    if (!text.trim() || !connection || connection.state !== signalR.HubConnectionState.Connected) {
+      return;
+    }
 
     setTranscript(undefined);
     setIsAiGenerating(true);
@@ -76,11 +84,61 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      const startedAt = requestStartedAtRef.current;
+      requestStartedAtRef.current = null;
+      pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "text",
         stage: "send",
         errorCode: "NetworkError",
-        durationMs: Date.now() - (requestStartedAtRef.current ?? Date.now()),
+        durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
+      });
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
+  };
+
+  // Optimistic swipe-to-delete: drop the card immediately, tell the backend to remove it from its
+  // draft basket, and roll the card back if the invoke fails (otherwise the next turn's snapshot
+  // would resurrect it). No-op when the id is gone or the connection is down.
+  const deleteDraftTask = async (id: string) => {
+    const index = streamedTasks.findIndex((task) => task.id === id);
+    if (index === -1) return;
+    const removed = streamedTasks[index];
+
+    setStreamedTasks((prev) => prev.filter((task) => task.id !== id));
+
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+    try {
+      await signalRService.invoke(connection, "DeleteDraftTask", id);
+    } catch (error) {
+      console.error("DeleteDraftTask invocation failed:", error);
+      setStreamedTasks((prev) => {
+        const next = [...prev];
+        next.splice(index, 0, removed);
+        return next;
+      });
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
+  };
+
+  const deleteDraftNote = async (id: string) => {
+    const index = streamedNotes.findIndex((note) => note.id === id);
+    if (index === -1) return;
+    const removed = streamedNotes[index];
+
+    setStreamedNotes((prev) => prev.filter((note) => note.id !== id));
+
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+    try {
+      await signalRService.invoke(connection, "DeleteDraftNote", id);
+    } catch (error) {
+      console.error("DeleteDraftNote invocation failed:", error);
+      setStreamedNotes((prev) => {
+        const next = [...prev];
+        next.splice(index, 0, removed);
+        return next;
       });
       Toast.show({ type: "error", text1: t("errors.default") });
     }
@@ -110,8 +168,10 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    setStreamedTasks([]);
-    setStreamedNotes([]);
+    if (error.errorCode !== "QuotaExceeded") {
+      setStreamedTasks([]);
+      setStreamedNotes([]);
+    }
 
     analytics.trackAiTaskGenerationFailed({
       inputMode: inputMode ?? "unknown",
@@ -132,9 +192,8 @@ export function useAiTaskGenerator({
 
     signalRService
       .createConnection()
-      .then((newConn) => {
+      .then(async (newConn) => {
         conn = newConn;
-        setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
         conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
@@ -148,7 +207,9 @@ export function useAiTaskGenerator({
           if (requestStartedAtRef.current == null) return;
           setStreamedNotes((prev) => [...prev, note]);
         });
-        return conn.start();
+
+        await conn.start();
+        setConnection(conn);
       })
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
@@ -171,6 +232,8 @@ export function useAiTaskGenerator({
     turns,
     submitAudioForTranscription,
     sendTextMessage,
+    deleteDraftTask,
+    deleteDraftNote,
   };
 }
 

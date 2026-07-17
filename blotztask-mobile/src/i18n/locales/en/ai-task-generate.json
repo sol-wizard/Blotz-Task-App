@@ -11,16 +11,17 @@
     "notesSection": "Notes"
   },
   "success": {
-    "taskAdded": "Yay! Task added!"
+    "taskAdded": "Tasks created successfully"
   },
   "errors": {
     "default": "Oops something went over my head. Please try again.",
     "transcriptionFailed": "Could not understand the audio. Please try again.",
-    "emptyAudio": "No audio was recorded. Please try again.",
+    "emptyAudio": "Voice not detected, please try again.",
     "tokenLimited": "You've hit the usage limit. Please try again later.",
     "contentFilter": "Your message was flagged. Please rephrase and try again.",
     "canceled": "The request was canceled.",
     "noTasksExtracted": "I couldn't find any tasks in that. Please try again.",
+    "quotaExceeded": "You've reached your AI usage limit. Your generated items have been kept.",
     "holdLonger": "Hold the mic a little longer to record.",
     "recordingFailed": "Failed to start recording. Please try again."
   },

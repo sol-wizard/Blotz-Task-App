@@ -5,6 +5,7 @@ using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
+using BlotzTask.Shared.Time;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,24 +13,18 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetTasksByDateRequest
 {
-    // TIMEZONE TODO: Align with timezone-handling.md Core Rule, Rule 2, Rule 4, and Rule 7.
-    // Replace startDate DateTimeOffset calendar queries with local date + request/device timeZoneId.
-    // Backend should resolve the local day boundaries from timeZoneId, convert them to UTC,
-    // keep the existing overlap logic, and add DST/travel/exact-midnight tests.
-    // TIMEZONE TODO: Remove IncludeFloatingForToday from the API/mobile call path because floating
-    // task support is no longer used.
-    [BindRequired] public DateTimeOffset StartDate { get; set; }
+    [BindRequired] public DateOnly Date { get; set; }
 
-    [BindRequired] public bool IncludeFloatingForToday { get; set; }
+    [BindRequired] public string TimeZoneId { get; set; } = string.Empty;
 }
 
 public class GetTasksByDateQuery
 {
     [Required] public required Guid UserId { get; init; }
 
-    [Required] public DateTimeOffset StartDate { get; init; }
+    [Required] public required DateOnly Date { get; init; }
 
-    [Required] public bool IncludeFloatingForToday { get; init; } = false;
+    [Required] public required string TimeZoneId { get; init; }
 }
 
 public class GetTasksByDateQueryHandler(
@@ -41,8 +36,10 @@ public class GetTasksByDateQueryHandler(
     {
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
-            "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
-            query.UserId, query.StartDate, query.IncludeFloatingForToday);
+            "Fetching tasks for user {UserId} on date {Date} (timezone {TimeZoneId})",
+            query.UserId, query.Date, query.TimeZoneId);
+
+        var tz = TimeZoneClock.ResolveOrThrow(query.TimeZoneId);
 
         bool? autoRolloverEnabled = await db.UserPreferences
             .AsNoTracking()
@@ -51,20 +48,17 @@ public class GetTasksByDateQueryHandler(
             .FirstOrDefaultAsync(ct);
         var autoRollover = autoRolloverEnabled ?? true;
 
-        var selectedDayStart = query.StartDate;
-        var selectedDayEnd = query.StartDate.AddDays(1);
-        var requestedDate = DateOnly.FromDateTime(query.StartDate.Date);
+        var selectedDayStart = TimeZoneClock.StartOfDayUtc(query.Date, tz);
+        var selectedDayEnd = TimeZoneClock.StartOfDayUtc(query.Date.AddDays(1), tz);
+        var requestedDate = query.Date;
 
-        var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
-        var isFutureDay = query.StartDate.Date > userNow.Date;
-        var isToday = query.StartDate.Date == userNow.Date;
+        var userToday = TimeZoneClock.Today(tz);
+        var isToday = query.Date == userToday;
 
-        var overdueCutoff = isToday ? userNow : selectedDayEnd;
+        var overdueCutoff = isToday ? DateTimeOffset.UtcNow : selectedDayEnd;
 
-
-        logger.LogInformation("StartDate received: {StartDate} (Offset={Offset})", query.StartDate, query.StartDate.Offset);
-        logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}, isFutureDay={IsFutureDay}",
-            selectedDayStart, selectedDayEnd, isFutureDay);
+        logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}",
+            selectedDayStart, selectedDayEnd);
 
         var queryStopwatch = Stopwatch.StartNew();
 
@@ -158,7 +152,7 @@ public class GetTasksByDateQueryHandler(
                 && o.OccurrenceDate <= requestedDate)
             .ToListAsync(ct);
 
-        var overrideMap = overrides.ToDictionary(o => (o.SeriesId, o.OccurrenceDate), o => o);
+        var overrideMap = overrides.ToDictionary(o => (o.RecurringTaskId, o.OccurrenceDate), o => o);
 
         // Step 4: For each recurring task not yet saved, check if it occurs on this date
         foreach (var recurring in recurringTasks)
@@ -172,7 +166,7 @@ public class GetTasksByDateQueryHandler(
             foreach (var occurrenceWindow in occurrenceWindows)
             {
                 if (overrideMap.TryGetValue(
-                        (recurring.SeriesId, occurrenceWindow.OccurrenceDate),
+                        (recurring.Id, occurrenceWindow.OccurrenceDate),
                         out var recurringOverride)
                     && recurringOverride.OverrideType != RecurringOccurrenceOverrideType.Detached)
                 {
