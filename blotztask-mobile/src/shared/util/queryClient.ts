@@ -39,7 +39,7 @@ export const queryClient = new QueryClient({
       if (__DEV__) console.error("[Mutation Error]", error);
       Sentry.captureException(error, { tags: { source: "mutation" } });
 
-      const msg = getErrorMessage(error);
+      const msg = getErrorMessage(error, mutation.meta);
 
       Toast.show({
         type: "error",
@@ -70,11 +70,16 @@ export const queryClient = new QueryClient({
   },
 });
 
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: unknown, meta?: Record<string, unknown>): string {
   if (isAxiosError(error)) {
     const status = error.response?.status;
     if (!error.response) return i18n.t("errors.network");
     if (status && status >= 500) return i18n.t("errors.server");
+    if (meta?.errorNs === "invite") {
+      if (status === 404) return i18n.t("settings:invite.errors.notFound");
+      if (status === 409) return i18n.t("settings:invite.errors.alreadyRedeemed");
+      return i18n.t("settings:invite.errors.invalid");
+    }
     if (status === 400 || status === 422) return i18n.t("errors.validation");
     return i18n.t("errors.default");
   }

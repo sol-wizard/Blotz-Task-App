@@ -12,5 +12,8 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.HasIndex(u => u.Auth0UserId)
             .IsUnique();
+
+        builder.HasIndex(u=>u.InviteCode)
+            .IsUnique();
     }
 }

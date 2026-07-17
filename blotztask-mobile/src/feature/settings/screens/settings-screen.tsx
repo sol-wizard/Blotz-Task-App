@@ -54,6 +54,12 @@ export default function SettingsScreen() {
       route: "/settings/language",
     },
     {
+      key: "invite",
+      label: t("menu.invite"),
+      icon: "account-plus-outline",
+      route: "/settings/invite",
+    },
+    {
       key: "about",
       label: t("menu.about"),
       icon: "information-outline",

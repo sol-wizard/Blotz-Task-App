@@ -9,6 +9,7 @@
     "notifications": "Notifications",
     "language": "Language",
     "allTasks": "All tasks page (beta)",
+    "invite": "Invite Friends",
     "about": "About"
   },
   "betaFeatures": {
@@ -118,5 +119,21 @@
   },
   "avatar": {
     "title": "Avatar"
+  },
+  "invite": {
+    "title": "Invite Friends",
+    "myCodeLabel": "Your invite code",
+    "myCodeHint": "Share this code with friends so they can join Blotz.",
+    "copied": "Copied to clipboard",
+    "redeemLabel": "Have an invite code?",
+    "redeemPlaceholder": "Enter code",
+    "redeemButton": "Redeem",
+    "redeeming": "Redeeming...",
+    "redeemSuccess": "Invite code redeemed successfully!",
+    "errors": {
+      "notFound": "Invite code not found.",
+      "invalid": "You cannot use your own invite code.",
+      "alreadyRedeemed": "You have already redeemed an invite code."
+    }
   }
 }

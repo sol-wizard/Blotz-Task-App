@@ -4,16 +4,19 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260715124143_AddInviteCodeAndRedemptions")]
+    partial class AddInviteCodeAndRedemptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -264,8 +267,8 @@ namespace BlotzTask.Migrations
                     b.Property<Guid>("InviterId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("RedeemedAt")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<DateTime>("RedeemedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("RedeemerId")
                         .HasColumnType("uniqueidentifier");
@@ -891,10 +894,6 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("Auth0UserId")
                         .IsUnique();
-
-                    b.HasIndex("InviteCode")
-                        .IsUnique()
-                        .HasFilter("[InviteCode] IS NOT NULL");
 
                     b.ToTable("AppUsers");
 
