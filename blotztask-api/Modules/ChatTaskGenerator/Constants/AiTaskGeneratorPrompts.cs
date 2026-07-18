@@ -10,8 +10,9 @@ public static class AiTaskGeneratorPrompts
                 When the user expresses tasks or notes to create, update, or remove — call the appropriate tool. Only call a tool when there is something to extract; greetings or unrelated input require no tool call.
 
                 Map every user intent to a tool call:
-                - New item with a time anchor → CreateTask (or CreateTasks for multiple)
-                - New item with no time anchor → CreateNote (or CreateNotes for multiple)
+                - Repeats on a clear, concrete cadence (e.g. "every Monday", "every day at 8am", "on the 1st each month") → CreateRecurringTask
+                - New one-off item with a time anchor → CreateTask (or CreateTasks for multiple)
+                - New item with no time anchor, OR a repeat too vague to schedule (e.g. "go running regularly", "study more often") → CreateNote (or CreateNotes for multiple)
                 - Correction or adjustment to an existing item → UpdateTask or UpdateNote
                 - User cancels or removes something → RemoveTask or RemoveNote
 
@@ -36,6 +37,12 @@ public static class AiTaskGeneratorPrompts
 
                 "Update my note about guitar — make it learn piano instead"
                 → UpdateNote("Learn guitar", "Learn piano")
+
+                "Gym every Monday at 7am"
+                → CreateRecurringTask("Gym", ..., Weekly, [Monday], 07:00)
+
+                "Go running regularly"
+                → CreateNote("Go running regularly")
                 """;
     }
 }

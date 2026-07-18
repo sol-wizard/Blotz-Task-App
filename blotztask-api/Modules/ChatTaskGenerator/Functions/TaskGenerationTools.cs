@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Modules.Tasks.Enums;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
 //TODO: Do we really need so many CRUD to do the operation ? Please research if we really need function tools here
@@ -10,8 +11,11 @@ public class TaskGenerationTools()
 
     public List<ExtractedTask> Tasks { get; private set; } = [];
     public List<ExtractedNote> Notes { get; private set; } = [];
+    // SPIKE (#1462, throwaway): parallel draft basket for recurring tasks.
+    public List<ExtractedRecurringTask> RecurringTasks { get; private set; } = [];
     public Func<ExtractedTask, Task>? OnTaskStreamed { get; set; }
     public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
+    public Func<ExtractedRecurringTask, Task>? OnRecurringTaskStreamed { get; set; }
 
     public void ResetCallCount() => ToolCallCount = 0;
 
@@ -63,6 +67,73 @@ public class TaskGenerationTools()
         Tasks.Add(task);
         if (OnTaskStreamed != null) await OnTaskStreamed(task);
         return "Task added.";
+    }
+
+    [Description(
+        "Add a task that REPEATS on a schedule. Use this ONLY when the user states a clear, concrete repeating cadence — e.g. 'gym every Monday', 'standup every weekday at 9am', 'pay rent on the 1st of each month', 'yoga every other Tuesday'. " +
+        "Do NOT use this for a one-off item with a single date/time (use CreateTask), and do NOT use it when the repetition is vague with no concrete frequency, e.g. 'go running regularly' or 'study more often' (use CreateNote instead). " +
+        "Rules: daysOfWeek applies only when frequency is Weekly; dayOfMonth applies only when frequency is Monthly; startDate must equal the date part of templateStartTime.")]
+    public async Task<string> CreateRecurringTask(
+        [Description("Title")] string title,
+        [Description("Description or empty")] string description,
+        [Description("SingleTime when the task is a moment with no duration (end equals start); RangeTime when it spans a start and end time.")] TaskTimeType timeType,
+        [Description("Work, Life, Learning, or Health")] LabelNameEnum label,
+        [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence. Its date part MUST equal startDate. If the user gives a day but no time, pick a sensible time of day.")] DateTime templateStartTime,
+        [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss. Equal to templateStartTime when timeType is SingleTime; strictly after templateStartTime when RangeTime.")] DateTime templateEndTime,
+        [Description("How often it repeats: Daily, Weekly, Monthly, or Yearly.")] RecurrenceFrequency frequency,
+        [Description("Repeat every N periods. 1 = every day/week/month/year, 2 = every other, and so on. Use 1 unless the user says otherwise.")] int interval,
+        [Description("The weekdays the task repeats on, named directly, e.g. [Monday, Wednesday, Friday]. REQUIRED when frequency is Weekly; leave empty otherwise. Just name the days — never compute a number.")] DayOfWeek[] daysOfWeek,
+        [Description("Day of month (1-31). REQUIRED when frequency is Monthly; otherwise leave null.")] int? dayOfMonth,
+        [Description("Date of the first occurrence as yyyy-MM-dd. MUST equal the date part of templateStartTime.")] DateOnly startDate,
+        [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after startDate.")] DateOnly? endDate)
+    {
+        ToolCallCount++;
+
+        // Friendly -> strict translation lives here, not in the model: named weekdays -> WeeklyDayFlags
+        // bitmask, interval clamped, and the fields the endpoint couples to frequency normalized so a
+        // creation failure reflects a genuine extraction error rather than a redundant field.
+        var weeklyMask = daysOfWeek is { Length: > 0 } ? ToWeeklyBitmask(daysOfWeek) : 0;
+        var task = new ExtractedRecurringTask
+        {
+            Id = Guid.NewGuid(),
+            Title = title,
+            Description = description,
+            TimeType = timeType,
+            LabelName = label,
+            TemplateStartTime = templateStartTime,
+            TemplateEndTime = templateEndTime,
+            Frequency = frequency,
+            Interval = interval < 1 ? 1 : interval,
+            DaysOfWeek = frequency == RecurrenceFrequency.Weekly && weeklyMask != 0 ? weeklyMask : null,
+            DayOfMonth = frequency == RecurrenceFrequency.Monthly ? dayOfMonth : null,
+            StartDate = startDate,
+            EndDate = endDate
+        };
+        RecurringTasks.Add(task);
+        if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
+        return "Recurring task added.";
+    }
+
+    // Maps named weekdays (System.DayOfWeek: Sun=0..Sat=6) to the WeeklyDayFlags bitmask
+    // (Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64) the recurring endpoint expects.
+    private static int ToWeeklyBitmask(IEnumerable<DayOfWeek> days)
+    {
+        var mask = 0;
+        foreach (var day in days)
+        {
+            mask |= day switch
+            {
+                DayOfWeek.Monday => (int)WeeklyDayFlags.Monday,
+                DayOfWeek.Tuesday => (int)WeeklyDayFlags.Tuesday,
+                DayOfWeek.Wednesday => (int)WeeklyDayFlags.Wednesday,
+                DayOfWeek.Thursday => (int)WeeklyDayFlags.Thursday,
+                DayOfWeek.Friday => (int)WeeklyDayFlags.Friday,
+                DayOfWeek.Saturday => (int)WeeklyDayFlags.Saturday,
+                DayOfWeek.Sunday => (int)WeeklyDayFlags.Sunday,
+                _ => 0
+            };
+        }
+        return mask;
     }
 
     [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item.")]

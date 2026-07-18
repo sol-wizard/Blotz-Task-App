@@ -165,12 +165,17 @@ public class AiTaskGenerateChatHub(
             await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
         chatContext.Tools.OnNoteStreamed = async note =>
             await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+        // SPIKE (#1462, throwaway): stream recurring drafts on their own event so the client
+        // can route them to the recurring endpoint, separate from the one-off task list.
+        chatContext.Tools.OnRecurringTaskStreamed = async recurringTask =>
+            await Clients.Caller.SendAsync("ReceiveRecurringTaskExtracted", recurringTask, ct);
     }
 
     private static void ClearStreamingCallbacks(AiChatContext chatContext)
     {
         chatContext.Tools.OnTaskStreamed = null;
         chatContext.Tools.OnNoteStreamed = null;
+        chatContext.Tools.OnRecurringTaskStreamed = null;
     }
 
     #endregion

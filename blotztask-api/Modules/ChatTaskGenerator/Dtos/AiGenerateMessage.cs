@@ -21,7 +21,12 @@ public class AiGenerateMessage
     [JsonPropertyName("extractedNotes")]
     [Description("Array of notes extracted from user input (items with no date/time). Empty when all have time.")]
     public List<ExtractedNote> ExtractedNotes { get; set; } = new();
-    
+
+    // SPIKE (#1462, throwaway): recurring tasks extracted from repeating-cadence intent.
+    [JsonPropertyName("extractedRecurringTasks")]
+    [Description("Array of recurring tasks extracted from user input (items that repeat on a schedule).")]
+    public List<ExtractedRecurringTask> ExtractedRecurringTasks { get; set; } = new();
+
 
     [JsonPropertyName("inputTokens")]
     [Description("Number of prompt tokens used.")]
