@@ -119,6 +119,15 @@ public class AiTaskGenerateChatHub(
         return Task.CompletedTask;
     }
 
+    // SPIKE (#1462, throwaway): swipe-to-delete for a streamed recurring draft.
+    public Task DeleteDraftRecurringTask(Guid recurringTaskId)
+    {
+        if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
+            chatContext.Tools.RemoveDraftRecurringTaskById(recurringTaskId);
+
+        return Task.CompletedTask;
+    }
+
     #endregion
 
     #region Private Helpers

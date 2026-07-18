@@ -232,4 +232,7 @@ public class TaskGenerationTools()
     public bool RemoveDraftTaskById(Guid id) => Tasks.RemoveAll(t => t.Id == id) > 0;
 
     public bool RemoveDraftNoteById(Guid id) => Notes.RemoveAll(n => n.Id == id) > 0;
+
+    // SPIKE (#1462, throwaway): swipe-to-delete for a recurring draft, mirroring the task/note helpers.
+    public bool RemoveDraftRecurringTaskById(Guid id) => RecurringTasks.RemoveAll(t => t.Id == id) > 0;
 }
