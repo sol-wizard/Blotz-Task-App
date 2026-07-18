@@ -530,9 +530,9 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RecurringTaskId");
+                    b.HasIndex("SeriesId");
 
-                    b.HasIndex("SeriesId", "OccurrenceDate")
+                    b.HasIndex("RecurringTaskId", "OccurrenceDate")
                         .IsUnique();
 
                     b.ToTable("RecurringOccurrenceOverrides", (string)null);

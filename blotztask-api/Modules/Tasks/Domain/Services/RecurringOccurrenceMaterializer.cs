@@ -25,14 +25,14 @@ public class RecurringOccurrenceMaterializer(
         if (template == null)
             throw new NotFoundException($"RecurringTask {recurringTaskId} not found.");
 
-        template = await ResolveTemplateForOccurrence(template, occurrenceDate, userId, ct);
+        template = ResolveTemplateForOccurrence(template, occurrenceDate);
 
         if (!generatorService.IsOccurrenceOn(template, occurrenceDate))
         {
             throw new ValidationException("Occurrence date is not valid for this recurring task.");
         }
 
-        var existingOverride = await FindExistingOverride(template.SeriesId, occurrenceDate, userId, ct);
+        var existingOverride = await FindExistingOverride(template.Id, occurrenceDate, userId, ct);
 
         if (existingOverride?.OverrideType is RecurringOccurrenceOverrideType.Skipped
             or RecurringOccurrenceOverrideType.Detached)
@@ -90,7 +90,7 @@ public class RecurringOccurrenceMaterializer(
                 db.Entry(recurringOverride).State = EntityState.Detached;
             }
 
-            var existingAfterConflict = await FindExistingOverride(template.SeriesId, occurrenceDate, userId, ct);
+            var existingAfterConflict = await FindExistingOverride(template.Id, occurrenceDate, userId, ct);
             if (existingAfterConflict?.TaskItem != null) return existingAfterConflict.TaskItem;
 
             throw;
@@ -99,11 +99,9 @@ public class RecurringOccurrenceMaterializer(
         return taskItem;
     }
 
-    private async Task<RecurringTask> ResolveTemplateForOccurrence(
+    private static RecurringTask ResolveTemplateForOccurrence(
         RecurringTask requestedTemplate,
-        DateOnly occurrenceDate,
-        Guid userId,
-        CancellationToken ct)
+        DateOnly occurrenceDate)
     {
         if (requestedTemplate.Series.IsDeleted)
         {
@@ -115,23 +113,7 @@ public class RecurringOccurrenceMaterializer(
             return requestedTemplate;
         }
 
-        var effectiveTemplate = await db.RecurringTasks
-            .Include(r => r.Series)
-            .Where(r => r.SeriesId == requestedTemplate.SeriesId
-                && r.UserId == userId
-                && r.IsActive
-                && r.StartDate <= occurrenceDate
-                && (r.EndDate == null || r.EndDate >= occurrenceDate))
-            .OrderByDescending(r => r.StartDate)
-            .ThenByDescending(r => r.Id)
-            .FirstOrDefaultAsync(ct);
-
-        if (effectiveTemplate == null || effectiveTemplate.Series.IsDeleted)
-        {
-            throw new ValidationException("Occurrence date is outside recurring task range.");
-        }
-
-        return effectiveTemplate;
+        throw new ValidationException("Occurrence date is outside recurring task range.");
     }
 
     private static bool IsTemplateEffectiveOn(RecurringTask template, DateOnly occurrenceDate)
@@ -142,14 +124,14 @@ public class RecurringOccurrenceMaterializer(
     }
 
     private Task<RecurringOccurrenceOverride?> FindExistingOverride(
-        int seriesId,
+        int recurringTaskId,
         DateOnly occurrenceDate,
         Guid userId,
         CancellationToken ct)
     {
         return db.RecurringOccurrenceOverrides
             .Include(o => o.TaskItem)
-            .SingleOrDefaultAsync(o => o.SeriesId == seriesId
+            .SingleOrDefaultAsync(o => o.RecurringTaskId == recurringTaskId
                 && o.OccurrenceDate == occurrenceDate
                 && o.Series.UserId == userId, ct);
     }

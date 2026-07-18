@@ -4,7 +4,7 @@ import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
@@ -16,6 +16,7 @@ import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
+import { formatTaskEndTime } from "../util/format-task-end-time";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
@@ -355,7 +356,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                     isOverdue ? "text-warning" : "text-primary"
                   } font-inter font-semibold text-lg`}
                 >
-                  {format(parseISO(task.endTime), "H:mm")}
+                  {formatTaskEndTime(task.endTime)}
                 </Text>
 
                 <View className="ml-1 w-6 items-center justify-center">

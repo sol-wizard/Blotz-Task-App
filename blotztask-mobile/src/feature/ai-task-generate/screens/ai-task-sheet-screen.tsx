@@ -8,7 +8,12 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
+import {
+  KeyboardStickyView,
+  useKeyboardState,
+  useReanimatedKeyboardAnimation,
+} from "react-native-keyboard-controller";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -37,7 +42,6 @@ export default function AiTaskSheetScreen() {
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   // Interface opens in voice mode by default; the keyboard toggle switches to text.
@@ -46,6 +50,13 @@ export default function AiTaskSheetScreen() {
   const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+
+  const { height: keyboardOffset } = useReanimatedKeyboardAnimation();
+  const listKeyboardPad = useAnimatedStyle(() => ({
+    paddingBottom: Math.max(0, -keyboardOffset.value),
+  }));
+
+  const bottomPadding = isKeyboardVisible ? 12 : Platform.OS === "android" ? bottom + 16 : 32;
 
   const {
     transcript,
@@ -164,26 +175,23 @@ export default function AiTaskSheetScreen() {
           end={{ x: 0.7, y: 1 }}
           style={{ height: height * 0.8, borderRadius: 20 }}
         >
-          <KeyboardStickyView style={{ flex: 1 }}>
-            <View className="flex-1 items-center">
-              {/* Top row - dismiss button */}
-              <View className="w-full items-end px-6 pt-4 pb-2">
-                <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
-                  <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
-                </Pressable>
+          <View className="flex-1 items-center">
+            {/* Top row - dismiss button */}
+            <View className="w-full items-end px-6 pt-4 pb-2">
+              <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
+                <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
+              </Pressable>
+            </View>
+
+            {/* Hint text (no results) */}
+            {!hasContent && (
+              <View className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}>
+                <VoiceHintText />
               </View>
+            )}
 
-              {/* Hint text (no results) */}
-              {!hasContent && (
-                <View
-                  className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}
-                >
-                  <VoiceHintText />
-                </View>
-              )}
-
-              {/* Task / note cards (streamed or final) */}
-              {hasContent && (
+            {hasContent && (
+              <Animated.View className="w-full flex-1" style={listKeyboardPad}>
                 <AiResultList
                   aiTasks={displayTasks}
                   aiNotes={displayNotes}
@@ -191,29 +199,30 @@ export default function AiTaskSheetScreen() {
                   onDeleteNote={deleteDraftNote}
                   isGenerating={isAiGenerating}
                 />
-              )}
+              </Animated.View>
+            )}
 
-              {isAiGenerating && !!transcript && (
-                <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
-                  &ldquo;{transcript}&rdquo;
-                </Text>
-              )}
+            {isAiGenerating && !!transcript && (
+              <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
+                &ldquo;{transcript}&rdquo;
+              </Text>
+            )}
 
-              {!hasContent && (
-                <ListeningIndicator
-                  isRecording={isRecording}
-                  isAiGenerating={isAiGenerating}
-                  isHoldHintVisible={isHoldHintVisible}
-                />
-              )}
+            {!hasContent && (
+              <ListeningIndicator
+                isRecording={isRecording}
+                isAiGenerating={isAiGenerating}
+                isHoldHintVisible={isHoldHintVisible}
+              />
+            )}
 
-              {isAiGenerating && hasContent && (
-                <Text className="mb-2 text-[13px] text-white/60">
-                  {t("voiceListening.aiThinking")}…
-                </Text>
-              )}
+            {isAiGenerating && hasContent && (
+              <Text className="mb-2 text-[13px] text-white/60">
+                {t("voiceListening.aiThinking")}…
+              </Text>
+            )}
 
-              {/* Input bar sticks to the keyboard only */}
+            <KeyboardStickyView className="w-full">
               <View
                 className="w-full flex-row items-center px-6 gap-4"
                 style={{ paddingBottom: bottomPadding }}
@@ -299,7 +308,7 @@ export default function AiTaskSheetScreen() {
                     )}
                   </View>
                 </View>
-                {hasContent && (
+                {hasContent && !isKeyboardVisible && (
                   <Pressable
                     onPress={() => void handleAddAll()}
                     accessibilityLabel="Confirm"
@@ -314,11 +323,10 @@ export default function AiTaskSheetScreen() {
                   </Pressable>
                 )}
               </View>
-            </View>
-          </KeyboardStickyView>
+            </KeyboardStickyView>
+          </View>
         </LinearGradient>
       </View>
-      {/* register extra toast here because this screen is a modal */}
       <Toast config={toastConfig} position="bottom" bottomOffset={120} />
     </View>
   );

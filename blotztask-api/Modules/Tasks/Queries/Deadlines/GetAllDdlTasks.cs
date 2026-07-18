@@ -73,24 +73,18 @@ public class GetAllDdlTasksQueryHandler(
                 && r.StartDate <= today)
             .ToListAsync(ct);
 
-        var currentOccurrencesBySeries = recurringDeadlineTemplates
+        var currentOccurrences = recurringDeadlineTemplates
             .Select(recurring => new CurrentRecurringDeadlineOccurrence(
                 recurring,
                 generatorService.GetCurrentOccurrenceDate(recurring, today)))
             .Where(x => x.OccurrenceDate != null)
-            .GroupBy(x => x.Recurring.SeriesId)
-            .Select(group => group
-                .OrderByDescending(x => x.OccurrenceDate)
-                .ThenByDescending(x => x.Recurring.StartDate)
-                .ThenByDescending(x => x.Recurring.Id)
-                .First())
             .ToList();
 
-        var currentSeriesIds = currentOccurrencesBySeries
-            .Select(x => x.Recurring.SeriesId)
+        var currentRecurringTaskIds = currentOccurrences
+            .Select(x => x.Recurring.Id)
             .ToHashSet();
 
-        var currentOccurrenceDates = currentOccurrencesBySeries
+        var currentOccurrenceDates = currentOccurrences
             .Select(x => x.OccurrenceDate!.Value)
             .ToHashSet();
 
@@ -101,16 +95,16 @@ public class GetAllDdlTasksQueryHandler(
             .Include(o => o.TaskItem)
             .ThenInclude(t => t!.Label)
             .Where(o => o.Series.UserId == query.UserId
-                && currentSeriesIds.Contains(o.SeriesId)
+                && currentRecurringTaskIds.Contains(o.RecurringTaskId)
                 && currentOccurrenceDates.Contains(o.OccurrenceDate))
-            .ToDictionaryAsync(o => new RecurringSeriesOccurrenceKey(o.SeriesId, o.OccurrenceDate), ct);
+            .ToDictionaryAsync(o => new RecurringTemplateOccurrenceKey(o.RecurringTaskId, o.OccurrenceDate), ct);
 
-        foreach (var currentOccurrence in currentOccurrencesBySeries)
+        foreach (var currentOccurrence in currentOccurrences)
         {
             var recurring = currentOccurrence.Recurring;
             var occurrenceDate = currentOccurrence.OccurrenceDate!.Value;
 
-            var occurrenceKey = new RecurringSeriesOccurrenceKey(recurring.SeriesId, occurrenceDate);
+            var occurrenceKey = new RecurringTemplateOccurrenceKey(recurring.Id, occurrenceDate);
             if (recurringOverrideMap.TryGetValue(occurrenceKey, out var recurringOverride))
             {
                 var materializedDdlTask = DeadlineTaskDtoFactory.ToDeadlineTaskDto(recurringOverride);
@@ -226,7 +220,7 @@ internal sealed record CurrentRecurringDeadlineOccurrence(
     RecurringTask Recurring,
     DateOnly? OccurrenceDate);
 
-internal sealed record RecurringSeriesOccurrenceKey(int SeriesId, DateOnly OccurrenceDate);
+internal sealed record RecurringTemplateOccurrenceKey(int RecurringTaskId, DateOnly OccurrenceDate);
 
 internal static class DeadlineTaskDtoFactory
 {
