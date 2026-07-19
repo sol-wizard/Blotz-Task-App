@@ -1,4 +1,5 @@
 import { parseISO } from "date-fns";
+import * as Sentry from "@sentry/react-native";
 import TodayTasksWidget from "@/feature/widget/ios/components/ios-tasks-widget";
 import type { TasksWidgetSnapshot } from "@/feature/widget/models/tasks-widget-snapshot";
 
@@ -14,7 +15,7 @@ export async function syncIosTodayTasksWidgetCache(
           props: snapshot,
         })),
     );
-  } catch {
-    // Widget timeline updates are best-effort.
+  } catch (error) {
+    Sentry.captureException(error, { tags: { source: "ios-widget-timeline" } });
   }
 }
