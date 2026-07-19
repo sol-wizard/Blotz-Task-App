@@ -16,7 +16,6 @@ export async function syncIosTodayTasksWidgetCache(
         })),
     );
   } catch (error) {
-    // A failed widget update must not break the app, but it should stay visible in Sentry.
     Sentry.captureException(error, { tags: { source: "ios-widget-timeline" } });
   }
 }
