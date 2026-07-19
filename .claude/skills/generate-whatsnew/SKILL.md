@@ -77,7 +77,7 @@ Install: extract the `.tar.gz` → `xcrun simctl install booted BlotzTask.app` �
 
 #### 3. Drive the app for screenshots (Maestro 2.6.1)
 
-**Confirm the account first**: Settings → Account must show `blotztest1@gmail.com` (the display name is "Nicole" — that's the test account). The simulator's Safari cookie jar keeps the Auth0 session across reinstalls, so login is often skipped silently — never assume who you're signed in as.
+**Confirm the account first**: Settings → Account must show the email `blotztest1@gmail.com`. Go by the email, not the display name — the display name is just profile data and can be changed at any time, so it proves nothing. The simulator's Safari cookie jar keeps the Auth0 session across reinstalls, so login is often skipped silently — never assume who you're signed in as.
 
 Things already learned the hard way:
 
