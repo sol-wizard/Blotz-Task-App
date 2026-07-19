@@ -64,6 +64,13 @@
         "EXPO_APPLE_TEAM_TYPE": "INDIVIDUAL"
       }
     },
+    "preview-simulator": {
+      "extends": "preview",
+      "autoIncrement": false,
+      "ios": {
+        "simulator": true
+      }
+    },
     "production": {
       "autoIncrement": true,
       "ios": {
