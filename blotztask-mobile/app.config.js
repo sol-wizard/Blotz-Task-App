@@ -1,3 +1,7 @@
+import widgetConfig from "./app-widget.config.cjs";
+
+const { androidWidgetConfig, iosWidgetConfig } = widgetConfig;
+
 export default {
   expo: {
     name: "BlotzTask",
@@ -92,6 +96,12 @@ export default {
         },
       ],
       "expo-status-bar",
+      [
+        "expo-widgets",
+        iosWidgetConfig,
+      ],
+      ["react-native-android-widget", androidWidgetConfig],
+      "./plugins/withAndroidWorkManagerFix",
     ],
     experiments: {
       typedRoutes: true,
