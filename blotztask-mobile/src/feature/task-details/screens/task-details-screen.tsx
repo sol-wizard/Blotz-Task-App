@@ -1,6 +1,20 @@
 import React from "react";
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Keyboard,
+  Linking,
+  Platform,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { requestCalendarPermissions } from "expo-calendar";
+import { createEventInCalendarAsync } from "expo-calendar/legacy";
+import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
+import Toast from "react-native-toast-message";
 import DetailsView from "@/feature/task-details/components/details-view";
 import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
@@ -47,6 +61,7 @@ function selectTaskByRouteMode({
 // TODO: This part may need optimization in the future.
 export default function TaskDetailsScreen() {
   const router = useRouter();
+  const [isExportingToCalendar, setIsExportingToCalendar] = React.useState(false);
   const params = useLocalSearchParams<{
     mode?: string;
     taskId?: string;
@@ -75,6 +90,8 @@ export default function TaskDetailsScreen() {
 
   const { t } = useTranslation();
   const recurringTaskId = selectedTask ? getRecurringTaskId(selectedTask) : null;
+  const supportsAppleCalendarExport =
+    Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) >= 17;
 
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
@@ -106,6 +123,57 @@ export default function TaskDetailsScreen() {
       occurrenceDate: params.occurrenceDate,
       dto,
     });
+  };
+
+  const handleExportToAppleCalendar = async () => {
+    if (!selectedTask || isExportingToCalendar) return;
+
+    setIsExportingToCalendar(true);
+
+    try {
+      const permission = await requestCalendarPermissions(true);
+
+      if (!permission.granted) {
+        Alert.alert(
+          t("tasks:details.calendarPermissionTitle"),
+          t("tasks:details.calendarPermissionMessage"),
+          [
+            { text: t("common:buttons.cancel"), style: "cancel" },
+            {
+              text: t("tasks:details.openSettings"),
+              onPress: () => {
+                void Linking.openSettings();
+              },
+            },
+          ],
+        );
+        return;
+      }
+
+      const description = selectedTask.description?.trim();
+      const result = await createEventInCalendarAsync({
+        title: selectedTask.title,
+        startDate: new Date(selectedTask.startTime),
+        ...(selectedTask.startTime !== selectedTask.endTime
+          ? { endDate: new Date(selectedTask.endTime) }
+          : {}),
+        ...(description ? { notes: description } : {}),
+      });
+
+      if (result.action === "saved") {
+        Toast.show({
+          type: "success",
+          text1: t("tasks:details.calendarExportSuccess"),
+        });
+      }
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: t("tasks:details.calendarExportFailed"),
+      });
+    } finally {
+      setIsExportingToCalendar(false);
+    }
   };
 
   if (mode === TASK_DETAIL_ROUTE_MODE.Persisted && isLoading) {
@@ -212,6 +280,28 @@ export default function TaskDetailsScreen() {
             <TaskSingleTimeCard startTime={selectedTask.startTime} />
           ) : (
             <TaskRangeTimeCard startTime={selectedTask.startTime} endTime={selectedTask.endTime} />
+          )}
+
+          {supportsAppleCalendarExport && (
+            <TouchableOpacity
+              onPress={() => {
+                void handleExportToAppleCalendar();
+              }}
+              disabled={isExportingToCalendar}
+              accessibilityRole="button"
+              accessibilityLabel={t("tasks:details.addToAppleCalendar")}
+              className="mt-1 self-start flex-row items-center rounded-xl border border-[#444964] px-4 py-2"
+              style={{ opacity: isExportingToCalendar ? 0.6 : 1 }}
+            >
+              {isExportingToCalendar ? (
+                <ActivityIndicator size="small" color="#444964" />
+              ) : (
+                <MaterialCommunityIcons name="calendar-plus" size={18} color="#444964" />
+              )}
+              <Text className="ml-2 font-balooBold text-sm text-[#444964]">
+                {t("tasks:details.addToAppleCalendar")}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       </TouchableWithoutFeedback>

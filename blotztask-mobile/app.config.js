@@ -37,6 +37,10 @@ export default {
     android: {
       package: "com.blotz.blotztask",
       permissions: ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"],
+      blockedPermissions: [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+      ],
     },
     web: {
       bundler: "metro",
@@ -70,8 +74,11 @@ export default {
       [
         "expo-calendar",
         {
-          calendarPermission:
-            "BlotzTask needs calendar access to sync your tasks into Apple Calendar.",
+          calendarPermission: false,
+          remindersPermission: false,
+          writeOnlyAccess: true,
+          writeOnlyCalendarPermission:
+            "BlotzTask adds a task to Apple Calendar only when you choose to export it.",
         },
       ],
       "expo-asset",
