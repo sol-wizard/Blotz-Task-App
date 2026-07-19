@@ -2,7 +2,6 @@ export interface AiResultMessageDTO {
   userInput?: string;
   extractedTasks?: ExtractedTaskDTO[];
   extractedNotes?: AiNoteDTO[];
-  // SPIKE (#1462, throwaway): recurring tasks extracted from repeating-cadence intent.
   extractedRecurringTasks?: ExtractedRecurringTaskDTO[];
 }
 
@@ -26,8 +25,8 @@ export interface ExtractedTaskDTO {
   task_label: string;
 }
 
-// SPIKE (#1462, throwaway): the recurring draft streamed on ReceiveRecurringTaskExtracted.
-// snake_case fields mirror the backend ExtractedRecurringTask JsonPropertyName attributes.
+// The recurring draft streamed on ReceiveRecurringTaskExtracted; snake_case fields mirror the
+// backend ExtractedRecurringTask JsonPropertyName attributes.
 export interface ExtractedRecurringTaskDTO {
   id: string;
   title: string;

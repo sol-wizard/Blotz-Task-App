@@ -11,7 +11,6 @@ public class TaskGenerationTools()
 
     public List<ExtractedTask> Tasks { get; private set; } = [];
     public List<ExtractedNote> Notes { get; private set; } = [];
-    // SPIKE (#1462, throwaway): parallel draft basket for recurring tasks.
     public List<ExtractedRecurringTask> RecurringTasks { get; private set; } = [];
     public Func<ExtractedTask, Task>? OnTaskStreamed { get; set; }
     public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
@@ -233,6 +232,5 @@ public class TaskGenerationTools()
 
     public bool RemoveDraftNoteById(Guid id) => Notes.RemoveAll(n => n.Id == id) > 0;
 
-    // SPIKE (#1462, throwaway): swipe-to-delete for a recurring draft, mirroring the task/note helpers.
     public bool RemoveDraftRecurringTaskById(Guid id) => RecurringTasks.RemoveAll(t => t.Id == id) > 0;
 }

@@ -5,9 +5,9 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
 import { LabelDTO } from "@/shared/models/label-dto";
 
-// SPIKE (#1462, throwaway): draft card for an AI-extracted recurring task. Mirrors AiResultCard's
-// container, but stacks the title over a schedule summary (e.g. "Weekly · Mon, Wed, Fri · 7:00 AM")
-// instead of a one-off time, so multi-day patterns the manual UI can't show are visible here.
+// Draft card for an AI-extracted recurring task. Mirrors AiResultCard's container, but stacks the
+// title over a schedule summary (e.g. "Weekly · Mon, Wed, Fri · 7:00 AM") instead of a one-off
+// time, so multi-day patterns the manual UI can't show are visible here.
 type Props = {
   title: string;
   label?: LabelDTO;

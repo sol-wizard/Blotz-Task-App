@@ -119,7 +119,6 @@ public class AiTaskGenerateChatHub(
         return Task.CompletedTask;
     }
 
-    // SPIKE (#1462, throwaway): swipe-to-delete for a streamed recurring draft.
     public Task DeleteDraftRecurringTask(Guid recurringTaskId)
     {
         if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
@@ -174,8 +173,6 @@ public class AiTaskGenerateChatHub(
             await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
         chatContext.Tools.OnNoteStreamed = async note =>
             await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
-        // SPIKE (#1462, throwaway): stream recurring drafts on their own event so the client
-        // can route them to the recurring endpoint, separate from the one-off task list.
         chatContext.Tools.OnRecurringTaskStreamed = async recurringTask =>
             await Clients.Caller.SendAsync("ReceiveRecurringTaskExtracted", recurringTask, ct);
     }

@@ -156,7 +156,7 @@ public static class QualityCheckRunner
         }
     }
 
-    // SPIKE (#1462, throwaway): recurring-extraction assertions.
+    // Recurring-extraction assertions.
     public static void CheckRecurringCount(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult)
     {
         var actual = result.ExtractedRecurringTasks?.Count ?? 0;

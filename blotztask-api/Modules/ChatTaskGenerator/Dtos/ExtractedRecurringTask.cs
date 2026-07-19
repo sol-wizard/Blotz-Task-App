@@ -4,10 +4,10 @@ using BlotzTask.Modules.Tasks.Enums;
 namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 /// <summary>
-///     SPIKE (#1462, throwaway): a single extracted recurring task from user input.
-///     Parallel to <see cref="ExtractedTask"/> but carries the recurrence schema the model filled.
-///     Times are naive local wall-clock (like ExtractedTask); the timezone/offset and LabelId are
-///     resolved at save time (client, or the dev eval harness), mirroring the one-off draft pipeline.
+///     A single extracted recurring task from user input. Parallel to <see cref="ExtractedTask"/>
+///     but carries the recurrence schema the model filled. Times are naive local wall-clock (like
+///     ExtractedTask); the timezone/offset and LabelId are resolved at save time, mirroring the
+///     one-off draft pipeline.
 /// </summary>
 public class ExtractedRecurringTask
 {
@@ -21,7 +21,7 @@ public class ExtractedRecurringTask
 
     // Property-level string-enum converter: the SignalR payload does not inherit the controllers'
     // global JsonStringEnumConverter, so without this frequency/time_type would serialize as ints
-    // (inconsistent with task_label). Scoped to this spike DTO to avoid touching the domain enums.
+    // (inconsistent with task_label). Scoped to this DTO to avoid touching the domain enums.
     [JsonPropertyName("time_type")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TaskTimeType TimeType { get; set; }

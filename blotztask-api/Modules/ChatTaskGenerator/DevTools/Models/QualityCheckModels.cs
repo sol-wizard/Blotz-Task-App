@@ -8,15 +8,14 @@ public class QualityCheckCase
     public int ExpectedNoteCount { get; set; }
     public List<QualityCheckTaskExpectation> Expectations { get; set; } = [];
 
-    // SPIKE (#1462, throwaway): recurring-extraction expectations.
     public int ExpectedRecurringTaskCount { get; set; }
     public List<QualityCheckRecurringExpectation> RecurringExpectations { get; set; } = [];
 }
 
 /// <summary>
-/// SPIKE (#1462): positional expectation for an extracted recurring task. Prefer the
-/// run-day-independent fields (frequency, daysOfWeek, interval, dayOfMonth) — they measure
-/// the strict-schema invariants without depending on the day the test runs.
+/// Positional expectation for an extracted recurring task. Prefer the run-day-independent fields
+/// (frequency, daysOfWeek, interval, dayOfMonth) — they measure the strict-schema invariants
+/// without depending on the day the test runs.
 /// </summary>
 public class QualityCheckRecurringExpectation
 {
@@ -90,8 +89,8 @@ public class QualityCheckExtractedTask
     public required string LabelName { get; set; }
 }
 
-// SPIKE (#1462, throwaway): captured recurring-task output + the outcome of attempting to create it
-// via the real CreateRecurringTaskCommandHandler, so the scorecard proves the strict endpoint accepts it.
+// Captured recurring-task output plus the outcome of attempting to create it via the real
+// CreateRecurringTaskCommandHandler, so the scorecard proves the strict endpoint accepts it.
 public class QualityCheckExtractedRecurringTask
 {
     public required string Title { get; set; }

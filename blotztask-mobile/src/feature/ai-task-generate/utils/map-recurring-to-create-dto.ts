@@ -2,10 +2,10 @@ import { AiRecurringTaskDTO } from "../models/ai-recurring-task-dto";
 import { RecurringTaskCreateDTO } from "@/shared/models/recurring-task-create-dto";
 import { TaskTimeType } from "@/shared/models/base-task-dto";
 
-// SPIKE (#1462, throwaway): AI recurring draft -> RecurringTaskCreateDTO (POST /api/RecurringTask).
-// Mirrors the manual flow's mapTaskToRecurringTask: device timezone for scheduleTimeZoneId,
-// templateEndTime null for SingleTime, and the rich daysOfWeek/interval/dayOfMonth passed straight
-// through (unlike the manual UI, which derives a single day from the start date).
+// AI recurring draft -> RecurringTaskCreateDTO (POST /api/RecurringTask). Mirrors the manual flow's
+// mapTaskToRecurringTask: device timezone for scheduleTimeZoneId, templateEndTime null for SingleTime,
+// and the rich daysOfWeek/interval/dayOfMonth passed straight through (unlike the manual UI, which
+// derives a single day from the start date).
 export function mapRecurringToCreateDTO(task: AiRecurringTaskDTO): RecurringTaskCreateDTO {
   const scheduleTimeZoneId = Intl.DateTimeFormat().resolvedOptions().timeZone;
 

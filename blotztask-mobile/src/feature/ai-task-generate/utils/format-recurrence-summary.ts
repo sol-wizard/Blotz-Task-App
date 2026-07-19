@@ -1,7 +1,7 @@
 import { parseISO, format } from "date-fns";
 
-// SPIKE (#1462, throwaway): builds a human-readable schedule label for a recurring draft card,
-// e.g. "Weekly · Mon, Wed, Fri · 7:00 AM". English-only for the spike; localise later if kept.
+// Builds a human-readable schedule label for a recurring draft card, e.g. "Weekly · Mon, Wed, Fri
+// · 7:00 AM". English-only for now; localise if needed.
 
 // WeeklyDayFlags bitmask (Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64).
 const DAY_FLAGS: { flag: number; short: string }[] = [

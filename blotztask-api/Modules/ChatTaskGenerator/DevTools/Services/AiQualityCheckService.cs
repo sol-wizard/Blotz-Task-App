@@ -189,9 +189,9 @@ public class AiQualityCheckService(
                 .Select(n => n.Text)
                 .ToList();
 
-            // SPIKE (#1462, throwaway): capture each extracted recurring draft AND attempt to create it
-            // through the real CreateRecurringTaskCommandHandler, so the scorecard proves the strict
-            // endpoint accepts what the model produced (not just that extraction happened).
+            // Capture each extracted recurring draft and attempt to create it through the real
+            // CreateRecurringTaskCommandHandler, so the scorecard proves the strict endpoint accepts
+            // what the model produced (not just that extraction happened).
             var createHandler = scope.ServiceProvider.GetRequiredService<CreateRecurringTaskCommandHandler>();
             caseResult.ExtractedRecurringTasks = await CaptureAndCreateRecurringAsync(
                 result.ExtractedRecurringTasks ?? [], createHandler, timeZone, userId, ct);
@@ -222,8 +222,8 @@ public class AiQualityCheckService(
         return caseResult;
     }
 
-    // SPIKE (#1462, throwaway): map each extracted recurring draft to the strict endpoint request,
-    // attempt real creation, and record the outcome (created ids or the ValidationException message).
+    // Map each extracted recurring draft to the strict endpoint request, attempt real creation,
+    // and record the outcome (created ids or the ValidationException message).
     private static async Task<List<QualityCheckExtractedRecurringTask>> CaptureAndCreateRecurringAsync(
         IReadOnlyList<ExtractedRecurringTask> drafts,
         CreateRecurringTaskCommandHandler createHandler,
@@ -290,7 +290,7 @@ public class AiQualityCheckService(
             Title = draft.Title,
             Description = draft.Description,
             TimeType = draft.TimeType,
-            LabelId = null, // label name -> id mapping is out of scope for the spike
+            LabelId = null, // label name -> id resolution happens on the client, not in the eval harness
             TemplateStartTime = templateStart,
             TemplateEndTime = templateEnd,
             ScheduleTimeZoneId = timeZone.Id,
