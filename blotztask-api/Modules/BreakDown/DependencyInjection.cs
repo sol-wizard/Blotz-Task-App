@@ -7,6 +7,7 @@ public static class DependencyInjection
     public static IServiceCollection AddTaskBreakdownModule(this IServiceCollection services)
     {
         services.AddScoped<BreakdownTaskCommandHandler>();
+        services.AddScoped<BreakdownAndReplaceTaskCommandHandler>();
 
         return services;
     }
