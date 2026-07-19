@@ -39,7 +39,7 @@ public class DeleteRecurringOccurrenceCommandHandler(
             throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
         }
 
-        template = await ResolveTemplateForOccurrence(template, command.OccurrenceDate, command.UserId, ct);
+        ValidateOccurrence(template, command.OccurrenceDate);
 
         if (!generatorService.IsOccurrenceOn(template, command.OccurrenceDate))
         {
@@ -182,41 +182,6 @@ public class DeleteRecurringOccurrenceCommandHandler(
         {
             throw new ValidationException("OccurrenceDate is outside recurring task range.");
         }
-    }
-
-    private async Task<RecurringTask> ResolveTemplateForOccurrence(
-        RecurringTask requestedTemplate,
-        DateOnly occurrenceDate,
-        Guid userId,
-        CancellationToken ct)
-    {
-        if (requestedTemplate.Series.IsDeleted)
-        {
-            throw new ValidationException("OccurrenceDate is outside recurring task range.");
-        }
-
-        if (IsTemplateEffectiveOn(requestedTemplate, occurrenceDate))
-        {
-            return requestedTemplate;
-        }
-
-        var effectiveTemplate = await db.RecurringTasks
-            .Include(r => r.Series)
-            .Where(r => r.SeriesId == requestedTemplate.SeriesId
-                && r.UserId == userId
-                && r.IsActive
-                && r.StartDate <= occurrenceDate
-                && (r.EndDate == null || r.EndDate >= occurrenceDate))
-            .OrderByDescending(r => r.StartDate)
-            .ThenByDescending(r => r.Id)
-            .FirstOrDefaultAsync(ct);
-
-        if (effectiveTemplate == null || effectiveTemplate.Series.IsDeleted)
-        {
-            ValidateOccurrence(requestedTemplate, occurrenceDate);
-        }
-
-        return effectiveTemplate!;
     }
 
     private static bool IsTemplateEffectiveOn(RecurringTask template, DateOnly occurrenceDate)

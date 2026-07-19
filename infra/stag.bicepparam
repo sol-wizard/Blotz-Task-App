@@ -14,14 +14,13 @@ param taskGenerationModelName = 'gpt-5.4-mini'
 param taskGenerationModelVersion = '2026-03-17'
 param taskGenerationDeploymentCapacity = 150
 
-param speechDeploymentName = 'whisper'
-param speechModelName = 'whisper'
-param speechModelVersion = '001'
-param speechDeploymentCapacity = 1
-
 param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 30
 param alertEmail = 'benjaminneoh2928@gmail.com'
+
+// App Insights.
+param azureMonitorOpenTelemetryEnabled = true
+param appInsightsSamplingPercentage = 4
 
 // App Service SKU (Free tier for staging)
 param appServiceSkuName = 'F1'

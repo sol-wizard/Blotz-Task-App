@@ -24,12 +24,11 @@ expo-env.d.ts
 
 
 # Expo managed native projects
-ios/
-android/
+/ios/
+/android/
 
 # secret
 keys/
 credentials.json
 ios-builds/
 .env.local
-

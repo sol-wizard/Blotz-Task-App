@@ -4,7 +4,7 @@ import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import MaterialIcons from "@react-native-vector-icons/material-icons/static";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
@@ -16,6 +16,7 @@ import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
+import { formatTaskEndTime } from "../util/format-task-end-time";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
@@ -27,7 +28,7 @@ import { useTranslation } from "react-i18next";
 import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 import { SwitchTaskModal } from "./pomodoro-switch-modal";
 import Toast from "react-native-toast-message";
-import { ensureTaskItemForTaskCard } from "../util/ensure-task-item-for-task-card";
+import { ensureTaskItemForTask } from "@/shared/util/ensure-task-item-for-task";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import {
   createVirtualTaskDetailCacheKey,
@@ -104,7 +105,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
 
   // Functions
   const ensureTaskItemId = (invalidateOnMaterializeSuccess = true) =>
-    ensureTaskItemForTaskCard({
+    ensureTaskItemForTask({
       task,
       materializeOccurrence: materializeOccurrenceAsync,
       invalidateOnMaterializeSuccess,
@@ -149,8 +150,9 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
     setIsBreakdownPending(true);
 
     try {
-      const taskId = await ensureTaskItemId(false);
-      const result = await breakDownAndReplaceSubtasks(taskId);
+      const result = hasTaskItemId(task)
+        ? await breakDownAndReplaceSubtasks({ taskId: task.id })
+        : await breakDownRecurringTaskOccurrence();
 
       if (result?.subtasks?.length) {
         setIsExpanded(true);
@@ -159,6 +161,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
     } finally {
       setIsBreakdownPending(false);
     }
+  };
+
+  const breakDownRecurringTaskOccurrence = async () => {
+    const recurringTaskId = getRecurringTaskId(task);
+    const occurrenceDate = getRecurringOccurrenceDate(task);
+    if (recurringTaskId == null || !occurrenceDate) return;
+
+    return await breakDownAndReplaceSubtasks({ recurringTaskId, occurrenceDate });
   };
 
   const handleDelete = async () => {
@@ -355,7 +365,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                     isOverdue ? "text-warning" : "text-primary"
                   } font-inter font-semibold text-lg`}
                 >
-                  {format(parseISO(task.endTime), "H:mm")}
+                  {formatTaskEndTime(task.endTime)}
                 </Text>
 
                 <View className="ml-1 w-6 items-center justify-center">

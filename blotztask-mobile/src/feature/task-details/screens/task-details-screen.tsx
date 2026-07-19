@@ -32,8 +32,12 @@ import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { virtualTaskDetailKeys } from "@/feature/task-details/util/virtual-task-detail-cache";
 import {
+  createVirtualTaskDetailCacheKey,
+  virtualTaskDetailKeys,
+} from "@/feature/task-details/util/virtual-task-detail-cache";
+import {
+  getRecurringOccurrenceDate,
   getRecurringTaskId,
   hasTaskItemId,
   isVirtualRecurringOccurrence,
@@ -43,6 +47,7 @@ import {
   isTaskDetailRouteMode,
   TaskDetailRouteMode,
 } from "@/feature/task-details/util/task-detail-route-mode";
+import { BreakdownTaskTarget } from "@/feature/task-details/services/subtask-service";
 
 function selectTaskByRouteMode({
   mode,
@@ -90,8 +95,40 @@ export default function TaskDetailsScreen() {
 
   const { t } = useTranslation();
   const recurringTaskId = selectedTask ? getRecurringTaskId(selectedTask) : null;
+  const occurrenceDate = selectedTask ? getRecurringOccurrenceDate(selectedTask) : null;
   const supportsAppleCalendarExport =
     Platform.OS === "ios" && Number.parseInt(String(Platform.Version), 10) >= 17;
+
+  React.useEffect(() => {
+    if (mode !== TASK_DETAIL_ROUTE_MODE.Virtual || !selectedTask) return;
+    if (!isVirtualRecurringOccurrence(selectedTask)) return;
+    if (recurringTaskId == null || !occurrenceDate) return;
+
+    const virtualTaskCacheKey = createVirtualTaskDetailCacheKey(selectedTask, occurrenceDate);
+    const paramsAlreadyMatch =
+      params.recurringTaskId === String(recurringTaskId) &&
+      params.occurrenceDate === occurrenceDate &&
+      params.virtualTaskCacheKey === virtualTaskCacheKey;
+
+    if (paramsAlreadyMatch) return;
+
+    queryClient.setQueryData(virtualTaskDetailKeys.byKey(virtualTaskCacheKey), selectedTask);
+    router.setParams({
+      recurringTaskId: String(recurringTaskId),
+      occurrenceDate,
+      virtualTaskCacheKey,
+    });
+  }, [
+    mode,
+    occurrenceDate,
+    params.occurrenceDate,
+    params.recurringTaskId,
+    params.virtualTaskCacheKey,
+    queryClient,
+    recurringTaskId,
+    router,
+    selectedTask,
+  ]);
 
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
@@ -116,11 +153,11 @@ export default function TaskDetailsScreen() {
       return;
     }
 
-    if (recurringTaskId == null || !params.occurrenceDate) return;
+    if (recurringTaskId == null || !occurrenceDate) return;
 
     await updateRecurringOccurrence({
       recurringTaskId,
-      occurrenceDate: params.occurrenceDate,
+      occurrenceDate,
       dto,
     });
   };
@@ -175,6 +212,29 @@ export default function TaskDetailsScreen() {
       setIsExportingToCalendar(false);
     }
   };
+
+  const handleBreakdownComplete = React.useCallback(
+    (parentTaskId: number) => {
+      if (!selectedTask || hasTaskItemId(selectedTask)) return;
+
+      router.replace({
+        pathname: "/(protected)/task-details",
+        params: {
+          mode: TASK_DETAIL_ROUTE_MODE.Persisted,
+          taskId: parentTaskId,
+        },
+      });
+    },
+    [router, selectedTask],
+  );
+
+  const breakdownTarget: BreakdownTaskTarget | undefined = !selectedTask
+    ? undefined
+    : hasTaskItemId(selectedTask)
+      ? { taskId: selectedTask.id }
+      : recurringTaskId != null && occurrenceDate
+        ? { recurringTaskId, occurrenceDate }
+        : undefined;
 
   if (mode === TASK_DETAIL_ROUTE_MODE.Persisted && isLoading) {
     return <LoadingScreen />;
@@ -245,21 +305,24 @@ export default function TaskDetailsScreen() {
             <TouchableOpacity
               onPress={() => {
                 if (isVirtualRecurringOccurrence(selectedTask)) {
-                  if (
-                    recurringTaskId == null ||
-                    !params.occurrenceDate ||
-                    !params.virtualTaskCacheKey
-                  ) {
-                    return;
-                  }
+                  if (recurringTaskId == null || !occurrenceDate) return;
+
+                  const virtualTaskCacheKey = createVirtualTaskDetailCacheKey(
+                    selectedTask,
+                    occurrenceDate,
+                  );
+                  queryClient.setQueryData(
+                    virtualTaskDetailKeys.byKey(virtualTaskCacheKey),
+                    selectedTask,
+                  );
 
                   router.push({
                     pathname: "/(protected)/task-edit",
                     params: {
                       mode: TASK_DETAIL_ROUTE_MODE.Virtual,
                       recurringTaskId,
-                      occurrenceDate: params.occurrenceDate,
-                      virtualTaskCacheKey: params.virtualTaskCacheKey,
+                      occurrenceDate,
+                      virtualTaskCacheKey,
                     },
                   });
                   return;
@@ -317,7 +380,11 @@ export default function TaskDetailsScreen() {
         </View>
 
         <View className="flex-1 px-4">
-          {hasTaskItemId(selectedTask) && <SubtasksView parentTask={selectedTask} />}
+          <SubtasksView
+            parentTask={selectedTask}
+            breakdownTarget={breakdownTarget}
+            onBreakdownComplete={handleBreakdownComplete}
+          />
         </View>
       </View>
     </SafeAreaView>
