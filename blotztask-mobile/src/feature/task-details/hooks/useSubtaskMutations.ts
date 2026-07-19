@@ -1,6 +1,6 @@
 import {
-  replaceSubtasks as replaceSubtasksService,
-  createBreakDownSubtasks,
+  breakDownAndReplaceTaskSubtasks,
+  BreakdownTaskTarget,
   deleteSubtask,
   updateSubtask,
   toggleSubtaskStatus,
@@ -8,7 +8,7 @@ import {
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
-import { BreakdownResultDTO } from "../models/breakdown-result-dto";
+import { BreakdownAndReplaceTaskResultDTO } from "../models/breakdown-result-dto";
 import { analytics } from "@/shared/services/analytics";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 
@@ -23,23 +23,16 @@ export const useSubtaskMutations = () => {
   const { subtask: subtaskFirework } = useFirework();
 
   const breakDownAndReplaceSubtasksMutation = useMutation<
-    BreakdownResultDTO | undefined,
+    BreakdownAndReplaceTaskResultDTO | undefined,
     Error,
-    number
+    BreakdownTaskTarget
   >({
-    mutationFn: async (taskId: number) => {
+    mutationFn: async (target: BreakdownTaskTarget) => {
       const startTime = Date.now();
-      let result: BreakdownResultDTO | undefined;
+      let result: BreakdownAndReplaceTaskResultDTO | undefined;
 
       try {
-        result = await createBreakDownSubtasks(taskId);
-        if (result?.isSuccess && result.subtasks?.length) {
-          await replaceSubtasksService({
-            taskId,
-            subtasks: result.subtasks.map((subtask) => ({ ...subtask })),
-          });
-        }
-
+        result = await breakDownAndReplaceTaskSubtasks(target);
         return result;
       } finally {
         analytics.trackTaskBreakdown({
@@ -49,8 +42,10 @@ export const useSubtaskMutations = () => {
         });
       }
     },
-    onSuccess: async (_, taskId) => {
-      await queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
+    onSuccess: async (result) => {
+      if (result) {
+        await queryClient.invalidateQueries({ queryKey: subtaskKeys.all(result.taskItemId) });
+      }
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
