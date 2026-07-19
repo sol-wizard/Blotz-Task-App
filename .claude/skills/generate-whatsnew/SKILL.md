@@ -1,126 +1,126 @@
 ---
 name: generate-whatsnew
-description: 每月做 Blotz app 的「What's New」更新引导页时用 —— 读未发布 release 草稿、挑出值得介绍给用户的新功能、截图 + 写文案、生成可左右滑的引导页预览 artifact(带「本次涵盖」审核清单),审核批准后把内容放进 app。Use when creating the monthly "What's New" / update-onboarding for an upcoming Blotz release.
+description: Use when creating the monthly "What's New" / update-onboarding page for an upcoming Blotz release — read the unreleased release draft, pick the features worth showing users, take real screenshots, write the copy, produce a swipeable preview artifact with a "what's covered" review checklist, and after approval put the content into the app.
 ---
 
-# 生成 What's New 更新引导页
+# Generate the What's New update-onboarding
 
-用户下载新版、第一次打开 app 时,用几张可滑的卡片介绍这一版的新功能。目标:**让新功能被看见、被用起来** —— 对容易忽略静默更新的 ADHD 用户尤其重要。
+When a user updates and opens the app for the first time, a few swipeable cards introduce what's new in this version. The goal is **that new features get seen and used** — which matters most for ADHD users, who are exactly the ones who skip past a silent update.
 
-> 🚧 **这是初稿,整套流程还没真正跑通过一次。** 最贵、最容易卡住的是第③步(出 build 截图)。第一次认真跑这套的人:**边跑边把踩到的坑补进这个文件。**
+> 🚧 **This is a first draft — the flow has never been run end to end.** The expensive, most likely to break step is ③ (building for screenshots). Whoever runs it first: **record what breaks directly in this file as you go.**
 
-## 谁做什么(重要)
+## Who does what (important)
 
-- **🤖 Claude(每月)** —— 读草稿、挑功能、出 build 截图、生成 artifact 预览、按反馈改到满意、批准后把内容放进 app。**这个 skill 就是 Claude 这部分的作业手册。**
-- **🛠 开发同事(只一次)** —— 在 app 里搭好一个 onboarding 式的 What's New 页(可滑卡片 + 更新时触发一次),并留一个**干净、集中的内容位置**(比如一个卡片数组:标题/正文/图片/语言)给 Claude 每月填。之后每月只**审核批准**。
-- 完整背景 + 分工见 plan(交给同事的那份文档)。
+- **🤖 Claude (monthly)** — read the draft, pick features, build + screenshot, produce the preview artifact, revise until approved, then put the content into the app. **This skill is the working manual for Claude's half.**
+- **🛠 The developer (once only)** — build an onboarding-style What's New page in the app (swipeable cards, shown once after an update) and leave a **clean, centralised place for the content** (e.g. an array of cards: title / body / image / language) for Claude to fill each month. After that, they only **review and approve**.
+- Full background and division of labour are in the handover plan document.
 
-## 每月流程
+## The monthly flow
 
-### ① 读内容源 —— 未发布 release 草稿
+### ① Read the source — the unreleased release draft
 
-内容来自 GitHub Releases 里的 **`Next release (unreleased)` 草稿**(`sol-wizard/Blotz-Task-App`)。它由 AI 从每次合并的 PR 自动整理,已经分好「新功能 / Bug 修复 / Beta」,不用自己翻 PR。
+Content comes from the **`Next release (unreleased)` draft** in GitHub Releases (`sol-wizard/Blotz-Task-App`). It is compiled automatically from merged PRs and already split into New features / Bug fixes / Beta — don't go through PRs by hand.
 
 ```
 gh api repos/sol-wizard/Blotz-Task-App/releases --jq '.[] | select(.draft==true) | .body'
 ```
 
-GitHub 账号必须是 `sol-wizard`(`gh api user -q .login` 确认)。另一个账号 `Ben0189` 没有 `project` 权限,连私有仓库都解析不了,报错看起来像仓库没了、不像权限问题。**账号不对或任何 gh 认证问题:停下告诉 Ben,说清当前是哪个账号,别自己 `gh auth switch`** —— 那会改他全局的 gh 状态。
+The GitHub account must be `sol-wizard` (check with `gh api user -q .login`). The other account, `Ben0189`, lacks the `project` scope and can't even resolve the private repo — the error looks like the repo is gone rather than like an auth problem. **Wrong account, or any gh auth problem: stop and tell Ben, stating which account is currently active. Never run `gh auth switch` yourself** — it changes his global gh state.
 
-### ② 挑功能 + 决定配图还是文字
+### ② Pick features + decide image or text
 
-只挑**用户会注意、会在意**的功能。判断表:
+Only pick what **users would notice and care about**. Decision table:
 
-| 功能类型 | 处理 | 为什么 |
+| Kind of change | Treatment | Why |
 |---|---|---|
-| 有独立画面、好截图(如 Badge 详情页) | **配图** | 一张真实截图最直观 |
-| 小功能 / 难截图(手势、滚动动作) | **纯文字** | 静图拍不出动作;必要时用 GIF,不用静图 |
-| 后台 / 开发类改动(遥测、重构、版本号、时区内部逻辑) | **不进** | 用户不会为这些看一张卡 |
+| Has its own screen, screenshots well (e.g. Badge details page) | **With image** | One real screenshot says it fastest |
+| Small or hard to capture (gestures, scrolling behaviour) | **Text only** | A still can't show motion; use a GIF if it really needs one, never a misleading still |
+| Backend / developer-facing (telemetry, refactors, version bumps, internal timezone logic) | **Leave out** | Nobody reads a card about these |
 
-**记下你挑了什么、跳过了什么及原因** —— 第 ④ 步的审核清单要用。
+**Write down what you picked, what you skipped, and why** — step ④'s review checklist needs it.
 
-### ③ 出素材(需要图的功能才做)
+### ③ Produce the assets (only for features that need an image)
 
-要截**真实**画面,不能网上找、不能凭空画。而且必须用**含这些未发布功能的 build**:旧 build 里没有,截不到。
+Screenshots must be **real** — never sourced from the web, never mocked up. And they must come from a **build that contains these unreleased features**: an older build doesn't have them.
 
-⚠️ **这一步很贵** —— 出一个 build 排队 + 编译要 20 分钟起。所以:**先把②确定下来,一次性截完所有要的图**,别边想边截。如果这个月一张图都不需要(全是纯文字卡),整个③跳过。
+⚠️ **This step is expensive** — a build takes 20+ minutes. So: **settle ② first and capture everything in one pass**, rather than building, thinking, and rebuilding. If no card needs an image this month, skip ③ entirely.
 
-#### 1. 拉最新 main
+#### 1. Pull latest main
 
 ```
 git -C development/Blotz-Task-App fetch origin --quiet
 git -C development/Blotz-Task-App pull --ff-only origin main
-git -C development/Blotz-Task-App log --oneline -1        # 记下截图用的是哪个 commit
+git -C development/Blotz-Task-App log --oneline -1        # record which commit the screenshots came from
 ```
 
-Ben 的本地 main 是 origin 的**只读镜像**(他从不在上面写代码),所以**自动 pull,不用问**。`--ff-only` 是保险:它只会拒绝、不会合并。**万一 pull 失败(不是快进 / 会覆盖本地改动)—— 停下告诉 Ben。** 别用 `git stash` / `reset` / `checkout --` / merge 去「修」,那会毁掉别人的工作。
+Ben's local `main` is a **read-only mirror of origin** — he never writes code on it — so **pull automatically, don't ask** (his rule, 2026-07-19). `--ff-only` is the safety catch: it refuses rather than merging. **If the pull fails (not a fast-forward, or it would clobber local changes) — stop and tell Ben.** Don't "fix" it with `git stash`, `git reset`, `git checkout --`, or a merge; those destroy work.
 
-#### 2. 出 simulator build
+#### 2. Build for the simulator
 
-在 `development/Blotz-Task-App/blotztask-mobile` 下跑,**默认加 `--local`**:
+Run from `development/Blotz-Task-App/blotztask-mobile`, **with `--local` by default**:
 
 ```
 npx --yes eas-cli@latest build --profile preview-simulator --platform ios --local --non-interactive
 ```
 
-**为什么一定要 `--local`(Ben 定,2026-07-19):** 不加就是跑 EAS 的云构建,**要消耗他们账号的构建配额**。他们本来每月就有 ~20 次发版构建,截图这种事没理由再占一次。`--local` 在 Ben 的 Mac 上编译,不走 EAS 服务器、不计费,代价只是占机器 15–30 分钟。
+**Why `--local` is required (Ben's decision, 2026-07-19):** without it this runs on EAS's servers and **consumes the account's build quota**. They already spend ~20 builds a month on releases; screenshots have no business taking another one. `--local` compiles on Ben's Mac — no EAS servers, no billing — at the cost of tying up the machine for 15–30 minutes.
 
-> ⚠️ `--local` **还没实际跑通过一次**(定这条规矩时只跑过云构建)。第一次跑的人:要是它挂了(缺 Xcode 组件、CocoaPods、fastlane 之类),**先把报错记到这里**,再决定是修本地环境还是这次先退回云构建。**退回云构建要先问 Ben** —— 那是花他钱。
+> ⚠️ `--local` **has never actually been run successfully** (only cloud builds had been run when this rule was set). First person to run it: if it fails (missing Xcode components, CocoaPods, fastlane, …), **record the error here first**, then decide whether to fix the local toolchain or fall back to a cloud build for this run. **Falling back to a cloud build needs Ben's OK first** — it spends his money.
 
-- **`eas` 没装、也不是本地依赖** —— `eas` 和 `npx eas` 都会失败(`command not found` / `could not determine executable to run`)。必须 `npx --yes eas-cli@latest`。`--yes` 是关键:少了它 npx 会弹确认,半夜无人时直接卡死。
-- **没有 `--simulator` 这个 flag**(eas-cli 21 已移除)。模拟器是配在 `eas.json` 的 `preview-simulator` profile 里的 —— 那个 profile 目前**未提交**,只在 Ben 本地。确认:`eas build:list --json` 里 `isForIosSimulator: true`。
-- 用 `preview-simulator` 而不是 `npx expo run:ios`:后者是 debug build,和用户装到的东西不是一回事。
-- 建议**后台跑**,这期间去写文案。跑之前先 `build:list` 看一眼:如果最新那个 simulator build 的 commit 就是现在的 main,直接拿来用,别重复出。
-- `--local` 的产物直接落在当前目录(不用下载);云构建才需要下 `.tar.gz`。
+- **`eas` is not installed and is not a local dependency** — both `eas` and `npx eas` fail (`command not found` / `could not determine executable to run`). Always `npx --yes eas-cli@latest`. The `--yes` matters: without it npx prompts for confirmation and an unattended run hangs there.
+- **There is no `--simulator` flag** (removed in eas-cli 21). The simulator setting lives in the `preview-simulator` profile in `eas.json`. Confirm a build is right with `isForIosSimulator: true` in `eas build:list --json`.
+- Use `preview-simulator`, not `npx expo run:ios` — the latter is a debug build, not what users actually install.
+- Run it **in the background** and write copy meanwhile. Before starting, check `build:list`: if the newest simulator build is already at the current main commit, reuse it instead of building again.
+- With `--local` the artifact lands in the current directory; only cloud builds need the `.tar.gz` downloaded.
 
-装进模拟器:下载 `.tar.gz` 产物 → 解压 → `xcrun simctl install booted BlotzTask.app` → `xcrun simctl launch booted com.Blotz.BlotzTask.staging`。
+Install: extract the `.tar.gz` → `xcrun simctl install booted BlotzTask.app` → `xcrun simctl launch booted com.Blotz.BlotzTask.staging`.
 
-#### 3. 驱动 app 截图(Maestro 2.6.1)
+#### 3. Drive the app for screenshots (Maestro 2.6.1)
 
-**先确认账号**:Settings → Account 要显示 `blotztest1@gmail.com`(显示名是 "Nicole",这就是测试号)。模拟器的 Safari cookie 会跨重装保留 Auth0 session,登录常被静默跳过 —— 别假设当前是谁。
+**Confirm the account first**: Settings → Account must show `blotztest1@gmail.com` (the display name is "Nicole" — that's the test account). The simulator's Safari cookie jar keeps the Auth0 session across reinstalls, so login is often skipped silently — never assume who you're signed in as.
 
-踩过的坑:
+Things already learned the hard way:
 
-- **按文字点基本点不中** —— app 里大多数元素没有可访问性名字,`tapOn: "Account"` 这类经常失败。用坐标百分比 `point: "X%,Y%"`。
-- **百分比必须是整数** —— `92.5%` 会抛 `NumberFormatException`。
-- **键盘会顶起布局** —— 对着底部控件的坐标点击可能落在键盘上。先收键盘。
-- **等动画** —— 用 `extendedWaitUntil`。刚跳转就截图/点击,多半是时机问题不是坏了。
-- **系统弹窗 Maestro 看不见**(比如通知授权),只能按坐标点。
-- **截图报 "Macintosh HD is read only"** → `killall -9 com.apple.CoreSimulator.CoreSimulatorService`,然后重启模拟器。截图一律写 `/private/tmp` 下,别写 `$HOME`。
-- **缺 testID 不要自己加。** (testID = 给按钮加个隐藏名牌,让点击不会落错位置;一个按钮一行代码,得开发来加。)记下来告诉 Ben,产品代码改不改是他的事。跟他提的时候**每次都从头解释**,别甩这个词 —— 他不是做自动化的。
+- **Targeting by text mostly fails** — most elements have no accessibility label, so `tapOn: "Account"` and similar miss. Use percentage coordinates, `point: "X%,Y%"`.
+- **Percentages must be integers** — `92.5%` throws `NumberFormatException`.
+- **The keyboard shifts the layout** — a coordinate tap aimed at a bottom control can land on the keyboard instead. Dismiss it first.
+- **Wait for animations** — use `extendedWaitUntil`. A screenshot or tap right after navigation usually failed on timing, not on a real defect.
+- **System dialogs are invisible to Maestro** (e.g. the notifications prompt) — tap them by coordinate.
+- **Screenshots failing with "Macintosh HD is read only"** → `killall -9 com.apple.CoreSimulator.CoreSimulatorService`, then reboot the simulator. Always write screenshots under `/private/tmp`, never `$HOME`.
+- **Don't add a missing `testID` yourself.** (A `testID` is a hidden name tag on an element so a tap can't land in the wrong place — one line of code per element, and a developer has to add it.) Note it and tell Ben; changing product code is his call. When raising it with him, **explain it from scratch every time** — he doesn't work in test automation, so the bare term means nothing to him.
 
-截到的图放 `/private/tmp/blotz-onboarding-shots/`,缩到宽 ~480 再用(`sips --resampleWidth 480`)。
+Put captures in `/private/tmp/blotz-onboarding-shots/` and scale to ~480px wide before use (`sips --resampleWidth 480`).
 
-### ④ 生成预览 artifact(带审核清单)
+### ④ Produce the preview artifact (with a review checklist)
 
-做一个手机样子的、可左右滑的 What's New 引导页,**顶/底附一个「本次涵盖」清单**:左边放了哪些功能(带 图/文字/占位 标记),右边跳过了哪些(每条一句原因)。审核的人对着清单看很快。
+Build a phone-shaped, swipeable What's New page, with a **"what's covered" checklist** at the top or bottom: on one side the features included (tagged image / text / placeholder), on the other the ones skipped, each with a one-line reason. A reviewer can scan the checklist in seconds.
 
-- 参考已有原型和生成脚本(在 Ben 的 scratchpad:`blotz-whatsnew.html` / `gen_whatsnew.py`)—— 截图用 base64 内嵌(artifact 不能连外部图),深浅色都做。
-- 视觉取 app 本身:檸檬绿强调、深墨绿灰文字、圆体标题(`ui-rounded`)、吉祥物渐层。
-- 发布前按 `artifact-design` skill 走一遍。
+- Reuse the existing prototype and generator script (in Ben's scratchpad: `blotz-whatsnew.html` / `gen_whatsnew.py`) — embed screenshots as base64, since artifacts can't load external images, and support both light and dark.
+- Take the visual language from the app itself: lime-green accent, deep ink-green text, rounded display type (`ui-rounded`), mascot gradients.
+- Run through the `artifact-design` skill before publishing.
 
-### ⑤ 审核 · 改到满意
+### ⑤ Review · revise until approved
 
-把 artifact 给审核的人(开发同事 / Ben)。不满意就改 —— 文案、选哪些功能、截图对不对。**改到对方说 OK 为止**,别自己拍板放行。
+Give the artifact to the reviewer (the developer / Ben). Revise whatever they don't like — the copy, which features made the cut, whether a screenshot is the right one. **Keep revising until they say OK**; never wave it through yourself.
 
-### ⑥ 放进 app
+### ⑥ Put it into the app
 
-批准后,**Claude 直接改代码,但不提 PR**(Ben 定,2026-07-19)。
+Once approved, **Claude edits the code but does not open the PR** (Ben's decision, 2026-07-19).
 
-1. 开一个分支,把文案和图片填进开发同事留好的卡片位置。
-2. 交给开发,告诉他分支名和改了哪些文件。
-3. **开发在本地打开 app,把引导页滑一遍,确认显示正常 —— 然后由开发提 PR。**
+1. Create a branch and fill the copy and images into the content slot the developer left.
+2. Hand it over: tell them the branch name and which files changed.
+3. **The developer opens the app locally, swipes through the onboarding, confirms it renders correctly — and opens the PR themselves.**
 
-Claude 不提 PR、不合并、不自己判定「能用」。理由:引导页是每个用户升级后第一眼看到的东西,而 Claude 没在真机/本地跑过就不知道它长什么样。开发本地看那一眼是这条流程唯一的把关点,不能跳。
+Claude doesn't open the PR, doesn't merge, and doesn't decide "it works". Reason: this page is the first thing every user sees after updating, and Claude hasn't seen it running. That local look is the only gate in this flow — don't skip it.
 
-## 内容规范
+## Content rules
 
-- **中英双语** —— 每张卡中英各一版,跟随用户语言(app 已支持中英)。
-- 文案从用户角度写,短、具体、说清「这个新功能能帮你做什么」。
-- 卡片形式:一页一个功能,图或文字 + 标题 + 一句说明;底部圆点 + 下一步/跳过。
+- **English and Chinese for every card** — one version each, following the user's language (the app already supports both). Both versions are written as originals, not one translated in a hurry from the other.
+- Write from the user's point of view: short, concrete, clear about what this new feature lets them do.
+- Card format: one feature per card, image or text + title + one line of explanation; page dots at the bottom with next / skip.
 
-## 注意
+## Notes
 
-- 原型里的截图/文案是一次性示意,**不要直接上线**。
-- 现在**不做**:自动化流水线、远程配置/CMS、A/B —— 都留到以后。
-- 只放**未发布**的功能;已 released 的用户早看过了,别放。
+- The screenshots and copy in the prototype are throwaway illustrations — **never ship them**.
+- **Not doing** for now: an automated pipeline, remote config / CMS, A/B testing. All deferred.
+- Only include **unreleased** features; users have already seen anything that shipped.
