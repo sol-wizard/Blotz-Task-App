@@ -39,7 +39,10 @@
     "failedToRefreshSubtasks": "Failed to refresh subtasks. Please try again.",
     "failedToDeleteSubtask": "Failed to delete subtask.",
     "mustHaveTitleError": "Task must have a title",
-    "titleTooLongError": "Title cannot exceed 80 characters"
+    "titleTooLongError": "Title cannot exceed 80 characters",
+    "addToAppleCalendar": "Add to Apple Calendar",
+    "calendarExportSuccess": "Added to Apple Calendar",
+    "calendarExportFailed": "Could not add this task to Apple Calendar."
   },
   "alerts": {
     "none": "None",
