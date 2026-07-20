@@ -1,9 +1,7 @@
 import React from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
-  Linking,
   Platform,
   Text,
   TouchableOpacity,
@@ -11,7 +9,6 @@ import {
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { requestCalendarPermissions } from "expo-calendar";
 import { createEventInCalendarAsync } from "expo-calendar/legacy";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import Toast from "react-native-toast-message";
@@ -168,25 +165,6 @@ export default function TaskDetailsScreen() {
     setIsExportingToCalendar(true);
 
     try {
-      const permission = await requestCalendarPermissions(true);
-
-      if (!permission.granted) {
-        Alert.alert(
-          t("tasks:details.calendarPermissionTitle"),
-          t("tasks:details.calendarPermissionMessage"),
-          [
-            { text: t("common:buttons.cancel"), style: "cancel" },
-            {
-              text: t("tasks:details.openSettings"),
-              onPress: () => {
-                void Linking.openSettings();
-              },
-            },
-          ],
-        );
-        return;
-      }
-
       const description = selectedTask.description?.trim();
       const result = await createEventInCalendarAsync({
         title: selectedTask.title,

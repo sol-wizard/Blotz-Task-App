@@ -55,7 +55,6 @@
     { "type": "bullet", "text": "Fingerprint: We will request this permission when you set up a fingerprint lock. Once granted, you can use your fingerprint to unlock the app." },
     { "type": "bullet", "text": "Clipboard: When you enable the \"Recognize Clipboard Content\" feature, if the clipboard contains time information, the app will automatically ask if you want to add a task when you open the app." },
     { "type": "subheader2", "text": "2. Permissions Requested on iOS" },
-    { "type": "bullet", "text": "Write-only calendar access: When you choose \"Add to Apple Calendar,\" Blotz makes a one-time copy of the task title, scheduled time, and description. Blotz does not read existing calendar events or keep the exported event in sync with the task." },
     { "type": "bullet", "text": "Approximate and precise location: We will request this permission when you use the \"Location Reminder\" feature." },
     { "type": "bullet", "text": "Write to external storage: We will request this permission when you save task attachments to your phone." },
     { "type": "bullet", "text": "Read from external storage: We will request this permission when you upload attachments to tasks." },

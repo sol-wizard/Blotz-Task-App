@@ -42,10 +42,7 @@
     "titleTooLongError": "Title cannot exceed 80 characters",
     "addToAppleCalendar": "Add to Apple Calendar",
     "calendarExportSuccess": "Added to Apple Calendar",
-    "calendarExportFailed": "Could not add this task to Apple Calendar.",
-    "calendarPermissionTitle": "Calendar Permission",
-    "calendarPermissionMessage": "Allow Blotz to add events in Settings, then try again.",
-    "openSettings": "Open Settings"
+    "calendarExportFailed": "Could not add this task to Apple Calendar."
   },
   "alerts": {
     "none": "None",

@@ -75,16 +75,6 @@ export default {
         },
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
-      [
-        "expo-calendar",
-        {
-          calendarPermission: false,
-          remindersPermission: false,
-          writeOnlyAccess: true,
-          writeOnlyCalendarPermission:
-            "BlotzTask adds a task to Apple Calendar only when you choose to export it.",
-        },
-      ],
       "expo-asset",
       "expo-build-properties",
       "@react-native-vector-icons/ionicons",

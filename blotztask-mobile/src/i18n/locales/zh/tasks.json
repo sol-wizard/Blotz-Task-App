@@ -42,10 +42,7 @@
     "titleTooLongError": "标题太长，请控制在 80 个字符以内。",
     "addToAppleCalendar": "添加到 Apple 日历",
     "calendarExportSuccess": "已添加到 Apple 日历",
-    "calendarExportFailed": "无法将此任务添加到 Apple 日历。",
-    "calendarPermissionTitle": "日历权限",
-    "calendarPermissionMessage": "请在系统设置中允许 Blotz 添加日历事件，然后重试。",
-    "openSettings": "打开设置"
+    "calendarExportFailed": "无法将此任务添加到 Apple 日历。"
   },
   "alerts": {
     "none": "无",
