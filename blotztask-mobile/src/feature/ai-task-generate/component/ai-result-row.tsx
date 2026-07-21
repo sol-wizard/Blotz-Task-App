@@ -123,10 +123,10 @@ export function AiResultRow({ onDelete, onRowOpen, enabled = true, children }: P
         )}
         rightThreshold={32}
         onSwipeableOpenStartDrag={() => {
+          onRowOpen(swipeRef);
           deleteBackgroundOpacity.value = 1;
         }}
         onSwipeableWillOpen={() => {
-          onRowOpen(swipeRef);
           if (hasCrossedDeleteThreshold.value) {
             onDelete();
           }
