@@ -20,4 +20,7 @@ public class AppUser
     
     [MaxLength(100)]
     public string? Timezone { get; set; }
+
+    [MaxLength(10)]
+    public string? InviteCode {get;set; }
 }
