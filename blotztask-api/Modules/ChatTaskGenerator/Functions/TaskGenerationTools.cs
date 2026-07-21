@@ -113,6 +113,33 @@ public class TaskGenerationTools()
         return "Recurring task added.";
     }
 
+    // No-op guards: editing/removing recurring tasks via chat is not supported yet. These give the
+    // model a safe place to route those intents so it does NOT reach for UpdateTask/RemoveTask (which
+    // act only on the one-off Tasks list and would change or delete the wrong item). They mutate no
+    // state; the ToolCallCount bump keeps the run from tripping the "no tool called" error and doubles
+    // as telemetry. Next PBI replaces these bodies with the real recurring update/remove.
+    [Description(
+        "Call this when the user wants to change, reschedule, or edit a recurring task they previously created with CreateRecurringTask (e.g. 'move my weekly gym to Tuesdays', 'make the standup 30 minutes'). " +
+        "Editing recurring tasks in chat is not supported yet, so this records the request without changing anything. " +
+        "Never use UpdateTask for a recurring task; UpdateTask acts only on one-off tasks and would change the wrong item.")]
+    public string UpdateRecurringTask(
+        [Description("Short paraphrase of the change the user asked for, e.g. 'move weekly gym to Tuesdays'")] string requestedChange)
+    {
+        ToolCallCount++;
+        return $"Editing recurring tasks in chat isn't supported yet, so no change was made ({requestedChange}).";
+    }
+
+    [Description(
+        "Call this when the user wants to delete or remove a recurring task they previously created with CreateRecurringTask (e.g. 'delete my recurring gym', 'stop the weekly standup'). " +
+        "Removing recurring tasks in chat is not supported yet, so this records the request without changing anything. " +
+        "Never use RemoveTask for a recurring task; RemoveTask acts only on one-off tasks and would delete the wrong item.")]
+    public string RemoveRecurringTask(
+        [Description("Short paraphrase of what the user asked to remove, e.g. 'delete weekly gym'")] string requestedChange)
+    {
+        ToolCallCount++;
+        return $"Removing recurring tasks in chat isn't supported yet, so nothing was removed ({requestedChange}).";
+    }
+
     // Maps named weekdays (System.DayOfWeek: Sun=0..Sat=6) to the WeeklyDayFlags bitmask
     // (Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64) the recurring endpoint expects.
     private static int ToWeeklyBitmask(IEnumerable<DayOfWeek> days)

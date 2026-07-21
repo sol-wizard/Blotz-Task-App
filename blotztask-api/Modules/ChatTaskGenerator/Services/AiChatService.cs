@@ -41,6 +41,8 @@ public class AiChatService(
                 AIFunctionFactory.Create(tools.CreateTask),
                 AIFunctionFactory.Create(tools.CreateTasks),
                 AIFunctionFactory.Create(tools.CreateRecurringTask),
+                AIFunctionFactory.Create(tools.UpdateRecurringTask),
+                AIFunctionFactory.Create(tools.RemoveRecurringTask),
                 AIFunctionFactory.Create(tools.CreateNote),
                 AIFunctionFactory.Create(tools.CreateNotes),
                 AIFunctionFactory.Create(tools.RemoveTask),
