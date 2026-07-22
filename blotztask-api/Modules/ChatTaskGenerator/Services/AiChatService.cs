@@ -40,6 +40,9 @@ public class AiChatService(
             [
                 AIFunctionFactory.Create(tools.CreateTask),
                 AIFunctionFactory.Create(tools.CreateTasks),
+                AIFunctionFactory.Create(tools.CreateRecurringTask),
+                AIFunctionFactory.Create(tools.UpdateRecurringTask),
+                AIFunctionFactory.Create(tools.RemoveRecurringTask),
                 AIFunctionFactory.Create(tools.CreateNote),
                 AIFunctionFactory.Create(tools.CreateNotes),
                 AIFunctionFactory.Create(tools.RemoveTask),
@@ -97,9 +100,9 @@ public class AiChatService(
             }, ct);
 
             logger.LogInformation(
-                "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
+                "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount} | Recurring={RecurringCount}",
                 runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
-                context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count);
+                context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count, context.Tools.RecurringTasks.Count);
         }
         catch (OperationCanceledException oce)
         {
@@ -132,6 +135,7 @@ public class AiChatService(
         {
             ExtractedTasks = context.Tools.Tasks,
             ExtractedNotes = context.Tools.Notes,
+            ExtractedRecurringTasks = context.Tools.RecurringTasks,
             InputTokens = inputTokens,
             OutputTokens = outputTokens,
             TotalTokens = totalTokens

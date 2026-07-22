@@ -10,10 +10,15 @@ public static class AiTaskGeneratorPrompts
                 When the user expresses tasks or notes to create, update, or remove — call the appropriate tool. Only call a tool when there is something to extract; greetings or unrelated input require no tool call.
 
                 Map every user intent to a tool call:
-                - New item with a time anchor → CreateTask (or CreateTasks for multiple)
-                - New item with no time anchor → CreateNote (or CreateNotes for multiple)
-                - Correction or adjustment to an existing item → UpdateTask or UpdateNote
-                - User cancels or removes something → RemoveTask or RemoveNote
+                - Repeats on a clear, concrete cadence (e.g. "every Monday", "every day at 8am", "on the 1st each month") → CreateRecurringTask
+                - Change, reschedule, or edit an existing recurring task → UpdateRecurringTask
+                - Delete or remove an existing recurring task → RemoveRecurringTask
+                - New one-off item with a time anchor → CreateTask (or CreateTasks for multiple)
+                - New item with no time anchor, OR a repeat too vague to schedule (e.g. "go running regularly", "study more often") → CreateNote (or CreateNotes for multiple)
+                - Correction or adjustment to an existing one-off task or note → UpdateTask or UpdateNote
+                - User cancels or removes an existing one-off task or note → RemoveTask or RemoveNote
+
+                Editing and removing recurring tasks are not supported yet: UpdateRecurringTask and RemoveRecurringTask record the request without changing anything. Never route a recurring task's edit or delete to UpdateTask or RemoveTask; those act only on one-off tasks and would change or delete the wrong item.
 
                 Evaluate each item independently. A single message may produce both tasks and notes.
                 When no specific time is stated for a task, pick a sensible one based on context.
@@ -36,6 +41,18 @@ public static class AiTaskGeneratorPrompts
 
                 "Update my note about guitar — make it learn piano instead"
                 → UpdateNote("Learn guitar", "Learn piano")
+
+                "Gym every Monday at 7am"
+                → CreateRecurringTask("Gym", ..., Weekly, [Monday], 07:00)
+
+                "Delete my recurring gym session"
+                → RemoveRecurringTask("delete recurring gym session")
+
+                "Move my weekly gym to Tuesdays"
+                → UpdateRecurringTask("move weekly gym to Tuesdays")
+
+                "Go running regularly"
+                → CreateNote("Go running regularly")
                 """;
     }
 }
