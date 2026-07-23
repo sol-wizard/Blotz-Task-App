@@ -19,13 +19,13 @@ public class DeadlineController(
 
     [HttpGet("all")]
     public async Task<IEnumerable<DeadlineTaskDto>> GetAllDdlTasks(
-        [FromQuery] DateTimeOffset? now,
+        [FromQuery] GetAllDdlTasksRequest request,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var query = new GetAllDdlTasksQuery { UserId = userId, Now = now };
+        var query = new GetAllDdlTasksQuery { UserId = userId, TimeZoneId = request.TimeZoneId };
         return await getAllDdlTasksQueryHandler.Handle(query, ct);
     }
 

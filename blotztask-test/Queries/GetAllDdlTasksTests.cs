@@ -3,6 +3,7 @@ using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.Deadlines;
+using BlotzTask.Shared.Time;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
@@ -12,6 +13,9 @@ namespace BlotzTask.Tests.Queries;
 
 public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
 {
+    private const string TimeZoneId = "Australia/Perth";
+    private static readonly TimeZoneInfo PerthTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
+
     private readonly BlotzTaskDbContext _context;
     private readonly GetAllDdlTasksQueryHandler _handler;
     private readonly DataSeeder _seeder;
@@ -24,27 +28,43 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
         _handler = new GetAllDdlTasksQueryHandler(_context, new RecurringTaskGeneratorService(), logger);
     }
 
+    // Today, per the same TimeZoneClock helper the handler uses, so tests stay correct
+    // regardless of which calendar day they happen to run on.
+    private static DateOnly Today() => TimeZoneClock.Today(PerthTimeZone);
+
+    // Most recent occurrence of the given weekday on or before the reference date.
+    private static DateOnly MostRecentWeekday(DateOnly reference, DayOfWeek weekday)
+    {
+        var diff = ((int)reference.DayOfWeek - (int)weekday + 7) % 7;
+        return reference.AddDays(-diff);
+    }
+
+    private static DateTimeOffset PerthTime(DateOnly date, TimeOnly time) =>
+        new(date.ToDateTime(time), TimeSpan.FromHours(8));
+
     [Fact]
     public async Task Handle_RecurringDeadlineSeries_ReturnsCurrentVirtualOccurrenceOnly()
     {
         // Arrange
+        var seriesMonday = MostRecentWeekday(Today(), DayOfWeek.Monday);
+
         var userId = await _seeder.CreateUserAsync();
         await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: seriesMonday,
+            templateStartTime: PerthTime(seriesMonday, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -57,9 +77,9 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             because: "the DDL list should expose occurrence identity for virtual recurring deadlines");
         task.RecurringOccurrence.Should().NotBeNull(
             because: "the mobile app needs the recurring identity to complete or materialize the virtual DDL item");
-        task.RecurringOccurrence!.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 8),
+        task.RecurringOccurrence!.OccurrenceDate.Should().Be(seriesMonday,
             because: "the DDL list should show the current cycle occurrence, not the next future occurrence");
-        task.DueAt.Should().Be(new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8)),
+        task.DueAt.Should().Be(PerthTime(seriesMonday.AddDays(2), new TimeOnly(17, 0)),
             because: "the due time should be derived from the current occurrence date and recurring deadline template");
     }
 
@@ -67,34 +87,38 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_MultipleRecurringDeadlineSeries_ReturnsOneCurrentOccurrencePerSeries()
     {
         // Arrange
+        var today = Today();
+        var reportMonday = MostRecentWeekday(today, DayOfWeek.Monday);
+        var retroWednesday = MostRecentWeekday(today, DayOfWeek.Wednesday);
+
         var userId = await _seeder.CreateUserAsync();
         var report = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: reportMonday,
+            templateStartTime: PerthTime(reportMonday, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
         var retro = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Team Retro",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 10),
-            templateStartTime: new DateTimeOffset(2026, 6, 10, 14, 0, 0, TimeSpan.FromHours(8)),
+            startDate: retroWednesday,
+            templateStartTime: PerthTime(retroWednesday, new TimeOnly(14, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Wednesday,
             isDeadline: true,
             deadlineOffsetDays: 1,
             deadlineTimeOfDay: new TimeOnly(12, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -115,19 +139,23 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_RecurringDeadlineSeriesWithMultipleVersions_ReturnsLatestCurrentOccurrenceForSeries()
     {
         // Arrange
+        var newStart = MostRecentWeekday(Today(), DayOfWeek.Monday);
+        var oldStart = newStart.AddDays(-14);
+        var oldEnd = newStart.AddDays(-1);
+
         var userId = await _seeder.CreateUserAsync();
         var oldTemplate = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Old Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 1),
-            templateStartTime: new DateTimeOffset(2026, 6, 1, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: oldStart,
+            templateStartTime: PerthTime(oldStart, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
-            endDate: new DateOnly(2026, 6, 14),
+            endDate: oldEnd,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
         var newTemplate = new RecurringTask
         {
             SeriesId = oldTemplate.SeriesId,
@@ -135,20 +163,20 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             UserId = userId,
             Title = "New Weekly Report",
             TimeType = TaskTimeType.SingleTime,
-            TemplateStartTime = new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(8)),
-            ScheduleTimeZoneId = "Australia/Perth",
+            TemplateStartTime = PerthTime(newStart, new TimeOnly(10, 0)),
+            ScheduleTimeZoneId = TimeZoneId,
             Pattern = new RecurrencePattern
             {
                 Frequency = RecurrenceFrequency.Weekly,
                 Interval = 1,
                 DaysOfWeek = (int)WeeklyDayFlags.Monday
             },
-            StartDate = new DateOnly(2026, 6, 15),
+            StartDate = newStart,
             IsActive = true,
             IsDeadline = true,
             DeadlineOffsetDays = 1,
             DeadlineTimeOfDay = new TimeOnly(16, 0),
-            DeadlineTimeZoneId = "Australia/Perth",
+            DeadlineTimeZoneId = TimeZoneId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -158,7 +186,7 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 18, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -170,7 +198,7 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             because: "a recurring deadline series should show the current occurrence from the active version for this cycle");
         task.RecurringOccurrence!.RecurringTaskId.Should().Be(newTemplate.Id,
             because: "the DDL item still needs the concrete recurring template version for occurrence actions");
-        task.RecurringOccurrence.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 15),
+        task.RecurringOccurrence.OccurrenceDate.Should().Be(newStart,
             because: "the series should not also show the previous version's older current occurrence");
     }
 
@@ -178,42 +206,44 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_CurrentRecurringDeadlineAlreadyMaterialized_DoesNotReturnVirtualDuplicate()
     {
         // Arrange
+        var seriesMonday = MostRecentWeekday(Today(), DayOfWeek.Monday);
+
         var userId = await _seeder.CreateUserAsync();
         var recurring = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: seriesMonday,
+            templateStartTime: PerthTime(seriesMonday, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var materialized = await _seeder.CreateTaskAsync(
             userId,
             "Weekly Report",
-            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
-            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)));
+            PerthTime(seriesMonday, new TimeOnly(9, 0)),
+            PerthTime(seriesMonday, new TimeOnly(9, 0)));
         materialized.Deadline = new TaskDeadline
         {
             TaskItem = materialized,
-            DueAt = new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8)),
+            DueAt = PerthTime(seriesMonday.AddDays(2), new TimeOnly(17, 0)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
         await _seeder.CreateRecurringOccurrenceOverrideAsync(
             recurring,
-            new DateOnly(2026, 6, 8),
+            seriesMonday,
             RecurringOccurrenceOverrideType.Materialized,
             materialized);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -233,42 +263,44 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_DetachedRecurringDeadlineOccurrence_ReturnsAsNormalDeadlineTask()
     {
         // Arrange
+        var seriesMonday = MostRecentWeekday(Today(), DayOfWeek.Monday);
+
         var userId = await _seeder.CreateUserAsync();
         var recurring = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: seriesMonday,
+            templateStartTime: PerthTime(seriesMonday, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var detached = await _seeder.CreateTaskAsync(
             userId,
             "Final Weekly Report",
-            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
-            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)));
+            PerthTime(seriesMonday, new TimeOnly(9, 0)),
+            PerthTime(seriesMonday, new TimeOnly(9, 0)));
         detached.Deadline = new TaskDeadline
         {
             TaskItem = detached,
-            DueAt = new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8)),
+            DueAt = PerthTime(seriesMonday.AddDays(2), new TimeOnly(17, 0)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
         await _seeder.CreateRecurringOccurrenceOverrideAsync(
             recurring,
-            new DateOnly(2026, 6, 8),
+            seriesMonday,
             RecurringOccurrenceOverrideType.Detached,
             detached);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -290,43 +322,45 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_CurrentRecurringDeadlineAlreadyCompleted_DoesNotReturnVirtualDuplicate()
     {
         // Arrange
+        var seriesMonday = MostRecentWeekday(Today(), DayOfWeek.Monday);
+
         var userId = await _seeder.CreateUserAsync();
         var recurring = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: seriesMonday,
+            templateStartTime: PerthTime(seriesMonday, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var completed = await _seeder.CreateTaskAsync(
             userId,
             "Weekly Report",
-            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
-            new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)));
+            PerthTime(seriesMonday, new TimeOnly(9, 0)),
+            PerthTime(seriesMonday, new TimeOnly(9, 0)));
         completed.IsDone = true;
         completed.Deadline = new TaskDeadline
         {
             TaskItem = completed,
-            DueAt = new DateTimeOffset(2026, 6, 10, 17, 0, 0, TimeSpan.FromHours(8)),
+            DueAt = PerthTime(seriesMonday.AddDays(2), new TimeOnly(17, 0)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
         await _seeder.CreateRecurringOccurrenceOverrideAsync(
             recurring,
-            new DateOnly(2026, 6, 8),
+            seriesMonday,
             RecurringOccurrenceOverrideType.Materialized,
             completed);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -341,23 +375,26 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_RecurringDeadlineSeriesEndedBeforeToday_ReturnsLatestCurrentOccurrence()
     {
         // Arrange
+        var endDate = Today().AddDays(-2);
+        var startDate = endDate.AddDays(-2);
+
         var userId = await _seeder.CreateUserAsync();
         await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Short Campaign",
             frequency: RecurrenceFrequency.Daily,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
-            endDate: new DateOnly(2026, 6, 10),
+            startDate: startDate,
+            templateStartTime: PerthTime(startDate, new TimeOnly(9, 0)),
+            endDate: endDate,
             isDeadline: true,
             deadlineOffsetDays: 1,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -365,9 +402,9 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
 
         // Assert
         var task = result.Should().ContainSingle(t => t.Title == "Short Campaign").Subject;
-        task.RecurringOccurrence!.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 10),
+        task.RecurringOccurrence!.OccurrenceDate.Should().Be(endDate,
             because: "a just-ended recurring deadline series can still have its latest uncompleted occurrence due in DDL");
-        task.DueAt.Should().Be(new DateTimeOffset(2026, 6, 11, 17, 0, 0, TimeSpan.FromHours(8)),
+        task.DueAt.Should().Be(PerthTime(endDate.AddDays(1), new TimeOnly(17, 0)),
             because: "the latest ended occurrence should still use the recurring deadline template");
     }
 
@@ -375,42 +412,45 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_FutureModifiedRecurringDeadlineOccurrence_DoesNotReturnBeforeItIsCurrentForSeries()
     {
         // Arrange
+        var seriesMonday = MostRecentWeekday(Today(), DayOfWeek.Monday);
+        var futureOccurrence = seriesMonday.AddDays(7);
+
         var userId = await _seeder.CreateUserAsync();
         var recurring = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: seriesMonday,
+            templateStartTime: PerthTime(seriesMonday, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var futureModified = await _seeder.CreateTaskAsync(
             userId,
             "Updated Future Report",
-            new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(8)),
-            new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(8)));
+            PerthTime(futureOccurrence, new TimeOnly(10, 0)),
+            PerthTime(futureOccurrence, new TimeOnly(10, 0)));
         futureModified.Deadline = new TaskDeadline
         {
             TaskItem = futureModified,
-            DueAt = new DateTimeOffset(2026, 6, 16, 16, 0, 0, TimeSpan.FromHours(8)),
+            DueAt = PerthTime(futureOccurrence.AddDays(1), new TimeOnly(16, 0)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
         await _seeder.CreateRecurringOccurrenceOverrideAsync(
             recurring,
-            new DateOnly(2026, 6, 15),
+            futureOccurrence,
             RecurringOccurrenceOverrideType.Modified,
             futureModified);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 12, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -420,7 +460,7 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
         result.Should().NotContain(t => t.Title == "Updated Future Report",
             because: "a future modified recurring occurrence should wait until it becomes the series current occurrence before appearing in DDL");
         var currentTask = result.Should().ContainSingle(t => t.Title == "Weekly Report").Subject;
-        currentTask.RecurringOccurrence!.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 8),
+        currentTask.RecurringOccurrence!.OccurrenceDate.Should().Be(seriesMonday,
             because: "the earlier current occurrence should continue to be generated from the series template");
     }
 
@@ -428,42 +468,45 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     public async Task Handle_CurrentModifiedRecurringDeadlineOccurrence_ReturnsModifiedTaskItemDataForSeries()
     {
         // Arrange
+        var currentOccurrence = MostRecentWeekday(Today(), DayOfWeek.Monday);
+        var seriesStart = currentOccurrence.AddDays(-7);
+
         var userId = await _seeder.CreateUserAsync();
         var recurring = await _seeder.CreateRecurringTaskAsync(
             userId,
             title: "Weekly Report",
             frequency: RecurrenceFrequency.Weekly,
-            startDate: new DateOnly(2026, 6, 8),
-            templateStartTime: new DateTimeOffset(2026, 6, 8, 9, 0, 0, TimeSpan.FromHours(8)),
+            startDate: seriesStart,
+            templateStartTime: PerthTime(seriesStart, new TimeOnly(9, 0)),
             daysOfWeek: (int)WeeklyDayFlags.Monday,
             isDeadline: true,
             deadlineOffsetDays: 2,
             deadlineTimeOfDay: new TimeOnly(17, 0),
-            deadlineTimeZoneId: "Australia/Perth");
+            deadlineTimeZoneId: TimeZoneId);
 
         var modified = await _seeder.CreateTaskAsync(
             userId,
             "Updated Future Report",
-            new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(8)),
-            new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(8)));
+            PerthTime(currentOccurrence, new TimeOnly(10, 0)),
+            PerthTime(currentOccurrence, new TimeOnly(10, 0)));
         modified.Deadline = new TaskDeadline
         {
             TaskItem = modified,
-            DueAt = new DateTimeOffset(2026, 6, 16, 16, 0, 0, TimeSpan.FromHours(8)),
+            DueAt = PerthTime(currentOccurrence.AddDays(1), new TimeOnly(16, 0)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
         await _context.SaveChangesAsync();
         await _seeder.CreateRecurringOccurrenceOverrideAsync(
             recurring,
-            new DateOnly(2026, 6, 15),
+            currentOccurrence,
             RecurringOccurrenceOverrideType.Modified,
             modified);
 
         var query = new GetAllDdlTasksQuery
         {
             UserId = userId,
-            Now = new DateTimeOffset(2026, 6, 18, 9, 0, 0, TimeSpan.FromHours(8))
+            TimeZoneId = TimeZoneId
         };
 
         // Act
@@ -477,9 +520,9 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
             because: "modified occurrence data comes from a persisted recurring occurrence TaskItem");
         task.RecurringOccurrence!.RecurringTaskId.Should().Be(recurring.Id,
             because: "the modified DDL item should preserve the recurring template version for occurrence actions");
-        task.RecurringOccurrence.OccurrenceDate.Should().Be(new DateOnly(2026, 6, 15),
+        task.RecurringOccurrence.OccurrenceDate.Should().Be(currentOccurrence,
             because: "the current occurrence date should be the modified occurrence date");
-        task.DueAt.Should().Be(new DateTimeOffset(2026, 6, 16, 16, 0, 0, TimeSpan.FromHours(8)),
+        task.DueAt.Should().Be(PerthTime(currentOccurrence.AddDays(1), new TimeOnly(16, 0)),
             because: "the DDL row should use the modified occurrence deadline instead of the template deadline");
         result.Should().NotContain(t => t.Title == "Weekly Report",
             because: "the template virtual row should not be duplicated when a modified current series occurrence exists");
