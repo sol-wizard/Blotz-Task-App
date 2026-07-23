@@ -1,6 +1,6 @@
 export interface BadgeDTO {
   id: number;
-  title: string;
+  name: string;
   iconUrl: string;
   displayOrder: number;
 }

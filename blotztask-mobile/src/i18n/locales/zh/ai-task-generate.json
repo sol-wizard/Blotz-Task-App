@@ -8,7 +8,8 @@
   },
   "labels": {
     "newTask": "新任务",
-    "notesSection": "笔记"
+    "notesSection": "笔记",
+    "recurringSection": "重复任务"
   },
   "success": {
     "taskAdded": "任务添加成功"
@@ -21,6 +22,7 @@
     "contentFilter": "您的消息被系统拦截，请换一种说法再试。",
     "canceled": "请求已取消。",
     "noTasksExtracted": "我没有找到任何任务，请再试一次。",
+    "quotaExceeded": "您的 AI 使用额度已达上限，已生成的内容会继续保留。",
     "holdLonger": "请长按麦克风以录音。",
     "recordingFailed": "录音启动失败，请再试一次。"
   },

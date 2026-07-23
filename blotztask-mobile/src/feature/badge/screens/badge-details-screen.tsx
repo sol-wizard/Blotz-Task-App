@@ -53,7 +53,7 @@ export default function BadgeDetailsScreen() {
             />
 
             <Text className="text-3xl font-balooExtraBold text-secondary text-center mb-4">
-              {badgeDetail.title}
+              {badgeDetail.name}
             </Text>
 
             <Text className="text-lg font-balooBold text-gray-500 text-center leading-8 mb-7">

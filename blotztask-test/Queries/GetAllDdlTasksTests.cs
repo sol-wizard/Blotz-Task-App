@@ -136,7 +136,7 @@ public class GetAllDdlTasksTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
-    public async Task Handle_RecurringDeadlineSeriesWithMultipleVersions_ReturnsLatestCurrentOccurrenceForSeries()
+    public async Task Handle_RecurringDeadlineSeriesWithMultipleVersions_ReturnsCurrentOccurrenceForEachTemplateVersion()
     {
         // Arrange
         var newStart = MostRecentWeekday(Today(), DayOfWeek.Monday);

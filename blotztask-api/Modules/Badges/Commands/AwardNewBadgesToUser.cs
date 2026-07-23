@@ -35,11 +35,19 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
 
         var earnedAt = DateTimeOffset.UtcNow;
 
-        db.UserBadges.AddRange(toAward.Select(badgeId => new UserBadge
+        var currentBadgeCount = await db.UserBadges
+            .CountAsync(ub => ub.UserId == command.UserId, ct);
+
+        db.UserBadges.AddRange(toAward.Select((badgeId, index) =>
         {
-            UserId = command.UserId,
-            BadgeId = badgeId,
-            EarnedAtUtc = earnedAt
+            var order = currentBadgeCount + index;
+            return new UserBadge
+            {
+                UserId = command.UserId,
+                BadgeId = badgeId,
+                EarnedAtUtc = earnedAt,
+                DisplayOrder = order <= 2 ? order : null
+            };
         }));
 
         await db.SaveChangesAsync(ct);

@@ -7,6 +7,7 @@ import {
   AiGenerationErrorDTO,
   AiNoteDTO,
   AiResultMessageDTO,
+  ExtractedRecurringTaskDTO,
   ExtractedTaskDTO,
 } from "../models/ai-result-message-dto";
 import { useTranslation } from "react-i18next";
@@ -21,6 +22,7 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   BlockedByContentFilter: "errors.contentFilter",
   Canceled: "errors.canceled",
   NoTasksExtracted: "errors.noTasksExtracted",
+  QuotaExceeded: "errors.quotaExceeded",
 };
 
 export function useAiTaskGenerator({
@@ -33,6 +35,9 @@ export function useAiTaskGenerator({
   const [transcript, setTranscript] = useState<string | undefined>();
   const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
   const [streamedNotes, setStreamedNotes] = useState<AiNoteDTO[]>([]);
+  const [streamedRecurringTasks, setStreamedRecurringTasks] = useState<ExtractedRecurringTaskDTO[]>(
+    [],
+  );
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
@@ -143,6 +148,28 @@ export function useAiTaskGenerator({
     }
   };
 
+  const deleteDraftRecurringTask = async (id: string) => {
+    const index = streamedRecurringTasks.findIndex((task) => task.id === id);
+    if (index === -1) return;
+    const removed = streamedRecurringTasks[index];
+
+    setStreamedRecurringTasks((prev) => prev.filter((task) => task.id !== id));
+
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+    try {
+      await signalRService.invoke(connection, "DeleteDraftRecurringTask", id);
+    } catch (error) {
+      console.error("DeleteDraftRecurringTask invocation failed:", error);
+      setStreamedRecurringTasks((prev) => {
+        const next = [...prev];
+        next.splice(index, 0, removed);
+        return next;
+      });
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
+  };
+
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
@@ -158,6 +185,7 @@ export function useAiTaskGenerator({
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
     setStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
+    setStreamedRecurringTasks(result.extractedRecurringTasks ?? []);
   };
 
   const generationErrorHandler = (error: AiGenerationErrorDTO) => {
@@ -167,8 +195,11 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    setStreamedTasks([]);
-    setStreamedNotes([]);
+    if (error.errorCode !== "QuotaExceeded") {
+      setStreamedTasks([]);
+      setStreamedNotes([]);
+      setStreamedRecurringTasks([]);
+    }
 
     analytics.trackAiTaskGenerationFailed({
       inputMode: inputMode ?? "unknown",
@@ -204,6 +235,10 @@ export function useAiTaskGenerator({
           if (requestStartedAtRef.current == null) return;
           setStreamedNotes((prev) => [...prev, note]);
         });
+        conn.on("ReceiveRecurringTaskExtracted", (task: ExtractedRecurringTaskDTO) => {
+          if (requestStartedAtRef.current == null) return;
+          setStreamedRecurringTasks((prev) => [...prev, task]);
+        });
 
         await conn.start();
         setConnection(conn);
@@ -217,6 +252,7 @@ export function useAiTaskGenerator({
         conn.off("ReceiveTranscript");
         conn.off("ReceiveTaskExtracted");
         conn.off("ReceiveNoteExtracted");
+        conn.off("ReceiveRecurringTaskExtracted");
         conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
@@ -226,11 +262,13 @@ export function useAiTaskGenerator({
     transcript,
     streamedTasks,
     streamedNotes,
+    streamedRecurringTasks,
     turns,
     submitAudioForTranscription,
     sendTextMessage,
     deleteDraftTask,
     deleteDraftNote,
+    deleteDraftRecurringTask,
   };
 }
 
