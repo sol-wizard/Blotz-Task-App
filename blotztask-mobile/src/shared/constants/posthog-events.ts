@@ -6,6 +6,8 @@ export const EVENTS = {
   BREAKDOWN_TASK: "breakdown_task",
   SCREEN_VIEWED: "screen_viewed",
   NOTE_CREATED: "note_created",
+  TASK_COMPLETED: "task_completed",
+  TASK_REOPENED: "task_reopened",
 } as const;
 
 export const SCREEN_NAMES = {

@@ -24,11 +24,14 @@ import {
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
+import { analytics } from "../services/analytics";
 
 type ToggleTaskVariables = {
   taskId: number;
   selectedDay?: Date;
   wasDone: boolean;
+  wasOverdue: boolean;
+  hasDeadline: boolean;
 };
 
 type UpdateTaskArgs = {
@@ -112,6 +115,16 @@ const useTaskMutations = () => {
     },
     onSuccess: (_data, variables) => {
       taskFirework.playIfCompleting(variables.wasDone);
+      if (variables.wasDone) {
+        analytics.trackTaskReopened({ taskId: variables.taskId });
+      } else {
+        analytics.trackTaskCompleted({
+          taskId: variables.taskId,
+          isRecurring: false,
+          wasOverdue: variables.wasOverdue,
+          hasDeadline: variables.hasDeadline,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });

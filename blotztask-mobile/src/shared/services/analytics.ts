@@ -119,4 +119,34 @@ export const analytics = {
   trackNoteCreated(params: { source: "manual" | "ai" }) {
     posthog.capture(EVENTS.NOTE_CREATED, { source: params.source });
   },
+
+  /**
+   * Fires when a user marks a task as complete — the core value moment for a to-do app.
+   * Only fires on genuine completion, never when un-completing a task.
+   * Carries `task_id` so creation → completion can be joined in PostHog once task creation
+   * is tracked, enabling completion-rate and "do completers retain better?" analysis.
+   */
+  trackTaskCompleted(params: {
+    taskId: number;
+    isRecurring: boolean;
+    wasOverdue: boolean;
+    hasDeadline: boolean;
+    occurrenceDate?: string;
+  }) {
+    posthog.capture(EVENTS.TASK_COMPLETED, {
+      task_id: params.taskId,
+      is_recurring: params.isRecurring,
+      was_overdue: params.wasOverdue,
+      has_deadline: params.hasDeadline,
+      ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
+    });
+  },
+
+  /**
+   * Fires when a user un-completes a task (checks it back off).
+   * A high reopen rate can hint at accidental completions or unclear task state.
+   */
+  trackTaskReopened(params: { taskId: number }) {
+    posthog.capture(EVENTS.TASK_REOPENED, { task_id: params.taskId });
+  },
 };
