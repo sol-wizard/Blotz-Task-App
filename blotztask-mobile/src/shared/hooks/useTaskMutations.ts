@@ -132,6 +132,12 @@ const useTaskMutations = () => {
   const deleteTaskMutation = useMutation({
     mutationFn: (task: TaskDetailDTO) => deleteTask(task.id!),
     onSuccess: (_data, task) => {
+      analytics.trackTaskDeleted({
+        taskId: task.id!,
+        isRecurring: false,
+        wasOverdue: parseISO(task.endTime).getTime() <= Date.now(),
+        hasDeadline: task.isDeadline,
+      });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
     },
@@ -140,6 +146,11 @@ const useTaskMutations = () => {
   const deleteRecurringOccurrenceMutation = useMutation({
     mutationFn: (payload: DeleteRecurringOccurrenceArgs) => deleteRecurringOccurrence(payload),
     onSuccess: async (_data, task) => {
+      analytics.trackTaskDeleted({
+        taskId: task.recurringTaskId,
+        isRecurring: true,
+        occurrenceDate: task.occurrenceDate,
+      });
       queryClient.removeQueries({ queryKey: ["virtualTaskDetail"] });
       if (!task.deleteFuture) {
         removeDeletedRecurringOccurrencesFromSelectedDayCaches(queryClient, task);

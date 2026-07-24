@@ -149,4 +149,26 @@ export const analytics = {
   trackTaskReopened(params: { taskId: number }) {
     posthog.capture(EVENTS.TASK_REOPENED, { task_id: params.taskId });
   },
+
+  /**
+   * Fires when a user deletes a task. A high delete rate can signal low-quality
+   * AI output or users giving up on stale tasks. Shares `task_id` with the rest
+   * of the task lifecycle. `was_overdue` / `has_deadline` are only available for
+   * normal tasks (recurring deletes don't carry the full task).
+   */
+  trackTaskDeleted(params: {
+    taskId: number;
+    isRecurring: boolean;
+    wasOverdue?: boolean;
+    hasDeadline?: boolean;
+    occurrenceDate?: string;
+  }) {
+    posthog.capture(EVENTS.TASK_DELETED, {
+      task_id: params.taskId,
+      is_recurring: params.isRecurring,
+      ...(params.wasOverdue !== undefined ? { was_overdue: params.wasOverdue } : {}),
+      ...(params.hasDeadline !== undefined ? { has_deadline: params.hasDeadline } : {}),
+      ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
+    });
+  },
 };

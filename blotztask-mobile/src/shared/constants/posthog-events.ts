@@ -8,6 +8,7 @@ export const EVENTS = {
   NOTE_CREATED: "note_created",
   TASK_COMPLETED: "task_completed",
   TASK_REOPENED: "task_reopened",
+  TASK_DELETED: "task_deleted",
 } as const;
 
 export const SCREEN_NAMES = {
