@@ -60,7 +60,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           MODEL="${{ inputs.model }}"; [ -z "$MODEL" ] && MODEL="openai/gpt-4o"
-          ZH_MODEL="deepseek/deepseek-v3-0324"   # Chinese-native model for the translation
+          ZH_MODEL="openai/gpt-4.1"   # stronger-Chinese model for the translation (DeepSeek is unavailable on this plan)
 
           # call_model <model> <system-prompt> <user-prefix> <input-file> <output-file>
           call_model() {
