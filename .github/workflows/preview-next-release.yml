@@ -55,25 +55,32 @@ jobs:
           echo "prev_tag=${PREV_TAG:-none}" >> "$GITHUB_OUTPUT"
           echo "Collected $(grep -c '^---$' prs.txt) PRs since ${PREV_TAG:-start}."
 
-      - name: Summarize with GitHub Models
+      - name: Summarize (English) and translate (Chinese) with GitHub Models
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           MODEL="${{ inputs.model }}"; [ -z "$MODEL" ] && MODEL="openai/gpt-4o"
-          SYSTEM='You write user-facing release notes ("What'\''s New") for BlotzTask, an ADHD-friendly mobile task manager. You receive the pull requests merged since the last release. Each PR may include a "Release note" line (a user-facing sentence) and a "Status" checklist. RULES: (1) If a PR is marked "Internal only" or "Hidden in production", OMIT it entirely. (2) If marked "Beta", place it under the "Beta features" section. (3) Prefer the PR'\''s "Release note" sentence for wording. (4) For PRs with no Release note section, judge conservatively from the title: include ONLY if it is clearly a user-visible feature or improvement, and when unsure, omit it. Never invent a feature or assume something is live in production. (5) Organize the notes under up to three markdown sections, in this order: "### ✨ New features", "### 🐛 Bug fixes", "### 🧪 Beta features". Place each item under the section that fits best (anything marked Beta goes under "Beta features"), as a short friendly bullet starting with a relevant emoji. OMIT any section that would be empty. Output only these sections, no preamble.'
 
-          jq -n --arg model "$MODEL" --arg sys "$SYSTEM" --rawfile prs prs.txt \
-            '{model:$model, temperature:0.3,
-              messages:[{role:"system",content:$sys},
-                        {role:"user",content:("PRs merged since the last release:\n\n"+$prs)}]}' > body.json
+          # call_model <system-prompt> <user-prefix> <input-file> <output-file>
+          call_model() {
+            jq -n --arg model "$MODEL" --arg sys "$1" --arg prefix "$2" --rawfile data "$3" \
+              '{model:$model, temperature:0.3,
+                messages:[{role:"system",content:$sys},
+                          {role:"user",content:($prefix+$data)}]}' > req.json
+            HTTP=$(curl -sS -o resp.json -w '%{http_code}' \
+              https://models.github.ai/inference/chat/completions \
+              -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @req.json)
+            if [ "$HTTP" != "200" ]; then
+              echo "GitHub Models request failed (HTTP $HTTP):"; cat resp.json; exit 1
+            fi
+            jq -r '.choices[0].message.content' resp.json > "$4"
+          }
 
-          HTTP=$(curl -sS -o resp.json -w '%{http_code}' \
-            https://models.github.ai/inference/chat/completions \
-            -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @body.json)
-          if [ "$HTTP" != "200" ]; then
-            echo "GitHub Models request failed (HTTP $HTTP):"; cat resp.json; exit 1
-          fi
-          jq -r '.choices[0].message.content' resp.json > notes.md
+          SUMMARY_SYS='You write user-facing release notes ("What'\''s New") for BlotzTask, an ADHD-friendly mobile task manager. You receive the pull requests merged since the last release. Each PR may include a "Release note" line (a user-facing sentence) and a "Status" checklist. RULES: (1) If a PR is marked "Internal only" or "Hidden in production", OMIT it entirely. (2) If marked "Beta", place it under the "Beta features" section. (3) Prefer the PR'\''s "Release note" sentence for wording. (4) For PRs with no Release note section, judge conservatively from the title: include ONLY if it is clearly a user-visible feature or improvement, and when unsure, omit it. Never invent a feature or assume something is live in production. (5) Organize the notes under up to three markdown sections, in this order: "### ✨ New features", "### 🐛 Bug fixes", "### 🧪 Beta features". Place each item under the section that fits best (anything marked Beta goes under "Beta features"), as a short friendly bullet starting with a relevant emoji. OMIT any section that would be empty. Output only these sections, no preamble.'
+          call_model "$SUMMARY_SYS" $'PRs merged since the last release:\n\n' prs.txt notes.md
+
+          TRANSLATE_SYS='You are a professional localizer for BlotzTask, an ADHD-friendly mobile task manager. You receive user-facing English release notes in markdown and translate them into natural, friendly Simplified Chinese (简体中文). RULES: (1) Keep the markdown structure and every emoji exactly as-is. (2) Translate the section headings too: "### ✨ New features" -> "### ✨ 新功能", "### 🐛 Bug fixes" -> "### 🐛 问题修复", "### 🧪 Beta features" -> "### 🧪 测试版功能". (3) Keep any "(beta)" tag as "（测试版）". (4) Do not add, drop, merge, or reorder any bullet — translate one-to-one. (5) Use natural product-copy tone, not literal machine translation. Output only the translated markdown, no preamble.'
+          call_model "$TRANSLATE_SYS" $'Translate these release notes into Simplified Chinese:\n\n' notes.md notes.zh.md
 
       - name: Upsert the draft with the AI summary
         env:
@@ -84,7 +91,15 @@ jobs:
             echo "> 🟡 **Preview of the next release** — AI-drafted from merged PRs, auto-updated on every merge to main. Review before publishing."
             echo "> Since: \`${{ steps.collect.outputs.prev_tag }}\`"
             echo ""
+            echo "## 🇬🇧 English"
+            echo ""
             cat notes.md
+            echo ""
+            echo "---"
+            echo ""
+            echo "## 🇨🇳 中文"
+            echo ""
+            cat notes.zh.md
           } > out.md
           ID=$(gh api "repos/$REPO/releases" --jq '.[] | select(.draft and .name=="Next release (unreleased)") | .id' | head -n1)
           if [ -n "$ID" ]; then
