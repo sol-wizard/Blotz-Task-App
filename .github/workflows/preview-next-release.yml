@@ -60,10 +60,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           MODEL="${{ inputs.model }}"; [ -z "$MODEL" ] && MODEL="openai/gpt-4o"
+          ZH_MODEL="deepseek/deepseek-v3-0324"   # Chinese-native model for the translation
 
-          # call_model <system-prompt> <user-prefix> <input-file> <output-file>
+          # call_model <model> <system-prompt> <user-prefix> <input-file> <output-file>
           call_model() {
-            jq -n --arg model "$MODEL" --arg sys "$1" --arg prefix "$2" --rawfile data "$3" \
+            jq -n --arg model "$1" --arg sys "$2" --arg prefix "$3" --rawfile data "$4" \
               '{model:$model, temperature:0.3,
                 messages:[{role:"system",content:$sys},
                           {role:"user",content:($prefix+$data)}]}' > req.json
@@ -73,14 +74,14 @@ jobs:
             if [ "$HTTP" != "200" ]; then
               echo "GitHub Models request failed (HTTP $HTTP):"; cat resp.json; exit 1
             fi
-            jq -r '.choices[0].message.content' resp.json > "$4"
+            jq -r '.choices[0].message.content' resp.json > "$5"
           }
 
           SUMMARY_SYS='You write user-facing release notes ("What'\''s New") for BlotzTask, an ADHD-friendly mobile task manager. You receive the pull requests merged since the last release. Each PR may include a "Release note" line (a user-facing sentence) and a "Status" checklist. RULES: (1) If a PR is marked "Internal only" or "Hidden in production", OMIT it entirely. (2) If marked "Beta", place it under the "Beta features" section. (3) Prefer the PR'\''s "Release note" sentence for wording. (4) For PRs with no Release note section, judge conservatively from the title: include ONLY if it is clearly a user-visible feature or improvement, and when unsure, omit it. Never invent a feature or assume something is live in production. (5) Organize the notes under up to three markdown sections, in this order: "### ✨ New features", "### 🐛 Bug fixes", "### 🧪 Beta features". Place each item under the section that fits best (anything marked Beta goes under "Beta features"), as a short friendly bullet starting with a relevant emoji. OMIT any section that would be empty. Output only these sections, no preamble.'
-          call_model "$SUMMARY_SYS" $'PRs merged since the last release:\n\n' prs.txt notes.md
+          call_model "$MODEL" "$SUMMARY_SYS" $'PRs merged since the last release:\n\n' prs.txt notes.md
 
-          TRANSLATE_SYS='You are a professional localizer for BlotzTask, an ADHD-friendly mobile task manager. You receive user-facing English release notes in markdown and translate them into natural, friendly Simplified Chinese (简体中文). RULES: (1) Keep the markdown structure and every emoji exactly as-is. (2) Translate the section headings too: "### ✨ New features" -> "### ✨ 新功能", "### 🐛 Bug fixes" -> "### 🐛 问题修复", "### 🧪 Beta features" -> "### 🧪 测试版功能". (3) Keep any "(beta)" tag as "（测试版）". (4) Do not add, drop, merge, or reorder any bullet — translate one-to-one. (5) Use natural product-copy tone, not literal machine translation. Output only the translated markdown, no preamble.'
-          call_model "$TRANSLATE_SYS" $'Translate these release notes into Simplified Chinese:\n\n' notes.md notes.zh.md
+          TRANSLATE_SYS='你是 BlotzTask（一款帮助 ADHD 用户的手机待办 app）的中文本地化专家。你会收到一段面向用户的英文更新说明（markdown 格式），把它翻译成简体中文。【语气】像 app 里的产品文案，轻松、口语、简洁；统一用「你」称呼用户，绝不用「您」；多用短句和祈使句，避免翻译腔，不要出现「进行」「该」「其」「对……进行」这类书面赘词，读起来要像中国团队自己写的。【术语表，必须统一】task=任务；draft=草稿；note=笔记；Persistent Note=持久笔记；badge=徽章；Pomodoro=番茄钟；subtask=子任务；recurring task=重复任务；swipe to delete=滑动删除；time picker=时间选择器；hold-to-talk=按住说话；Apple Calendar=Apple 日历；card=卡片；AI usage limit=AI 使用额度；availability view=空闲时间视图；daylight saving=夏令时。【格式】(1) 完整保留 markdown 结构和每一个 emoji，位置不变；(2) 章节标题也要翻译：「### ✨ New features」→「### ✨ 新功能」，「### 🐛 Bug fixes」→「### 🐛 问题修复」，「### 🧪 Beta features」→「### 🧪 测试版功能」；(3) 「(beta)」标记译成「（测试版）」；(4) 逐条一一对应翻译，不增加、不删减、不合并、不调整顺序；(5) 只输出翻译后的 markdown，不要任何前言或解释。'
+          call_model "$ZH_MODEL" "$TRANSLATE_SYS" $'把下面这段更新说明翻译成简体中文：\n\n' notes.md notes.zh.md
 
       - name: Upsert the draft with the AI summary
         env:
