@@ -55,33 +55,45 @@ jobs:
           echo "prev_tag=${PREV_TAG:-none}" >> "$GITHUB_OUTPUT"
           echo "Collected $(grep -c '^---$' prs.txt) PRs since ${PREV_TAG:-start}."
 
-      - name: Summarize (English) and translate (Chinese) with GitHub Models
+      - name: Summarize with GitHub Models
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           MODEL="${{ inputs.model }}"; [ -z "$MODEL" ] && MODEL="openai/gpt-4o"
+          SYSTEM='You write user-facing release notes ("What'\''s New") for BlotzTask, an ADHD-friendly mobile task manager. You receive the pull requests merged since the last release. Each PR may include a "Release note" line (a user-facing sentence) and a "Status" checklist. RULES: (1) If a PR is marked "Internal only" or "Hidden in production", OMIT it entirely. (2) If marked "Beta", place it under the "Beta features" section. (3) Prefer the PR'\''s "Release note" sentence for wording. (4) For PRs with no Release note section, judge conservatively from the title: include ONLY if it is clearly a user-visible feature or improvement, and when unsure, omit it. Never invent a feature or assume something is live in production. (5) Organize the notes under up to three markdown sections, in this order: "### ✨ New features", "### 🐛 Bug fixes", "### 🧪 Beta features". Place each item under the section that fits best (anything marked Beta goes under "Beta features"), as a short friendly bullet starting with a relevant emoji. OMIT any section that would be empty. Output only these sections, no preamble.'
+
+          jq -n --arg model "$MODEL" --arg sys "$SYSTEM" --rawfile prs prs.txt \
+            '{model:$model, temperature:0.3,
+              messages:[{role:"system",content:$sys},
+                        {role:"user",content:("PRs merged since the last release:\n\n"+$prs)}]}' > body.json
+
+          HTTP=$(curl -sS -o resp.json -w '%{http_code}' \
+            https://models.github.ai/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @body.json)
+          if [ "$HTTP" != "200" ]; then
+            echo "GitHub Models request failed (HTTP $HTTP):"; cat resp.json; exit 1
+          fi
+          jq -r '.choices[0].message.content' resp.json > notes.md
+
+      - name: Translate the summary into Simplified Chinese
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           ZH_MODEL="openai/gpt-4.1"   # stronger-Chinese model for the translation (DeepSeek is unavailable on this plan)
+          SYSTEM='你是 BlotzTask（一款帮助 ADHD 用户的手机待办 app）的中文本地化专家。你会收到一段面向用户的英文更新说明（markdown 格式），把它翻译成简体中文。【语气】像 app 里的产品文案，轻松、口语、简洁；统一用「你」称呼用户，绝不用「您」；多用短句和祈使句，避免翻译腔，不要出现「进行」「该」「其」「对……进行」这类书面赘词，读起来要像中国团队自己写的。【术语表，必须统一】task=任务；draft=草稿；note=笔记；Persistent Note=持久笔记；badge=徽章；Pomodoro=番茄钟；subtask=子任务；recurring task=重复任务；swipe to delete=滑动删除；time picker=时间选择器；hold-to-talk=按住说话；Apple Calendar=Apple 日历；card=卡片；AI usage limit=AI 使用额度；availability view=空闲时间视图；daylight saving=夏令时。【格式】(1) 完整保留 markdown 结构和每一个 emoji，位置不变；(2) 章节标题也要翻译：「### ✨ New features」→「### ✨ 新功能」，「### 🐛 Bug fixes」→「### 🐛 问题修复」，「### 🧪 Beta features」→「### 🧪 测试版功能」；(3) 「(beta)」标记译成「（测试版）」；(4) 逐条一一对应翻译，不增加、不删减、不合并、不调整顺序；(5) 只输出翻译后的 markdown，不要任何前言或解释。'
 
-          # call_model <model> <system-prompt> <user-prefix> <input-file> <output-file>
-          call_model() {
-            jq -n --arg model "$1" --arg sys "$2" --arg prefix "$3" --rawfile data "$4" \
-              '{model:$model, temperature:0.3,
-                messages:[{role:"system",content:$sys},
-                          {role:"user",content:($prefix+$data)}]}' > req.json
-            HTTP=$(curl -sS -o resp.json -w '%{http_code}' \
-              https://models.github.ai/inference/chat/completions \
-              -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @req.json)
-            if [ "$HTTP" != "200" ]; then
-              echo "GitHub Models request failed (HTTP $HTTP):"; cat resp.json; exit 1
-            fi
-            jq -r '.choices[0].message.content' resp.json > "$5"
-          }
+          jq -n --arg model "$ZH_MODEL" --arg sys "$SYSTEM" --rawfile notes notes.md \
+            '{model:$model, temperature:0.3,
+              messages:[{role:"system",content:$sys},
+                        {role:"user",content:("把下面这段更新说明翻译成简体中文：\n\n"+$notes)}]}' > body.zh.json
 
-          SUMMARY_SYS='You write user-facing release notes ("What'\''s New") for BlotzTask, an ADHD-friendly mobile task manager. You receive the pull requests merged since the last release. Each PR may include a "Release note" line (a user-facing sentence) and a "Status" checklist. RULES: (1) If a PR is marked "Internal only" or "Hidden in production", OMIT it entirely. (2) If marked "Beta", place it under the "Beta features" section. (3) Prefer the PR'\''s "Release note" sentence for wording. (4) For PRs with no Release note section, judge conservatively from the title: include ONLY if it is clearly a user-visible feature or improvement, and when unsure, omit it. Never invent a feature or assume something is live in production. (5) Organize the notes under up to three markdown sections, in this order: "### ✨ New features", "### 🐛 Bug fixes", "### 🧪 Beta features". Place each item under the section that fits best (anything marked Beta goes under "Beta features"), as a short friendly bullet starting with a relevant emoji. OMIT any section that would be empty. Output only these sections, no preamble.'
-          call_model "$MODEL" "$SUMMARY_SYS" $'PRs merged since the last release:\n\n' prs.txt notes.md
-
-          TRANSLATE_SYS='你是 BlotzTask（一款帮助 ADHD 用户的手机待办 app）的中文本地化专家。你会收到一段面向用户的英文更新说明（markdown 格式），把它翻译成简体中文。【语气】像 app 里的产品文案，轻松、口语、简洁；统一用「你」称呼用户，绝不用「您」；多用短句和祈使句，避免翻译腔，不要出现「进行」「该」「其」「对……进行」这类书面赘词，读起来要像中国团队自己写的。【术语表，必须统一】task=任务；draft=草稿；note=笔记；Persistent Note=持久笔记；badge=徽章；Pomodoro=番茄钟；subtask=子任务；recurring task=重复任务；swipe to delete=滑动删除；time picker=时间选择器；hold-to-talk=按住说话；Apple Calendar=Apple 日历；card=卡片；AI usage limit=AI 使用额度；availability view=空闲时间视图；daylight saving=夏令时。【格式】(1) 完整保留 markdown 结构和每一个 emoji，位置不变；(2) 章节标题也要翻译：「### ✨ New features」→「### ✨ 新功能」，「### 🐛 Bug fixes」→「### 🐛 问题修复」，「### 🧪 Beta features」→「### 🧪 测试版功能」；(3) 「(beta)」标记译成「（测试版）」；(4) 逐条一一对应翻译，不增加、不删减、不合并、不调整顺序；(5) 只输出翻译后的 markdown，不要任何前言或解释。'
-          call_model "$ZH_MODEL" "$TRANSLATE_SYS" $'把下面这段更新说明翻译成简体中文：\n\n' notes.md notes.zh.md
+          HTTP=$(curl -sS -o resp.zh.json -w '%{http_code}' \
+            https://models.github.ai/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -d @body.zh.json)
+          if [ "$HTTP" != "200" ]; then
+            echo "GitHub Models translation request failed (HTTP $HTTP):"; cat resp.zh.json; exit 1
+          fi
+          jq -r '.choices[0].message.content' resp.zh.json > notes.zh.md
 
       - name: Upsert the draft with the AI summary
         env:
