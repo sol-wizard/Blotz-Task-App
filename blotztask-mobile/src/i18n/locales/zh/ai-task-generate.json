@@ -8,7 +8,8 @@
   },
   "labels": {
     "newTask": "新任务",
-    "notesSection": "笔记"
+    "notesSection": "笔记",
+    "recurringSection": "重复任务"
   },
   "success": {
     "taskAdded": "任务添加成功"

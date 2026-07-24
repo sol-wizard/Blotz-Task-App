@@ -7,6 +7,37 @@ public class QualityCheckCase
     public int ExpectedTaskCount { get; set; }
     public int ExpectedNoteCount { get; set; }
     public List<QualityCheckTaskExpectation> Expectations { get; set; } = [];
+
+    public int ExpectedRecurringTaskCount { get; set; }
+    public List<QualityCheckRecurringExpectation> RecurringExpectations { get; set; } = [];
+}
+
+/// <summary>
+/// Positional expectation for an extracted recurring task. Prefer the run-day-independent fields
+/// (frequency, daysOfWeek, interval, dayOfMonth) — they measure the strict-schema invariants
+/// without depending on the day the test runs.
+/// </summary>
+public class QualityCheckRecurringExpectation
+{
+    public List<string> TitleContains { get; set; } = [];
+    public string? Label { get; set; }
+
+    /// <summary>Expected frequency name: "Daily", "Weekly", "Monthly", or "Yearly".</summary>
+    public string? Frequency { get; set; }
+    public int? Interval { get; set; }
+
+    /// <summary>Expected weekday bitmask (Mon=1..Sun=64). e.g. Mon+Wed+Fri = 21.</summary>
+    public int? DaysOfWeek { get; set; }
+    public int? DayOfMonth { get; set; }
+
+    /// <summary>Expected time-of-day hour of the template start (run-day-independent).</summary>
+    public int? StartTimeHour { get; set; }
+
+    /// <summary>Expected TimeType name: "SingleTime" or "RangeTime".</summary>
+    public string? TimeType { get; set; }
+
+    /// <summary>When true, asserts the strict invariant that StartDate equals TemplateStartTime's date.</summary>
+    public bool? StartDateMatchesTemplate { get; set; }
 }
 
 public class QualityCheckTaskExpectation
@@ -58,6 +89,30 @@ public class QualityCheckExtractedTask
     public required string LabelName { get; set; }
 }
 
+// Captured recurring-task output plus the outcome of attempting to create it via the real
+// CreateRecurringTaskCommandHandler, so the scorecard proves the strict endpoint accepts it.
+public class QualityCheckExtractedRecurringTask
+{
+    public required string Title { get; set; }
+    public required string Frequency { get; set; }
+    public int Interval { get; set; }
+    public int? DaysOfWeek { get; set; }
+    public int? DayOfMonth { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+    public DateTime TemplateStartTime { get; set; }
+    public DateTime TemplateEndTime { get; set; }
+    public required string TimeType { get; set; }
+    public required string LabelName { get; set; }
+
+    /// <summary>True if the extracted draft passed the strict endpoint validation and a recurring task was created.</summary>
+    public bool Created { get; set; }
+    public int? SeriesId { get; set; }
+    public int? RecurringTaskId { get; set; }
+    /// <summary>The ValidationException message when creation was rejected; null on success.</summary>
+    public string? CreationError { get; set; }
+}
+
 public class QualityCheckCaseResult
 {
     public required string Id { get; set; }
@@ -68,6 +123,7 @@ public class QualityCheckCaseResult
     public long AiTimeMs { get; set; }
     public List<QualityCheckItem> Checks { get; set; } = [];
     public List<QualityCheckExtractedTask> ExtractedTasks { get; set; } = [];
+    public List<QualityCheckExtractedRecurringTask> ExtractedRecurringTasks { get; set; } = [];
     public List<string> ExtractedNotes { get; set; } = [];
 
     /// <summary>Populated only when the run was executed multiple times for reliability testing.</summary>
