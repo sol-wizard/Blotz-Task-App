@@ -136,10 +136,21 @@ export default function AiTaskSheetScreen() {
     if (isAdding || isNoteCreating || isCreatingRecurringTask) return;
 
     const results = await Promise.allSettled([
-      ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
-      ...displayRecurringTasks.map((task) =>
-        createRecurringTaskAsync(mapRecurringToCreateDTO(task)),
-      ),
+      ...displayTasks.map(async (task) => {
+        // Fire per successful task, not behind the all-succeed gate below, so a partial
+        // failure still records the tasks that did land.
+        const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
+        analytics.trackTaskCreated({ taskId, source: "ai", isRecurring: false, hasDeadline: false });
+      }),
+      ...displayRecurringTasks.map(async (task) => {
+        const { recurringTaskId } = await createRecurringTaskAsync(mapRecurringToCreateDTO(task));
+        analytics.trackTaskCreated({
+          taskId: recurringTaskId,
+          source: "ai",
+          isRecurring: true,
+          hasDeadline: false,
+        });
+      }),
       ...displayNotes.map((n) => createNoteAsync({ text: n.text, isPersistent: false })),
     ]);
 

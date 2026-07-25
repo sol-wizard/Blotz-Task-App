@@ -7,6 +7,7 @@ import {
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type TaskSource,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -118,6 +119,27 @@ export const analytics = {
 
   trackNoteCreated(params: { source: "manual" | "ai" }) {
     posthog.capture(EVENTS.NOTE_CREATED, { source: params.source });
+  },
+
+  /**
+   * Fires when a task is created — the counterpart to the completion events, carrying the same
+   * `task_id` so created → completed can be joined in PostHog. `source` separates manual vs AI
+   * creation. Recurring tasks fire this once per series (`task_id` = `recurringTaskId`), while
+   * `task_completed` fires per occurrence, so filter `is_recurring` when computing a completion
+   * rate. Preset tasks are seeded server-side and never fire this, so they are excluded naturally.
+   */
+  trackTaskCreated(params: {
+    taskId: number;
+    source: TaskSource;
+    isRecurring: boolean;
+    hasDeadline: boolean;
+  }) {
+    posthog.capture(EVENTS.TASK_CREATED, {
+      task_id: params.taskId,
+      source: params.source,
+      is_recurring: params.isRecurring,
+      has_deadline: params.hasDeadline,
+    });
   },
 
   /**
