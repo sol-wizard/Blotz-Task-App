@@ -11,8 +11,14 @@ interface PomodoroSession {
   durationSeconds: number;
 }
 
+interface PomodoroCompletion {
+  taskId: string;
+  completionId: number;
+}
+
 interface PomodoroTimerState {
   session: PomodoroSession | null;
+  lastCompletion: PomodoroCompletion | null;
   startTimer: (
     taskId: string,
     soundscape: PomodoroSoundscapeType,
@@ -28,6 +34,7 @@ let pomodoroClock: ReturnType<typeof setInterval> | null = null;
 
 export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   session: null,
+  lastCompletion: null,
 
   startTimer: async (taskId, soundscape, isCountdown, durationMinutes) => {
     if (pomodoroClock) {
@@ -75,7 +82,14 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
     const { session } = get();
     if (session && !session.isPaused) {
       if (session.elapsedSeconds >= session.durationSeconds && session.isCountdown) {
+        const { taskId } = session;
         get().stopTimer();
+        set((state) => ({
+          lastCompletion: {
+            taskId,
+            completionId: (state.lastCompletion?.completionId ?? 0) + 1,
+          },
+        }));
         return;
       }
       set({
