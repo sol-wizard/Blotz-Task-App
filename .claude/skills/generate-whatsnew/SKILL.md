@@ -11,7 +11,7 @@ When a user updates and opens the app for the first time, a few swipeable cards 
 
 ## Who does what (important)
 
-- **🤖 Claude (monthly)** — read the draft, pick features, build + screenshot, produce the preview artifact, revise until approved, then put the content into the app. **This skill is the working manual for Claude's half.**
+- **🤖 Claude (monthly)** — read the draft, pick features, write a screenshot brief, produce the preview artifact once screenshots are received, revise until approved, then put the content into the app. **This skill is the working manual for Claude's half.**
 - **🛠 The developer (once only)** — build an onboarding-style What's New page in the app (swipeable cards, shown once after an update) and leave a **clean, centralised place for the content** (e.g. an array of cards: title / body / image / language) for Claude to fill each month. After that, they only **review and approve**.
 - Full background and division of labour are in the handover plan document.
 
@@ -34,62 +34,35 @@ Only pick what **users would notice and care about**. Decision table:
 | Kind of change | Treatment | Why |
 |---|---|---|
 | Has its own screen, screenshots well (e.g. Badge details page) | **With image** | One real screenshot says it fastest |
-| Small or hard to capture (gestures, scrolling behaviour) | **Text only** | A still can't show motion; use a GIF if it really needs one, never a misleading still |
+| Small or hard to capture (gestures, scrolling behaviour) | **Avatar card** | A still can't show motion. Pick a random avatar SVG from `blotztask-mobile/assets/avatars/` (avatar1–avatar12). No emoji, no illustrations. Each card in a release should use a different avatar. |
 | Backend / developer-facing (telemetry, refactors, version bumps, internal timezone logic) | **Leave out** | Nobody reads a card about these |
 
 **Write down what you picked, what you skipped, and why** — step ④'s review checklist needs it.
 
 ### ③ Produce the assets (only for features that need an image)
 
-Screenshots must be **real** — never sourced from the web, never mocked up. And they must come from a **build that contains these unreleased features**: an older build doesn't have them.
+Screenshots must be **real** — never sourced from the web, never mocked up. If no card needs an image this month, skip ③ entirely.
 
-⚠️ **This step is expensive** — a build takes 20+ minutes. So: **settle ② first and capture everything in one pass**, rather than building, thinking, and rebuilding. If no card needs an image this month, skip ③ entirely.
+#### 1. Produce the screenshot brief
 
-#### 1. Pull latest main
+After settling ②, write a clear brief listing every screenshot needed. For each one, state:
 
-```
-git -C development/Blotz-Task-App fetch origin --quiet
-git -C development/Blotz-Task-App pull --ff-only origin main
-git -C development/Blotz-Task-App log --oneline -1        # record which commit the screenshots came from
-```
+- **Screen / state**: exactly where in the app to navigate (e.g. "Badges tab → tap any badge → Badge Detail sheet")
+- **What to show**: what should be visible in the frame (e.g. "the badge image, name, description, and progress bar — ideally with the badge already unlocked")
+- **Filename**: the target filename in `blotztask-mobile/assets/images-png/whatsnew/`, e.g. `whatsnew-badge-detail.png`
 
-Ben's local `main` is a **read-only mirror of origin** — he never writes code on it — so **pull automatically, don't ask** (his rule, 2026-07-19). `--ff-only` is the safety catch: it refuses rather than merging. **If the pull fails (not a fast-forward, or it would clobber local changes) — stop and tell Ben.** Don't "fix" it with `git stash`, `git reset`, `git checkout --`, or a merge; those destroy work.
+Present this list to the developer and ask them to take the screenshots and send them back in the conversation. Screenshots come from a real device or simulator running a build that already has the unreleased features — the developer chooses which.
 
-#### 2. Build for the simulator
+#### 2. Receive and save the screenshots
 
-Run from `development/Blotz-Task-App/blotztask-mobile`, **with `--local` by default**:
+The developer sends the screenshots directly in the conversation. When they arrive:
 
-```
-npx --yes eas-cli@latest build --profile preview-simulator --platform ios --local --non-interactive
-```
+1. **Delete all existing files** in `blotztask-mobile/assets/images-png/whatsnew/` — each release replaces the previous one entirely. Old screenshots are dead weight: users have already seen that What's New screen and will never see it again, and each build is self-contained so older installs are unaffected.
+2. Note which filename each image maps to from the brief.
+3. Save each one to `blotztask-mobile/assets/images-png/whatsnew/<filename>.png` — this is the final location the app code will reference, so no second move is needed.
+4. If an image is very wide (original device resolution), scale it to ~480 px wide: `sips --resampleWidth 480 <file>`.
 
-**Why `--local` is required (Ben's decision, 2026-07-19):** without it this runs on EAS's servers and **consumes the account's build quota**. They already spend ~20 builds a month on releases; screenshots have no business taking another one. `--local` compiles on Ben's Mac — no EAS servers, no billing — at the cost of tying up the machine for 15–30 minutes.
-
-> ⚠️ `--local` **has never actually been run successfully** (only cloud builds had been run when this rule was set). First person to run it: if it fails (missing Xcode components, CocoaPods, fastlane, …), **record the error here first**, then decide whether to fix the local toolchain or fall back to a cloud build for this run. **Falling back to a cloud build needs Ben's OK first** — it spends his money.
-
-- **`eas` is not installed and is not a local dependency** — both `eas` and `npx eas` fail (`command not found` / `could not determine executable to run`). Always `npx --yes eas-cli@latest`. The `--yes` matters: without it npx prompts for confirmation and an unattended run hangs there.
-- **There is no `--simulator` flag** (removed in eas-cli 21). The simulator setting lives in the `preview-simulator` profile in `eas.json`. Confirm a build is right with `isForIosSimulator: true` in `eas build:list --json`.
-- Use `preview-simulator`, not `npx expo run:ios` — the latter is a debug build, not what users actually install.
-- Run it **in the background** and write copy meanwhile. Before starting, check `build:list`: if the newest simulator build is already at the current main commit, reuse it instead of building again.
-- With `--local` the artifact lands in the current directory; only cloud builds need the `.tar.gz` downloaded.
-
-Install: extract the `.tar.gz` → `xcrun simctl install booted BlotzTask.app` → `xcrun simctl launch booted com.Blotz.BlotzTask.staging`.
-
-#### 3. Drive the app for screenshots (Maestro 2.6.1)
-
-**Confirm the account first**: Settings → Account must show the email `blotztest1@gmail.com`. Go by the email, not the display name — the display name is just profile data and can be changed at any time, so it proves nothing. The simulator's Safari cookie jar keeps the Auth0 session across reinstalls, so login is often skipped silently — never assume who you're signed in as.
-
-Things already learned the hard way:
-
-- **Targeting by text mostly fails** — most elements have no accessibility label, so `tapOn: "Account"` and similar miss. Use percentage coordinates, `point: "X%,Y%"`.
-- **Percentages must be integers** — `92.5%` throws `NumberFormatException`.
-- **The keyboard shifts the layout** — a coordinate tap aimed at a bottom control can land on the keyboard instead. Dismiss it first.
-- **Wait for animations** — use `extendedWaitUntil`. A screenshot or tap right after navigation usually failed on timing, not on a real defect.
-- **System dialogs are invisible to Maestro** (e.g. the notifications prompt) — tap them by coordinate.
-- **Screenshots failing with "Macintosh HD is read only"** → `killall -9 com.apple.CoreSimulator.CoreSimulatorService`, then reboot the simulator. Always write screenshots under `/private/tmp`, never `$HOME`.
-- **Don't add a missing `testID` yourself.** (A `testID` is a hidden name tag on an element so a tap can't land in the wrong place — one line of code per element, and a developer has to add it.) Note it and tell Ben; changing product code is his call. When raising it with him, **explain it from scratch every time** — he doesn't work in test automation, so the bare term means nothing to him.
-
-Put captures in `/private/tmp/blotz-onboarding-shots/` and scale to ~480px wide before use (`sips --resampleWidth 480`).
+**Confirm the account shown**: if any screenshot shows account-identifying UI (Settings → Account), verify the email is `blotztest1@gmail.com`, not a personal account. If it isn't, flag it and ask for a retake.
 
 ### ④ Produce the preview artifact (with a review checklist)
 
