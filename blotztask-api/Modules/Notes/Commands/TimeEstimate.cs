@@ -1,12 +1,13 @@
 using System.ComponentModel;
 using Azure.AI.Projects;
-using BlotzTask.Extension;
+using BlotzTask.Extension.Options;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.Notes.Commands;
 
@@ -28,11 +29,11 @@ public class TimeEstimateCommandHandler(
     ILogger<TimeEstimateCommandHandler> logger,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    AgentFrameworkServiceExtensions.AzureAIOptions options,
+    IOptions<AzureOpenAIOptions> options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
 {
-    private readonly string _deploymentId = options.BreakdownDeploymentId;
+    private readonly string _deploymentId = options.Value.AiModels.Breakdown.DeploymentId;
 
     public async Task<AITimeEstimationResult?> Handle(NoteTimeEstimationRequest request, CancellationToken ct = default)
     {
