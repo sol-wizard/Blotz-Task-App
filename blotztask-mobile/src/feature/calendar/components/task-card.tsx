@@ -307,11 +307,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
                       recurringTaskId,
                       occurrenceDate,
                       wasDone: task.isDone,
+                      wasOverdue: isOverdue,
+                      hasDeadline: task.isDeadline,
                     });
                     return;
                   }
                   if (!hasTaskItemId(task)) return;
-                  toggleTask({ taskId: task.id, selectedDay, wasDone: task.isDone });
+                  toggleTask({
+                    taskId: task.id,
+                    selectedDay,
+                    wasDone: task.isDone,
+                    wasOverdue: isOverdue,
+                    hasDeadline: task.isDeadline,
+                  });
                   if (task.alertTime && new Date(task.alertTime) > new Date()) {
                     await cancelNotification({ notificationId: task?.notificationId });
                   }
