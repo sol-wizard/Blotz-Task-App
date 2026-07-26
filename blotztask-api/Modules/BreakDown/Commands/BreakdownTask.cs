@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ClientModel;
 using Azure.AI.Projects;
-using BlotzTask.Extension;
+using BlotzTask.Extension.Options;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
@@ -11,6 +11,7 @@ using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.BreakDown.Commands;
 
@@ -26,11 +27,11 @@ public class BreakdownTaskCommandHandler(
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    AgentFrameworkServiceExtensions.AzureAIOptions options,
+    IOptions<AzureOpenAIOptions> options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
 {
-    private readonly string _deploymentId = options.BreakdownDeploymentId;
+    private readonly string _deploymentId = options.Value.AiModels.Breakdown.DeploymentId;
 
     public async Task<BreakdownResult> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {

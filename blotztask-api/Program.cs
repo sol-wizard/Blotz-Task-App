@@ -43,7 +43,7 @@ builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
 
 // External integrations
-builder.Services.AddAgentFrameworkServices(builder.Configuration);
+builder.Services.AddAgentFrameworkServices();
 
 var app = builder.Build();
 
