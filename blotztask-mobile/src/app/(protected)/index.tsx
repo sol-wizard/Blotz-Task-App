@@ -12,7 +12,7 @@ export default function ProtectedGate() {
   const { userProfile, isUserProfileLoading } = useUserProfile();
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
-  const { hasSeen: hasSeenWhatsNew } = useWhatsNewSeen();
+  const { hasSeen: hasSeenWhatsNew, markAsSeen } = useWhatsNewSeen();
 
   const isLoading = isUserProfileLoading || isUserPreferencesLoading || isUpdatingUserPreferences;
 
@@ -47,8 +47,13 @@ export default function ProtectedGate() {
     hasSeenWhatsNew,
   ]);
 
+  const handleWhatsNewFinish = async () => {
+    await markAsSeen();
+    router.replace("/(protected)/(tabs)");
+  };
+
   if (userProfile?.isOnBoarded && hasSeenWhatsNew === false) {
-    return <WhatsNewScreen />;
+    return <WhatsNewScreen onFinish={handleWhatsNewFinish} />;
   }
 
   return <LoadingScreen />;
