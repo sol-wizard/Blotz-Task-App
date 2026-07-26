@@ -73,7 +73,7 @@ export function IntroCarousel<T>({
         </View>
         <GradientColor className="h-[45px] w-[135px] overflow-visible">
           <View className="flex-1 flex-row justify-center items-center bg-transparent">
-            <Text className="text-[30px] leading-10 font-balooExtraBold text-center">Blotz</Text>
+            <Text className="text-[30px] leading-11 font-balooExtraBold text-center">Blotz</Text>
           </View>
         </GradientColor>
         <View className="flex-1 items-end">
