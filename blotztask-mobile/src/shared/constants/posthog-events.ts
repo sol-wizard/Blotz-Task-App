@@ -6,12 +6,19 @@ export const EVENTS = {
   BREAKDOWN_TASK: "breakdown_task",
   SCREEN_VIEWED: "screen_viewed",
   NOTE_CREATED: "note_created",
+  TASK_CREATED: "task_created",
+  TASK_COMPLETED: "task_completed",
+  TASK_REOPENED: "task_reopened",
+  TASK_DELETED: "task_deleted",
 } as const;
 
 export const SCREEN_NAMES = {
   NOTES: "Notes",
   GASHAPON_MACHINE: "GashaponMachine",
 } as const;
+
+/** How a task was created. `manual` = task form, `ai` = AI generation sheet. */
+export type TaskSource = "manual" | "ai";
 
 export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";
 export type AiTaskInputMode = "voice" | "text";
