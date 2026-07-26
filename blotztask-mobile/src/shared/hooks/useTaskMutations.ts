@@ -24,11 +24,14 @@ import {
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
+import { analytics } from "../services/analytics";
 
 type ToggleTaskVariables = {
   taskId: number;
   selectedDay?: Date;
   wasDone: boolean;
+  wasOverdue: boolean;
+  hasDeadline: boolean;
 };
 
 type UpdateTaskArgs = {
@@ -112,6 +115,16 @@ const useTaskMutations = () => {
     },
     onSuccess: (_data, variables) => {
       taskFirework.playIfCompleting(variables.wasDone);
+      if (variables.wasDone) {
+        analytics.trackTaskReopened({ taskId: variables.taskId });
+      } else {
+        analytics.trackTaskCompleted({
+          taskId: variables.taskId,
+          isRecurring: false,
+          wasOverdue: variables.wasOverdue,
+          hasDeadline: variables.hasDeadline,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
@@ -119,6 +132,12 @@ const useTaskMutations = () => {
   const deleteTaskMutation = useMutation({
     mutationFn: (task: TaskDetailDTO) => deleteTask(task.id!),
     onSuccess: (_data, task) => {
+      analytics.trackTaskDeleted({
+        taskId: task.id!,
+        isRecurring: false,
+        wasOverdue: parseISO(task.endTime).getTime() <= Date.now(),
+        hasDeadline: task.isDeadline,
+      });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
     },
@@ -127,6 +146,11 @@ const useTaskMutations = () => {
   const deleteRecurringOccurrenceMutation = useMutation({
     mutationFn: (payload: DeleteRecurringOccurrenceArgs) => deleteRecurringOccurrence(payload),
     onSuccess: async (_data, task) => {
+      analytics.trackTaskDeleted({
+        taskId: task.recurringTaskId,
+        isRecurring: true,
+        occurrenceDate: task.occurrenceDate,
+      });
       queryClient.removeQueries({ queryKey: ["virtualTaskDetail"] });
       if (!task.deleteFuture) {
         removeDeletedRecurringOccurrencesFromSelectedDayCaches(queryClient, task);

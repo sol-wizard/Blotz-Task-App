@@ -74,5 +74,153 @@
     "expectedTaskCount": 0,
     "expectedNoteCount": 3,
     "expectations": []
+  },
+  {
+    "id": "rec-weekly-single-monday",
+    "input": "Gym every Monday at 7am",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["gym"],
+        "label": "Health",
+        "frequency": "Weekly",
+        "interval": 1,
+        "daysOfWeek": 1,
+        "startTimeHour": 7,
+        "startDateMatchesTemplate": true
+      }
+    ]
+  },
+  {
+    "id": "rec-weekly-mon-wed-fri",
+    "input": "Team standup every Monday, Wednesday and Friday at 9am",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["standup", "stand up"],
+        "label": "Work",
+        "frequency": "Weekly",
+        "interval": 1,
+        "daysOfWeek": 21,
+        "startTimeHour": 9,
+        "startDateMatchesTemplate": true
+      }
+    ]
+  },
+  {
+    "id": "rec-weekly-tue-thu",
+    "input": "Yoga every Tuesday and Thursday",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["yoga"],
+        "frequency": "Weekly",
+        "interval": 1,
+        "daysOfWeek": 10,
+        "startDateMatchesTemplate": true
+      }
+    ]
+  },
+  {
+    "id": "rec-weekly-biweekly-tuesday",
+    "input": "Team lunch every other Tuesday at noon",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["lunch"],
+        "frequency": "Weekly",
+        "interval": 2,
+        "daysOfWeek": 2,
+        "startTimeHour": 12
+      }
+    ]
+  },
+  {
+    "id": "rec-daily-explicit-time",
+    "input": "Take my vitamins every day at 8am",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["vitamin"],
+        "frequency": "Daily",
+        "interval": 1,
+        "startTimeHour": 8,
+        "startDateMatchesTemplate": true
+      }
+    ]
+  },
+  {
+    "id": "rec-daily-vague-time",
+    "input": "Meditate every morning",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["meditate"],
+        "label": "Health",
+        "frequency": "Daily",
+        "interval": 1
+      }
+    ]
+  },
+  {
+    "id": "rec-monthly-day-of-month",
+    "input": "Pay rent on the 1st of every month",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["rent"],
+        "frequency": "Monthly",
+        "interval": 1,
+        "dayOfMonth": 1,
+        "startDateMatchesTemplate": true
+      }
+    ]
+  },
+  {
+    "id": "rec-vague-note-running",
+    "input": "I want to go running regularly",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1,
+    "expectedRecurringTaskCount": 0,
+    "expectations": [],
+    "recurringExpectations": []
+  },
+  {
+    "id": "rec-vague-note-study",
+    "input": "I should study more often",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1,
+    "expectedRecurringTaskCount": 0,
+    "expectations": [],
+    "recurringExpectations": []
+  },
+  {
+    "id": "rec-oneoff-guard-monday",
+    "input": "Gym on Monday at 7am",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["gym"],
+        "startTimeHour": 7,
+        "expectedDayOfWeek": "Monday"
+      }
+    ],
+    "recurringExpectations": []
   }
 ]

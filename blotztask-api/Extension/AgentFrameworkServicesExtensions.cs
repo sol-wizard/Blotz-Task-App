@@ -2,6 +2,8 @@ using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
+using BlotzTask.Extension.Options;
+using Microsoft.Extensions.Options;
 using OpenAI;
 using System.ClientModel;
 
@@ -9,53 +11,51 @@ namespace BlotzTask.Extension;
 
 public static class AgentFrameworkServiceExtensions
 {
-    public class AzureAIOptions
+    public static IServiceCollection AddAgentFrameworkServices(this IServiceCollection services)
     {
-        public required string Endpoint { get; init; }
-        public required string ApiKey { get; init; }
-        public required string TaskGenerationDeploymentId { get; init; }
-        public required string BreakdownDeploymentId { get; init; }
-        public required string GroqApiKey { get; init; }
-        public required string GroqSpeechModel { get; init; }
-        public required string GroqEndpoint { get; init; }
-    }
+        services.AddOptions<AzureOpenAIOptions>()
+            .BindConfiguration(AzureOpenAIOptions.SectionName)
+            .ValidateDataAnnotations()
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.AiModels.TaskGeneration.DeploymentId),
+                $"Missing {AzureOpenAIOptions.SectionName}:AiModels:TaskGeneration:DeploymentId")
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.AiModels.Breakdown.DeploymentId),
+                $"Missing {AzureOpenAIOptions.SectionName}:AiModels:Breakdown:DeploymentId")
+              .Validate(
+                options => Uri.TryCreate(options.Endpoint, UriKind.Absolute, out _),
+                $"{AzureOpenAIOptions.SectionName}:Endpoint must be a valid absolute URI")
+            .ValidateOnStart();
 
-    public static IServiceCollection AddAgentFrameworkServices(
-        this IServiceCollection services, IConfiguration configuration)
-    {
-        var options = new AzureAIOptions
-        {
-            Endpoint = configuration["AzureOpenAI:Endpoint"]
-                ?? throw new InvalidOperationException("Missing AzureOpenAI:Endpoint"),
-            ApiKey = configuration["AzureOpenAI:ApiKey"]
-                ?? throw new InvalidOperationException("Missing AzureOpenAI:ApiKey"),
-            TaskGenerationDeploymentId = configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
-                ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId"),
-            BreakdownDeploymentId = configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
-                ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId"),
-            GroqApiKey = configuration["Groq:ApiKey"]
-                ?? throw new InvalidOperationException("Missing Groq:ApiKey"),
-            GroqSpeechModel = configuration["Groq:SpeechModel"]
-                ?? throw new InvalidOperationException("Missing Groq:SpeechModel"),
-            GroqEndpoint = configuration["Groq:Endpoint"]
-                ?? throw new InvalidOperationException("Missing Groq:Endpoint"),
-        };
+        services.AddOptions<GroqOptions>()
+            .BindConfiguration(GroqOptions.SectionName)
+            .ValidateDataAnnotations()
+            .Validate(
+                options => Uri.TryCreate(options.Endpoint, UriKind.Absolute, out _),
+                $"{GroqOptions.SectionName}:Endpoint must be a valid absolute URI")
+            .ValidateOnStart();
 
         // AIProjectClient is shared — one client, multiple deployment targets.
         // AIAgent is NOT created here because instructions are user-specific
         // (language + local time) and must be set per-session in the service layer.
         //TODO: to see whether we have a better solution
-        services.AddSingleton(options);
-        services.AddSingleton<AzureOpenAIClient>(_ =>
-            new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey)));
-        services.AddSingleton<AIProjectClient>(_ =>
-            new AIProjectClient(new Uri(options.Endpoint), new DefaultAzureCredential()));
-        services.AddSingleton(_ =>
+        services.AddSingleton<AzureOpenAIClient>(serviceProvider =>
         {
+            var options = serviceProvider.GetRequiredService<IOptions<AzureOpenAIOptions>>().Value;
+            return new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey));
+        });
+        services.AddSingleton<AIProjectClient>(serviceProvider =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<AzureOpenAIOptions>>().Value;
+            return new AIProjectClient(new Uri(options.Endpoint), new DefaultAzureCredential());
+        });
+        services.AddSingleton(serviceProvider =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<GroqOptions>>().Value;
             var groqClient = new OpenAIClient(
-                new ApiKeyCredential(options.GroqApiKey),
-                new OpenAIClientOptions { Endpoint = new Uri(options.GroqEndpoint) });
-            return groqClient.GetAudioClient(options.GroqSpeechModel);
+                new ApiKeyCredential(options.ApiKey),
+                new OpenAIClientOptions { Endpoint = new Uri(options.Endpoint) });
+            return groqClient.GetAudioClient(options.SpeechModel);
         });
 
         return services;

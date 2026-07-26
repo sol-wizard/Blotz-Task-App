@@ -7,6 +7,7 @@ import {
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type TaskSource,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -118,5 +119,78 @@ export const analytics = {
 
   trackNoteCreated(params: { source: "manual" | "ai" }) {
     posthog.capture(EVENTS.NOTE_CREATED, { source: params.source });
+  },
+
+  /**
+   * Fires when a task is created — the counterpart to the completion events, carrying the same
+   * `task_id` so created → completed can be joined in PostHog. `source` separates manual vs AI
+   * creation. Recurring tasks fire this once per series (`task_id` = `recurringTaskId`), while
+   * `task_completed` fires per occurrence, so filter `is_recurring` when computing a completion
+   * rate. Preset tasks are seeded server-side and never fire this, so they are excluded naturally.
+   */
+  trackTaskCreated(params: {
+    taskId: number;
+    source: TaskSource;
+    isRecurring: boolean;
+    hasDeadline: boolean;
+  }) {
+    posthog.capture(EVENTS.TASK_CREATED, {
+      task_id: params.taskId,
+      source: params.source,
+      is_recurring: params.isRecurring,
+      has_deadline: params.hasDeadline,
+    });
+  },
+
+  /**
+   * Fires when a user marks a task as complete — the core value moment for a to-do app.
+   * Only fires on genuine completion, never when un-completing a task.
+   * Carries `task_id` so creation → completion can be joined in PostHog once task creation
+   * is tracked, enabling completion-rate and "do completers retain better?" analysis.
+   */
+  trackTaskCompleted(params: {
+    taskId: number;
+    isRecurring: boolean;
+    wasOverdue: boolean;
+    hasDeadline: boolean;
+    occurrenceDate?: string;
+  }) {
+    posthog.capture(EVENTS.TASK_COMPLETED, {
+      task_id: params.taskId,
+      is_recurring: params.isRecurring,
+      was_overdue: params.wasOverdue,
+      has_deadline: params.hasDeadline,
+      ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
+    });
+  },
+
+  /**
+   * Fires when a user un-completes a task (checks it back off).
+   * A high reopen rate can hint at accidental completions or unclear task state.
+   */
+  trackTaskReopened(params: { taskId: number }) {
+    posthog.capture(EVENTS.TASK_REOPENED, { task_id: params.taskId });
+  },
+
+  /**
+   * Fires when a user deletes a task. A high delete rate can signal low-quality
+   * AI output or users giving up on stale tasks. Shares `task_id` with the rest
+   * of the task lifecycle. `was_overdue` / `has_deadline` are only available for
+   * normal tasks (recurring deletes don't carry the full task).
+   */
+  trackTaskDeleted(params: {
+    taskId: number;
+    isRecurring: boolean;
+    wasOverdue?: boolean;
+    hasDeadline?: boolean;
+    occurrenceDate?: string;
+  }) {
+    posthog.capture(EVENTS.TASK_DELETED, {
+      task_id: params.taskId,
+      is_recurring: params.isRecurring,
+      ...(params.wasOverdue !== undefined ? { was_overdue: params.wasOverdue } : {}),
+      ...(params.hasDeadline !== undefined ? { has_deadline: params.hasDeadline } : {}),
+      ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
+    });
   },
 };

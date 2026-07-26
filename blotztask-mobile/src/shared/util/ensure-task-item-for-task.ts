@@ -15,7 +15,7 @@ type RecurringOccurrenceResult = {
   taskItemId: number;
 };
 
-type EnsureTaskItemForTaskCardParams = {
+type EnsureTaskItemForTaskParams = {
   task: TaskDetailDTO;
   materializeOccurrence: (
     payload: RecurringOccurrencePayload,
@@ -23,11 +23,11 @@ type EnsureTaskItemForTaskCardParams = {
   invalidateOnMaterializeSuccess?: boolean;
 };
 
-export async function ensureTaskItemForTaskCard({
+export async function ensureTaskItemForTask({
   task,
   materializeOccurrence,
   invalidateOnMaterializeSuccess = true,
-}: EnsureTaskItemForTaskCardParams): Promise<number> {
+}: EnsureTaskItemForTaskParams): Promise<number> {
   if (hasTaskItemId(task)) {
     return task.id;
   }
