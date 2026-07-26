@@ -68,7 +68,7 @@ The developer sends the screenshots directly in the conversation. When they arri
 
 Build a phone-shaped, swipeable What's New page, with a **"what's covered" checklist** at the top or bottom: on one side the features included (tagged image / text / placeholder), on the other the ones skipped, each with a one-line reason. A reviewer can scan the checklist in seconds.
 
-- Reuse the existing prototype and generator script (in Ben's scratchpad: `blotz-whatsnew.html` / `gen_whatsnew.py`) — embed screenshots as base64, since artifacts can't load external images, and support both light and dark.
+- Generate the HTML fresh each release — embed screenshots as base64 (artifacts can't load external files). Save the output to `.claude/skills/generate-whatsnew/blotz-whatsnew.html` for the review session. **Never commit this file** — it is gitignored (`.claude/skills/generate-whatsnew/blotz-whatsnew.html` is listed in `.gitignore`) to prevent it from ever reaching the remote repo.
 - Take the visual language from the app itself: lime-green accent, deep ink-green text, rounded display type (`ui-rounded`), mascot gradients.
 - Run through the `artifact-design` skill before publishing.
 
