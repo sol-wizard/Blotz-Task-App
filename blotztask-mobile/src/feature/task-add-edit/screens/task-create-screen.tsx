@@ -22,8 +22,14 @@ export default function TaskCreateScreen() {
       if (!recurringTask) return;
 
       createRecurringTask(recurringTask, {
-        onSuccess: () => {
+        onSuccess: (result) => {
           analytics.trackManualTaskCreated();
+          analytics.trackTaskCreated({
+            taskId: result.recurringTaskId,
+            source: "manual",
+            isRecurring: true,
+            hasDeadline: recurringTask.isDeadline ?? false,
+          });
           router.back();
           Toast.show({ type: "warning", text1: t("success.taskCreated") });
         },
@@ -32,8 +38,14 @@ export default function TaskCreateScreen() {
     }
 
     addTask(submitTask, {
-      onSuccess: () => {
+      onSuccess: (taskId) => {
         analytics.trackManualTaskCreated();
+        analytics.trackTaskCreated({
+          taskId,
+          source: "manual",
+          isRecurring: false,
+          hasDeadline: submitTask.isDeadline ?? false,
+        });
         router.back();
         Toast.show({ type: "success", text1: t("success.taskCreated") });
       },
