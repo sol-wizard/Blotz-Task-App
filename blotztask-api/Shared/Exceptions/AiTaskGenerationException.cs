@@ -12,6 +12,7 @@ public enum AiErrorCode
     Canceled = 5,
     TranscriptionFailed = 6,
     EmptyAudio = 7,
+    [Obsolete("No longer thrown: an empty extraction now returns a normal empty result on the success channel instead of an error. Kept so older clients that still map this code keep working; remove once they age out.")]
     NoTasksExtracted = 8,
     QuotaExceeded = 9
 }

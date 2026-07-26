@@ -128,9 +128,8 @@ public class AiChatService(
                 "An unhandled exception occurred during AI task generation.", ex);
         }
 
-        if (context.Tools.ToolCallCount <= 0)
-            throw new AiTaskGenerationException(AiErrorCode.NoTasksExtracted, "No tasks or notes were extracted.");
-
+        // No tool called means the user's message had nothing task-shaped. That is a valid
+        // empty result, not a fault — fall through and return it on the normal success path.
         return new AiGenerateMessage
         {
             ExtractedTasks = context.Tools.Tasks,
