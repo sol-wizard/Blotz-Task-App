@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View, FlatList } from "react-native";
+import { Pressable, Text, View, FlatList, useWindowDimensions } from "react-native";
 import Animated, { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import Modal from "react-native-modal";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 
 import { AnimatedChevron } from "./chevron";
 import { FormDivider } from "./form-divider";
+
+const PANEL_GAP = 6;
+
+const PANEL_VERTICAL_PADDING = 16;
+const SCREEN_EDGE_MARGIN = 8;
 
 export type DropdownOption<T> = {
   label: string;
@@ -47,6 +52,8 @@ export function AnimatedDropdown<T>({
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
+  const { height: windowHeight } = useWindowDimensions();
+
   // animation progress: 0 -> closed, 1 -> open
   const animationProgress = useSharedValue(0);
 
@@ -59,8 +66,6 @@ export function AnimatedDropdown<T>({
 
   const foundOption = options.find((option) => option.value === value);
   const selectedLabel = foundOption?.label ?? placeholder;
-
-  const visibleCount = Math.min(options.length, maxVisibleItems);
 
   const openDropdown = (ref: View | null) => {
     if (!ref?.measureInWindow) {
@@ -83,9 +88,30 @@ export function AnimatedDropdown<T>({
     closeDropdown();
   };
 
-  // Position panel under trigger
+  const anchorTop = anchor?.y ?? 0;
+  const anchorHeight = anchor?.h ?? 0;
+
+  const topLimit = SCREEN_EDGE_MARGIN;
+  const bottomLimit = windowHeight - SCREEN_EDGE_MARGIN;
+  const spaceBelow = bottomLimit - (anchorTop + anchorHeight + PANEL_GAP);
+  const spaceAbove = anchorTop - PANEL_GAP - topLimit;
+
+  const preferredListHeight = Math.min(options.length, maxVisibleItems) * itemHeight;
+  const dropUp =
+    spaceBelow < preferredListHeight + PANEL_VERTICAL_PADDING && spaceAbove > spaceBelow;
+
+  // Shrink the list rather than letting the panel run off-screen; the FlatList scrolls.
+  const availableHeight = Math.max(
+    dropUp ? spaceAbove : spaceBelow,
+    itemHeight + PANEL_VERTICAL_PADDING,
+  );
+  const listHeight = Math.min(preferredListHeight, availableHeight - PANEL_VERTICAL_PADDING);
+  const panelHeight = listHeight + PANEL_VERTICAL_PADDING;
+
   const panelLeft = anchor?.x ?? 0;
-  const panelTop = (anchor?.y ?? 0) + (anchor?.h ?? 0) + 6;
+  const panelTop = dropUp
+    ? Math.max(topLimit, anchorTop - PANEL_GAP - panelHeight)
+    : Math.min(anchorTop + anchorHeight + PANEL_GAP, bottomLimit - panelHeight);
   const panelWidth = Math.max(minWidth, anchor?.w ?? minWidth);
 
   return (
@@ -130,7 +156,7 @@ export function AnimatedDropdown<T>({
                 data={options}
                 keyExtractor={(item, idx) => `${item.label}-${idx}`}
                 bounces={false}
-                style={{ maxHeight: visibleCount * itemHeight }}
+                style={{ maxHeight: listHeight }}
                 renderItem={({ item }) => {
                   const selected = item.value === value;
                   return (
