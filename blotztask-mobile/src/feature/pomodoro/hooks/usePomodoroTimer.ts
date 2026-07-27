@@ -52,7 +52,7 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
         durationSeconds: durationMinutes * 60,
       },
     });
-    analytics.trackPomodoroStarted();
+    analytics.trackPomodoroStarted({ isCountdown, durationMinutes });
     pomodoroClock = setInterval(() => get()._tick(), 1000);
     const sound = useSoundscapeStore.getState();
     void sound.playSoundscape(soundscape);

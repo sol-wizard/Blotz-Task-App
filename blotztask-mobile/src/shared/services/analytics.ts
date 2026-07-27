@@ -250,12 +250,15 @@ export const analytics = {
     posthog.capture(EVENTS.GASHAPON_SPIN);
   },
 
-  trackPomodoroStarted() {
-    posthog.capture(EVENTS.POMODORO_STARTED);
+  trackPomodoroStarted(params: { isCountdown: boolean; durationMinutes: number }) {
+    posthog.capture(EVENTS.POMODORO_STARTED, {
+      is_countdown: params.isCountdown,
+      duration_minutes: params.durationMinutes,
+    });
   },
 
-  trackBadgeUnlocked() {
-    posthog.capture(EVENTS.BADGE_UNLOCKED);
+  trackBadgeUnlocked(params: { badgeId: number }) {
+    posthog.capture(EVENTS.BADGE_UNLOCKED, { badge_id: params.badgeId });
   },
 
   trackReviewGenerated(params: { period: ReviewPeriodType }) {

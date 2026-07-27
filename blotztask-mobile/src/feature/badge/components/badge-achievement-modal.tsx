@@ -38,7 +38,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     rewardSound.seekTo(0);
     rewardSound.play();
-    analytics.trackBadgeUnlocked();
+    analytics.trackBadgeUnlocked({ badgeId });
   }, [badgeId, rewardSound]);
 
   if (!badge) return null;
