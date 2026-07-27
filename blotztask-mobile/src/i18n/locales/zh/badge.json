@@ -9,7 +9,8 @@
     "title": "成就"
   },
   "wall": {
-    "title": "徽章墙"
+    "title": "徽章墙",
+    "earnedCount": "已获得 {{count}} 个徽章"
   },
   "details": {
     "category": "类别：{{category}}",
