@@ -27,6 +27,8 @@ import enBadge from "./locales/en/badge.json";
 import zhBadge from "./locales/zh/badge.json";
 import enWidget from "./locales/en/widget.json";
 import zhWidget from "./locales/zh/widget.json";
+import enWhatsNew from "./locales/en/whats-new.json";
+import zhWhatsNew from "./locales/zh/whats-new.json";
 
 // Get device language code (e.g., 'en', 'zh')
 const getDeviceLanguage = (): string => {
@@ -58,6 +60,7 @@ i18n.use(initReactI18next).init({
       pomodoro: enPomodoro,
       badge: enBadge,
       widget: enWidget,
+      whatsNew: enWhatsNew,
     },
     zh: {
       common: zhCommon,
@@ -72,6 +75,7 @@ i18n.use(initReactI18next).init({
       pomodoro: zhPomodoro,
       badge: zhBadge,
       widget: zhWidget,
+      whatsNew: zhWhatsNew,
     },
   },
   lng: getDeviceLanguage(), // Will be overridden by user preference from backend
