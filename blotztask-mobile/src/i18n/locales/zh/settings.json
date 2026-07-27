@@ -126,11 +126,6 @@
     "myCodeLabel": "你的邀请码",
     "myCodeHint": "将此邀请码分享给好友，邀请他们加入 Blotz。",
     "copied": "已复制到剪贴板",
-    "redeemLabel": "有邀请码？",
-    "redeemPlaceholder": "输入邀请码",
-    "redeemButton": "兑换",
-    "redeeming": "兑换中...",
-    "redeemSuccess": "邀请码兑换成功！",
     "errors": {
       "notFound": "邀请码不存在。",
       "invalid": "不能使用自己的邀请码。",

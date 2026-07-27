@@ -253,28 +253,6 @@ namespace BlotzTask.Migrations
                     b.ToTable("UserProgress", (string)null);
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Invites.Domain.InviteRedemption", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("InviterId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("RedeemedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("RedeemerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("InviteRedemptions");
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Property<int>("LabelId")
@@ -407,6 +385,66 @@ namespace BlotzTask.Migrations
                             IsCountdown = false,
                             Timing = 25
                         });
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.Referral", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeUsed")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<DateTime>("RedeemedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RefereeUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReferrerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RefereeUserId")
+                        .IsUnique();
+
+                    b.ToTable("Referrals", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.ReferralCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("[Code] IS NOT NULL");
+
+                    b.HasIndex("OwnerUserId")
+                        .IsUnique();
+
+                    b.ToTable("ReferralCodes", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Reviews.Domain.ReviewReport", b =>
@@ -861,10 +899,6 @@ namespace BlotzTask.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("InviteCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 
@@ -891,10 +925,6 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("Auth0UserId")
                         .IsUnique();
-
-                    b.HasIndex("InviteCode")
-                        .IsUnique()
-                        .HasFilter("[InviteCode] IS NOT NULL");
 
                     b.ToTable("AppUsers");
 
@@ -1095,6 +1125,17 @@ namespace BlotzTask.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.ReferralCode", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "Owner")
+                        .WithOne()
+                        .HasForeignKey("BlotzTask.Modules.Referrals.Domain.ReferralCode", "OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Reviews.Domain.ReviewReport", b =>

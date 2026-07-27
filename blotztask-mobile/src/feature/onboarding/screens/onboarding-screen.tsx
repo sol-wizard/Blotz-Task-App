@@ -1,6 +1,7 @@
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-ai-section";
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
+import { OnboardingInviteSection } from "@/feature/onboarding/components/onboarding-invite-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { router } from "expo-router";
 import React, { useState, useRef } from "react";
@@ -26,7 +27,7 @@ export default function OnboardingScreen() {
   const { t } = useTranslation("onboarding");
   useLanguageInit();
 
-  const sections = ["ai-voice", "note", "breakdown"];
+  const sections = ["ai-voice", "note", "breakdown", "invite"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -95,6 +96,7 @@ export default function OnboardingScreen() {
             {item === "ai-voice" && <OnboardingAiSection />}
             {item === "breakdown" && <OnboardingBreakdownSection />}
             {item === "note" && <OnboardingNoteSection />}
+            {item === "invite" && <OnboardingInviteSection />}
           </View>
         )}
       />
@@ -114,7 +116,9 @@ export default function OnboardingScreen() {
           })}
         </View>
         <Pressable onPress={handleNext} className="w-[46%] h-[48px] bg-[#8BCC5A] rounded-full py-4">
-          <Text className="text-white text-lg font-baloo text-center">{t("actions.continue")}</Text>
+          <Text className="text-white text-lg font-baloo text-center">
+            {activeOnboardingIndex === sections.length - 1 ? t("actions.start") : t("actions.continue")}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>

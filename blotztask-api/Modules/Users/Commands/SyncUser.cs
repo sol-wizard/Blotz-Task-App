@@ -4,6 +4,7 @@ using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Pomodoro.Domain;
+using BlotzTask.Modules.Referrals.Commands;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Services;
@@ -22,6 +23,7 @@ public sealed class SyncUserResult
 // Change file name
 public class SyncUserCommandHandler(
     BlotzTaskDbContext db,
+    EnsureReferralCodeHandler ensureReferralCode,
     ILogger<SyncUserCommandHandler> logger)
 {
     public async Task<SyncUserResult> Handle(SyncUserCommand command, CancellationToken ct = default)
@@ -139,11 +141,15 @@ public class SyncUserCommandHandler(
                 "Created new AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
                 row.Id, row.Auth0UserId);
 
+            await ensureReferralCode.HandleAsync(row.Id, ct);
+
             return new SyncUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
         }
 
         existing.LoginAt = utcNow;
         await db.SaveChangesAsync(ct);
+
+        await ensureReferralCode.HandleAsync(existing.Id, ct);
 
         return new SyncUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
     }

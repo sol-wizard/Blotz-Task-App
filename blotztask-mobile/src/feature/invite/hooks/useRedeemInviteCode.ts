@@ -10,7 +10,5 @@ export const useRedeemInviteCode = () => {
   return {
     redeemInviteCode: mutation.mutate,
     isRedeeming: mutation.isPending,
-    isSuccess: mutation.isSuccess,
-    error: mutation.error,
   };
 };

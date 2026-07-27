@@ -125,11 +125,6 @@
     "myCodeLabel": "Your invite code",
     "myCodeHint": "Share this code with friends so they can join Blotz.",
     "copied": "Copied to clipboard",
-    "redeemLabel": "Have an invite code?",
-    "redeemPlaceholder": "Enter code",
-    "redeemButton": "Redeem",
-    "redeeming": "Redeeming...",
-    "redeemSuccess": "Invite code redeemed successfully!",
     "errors": {
       "notFound": "Invite code not found.",
       "invalid": "You cannot use your own invite code.",

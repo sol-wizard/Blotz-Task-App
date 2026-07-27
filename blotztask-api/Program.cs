@@ -10,7 +10,7 @@ using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Reviews;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
-using BlotzTask.Modules.Invites;
+using BlotzTask.Modules.Referrals;
 using BlotzTask.Modules.AppVersion;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
@@ -42,7 +42,7 @@ builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
-builder.Services.AddInviteModule();
+builder.Services.AddReferralModule();
 
 // External integrations
 builder.Services.AddAgentFrameworkServices(builder.Configuration);
