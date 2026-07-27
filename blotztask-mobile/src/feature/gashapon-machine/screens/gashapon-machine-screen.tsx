@@ -59,6 +59,7 @@ export default function GashaponMachineScreen() {
 
   const handleStarDropped = (starIndex: number) => {
     const droppedNote = limitedNotes[starIndex];
+    analytics.trackGashaponSpin();
     setRandomTask(droppedNote);
     setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
     setDropStarTrigger((prev) => prev + 1);

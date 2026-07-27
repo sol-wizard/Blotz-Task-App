@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { PomodoroSoundscapeType } from "../utils/pomodoro-setting";
 import { useSoundscapeStore } from "./useSoundscapeStore";
+import { analytics } from "@/shared/services/analytics";
 
 interface PomodoroSession {
   taskId: string;
@@ -51,6 +52,7 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
         durationSeconds: durationMinutes * 60,
       },
     });
+    analytics.trackPomodoroStarted();
     pomodoroClock = setInterval(() => get()._tick(), 1000);
     const sound = useSoundscapeStore.getState();
     void sound.playSoundscape(soundscape);
