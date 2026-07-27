@@ -7,6 +7,9 @@ import {
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type LoginConnection,
+  type LoginErrorCode,
+  type LoginFailureReason,
   type TaskSource,
 } from "@/shared/constants/posthog-events";
 
@@ -39,6 +42,54 @@ export const analytics = {
    */
   trackScreenViewed(screenName: ScreenName) {
     posthog.capture(EVENTS.SCREEN_VIEWED, { screen_name: screenName });
+  },
+
+  /**
+   * Fires the instant a sign-in button is tapped, before the Auth0 browser opens.
+   * This is the denominator the login funnel has never had: without it, an install that
+   * never logs in cannot be told apart from one that tried and failed.
+   * Fires while the user is still anonymous — the client runs `personProfiles: "always"`
+   * so PostHog joins these to the identified person at `$identify`.
+   */
+  trackLoginStarted(params: { connection: LoginConnection }) {
+    posthog.capture(EVENTS.LOGIN_STARTED, { connection: params.connection });
+  },
+
+  /**
+   * Fires once Auth0 returns both an access and a refresh token, before the redirect
+   * into `(protected)`. Deliberately emitted pre-`identify` so the whole login funnel
+   * sits on one anonymous distinct_id.
+   * Note this is not proof the user reached the app — it fires before `refreshAuthState`
+   * and the redirect, so pair it with the screen views to measure that last hop.
+   */
+  trackLoginSucceeded(params: { connection: LoginConnection; durationMs: number }) {
+    posthog.capture(EVENTS.LOGIN_SUCCEEDED, {
+      connection: params.connection,
+      duration_ms: params.durationMs,
+    });
+  },
+
+  /**
+   * Fires on every non-success exit from Auth0 — the three branches that were previously
+   * silent `console.error` calls and left half our installs unexplained.
+   * `reason` separates a deliberate cancel and a dismissed browser from a genuine
+   * failure, so Auth0 reliability can be measured without user exits polluting it.
+   * `duration_ms` is what makes a cancel interpretable: near-zero means a mis-tap or a
+   * browser that failed to open, while tens of seconds means real abandonment at the
+   * Auth0 form — two very different fixes.
+   */
+  trackLoginFailed(params: {
+    connection: LoginConnection;
+    reason: LoginFailureReason;
+    errorCode: LoginErrorCode;
+    durationMs: number;
+  }) {
+    posthog.capture(EVENTS.LOGIN_FAILED, {
+      connection: params.connection,
+      reason: params.reason,
+      error_code: params.errorCode,
+      duration_ms: params.durationMs,
+    });
   },
 
   /**
