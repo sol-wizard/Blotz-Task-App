@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import { ReviewPeriodType } from "@/feature/review/models/review-dto";
 import posthog from "@/shared/constants/posthog-client";
 import {
   EVENTS,
@@ -243,5 +244,24 @@ export const analytics = {
       ...(params.hasDeadline !== undefined ? { has_deadline: params.hasDeadline } : {}),
       ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
     });
+  },
+
+  trackGashaponSpin() {
+    posthog.capture(EVENTS.GASHAPON_SPIN);
+  },
+
+  trackPomodoroStarted(params: { isCountdown: boolean; durationMinutes: number }) {
+    posthog.capture(EVENTS.POMODORO_STARTED, {
+      is_countdown: params.isCountdown,
+      duration_minutes: params.durationMinutes,
+    });
+  },
+
+  trackBadgeUnlocked(params: { badgeId: number }) {
+    posthog.capture(EVENTS.BADGE_UNLOCKED, { badge_id: params.badgeId });
+  },
+
+  trackReviewGenerated(params: { period: ReviewPeriodType }) {
+    posthog.capture(EVENTS.REVIEW_GENERATED, { period: params.period });
   },
 };
