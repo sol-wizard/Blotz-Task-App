@@ -8,8 +8,6 @@ import { AnimatedChevron } from "./chevron";
 import { FormDivider } from "./form-divider";
 
 const PANEL_GAP = 6;
-
-const PANEL_VERTICAL_PADDING = 16;
 const SCREEN_EDGE_MARGIN = 8;
 
 export type DropdownOption<T> = {
@@ -67,6 +65,8 @@ export function AnimatedDropdown<T>({
   const foundOption = options.find((option) => option.value === value);
   const selectedLabel = foundOption?.label ?? placeholder;
 
+  const visibleCount = Math.min(options.length, maxVisibleItems);
+
   const openDropdown = (ref: View | null) => {
     if (!ref?.measureInWindow) {
       setOpen(true);
@@ -89,29 +89,15 @@ export function AnimatedDropdown<T>({
   };
 
   const anchorTop = anchor?.y ?? 0;
-  const anchorHeight = anchor?.h ?? 0;
+  const panelTopBelow = anchorTop + (anchor?.h ?? 0) + PANEL_GAP;
+  // + 16 mirrors the panel's `py-2` below
+  const panelHeight = visibleCount * itemHeight + 16;
 
-  const topLimit = SCREEN_EDGE_MARGIN;
-  const bottomLimit = windowHeight - SCREEN_EDGE_MARGIN;
-  const spaceBelow = bottomLimit - (anchorTop + anchorHeight + PANEL_GAP);
-  const spaceAbove = anchorTop - PANEL_GAP - topLimit;
-
-  const preferredListHeight = Math.min(options.length, maxVisibleItems) * itemHeight;
-  const dropUp =
-    spaceBelow < preferredListHeight + PANEL_VERTICAL_PADDING && spaceAbove > spaceBelow;
-
-  // Shrink the list rather than letting the panel run off-screen; the FlatList scrolls.
-  const availableHeight = Math.max(
-    dropUp ? spaceAbove : spaceBelow,
-    itemHeight + PANEL_VERTICAL_PADDING,
-  );
-  const listHeight = Math.min(preferredListHeight, availableHeight - PANEL_VERTICAL_PADDING);
-  const panelHeight = listHeight + PANEL_VERTICAL_PADDING;
+  // Flip above the trigger when the panel would run past the bottom of the screen.
+  const dropUp = panelTopBelow + panelHeight > windowHeight - SCREEN_EDGE_MARGIN;
 
   const panelLeft = anchor?.x ?? 0;
-  const panelTop = dropUp
-    ? Math.max(topLimit, anchorTop - PANEL_GAP - panelHeight)
-    : Math.min(anchorTop + anchorHeight + PANEL_GAP, bottomLimit - panelHeight);
+  const panelTop = dropUp ? anchorTop - PANEL_GAP - panelHeight : panelTopBelow;
   const panelWidth = Math.max(minWidth, anchor?.w ?? minWidth);
 
   return (
@@ -156,7 +142,7 @@ export function AnimatedDropdown<T>({
                 data={options}
                 keyExtractor={(item, idx) => `${item.label}-${idx}`}
                 bounces={false}
-                style={{ maxHeight: listHeight }}
+                style={{ maxHeight: visibleCount * itemHeight }}
                 renderItem={({ item }) => {
                   const selected = item.value === value;
                   return (

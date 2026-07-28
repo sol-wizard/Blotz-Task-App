@@ -12,13 +12,11 @@ type Props = {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const CONTAINER_PADDING = 4;
-const MAX_CONTAINER_WIDTH = 200;
-
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
-  const [containerWidth, setContainerWidth] = React.useState(MAX_CONTAINER_WIDTH);
-  const tabWidth = (containerWidth - CONTAINER_PADDING * 2) / 2;
+  // 200 and 4 mirror `max-w-[200px]` and `p-1` on the container below — change both together.
+  const [containerWidth, setContainerWidth] = React.useState(200);
+  const tabWidth = (containerWidth - 4 * 2) / 2;
   const tabPositionX = useSharedValue(value === SegmentButtonValue.Reminder ? 0 : tabWidth);
   const isInitialMount = React.useRef(true);
   React.useEffect(() => {
