@@ -75,10 +75,9 @@ function getErrorMessage(error: unknown, meta?: Record<string, unknown>): string
     const status = error.response?.status;
     if (!error.response) return i18n.t("errors.network");
     if (status && status >= 500) return i18n.t("errors.server");
-    if (meta?.errorNs === "invite") {
-      if (status === 404) return i18n.t("settings:invite.errors.notFound");
-      if (status === 409) return i18n.t("settings:invite.errors.alreadyRedeemed");
-      return i18n.t("settings:invite.errors.invalid");
+    const errorMap = meta?.errorMap as Record<number, string> | undefined;
+    if (status && errorMap?.[status]) {
+      return i18n.t(errorMap[status]);
     }
     if (status === 400 || status === 422) return i18n.t("errors.validation");
     return i18n.t("errors.default");
