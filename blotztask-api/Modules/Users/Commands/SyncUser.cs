@@ -149,8 +149,6 @@ public class SyncUserCommandHandler(
         existing.LoginAt = utcNow;
         await db.SaveChangesAsync(ct);
 
-        await ensureReferralCode.HandleAsync(existing.Id, ct);
-
         return new SyncUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
     }
 

@@ -1,4 +1,5 @@
 using BlotzTask.Modules.Referrals.Domain;
+using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,5 +13,15 @@ public class ReferralConfiguration : IEntityTypeConfiguration<Referral>
         builder.HasKey(r => r.Id);
         builder.Property(r => r.CodeUsed).IsRequired().HasMaxLength(12);
         builder.HasIndex(r => r.RefereeUserId).IsUnique();
+
+        builder.HasOne<AppUser>()
+            .WithMany()
+            .HasForeignKey(r=>r.ReferrerUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<AppUser>()
+            .WithMany()
+            .HasForeignKey(r=>r.RefereeUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

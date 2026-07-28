@@ -23,7 +23,7 @@ public class RedeemReferralCodeCommandHandler(
             ?? throw new NotFoundException("User not found.");
 
         if (referee.IsOnboarded)
-            throw new InvalidOperationException("Invite codes can only be redeemed during onboarding.");
+            throw new ForbiddenException("Invite codes can only be redeemed during onboarding.");
 
         var referralCode = await db.ReferralCodes.FirstOrDefaultAsync(r => r.Code == code, ct)
             ?? throw new NotFoundException("Referral code not found.");
