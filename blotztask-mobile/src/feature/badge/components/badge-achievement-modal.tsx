@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { analytics } from "@/shared/services/analytics";
 
 interface BadgeAchievementModalProps {
   badge?: BadgeNotificationDTO;
@@ -37,6 +38,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     rewardSound.seekTo(0);
     rewardSound.play();
+    analytics.trackBadgeUnlocked({ badgeId });
   }, [badgeId, rewardSound]);
 
   if (!badge) return null;
