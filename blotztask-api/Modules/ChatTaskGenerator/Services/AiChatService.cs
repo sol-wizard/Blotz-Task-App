@@ -1,13 +1,14 @@
 using System.Diagnostics;
 using System.ClientModel;
 using Azure.AI.Projects;
-using BlotzTask.Extension;
+using BlotzTask.Extension.Options;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -20,12 +21,12 @@ public interface IAiChatService
 public class AiChatService(
     ILogger<AiChatService> logger,
     AIProjectClient projectClient,
-    AgentFrameworkServiceExtensions.AzureAIOptions options,
+    IOptions<AzureOpenAIOptions> options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
     : IAiChatService
 {
-    private readonly string _deploymentId = options.TaskGenerationDeploymentId;
+    private readonly string _deploymentId = options.Value.AiModels.TaskGeneration.DeploymentId;
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct)
     {

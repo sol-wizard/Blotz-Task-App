@@ -7,6 +7,10 @@ import {
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type LoginConnection,
+  type LoginErrorCode,
+  type LoginFailureReason,
+  type TaskSource,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -38,6 +42,54 @@ export const analytics = {
    */
   trackScreenViewed(screenName: ScreenName) {
     posthog.capture(EVENTS.SCREEN_VIEWED, { screen_name: screenName });
+  },
+
+  /**
+   * Fires the instant a sign-in button is tapped, before the Auth0 browser opens.
+   * This is the denominator the login funnel has never had: without it, an install that
+   * never logs in cannot be told apart from one that tried and failed.
+   * Fires while the user is still anonymous — the client runs `personProfiles: "always"`
+   * so PostHog joins these to the identified person at `$identify`.
+   */
+  trackLoginStarted(params: { connection: LoginConnection }) {
+    posthog.capture(EVENTS.LOGIN_STARTED, { connection: params.connection });
+  },
+
+  /**
+   * Fires once Auth0 returns both an access and a refresh token, before the redirect
+   * into `(protected)`. Deliberately emitted pre-`identify` so the whole login funnel
+   * sits on one anonymous distinct_id.
+   * Note this is not proof the user reached the app — it fires before `refreshAuthState`
+   * and the redirect, so pair it with the screen views to measure that last hop.
+   */
+  trackLoginSucceeded(params: { connection: LoginConnection; durationMs: number }) {
+    posthog.capture(EVENTS.LOGIN_SUCCEEDED, {
+      connection: params.connection,
+      duration_ms: params.durationMs,
+    });
+  },
+
+  /**
+   * Fires on every non-success exit from Auth0 — the three branches that were previously
+   * silent `console.error` calls and left half our installs unexplained.
+   * `reason` separates a deliberate cancel and a dismissed browser from a genuine
+   * failure, so Auth0 reliability can be measured without user exits polluting it.
+   * `duration_ms` is what makes a cancel interpretable: near-zero means a mis-tap or a
+   * browser that failed to open, while tens of seconds means real abandonment at the
+   * Auth0 form — two very different fixes.
+   */
+  trackLoginFailed(params: {
+    connection: LoginConnection;
+    reason: LoginFailureReason;
+    errorCode: LoginErrorCode;
+    durationMs: number;
+  }) {
+    posthog.capture(EVENTS.LOGIN_FAILED, {
+      connection: params.connection,
+      reason: params.reason,
+      error_code: params.errorCode,
+      duration_ms: params.durationMs,
+    });
   },
 
   /**
@@ -118,5 +170,78 @@ export const analytics = {
 
   trackNoteCreated(params: { source: "manual" | "ai" }) {
     posthog.capture(EVENTS.NOTE_CREATED, { source: params.source });
+  },
+
+  /**
+   * Fires when a task is created — the counterpart to the completion events, carrying the same
+   * `task_id` so created → completed can be joined in PostHog. `source` separates manual vs AI
+   * creation. Recurring tasks fire this once per series (`task_id` = `recurringTaskId`), while
+   * `task_completed` fires per occurrence, so filter `is_recurring` when computing a completion
+   * rate. Preset tasks are seeded server-side and never fire this, so they are excluded naturally.
+   */
+  trackTaskCreated(params: {
+    taskId: number;
+    source: TaskSource;
+    isRecurring: boolean;
+    hasDeadline: boolean;
+  }) {
+    posthog.capture(EVENTS.TASK_CREATED, {
+      task_id: params.taskId,
+      source: params.source,
+      is_recurring: params.isRecurring,
+      has_deadline: params.hasDeadline,
+    });
+  },
+
+  /**
+   * Fires when a user marks a task as complete — the core value moment for a to-do app.
+   * Only fires on genuine completion, never when un-completing a task.
+   * Carries `task_id` so creation → completion can be joined in PostHog once task creation
+   * is tracked, enabling completion-rate and "do completers retain better?" analysis.
+   */
+  trackTaskCompleted(params: {
+    taskId: number;
+    isRecurring: boolean;
+    wasOverdue: boolean;
+    hasDeadline: boolean;
+    occurrenceDate?: string;
+  }) {
+    posthog.capture(EVENTS.TASK_COMPLETED, {
+      task_id: params.taskId,
+      is_recurring: params.isRecurring,
+      was_overdue: params.wasOverdue,
+      has_deadline: params.hasDeadline,
+      ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
+    });
+  },
+
+  /**
+   * Fires when a user un-completes a task (checks it back off).
+   * A high reopen rate can hint at accidental completions or unclear task state.
+   */
+  trackTaskReopened(params: { taskId: number }) {
+    posthog.capture(EVENTS.TASK_REOPENED, { task_id: params.taskId });
+  },
+
+  /**
+   * Fires when a user deletes a task. A high delete rate can signal low-quality
+   * AI output or users giving up on stale tasks. Shares `task_id` with the rest
+   * of the task lifecycle. `was_overdue` / `has_deadline` are only available for
+   * normal tasks (recurring deletes don't carry the full task).
+   */
+  trackTaskDeleted(params: {
+    taskId: number;
+    isRecurring: boolean;
+    wasOverdue?: boolean;
+    hasDeadline?: boolean;
+    occurrenceDate?: string;
+  }) {
+    posthog.capture(EVENTS.TASK_DELETED, {
+      task_id: params.taskId,
+      is_recurring: params.isRecurring,
+      ...(params.wasOverdue !== undefined ? { was_overdue: params.wasOverdue } : {}),
+      ...(params.hasDeadline !== undefined ? { has_deadline: params.hasDeadline } : {}),
+      ...(params.occurrenceDate ? { occurrence_date: params.occurrenceDate } : {}),
+    });
   },
 };

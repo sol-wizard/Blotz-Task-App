@@ -7,11 +7,14 @@ import {
 } from "@/shared/services/task-service";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
+import { analytics } from "@/shared/services/analytics";
 
 type CompleteRecurringOccurrenceArgs = {
   recurringTaskId: number;
   occurrenceDate: string;
   wasDone: boolean;
+  wasOverdue: boolean;
+  hasDeadline: boolean;
 };
 
 type MaterializeRecurringOccurrenceArgs = {
@@ -29,6 +32,15 @@ export function useRecurringTaskMutations() {
       saveRecurringOccurrence({ recurringTaskId, occurrenceDate }),
     onSuccess: (_data, variables) => {
       taskFirework.playIfCompleting(variables.wasDone);
+      if (!variables.wasDone) {
+        analytics.trackTaskCompleted({
+          taskId: variables.recurringTaskId,
+          isRecurring: true,
+          wasOverdue: variables.wasOverdue,
+          hasDeadline: variables.hasDeadline,
+          occurrenceDate: variables.occurrenceDate,
+        });
+      }
       invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
     },
   });
