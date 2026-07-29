@@ -7,9 +7,6 @@ import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { AnimatedChevron } from "./chevron";
 import { FormDivider } from "./form-divider";
 
-const PANEL_GAP = 6;
-const SCREEN_EDGE_MARGIN = 8;
-
 export type DropdownOption<T> = {
   label: string;
   value: T;
@@ -88,16 +85,16 @@ export function AnimatedDropdown<T>({
     closeDropdown();
   };
 
+  // 6 is the gap between trigger and panel; 16 mirrors the panel's `py-2` below.
   const anchorTop = anchor?.y ?? 0;
-  const panelTopBelow = anchorTop + (anchor?.h ?? 0) + PANEL_GAP;
-  // + 16 mirrors the panel's `py-2` below
+  const panelTopBelow = anchorTop + (anchor?.h ?? 0) + 6;
   const panelHeight = visibleCount * itemHeight + 16;
 
   // Flip above the trigger when the panel would run past the bottom of the screen.
-  const dropUp = panelTopBelow + panelHeight > windowHeight - SCREEN_EDGE_MARGIN;
+  const dropUp = panelTopBelow + panelHeight > windowHeight - 8;
 
   const panelLeft = anchor?.x ?? 0;
-  const panelTop = dropUp ? anchorTop - PANEL_GAP - panelHeight : panelTopBelow;
+  const panelTop = dropUp ? anchorTop - 6 - panelHeight : panelTopBelow;
   const panelWidth = Math.max(minWidth, anchor?.w ?? minWidth);
 
   return (
