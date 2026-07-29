@@ -3,14 +3,9 @@ import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
 import { reviewKeys } from "@/shared/constants/query-key-factory";
-import {
-  fetchReview,
-  generateReview,
-} from "@/feature/review/services/review-service";
-import {
-  ReviewPeriodType,
-  ReviewReportDTO,
-} from "@/feature/review/models/review-dto";
+import { fetchReview, generateReview } from "@/feature/review/services/review-service";
+import { ReviewPeriodType, ReviewReportDTO } from "@/feature/review/models/review-dto";
+import { analytics } from "@/shared/services/analytics";
 
 // anchorDate: any date inside the period ("YYYY-MM-DD"); the backend snaps it to the
 // canonical start. Callers normalize to the period start so the cache key is stable.
@@ -30,6 +25,7 @@ export function useReview(periodType: ReviewPeriodType, anchorDate: string, enab
     mutationFn: () => generateReview(periodType, anchorDate),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data);
+      analytics.trackReviewGenerated({ period: periodType });
     },
     onError: (error) => {
       const quotaExceeded = isAxiosError(error) && error.response?.status === 429;

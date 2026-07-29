@@ -15,6 +15,10 @@ export const EVENTS = {
   TASK_COMPLETED: "task_completed",
   TASK_REOPENED: "task_reopened",
   TASK_DELETED: "task_deleted",
+  GASHAPON_SPIN: "gashapon_spin",
+  POMODORO_STARTED: "pomodoro_started",
+  BADGE_UNLOCKED: "badge_unlocked",
+  REVIEW_GENERATED: "review_generated",
 } as const;
 
 export const SCREEN_NAMES = {
