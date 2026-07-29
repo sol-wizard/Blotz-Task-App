@@ -59,12 +59,6 @@ export default function BadgeDetailsScreen() {
             <Text className="text-lg font-balooBold text-gray-500 text-center leading-8 mb-7">
               {badgeDetail.description}
             </Text>
-
-            <View className="bg-lime-100 rounded-full px-5 py-2 mb-6">
-              <Text className="text-base font-balooBold text-secondary text-center">
-                {t("details.category", { category: badgeDetail.category })}
-              </Text>
-            </View>
           </View>
 
           <View className="mt-8 flex-row items-center justify-center gap-4">
