@@ -125,11 +125,6 @@
     "title": "邀请好友",
     "myCodeLabel": "你的邀请码",
     "myCodeHint": "将此邀请码分享给好友，邀请他们加入 Blotz。",
-    "copied": "已复制到剪贴板",
-    "errors": {
-      "notFound": "邀请码不存在。",
-      "invalid": "不能使用自己的邀请码。",
-      "alreadyRedeemed": "你已经兑换过邀请码了。"
-    }
+    "copied": "已复制到剪贴板"
   }
 }

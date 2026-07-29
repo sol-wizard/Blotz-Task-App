@@ -3,6 +3,8 @@ import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingInviteSection } from "@/feature/onboarding/components/onboarding-invite-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
+import { REDEEM_REFERRAL_CODE_MUTATION_KEY } from "@/feature/referral/hooks/useRedeemReferralCode";
+import { useIsMutating } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState, useRef } from "react";
 import {
@@ -26,6 +28,9 @@ export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
   const { t } = useTranslation("onboarding");
   useLanguageInit();
+
+  const isRedeemingReferralCode =
+    useIsMutating({ mutationKey: REDEEM_REFERRAL_CODE_MUTATION_KEY }) > 0;
 
   const sections = ["ai-voice", "note", "breakdown", "invite"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
@@ -74,7 +79,7 @@ export default function OnboardingScreen() {
           </View>
         </GradientColor>
         <View className="flex-1 items-end">
-          <Pressable onPress={handleFinish} hitSlop={10}>
+          <Pressable onPress={handleFinish} hitSlop={10} disabled={isRedeemingReferralCode}>
             <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
           </Pressable>
         </View>
@@ -115,7 +120,13 @@ export default function OnboardingScreen() {
             );
           })}
         </View>
-        <Pressable onPress={handleNext} className="w-[46%] h-[48px] bg-[#8BCC5A] rounded-full py-4">
+        <Pressable
+          onPress={handleNext}
+          disabled={isRedeemingReferralCode}
+          className={`w-[46%] h-[48px] rounded-full py-4 ${
+            isRedeemingReferralCode ? "bg-gray-200" : "bg-[#8BCC5A]"
+          }`}
+        >
           <Text className="text-white text-lg font-baloo text-center">
             {activeOnboardingIndex === sections.length - 1 ? t("actions.start") : t("actions.continue")}
           </Text>

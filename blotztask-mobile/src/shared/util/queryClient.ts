@@ -7,10 +7,7 @@ import i18n from "@/i18n";
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      if (
-        isAxiosError(error) &&
-        (error.response?.status === 401 || error.response?.status === 403)
-      ) {
+      if (isAxiosError(error) && error.response?.status === 401) {
         return;
       }
       if (query.meta?.silent) return;
@@ -28,10 +25,7 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
-      if (
-        isAxiosError(error) &&
-        (error.response?.status === 401 || error.response?.status === 403)
-      ) {
+      if (isAxiosError(error) && error.response?.status === 401) {
         return;
       }
       if (mutation.meta?.silent) return;

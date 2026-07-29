@@ -7,17 +7,17 @@ import { useTranslation } from "react-i18next";
 import * as Clipboard from "expo-clipboard";
 import { ReturnButton } from "@/shared/components/return-button";
 import LoadingScreen from "@/shared/components/loading-screen";
-import { useMyInviteCode } from "@/feature/invite/hooks/useMyInviteCode";
+import { useMyReferralCode } from "@/feature/referral/hooks/useMyReferralCode";
 
 export default function SettingsInviteScreen() {
   const { t } = useTranslation("settings");
-  const { inviteCode, isLoading } = useMyInviteCode();
+  const { referralCode, isLoading } = useMyReferralCode();
 
   if (isLoading) return <LoadingScreen />;
 
   const handleCopy = async () => {
-    if (!inviteCode) return;
-    await Clipboard.setStringAsync(inviteCode);
+    if (!referralCode) return;
+    await Clipboard.setStringAsync(referralCode);
     Toast.show({ type: "success", text1: t("invite.copied") });
   };
 
@@ -32,7 +32,7 @@ export default function SettingsInviteScreen() {
         <Text className="text-sm font-baloo text-gray-500 mb-2 px-1">{t("invite.myCodeLabel")}</Text>
         <View className="bg-white rounded-2xl px-5 py-4 flex-row items-center justify-between">
           <Text className="text-2xl font-balooExtraBold text-secondary tracking-widest">
-            {inviteCode ?? "—"}
+            {referralCode ?? "—"}
           </Text>
           <Pressable onPress={handleCopy} hitSlop={8}>
             <MaterialCommunityIcons name="content-copy" size={22} color="#444964" />

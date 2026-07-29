@@ -3,18 +3,18 @@ import { View, Text, TextInput, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
-import { useRedeemInviteCode } from "@/feature/invite/hooks/useRedeemInviteCode";
+import { useRedeemReferralCode } from "@/feature/referral/hooks/useRedeemReferralCode";
 
 export function OnboardingInviteSection() {
   const { t } = useTranslation("onboarding");
   const [code, setCode] = useState("");
   const [redeemed, setRedeemed] = useState(false);
-  const { redeemInviteCode, isRedeeming } = useRedeemInviteCode();
+  const { redeemReferralCode, isRedeeming } = useRedeemReferralCode();
 
   const handleRedeem = () => {
     const trimmed = code.trim();
     if (!trimmed) return;
-    redeemInviteCode(trimmed, {
+    redeemReferralCode(trimmed, {
       onSuccess: () => {
         setRedeemed(true);
         Toast.show({ type: "success", text1: t("invite.redeemSuccess") });
