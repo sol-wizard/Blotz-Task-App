@@ -10,11 +10,11 @@ public class EnsureReferralCodeHandler(
     ReferralCodeGenerator generator,
     ILogger<EnsureReferralCodeHandler> logger)
 {
-    public async Task HandleAsync(Guid userId, CancellationToken ct = default)
+    public async Task<ReferralCode> HandleAsync(Guid userId, CancellationToken ct = default)
     {
         var referralCode = await db.ReferralCodes.FirstOrDefaultAsync(r => r.OwnerUserId == userId, ct);
 
-        if (referralCode is not null && referralCode.Code is not null) return;
+        if (referralCode is not null && referralCode.Code is not null) return referralCode;
 
         if (referralCode is null)
         {
@@ -31,5 +31,7 @@ public class EnsureReferralCodeHandler(
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Generated referral code for user {UserId}", userId);
+
+        return referralCode;
     }
 }
