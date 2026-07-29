@@ -1,12 +1,18 @@
-import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { ASSETS } from "@/shared/constants/assets";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
 
+interface BadgeShareCardBadge {
+  name: string;
+  description: string;
+  iconUrl: string;
+  obtainedAt?: Date;
+}
+
 interface BadgeShareCardProps {
-  badge: BadgeNotificationDTO;
+  badge: BadgeShareCardBadge;
 }
 
 function ShareCardBackground() {
@@ -49,9 +55,7 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
             {t("shareCardHeadline")}
           </Text>
 
-          <Text
-            className="mt-4 w-full text-secondary text-[25px] font-balooBold text-center leading-9"
-          >
+          <Text className="mt-4 w-full text-secondary text-[25px] font-balooBold text-center leading-9">
             {badge.name}
           </Text>
 
@@ -59,11 +63,13 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
             {badge.description}
           </Text>
 
-          <Text className="mt-4 scale-110 text-secondary/40 text-sm font-baloo text-center">
-            {t("obtainedOn", {
-              date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
-            })}
-          </Text>
+          {badge.obtainedAt ? (
+            <Text className="mt-4 scale-110 text-secondary/40 text-sm font-baloo text-center">
+              {t("obtainedOn", {
+                date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
+              })}
+            </Text>
+          ) : null}
         </View>
 
         <View
