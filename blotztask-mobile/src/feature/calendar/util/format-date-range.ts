@@ -17,5 +17,10 @@ export const formatDateRange = ({
     if (isSameDay(singleDate, selectedDate)) return "";
     return format(singleDate, formatToken);
   }
-  return `${format(new Date(startTime), formatToken)} - ${format(new Date(endTime), formatToken)}`;
+
+  const startDate = new Date(startTime);
+  const endDate = new Date(endTime);
+  if (isSameDay(startDate, endDate)) return format(startDate, formatToken);
+
+  return `${format(startDate, formatToken)} - ${format(endDate, formatToken)}`;
 };
