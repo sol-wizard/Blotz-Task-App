@@ -43,7 +43,7 @@ export function SegmentToggle({ value, setValue }: Props) {
     >
       <Animated.View
         className="absolute bg-white rounded-xl h-10 shadow-sm shadow-gray-400"
-        style={[tabAnimatedStyle, { width: tabWidth }]}
+        style={[tabAnimatedStyle, { width: tabWidth, left: 4 }]}
       />
       <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-2 rounded-xl `}
