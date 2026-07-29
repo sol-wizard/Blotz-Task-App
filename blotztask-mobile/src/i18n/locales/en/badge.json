@@ -12,7 +12,6 @@
     "title": "Badge Wall"
   },
   "details": {
-    "category": "Category: {{category}}",
     "equipReward": "Equip reward",
     "notFound": "Badge not found"
   }

@@ -12,7 +12,6 @@
     "title": "徽章墙"
   },
   "details": {
-    "category": "类别：{{category}}",
     "equipReward": "装备奖励",
     "notFound": "未找到徽章"
   }
