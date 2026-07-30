@@ -1,4 +1,3 @@
-import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { ASSETS } from "@/shared/constants/assets";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { forwardRef } from "react";
@@ -6,7 +5,12 @@ import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
 
 interface BadgeShareCardProps {
-  badge: BadgeNotificationDTO;
+  badge: {
+    name: string;
+    description: string;
+    iconUrl: string;
+    obtainedAt: Date;
+  };
 }
 
 function ShareCardBackground() {
@@ -49,9 +53,7 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
             {t("shareCardHeadline")}
           </Text>
 
-          <Text
-            className="mt-4 w-full text-secondary text-[25px] font-balooBold text-center leading-9"
-          >
+          <Text className="mt-4 w-full text-secondary text-[25px] font-balooBold text-center leading-9">
             {badge.name}
           </Text>
 
