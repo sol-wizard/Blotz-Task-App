@@ -3,4 +3,5 @@ export interface BadgeDetailDTO {
   name: string;
   iconUrl: string;
   description: string;
+  obtainedAt: string;
 }

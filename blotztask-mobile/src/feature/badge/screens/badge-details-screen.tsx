@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useBadgeDetailQuery } from "../hooks/useBadgeDetailQuery";
 import { BadgeShareCard } from "@/feature/badge/components/badge-share-card";
 import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
+import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { useRef } from "react";
 
 export default function BadgeDetailsScreen() {
@@ -68,6 +69,12 @@ export default function BadgeDetailsScreen() {
               <Text className="text-lg font-balooBold text-gray-500 text-center leading-8 mb-7">
                 {badgeDetail.description}
               </Text>
+
+              <Text className="text-base font-baloo text-gray-400 text-center">
+                {t("obtainedOn", {
+                  date: formatLocalizedDate(new Date(badgeDetail.obtainedAt), "fullMonthDayYear"),
+                })}
+              </Text>
             </View>
 
             <View className="mt-8 flex-row items-center justify-center gap-4">
@@ -97,7 +104,10 @@ export default function BadgeDetailsScreen() {
               Blotz task
             </Text>
           </ScrollView>
-          <BadgeShareCard ref={shareCardRef} badge={badgeDetail} />
+          <BadgeShareCard
+            ref={shareCardRef}
+            badge={{ ...badgeDetail, obtainedAt: new Date(badgeDetail.obtainedAt) }}
+          />
         </>
       )}
     </SafeAreaView>

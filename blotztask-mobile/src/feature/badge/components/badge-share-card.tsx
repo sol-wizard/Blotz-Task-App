@@ -4,15 +4,13 @@ import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
 
-interface BadgeShareCardBadge {
-  name: string;
-  description: string;
-  iconUrl: string;
-  obtainedAt?: Date;
-}
-
 interface BadgeShareCardProps {
-  badge: BadgeShareCardBadge;
+  badge: {
+    name: string;
+    description: string;
+    iconUrl: string;
+    obtainedAt: Date;
+  };
 }
 
 function ShareCardBackground() {
@@ -63,13 +61,11 @@ export const BadgeShareCard = forwardRef<View, BadgeShareCardProps>(function Bad
             {badge.description}
           </Text>
 
-          {badge.obtainedAt ? (
-            <Text className="mt-4 scale-110 text-secondary/40 text-sm font-baloo text-center">
-              {t("obtainedOn", {
-                date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
-              })}
-            </Text>
-          ) : null}
+          <Text className="mt-4 scale-110 text-secondary/40 text-sm font-baloo text-center">
+            {t("obtainedOn", {
+              date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
+            })}
+          </Text>
         </View>
 
         <View
