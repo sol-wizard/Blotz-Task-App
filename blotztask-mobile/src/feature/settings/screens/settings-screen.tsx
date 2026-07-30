@@ -10,11 +10,13 @@ import { UserAvatar } from "@/shared/components/user-avatar";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { BadgePreviewSection } from "@/feature/settings/components/badge-preview-section";
 import { useTranslation } from "react-i18next";
+import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const { t } = useTranslation("settings");
+  const { badges } = useBadgesQuery();
 
   const menuItems: SettingsMenuItem[] = [
     {
@@ -88,7 +90,7 @@ export default function SettingsScreen() {
         <Text className="text-2xl font-balooBold text-secondary mt-5">
           {userProfile?.displayName}
         </Text>
-        <BadgePreviewSection />
+        {badges.length > 0 && <BadgePreviewSection badges={badges} />}
         <View className="bg-white w-full pl-4 rounded-2xl mt-4">
           {menuItems.map((item, index) => (
             <View key={item.key} className="w-11/12">
