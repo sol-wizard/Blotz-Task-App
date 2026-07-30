@@ -33,10 +33,19 @@ export default function BadgeWallScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#E7F7D7]">
-      <View className="flex-row items-center px-5 py-4">
-        <ReturnButton className="mr-4" />
-        <Text className="text-2xl font-balooBold text-secondary">{t("wall.title")}</Text>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="px-5 py-4">
+        <View className="flex-row items-center">
+          <ReturnButton className="mr-4" />
+
+          <Text className="text-2xl font-balooBold text-secondary">
+            {t("wall.title")}
+          </Text>
+        </View>
+
+        <Text className="self-end mt-1 text-sm text-gray-500">
+          {t("wall.earnedCount", { count: badges.length })}
+        </Text>
       </View>
 
       <FlatList

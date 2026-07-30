@@ -9,7 +9,8 @@
     "title": "Achievement"
   },
   "wall": {
-    "title": "Badge Wall"
+    "title": "Badge Wall",
+    "earnedCount": "{{count}} badges earned"
   },
   "details": {
     "equipReward": "Equip reward",
