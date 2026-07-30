@@ -13,7 +13,6 @@
     "earnedCount": "已获得 {{count}} 个徽章"
   },
   "details": {
-    "category": "类别：{{category}}",
     "equipReward": "装备奖励",
     "notFound": "未找到徽章"
   }

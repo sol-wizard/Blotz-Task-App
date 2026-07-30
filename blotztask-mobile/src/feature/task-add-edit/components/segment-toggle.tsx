@@ -14,8 +14,10 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
-  const tabPositionX = useSharedValue(value === SegmentButtonValue.Reminder ? 0 : 224 / 2);
-  const [containerWidth, setContainerWidth] = React.useState(224);
+  // 200 and 4 mirror `max-w-[200px]` and `p-1` on the container below — change both together.
+  const [containerWidth, setContainerWidth] = React.useState(200);
+  const tabWidth = (containerWidth - 4 * 2) / 2;
+  const tabPositionX = useSharedValue(value === SegmentButtonValue.Reminder ? 0 : tabWidth);
   const isInitialMount = React.useRef(true);
   React.useEffect(() => {
     if (containerWidth > 0) {
@@ -25,7 +27,6 @@ export function SegmentToggle({ value, setValue }: Props) {
   }, [value, containerWidth]);
 
   const onTabMovingAnimation = (index: number, animate: boolean = true) => {
-    const tabWidth = containerWidth / 2;
     const target = tabWidth * index;
     tabPositionX.value = animate ? withTiming(target, { duration: 200 }) : target;
   };
@@ -36,22 +37,23 @@ export function SegmentToggle({ value, setValue }: Props) {
 
   return (
     <Animated.View
-      className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56 items-center"
+      className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-full max-w-[200px] items-center"
       layout={MotionAnimations.layout}
       onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
-        className="absolute bg-white rounded-xl w-28 h-10 shadow-sm shadow-gray-400"
-        style={tabAnimatedStyle}
+        className="absolute bg-white rounded-xl h-10 shadow-sm shadow-gray-400"
+        style={[tabAnimatedStyle, { width: tabWidth, left: 4 }]}
       />
       <AnimatedPressable
-        className={`flex-1 justify-center items-center py-2 px-3 rounded-xl `}
+        className={`flex-1 justify-center items-center py-2 px-2 rounded-xl `}
         onPress={() => {
           setValue(SegmentButtonValue.Reminder);
           onTabMovingAnimation(0);
         }}
       >
         <Text
+          numberOfLines={1}
           className={`text-[15px] font-semibold ${
             value === SegmentButtonValue.Reminder ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
@@ -62,13 +64,14 @@ export function SegmentToggle({ value, setValue }: Props) {
 
       {/* Event tab */}
       <AnimatedPressable
-        className={`flex-1 justify-center items-center py-2 px-3 rounded-xl`}
+        className={`flex-1 justify-center items-center py-2 px-2 rounded-xl`}
         onPress={() => {
           setValue(SegmentButtonValue.Event);
           onTabMovingAnimation(1);
         }}
       >
         <Text
+          numberOfLines={1}
           className={`text-[15px] font-semibold ${
             value === SegmentButtonValue.Event ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
