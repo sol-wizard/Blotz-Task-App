@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What's New — Intro Card Design</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #e8e8e8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    gap: 32px;
+    padding: 40px 20px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .lang-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 2px solid #8BCC5A;
+    background: white;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .lang-btn.active {
+    background: #8BCC5A;
+    color: white;
+  }
+
+  /* Side by side layout */
+  .phones-row {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .phone-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .variant-label {
+    font-size: 12px;
+    color: #aaa;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 375px;
+    height: 780px;
+    border-radius: 48px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #f7f7f7;
+  }
+
+  /* Dot grid background — recreates the onboarding-breakdown-background style */
+  .phone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, #ccc 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Notch */
+  .notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 34px;
+    background: #111;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+  }
+
+  /* Safe area top */
+  .safe-top { height: 56px; flex-shrink: 0; position: relative; z-index: 1; }
+
+  /* Header */
+  .header {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .header-side { flex: 1; }
+  .header-skip {
+    font-size: 17px;
+    color: rgba(0,0,0,0.30);
+    font-weight: 400;
+  }
+
+  /* Gradient Blotz text */
+  .blotz-text {
+    font-size: 30px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #A3DC2F 19%, #57C785 50%, #2F80ED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  /* Card content */
+  .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 32px 0;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  /* ── Firework particles ── */
+  .fw {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Burst animation: radiate outward and fade */
+  @keyframes burst {
+    0%   { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
+  }
+
+  /* Gentle float animation for small drifting pieces */
+  @keyframes drift {
+    0%   { transform: translateY(0) rotate(0deg);   opacity: 0.7; }
+    50%  { opacity: 0.9; }
+    100% { transform: translateY(var(--fall)) rotate(var(--spin)); opacity: 0; }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50%       { opacity: 1;   transform: scale(1.2); }
+  }
+
+  /* Star sparkles around mascot */
+  .sparkle {
+    position: absolute;
+    font-size: 14px;
+    animation: twinkle var(--dur, 1.6s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* ── App-style bun mascot ── */
+  .mascot-wrap {
+    position: relative;
+    margin-bottom: 28px;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Soft glow blob behind bun */
+  .bun-glow {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 40%,
+      rgba(139,204,90,0.22) 0%,
+      rgba(87,199,133,0.10) 50%,
+      transparent 75%);
+    filter: blur(8px);
+  }
+
+  /* The bun body SVG */
+  svg.bun-svg {
+    width: 130px;
+    height: 130px;
+    position: relative;
+    z-index: 1;
+    /* Gentle bob animation */
+    animation: bob 3s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+  }
+
+  .headline {
+    font-size: 26px;
+    font-weight: 800;
+    color: #111;
+    text-align: center;
+    line-height: 1.25;
+    margin-bottom: 14px;
+    letter-spacing: -0.3px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .body-text {
+    font-size: 16px;
+    color: rgba(0,0,0,0.42);
+    text-align: center;
+    line-height: 1.6;
+    max-width: 260px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Bottom bar */
+  .bottom {
+    padding: 0 24px 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .dot {
+    height: 8px;
+    border-radius: 4px;
+    background: #D1D5DB;
+    transition: all 0.2s;
+  }
+  .dot.active {
+    width: 20px;
+    background: #333;
+  }
+  .dot:not(.active) { width: 8px; }
+
+  .continue-btn {
+    width: 52%;
+    height: 50px;
+    background: linear-gradient(135deg, #8BCC5A 0%, #57C785 100%);
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(139,204,90,0.38);
+  }
+  .continue-btn span {
+    color: white;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+  <button class="lang-btn" onclick="setLang('en')">English</button>
+</div>
+
+<div class="phones-row" id="phones-row">
+
+  <!-- Option A — 活泼直接 -->
+  <div class="phone-col">
+    <div class="variant-label">Option A — 活泼直接</div>
+    <div class="phone" id="phone-a">
+      <div class="notch"></div>
+      <div class="safe-top"></div>
+      <div class="header">
+        <div class="header-side"></div>
+        <span class="blotz-text">Blotz</span>
+        <div class="header-side" style="text-align:right">
+          <span class="header-skip" id="skip-a">跳过</span>
+        </div>
+      </div>
+
+      <div class="card" id="card-a">
+
+        <!-- Sparkle stars around mascot area -->
+        <div class="sparkle" style="top:12%;left:15%;--dur:1.8s;--delay:0s">✦</div>
+        <div class="sparkle" style="top:16%;right:13%;--dur:2.1s;--delay:0.4s;font-size:10px;color:#2F80ED">✦</div>
+        <div class="sparkle" style="top:38%;left:9%;--dur:1.5s;--delay:0.8s;font-size:11px;color:#8BCC5A">✦</div>
+        <div class="sparkle" style="top:42%;right:8%;--dur:2.4s;--delay:0.2s;font-size:9px;color:#F4C430">✦</div>
+
+        <div class="mascot-wrap">
+          <div class="bun-glow"></div>
+
+          <!-- avatar2 -->
+          <svg class="bun-svg" viewBox="0 0 66 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="33" cy="33" r="33" fill="#B4CFCE"/>
+            <path d="M41.1797 16C43.872 16.0001 46.0546 18.1833 46.0547 20.876C46.0547 22.5163 46.1907 24.3737 47.2627 25.6152C50.2142 29.0329 52 33.487 52 38.3574C51.9997 49.1279 43.2692 50.0107 32.5 50.0107C21.7308 50.0107 13.0003 49.1279 13 38.3574C13.0001 27.5865 21.7306 18.8546 32.5 18.8545C34.8428 18.8544 37.1371 17.2823 39.2979 16.377C39.8768 16.1344 40.5127 16 41.1797 16ZM30 32.9609L34.96 39.2373L36.1367 38.3066L36.5293 37.9971L32.8096 33.2891L36.3398 30.499L36.7324 30.1895L37.5166 29.5693L36.2764 28L30 32.9609ZM21.3887 27.0137C20.2367 26.9506 19.1637 29.4215 18.9922 32.5322C18.8207 35.643 19.6156 38.2163 20.7676 38.2803C20.7779 38.2808 20.7885 38.2791 20.7988 38.2793C20.8902 38.3304 20.9833 38.3583 21.0791 38.3584C21.4757 38.3581 21.8381 37.9011 22.124 37.1396C22.6644 36.1348 23.0651 34.5558 23.1641 32.7627C23.3356 29.6517 22.5408 27.0772 21.3887 27.0137Z" fill="white"/>
+          </svg>
+        </div>
+
+        <h1 class="headline" id="headline-a">这次不只是修了 bug</h1>
+        <p class="body-text" id="body-a">往右滑看看<br>我们给你带来了什么新东西</p>
+      </div>
+
+      <div class="bottom">
+        <div class="dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="continue-btn"><span id="continue-a">看看 →</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B — 俏皮神秘 -->
+  <div class="phone-col">
+    <div class="variant-label">Option B — 俏皮神秘</div>
+    <div class="phone" id="phone-b">
+      <div class="notch"></div>
+      <div class="safe-top"></div>
+      <div class="header">
+        <div class="header-side"></div>
+        <span class="blotz-text">Blotz</span>
+        <div class="header-side" style="text-align:right">
+          <span class="header-skip" id="skip-b">跳过</span>
+        </div>
+      </div>
+
+      <div class="card" id="card-b">
+
+        <div class="sparkle" style="top:10%;left:18%;--dur:2.0s;--delay:0.3s;color:#8BCC5A">✦</div>
+        <div class="sparkle" style="top:20%;right:16%;--dur:1.7s;--delay:0s;font-size:10px;color:#F4C430">✦</div>
+        <div class="sparkle" style="top:40%;left:10%;--dur:2.3s;--delay:1s;font-size:9px;color:#2F80ED">✦</div>
+        <div class="sparkle" style="top:35%;right:9%;--dur:1.9s;--delay:0.6s;font-size:12px;color:#57C785">✦</div>
+
+        <div class="mascot-wrap">
+          <!-- Blue-tinted glow for Option B -->
+          <div class="bun-glow" style="background: radial-gradient(ellipse at 40% 40%, rgba(47,128,237,0.18) 0%, rgba(87,199,133,0.08) 50%, transparent 75%);"></div>
+
+          <!-- avatar2 -->
+          <svg class="bun-svg" viewBox="0 0 66 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="33" cy="33" r="33" fill="#B4CFCE"/>
+            <path d="M41.1797 16C43.872 16.0001 46.0546 18.1833 46.0547 20.876C46.0547 22.5163 46.1907 24.3737 47.2627 25.6152C50.2142 29.0329 52 33.487 52 38.3574C51.9997 49.1279 43.2692 50.0107 32.5 50.0107C21.7308 50.0107 13.0003 49.1279 13 38.3574C13.0001 27.5865 21.7306 18.8546 32.5 18.8545C34.8428 18.8544 37.1371 17.2823 39.2979 16.377C39.8768 16.1344 40.5127 16 41.1797 16ZM30 32.9609L34.96 39.2373L36.1367 38.3066L36.5293 37.9971L32.8096 33.2891L36.3398 30.499L36.7324 30.1895L37.5166 29.5693L36.2764 28L30 32.9609ZM21.3887 27.0137C20.2367 26.9506 19.1637 29.4215 18.9922 32.5322C18.8207 35.643 19.6156 38.2163 20.7676 38.2803C20.7779 38.2808 20.7885 38.2791 20.7988 38.2793C20.8902 38.3304 20.9833 38.3583 21.0791 38.3584C21.4757 38.3581 21.8381 37.9011 22.124 37.1396C22.6644 36.1348 23.0651 34.5558 23.1641 32.7627C23.3356 29.6517 22.5408 27.0772 21.3887 27.0137Z" fill="white"/>
+          </svg>
+        </div>
+
+        <h1 class="headline" id="headline-b">猜猜我们又做了什么</h1>
+        <p class="body-text" id="body-b">右滑自己去发现吧～</p>
+      </div>
+
+      <div class="bottom">
+        <div class="dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="continue-btn"><span id="continue-b">去发现 →</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Language copy ──
+const copy = {
+  zh: {
+    skip: '跳过',
+    'headline-a': '这次不只是修了 bug',
+    'body-a': '往右滑看看\n我们给你带来了什么新东西',
+    'continue-a': '看看 →',
+    'headline-b': '猜猜我们又做了什么',
+    'body-b': '右滑自己去发现吧～',
+    'continue-b': '去发现 →',
+  },
+  en: {
+    skip: 'Skip',
+    'headline-a': "We didn't just fix bugs.",
+    'body-a': "Swipe to see what's new.",
+    'continue-a': 'Show me →',
+    'headline-b': "Guess what we've been up to.",
+    'body-b': 'Swipe to find out～',
+    'continue-b': 'Find out →',
+  }
+};
+
+function setLang(lang) {
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.includes(lang === 'zh' ? '中' : 'En'))
+  );
+  const c = copy[lang];
+  ['a','b'].forEach(v => {
+    document.getElementById('skip-' + v).textContent = c.skip;
+    document.getElementById('headline-' + v).textContent = c['headline-' + v];
+    document.getElementById('body-' + v).innerHTML = c['body-' + v].replace('\n', '<br>');
+    document.getElementById('continue-' + v).textContent = c['continue-' + v];
+  });
+}
+
+// ── Firework particle bursts ──
+// Inject animated particles into each card
+const COLORS = ['#8BCC5A','#57C785','#2F80ED','#F4C430','#FF8FAB','#5BC8F5','#FF6B6B'];
+
+function randomBetween(a, b) {
+  return a + Math.random() * (b - a);
+}
+
+function launchBurst(card) {
+  const count = 10 + Math.floor(Math.random() * 8);
+  const originX = randomBetween(20, 80); // % from left
+  const originY = randomBetween(15, 55); // % from top
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.classList.add('fw');
+
+    const size = randomBetween(4, 10);
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    const angle = (i / count) * 360 + randomBetween(-15, 15);
+    const distance = randomBetween(30, 80);
+    const rad = angle * Math.PI / 180;
+    const dx = Math.cos(rad) * distance;
+    const dy = Math.sin(rad) * distance;
+    const dur = randomBetween(0.55, 0.95);
+    const isRect = Math.random() > 0.5;
+
+    el.style.cssText = `
+      width: ${size}px;
+      height: ${isRect ? size * 0.5 : size}px;
+      background: ${color};
+      border-radius: ${isRect ? '2px' : '50%'};
+      left: ${originX}%;
+      top: ${originY}%;
+      --dx: ${dx}px;
+      --dy: ${dy}px;
+      animation: burst ${dur}s ease-out forwards;
+      transform: rotate(${randomBetween(0,360)}deg);
+      position: absolute;
+      pointer-events: none;
+    `;
+    card.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 50);
+  }
+}
+
+function scheduleBursts(card) {
+  // Fire 2-3 bursts on load, then repeat
+  let delay = 300;
+  const initialCount = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < initialCount; i++) {
+    setTimeout(() => launchBurst(card), delay);
+    delay += randomBetween(400, 700);
+  }
+  // Repeat every 2.5–4s
+  setInterval(() => {
+    const bursts = 1 + Math.floor(Math.random() * 2);
+    let d = 0;
+    for (let i = 0; i < bursts; i++) {
+      setTimeout(() => launchBurst(card), d);
+      d += randomBetween(300, 600);
+    }
+  }, randomBetween(2500, 4000));
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  scheduleBursts(document.getElementById('card-a'));
+  setTimeout(() => scheduleBursts(document.getElementById('card-b')), 700);
+});
+</script>
+</body>
+</html>
