@@ -77,7 +77,9 @@ export default function BadgeDetailsScreen() {
               </Text>
             </View>
 
-            <View className="mt-8 flex-row items-center justify-center gap-4">
+            <View className="mt-8 flex-row items-center justify-center">
+              {/* TODO: restore this once equipping a reward is implemented — it was
+                  a console.log placeholder with no behaviour behind it.
               <Pressable
                 className="h-14 min-w-36 rounded-full border border-highlight bg-white/60 px-5 items-center justify-center"
                 onPress={() => console.log("Equip reward", badgeDetail.id)}
@@ -86,6 +88,7 @@ export default function BadgeDetailsScreen() {
                   {t("details.equipReward")}
                 </Text>
               </Pressable>
+              */}
 
               <Pressable
                 className={`h-14 min-w-36 rounded-full bg-highlight px-5 items-center justify-center shadow-lg shadow-lime-300 ${
