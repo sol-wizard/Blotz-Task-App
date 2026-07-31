@@ -3,8 +3,10 @@ import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingInviteSection } from "@/feature/onboarding/components/onboarding-invite-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
+import { REDEEM_REFERRAL_CODE_MUTATION_KEY } from "@/feature/referral/hooks/useRedeemReferralCode";
 import { useWhatsNewSeen } from "@/feature/whats-new/hooks/useWhatsNewSeen";
 import { IntroCarousel } from "@/shared/components/intro-carousel";
+import { useIsMutating } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
@@ -17,6 +19,9 @@ export default function OnboardingScreen() {
   const { markAsSeen } = useWhatsNewSeen();
   const { t } = useTranslation("onboarding");
   useLanguageInit();
+
+  const isRedeemingReferralCode =
+    useIsMutating({ mutationKey: REDEEM_REFERRAL_CODE_MUTATION_KEY }) > 0;
 
   const handleFinish = async () => {
     await setUserOnboarded(true);
@@ -41,6 +46,7 @@ export default function OnboardingScreen() {
       skipLabel={t("actions.skip")}
       dotContainerClassName="mb-16 mt-[-90]"
       activeDotClassName="w-2 bg-black"
+      disableActions={isRedeemingReferralCode}
     />
   );
 }
