@@ -1,12 +1,15 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
+import { useQueryClient } from "@tanstack/react-query";
 import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
 import { useRouter } from "expo-router";
 import { toggleTaskCompletion } from "../services/task-service";
+import { badgeKeys } from "../constants/query-key-factory";
 
 export function usePushNotificationSetup() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [badgeQueue, setBadgeQueue] = useState<BadgeNotificationDTO[]>([]);
 
   useEffect(() => {
@@ -28,6 +31,8 @@ export function usePushNotificationSetup() {
           obtainedAt: earnedAtUtc ? new Date(earnedAtUtc) : new Date(),
         },
       ]);
+
+      queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     });
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(

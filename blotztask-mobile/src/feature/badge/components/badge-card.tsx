@@ -1,9 +1,9 @@
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
-import { BadgeDTO } from "../models/badge-preview-dto";
+import { BadgePreviewDTO } from "../models/badge-preview-dto";
 
 interface BadgeCardProps {
-  badge: BadgeDTO;
+  badge: BadgePreviewDTO;
   // When true, the icon sits directly on the page background (no tile).
   transparent?: boolean;
 }
