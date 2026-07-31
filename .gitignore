@@ -19,4 +19,4 @@ package-lock.json
 infra/main.json
 infra/*.ps1
 # What's New preview artifact (generated per release, not for commit)
-.claude/skills/generate-whatsnew/blotz-whatsnew.html
+.claude/skills/generate-whatsnew/blotz-whatsnew*.html

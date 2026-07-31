@@ -45,7 +45,7 @@ function SparkleStar({ source, top, left, right, delay, size = 20 }: SparkleStar
         false
       )
     );
-  }, []);
+  }, [delay]);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
