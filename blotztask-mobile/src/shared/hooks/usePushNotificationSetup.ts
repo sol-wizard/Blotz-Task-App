@@ -21,16 +21,17 @@ export function usePushNotificationSetup() {
 
       const earnedAtUtc = typeof data.earnedAtUtc === "string" ? data.earnedAtUtc : undefined;
 
-      setBadgeQueue((prev) => [
-        ...prev,
-        {
-          badgeId: Number(data.badgeId),
-          name: notification.request.content.body ?? "",
-          description: typeof data.description === "string" ? data.description : "",
-          iconUrl: typeof data.iconUrl === "string" ? data.iconUrl : "",
-          obtainedAt: earnedAtUtc ? new Date(earnedAtUtc) : new Date(),
-        },
-      ]);
+      const badge: BadgeNotificationDTO = {
+        badgeId: Number(data.badgeId),
+        name: notification.request.content.body ?? "",
+        description: typeof data.description === "string" ? data.description : "",
+        iconUrl: typeof data.iconUrl === "string" ? data.iconUrl : "",
+        obtainedAt: earnedAtUtc ? new Date(earnedAtUtc) : new Date(),
+      };
+
+      setBadgeQueue((prev) =>
+        prev.some((queued) => queued.badgeId === badge.badgeId) ? prev : [...prev, badge],
+      );
 
       queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     });
