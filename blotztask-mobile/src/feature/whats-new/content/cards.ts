@@ -35,6 +35,18 @@ export const WHATS_NEW_CARDS: WhatsNewCard[] = [
     bodyKey: "persistent-note.body",
   },
   {
+    type: "screenshot",
+    image: require("../../../../assets/images-png/whatsnew/whatsnew-widget.png"),
+    titleKey: "widget.title",
+    bodyKey: "widget.body",
+  },
+  {
+    type: "screenshot",
+    image: require("../../../../assets/images-png/whatsnew/whatsnew-firework.png"),
+    titleKey: "firework.title",
+    bodyKey: "firework.body",
+  },
+  {
     type: "avatar",
     Avatar: Avatar2,
     titleKey: "time-picker.title",

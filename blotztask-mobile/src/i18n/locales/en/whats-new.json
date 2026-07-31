@@ -19,5 +19,13 @@
   "recurring-subtasks": {
     "title": "Break Down Repeating Tasks",
     "body": "From any recurring task's detail page, ask the AI to split it into subtasks — even for just that one instance."
+  },
+  "widget": {
+    "title": "Your Tasks on Your Home Screen",
+    "body": "Add the Blotz widget to see today's tasks at a glance — no need to open the app."
+  },
+  "firework": {
+    "title": "A Little Celebration Every Time",
+    "body": "Complete a task and watch the confetti fly. Subtasks get a smaller burst — every win counts."
   }
 }

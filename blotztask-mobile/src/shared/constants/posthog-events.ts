@@ -1,5 +1,10 @@
+import type { WebAuthErrorCodes } from "react-native-auth0";
+
 export const EVENTS = {
   CREATE_TASK_MANUALLY: "create_task_manually",
+  LOGIN_STARTED: "login_started",
+  LOGIN_SUCCEEDED: "login_succeeded",
+  LOGIN_FAILED: "login_failed",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
   ACTIVE_USER_5S: "active_user_5s",
@@ -10,12 +15,37 @@ export const EVENTS = {
   TASK_COMPLETED: "task_completed",
   TASK_REOPENED: "task_reopened",
   TASK_DELETED: "task_deleted",
+  GASHAPON_SPIN: "gashapon_spin",
+  POMODORO_STARTED: "pomodoro_started",
+  BADGE_UNLOCKED: "badge_unlocked",
+  REVIEW_GENERATED: "review_generated",
 } as const;
 
 export const SCREEN_NAMES = {
+  SIGN_IN: "SignIn",
   NOTES: "Notes",
   GASHAPON_MACHINE: "GashaponMachine",
 } as const;
+
+/** Which sign-in button was used. `sms` is only rendered outside production. */
+export type LoginConnection = "default" | "sms";
+
+/**
+ * Why a login attempt did not produce tokens.
+ * `cancelled` and `browser_dismissed` are user exits rather than failures — exclude
+ * them when measuring Auth0 reliability. `browser_dismissed` is kept separate because
+ * on Android a swiped-away Custom Tab surfaces as `BROWSER_TERMINATED`, and folding it
+ * into `auth0_error` would inflate the "Auth0 broke" bucket with users who just left.
+ */
+export type LoginFailureReason = "cancelled" | "browser_dismissed" | "no_tokens" | "auth0_error";
+
+/**
+ * Bounded to react-native-auth0's 18 `WebAuthErrorCodes`, plus our own token-shape check.
+ * Raw error messages are never sent — they carry Auth0 descriptions and are unbounded.
+ */
+export type LoginErrorCode =
+  | (typeof WebAuthErrorCodes)[keyof typeof WebAuthErrorCodes]
+  | "NoTokensReturned";
 
 /** How a task was created. `manual` = task form, `ai` = AI generation sheet. */
 export type TaskSource = "manual" | "ai";

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View, FlatList } from "react-native";
+import { Pressable, Text, View, FlatList, useWindowDimensions } from "react-native";
 import Animated, { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import Modal from "react-native-modal";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
@@ -47,6 +47,8 @@ export function AnimatedDropdown<T>({
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
+  const { height: windowHeight } = useWindowDimensions();
+
   // animation progress: 0 -> closed, 1 -> open
   const animationProgress = useSharedValue(0);
 
@@ -83,9 +85,16 @@ export function AnimatedDropdown<T>({
     closeDropdown();
   };
 
-  // Position panel under trigger
+  // 6 is the gap between trigger and panel; 16 mirrors the panel's `py-2` below.
+  const anchorTop = anchor?.y ?? 0;
+  const panelTopBelow = anchorTop + (anchor?.h ?? 0) + 6;
+  const panelHeight = visibleCount * itemHeight + 16;
+
+  // Flip above the trigger when the panel would run past the bottom of the screen.
+  const dropUp = panelTopBelow + panelHeight > windowHeight - 8;
+
   const panelLeft = anchor?.x ?? 0;
-  const panelTop = (anchor?.y ?? 0) + (anchor?.h ?? 0) + 6;
+  const panelTop = dropUp ? anchorTop - 6 - panelHeight : panelTopBelow;
   const panelWidth = Math.max(minWidth, anchor?.w ?? minWidth);
 
   return (

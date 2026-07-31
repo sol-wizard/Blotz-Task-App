@@ -1,5 +1,5 @@
 {
-  "achievementUnlocked": "Achievement unlocked!",
+  "achievementUnlocked": " Achievement unlocked!",
   "shareCardHeadline": "I've unlocked:",
   "obtainedOn": "Obtained on {{date}}",
   "view": "View",
@@ -9,10 +9,10 @@
     "title": "Achievement"
   },
   "wall": {
-    "title": "Badge Wall"
+    "title": "Badge Wall",
+    "earnedCount": "{{count}} badges earned"
   },
   "details": {
-    "category": "Category: {{category}}",
     "equipReward": "Equip reward",
     "notFound": "Badge not found"
   }
