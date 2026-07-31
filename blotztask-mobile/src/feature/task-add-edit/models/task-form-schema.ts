@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { combineDateTime } from "../util/combine-date-time";
-import { isBefore, isEqual, startOfDay } from "date-fns";
+import { isAfter, isBefore, isEqual, startOfDay } from "date-fns";
 
 export const recurrenceValues = [
   "never",
@@ -17,27 +17,28 @@ export const recurrenceEndModeValues = ["never", "onDate"] as const;
 const MAX_RECURRING_EVENT_DURATION_DAYS = 31;
 const MAX_RECURRING_EVENT_DURATION_MS = MAX_RECURRING_EVENT_DURATION_DAYS * 24 * 60 * 60 * 1000;
 
-export const taskFormSchema = z
-  .object({
-    title: z
-      .string()
-      .trim()
-      .min(1, "details.mustHaveTitleError")
-      .max(80, "details.titleTooLongError"),
-    description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
-    startDate: z.date(),
-    startTime: z.date(),
-    endDate: z.date(),
-    endTime: z.date(),
-    labelId: z.number().nullable(),
-    alert: z.number().nullable(),
-    recurrence: z.enum(recurrenceValues),
-    recurrenceEndMode: z.enum(recurrenceEndModeValues),
-    recurrenceEndDate: z.date().nullable(),
-    isDeadline: z.boolean(),
-    deadlineDate: z.date().nullable(),
-    deadlineTime: z.date().nullable(),
-  })
+const taskFormShape = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "details.mustHaveTitleError")
+    .max(80, "details.titleTooLongError"),
+  description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
+  startDate: z.date(),
+  startTime: z.date(),
+  endDate: z.date(),
+  endTime: z.date(),
+  labelId: z.number().nullable(),
+  alert: z.number().nullable(),
+  recurrence: z.enum(recurrenceValues),
+  recurrenceEndMode: z.enum(recurrenceEndModeValues),
+  recurrenceEndDate: z.date().nullable(),
+  isDeadline: z.boolean(),
+  deadlineDate: z.date().nullable(),
+  deadlineTime: z.date().nullable(),
+});
+
+export const taskFormSchema = taskFormShape
   .refine(
     (data) => {
       const start = combineDateTime(data.startDate, data.startTime);
@@ -94,22 +95,30 @@ export const taskFormSchema = z
       message: "recurrence.endDateBeforeStart",
       path: ["recurrenceEndDate"],
     },
-  );
+  )
+  .refine((data) => !hasDeadlineConflict(data), {
+    message: "form.invalidDeadlineRange",
+    path: ["deadlineTime"],
+  });
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
 
 export type TimeFormValues = Pick<TaskFormField, "startDate" | "startTime" | "endDate" | "endTime">;
 
-export function hasDeadlineWarning(data: TaskFormField): boolean {
+export type DeadlineConflictValues = Pick<
+  z.infer<typeof taskFormShape>,
+  "isDeadline" | "endDate" | "endTime" | "deadlineDate" | "deadlineTime"
+>;
+
+export function hasDeadlineConflict(data: DeadlineConflictValues): boolean {
   if (!data.isDeadline) return false;
 
-  const endDate = data.endDate;
-  const endTime = data.endTime;
-  const end = combineDateTime(endDate, endTime);
+  const end = combineDateTime(data.endDate, data.endTime);
   const deadline = combineDateTime(data.deadlineDate, data.deadlineTime);
+  // Deadline not picked yet — nothing to compare against.
   if (!end || !deadline) return false;
 
-  return end > deadline;
+  return isAfter(end, deadline);
 }
 
 export default TaskFormField;

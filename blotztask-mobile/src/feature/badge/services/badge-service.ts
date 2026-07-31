@@ -1,9 +1,9 @@
 import { apiClient } from "@/shared/services/api/client";
-import { BadgeDTO } from "../models/badge-preview-dto";
-import { BadgeDetailDTO } from "../models/badge-by-id-dto";
+import { BadgePreviewDTO } from "../models/badge-preview-dto";
+import { BadgeDetailDTO } from "../models/badge-detail-dto";
 
-export const fetchAllBadges = async (): Promise<BadgeDTO[]> => {
-  return await apiClient.get<BadgeDTO[]>("/Badge");
+export const fetchAllBadges = async (): Promise<BadgePreviewDTO[]> => {
+  return await apiClient.get<BadgePreviewDTO[]>("/Badge");
 };
 
 export const fetchBadgeDetailById = async (badgeId: number): Promise<BadgeDetailDTO> => {
