@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useBadgesQuery } from "../hooks/useBadgesQuery";
 import { BadgeCard } from "../components/badge-card";
-import { BadgeDTO } from "../models/badge-preview-dto";
+import { BadgePreviewDTO } from "../models/badge-preview-dto";
 
 const NUM_COLUMNS = 3;
 
@@ -13,7 +13,7 @@ const NUM_COLUMNS = 3;
 // width instead of stretching when the row isn't full.
 interface BadgeGridItem {
   key: string;
-  badge: BadgeDTO | null;
+  badge: BadgePreviewDTO | null;
 }
 
 export default function BadgeWallScreen() {
