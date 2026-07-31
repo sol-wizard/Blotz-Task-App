@@ -215,6 +215,9 @@ namespace BlotzTask.Migrations
                     b.Property<int>("BadgeId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("EarnedAtUtc")
                         .HasColumnType("datetimeoffset");
 

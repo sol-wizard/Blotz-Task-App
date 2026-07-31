@@ -45,7 +45,7 @@ builder.Services.AddAppVersionModule();
 builder.Services.AddReferralModule();
 
 // External integrations
-builder.Services.AddAgentFrameworkServices(builder.Configuration);
+builder.Services.AddAgentFrameworkServices();
 
 var app = builder.Build();
 

@@ -119,6 +119,14 @@ public class AiTaskGenerateChatHub(
         return Task.CompletedTask;
     }
 
+    public Task DeleteDraftRecurringTask(Guid recurringTaskId)
+    {
+        if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
+            chatContext.Tools.RemoveDraftRecurringTaskById(recurringTaskId);
+
+        return Task.CompletedTask;
+    }
+
     #endregion
 
     #region Private Helpers
@@ -165,12 +173,15 @@ public class AiTaskGenerateChatHub(
             await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
         chatContext.Tools.OnNoteStreamed = async note =>
             await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+        chatContext.Tools.OnRecurringTaskStreamed = async recurringTask =>
+            await Clients.Caller.SendAsync("ReceiveRecurringTaskExtracted", recurringTask, ct);
     }
 
     private static void ClearStreamingCallbacks(AiChatContext chatContext)
     {
         chatContext.Tools.OnTaskStreamed = null;
         chatContext.Tools.OnNoteStreamed = null;
+        chatContext.Tools.OnRecurringTaskStreamed = null;
     }
 
     #endregion

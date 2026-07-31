@@ -1,12 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 
 import GetStartedButton from "@/feature/auth/components/get-started-button";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import MaskedView from "@expo/ui/community/masked-view";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SigninScreen() {
   const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+  // The top of the login funnel: an install that never reaches here is a different
+  // problem from one that saw this screen and never tapped Continue.
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SIGN_IN);
+  }, []);
+
   return (
     <>
       <View

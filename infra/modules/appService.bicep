@@ -106,6 +106,18 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/azureopenai-apikey/)'
         }
         {
+          name: 'Groq__Endpoint'
+          value: 'https://api.groq.com/openai/v1'
+        }
+        {
+          name: 'Groq__SpeechModel'
+          value: 'whisper-large-v3-turbo'
+        }
+        {
+          name: 'Groq__ApiKey'
+          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/groq-apikey/)'
+        }
+        {
           name: 'ConnectionStrings__DefaultConnection'
           value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/sql-connection-string/)'
         }

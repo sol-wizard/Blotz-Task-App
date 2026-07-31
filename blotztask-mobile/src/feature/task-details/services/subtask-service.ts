@@ -1,15 +1,24 @@
-import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { SubtaskDTO } from "../models/subtask-dto";
 import { apiClient } from "@/shared/services/api/client";
-import { BreakdownResultDTO } from "../models/breakdown-result-dto";
+import { BreakdownAndReplaceTaskResultDTO } from "../models/breakdown-result-dto";
 import { AddNewSubtaskDTO } from "../models/add-new-subtask-dto";
 
-export const createBreakDownSubtasks = async (
-  taskId: number,
-): Promise<BreakdownResultDTO | undefined> => {
-  if (!taskId) return;
-  const url = `/TaskBreakdown/${taskId}`;
-  return await apiClient.post(url);
+export type BreakdownTaskTarget =
+  | {
+      taskId: number;
+      recurringTaskId?: never;
+      occurrenceDate?: never;
+    }
+  | {
+      taskId?: never;
+      recurringTaskId: number;
+      occurrenceDate: string;
+    };
+
+export const breakDownAndReplaceTaskSubtasks = async (
+  target: BreakdownTaskTarget,
+): Promise<BreakdownAndReplaceTaskResultDTO> => {
+  return await apiClient.post("/TaskBreakdown", target);
 };
 
 export async function addSubtask(newSubtask: AddNewSubtaskDTO): Promise<number> {
@@ -22,18 +31,6 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const url = `/SubTask/tasks/${taskId}/subtasks/${subtaskId}`;
 
   await apiClient.put(url, { ...newSubtask });
-}
-
-export async function replaceSubtasks({
-  taskId,
-  subtasks,
-}: {
-  taskId: number;
-  subtasks: AddSubtaskDTO[];
-}): Promise<void> {
-  const url = `/SubTask/tasks/${taskId}/replaceSubtasks`;
-
-  await apiClient.post(url, { taskId, subtasks });
 }
 
 export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDTO[]> {

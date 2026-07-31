@@ -1,4 +1,4 @@
-export interface BadgeDTO {
+export interface BadgePreviewDTO {
   id: number;
   name: string;
   iconUrl: string;

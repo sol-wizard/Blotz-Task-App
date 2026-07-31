@@ -2,20 +2,32 @@ import { View, Text } from "react-native";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { AiResultCard } from "./ai-result-card";
+import { AiRecurringResultCard } from "./ai-recurring-result-card";
 import { AiResultRow } from "./ai-result-row";
 import { useSwipeableManager } from "@/feature/notes/hooks/useSwipeableManager";
 import { AiTaskDTO } from "../models/ai-task-dto";
+import { AiRecurringTaskDTO } from "../models/ai-recurring-task-dto";
 import { AiNoteDTO } from "../models/ai-result-message-dto";
 
 type Props = {
   aiTasks: AiTaskDTO[];
+  aiRecurringTasks: AiRecurringTaskDTO[];
   aiNotes: AiNoteDTO[];
   onDeleteTask: (id: string) => void;
+  onDeleteRecurring: (id: string) => void;
   onDeleteNote: (id: string) => void;
   isGenerating: boolean;
 };
 
-export function AiResultList({ aiTasks, aiNotes, onDeleteTask, onDeleteNote, isGenerating }: Props) {
+export function AiResultList({
+  aiTasks,
+  aiRecurringTasks,
+  aiNotes,
+  onDeleteTask,
+  onDeleteRecurring,
+  onDeleteNote,
+  isGenerating,
+}: Props) {
   const { t } = useTranslation("aiTaskGenerate");
   const { onRowOpen } = useSwipeableManager();
 
@@ -37,6 +49,27 @@ export function AiResultList({ aiTasks, aiNotes, onDeleteTask, onDeleteNote, isG
             />
           </AiResultRow>
         ))}
+        {aiRecurringTasks.length > 0 && (
+          <>
+            <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">
+              {t("labels.recurringSection")}
+            </Text>
+            {aiRecurringTasks.map((task) => (
+              <AiResultRow
+                key={task.id}
+                onDelete={() => onDeleteRecurring(task.id)}
+                onRowOpen={onRowOpen}
+                enabled={!isGenerating}
+              >
+                <AiRecurringResultCard
+                  title={task.title}
+                  label={task.label}
+                  scheduleSummary={task.scheduleSummary}
+                />
+              </AiResultRow>
+            ))}
+          </>
+        )}
         {aiNotes.length > 0 && (
           <>
             <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">

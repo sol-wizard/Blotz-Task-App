@@ -140,11 +140,9 @@ const SubtasksEditor = ({
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableFlatList
-          data={listData} 
+          data={listData}
           onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setDraggableSubtasks(newData)}
-          keyExtractor={(item: SubtaskDTO, index: number) =>
-            item.id != null ? item.id.toString() : `temp-${index}`
-          }
+          keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: listBottomPadding }}
           autoscrollThreshold={40}

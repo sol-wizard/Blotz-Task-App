@@ -3,135 +3,44 @@ import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingInviteSection } from "@/feature/onboarding/components/onboarding-invite-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
-import { REDEEM_REFERRAL_CODE_MUTATION_KEY } from "@/feature/referral/hooks/useRedeemReferralCode";
-import { useIsMutating } from "@tanstack/react-query";
+import { useWhatsNewSeen } from "@/feature/whats-new/hooks/useWhatsNewSeen";
+import { IntroCarousel } from "@/shared/components/intro-carousel";
 import { router } from "expo-router";
-import React, { useState, useRef } from "react";
-import {
-  Pressable,
-  Text,
-  View,
-  FlatList,
-  Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
-import Ionicons from "@react-native-vector-icons/ionicons/static";
-import { GradientColor } from "@/shared/components/gradient-color";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SECTIONS = ["ai-voice", "note", "breakdown", "invite"] as const;
+type OnboardingSection = (typeof SECTIONS)[number];
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
+  const { markAsSeen } = useWhatsNewSeen();
   const { t } = useTranslation("onboarding");
   useLanguageInit();
 
-  const isRedeemingReferralCode =
-    useIsMutating({ mutationKey: REDEEM_REFERRAL_CODE_MUTATION_KEY }) > 0;
-
-  const sections = ["ai-voice", "note", "breakdown", "invite"];
-  const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
-
-  const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setActiveOnboardingIndex(index);
-  };
-
   const handleFinish = async () => {
     await setUserOnboarded(true);
+    await markAsSeen();
     router.replace("/(protected)/(tabs)");
   };
 
-  const handleNext = () => {
-    if (activeOnboardingIndex >= sections.length - 1) {
-      handleFinish();
-      return;
-    }
-    const nextIndex = activeOnboardingIndex + 1;
-    flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-    setActiveOnboardingIndex(nextIndex);
-  };
-
-  const handleBack = () => {
-    if (activeOnboardingIndex === 0) return;
-    const prevIndex = activeOnboardingIndex - 1;
-    flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
-    setActiveOnboardingIndex(prevIndex);
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row items-center px-6 pt-2 h-12">
-        <View className="flex-1 items-start">
-          {activeOnboardingIndex > 0 && (
-            <Pressable onPress={handleBack} hitSlop={10}>
-              <Ionicons name="chevron-back" size={22} color="#8C8C8C" />
-            </Pressable>
-          )}
-        </View>
-        <GradientColor className="h-[45px] w-[135px]">
-          <View className="flex-1 flex-row justify-center items-center bg-transparent">
-            <Text className="text-[30px] leading-9 font-balooExtraBold text-center">Blotz</Text>
-          </View>
-        </GradientColor>
-        <View className="flex-1 items-end">
-          <Pressable onPress={handleFinish} hitSlop={10} disabled={isRedeemingReferralCode}>
-            <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
-          </Pressable>
-        </View>
-      </View>
-      <FlatList
-        ref={flatListRef}
-        data={sections}
-        horizontal
-        pagingEnabled
-        getItemLayout={(_, index) => ({
-          length: SCREEN_WIDTH,
-          offset: SCREEN_WIDTH * index,
-          index,
-        })}
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        renderItem={({ item }) => (
-          <View style={{ width: SCREEN_WIDTH }}>
-            {item === "ai-voice" && <OnboardingAiSection />}
-            {item === "breakdown" && <OnboardingBreakdownSection />}
-            {item === "note" && <OnboardingNoteSection />}
-            {item === "invite" && <OnboardingInviteSection />}
-          </View>
-        )}
-      />
-      <View className="items-center pb-8 px-6">
-        <View className="flex-row items-center mb-16 mt-[-90]">
-          {sections.map((section, index) => {
-            const isActive = index === activeOnboardingIndex;
-            const key = `${section}-${index}`;
-            return (
-              <View
-                key={key}
-                className={`${isActive ? "w-2 bg-black" : "w-2 bg-gray-300"} h-2 rounded-full ${
-                  index < sections.length - 1 ? "mr-2" : ""
-                }`}
-              />
-            );
-          })}
-        </View>
-        <Pressable
-          onPress={handleNext}
-          disabled={isRedeemingReferralCode}
-          className={`w-[46%] h-[48px] rounded-full py-4 ${
-            isRedeemingReferralCode ? "bg-gray-200" : "bg-[#8BCC5A]"
-          }`}
-        >
-          <Text className="text-white text-lg font-baloo text-center">
-            {activeOnboardingIndex === sections.length - 1 ? t("actions.start") : t("actions.continue")}
-          </Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+    <IntroCarousel<OnboardingSection>
+      data={SECTIONS}
+      renderItem={(item) => (
+        <>
+          {item === "ai-voice" && <OnboardingAiSection />}
+          {item === "breakdown" && <OnboardingBreakdownSection />}
+          {item === "note" && <OnboardingNoteSection />}
+          {item === "invite" && <OnboardingInviteSection />}
+        </>
+      )}
+      onFinish={handleFinish}
+      continueLabel={t("actions.continue")}
+      finishLabel={t("actions.continue")}
+      skipLabel={t("actions.skip")}
+      dotContainerClassName="mb-16 mt-[-90]"
+      activeDotClassName="w-2 bg-black"
+    />
   );
 }

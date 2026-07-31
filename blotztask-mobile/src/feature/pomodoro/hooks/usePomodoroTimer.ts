@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { PomodoroSoundscapeType } from "../utils/pomodoro-setting";
 import { useSoundscapeStore } from "./useSoundscapeStore";
+import { analytics } from "@/shared/services/analytics";
 
 interface PomodoroSession {
   taskId: string;
@@ -11,8 +12,14 @@ interface PomodoroSession {
   durationSeconds: number;
 }
 
+interface PomodoroCompletion {
+  taskId: string;
+  completionId: number;
+}
+
 interface PomodoroTimerState {
   session: PomodoroSession | null;
+  lastCompletion: PomodoroCompletion | null;
   startTimer: (
     taskId: string,
     soundscape: PomodoroSoundscapeType,
@@ -28,6 +35,7 @@ let pomodoroClock: ReturnType<typeof setInterval> | null = null;
 
 export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   session: null,
+  lastCompletion: null,
 
   startTimer: async (taskId, soundscape, isCountdown, durationMinutes) => {
     if (pomodoroClock) {
@@ -44,6 +52,7 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
         durationSeconds: durationMinutes * 60,
       },
     });
+    analytics.trackPomodoroStarted({ isCountdown, durationMinutes });
     pomodoroClock = setInterval(() => get()._tick(), 1000);
     const sound = useSoundscapeStore.getState();
     void sound.playSoundscape(soundscape);
@@ -75,7 +84,14 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
     const { session } = get();
     if (session && !session.isPaused) {
       if (session.elapsedSeconds >= session.durationSeconds && session.isCountdown) {
+        const { taskId } = session;
         get().stopTimer();
+        set((state) => ({
+          lastCompletion: {
+            taskId,
+            completionId: (state.lastCompletion?.completionId ?? 0) + 1,
+          },
+        }));
         return;
       }
       set({
