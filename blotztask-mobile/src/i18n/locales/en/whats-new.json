@@ -4,6 +4,10 @@
     "continue": "Continue",
     "finish": "Let's go!"
   },
+  "intro": {
+    "title": "Guess what we've been up to.",
+    "body": "Swipe to find out!"
+  },
   "badge-detail": {
     "title": "Your Achievements, Up Close",
     "body": "Tap any badge to see what you earned it for and what reward it unlocked."
