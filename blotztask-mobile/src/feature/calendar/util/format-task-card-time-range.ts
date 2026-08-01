@@ -21,14 +21,15 @@ export const formatTaskCardTimeRange = ({
 
   // Same day: "19:00-21:00 · Today"
   if (isSameDay(start, end)) {
-    // Single-time tasks are defined at minute granularity (see getTimeType), which
-    // matches what the card renders.
     const timeRange = isSameMinute(start, end)
       ? format(start, TIME_FORMAT)
       : `${format(start, TIME_FORMAT)}-${format(end, TIME_FORMAT)}`;
     return `${timeRange} · ${formatDateLabel(start)}`;
   }
 
-  // Across days: "19:00 · 05/15 - 20:00 · 05/16"
-  return `${format(start, TIME_FORMAT)} · ${formatDateLabel(start)} - ${format(end, TIME_FORMAT)} · ${formatDateLabel(end)}`;
+  // Across days: "19:00 · 05/15 - 20:00 · 05/16".
+  // Always explicit dates, never the "Today" label: the card appears on every day the
+  // task spans, so "Today" would be read as the day being viewed rather than the day
+  // the task actually starts or ends.
+  return `${format(start, TIME_FORMAT)} · ${format(start, DATE_FORMAT)} - ${format(end, TIME_FORMAT)} · ${format(end, DATE_FORMAT)}`;
 };
