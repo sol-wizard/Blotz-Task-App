@@ -2,8 +2,10 @@ import { useRouter } from "expo-router";
 import { View, Text, FlatList, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import * as Haptics from "expo-haptics";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useBadgesQuery } from "../hooks/useBadgesQuery";
+import { useBadgeEquipMutation } from "../hooks/useBadgeEquipMutation";
 import { BadgeCard } from "../components/badge-card";
 import { BadgePreviewDTO } from "../models/badge-preview-dto";
 
@@ -19,7 +21,17 @@ interface BadgeGridItem {
 export default function BadgeWallScreen() {
   const { t } = useTranslation("badge");
   const { badges } = useBadgesQuery();
+  const { toggleBadgeEquip, isTogglingBadgeEquip, togglingBadgeId } = useBadgeEquipMutation();
   const router = useRouter();
+
+  const handleLongPress = (badge: BadgePreviewDTO) => {
+    // One at a time: two overlapping requests would each read the slots before the other wrote,
+    // and the second would undo the first's shift.
+    if (isTogglingBadgeEquip) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleBadgeEquip({ badgeId: badge.id, isEquipped: badge.equippedSlot !== null });
+  };
 
   const gridItems: BadgeGridItem[] = [...badges]
     .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -70,8 +82,14 @@ export default function BadgeWallScreen() {
                       params: { badgeId: badge.id },
                     })
                   }
+                  onLongPress={() => handleLongPress(badge)}
                 >
-                  <BadgeCard badge={badge} transparent />
+                  <BadgeCard
+                    badge={badge}
+                    transparent
+                    slot={badge.equippedSlot === null ? undefined : badge.equippedSlot + 1}
+                    pending={togglingBadgeId === badge.id && isTogglingBadgeEquip}
+                  />
                 </Pressable>
               ) : null}
             </View>

@@ -1,9 +1,11 @@
 import { BadgePreviewDTO } from "../models/badge-preview-dto";
 
-const PREVIEW_DISPLAY_ORDERS = [0, 1, 2];
+export const PREVIEW_SLOT_COUNT = 3;
 
 export const getPreviewBadges = (badges: BadgePreviewDTO[]): BadgePreviewDTO[] =>
   badges
-    .filter((badge) => PREVIEW_DISPLAY_ORDERS.includes(badge.displayOrder))
-    .sort((a, b) => a.displayOrder - b.displayOrder)
-    .slice(0, PREVIEW_DISPLAY_ORDERS.length);
+    .filter(
+      (badge): badge is BadgePreviewDTO & { equippedSlot: number } => badge.equippedSlot !== null,
+    )
+    .sort((a, b) => a.equippedSlot - b.equippedSlot)
+    .slice(0, PREVIEW_SLOT_COUNT);

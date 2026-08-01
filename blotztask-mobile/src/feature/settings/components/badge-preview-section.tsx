@@ -2,11 +2,9 @@ import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { GradientColor } from "@/shared/components/gradient-color";
-import { getPreviewBadges } from "@/feature/badge/utils/get-preview-badges";
+import { getPreviewBadges, PREVIEW_SLOT_COUNT } from "@/feature/badge/utils/get-preview-badges";
 import { BadgeCard } from "@/feature/badge/components/badge-card";
 import { BadgePreviewDTO } from "@/feature/badge/models/badge-preview-dto";
-
-const PREVIEW_SLOTS = 3;
 
 export function BadgePreviewSection({ badges }: { badges: BadgePreviewDTO[] }) {
   const router = useRouter();
@@ -14,7 +12,7 @@ export function BadgePreviewSection({ badges }: { badges: BadgePreviewDTO[] }) {
 
   const previewBadges = getPreviewBadges(badges);
 
-  const slots = Array.from({ length: PREVIEW_SLOTS }, (_, i) => previewBadges[i] ?? null);
+  const slots = Array.from({ length: PREVIEW_SLOT_COUNT }, (_, i) => previewBadges[i] ?? null);
 
   return (
     <Pressable
