@@ -5,7 +5,7 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import { useTranslation } from "react-i18next";
 import { PNGIMAGES } from "@/shared/constants/assets";
 
-const WEBSITE_URL = "https://blotz-website.vercel.app/";
+const WEBSITE_URL = "https://www.blotztask.com/";
 const FEEDBACK_URL =
   "https://m3cetbcyp2d.usttp.larksuite.com/share/base/form/shrusf712jJdjDC4l6gJkXcc8Yf";
 const XIAOHONGSHU_URL =

@@ -106,7 +106,10 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
             </Pressable>
 
             <Pressable
-              onPress={shareImage}
+              onPress={async () => {
+                await shareImage();
+                onDismiss();
+              }}
               disabled={isSharingImage}
               className={`min-h-[44px] px-7 py-2.5 rounded-full border-2 border-transparent bg-highlight items-center justify-center ${
                 isSharingImage ? "opacity-60" : "opacity-100"
