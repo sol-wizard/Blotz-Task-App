@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { badgeKeys } from "@/shared/constants/query-key-factory";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { ASSETS } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/form-divider";
@@ -17,6 +19,13 @@ export default function SettingsScreen() {
   const { userProfile } = useUserProfile();
   const { t } = useTranslation("settings");
   const { badges } = useBadgesQuery();
+  const queryClient = useQueryClient();
+
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: badgeKeys.all });
+    }, [queryClient]),
+  );
 
   const menuItems: SettingsMenuItem[] = [
     {
