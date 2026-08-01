@@ -11,5 +11,6 @@ namespace BlotzTask.Modules.Users.Domain
         public bool DailyPlanningNotification { get; set; } = false;
         public bool EveningWrapUpNotification { get; set; } = false;
         public Language PreferredLanguage { get; set; } = Language.En;
+        public bool HasCustomizedBadgeDisplay { get; set; } = false;
     }
 }
