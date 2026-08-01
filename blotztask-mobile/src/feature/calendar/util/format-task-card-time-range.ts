@@ -1,4 +1,4 @@
-import { format, isSameDay, isToday, parseISO } from "date-fns";
+import { format, isSameDay, isSameMinute, isToday, parseISO } from "date-fns";
 import i18n from "@/i18n";
 
 const TIME_FORMAT = "HH:mm";
@@ -21,10 +21,11 @@ export const formatTaskCardTimeRange = ({
 
   // Same day: "19:00-21:00 · Today"
   if (isSameDay(start, end)) {
-    const timeRange =
-      startTime === endTime
-        ? format(start, TIME_FORMAT)
-        : `${format(start, TIME_FORMAT)}-${format(end, TIME_FORMAT)}`;
+    // Single-time tasks are defined at minute granularity (see getTimeType), which
+    // matches what the card renders.
+    const timeRange = isSameMinute(start, end)
+      ? format(start, TIME_FORMAT)
+      : `${format(start, TIME_FORMAT)}-${format(end, TIME_FORMAT)}`;
     return `${timeRange} · ${formatDateLabel(start)}`;
   }
 
