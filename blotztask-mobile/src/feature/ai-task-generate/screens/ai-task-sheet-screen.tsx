@@ -24,6 +24,7 @@ import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
+import { AiEmptyResult } from "../component/ai-empty-result";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
@@ -62,6 +63,8 @@ export default function AiTaskSheetScreen() {
 
   const {
     transcript,
+    emptyResult,
+    clearEmptyResult,
     turns,
     streamedTasks,
     streamedNotes,
@@ -80,7 +83,7 @@ export default function AiTaskSheetScreen() {
   );
   const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
     useTaskMutations();
-  const { createNoteAsync, isNoteCreating } = useNotesMutation();
+  const { createNote, createNoteAsync, isNoteCreating } = useNotesMutation();
 
   // Request mic permission on mount; navigate back if denied
   useEffect(() => {
@@ -130,6 +133,24 @@ export default function AiTaskSheetScreen() {
     setTextInput("");
     Keyboard.dismiss();
     await sendTextMessage(message);
+  };
+
+  // Capture what we heard without leaving the sheet. Opening the note editor instead would mean
+  // navigating away from any drafts earlier turns produced, so this saves in place; the note stays
+  // editable in the Notes tab afterwards.
+  const handleSaveAsNote = () => {
+    if (!emptyResult?.userInput || isNoteCreating) return;
+
+    createNote(
+      { text: emptyResult.userInput, isPersistent: false },
+      {
+        onSuccess: () => {
+          analytics.trackNoteCreated({ source: "ai" });
+          clearEmptyResult();
+          Toast.show({ type: "success", text1: t("emptyResult.savedAsNote") });
+        },
+      },
+    );
   };
 
   const handleAddAll = async () => {
@@ -225,6 +246,11 @@ export default function AiTaskSheetScreen() {
                   isGenerating={isAiGenerating}
                 />
               </Animated.View>
+            )}
+
+            {/* A turn that found nothing. Any earlier drafts stay on screen above it. */}
+            {emptyResult && !isAiGenerating && (
+              <AiEmptyResult userInput={emptyResult.userInput} onSaveAsNote={handleSaveAsNote} />
             )}
 
             {isAiGenerating && !!transcript && (

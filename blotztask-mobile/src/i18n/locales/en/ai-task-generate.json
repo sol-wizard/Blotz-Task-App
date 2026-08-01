@@ -37,6 +37,11 @@
     "editTextLabel": "Edit note",
     "editTextHint": "Double tap to edit note"
   },
+  "emptyResult": {
+    "title": "Nothing to add from that one",
+    "saveAsNote": "Save as note",
+    "savedAsNote": "Saved as a note"
+  },
   "voiceHint": {
     "trySaying": "Try speaking or typing",
     "hintText": "\"Attend the U.S. presidential election tomorrow at 8 AM\""
