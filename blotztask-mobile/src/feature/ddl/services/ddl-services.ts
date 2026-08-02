@@ -1,13 +1,13 @@
 import { apiClient } from "@/shared/services/api/client";
-import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 
+function deviceTimeZoneId(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 export async function getAllDdlTasks(): Promise<DeadlineTaskDTO[]> {
-  // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 6.
-  // Deadline "today" should send request/device timeZoneId, not a precomputed now
-  // DateTimeOffset, so the backend derives local today from the timezone.
-  const now = encodeURIComponent(convertToDateTimeOffset(new Date()));
-  return apiClient.get(`/Deadline/all?now=${now}`);
+  const timeZoneId = encodeURIComponent(deviceTimeZoneId());
+  return apiClient.get(`/Deadline/all?timeZoneId=${timeZoneId}`);
 }
 
 export async function updatePin(taskId: number, isPinned: boolean): Promise<void> {
