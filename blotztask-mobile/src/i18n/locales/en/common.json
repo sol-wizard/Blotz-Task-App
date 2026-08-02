@@ -54,6 +54,12 @@
     "server": "Something went wrong on our end. Please try again later.",
     "validation": "That didn't work. Please check your input.",
     "default": "Something went wrong. Please try again.",
+    "invite": {
+      "selfCode": "You cannot use your own invite code.",
+      "onboardingOnly": "Invite codes can only be redeemed during onboarding.",
+      "notFound": "Invite code not found.",
+      "alreadyRedeemed": "You have already redeemed an invite code."
+    },
     "pushTokenFailed": "Push notifications are not available on this device.",
     "physicalDeviceRequired": "Push notifications require a physical device."
   }

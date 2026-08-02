@@ -2,5 +2,7 @@ namespace BlotzTask.Modules.Badges.Enum;
 
 public enum EventValueKey
 {
-    CompleteOffsetMins
+    CompleteOffsetMins,
+    //To do
+    InviteCount
 }

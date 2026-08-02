@@ -4,16 +4,19 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727150250_ReplaceInviteSystemWithReferralSystem")]
+    partial class ReplaceInviteSystemWithReferralSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,9 +218,6 @@ namespace BlotzTask.Migrations
                     b.Property<int>("BadgeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DisplayOrder")
-                        .HasColumnType("int");
-
                     b.Property<DateTimeOffset>("EarnedAtUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -416,8 +416,6 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("RefereeUserId")
                         .IsUnique();
-
-                    b.HasIndex("ReferrerUserId");
 
                     b.ToTable("Referrals", (string)null);
                 });
@@ -1130,21 +1128,6 @@ namespace BlotzTask.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.Referral", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("RefereeUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("ReferrerUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.ReferralCode", b =>

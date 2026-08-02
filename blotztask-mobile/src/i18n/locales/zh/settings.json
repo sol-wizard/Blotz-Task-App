@@ -9,6 +9,7 @@
     "notifications": "通知",
     "language": "语言",
     "allTasks": "所有任务页面 (测试版)",
+    "invite": "邀请好友",
     "about": "关于"
   },
   "betaFeatures": {
@@ -119,5 +120,11 @@
   },
   "avatar": {
     "title": "头像"
+  },
+  "invite": {
+    "title": "邀请好友",
+    "myCodeLabel": "你的邀请码",
+    "myCodeHint": "将此邀请码分享给好友，邀请他们加入 Blotz。",
+    "copied": "已复制到剪贴板"
   }
 }

@@ -31,6 +31,10 @@ public class DeleteUserCommandHandler(
         await auth0ManagementService.DeleteUserAsync(auth0UserId, ct);
         logger.LogInformation("Deleted Auth0 user {Auth0UserId} before DB cleanup for {UserId}", auth0UserId, command.UserId);
 
+        await db.Referrals
+            .Where(r=>r.ReferrerUserId == command.UserId|| r.RefereeUserId == command.UserId)
+            .ExecuteDeleteAsync(ct);
+            
         db.AppUsers.Remove(appUser);
         await db.SaveChangesAsync(ct);
 
