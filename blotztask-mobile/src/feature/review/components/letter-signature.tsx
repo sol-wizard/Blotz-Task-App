@@ -21,21 +21,24 @@ export function LetterSignature() {
             {t("review.signature")}
           </Text>
         </View>
-        <View
-          className="w-14 h-14 rounded-full items-center justify-center bg-white"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          <Image
-            source={PNGIMAGES.blotzIcon}
-            style={{ width: 40, height: 40 }}
-            contentFit="contain"
-          />
+        <View className="items-center">
+          <View
+            className="w-14 h-14 rounded-full items-center justify-center bg-white"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <Image
+              source={PNGIMAGES.blotzIcon}
+              style={{ width: 40, height: 40 }}
+              contentFit="contain"
+            />
+          </View>
+          <Text className="mt-1 text-xs font-balooBold text-[#94C933]">@blotz</Text>
         </View>
       </View>
     </>
