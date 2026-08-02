@@ -26,6 +26,10 @@ public class AiGenerateMessage
     [Description("Array of recurring tasks extracted from user input (items that repeat on a schedule).")]
     public List<ExtractedRecurringTask> ExtractedRecurringTasks { get; set; } = new();
 
+    [JsonPropertyName("isEmptyResult")]
+    [Description("True when this turn called no tools, i.e. nothing was extracted from what the user said. The extracted* lists above are cumulative for the whole session, so they cannot express this on their own.")]
+    public bool IsEmptyResult { get; set; }
+
 
     [JsonPropertyName("inputTokens")]
     [Description("Number of prompt tokens used.")]

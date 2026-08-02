@@ -42,9 +42,6 @@ export function useAiTaskGenerator({
   const [emptyResult, setEmptyResult] = useState<{ userInput: string } | null>(null);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
-  // What the user actually said or typed for the in-flight run. A ref, not state, so retaining the
-  // text path's input does not start echoing it under the mic while the AI is still working.
-  const pendingUserInputRef = useRef<string | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -59,7 +56,6 @@ export function useAiTaskGenerator({
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "voice";
-    pendingUserInputRef.current = null;
 
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
@@ -69,7 +65,6 @@ export function useAiTaskGenerator({
       const startedAt = requestStartedAtRef.current;
       requestStartedAtRef.current = null;
       pendingInputModeRef.current = null;
-      pendingUserInputRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "transcription",
@@ -90,8 +85,6 @@ export function useAiTaskGenerator({
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "text";
-    // Unlike voice, nothing echoes the text back to us, so hold on to it here.
-    pendingUserInputRef.current = text;
 
     try {
       await signalRService.invoke(connection, "SendMessage", text);
@@ -101,7 +94,6 @@ export function useAiTaskGenerator({
       const startedAt = requestStartedAtRef.current;
       requestStartedAtRef.current = null;
       pendingInputModeRef.current = null;
-      pendingUserInputRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "text",
         stage: "send",
@@ -183,13 +175,14 @@ export function useAiTaskGenerator({
 
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
     setTranscript(undefined);
-    setEmptyResult(null);
     setIsAiGenerating(false);
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    pendingUserInputRef.current = null;
     const inputText = result.userInput;
+
+    // A turn that extracted nothing is a normal result, so it arrives here rather than as an error.
+    setEmptyResult(result.isEmptyResult ? { userInput: inputText ?? "" } : null);
 
     if (inputMode && inputText) {
       setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
@@ -208,8 +201,6 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    const userInput = pendingUserInputRef.current;
-    pendingUserInputRef.current = null;
 
     analytics.trackAiTaskGenerationFailed({
       inputMode: inputMode ?? "unknown",
@@ -221,20 +212,8 @@ export function useAiTaskGenerator({
       durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
     });
 
-    // Finding no tasks is a legitimate empty result, not a fault, so it gets an empty state showing
-    // what we heard, never a red toast. It returns before the clear below on purpose: a barren turn
-    // must not destroy drafts earlier turns produced. The backend's draft basket still holds them,
-    // so clearing here would only desync the two until the next successful turn resurrected them.
-    //
-    // Temporary: the backend expresses "no tasks found" by throwing, so this arrives on the error
-    // channel and has to be caught here. Once the backend returns an empty result normally, delete
-    // this branch and drive the empty state from generationCompleteHandler instead. The failure
-    // metric still counts this run above; reclassifying it belongs with that backend change.
-    if (error.errorCode === "NoTasksExtracted") {
-      setEmptyResult({ userInput: userInput ?? "" });
-      return;
-    }
-
+    // This handler now sees genuine faults only. An empty extraction is a normal result and lands
+    // in generationCompleteHandler, so clear any empty state a previous turn left showing.
     setEmptyResult(null);
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
@@ -252,7 +231,6 @@ export function useAiTaskGenerator({
         conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
           setTranscript(text);
-          pendingUserInputRef.current = text;
         });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
           if (requestStartedAtRef.current == null) return;
