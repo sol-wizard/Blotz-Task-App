@@ -4,18 +4,21 @@ using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.Time;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Deadlines;
 
+public class GetAllDdlTasksRequest
+{
+    [BindRequired] public string TimeZoneId { get; set; } = string.Empty;
+}
+
 public class GetAllDdlTasksQuery
 {
     public required Guid UserId { get; init; }
-    // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 6.
-    // Deadline "today" is local calendar meaning; replace Now DateTimeOffset with
-    // request/device timeZoneId and derive today server-side via the timezone helper.
-    // Do not fall back to UTC for user-local deadline occurrence selection.
-    public DateTimeOffset? Now { get; init; }
+    public required string TimeZoneId { get; init; }
 }
 
 public class GetAllDdlTasksQueryHandler(
@@ -27,8 +30,8 @@ public class GetAllDdlTasksQueryHandler(
     {
         logger.LogInformation("Fetching all DDL tasks for user {UserId}", query.UserId);
 
-        var now = query.Now ?? DateTimeOffset.UtcNow;
-        var today = DateOnly.FromDateTime(now.Date);
+        var tz = TimeZoneClock.ResolveOrThrow(query.TimeZoneId);
+        var today = TimeZoneClock.Today(tz);
 
         var ddlTasks = await db.TaskItems
             .AsNoTracking()
