@@ -14,9 +14,7 @@ export function LetterSignature() {
       </View>
       <View className="flex-row items-center">
         <View className="flex-1">
-          <Text className="text-sm font-baloo text-secondary/60 italic">
-            {t("review.signOff")}
-          </Text>
+          <Text className="text-sm font-baloo text-secondary/60 italic">{t("review.signOff")}</Text>
           <Text className="text-2xl font-balooBold text-secondary mt-1">
             {t("review.signature")}
           </Text>
@@ -38,7 +36,7 @@ export function LetterSignature() {
               contentFit="contain"
             />
           </View>
-          <Text className="mt-1 text-xs font-balooBold text-[#94C933]">@blotz</Text>
+          <Text className="mt-1 text-xs font-balooBold text-[#94C933]">Blotz task</Text>
         </View>
       </View>
     </>
