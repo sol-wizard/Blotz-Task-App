@@ -35,29 +35,20 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
 
         var earnedAt = DateTimeOffset.UtcNow;
 
-        // A user who has never curated the achievement preview gets it filled by earned order, so
-        // the earliest badges take the slots. The moment they equip or unequip anything the flag
-        // flips and new badges wait to be picked instead — see BadgeDisplaySlots.MarkCustomized.
-        var preference = await db.UserPreferences.FindAsync(command.UserId, ct);
-        var hasCustomized = preference?.HasCustomizedBadgeDisplay ?? false;
+        var currentBadgeCount = await db.UserBadges
+            .CountAsync(ub => ub.UserId == command.UserId, ct);
 
-        // Occupied slots are always contiguous from 0, so the equipped count is the next free slot.
-        var nextSlot = hasCustomized
-            ? BadgeDisplaySlots.Count
-            : await db.UserBadges.CountAsync(ub => ub.UserId == command.UserId && ub.DisplayOrder != null, ct);
-
-        foreach (var badgeId in toAward)
+        db.UserBadges.AddRange(toAward.Select((badgeId, index) =>
         {
-            int? slot = nextSlot < BadgeDisplaySlots.Count ? nextSlot++ : null;
-
-            db.UserBadges.Add(new UserBadge
+            var order = currentBadgeCount + index;
+            return new UserBadge
             {
                 UserId = command.UserId,
                 BadgeId = badgeId,
                 EarnedAtUtc = earnedAt,
-                DisplayOrder = slot
-            });
-        }
+                DisplayOrder = order <= 2 ? order : null
+            };
+        }));
 
         await db.SaveChangesAsync(ct);
 

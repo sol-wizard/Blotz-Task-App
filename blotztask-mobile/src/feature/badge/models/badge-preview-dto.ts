@@ -3,5 +3,4 @@ export interface BadgePreviewDTO {
   name: string;
   iconUrl: string;
   displayOrder: number;
-  equippedSlot: number | null;
 }

@@ -14,7 +14,6 @@ public static class DependencyInjection
         services.AddScoped<BadgeAwardService>();
         services.AddScoped<GetBadgeByIdQueryHandler>();
         services.AddScoped<EquipBadgeCommandHandler>();
-        services.AddScoped<UnequipBadgeCommandHandler>();
 
         services.AddHttpClient("Expo", client =>
         {

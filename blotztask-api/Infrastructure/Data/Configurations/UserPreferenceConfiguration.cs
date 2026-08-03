@@ -36,9 +36,6 @@ namespace BlotzTask.Infrastructure.Data.Configurations
             builder.Property(x => x.EveningWrapUpNotification)
                    .HasDefaultValue(false);
 
-            builder.Property(x => x.HasCustomizedBadgeDisplay)
-                   .HasDefaultValue(false);
-
             // Store Language enum as string in database
             builder.Property(x => x.PreferredLanguage)
                    .HasConversion<string>()

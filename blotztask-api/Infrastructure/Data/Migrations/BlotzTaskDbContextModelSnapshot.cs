@@ -907,11 +907,6 @@ namespace BlotzTask.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("HasCustomizedBadgeDisplay")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("OverdueNotification")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -939,7 +934,6 @@ namespace BlotzTask.Migrations
                             AutoRollover = true,
                             DailyPlanningNotification = false,
                             EveningWrapUpNotification = false,
-                            HasCustomizedBadgeDisplay = false,
                             OverdueNotification = true,
                             PreferredLanguage = "Zh",
                             UpcomingNotification = true
