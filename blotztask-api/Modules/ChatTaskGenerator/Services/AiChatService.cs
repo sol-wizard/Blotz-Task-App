@@ -106,10 +106,8 @@ public class AiChatService(
                 runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
                 context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count, context.Tools.RecurringTasks.Count);
 
-            // Nothing task-shaped in a sentence is no reason to lose the sentence. When the AI calls
-            // no tools, keep what the user said as a note so the turn still produces something they
-            // can act on. Their original wording, not the date-resolved rewrite, since a note is a
-            // captured thought rather than an extracted entity.
+            // Nothing extracted: keep the input as a note rather than dropping it.
+            // Original wording, since resolvedMessage has had its dates rewritten.
             if (context.Tools.ToolCallCount <= 0)
             {
                 logger.LogInformation("TaskGeneration: no tools called, keeping the user's input as a note.");
