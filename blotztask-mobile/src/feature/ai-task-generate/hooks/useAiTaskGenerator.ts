@@ -38,8 +38,6 @@ export function useAiTaskGenerator({
     [],
   );
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
-  // A run that produced nothing: the user said something the AI found no tasks or notes in.
-  const [emptyResult, setEmptyResult] = useState<{ userInput: string } | null>(null);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
 
@@ -52,7 +50,6 @@ export function useAiTaskGenerator({
     const base64 = arrayBufferToBase64(arrayBuffer);
 
     setTranscript(undefined);
-    setEmptyResult(null);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "voice";
@@ -81,7 +78,6 @@ export function useAiTaskGenerator({
     }
 
     setTranscript(undefined);
-    setEmptyResult(null);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "text";
@@ -181,9 +177,6 @@ export function useAiTaskGenerator({
     pendingInputModeRef.current = null;
     const inputText = result.userInput;
 
-    // A turn that extracted nothing is a normal result, so it arrives here rather than as an error.
-    setEmptyResult(result.isEmptyResult ? { userInput: inputText ?? "" } : null);
-
     if (inputMode && inputText) {
       setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
     }
@@ -211,10 +204,6 @@ export function useAiTaskGenerator({
       errorCode: error.errorCode,
       durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
     });
-
-    // This handler now sees genuine faults only. An empty extraction is a normal result and lands
-    // in generationCompleteHandler, so clear any empty state a previous turn left showing.
-    setEmptyResult(null);
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
     Toast.show({ type: "error", text1: t(i18nKey) });
@@ -265,8 +254,6 @@ export function useAiTaskGenerator({
 
   return {
     transcript,
-    emptyResult,
-    clearEmptyResult: () => setEmptyResult(null),
     streamedTasks,
     streamedNotes,
     streamedRecurringTasks,

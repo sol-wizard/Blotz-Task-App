@@ -3,9 +3,6 @@ export interface AiResultMessageDTO {
   extractedTasks?: ExtractedTaskDTO[];
   extractedNotes?: AiNoteDTO[];
   extractedRecurringTasks?: ExtractedRecurringTaskDTO[];
-  // This turn called no tools, so nothing was extracted from what the user said. The extracted*
-  // lists are cumulative for the session, so their length cannot tell us this on its own.
-  isEmptyResult?: boolean;
 }
 
 export interface AiGenerationErrorDTO {

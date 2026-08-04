@@ -37,11 +37,6 @@
     "editTextLabel": "编辑笔记",
     "editTextHint": "双击编辑笔记"
   },
-  "emptyResult": {
-    "title": "这句话里没有可添加的内容",
-    "saveAsNote": "存为笔记",
-    "savedAsNote": "已存为笔记"
-  },
   "voiceHint": {
     "trySaying": "试试说话或输入",
     "hintText": "\"明天早上 8 点参加美国总统选举\""
