@@ -194,6 +194,11 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
+    if (error.errorCode !== "QuotaExceeded") {
+      setStreamedTasks([]);
+      setStreamedNotes([]);
+      setStreamedRecurringTasks([]);
+    }
 
     analytics.trackAiTaskGenerationFailed({
       inputMode: inputMode ?? "unknown",
