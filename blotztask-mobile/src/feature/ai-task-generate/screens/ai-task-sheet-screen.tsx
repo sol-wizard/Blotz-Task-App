@@ -83,7 +83,7 @@ export default function AiTaskSheetScreen() {
   );
   const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
     useTaskMutations();
-  const { createNote, createNoteAsync, isNoteCreating } = useNotesMutation();
+  const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
   // Request mic permission on mount; navigate back if denied
   useEffect(() => {
@@ -138,19 +138,21 @@ export default function AiTaskSheetScreen() {
   // Capture what we heard without leaving the sheet. Opening the note editor instead would mean
   // navigating away from any drafts earlier turns produced, so this saves in place; the note stays
   // editable in the Notes tab afterwards.
-  const handleSaveAsNote = () => {
+  const handleSaveAsNote = async () => {
     if (!emptyResult?.userInput || isNoteCreating) return;
 
-    createNote(
-      { text: emptyResult.userInput, isPersistent: false },
-      {
-        onSuccess: () => {
-          analytics.trackNoteCreated({ source: "ai" });
-          clearEmptyResult();
-          Toast.show({ type: "success", text1: t("emptyResult.savedAsNote") });
-        },
-      },
-    );
+    try {
+      await createNoteAsync({ text: emptyResult.userInput, isPersistent: false });
+      analytics.trackNoteCreated({ source: "ai" });
+      clearEmptyResult();
+      // Confirms even if the sheet was dismissed mid-request: the root Toast in _layout outlives it,
+      // the same way handleAddAll below toasts after closing. mutate's callbacks would be skipped on
+      // unmount, leaving a saved note with no confirmation at all.
+      Toast.show({ type: "success", text1: t("emptyResult.savedAsNote") });
+    } catch {
+      // Only here to stop an unhandled rejection. The failure itself is already toasted and sent to
+      // Sentry by the global mutationCache.onError.
+    }
   };
 
   const handleAddAll = async () => {
@@ -250,7 +252,10 @@ export default function AiTaskSheetScreen() {
 
             {/* A turn that found nothing. Any earlier drafts stay on screen above it. */}
             {emptyResult && !isAiGenerating && (
-              <AiEmptyResult userInput={emptyResult.userInput} onSaveAsNote={handleSaveAsNote} />
+              <AiEmptyResult
+                userInput={emptyResult.userInput}
+                onSaveAsNote={() => void handleSaveAsNote()}
+              />
             )}
 
             {isAiGenerating && !!transcript && (
