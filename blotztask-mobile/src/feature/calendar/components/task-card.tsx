@@ -15,7 +15,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { cancelNotification } from "@/shared/util/cancel-notification";
-import { formatDateRange } from "../util/format-date-range";
+import { formatTaskCardTimeRange } from "../util/format-task-card-time-range";
 import { formatTaskEndTime } from "../util/format-task-end-time";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
@@ -86,10 +86,9 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
 
   // Derived values
   const hasSubtasks = !!task.subtasks?.length;
-  const timePeriod = formatDateRange({
+  const timePeriod = formatTaskCardTimeRange({
     startTime: task.startTime,
     endTime: task.endTime,
-    selectedDay,
   });
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
   const isLoading =
