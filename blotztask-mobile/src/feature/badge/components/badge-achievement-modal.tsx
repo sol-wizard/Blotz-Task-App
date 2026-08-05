@@ -24,7 +24,11 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
   const { t } = useTranslation("badge");
 
   const shareCardRef = useRef<View>(null);
-  const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
+  const { isSharingImage, shareImage } = useReviewShare({
+    captureTargetRef: shareCardRef,
+    source: "badge",
+    contentType: "badge",
+  });
 
   const rewardSound = useAudioPlayer(ASSETS.badgeReward);
 
