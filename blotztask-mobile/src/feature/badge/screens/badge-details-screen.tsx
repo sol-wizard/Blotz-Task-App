@@ -17,6 +17,8 @@ export default function BadgeDetailsScreen() {
   const shareCardRef = useRef<View>(null);
   const { isSharingImage, shareImage } = useReviewShare({
     captureTargetRef: shareCardRef,
+    source: "badge",
+    contentType: "badge",
   });
 
   const params = useLocalSearchParams<{ badgeId: string }>();
