@@ -1,12 +1,15 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
+import { useQueryClient } from "@tanstack/react-query";
 import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
 import { useRouter } from "expo-router";
 import { toggleTaskCompletion } from "../services/task-service";
+import { badgeKeys } from "../constants/query-key-factory";
 
 export function usePushNotificationSetup() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [badgeQueue, setBadgeQueue] = useState<BadgeNotificationDTO[]>([]);
 
   useEffect(() => {
@@ -18,16 +21,19 @@ export function usePushNotificationSetup() {
 
       const earnedAtUtc = typeof data.earnedAtUtc === "string" ? data.earnedAtUtc : undefined;
 
-      setBadgeQueue((prev) => [
-        ...prev,
-        {
-          badgeId: Number(data.badgeId),
-          name: notification.request.content.body ?? "",
-          description: typeof data.description === "string" ? data.description : "",
-          iconUrl: typeof data.iconUrl === "string" ? data.iconUrl : "",
-          obtainedAt: earnedAtUtc ? new Date(earnedAtUtc) : new Date(),
-        },
-      ]);
+      const badge: BadgeNotificationDTO = {
+        badgeId: Number(data.badgeId),
+        name: notification.request.content.body ?? "",
+        description: typeof data.description === "string" ? data.description : "",
+        iconUrl: typeof data.iconUrl === "string" ? data.iconUrl : "",
+        obtainedAt: earnedAtUtc ? new Date(earnedAtUtc) : new Date(),
+      };
+
+      setBadgeQueue((prev) =>
+        prev.some((queued) => queued.badgeId === badge.badgeId) ? prev : [...prev, badge],
+      );
+
+      queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     });
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(

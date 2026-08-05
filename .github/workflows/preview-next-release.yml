@@ -48,12 +48,37 @@ jobs:
           else
             SINCE="1970-01-01T00:00:00Z"
           fi
+          # Send only what the summarizer is allowed to use: the title, the author's
+          # "Release note" sentence, and the ONE ticked Status box. Full PR bodies
+          # (Summary prose + the three unticked boxes) were ~70% of the payload and
+          # pushed the request past the GitHub Models 8k input cap once ~35 PRs had
+          # accumulated in a release cycle.
           gh pr list --repo "$REPO" --state merged --base main --limit 100 \
             --json number,title,body,mergedAt \
-            --jq "[.[] | select(.mergedAt > \"$SINCE\")] | sort_by(.mergedAt)
-                  | .[] | \"#\(.number) \(.title)\n\(.body // \"\" | .[0:1500])\n---\"" > prs.txt
+          | jq -r --arg since "$SINCE" '
+              [.[] | select(.mergedAt > $since)]
+              | sort_by(.mergedAt)
+              | .[]
+              | "#\(.number) \(.title)"
+                + ( (.body // "")
+                    | [splits("\r?\n")]
+                    | map(select(test("^\\s*-\\s*\\[[xX]\\]")
+                                 or (test("^\\s*>") and (test("_your one-line") | not))))
+                    | map(sub("^\\s*>\\s*"; "note: ")
+                          | sub("^\\s*-\\s*\\[[xX]\\]\\s*"; "status: ")
+                          | sub("\\s+$"; ""))
+                    | map(select(length > 0))
+                    | if length == 0 then "" else "\n" + join("\n") end )
+            ' > prs.txt
+          COUNT=$(grep -c '^#' prs.txt)
           echo "prev_tag=${PREV_TAG:-none}" >> "$GITHUB_OUTPUT"
-          echo "Collected $(grep -c '^---$' prs.txt) PRs since ${PREV_TAG:-start}."
+          echo "Collected $COUNT PRs since ${PREV_TAG:-start} ($(wc -c < prs.txt) bytes)."
+          # The 100 above is a fetch cap, not a filter: gh returns the newest 100 merged
+          # PRs and jq then narrows by date. If a cycle ever exceeds it, older PRs are
+          # dropped silently and the notes look complete but aren't. Say so out loud.
+          if [ "$COUNT" -ge 100 ]; then
+            echo "::warning::Hit the 100-PR fetch cap; PRs merged early in this cycle may be missing from the notes."
+          fi
 
       - name: Summarize with GitHub Models
         env:

@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { analytics } from "@/shared/services/analytics";
 
 interface BadgeAchievementModalProps {
   badge?: BadgeNotificationDTO;
@@ -23,7 +24,11 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
   const { t } = useTranslation("badge");
 
   const shareCardRef = useRef<View>(null);
-  const { isSharingImage, shareImage } = useReviewShare({ captureTargetRef: shareCardRef });
+  const { isSharingImage, shareImage } = useReviewShare({
+    captureTargetRef: shareCardRef,
+    source: "badge",
+    contentType: "badge",
+  });
 
   const rewardSound = useAudioPlayer(ASSETS.badgeReward);
 
@@ -37,6 +42,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     rewardSound.seekTo(0);
     rewardSound.play();
+    analytics.trackBadgeUnlocked({ badgeId });
   }, [badgeId, rewardSound]);
 
   if (!badge) return null;
@@ -69,7 +75,7 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
 
           <Image
             source={{ uri: badge.iconUrl }}
-            style={{ width: 128, height: 128, marginBottom: 20 }}
+            style={{ width: 210, height: 210, marginBottom: 20 }}
             contentFit="contain"
           />
 
@@ -79,11 +85,11 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
             </Text>
           </View>
 
-          <Text className="text-white text-xl font-balooThin text-center w-64">
+          <Text className="text-white text-lg font-balooThin text-center w-64">
             {badge.description}
           </Text>
 
-          <Text className="text-white text-xl font-baloo mt-4">
+          <Text className="text-white text-lg font-baloo mt-4">
             {t("obtainedOn", {
               date: formatLocalizedDate(badge.obtainedAt, "fullMonthDayYear"),
             })}
@@ -100,17 +106,20 @@ export function BadgeAchievementModal({ badge, onDismiss }: BadgeAchievementModa
               }}
               className="min-h-[44px] px-7 py-2.5 rounded-full border-2 border-highlight items-center justify-center"
             >
-              <Text className="text-highlight text-base font-balooBold pt-1">{t("view")}</Text>
+              <Text className="text-highlight text-lg font-balooBold pt-1">{t("view")}</Text>
             </Pressable>
 
             <Pressable
-              onPress={shareImage}
+              onPress={async () => {
+                await shareImage();
+                onDismiss();
+              }}
               disabled={isSharingImage}
               className={`min-h-[44px] px-7 py-2.5 rounded-full border-2 border-transparent bg-highlight items-center justify-center ${
                 isSharingImage ? "opacity-60" : "opacity-100"
               }`}
             >
-              <Text className="text-white text-base font-balooBold pt-1">
+              <Text className="text-white text-lg font-balooBold pt-1">
                 {isSharingImage ? t("sharing") : t("shareReward")}
               </Text>
             </Pressable>

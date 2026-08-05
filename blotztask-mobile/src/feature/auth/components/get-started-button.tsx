@@ -4,6 +4,9 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { updateUserProfile } from "@/shared/services/user-service";
+import { analytics } from "@/shared/services/analytics";
+import { toLoginErrorCode, toLoginFailureReason } from "@/feature/auth/utils/login-error-code";
+import type { LoginConnection } from "@/shared/constants/posthog-events";
 import { Pressable, Text, View } from "react-native";
 import {
   createAnimatedComponent,
@@ -21,6 +24,11 @@ export default function GetStartedButton() {
   const { refreshAuthState } = useAuth();
 
   const signIn = async (connection?: string) => {
+    const trackedConnection: LoginConnection = connection === "sms" ? "sms" : "default";
+    const startedAt = Date.now();
+
+    analytics.trackLoginStarted({ connection: trackedConnection });
+
     try {
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
@@ -30,8 +38,21 @@ export default function GetStartedButton() {
 
       if (!result?.accessToken || !result?.refreshToken) {
         console.error("No access token received from Auth0");
+        analytics.trackLoginFailed({
+          connection: trackedConnection,
+          reason: "no_tokens",
+          errorCode: "NoTokensReturned",
+          durationMs: Date.now() - startedAt,
+        });
         return;
       }
+
+      // Tracked before the redirect so it lands on the same anonymous distinct_id as
+      // `login_started`, keeping the whole funnel on one identity until `$identify`.
+      analytics.trackLoginSucceeded({
+        connection: trackedConnection,
+        durationMs: Date.now() - startedAt,
+      });
 
       try {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -44,6 +65,15 @@ export default function GetStartedButton() {
       router.replace("/(protected)");
     } catch (e) {
       console.error("Auth0 authorization error:", e);
+      // This branch catches user cancellation as well as genuine errors — `reason` is
+      // what tells them apart.
+      const errorCode = toLoginErrorCode(e);
+      analytics.trackLoginFailed({
+        connection: trackedConnection,
+        reason: toLoginFailureReason(errorCode),
+        errorCode,
+        durationMs: Date.now() - startedAt,
+      });
     }
   };
 
