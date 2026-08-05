@@ -15,7 +15,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IAiChatService
 {
     Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct);
-    Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string resolvedMessage, string originalMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiChatService(
@@ -71,7 +71,8 @@ public class AiChatService(
 
     public async Task<AiGenerateMessage> GenerateAiResponse(
         Guid userId,
-        string userMessage,
+        string resolvedMessage,
+        string originalMessage,
         AiChatContext context,
         CancellationToken ct)
     {
@@ -86,7 +87,7 @@ public class AiChatService(
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             var runSw = Stopwatch.StartNew();
-            var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            var response = await context.Agent.RunAsync(resolvedMessage, context.Session, cancellationToken: ct);
             runSw.Stop();
 
             inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
@@ -104,6 +105,14 @@ public class AiChatService(
                 "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount} | Recurring={RecurringCount}",
                 runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
                 context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count, context.Tools.RecurringTasks.Count);
+
+            // Nothing extracted: keep the input as a note rather than dropping it.
+            // Original wording, since resolvedMessage has had its dates rewritten.
+            if (context.Tools.ToolCallCount <= 0)
+            {
+                logger.LogInformation("TaskGeneration: no tools called, keeping the user's input as a note.");
+                await context.Tools.CreateNote(originalMessage);
+            }
         }
         catch (OperationCanceledException oce)
         {
@@ -128,9 +137,6 @@ public class AiChatService(
             throw new AiTaskGenerationException(AiErrorCode.Unknown,
                 "An unhandled exception occurred during AI task generation.", ex);
         }
-
-        if (context.Tools.ToolCallCount <= 0)
-            throw new AiTaskGenerationException(AiErrorCode.NoTasksExtracted, "No tasks or notes were extracted.");
 
         return new AiGenerateMessage
         {
