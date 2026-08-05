@@ -19,6 +19,10 @@ export const EVENTS = {
   POMODORO_STARTED: "pomodoro_started",
   BADGE_UNLOCKED: "badge_unlocked",
   REVIEW_GENERATED: "review_generated",
+  SHARE_CLICKED: "share_clicked",
+  SHARE_SHEET_OPENED: "share_sheet_opened",
+  SHARE_COMPLETED: "share_completed",
+  SHARE_FAILED: "share_failed",
 } as const;
 
 export const SCREEN_NAMES = {
@@ -74,3 +78,14 @@ export type AiTaskGenerationTurn = {
     text: string;
   }[];
 };
+
+// sharing records
+export type ShareEvent =
+  | typeof EVENTS.SHARE_CLICKED
+  | typeof EVENTS.SHARE_SHEET_OPENED
+  | typeof EVENTS.SHARE_COMPLETED
+  | typeof EVENTS.SHARE_FAILED;
+
+export type ShareSource = "weekly_review" | "monthly_review" | "badge";
+
+export type ShareContentType = "review" | "badge";

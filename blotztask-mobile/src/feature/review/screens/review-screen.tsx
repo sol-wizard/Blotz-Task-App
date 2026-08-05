@@ -38,6 +38,8 @@ export default function ReviewScreen() {
   const activeShareCardRef = isMonthlyTab ? monthlyShareCardRef : weeklyShareCardRef;
   const { isSharingImage, shareImage } = useReviewShare({
     captureTargetRef: activeShareCardRef,
+    source: isMonthlyTab ? "monthly_review" : "weekly_review",
+    contentType: "review",
   });
   // Don't let users page back before sign-up month — those months are always empty.
   const earliestReviewableMonth = userProfile?.signUpAt
