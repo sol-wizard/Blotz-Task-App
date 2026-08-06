@@ -162,7 +162,7 @@ public class AiQualityCheckService(
             });
 
             var aiSw = Stopwatch.StartNew();
-            var result = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
+            var result = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, qualityCheckCase.Input, chatContext, ct);
             aiSw.Stop();
 
             caseSw.Stop();
