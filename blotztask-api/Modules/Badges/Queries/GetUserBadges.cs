@@ -29,7 +29,8 @@ public class GetUserBadgesQueryHandler(BlotzTaskDbContext db, ILogger<GetUserBad
                     badge.IconUrl,
                     badge.NameEn,
                     badge.NameZh,
-                    ub.EarnedAtUtc
+                    ub.EarnedAtUtc,
+                    EquippedSlot = ub.DisplayOrder
                 })
             .OrderBy(b => b.EarnedAtUtc)
             .ToListAsync(ct);
@@ -40,7 +41,8 @@ public class GetUserBadgesQueryHandler(BlotzTaskDbContext db, ILogger<GetUserBad
                 Id = badge.Id,
                 Name = language == Language.Zh ? badge.NameZh : badge.NameEn,
                 IconUrl = badge.IconUrl,
-                DisplayOrder = index
+                DisplayOrder = index,
+                EquippedSlot = badge.EquippedSlot
             })
             .ToList();
 
@@ -55,4 +57,5 @@ public class BadgeDto
     public required string Name { get; set; }
     public required string IconUrl { get; set; }
     public int DisplayOrder { get; set; }
+    public int? EquippedSlot { get; set; }
 }
