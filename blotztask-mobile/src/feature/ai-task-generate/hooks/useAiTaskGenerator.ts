@@ -21,7 +21,6 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   TokenLimited: "errors.tokenLimited",
   BlockedByContentFilter: "errors.contentFilter",
   Canceled: "errors.canceled",
-  NoTasksExtracted: "errors.noTasksExtracted",
   QuotaExceeded: "errors.quotaExceeded",
 };
 
