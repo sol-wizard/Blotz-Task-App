@@ -12,6 +12,9 @@ import {
   type LoginErrorCode,
   type LoginFailureReason,
   type TaskSource,
+  type ShareEvent,
+  type ShareSource,
+  type ShareContentType,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -263,5 +266,21 @@ export const analytics = {
 
   trackReviewGenerated(params: { period: ReviewPeriodType }) {
     posthog.capture(EVENTS.REVIEW_GENERATED, { period: params.period });
+  },
+
+  // sharing
+  trackShare(
+    event: ShareEvent,
+    params: {
+      source: ShareSource;
+      contentType: ShareContentType;
+      error?: string;
+    },
+  ) {
+    posthog.capture(event, {
+      source: params.source,
+      content_type: params.contentType,
+      ...(params.error ? { error: params.error } : {}),
+    });
   },
 };
