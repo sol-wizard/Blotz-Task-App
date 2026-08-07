@@ -1,5 +1,4 @@
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Modules.Badges.Domain;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,17 +10,11 @@ public class EquipBadgeCommand
     public required int BadgeId { get; init; }
 }
 
-public class EquippedBadgeDto
-{
-    public int BadgeId { get; set; }
-    public int Slot { get; set; }
-}
-
 public class EquipBadgeCommandHandler(BlotzTaskDbContext db, ILogger<EquipBadgeCommandHandler> logger)
 {
     private const int SlotCount = 3;
 
-    public async Task<List<EquippedBadgeDto>> Handle(EquipBadgeCommand command, CancellationToken ct = default)
+    public async Task Handle(EquipBadgeCommand command, CancellationToken ct = default)
     {
         var userBadges = await db.UserBadges
             .Where(ub => ub.UserId == command.UserId)
@@ -39,7 +32,7 @@ public class EquipBadgeCommandHandler(BlotzTaskDbContext db, ILogger<EquipBadgeC
         {
             logger.LogInformation(
                 "Badge {BadgeId} is already on display for user {UserId}", command.BadgeId, command.UserId);
-            return ToDto(equipped);
+            return;
         }
 
         // FIFO: the display holds at most three badges, so a new one pushes the oldest out.
@@ -59,12 +52,5 @@ public class EquipBadgeCommandHandler(BlotzTaskDbContext db, ILogger<EquipBadgeC
         logger.LogInformation(
             "User {UserId} equipped badge {BadgeId} into slot {Slot}",
             command.UserId, command.BadgeId, target.DisplayOrder);
-
-        return ToDto(equipped);
     }
-
-    private static List<EquippedBadgeDto> ToDto(List<UserBadge> equipped) =>
-        equipped
-            .Select(ub => new EquippedBadgeDto { BadgeId = ub.BadgeId, Slot = ub.DisplayOrder!.Value })
-            .ToList();
 }
