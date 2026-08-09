@@ -1,13 +1,21 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
 
-type ContentBlock = {
+type TextContentBlock = {
   type: "paragraph" | "header" | "subheader" | "subheader2" | "bullet" | "toc_title" | "toc";
   text: string;
 };
+
+type LinkContentBlock = {
+  type: "link";
+  text: string;
+  url: string;
+};
+
+type ContentBlock = TextContentBlock | LinkContentBlock;
 
 export default function SettingsPrivacyPolicyScreen() {
   const router = useRouter();
@@ -56,6 +64,38 @@ export default function SettingsPrivacyPolicyScreen() {
             <Text className="text-sm font-baloo text-gray-500 mr-2 mt-0.5">•</Text>
             <Text className="text-sm font-baloo text-gray-500 flex-1 leading-5">{block.text}</Text>
           </View>
+        );
+      case "link":
+        if (block.url.startsWith("mailto:")) {
+          const email = block.url.slice("mailto:".length);
+          const emailIndex = block.text.indexOf(email);
+          const prefix = emailIndex >= 0 ? block.text.slice(0, emailIndex) : "";
+          const suffix = emailIndex >= 0 ? block.text.slice(emailIndex + email.length) : "";
+
+          return (
+            <Text key={index} className="text-sm font-baloo text-gray-500 mt-2 leading-5">
+              {prefix}
+              <Text
+                accessibilityRole="link"
+                onPress={() => void Linking.openURL(block.url)}
+                className="text-blue-500 underline"
+              >
+                {email}
+              </Text>
+              {suffix}
+            </Text>
+          );
+        }
+
+        return (
+          <Pressable
+            key={index}
+            accessibilityRole="link"
+            onPress={() => void Linking.openURL(block.url)}
+            className="mt-2"
+          >
+            <Text className="text-sm font-baloo text-blue-500 underline leading-5">{block.text}</Text>
+          </Pressable>
         );
       case "paragraph":
       default:
