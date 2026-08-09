@@ -20,7 +20,7 @@ export function AiRecurringResultCard({ title, label, scheduleSummary }: Props) 
       entering={MotionAnimations.upEntering}
       exiting={MotionAnimations.outExiting}
       layout={MotionAnimations.layout}
-      className="bg-white rounded-2xl flex-row items-center w-[88%] pl-6 pr-4 pt-4 pb-3 my-4"
+      className="bg-white rounded-2xl flex-row items-center  w-full justify-between pl-6 pr-4 pt-4 pb-3 "
     >
       <View
         className="w-1.5 h-10 rounded-full"
@@ -28,7 +28,10 @@ export function AiRecurringResultCard({ title, label, scheduleSummary }: Props) 
       />
 
       <View className="flex-1 ml-4">
-        <Text className="text-lg font-baloo leading-5 py-1" style={{ color: theme.colors.onSurface }}>
+        <Text
+          className="text-lg font-baloo leading-5 py-1"
+          style={{ color: theme.colors.onSurface }}
+        >
           {title}
         </Text>
         <Text className="text-sm font-balooThin text-primary mt-0.5">{scheduleSummary}</Text>

@@ -71,7 +71,7 @@ public class AiTaskGenerateChatHub(
         WireStreamingCallbacks(chatContext, ct);
 
         // 3. Run the AI — it will call tools (CreateTask, CreateNote, etc.) which trigger the callbacks above
-        var resultMessage = await aiChatService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
+        var resultMessage = await aiChatService.GenerateAiResponse(userId, resolvedMessage, message, chatContext, ct);
 
         // 4. Clear callbacks so stale tool calls from a previous turn cannot push to the client
         ClearStreamingCallbacks(chatContext);
