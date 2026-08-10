@@ -162,6 +162,10 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           name: 'AppVersion__Android__StoreUrl'
           value: androidStoreUrl
         }
+        // Not modelled here, on purpose: prod also carries AzureSpeech__Key, AzureSpeech__Region,
+        // AzureOpenAI__DeploymentId, and both apps carry AzureOpenAI__AiModels__Speech__DeploymentId.
+        // No C# reads any of them - speech runs through Groq whisper (Groq__SpeechModel) - so they
+        // are leftovers that can be deleted from the App Service settings.
       ]
     }
   }

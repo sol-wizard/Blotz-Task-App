@@ -5,10 +5,6 @@ param organizationName = 'blotz'
 param projectName = 'task'
 param location = 'australiaeast'
 
-param breakdownDeploymentName = 'gpt-5.2-chat'
-param breakdownModelName = 'gpt-5.2-chat'
-param breakdownModelVersion = '2025-12-11'
-
 param taskGenerationDeploymentName = 'gpt-5.4-mini'
 param taskGenerationModelName = 'gpt-5.4-mini'
 param taskGenerationModelVersion = '2026-03-17'
@@ -27,11 +23,12 @@ param appInsightsSamplingPercentage = 4
 param appServiceSkuName = 'B1'
 param appServiceSkuTier = 'Basic'
 
-// Database (DTU Standard S0 - 10 DTUs, max 250GB)
-param dbMaxSizeGb = 2
-param dbSkuName = 'S0'
-param dbSkuTier = 'Standard'
-param dbSkuCapacity = 10
+// Database (DTU Basic - 5 DTUs, 1GB). Prod runs Basic, not the S0 Standard this file
+// used to claim; verified against sqldb-blotz-task-prod.
+param dbMaxSizeGb = 1
+param dbSkuName = 'Basic'
+param dbSkuTier = 'Basic'
+param dbSkuCapacity = 5
 
 // Entra ID dev group Object ID - create a prod group and replace this
 param devGroupId = '5719a9e2-49bd-49eb-85d1-e4afd63ca04d'

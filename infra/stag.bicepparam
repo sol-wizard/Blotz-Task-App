@@ -5,10 +5,8 @@ param organizationName = 'blotz'
 param projectName = 'task'
 param location = 'australiaeast'
 
-param breakdownDeploymentName = 'gpt-5.2-chat'
-param breakdownModelName = 'gpt-5.2-chat'
-param breakdownModelVersion = '2025-12-11'
-
+// Staging also carries a gpt-5-mini deployment (capacity 500) left over from earlier testing.
+// Nothing in the API references it - it is not modelled here.
 param taskGenerationDeploymentName = 'gpt-5.4-mini'
 param taskGenerationModelName = 'gpt-5.4-mini'
 param taskGenerationModelVersion = '2026-03-17'

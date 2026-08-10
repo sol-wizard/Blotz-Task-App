@@ -18,10 +18,6 @@ param auth0Audience string
 param auth0ManagementClientId string
 param auth0ManagementAudience string
 
-param breakdownDeploymentName string
-param breakdownModelName string
-param breakdownModelVersion string
-
 param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
@@ -183,9 +179,6 @@ module openAi 'modules/openAi.bicep' = {
     projectName: namePrefix
     keyVaultName: kv.outputs.name
     foundryProjectName: 'proj-${namePrefix}-${environment}'
-    breakdownDeploymentName: breakdownDeploymentName
-    breakdownModelName: breakdownModelName
-    breakdownModelVersion: breakdownModelVersion
     taskGenerationDeploymentName: taskGenerationDeploymentName
     taskGenerationModelName: taskGenerationModelName
     taskGenerationModelVersion: taskGenerationModelVersion
