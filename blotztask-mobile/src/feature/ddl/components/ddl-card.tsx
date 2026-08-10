@@ -139,7 +139,8 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             }
             style={isPinned ? { width: 104 } : undefined}
           >
-            <View className={isPinned ? "w-full items-center" : "items-center"}>
+            <View className={isPinned ? "w-full items-center" : "flex-row items-center"}
+            style={!isPinned ? { transform: [{ translateX: -8 }] } : undefined}>
               <Text
                 className={
                   isPinned
