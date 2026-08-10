@@ -46,3 +46,14 @@ param auth0ManagementClientId = 'xWylVePDs5giZLBopYT1qHecBv2WijQh'
 param auth0ManagementAudience = 'https://dev-k72xachs0fr6nebp.us.auth0.com/api/v2/'
 // Auth0 Management Client Secret - overridden at deploy time
 param auth0ManagementClientSecret = ''
+
+// Mobile force-update policy. LatestVersion drives the soft "update available" prompt;
+// MinimumSupportedVersion is the hard wall - only raise it once that build is live in the store,
+// or every user below it is locked out with nothing to install.
+param iosLatestVersion = '1.2.0'
+param iosMinimumSupportedVersion = '1.2.0'
+param iosStoreUrl = 'https://apps.apple.com/us/app/blotztask-adhd-time-manager/id6752492404'
+
+param androidLatestVersion = '1.2.1'
+param androidMinimumSupportedVersion = '1.0.0'
+param androidStoreUrl = 'https://play.google.com/store/apps/details?id=com.blotz.blotztask'

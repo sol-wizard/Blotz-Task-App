@@ -40,6 +40,14 @@ param appInsightsSamplingPercentage int = 5
 param appServiceSkuName string
 param appServiceSkuTier string
 
+// Mobile force-update policy (served by GET /api/app-version)
+param iosLatestVersion string
+param iosMinimumSupportedVersion string
+param iosStoreUrl string
+param androidLatestVersion string
+param androidMinimumSupportedVersion string
+param androidStoreUrl string
+
 // Database (DTU model)
 param dbMaxSizeGb int
 param dbSkuName string
@@ -116,6 +124,12 @@ module webAppForAPI 'modules/appService.bicep' = {
     auth0Audience: auth0Audience
     auth0ManagementClientId: auth0ManagementClientId
     auth0ManagementAudience: auth0ManagementAudience
+    iosLatestVersion: iosLatestVersion
+    iosMinimumSupportedVersion: iosMinimumSupportedVersion
+    iosStoreUrl: iosStoreUrl
+    androidLatestVersion: androidLatestVersion
+    androidMinimumSupportedVersion: androidMinimumSupportedVersion
+    androidStoreUrl: androidStoreUrl
   }
 }
 
