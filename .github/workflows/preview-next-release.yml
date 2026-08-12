@@ -8,15 +8,13 @@ name: Preview Next Release
 # uses Azure OpenAI to draft friendly "What's New" copy: it omits work marked
 # internal or hidden-in-production, and tags beta features as "(beta)".
 #
-# Refreshes on every merge to main, when a release is published, and on demand.
+# Refreshes when a release is published and on demand.
 # Uses the Azure OpenAI v1 API (requires the AZURE_OPENAI_ENDPOINT — the
 # "https://<resource>.openai.azure.com/openai/v1" base shown in Foundry, no
 # trailing slash — plus AZURE_OPENAI_API_KEY and AZURE_OPENAI_DEPLOYMENT repo
 # secrets; GitHub Models was retired).
 
 on:
-  push:
-    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
