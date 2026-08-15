@@ -154,25 +154,45 @@ public class AiQualityCheckService(
             var chatContext = await aiTaskGenerateService.InitializeAsync("English", timeZone, ct);
             initSw.Stop();
 
-            var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
-            {
-                Message = qualityCheckCase.Input,
-                TimeZone = timeZone,
-                ReferenceTime = userLocalTime
-            });
-
             var aiSw = Stopwatch.StartNew();
-            var result = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, qualityCheckCase.Input, chatContext, ct);
+            var inputTokens = 0;
+            var outputTokens = 0;
+            var totalTokens = 0;
+            AiGenerateMessage? result = null;
+
+            foreach (var setupInput in qualityCheckCase.SetupInputs)
+            {
+                result = await GenerateAsync(setupInput);
+            }
+
+            var recurringBeforeMutation = chatContext.Tools.RecurringTasks.Select(CloneRecurringTask).ToList();
+            result = await GenerateAsync(qualityCheckCase.Input);
             aiSw.Stop();
+
+            async Task<AiGenerateMessage> GenerateAsync(string input)
+            {
+                var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
+                {
+                    Message = input,
+                    TimeZone = timeZone,
+                    ReferenceTime = userLocalTime
+                });
+                var response = await aiTaskGenerateService.GenerateAiResponse(
+                    userId, resolvedMessage, input, chatContext, ct);
+                inputTokens += response.InputTokens;
+                outputTokens += response.OutputTokens;
+                totalTokens += response.TotalTokens;
+                return response;
+            }
 
             caseSw.Stop();
             caseResult.TotalTimeMs = caseSw.ElapsedMilliseconds;
-           caseResult.InitTimeMs = Math.Max(1, initSw.ElapsedMilliseconds);
+            caseResult.InitTimeMs = Math.Max(1, initSw.ElapsedMilliseconds);
             caseResult.AiTimeMs = aiSw.ElapsedMilliseconds;
 
-            caseResult.InputTokens = result.InputTokens;
-            caseResult.OutputTokens = result.OutputTokens;
-            caseResult.TotalTokens = result.TotalTokens;
+            caseResult.InputTokens = inputTokens;
+            caseResult.OutputTokens = outputTokens;
+            caseResult.TotalTokens = totalTokens;
 
             caseResult.ExtractedTasks = (result.ExtractedTasks ?? [])
                 .Select(t => new QualityCheckExtractedTask
@@ -202,6 +222,8 @@ public class AiQualityCheckService(
             QualityCheckRunner.CheckRecurringCount(qualityCheckCase, result, caseResult);
             QualityCheckRunner.CheckRecurringExpectations(qualityCheckCase, result, caseResult);
             QualityCheckRunner.CheckRecurringCreation(qualityCheckCase, caseResult);
+            QualityCheckRunner.CheckRecurringMutation(
+                qualityCheckCase, recurringBeforeMutation, result, caseResult);
 
             caseResult.Passed = caseResult.Checks.All(c => c.Passed);
         }
@@ -221,6 +243,23 @@ public class AiQualityCheckService(
 
         return caseResult;
     }
+
+    private static ExtractedRecurringTask CloneRecurringTask(ExtractedRecurringTask task) => new()
+    {
+        Id = task.Id,
+        Title = task.Title,
+        Description = task.Description,
+        TimeType = task.TimeType,
+        LabelName = task.LabelName,
+        TemplateStartTime = task.TemplateStartTime,
+        TemplateEndTime = task.TemplateEndTime,
+        Frequency = task.Frequency,
+        Interval = task.Interval,
+        DaysOfWeek = task.DaysOfWeek,
+        DayOfMonth = task.DayOfMonth,
+        StartDate = task.StartDate,
+        EndDate = task.EndDate
+    };
 
     // Map each extracted recurring draft to the strict endpoint request, attempt real creation,
     // and record the outcome (created ids or the ValidationException message).
