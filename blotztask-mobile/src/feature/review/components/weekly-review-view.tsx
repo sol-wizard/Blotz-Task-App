@@ -101,12 +101,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
             collapsable={false}
             className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
           >
-            <LetterHeader
-              displayPeriod={displayWeek}
-              recipientName={recipientName}
-              pictureUrl={userProfile?.pictureUrl}
-              letterLabel={t("weeklyReview.letterLabel")}
-            />
+            <LetterHeader displayPeriod={displayWeek} letterLabel={t("weeklyReview.letterLabel")} />
             <LetterCardContent
               isLoading={isLoading}
               report={report}
@@ -114,6 +109,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
               isGenerating={isGenerating}
               onGenerate={generate}
               period={ReviewPeriodType.Weekly}
+              periodName={displayWeek}
             />
           </View>
         </View>

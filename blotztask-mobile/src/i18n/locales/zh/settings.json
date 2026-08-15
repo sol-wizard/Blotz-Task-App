@@ -86,7 +86,12 @@
     "lowActivityHint": "想让 Blotz 更懂你？🌱 多记录一些任务，下封信就会写得更有意思！✨",
     "comingSoonTitle": "你的第一封信正在路上 ✨",
     "comingSoonBody": "月度回顾会在你使用 Blotz 满一个整月后送达。继续记录你的任务，很快就会有一封信等着你！🌱",
-    "aiDisclosure": "由AI根据您本月创建的任务生成"
+    "aiDisclosure": "由AI根据您本月创建的任务生成",
+    "recordToday": "记录今天",
+    "readyTitle": "你的{{month}}月度信件已准备好。",
+    "readLetter": "阅读信件",
+    "inProgressTitle": "我们还在为你写这个月的信。",
+    "inProgressArrival": "你的信将在 {{date}} 到达 · 还有 {{days}} 天"
   },
   "review": {
     "title": "回顾",

@@ -1,11 +1,13 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { ReviewPeriodType, ReviewReportDTO } from "../models/review-dto";
 import { LetterBody } from "./letter-body";
-import { LetterEmptyState } from "./letter-empty-state";
+
 import { LetterGeneratingState } from "./letter-generating-state";
 import { LetterSignature } from "./letter-signature";
+import { MonthlyLetterInProgressState } from "./monthly-letter-in-progress-state";
+import { LetterReadyState } from "./letter-ready-state";
 
 type Props = {
   isLoading: boolean;
@@ -14,6 +16,8 @@ type Props = {
   isGenerating: boolean;
   onGenerate: () => void;
   period: ReviewPeriodType;
+  isCurrentMonth?: boolean;
+  periodName?: string;
 };
 
 export function LetterCardContent({
@@ -23,6 +27,8 @@ export function LetterCardContent({
   isGenerating,
   onGenerate,
   period,
+  isCurrentMonth = false,
+  periodName,
 }: Props) {
   const { t } = useTranslation("settings");
   const ns = period === ReviewPeriodType.Weekly ? "weeklyReview" : "monthlyReview";
@@ -43,31 +49,24 @@ export function LetterCardContent({
     return <LetterGeneratingState />;
   }
 
+  if (isCurrentMonth) {
+    return <MonthlyLetterInProgressState />;
+  }
+
   if (report) {
     return (
       <>
         <LetterBody recipientName={recipientName} body={report.letter ?? ""} />
         <LetterSignature />
-        <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
-          {t(`${ns}.aiDisclosure`)}
-        </Text>
+
+        {period === ReviewPeriodType.Weekly && (
+          <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
+            {t(`${ns}.aiDisclosure`)}
+          </Text>
+        )}
       </>
     );
   }
 
-  // No report yet → empty state.
-  return (
-    <>
-      <LetterEmptyState period={period} />
-      <View className="items-center mb-6">
-        <Pressable
-          onPress={onGenerate}
-          disabled={isGenerating}
-          className="px-5 py-2 rounded-full bg-secondary"
-        >
-          <Text className="text-white font-balooBold">{t(`${ns}.generate`)}</Text>
-        </Pressable>
-      </View>
-    </>
-  );
+  return <LetterReadyState period={period} periodName={periodName ?? ""} onRead={onGenerate} />;
 }
