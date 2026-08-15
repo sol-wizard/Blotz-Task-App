@@ -11,6 +11,7 @@ using BlotzTask.Modules.Reviews;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
 using BlotzTask.Modules.AppVersion;
+using BlotzTask.Modules.AiCoach;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using Serilog;
@@ -41,6 +42,7 @@ builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
+builder.Services.AddAiCoachModule();
 
 // External integrations
 builder.Services.AddAgentFrameworkServices();
@@ -76,6 +78,7 @@ app.MapGet("/", (IHostEnvironment environment) => Results.Ok(new
 app.MapHealthChecks("/health");
 app.MapControllers();
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
+app.MapHub<AiCoachHub>("/ai-coach-hub");
 
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 app.Run();
