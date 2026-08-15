@@ -75,10 +75,10 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         <View
           className={
             isPinned
-              ? "bg-white rounded-[28px] min-h-32 px-2 py-4 flex-row items-center"
-              : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
+              ? "bg-white  min-h-32 px-2 py-4 flex-row items-center"
+              : "bg-white  px-4 py-3 h-20 flex-row items-center"
           }
-          style={!isPinned ? { gap: 12 } : undefined}
+          style={isPinned ? { borderRadius: 10 } : { borderRadius: 10, gap: 12 }}
         >
           {isPinned && (
             <View className="absolute top-2.5 right-2.5">
@@ -135,7 +135,10 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             }
             style={isPinned ? { width: 104 } : undefined}
           >
-            <View className={isPinned ? "w-full items-center" : "items-center"}>
+            <View
+              className={isPinned ? "w-full items-center" : "flex-row items-center"}
+              style={!isPinned ? { marginRight: 8 } : undefined}
+            >
               <Text
                 className={
                   isPinned
@@ -146,10 +149,11 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
                   isPinned
                     ? {
                         width: "100%",
-                        fontSize: 34,
-                        lineHeight: 46,
+                        fontSize: daysLeftText.length >= 4 ? 34 : 50,
+                        lineHeight: daysLeftText.length >= 4 ? 46 : 64,
                         textAlign: "center",
                         includeFontPadding: false,
+                        transform: [{ translateY: 8 }],
                       }
                     : undefined
                 }
