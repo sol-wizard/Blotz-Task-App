@@ -8,6 +8,8 @@ namespace BlotzTask.Modules.Tasks.Commands.SubTasks;
 public class UpdateSubtaskStatusCommand
 {
     public int SubtaskId { get; set; }
+
+    [Required] public required Guid UserId { get; init; }
 }
 
 public class UpdateSubtaskStatusCommandHandler(BlotzTaskDbContext db, ILogger<UpdateSubtaskStatusCommandHandler> logger)
@@ -15,7 +17,8 @@ public class UpdateSubtaskStatusCommandHandler(BlotzTaskDbContext db, ILogger<Up
     public async Task<string> Handle(UpdateSubtaskStatusCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Updating subtask status");
-        var subtask = await db.Subtasks.FindAsync(command.SubtaskId, ct);
+        var subtask = await db.Subtasks
+            .FirstOrDefaultAsync(s => s.Id == command.SubtaskId && s.ParentTask.UserId == command.UserId, ct);
 
         if (subtask == null)
         {

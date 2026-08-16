@@ -188,7 +188,7 @@ export default function TaskEditScreen() {
             });
           }
 
-          router.replace({
+          router.dismissTo({
             pathname: "/(protected)/task-details",
             params: {
               mode: TASK_DETAIL_ROUTE_MODE.Persisted,
@@ -242,7 +242,7 @@ export default function TaskEditScreen() {
               updatedTask,
             );
 
-            router.replace({
+            router.dismissTo({
               pathname: "/(protected)/task-details",
               params: {
                 mode: TASK_DETAIL_ROUTE_MODE.Virtual,
