@@ -5,6 +5,7 @@ $profiles  = @("development", "preview", "production")
 
 $androidBuildTypes = @("App Bundle", "APK")
 $bumpTypes = @("No change", "Major (+1.0.0)", "Minor (x.+1.0)", "Patch (x.x.+1)")
+$easChanged = $false
 
 function Show-Menu {
     param(
@@ -40,7 +41,16 @@ $profile  = Show-Menu -Title "Select profile:"  -Options $profiles
 # Load eas.json
 # ------------------------
 $easPath = "eas.json"
-$easJson = Get-Content $easPath -Raw | ConvertFrom-Json
+$originalEasJsonContent = Get-Content $easPath -Raw
+$easJson = $originalEasJsonContent | ConvertFrom-Json
+
+$easCommand = Get-Command "eas" -ErrorAction SilentlyContinue
+
+if (-not $easCommand) {
+    Write-Host "`nEAS CLI was not found." -ForegroundColor Red
+    Write-Host "Install it with: npm install --global eas-cli" -ForegroundColor Yellow
+    exit 1
+}
 
 $currentVersion = $easJson.build.$profile.$platform.env.APP_VERSION
 Write-Host "`nCurrent $platform version ($profile): $currentVersion" -ForegroundColor Cyan
@@ -67,6 +77,7 @@ if ($bump -eq "No change") {
     $newVersion = "$major.$minor.$patch"
     Write-Host "Version update: $currentVersion → $newVersion" -ForegroundColor Green
     $easJson.build.$profile.$platform.env.APP_VERSION = $newVersion
+    $easChanged = $true
 }
 
 # ------------------------
@@ -86,13 +97,18 @@ if ($platform -eq "android") {
         $easJson.build.$profile | Add-Member -MemberType NoteProperty -Name android -Value @{}
     }
 
-    $easJson.build.$profile.android.buildType = $androidBuildType
+    if ($easJson.build.$profile.android.buildType -ne $androidBuildType) {
+        $easJson.build.$profile.android.buildType = $androidBuildType
+        $easChanged = $true
+    }
 }
 
 # ------------------------
 # Save eas.json safely
 # ------------------------
-$easJson | ConvertTo-Json -Depth 10 | Set-Content $easPath
+if ($easChanged) {
+    $easJson | ConvertTo-Json -Depth 10 | Set-Content $easPath
+}
 
 # ------------------------
 # Build command
@@ -117,4 +133,31 @@ if ($platform -eq "ios") {
 
 Write-Host "`nRunning: eas $($buildArgs -join ' ')" -ForegroundColor Green
 
+$previousCapabilitySyncSetting = $env:EXPO_NO_CAPABILITY_SYNC
+
+if ($platform -eq "ios") {
+    Write-Host "Skipping EAS iOS capability sync. Apple Developer capabilities are managed manually." -ForegroundColor Yellow
+    $env:EXPO_NO_CAPABILITY_SYNC = "1"
+}
+
 & eas @buildArgs
+$buildExitCode = $LASTEXITCODE
+
+if ($platform -eq "ios") {
+    if ($null -eq $previousCapabilitySyncSetting) {
+        Remove-Item Env:EXPO_NO_CAPABILITY_SYNC -ErrorAction SilentlyContinue
+    } else {
+        $env:EXPO_NO_CAPABILITY_SYNC = $previousCapabilitySyncSetting
+    }
+}
+
+if ($buildExitCode -ne 0) {
+    if ($easChanged) {
+        Set-Content -Path $easPath -Value $originalEasJsonContent -NoNewline
+        Write-Host "`nBuild failed. Restored eas.json to the previous version." -ForegroundColor Yellow
+    }
+
+    exit $buildExitCode
+}
+
+Write-Host "`nBuild succeeded. Kept eas.json changes." -ForegroundColor Green

@@ -20,6 +20,15 @@ param auth0ManagementAudience string
 param appServiceSkuName string = 'B1'
 param appServiceSkuTier string = 'Basic'
 
+// Force-update policy served by GET /api/app-version. An empty MinimumSupportedVersion makes
+// the client treat every build as up to date, so these must be filled in per environment.
+param iosLatestVersion string
+param iosMinimumSupportedVersion string
+param iosStoreUrl string
+param androidLatestVersion string
+param androidMinimumSupportedVersion string
+param androidStoreUrl string
+
 var normalizedKeyVaultUri = endsWith(keyVaultUri, '/') ? keyVaultUri : '${keyVaultUri}/'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
@@ -129,6 +138,34 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           name: 'WEBSITE_HEALTHCHECK_MAXPINGFAILURES'
           value: '3'
         }
+        {
+          name: 'AppVersion__Ios__LatestVersion'
+          value: iosLatestVersion
+        }
+        {
+          name: 'AppVersion__Ios__MinimumSupportedVersion'
+          value: iosMinimumSupportedVersion
+        }
+        {
+          name: 'AppVersion__Ios__StoreUrl'
+          value: iosStoreUrl
+        }
+        {
+          name: 'AppVersion__Android__LatestVersion'
+          value: androidLatestVersion
+        }
+        {
+          name: 'AppVersion__Android__MinimumSupportedVersion'
+          value: androidMinimumSupportedVersion
+        }
+        {
+          name: 'AppVersion__Android__StoreUrl'
+          value: androidStoreUrl
+        }
+        // Not modelled here, on purpose: prod also carries AzureSpeech__Key, AzureSpeech__Region,
+        // AzureOpenAI__DeploymentId, and both apps carry AzureOpenAI__AiModels__Speech__DeploymentId.
+        // No C# reads any of them - speech runs through Groq whisper (Groq__SpeechModel) - so they
+        // are leftovers that can be deleted from the App Service settings.
       ]
     }
   }
