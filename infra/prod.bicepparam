@@ -5,10 +5,6 @@ param organizationName = 'blotz'
 param projectName = 'task'
 param location = 'australiaeast'
 
-param breakdownDeploymentName = 'gpt-5.2-chat'
-param breakdownModelName = 'gpt-5.2-chat'
-param breakdownModelVersion = '2025-12-11'
-
 param taskGenerationDeploymentName = 'gpt-5.4-mini'
 param taskGenerationModelName = 'gpt-5.4-mini'
 param taskGenerationModelVersion = '2026-03-17'
@@ -27,11 +23,12 @@ param appInsightsSamplingPercentage = 4
 param appServiceSkuName = 'B1'
 param appServiceSkuTier = 'Basic'
 
-// Database (DTU Standard S0 - 10 DTUs, max 250GB)
-param dbMaxSizeGb = 2
-param dbSkuName = 'S0'
-param dbSkuTier = 'Standard'
-param dbSkuCapacity = 10
+// Database (DTU Basic - 5 DTUs, 1GB). Prod runs Basic, not the S0 Standard this file
+// used to claim; verified against sqldb-blotz-task-prod.
+param dbMaxSizeGb = 1
+param dbSkuName = 'Basic'
+param dbSkuTier = 'Basic'
+param dbSkuCapacity = 5
 
 // Entra ID dev group Object ID - create a prod group and replace this
 param devGroupId = '5719a9e2-49bd-49eb-85d1-e4afd63ca04d'
@@ -46,3 +43,14 @@ param auth0ManagementClientId = 'xWylVePDs5giZLBopYT1qHecBv2WijQh'
 param auth0ManagementAudience = 'https://dev-k72xachs0fr6nebp.us.auth0.com/api/v2/'
 // Auth0 Management Client Secret - overridden at deploy time
 param auth0ManagementClientSecret = ''
+
+// Mobile force-update policy. LatestVersion drives the soft "update available" prompt;
+// MinimumSupportedVersion is the hard wall - only raise it once that build is live in the store,
+// or every user below it is locked out with nothing to install.
+param iosLatestVersion = '1.2.0'
+param iosMinimumSupportedVersion = '1.2.0'
+param iosStoreUrl = 'https://apps.apple.com/us/app/blotztask-adhd-time-manager/id6752492404'
+
+param androidLatestVersion = '1.2.1'
+param androidMinimumSupportedVersion = '1.0.0'
+param androidStoreUrl = 'https://play.google.com/store/apps/details?id=com.blotz.blotztask'
