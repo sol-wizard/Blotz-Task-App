@@ -22,10 +22,9 @@ public static class AgentFrameworkServiceExtensions
             .Validate(
                 options => !string.IsNullOrWhiteSpace(options.AiModels.Breakdown.DeploymentId),
                 $"Missing {AzureOpenAIOptions.SectionName}:AiModels:Breakdown:DeploymentId")
-              .Validate(
+            .Validate(
                 options => Uri.TryCreate(options.Endpoint, UriKind.Absolute, out _),
-                $"{AzureOpenAIOptions.SectionName}:Endpoint must be a valid absolute URI")
-            .ValidateOnStart();
+                $"{AzureOpenAIOptions.SectionName}:Endpoint must be a valid absolute URI");
 
         services.AddOptions<GroqOptions>()
             .BindConfiguration(GroqOptions.SectionName)

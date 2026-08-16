@@ -1,5 +1,7 @@
 using BlotzTask.Modules.AiCoach.Domain;
+using BlotzTask.Modules.AiCoach.ModelTurn;
 using BlotzTask.Modules.AiCoach.Modes;
+using BlotzTask.Modules.AiCoach.StateMachine;
 
 namespace BlotzTask.Modules.AiCoach.Capabilities;
 
@@ -18,8 +20,19 @@ public enum CapabilityExecutionSemantics { ReadOnly, ProposesArtifact, ExternalE
 public enum CapabilityConcurrencyPolicy { SequentialOnly, ParallelSafe }
 public enum CurrentArtifactRequirement { RequiresNone, AllowsAny, RequiresTypes }
 
+public enum ConsentType { ExplicitUserCommand, AcceptedRecommendation, AcceptedSuggestion }
+
+public sealed record ConsentEvidence(
+    ConsentType Type,
+    Guid SourceCommandId,
+    Guid ConversationId,
+    Guid? ArtifactId,
+    Guid? SuggestionId,
+    DateTimeOffset OccurredAt);
+
 public sealed record CapabilityDefinition(
-    CapabilityId Id, int CapabilityVersion, int InputSchemaVersion, int OutputSchemaVersion,
+    CapabilityId Id, string ToolName, string Description,
+    int CapabilityVersion, int InputSchemaVersion, int OutputSchemaVersion,
     IReadOnlySet<CapabilityInvoker> AllowedInvokers,
     IReadOnlySet<AiCoachMode> AllowedModes,
     IReadOnlySet<ConversationState> AllowedStates,
@@ -30,8 +43,14 @@ public sealed record CapabilityDefinition(
     CapabilityConcurrencyPolicy ConcurrencyPolicy,
     Type InputType, Type OutputType, Type HandlerType);
 
-public sealed record CreateOneOffDraftCapabilityInput(string Title, string? Description,
-    DateTimeOffset StartTimeUtc, DateTimeOffset EndTimeUtc, string TimeZoneId);
+public sealed record CreateOneOffDraftCapabilityInput(
+    string Title,
+    string? Description,
+    DateOnly Date,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    string TimeZoneId,
+    int? LabelId);
 public sealed record CreateOneOffDraftCapabilityOutput(Guid ArtifactId);
 public sealed record UpdateArtifactCapabilityInput(Guid ArtifactId, int ExpectedVersion);
 public sealed record UpdateArtifactCapabilityOutput(Guid ArtifactId, int Version);
@@ -44,28 +63,45 @@ public interface ICapabilityHandler
 {
     Type InputType { get; }
     Type OutputType { get; }
-    Task<object> HandleAsync(object input, CancellationToken cancellationToken);
+    Task<object> HandleAsync(
+        object input,
+        CapabilityExecutionContext context,
+        CancellationToken cancellationToken);
 }
 
 public interface ICapabilityHandler<in TInput, TOutput> : ICapabilityHandler
 {
-    Task<TOutput> HandleAsync(TInput input, CancellationToken cancellationToken);
+    Task<TOutput> HandleAsync(
+        TInput input,
+        CapabilityExecutionContext context,
+        CancellationToken cancellationToken);
 }
 
 public abstract class CapabilityHandler<TInput, TOutput> : ICapabilityHandler<TInput, TOutput>
 {
     public Type InputType => typeof(TInput);
     public Type OutputType => typeof(TOutput);
-    public abstract Task<TOutput> HandleAsync(TInput input, CancellationToken cancellationToken);
-    async Task<object> ICapabilityHandler.HandleAsync(object input, CancellationToken cancellationToken) =>
-        await HandleAsync((TInput)input, cancellationToken) ?? throw new InvalidOperationException("Capability returned null.");
+    public abstract Task<TOutput> HandleAsync(
+        TInput input,
+        CapabilityExecutionContext context,
+        CancellationToken cancellationToken);
+
+    async Task<object> ICapabilityHandler.HandleAsync(
+        object input,
+        CapabilityExecutionContext context,
+        CancellationToken cancellationToken) =>
+        await HandleAsync((TInput)input, context, cancellationToken)
+        ?? throw new InvalidOperationException("Capability returned null.");
 }
 
 // P1.5 registers real handler types so registry validation is meaningful, while deliberately
 // refusing execution until the corresponding P2 application workflow is implemented.
 public sealed class FoundationCapabilityHandler<TInput, TOutput> : CapabilityHandler<TInput, TOutput>
 {
-    public override Task<TOutput> HandleAsync(TInput input, CancellationToken cancellationToken) =>
+    public override Task<TOutput> HandleAsync(
+        TInput input,
+        CapabilityExecutionContext context,
+        CancellationToken cancellationToken) =>
         throw new NotSupportedException("This capability is registered for schema/toolset validation only in P1.5.");
 }
 
@@ -80,25 +116,37 @@ public sealed class FoundationCapabilityDefinitions : ICapabilityDefinitionProvi
     public static IReadOnlyList<CapabilityDefinition> Create() =>
     [
         Define<CreateOneOffDraftCapabilityInput, CreateOneOffDraftCapabilityOutput>(
-            CapabilityIds.CreateOneOffDraft, new HashSet<CapabilityInvoker> { CapabilityInvoker.Model },
+            CapabilityIds.CreateOneOffDraft,
+            "create_one_off_task_draft",
+            "Propose one one-off task draft after the execution-mode requirements are complete.",
+            new HashSet<CapabilityInvoker> { CapabilityInvoker.Model },
             new HashSet<AiCoachMode> { AiCoachMode.Execute },
             new HashSet<ConversationState> { ConversationState.Conversing, ConversationState.Clarifying },
             CurrentArtifactRequirement.RequiresNone, new HashSet<ArtifactType>(),
             ConsentRequirement.ModePolicy, CapabilityExecutionSemantics.ProposesArtifact),
         Define<UpdateArtifactCapabilityInput, UpdateArtifactCapabilityOutput>(
-            CapabilityIds.UpdateArtifact, new HashSet<CapabilityInvoker> { CapabilityInvoker.UserCommand },
+            CapabilityIds.UpdateArtifact,
+            "update_artifact",
+            "Update the current artifact from a verified user command.",
+            new HashSet<CapabilityInvoker> { CapabilityInvoker.UserCommand },
             new HashSet<AiCoachMode> { AiCoachMode.Execute },
             new HashSet<ConversationState> { ConversationState.DraftPending },
             CurrentArtifactRequirement.RequiresTypes, new HashSet<ArtifactType> { ArtifactType.TaskDraft },
             ConsentRequirement.VerifiedUserCommand, CapabilityExecutionSemantics.ProposesArtifact),
         Define<RejectArtifactCapabilityInput, RejectArtifactCapabilityOutput>(
-            CapabilityIds.RejectArtifact, new HashSet<CapabilityInvoker> { CapabilityInvoker.UserCommand },
+            CapabilityIds.RejectArtifact,
+            "reject_artifact",
+            "Reject the current artifact from a verified user command.",
+            new HashSet<CapabilityInvoker> { CapabilityInvoker.UserCommand },
             new HashSet<AiCoachMode> { AiCoachMode.Execute },
             new HashSet<ConversationState> { ConversationState.DraftPending },
             CurrentArtifactRequirement.RequiresTypes, new HashSet<ArtifactType> { ArtifactType.TaskDraft },
             ConsentRequirement.VerifiedUserCommand, CapabilityExecutionSemantics.ProposesArtifact),
         Define<PersistTaskCapabilityInput, PersistTaskCapabilityOutput>(
-            CapabilityIds.PersistTask, new HashSet<CapabilityInvoker> { CapabilityInvoker.UserCommand },
+            CapabilityIds.PersistTask,
+            "persist_task",
+            "Persist an accepted task draft from a verified user command.",
+            new HashSet<CapabilityInvoker> { CapabilityInvoker.UserCommand },
             new HashSet<AiCoachMode> { AiCoachMode.Execute },
             new HashSet<ConversationState> { ConversationState.DraftPending },
             CurrentArtifactRequirement.RequiresTypes, new HashSet<ArtifactType> { ArtifactType.TaskDraft },
@@ -106,11 +154,13 @@ public sealed class FoundationCapabilityDefinitions : ICapabilityDefinitionProvi
     ];
 
     private static CapabilityDefinition Define<TInput, TOutput>(
-        CapabilityId id, IReadOnlySet<CapabilityInvoker> invokers, IReadOnlySet<AiCoachMode> modes,
+        CapabilityId id, string toolName, string description,
+        IReadOnlySet<CapabilityInvoker> invokers, IReadOnlySet<AiCoachMode> modes,
         IReadOnlySet<ConversationState> states, CurrentArtifactRequirement artifactRequirement,
         IReadOnlySet<ArtifactType> artifactTypes, ConsentRequirement consent,
         CapabilityExecutionSemantics semantics) =>
-        new(id, 1, 1, 1, invokers, modes, states, artifactRequirement, artifactTypes, consent, semantics,
+        new(id, toolName, description, 1, 1, 1, invokers, modes, states,
+            artifactRequirement, artifactTypes, consent, semantics,
             CapabilityConcurrencyPolicy.SequentialOnly, typeof(TInput), typeof(TOutput),
             typeof(FoundationCapabilityHandler<TInput, TOutput>));
 }
@@ -156,6 +206,10 @@ public sealed class CapabilityRegistry(IEnumerable<ICapabilityDefinitionProvider
         var definitions = providers.Select(provider => provider.Definition).ToArray();
         var duplicate = definitions.GroupBy(definition => definition.Id).FirstOrDefault(group => group.Count() > 1);
         if (duplicate is not null) throw new InvalidOperationException($"Capability '{duplicate.Key}' is registered more than once.");
+        var duplicateTool = definitions.GroupBy(definition => definition.ToolName, StringComparer.Ordinal)
+            .FirstOrDefault(group => group.Count() > 1);
+        if (duplicateTool is not null)
+            throw new InvalidOperationException($"Model tool '{duplicateTool.Key}' is registered more than once.");
         foreach (var definition in definitions)
         {
             if (!typeof(ICapabilityHandler).IsAssignableFrom(definition.HandlerType))
@@ -175,20 +229,25 @@ public sealed class CapabilityRegistry(IEnumerable<ICapabilityDefinitionProvider
     }
 }
 
-public sealed record CapabilityInvocationContext(
-    CapabilityInvoker Invoker, AiCoachModeDefinition Mode, ConversationState State,
-    ArtifactType? CurrentArtifactType, bool HasVerifiedUserConsent);
+public sealed record CapabilityExecutionContext(
+    CapabilityInvoker Invoker,
+    AiCoachModeDefinition Mode,
+    ConversationSnapshot Snapshot,
+    TurnView Turn,
+    ProposedArtifactBuffer Proposals,
+    ConsentEvidence? ConsentEvidence,
+    int InvocationIndex);
 
 public interface ICapabilityDispatcher
 {
-    Task<object> DispatchAsync(CapabilityId id, object input, CapabilityInvocationContext context,
+    Task<object> DispatchAsync(CapabilityId id, object input, CapabilityExecutionContext context,
         CancellationToken cancellationToken);
 }
 
 public sealed class CapabilityDispatcher(ICapabilityRegistry registry, IServiceProvider services)
     : ICapabilityDispatcher
 {
-    public async Task<object> DispatchAsync(CapabilityId id, object input, CapabilityInvocationContext context,
+    public async Task<object> DispatchAsync(CapabilityId id, object input, CapabilityExecutionContext context,
         CancellationToken cancellationToken)
     {
         var definition = registry.Get(id);
@@ -196,21 +255,42 @@ public sealed class CapabilityDispatcher(ICapabilityRegistry registry, IServiceP
         var handler = (ICapabilityHandler)services.GetRequiredService(definition.HandlerType);
         if (handler.InputType != definition.InputType || handler.OutputType != definition.OutputType)
             throw new InvalidOperationException($"Capability '{id}' handler contract does not match its definition.");
-        return await handler.HandleAsync(input, cancellationToken);
+        return await handler.HandleAsync(input, context, cancellationToken);
     }
 
     private static void EnsureAllowed(
-        CapabilityDefinition definition, object input, CapabilityInvocationContext context)
+        CapabilityDefinition definition, object input, CapabilityExecutionContext context)
     {
         if (input.GetType() != definition.InputType
             || !context.Mode.Capabilities.Contains(definition.Id)
             || !definition.AllowedInvokers.Contains(context.Invoker)
             || !definition.AllowedModes.Contains(context.Mode.Mode)
-            || !definition.AllowedStates.Contains(context.State)
-            || !CapabilityRegistry.ArtifactMatches(definition, context.CurrentArtifactType))
-            throw new InvalidOperationException($"Capability '{definition.Id}' is not allowed in the current execution frame.");
+            || !definition.AllowedStates.Contains(context.Snapshot.State)
+            || !CapabilityRegistry.ArtifactMatches(definition, context.Turn.CurrentArtifact?.Type))
+            throw new CapabilityRejectedException("capability_not_allowed", definition.Id);
         if (definition.ConsentRequirement == ConsentRequirement.VerifiedUserCommand
-            && !context.HasVerifiedUserConsent)
-            throw new InvalidOperationException($"Capability '{definition.Id}' requires verified user consent.");
+            && !IsValidConsent(context))
+            throw new CapabilityRejectedException("explicit_consent_required", definition.Id);
     }
+
+    private static bool IsValidConsent(CapabilityExecutionContext context)
+    {
+        var evidence = context.ConsentEvidence;
+        if (evidence is null
+            || evidence.SourceCommandId == Guid.Empty
+            || evidence.Type != ConsentType.ExplicitUserCommand
+            || evidence.ConversationId != context.Snapshot.ConversationId)
+            return false;
+
+        return context.Turn.CurrentArtifact is null
+            ? evidence.ArtifactId is null
+            : evidence.ArtifactId == context.Turn.CurrentArtifact.Id;
+    }
+}
+
+public sealed class CapabilityRejectedException(string code, CapabilityId capabilityId)
+    : Exception($"Capability '{capabilityId}' was rejected with code '{code}'.")
+{
+    public string Code { get; } = code;
+    public CapabilityId CapabilityId { get; } = capabilityId;
 }

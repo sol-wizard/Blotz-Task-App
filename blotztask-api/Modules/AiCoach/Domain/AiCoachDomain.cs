@@ -99,6 +99,15 @@ public sealed class AiConversation
         return message;
     }
 
+    public AiConversationMessage AddAssistantMessage(Guid id, string content, DateTimeOffset createdAt)
+    {
+        if (LastTurnNumber < 1)
+            throw new InvalidOperationException("An assistant message requires a current user turn.");
+        var message = AiConversationMessage.CreateAssistant(id, Id, LastTurnNumber, content, createdAt);
+        Messages.Add(message);
+        return message;
+    }
+
     public void SetCurrentArtifact(AiConversationArtifact artifact)
     {
         if (LifecycleStatus != ConversationLifecycleStatus.Active)
@@ -159,6 +168,14 @@ public sealed class AiConversationMessage
         {
             Id = id, ConversationId = conversationId, TurnNumber = turnNumber, Sequence = 1,
             Role = ConversationMessageRole.User, Content = content, CreatedAt = createdAt
+        };
+
+    public static AiConversationMessage CreateAssistant(
+        Guid id, Guid conversationId, int turnNumber, string content, DateTimeOffset createdAt) =>
+        new()
+        {
+            Id = id, ConversationId = conversationId, TurnNumber = turnNumber, Sequence = 2,
+            Role = ConversationMessageRole.Assistant, Content = content, CreatedAt = createdAt
         };
 }
 
@@ -293,6 +310,18 @@ public sealed class AiConversationEffect
         CompletedAt = now;
         LeaseExpiresAt = null;
         LastErrorCode = errorCode;
+        UpdatedAt = now;
+    }
+
+    public void Supersede(DateTimeOffset now)
+    {
+        if (Status is ConversationEffectStatus.Completed
+            or ConversationEffectStatus.Failed
+            or ConversationEffectStatus.Superseded)
+            return;
+        Status = ConversationEffectStatus.Superseded;
+        CompletedAt = now;
+        LeaseExpiresAt = null;
         UpdatedAt = now;
     }
 

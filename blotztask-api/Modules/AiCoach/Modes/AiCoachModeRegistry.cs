@@ -78,8 +78,18 @@ internal static class FoundationModePolicies
         {
             [typeof(UserMessageReceived)] = states.Where(state => state is ConversationState.Idle
                 or ConversationState.Conversing or ConversationState.Clarifying).ToHashSet(),
-            [typeof(ConversationExpired)] = states.Where(state => state != ConversationState.Closed).ToHashSet()
+            [typeof(ConversationExpired)] = states.Where(state => state != ConversationState.Closed).ToHashSet(),
+            [typeof(ModelTurnCompleted)] = ModelResultStates(states),
+            [typeof(ClarificationRequested)] = ModelResultStates(states),
+            [typeof(ModelGenerationFailed)] = ModelResultStates(states),
+            [typeof(QuotaBlocked)] = ModelResultStates(states),
+            [typeof(ContentFiltered)] = ModelResultStates(states)
         });
+
+    private static IReadOnlySet<ConversationState> ModelResultStates(
+        IReadOnlySet<ConversationState> states) =>
+        states.Where(state => state is ConversationState.Conversing
+            or ConversationState.Clarifying).ToHashSet();
 }
 
 public sealed class ExecuteModeDefinitionProvider : IAiCoachModeDefinitionProvider

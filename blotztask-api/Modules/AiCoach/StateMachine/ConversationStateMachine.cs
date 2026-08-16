@@ -1,6 +1,7 @@
 using BlotzTask.Modules.AiCoach.Artifacts;
 using BlotzTask.Modules.AiCoach.Domain;
 using BlotzTask.Modules.AiCoach.Modes;
+using BlotzTask.Modules.AiCoach.ModelTurn;
 
 namespace BlotzTask.Modules.AiCoach.StateMachine;
 
@@ -19,12 +20,30 @@ public sealed record ConversationSnapshot(
 public abstract record ConversationEvent;
 public sealed record UserMessageReceived(Guid MessageId, string Content, DateTimeOffset OccurredAt) : ConversationEvent;
 public sealed record ConversationExpired(DateTimeOffset OccurredAt) : ConversationEvent;
+public sealed record ModelTurnCompleted(
+    Guid EffectId, int BaseConversationVersion, ControlledModelOutcome Outcome,
+    DateTimeOffset OccurredAt) : ConversationEvent;
+public sealed record ClarificationRequested(
+    Guid EffectId, int BaseConversationVersion, ControlledModelOutcome Outcome,
+    DateTimeOffset OccurredAt) : ConversationEvent;
+public sealed record ModelGenerationFailed(
+    Guid EffectId, int BaseConversationVersion, string ErrorCode,
+    GenerationBlockedReason BlockedReason, DateTimeOffset OccurredAt) : ConversationEvent;
+public sealed record QuotaBlocked(
+    Guid EffectId, int BaseConversationVersion, DateTimeOffset OccurredAt) : ConversationEvent;
+public sealed record ContentFiltered(
+    Guid EffectId, int BaseConversationVersion, DateTimeOffset OccurredAt) : ConversationEvent;
 
 public abstract record DomainMutation;
 public sealed record AddConversationMessageMutation(Guid MessageId, string Content, DateTimeOffset CreatedAt) : DomainMutation;
 public sealed record ExpireConversationMutation(DateTimeOffset ExpiredAt) : DomainMutation;
+public sealed record AddAssistantMessageMutation(
+    Guid MessageId, string Content, DateTimeOffset CreatedAt) : DomainMutation;
 
 public abstract record ConversationEffectRequest;
+public sealed record GenerateModelTurnEffectRequest(
+    ModelPurpose Purpose,
+    TurnObjectiveKey Objective) : ConversationEffectRequest;
 public abstract record ConversationDomainEvent;
 
 public enum RuleViolation
@@ -147,11 +166,91 @@ public sealed class UserMessageReceivedTransitionHandler(IAllowedActionResolver 
         if (content.Length > 10_000)
             return TransitionResult.Rejected(current, RuleViolation.MessageTooLong);
 
-        const ConversationState next = ConversationState.Conversing;
-        return new TransitionResult(true, null, next, GenerationStatus.Idle, null,
-            [new AddConversationMessageMutation(input.MessageId, content, input.OccurredAt)], [], [],
-            actions.Resolve(current.LifecycleStatus, next, GenerationStatus.Idle, null));
+        var next = current.State == ConversationState.Clarifying
+            ? ConversationState.Clarifying
+            : ConversationState.Conversing;
+        return new TransitionResult(true, null, next, GenerationStatus.Running, null,
+            [new AddConversationMessageMutation(input.MessageId, content, input.OccurredAt)],
+            [new GenerateModelTurnEffectRequest(
+                ModelPurpose.Clarification,
+                TurnObjectiveKey.ClarifyOneCoreRequirement)],
+            [],
+            actions.Resolve(current.LifecycleStatus, next, GenerationStatus.Running, null));
     }
+}
+
+public abstract class ModelResultTransitionHandler<TEvent>(IAllowedActionResolver actions)
+    : ConversationTransitionHandler<TEvent> where TEvent : ConversationEvent
+{
+    protected TransitionResult Complete(
+        ConversationSnapshot current,
+        ConversationState nextState,
+        Guid messageId,
+        string assistantMessage,
+        DateTimeOffset occurredAt) =>
+        new(true, null, nextState, GenerationStatus.Idle, null,
+            [new AddAssistantMessageMutation(messageId, assistantMessage, occurredAt)],
+            [], [],
+            actions.Resolve(current.LifecycleStatus, nextState, GenerationStatus.Idle, null));
+
+    protected TransitionResult Block(
+        ConversationSnapshot current,
+        GenerationBlockedReason reason) =>
+        new(true, null, current.State, GenerationStatus.Blocked, reason,
+            [], [], [],
+            actions.Resolve(current.LifecycleStatus, current.State, GenerationStatus.Blocked, null));
+}
+
+public sealed class ModelTurnCompletedTransitionHandler(IAllowedActionResolver actions)
+    : ModelResultTransitionHandler<ModelTurnCompleted>(actions)
+{
+    public override TransitionResult Reduce(
+        ConversationSnapshot current, ModelTurnCompleted input, AiCoachModeDefinition mode) =>
+        current.GenerationStatus != GenerationStatus.Running
+            ? TransitionResult.Rejected(current, RuleViolation.InvalidState)
+            : Complete(current, ConversationState.Conversing, input.EffectId,
+                input.Outcome.AssistantMessage, input.OccurredAt);
+}
+
+public sealed class ClarificationRequestedTransitionHandler(IAllowedActionResolver actions)
+    : ModelResultTransitionHandler<ClarificationRequested>(actions)
+{
+    public override TransitionResult Reduce(
+        ConversationSnapshot current, ClarificationRequested input, AiCoachModeDefinition mode) =>
+        current.GenerationStatus != GenerationStatus.Running
+            ? TransitionResult.Rejected(current, RuleViolation.InvalidState)
+            : Complete(current, ConversationState.Clarifying, input.EffectId,
+                input.Outcome.AssistantMessage, input.OccurredAt);
+}
+
+public sealed class ModelGenerationFailedTransitionHandler(IAllowedActionResolver actions)
+    : ModelResultTransitionHandler<ModelGenerationFailed>(actions)
+{
+    public override TransitionResult Reduce(
+        ConversationSnapshot current, ModelGenerationFailed input, AiCoachModeDefinition mode) =>
+        current.GenerationStatus != GenerationStatus.Running
+            ? TransitionResult.Rejected(current, RuleViolation.InvalidState)
+            : Block(current, input.BlockedReason);
+}
+
+public sealed class QuotaBlockedTransitionHandler(IAllowedActionResolver actions)
+    : ModelResultTransitionHandler<QuotaBlocked>(actions)
+{
+    public override TransitionResult Reduce(
+        ConversationSnapshot current, QuotaBlocked input, AiCoachModeDefinition mode) =>
+        current.GenerationStatus != GenerationStatus.Running
+            ? TransitionResult.Rejected(current, RuleViolation.InvalidState)
+            : Block(current, GenerationBlockedReason.Quota);
+}
+
+public sealed class ContentFilteredTransitionHandler(IAllowedActionResolver actions)
+    : ModelResultTransitionHandler<ContentFiltered>(actions)
+{
+    public override TransitionResult Reduce(
+        ConversationSnapshot current, ContentFiltered input, AiCoachModeDefinition mode) =>
+        current.GenerationStatus != GenerationStatus.Running
+            ? TransitionResult.Rejected(current, RuleViolation.InvalidState)
+            : Block(current, GenerationBlockedReason.ContentFiltered);
 }
 
 public sealed class ConversationExpiredTransitionHandler : ConversationTransitionHandler<ConversationExpired>

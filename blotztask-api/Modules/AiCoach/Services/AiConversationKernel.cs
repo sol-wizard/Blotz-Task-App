@@ -2,7 +2,9 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Artifacts;
 using BlotzTask.Modules.AiCoach.Domain;
 using BlotzTask.Modules.AiCoach.Modes;
+using BlotzTask.Modules.AiCoach.ModelTurn;
 using BlotzTask.Modules.AiCoach.StateMachine;
+using BlotzTask.Modules.AiCoach.Effects;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +46,13 @@ public sealed class AddConversationMessageMutationHandler
 {
     public override void Apply(AiConversation conversation, AddConversationMessageMutation mutation) =>
         conversation.AddUserMessage(mutation.MessageId, mutation.Content, mutation.CreatedAt);
+}
+
+public sealed class AddAssistantMessageMutationHandler
+    : ConversationMutationHandler<AddAssistantMessageMutation>
+{
+    public override void Apply(AiConversation conversation, AddAssistantMessageMutation mutation) =>
+        conversation.AddAssistantMessage(mutation.MessageId, mutation.Content, mutation.CreatedAt);
 }
 
 public sealed class ExpireConversationMutationHandler : ConversationMutationHandler<ExpireConversationMutation>
@@ -88,6 +97,8 @@ internal interface IAiConversationStore
     Task<AiConversation> LoadAsync(Guid userId, Guid conversationId, CancellationToken cancellationToken);
     Task<AiConversation?> FindActiveAsync(Guid userId, string activeSlot, CancellationToken cancellationToken);
     Task SaveAsync(CancellationToken cancellationToken);
+    Task<AiConversationEffect?> FindEffectAsync(
+        Guid conversationId, Guid effectId, CancellationToken cancellationToken);
     void Add(AiConversation conversation);
     void ClearTracking();
 }
@@ -99,6 +110,12 @@ internal sealed class AiConversationStore(
     public void Add(AiConversation conversation) => db.AiConversations.Add(conversation);
     public Task SaveAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
     public void ClearTracking() => db.ChangeTracker.Clear();
+
+    public Task<AiConversationEffect?> FindEffectAsync(
+        Guid conversationId, Guid effectId, CancellationToken cancellationToken) =>
+        db.AiConversationEffects.SingleOrDefaultAsync(
+            effect => effect.ConversationId == conversationId && effect.Id == effectId,
+            cancellationToken);
 
     public async Task<AiConversation?> FindActiveAsync(
         Guid userId, string activeSlot, CancellationToken cancellationToken)
@@ -209,6 +226,8 @@ internal sealed class AiConversationKernel(
     IConversationReducer reducer,
     IConversationSnapshotProjector projector,
     IConversationMutationRegistry mutations,
+    IConversationEffectDispatcher effects,
+    ILogger<AiConversationKernel> logger,
     TimeProvider timeProvider) : IAiConversationKernel
 {
     public async Task<ConversationDispatchResult> DispatchAsync(
@@ -228,6 +247,14 @@ internal sealed class AiConversationKernel(
             conversation.ApplyTransition(transition.NextState, transition.NextGenerationStatus,
                 transition.NextBlockedReason, timeProvider.GetUtcNow());
 
+        var pendingEffects = transition.Effects.Select(effectRequest =>
+            CreateEffect(conversation, effectRequest)).ToArray();
+        foreach (var effect in pendingEffects)
+        {
+            effect.AcquireLease(timeProvider.GetUtcNow().AddMinutes(2), timeProvider.GetUtcNow());
+            conversation.Effects.Add(effect);
+        }
+
         try { await store.SaveAsync(cancellationToken); }
         catch (DbUpdateConcurrencyException)
         {
@@ -235,6 +262,103 @@ internal sealed class AiConversationKernel(
             var latest = await application.GetAsync(userId, conversationId, cancellationToken);
             return new ConversationDispatchResult(false, null, latest);
         }
+        foreach (var effect in pendingEffects)
+        {
+            ConversationEventResult effectResult;
+            try
+            {
+                effectResult = await effects.DispatchAsync(effect, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(
+                    exception,
+                    "AI Coach effect {EffectId} failed before producing a result event.",
+                    effect.Id);
+                effectResult = new ConversationEventResult(
+                    effect.Id,
+                    effect.BaseConversationVersion,
+                    new ModelGenerationFailed(
+                        effect.Id,
+                        effect.BaseConversationVersion,
+                        "effect_handler_failed",
+                        GenerationBlockedReason.ModelUnavailable,
+                        timeProvider.GetUtcNow()));
+            }
+
+            store.ClearTracking();
+            conversation = await application.GetAsync(userId, conversationId, CancellationToken.None);
+            var currentEffect = await store.FindEffectAsync(
+                conversationId, effectResult.EffectId, CancellationToken.None);
+            if (currentEffect is null
+                || currentEffect.Status != ConversationEffectStatus.Running
+                || currentEffect.BaseConversationVersion != effectResult.BaseConversationVersion
+                || conversation.Version != effectResult.BaseConversationVersion)
+            {
+                currentEffect?.Supersede(timeProvider.GetUtcNow());
+                if (currentEffect is not null)
+                    await store.SaveAsync(CancellationToken.None);
+                return new ConversationDispatchResult(false, null, conversation);
+            }
+
+            if (effectResult.ResultEvent is not ConversationEvent resultEvent)
+                throw new InvalidOperationException("Conversation effect returned an unsupported result event.");
+            var resultTransition = reducer.Reduce(
+                projector.ToDomain(conversation), resultEvent, modeRegistry.Get(conversation.Mode));
+            if (!resultTransition.Accepted)
+            {
+                currentEffect.Supersede(timeProvider.GetUtcNow());
+                await store.SaveAsync(CancellationToken.None);
+                return new ConversationDispatchResult(false, resultTransition.Violation, conversation);
+            }
+
+            mutations.Apply(conversation, resultTransition.Mutations);
+            conversation.ApplyTransition(
+                resultTransition.NextState,
+                resultTransition.NextGenerationStatus,
+                resultTransition.NextBlockedReason,
+                timeProvider.GetUtcNow());
+            if (resultEvent is ModelTurnCompleted or ClarificationRequested)
+                currentEffect.Complete(timeProvider.GetUtcNow());
+            else
+                currentEffect.Fail(ResultErrorCode(resultEvent), timeProvider.GetUtcNow());
+
+            try { await store.SaveAsync(CancellationToken.None); }
+            catch (DbUpdateConcurrencyException)
+            {
+                store.ClearTracking();
+                var latest = await application.GetAsync(userId, conversationId, CancellationToken.None);
+                return new ConversationDispatchResult(false, null, latest);
+            }
+        }
+
         return new ConversationDispatchResult(true, null, conversation);
     }
+
+    private static AiConversationEffect CreateEffect(
+        AiConversation conversation,
+        ConversationEffectRequest request) => request switch
+        {
+            GenerateModelTurnEffectRequest
+                {
+                    Purpose: ModelPurpose.Clarification,
+                    Objective: TurnObjectiveKey.ClarifyOneCoreRequirement
+                } => AiConversationEffect.Create(
+                conversation.Id,
+                conversation.Version,
+                GenerateModelTurnEffectHandler.Type,
+                GenerateModelTurnEffectHandler.Version,
+                $"model-turn:{conversation.Id}:{conversation.Version}",
+                conversation.UpdatedAt),
+            _ => throw new InvalidOperationException(
+                $"Unsupported conversation effect request '{request.GetType().Name}'.")
+        };
+
+    private static string ResultErrorCode(ConversationEvent resultEvent) => resultEvent switch
+    {
+        ModelGenerationFailed failed => failed.ErrorCode,
+        QuotaBlocked => "quota_exceeded",
+        ContentFiltered => "content_filtered",
+        _ => "model_turn_failed"
+    };
 }
