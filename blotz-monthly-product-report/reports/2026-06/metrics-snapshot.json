@@ -1,0 +1,883 @@
+{
+  "schema_version": 1,
+  "month": "2026-06",
+  "generated_at": "2026-07-22T15:53:26+00:00",
+  "sources": {
+    "app_store_connect": {
+      "status": "ok",
+      "data_complete_through": null,
+      "warnings": [
+        "No 2026-06 instances found for App Store report `Streaming Downloads Performance`.",
+        "No 2026-06 instances found for App Store report `App Crashes`.",
+        "No 2026-06 instances found for App Store report `App Crashes Expanded`."
+      ]
+    },
+    "posthog": {
+      "status": "ok",
+      "project_id": "233228",
+      "events_queried": [
+        "Application Installed",
+        "Application Opened",
+        "$identify",
+        "active_user_5s",
+        "manual_task_creation",
+        "create_task_manually",
+        "ai_task_interaction_completed",
+        "create_task_by_ai",
+        "ai_task_generation_session",
+        "ai_task_generation_failed",
+        "breakdown_task",
+        "note_created",
+        "screen_viewed"
+      ],
+      "warnings": [
+        "`ai_task_generation_session` returned 2 session(s) without a recognized input mode."
+      ]
+    }
+  },
+  "data_quality": [
+    {
+      "name": "app_store_data_present",
+      "status": "pass",
+      "details": "Required App Store normalized metrics are present."
+    },
+    {
+      "name": "posthog_activity_events_present",
+      "status": "pass",
+      "details": "PostHog active user metrics are present."
+    },
+    {
+      "name": "posthog_ai_session_events_present",
+      "status": "pass",
+      "details": "AI task generation session metrics are present."
+    },
+    {
+      "name": "manual_task_recurring_deadline_properties",
+      "status": "warning",
+      "details": "`create_task_manually` currently defaults recurring/deadline properties because callers do not pass them."
+    },
+    {
+      "name": "screen_coverage",
+      "status": "warning",
+      "details": "`screen_viewed` currently covers only Notes and GashaponMachine; do not infer full feature usage."
+    },
+    {
+      "name": "unsupported_metrics_not_collected",
+      "status": "pass",
+      "details": "Unsupported first-version metrics were not inferred or collected."
+    },
+    {
+      "name": "posthog_query_warnings",
+      "status": "warning",
+      "details": "1 PostHog warning(s) were recorded in manifest.json."
+    }
+  ],
+  "metrics": {
+    "month": "2026-06",
+    "app_store": {
+      "downloads": 196,
+      "first_time_downloads": 183,
+      "redownloads": 13,
+      "app_updates": 544,
+      "restores": 7,
+      "product_page_views": 517,
+      "product_page_gets": 87,
+      "conversion_rate": 0.168279,
+      "top_sources": [
+        {
+          "name": "App Store search",
+          "value": 168.0
+        },
+        {
+          "name": "App referrer",
+          "value": 20.0
+        },
+        {
+          "name": "App Store browse",
+          "value": 6.0
+        },
+        {
+          "name": "Unavailable",
+          "value": 1.0
+        },
+        {
+          "name": "Web referrer",
+          "value": 1.0
+        }
+      ],
+      "top_territories": [
+        {
+          "name": "CN",
+          "value": 139.0
+        },
+        {
+          "name": "AU",
+          "value": 31.0
+        },
+        {
+          "name": "US",
+          "value": 11.0
+        },
+        {
+          "name": "HK",
+          "value": 4.0
+        },
+        {
+          "name": "TW",
+          "value": 2.0
+        },
+        {
+          "name": "NZ",
+          "value": 2.0
+        },
+        {
+          "name": "KR",
+          "value": 2.0
+        },
+        {
+          "name": "SG",
+          "value": 1.0
+        },
+        {
+          "name": "JP",
+          "value": 1.0
+        },
+        {
+          "name": "ES",
+          "value": 1.0
+        }
+      ],
+      "coverage": {
+        "downloads": true,
+        "product_page_views": true,
+        "product_page_gets": true
+      },
+      "selected_instances": [
+        {
+          "report_name": "App Downloads Standard",
+          "report_id": "r3-9fdf4f34-84ca-44ab-a808-a277bf9d4f58",
+          "instance_id": "192ed398-5b5e-4a32-9ca6-38d7b9cc4fce",
+          "granularity": "DAILY",
+          "processing_date": "2026-07-12"
+        },
+        {
+          "report_name": "App Store Discovery and Engagement Standard",
+          "report_id": "r14-9fdf4f34-84ca-44ab-a808-a277bf9d4f58",
+          "instance_id": "e765bf8f-e21c-4c12-bf54-c0adb4f135ed",
+          "granularity": "MONTHLY",
+          "processing_date": "2026-07-12"
+        }
+      ],
+      "report_granularity": "Standard",
+      "rows_scanned": 3017,
+      "rows_used": 1074
+    },
+    "posthog": {
+      "activity": {
+        "mau": 249,
+        "wau_average": 73.6,
+        "dau_average": 19.133333,
+        "active_days_per_user_average": 2.3052208835341363,
+        "active_day_tiers": [
+          {
+            "tier": "1 day",
+            "users": 150,
+            "average_active_days": 1.0
+          },
+          {
+            "tier": "2-3 days",
+            "users": 63,
+            "average_active_days": 2.1746031746031744
+          },
+          {
+            "tier": "4-7 days",
+            "users": 23,
+            "average_active_days": 5.304347826086956
+          },
+          {
+            "tier": "8+ days",
+            "users": 13,
+            "average_active_days": 12.692307692307692
+          }
+        ]
+      },
+      "manual_tasks": {
+        "created_count": 217,
+        "creator_count": 69,
+        "created_per_active_user": 0.871486
+      },
+      "ai_task_generation": {
+        "session_count": 343,
+        "user_count": 75,
+        "accepted_sessions": 274,
+        "rejected_sessions": 59,
+        "abandoned_sessions": 10,
+        "acceptance_rate": 0.798834,
+        "voice_session_count": 216,
+        "text_session_count": 127,
+        "voice_only_session_count": 214,
+        "text_only_session_count": 125,
+        "mixed_input_session_count": 2,
+        "unknown_input_mode_session_count": 2,
+        "average_turns_per_session": 1.075801749271137,
+        "average_generated_tasks_per_session": 1.478134110787172,
+        "average_generated_notes_per_session": 0.1661807580174927
+      },
+      "ai_failures": {
+        "failure_count": 202,
+        "failure_users": 57,
+        "by_stage": [
+          {
+            "stage": "generation",
+            "count": 103
+          },
+          {
+            "stage": "transcription",
+            "count": 42
+          },
+          {
+            "stage": "recording",
+            "count": 23
+          },
+          {
+            "stage": "send",
+            "count": 18
+          },
+          {
+            "stage": "permission",
+            "count": 16
+          }
+        ],
+        "by_error_code": [
+          {
+            "error_code": "NoTasksExtracted",
+            "count": 103
+          },
+          {
+            "error_code": "NetworkError",
+            "count": 52
+          },
+          {
+            "error_code": "PermissionDenied",
+            "count": 16
+          },
+          {
+            "error_code": "RecordingStartFailed",
+            "count": 15
+          },
+          {
+            "error_code": "NotRecording",
+            "count": 8
+          },
+          {
+            "error_code": "AudioSubmitFailed",
+            "count": 5
+          },
+          {
+            "error_code": "TranscriptionFailed",
+            "count": 3
+          }
+        ],
+        "by_stage_and_error_code": [
+          {
+            "stage": "generation",
+            "error_code": "NoTasksExtracted",
+            "count": 103
+          },
+          {
+            "stage": "transcription",
+            "error_code": "NetworkError",
+            "count": 39
+          },
+          {
+            "stage": "permission",
+            "error_code": "PermissionDenied",
+            "count": 16
+          },
+          {
+            "stage": "recording",
+            "error_code": "RecordingStartFailed",
+            "count": 15
+          },
+          {
+            "stage": "send",
+            "error_code": "NetworkError",
+            "count": 13
+          },
+          {
+            "stage": "recording",
+            "error_code": "NotRecording",
+            "count": 8
+          },
+          {
+            "stage": "send",
+            "error_code": "AudioSubmitFailed",
+            "count": 5
+          },
+          {
+            "stage": "transcription",
+            "error_code": "TranscriptionFailed",
+            "count": 3
+          }
+        ],
+        "weekly": [
+          {
+            "week": "2026-06-07",
+            "failure_count": 26,
+            "failure_users": 9
+          },
+          {
+            "week": "2026-06-14",
+            "failure_count": 49,
+            "failure_users": 19
+          },
+          {
+            "week": "2026-06-21",
+            "failure_count": 94,
+            "failure_users": 30
+          },
+          {
+            "week": "2026-06-28",
+            "failure_count": 33,
+            "failure_users": 11
+          }
+        ]
+      },
+      "ai_breakdown": {
+        "usage_count": 194,
+        "user_count": 77,
+        "success_rate": 0.9639175257731959,
+        "average_duration_ms": 10002.71875,
+        "average_subtask_count": 3.5208333333333335
+      },
+      "notes": {
+        "created_count": 0,
+        "manual_created_count": 0,
+        "ai_created_count": 0,
+        "unknown_created_count": 0,
+        "ai_share": null
+      },
+      "screen_views": {
+        "notes_views": 1613,
+        "notes_viewers": 198,
+        "gashapon_views": 159,
+        "gashapon_viewers": 70
+      },
+      "event_inventory": {
+        "event_count": 22,
+        "events": [
+          {
+            "event": "$autocapture",
+            "total_events": 175213,
+            "total_users": 819,
+            "month_events": 417,
+            "month_users": 13,
+            "first_seen": "2025-10-13T07:46:05.562000Z",
+            "last_seen": "2026-07-15T07:03:39.206000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "Application Became Active",
+            "total_events": 19516,
+            "total_users": 1507,
+            "month_events": 3403,
+            "month_users": 338,
+            "first_seen": "2025-10-13T10:22:15.097000Z",
+            "last_seen": "2026-07-22T13:50:39.761000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "Application Backgrounded",
+            "total_events": 16905,
+            "total_users": 1379,
+            "month_events": 3154,
+            "month_users": 361,
+            "first_seen": "2025-10-15T01:57:08.141000Z",
+            "last_seen": "2026-07-22T14:59:25.523000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "screen_viewed",
+            "total_events": 12286,
+            "total_users": 860,
+            "month_events": 1772,
+            "month_users": 198,
+            "first_seen": "2025-12-27T07:42:37.574000Z",
+            "last_seen": "2026-07-22T13:49:41.121000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "Application Opened",
+            "total_events": 9735,
+            "total_users": 1556,
+            "month_events": 1400,
+            "month_users": 386,
+            "first_seen": "2025-10-13T07:13:13.232000Z",
+            "last_seen": "2026-07-22T14:59:09.094000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "create_task_by_ai",
+            "total_events": 4448,
+            "total_users": 440,
+            "month_events": 125,
+            "month_users": 45,
+            "first_seen": "2025-12-27T05:40:57.007000Z",
+            "last_seen": "2026-06-16T07:18:00.907000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "active_user_5s",
+            "total_events": 3469,
+            "total_users": 996,
+            "month_events": 622,
+            "month_users": 249,
+            "first_seen": "2025-12-27T05:38:28.081000Z",
+            "last_seen": "2026-07-22T14:59:20.015000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "$set",
+            "total_events": 2783,
+            "total_users": 454,
+            "month_events": 830,
+            "month_users": 153,
+            "first_seen": "2026-02-14T10:28:23.512000Z",
+            "last_seen": "2026-07-22T14:59:14.993000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "ai_task_interaction_completed",
+            "total_events": 2592,
+            "total_users": 106,
+            "month_events": 0,
+            "month_users": 0,
+            "first_seen": "2025-10-13T10:22:32.261000Z",
+            "last_seen": "2026-04-18T21:16:45.624000Z",
+            "active_in_month": false
+          },
+          {
+            "event": "$rageclick",
+            "total_events": 1945,
+            "total_users": 362,
+            "month_events": 583,
+            "month_users": 122,
+            "first_seen": "2026-05-03T12:13:38.004000Z",
+            "last_seen": "2026-07-22T11:43:39.351000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "Application Installed",
+            "total_events": 1734,
+            "total_users": 1541,
+            "month_events": 249,
+            "month_users": 247,
+            "first_seen": "2025-10-13T07:13:13.227000Z",
+            "last_seen": "2026-07-22T11:34:39.472000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "breakdown_task",
+            "total_events": 1471,
+            "total_users": 400,
+            "month_events": 194,
+            "month_users": 77,
+            "first_seen": "2025-12-27T07:37:23.310000Z",
+            "last_seen": "2026-07-22T11:41:53.433000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "create_task_manually",
+            "total_events": 1426,
+            "total_users": 286,
+            "month_events": 217,
+            "month_users": 69,
+            "first_seen": "2025-12-27T05:42:07.073000Z",
+            "last_seen": "2026-07-22T14:24:55.408000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "$identify",
+            "total_events": 1410,
+            "total_users": 803,
+            "month_events": 194,
+            "month_users": 181,
+            "first_seen": "2025-10-13T07:46:47.599000Z",
+            "last_seen": "2026-07-22T11:35:44.995000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "ai_task_generation_session",
+            "total_events": 735,
+            "total_users": 174,
+            "month_events": 343,
+            "month_users": 75,
+            "first_seen": "2026-05-14T13:24:26.840000Z",
+            "last_seen": "2026-07-22T11:58:45.588000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "Application Updated",
+            "total_events": 631,
+            "total_users": 309,
+            "month_events": 152,
+            "month_users": 134,
+            "first_seen": "2025-10-19T09:19:40.689000Z",
+            "last_seen": "2026-07-22T13:05:23.309000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "ai_task_generation_failed",
+            "total_events": 419,
+            "total_users": 130,
+            "month_events": 202,
+            "month_users": 57,
+            "first_seen": "2026-06-11T09:20:53.412000Z",
+            "last_seen": "2026-07-22T11:55:31.031000Z",
+            "active_in_month": true
+          },
+          {
+            "event": "manual_task_creation",
+            "total_events": 386,
+            "total_users": 41,
+            "month_events": 0,
+            "month_users": 0,
+            "first_seen": "2025-10-14T05:36:35.304000Z",
+            "last_seen": "2026-01-02T09:48:39.384000Z",
+            "active_in_month": false
+          },
+          {
+            "event": "ai_preview_shown",
+            "total_events": 225,
+            "total_users": 56,
+            "month_events": 0,
+            "month_users": 0,
+            "first_seen": "2026-04-02T09:05:29.410000Z",
+            "last_seen": "2026-05-06T19:58:19.800000Z",
+            "active_in_month": false
+          },
+          {
+            "event": "user_load_calendar_screen",
+            "total_events": 6,
+            "total_users": 1,
+            "month_events": 0,
+            "month_users": 0,
+            "first_seen": "2025-10-14T05:54:01.317000Z",
+            "last_seen": "2025-10-14T10:58:45.823000Z",
+            "active_in_month": false
+          },
+          {
+            "event": "CalendarScreen loaded",
+            "total_events": 3,
+            "total_users": 2,
+            "month_events": 0,
+            "month_users": 0,
+            "first_seen": "2025-10-13T07:13:13.325000Z",
+            "last_seen": "2025-10-13T07:46:47.685000Z",
+            "active_in_month": false
+          },
+          {
+            "event": "ai_task_result_received",
+            "total_events": 2,
+            "total_users": 1,
+            "month_events": 0,
+            "month_users": 0,
+            "first_seen": "2025-10-13T10:22:23.300000Z",
+            "last_seen": "2025-10-13T10:22:43.903000Z",
+            "active_in_month": false
+          }
+        ]
+      },
+      "installation_retention": {
+        "as_of": "2026-07-22",
+        "cohorts": [
+          {
+            "cohort": "2025-10-01",
+            "users": 87,
+            "d1_users": 24,
+            "d1_rate": 0.275862,
+            "d1_mature": true,
+            "d7_users": 5,
+            "d7_rate": 0.057471,
+            "d7_mature": true,
+            "d30_users": 4,
+            "d30_rate": 0.045977,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2025-11-01",
+            "users": 108,
+            "d1_users": 22,
+            "d1_rate": 0.203704,
+            "d1_mature": true,
+            "d7_users": 8,
+            "d7_rate": 0.074074,
+            "d7_mature": true,
+            "d30_users": 5,
+            "d30_rate": 0.046296,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2025-12-01",
+            "users": 106,
+            "d1_users": 8,
+            "d1_rate": 0.075472,
+            "d1_mature": true,
+            "d7_users": 2,
+            "d7_rate": 0.018868,
+            "d7_mature": true,
+            "d30_users": 1,
+            "d30_rate": 0.009434,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2026-01-01",
+            "users": 91,
+            "d1_users": 13,
+            "d1_rate": 0.142857,
+            "d1_mature": true,
+            "d7_users": 3,
+            "d7_rate": 0.032967,
+            "d7_mature": true,
+            "d30_users": 2,
+            "d30_rate": 0.021978,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2026-02-01",
+            "users": 82,
+            "d1_users": 10,
+            "d1_rate": 0.121951,
+            "d1_mature": true,
+            "d7_users": 2,
+            "d7_rate": 0.02439,
+            "d7_mature": true,
+            "d30_users": 1,
+            "d30_rate": 0.012195,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2026-03-01",
+            "users": 9,
+            "d1_users": 2,
+            "d1_rate": 0.222222,
+            "d1_mature": true,
+            "d7_users": 1,
+            "d7_rate": 0.111111,
+            "d7_mature": true,
+            "d30_users": 1,
+            "d30_rate": 0.111111,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2026-04-01",
+            "users": 111,
+            "d1_users": 20,
+            "d1_rate": 0.18018,
+            "d1_mature": true,
+            "d7_users": 5,
+            "d7_rate": 0.045045,
+            "d7_mature": true,
+            "d30_users": 3,
+            "d30_rate": 0.027027,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2026-05-01",
+            "users": 452,
+            "d1_users": 82,
+            "d1_rate": 0.181416,
+            "d1_mature": true,
+            "d7_users": 16,
+            "d7_rate": 0.035398,
+            "d7_mature": true,
+            "d30_users": 4,
+            "d30_rate": 0.00885,
+            "d30_mature": true
+          },
+          {
+            "cohort": "2026-06-01",
+            "users": 242,
+            "d1_users": 39,
+            "d1_rate": 0.161157,
+            "d1_mature": true,
+            "d7_users": 16,
+            "d7_rate": 0.066116,
+            "d7_mature": true,
+            "d30_users": 2,
+            "d30_rate": null,
+            "d30_mature": false
+          },
+          {
+            "cohort": "2026-07-01",
+            "users": 253,
+            "d1_users": 42,
+            "d1_rate": null,
+            "d1_mature": false,
+            "d7_users": 5,
+            "d7_rate": null,
+            "d7_mature": false,
+            "d30_users": 0,
+            "d30_rate": null,
+            "d30_mature": false
+          }
+        ]
+      },
+      "ai_manual_combinations": [
+        {
+          "segment": "AI + manual",
+          "users": 33,
+          "average_active_days": 5.7272727272727275
+        },
+        {
+          "segment": "AI only",
+          "users": 78,
+          "average_active_days": 2.1923076923076925
+        },
+        {
+          "segment": "manual only",
+          "users": 36,
+          "average_active_days": 2.4444444444444446
+        },
+        {
+          "segment": "neither",
+          "users": 102,
+          "average_active_days": 1.2352941176470589
+        }
+      ],
+      "audience": {
+        "countries": [
+          {
+            "country": "CN",
+            "users": 153,
+            "average_active_days": 1.8496732026143792
+          },
+          {
+            "country": "AU",
+            "users": 44,
+            "average_active_days": 3.9318181818181817
+          },
+          {
+            "country": "US",
+            "users": 13,
+            "average_active_days": 2.0
+          },
+          {
+            "country": "SG",
+            "users": 7,
+            "average_active_days": 3.5714285714285716
+          },
+          {
+            "country": "JP",
+            "users": 6,
+            "average_active_days": 2.1666666666666665
+          },
+          {
+            "country": "HK",
+            "users": 6,
+            "average_active_days": 1.3333333333333333
+          },
+          {
+            "country": "MY",
+            "users": 3,
+            "average_active_days": 1.3333333333333333
+          },
+          {
+            "country": "NZ",
+            "users": 3,
+            "average_active_days": 3.6666666666666665
+          },
+          {
+            "country": "GB",
+            "users": 3,
+            "average_active_days": 1.0
+          },
+          {
+            "country": "IE",
+            "users": 2,
+            "average_active_days": 1.0
+          },
+          {
+            "country": "SE",
+            "users": 2,
+            "average_active_days": 1.5
+          },
+          {
+            "country": "NL",
+            "users": 1,
+            "average_active_days": 3.0
+          },
+          {
+            "country": "DE",
+            "users": 1,
+            "average_active_days": 1.0
+          },
+          {
+            "country": "ES",
+            "users": 1,
+            "average_active_days": 1.0
+          },
+          {
+            "country": "KR",
+            "users": 1,
+            "average_active_days": 6.0
+          },
+          {
+            "country": "TW",
+            "users": 1,
+            "average_active_days": 2.0
+          },
+          {
+            "country": "PH",
+            "users": 1,
+            "average_active_days": 2.0
+          },
+          {
+            "country": "PT",
+            "users": 1,
+            "average_active_days": 8.0
+          }
+        ],
+        "app_versions": [
+          {
+            "app_version": "1.1.2",
+            "users": 153
+          },
+          {
+            "app_version": "1.1.1",
+            "users": 61
+          },
+          {
+            "app_version": "1.2.0",
+            "users": 14
+          },
+          {
+            "app_version": "1.1.0",
+            "users": 9
+          },
+          {
+            "app_version": "Unknown",
+            "users": 5
+          },
+          {
+            "app_version": "1.0.1",
+            "users": 4
+          },
+          {
+            "app_version": "1.2.1",
+            "users": 3
+          }
+        ]
+      },
+      "historical_install_proxy": {
+        "installed_users": 1541,
+        "identified_users": 787,
+        "identified_user_ratio": 0.510707,
+        "authenticated_active_users": 884,
+        "authenticated_active_ratio": 0.573653,
+        "is_strict_funnel": false
+      }
+    }
+  },
+  "collection_failures": []
+}

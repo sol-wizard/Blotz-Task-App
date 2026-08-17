@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blotz Monthly Product Report"
+  short_description: "生成、分析与优化 App Store 与 PostHog 的 Blotz 中文产品月报"
+  default_prompt: "使用 $monthly-product-report 生成 Blotz 上个月的中文产品分析报告。"

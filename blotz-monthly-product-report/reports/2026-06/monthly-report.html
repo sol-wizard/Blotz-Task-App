@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blotz 2026年6月产品分析报告</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #5f6876;
+      --line: #d9dde7;
+      --soft: #eef0f3;
+      --accent: #2f6edb;
+      --accent-soft: #edf4ff;
+      --good: #168a5b;
+      --good-soft: #eaf7f1;
+      --warning: #9b5d00;
+      --warning-soft: #fff6e6;
+      --critical: #b93838;
+      --critical-soft: #fff1ef;
+      --header-bg: #20263b;
+      --header-text: #ffffff;
+      --header-muted: #d6dbe6;
+      --shadow: 0 4px 14px rgba(23, 32, 51, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+    .page { width: min(100% - 48px, 1180px); margin: 0 auto; padding: 36px 0 80px; }
+    header {
+      margin-bottom: 28px;
+      padding: 26px 30px;
+      border: 1px solid #303951;
+      border-radius: 8px;
+      color: var(--header-text);
+      background: var(--header-bg);
+      box-shadow: var(--shadow);
+    }
+    header .meta, header .source-line { color: var(--header-muted); }
+    header h1 { color: var(--header-text); }
+    main { display: block; }
+    section { margin-top: 32px; }
+    h1 { margin: 4px 0 6px; font-size: 32px; line-height: 1.25; letter-spacing: 0; overflow-wrap: anywhere; }
+    h2 {
+      margin: 0 0 14px;
+      padding: 2px 0 2px 12px;
+      border-left: 4px solid var(--accent);
+      font-size: 23px;
+      line-height: 1.4;
+      letter-spacing: 0;
+    }
+    h3 { margin: 24px 0 8px; font-size: 18px; line-height: 1.45; letter-spacing: 0; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 16px; padding-left: 24px; }
+    li { margin: 5px 0; }
+    strong { font-weight: 650; }
+    code { padding: 1px 5px; border-radius: 4px; background: var(--soft); font-size: 0.9em; overflow-wrap: anywhere; }
+    .meta { color: var(--muted); font-size: 14px; }
+    .source-line { margin-top: 6px; color: var(--muted); font-size: 14px; }
+    .source-status { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0 24px;
+    }
+    .summary-metric {
+      min-width: 0;
+      min-height: 124px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .metric-label { color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .metric-value {
+      margin: 5px 0 3px;
+      font-size: 27px;
+      font-weight: 720;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    .metric-note { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 20px 0 24px;
+    }
+    .signal {
+      min-width: 0;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-left-width: 4px;
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .signal-positive { border-left-color: var(--good); background: var(--good-soft); }
+    .signal-risk { border-left-color: var(--critical); background: var(--critical-soft); }
+    .signal-label { margin: 0 0 5px; font-size: 13px; font-weight: 700; }
+    .signal h3 { margin: 0 0 8px; font-size: 17px; }
+    .signal p:last-child { margin-bottom: 0; }
+    .section-intro { max-width: 760px; margin: -4px 0 16px; color: var(--muted); }
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: start;
+      margin: 18px 0 26px;
+    }
+    .evidence-column { min-width: 0; }
+    .evidence-column > h3:first-child { margin-top: 0; }
+    .evidence-column .table-wrap,
+    .evidence-column .trend-chart { margin-top: 10px; }
+    .evidence-column .trend-svg,
+    .evidence-column table { min-width: 560px; }
+    .distribution-list { margin: 12px 0 20px; }
+    .distribution-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 160px) minmax(140px, 1fr) minmax(58px, auto);
+      gap: 12px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .distribution-label { min-width: 0; overflow-wrap: anywhere; }
+    .distribution-value {
+      text-align: right;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    progress.distribution-bar {
+      width: 100%;
+      height: 12px;
+      border: 0;
+      border-radius: 6px;
+      overflow: hidden;
+      appearance: none;
+      background: var(--soft);
+    }
+    progress.distribution-bar::-webkit-progress-bar { background: var(--soft); }
+    progress.distribution-bar::-webkit-progress-value { background: var(--accent); }
+    progress.distribution-bar::-moz-progress-bar { background: var(--accent); }
+    progress.distribution-good::-webkit-progress-value { background: var(--good); }
+    progress.distribution-good::-moz-progress-bar { background: var(--good); }
+    progress.distribution-critical::-webkit-progress-value { background: var(--critical); }
+    progress.distribution-critical::-moz-progress-bar { background: var(--critical); }
+    progress.distribution-accent::-webkit-progress-value { background: var(--accent); }
+    progress.distribution-accent::-moz-progress-bar { background: var(--accent); }
+    .trend-chart { margin: 14px 0 22px; }
+    .trend-chart-scroll { width: 100%; overflow-x: auto; }
+    .trend-svg {
+      display: block;
+      width: 100%;
+      min-width: 640px;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .trend-grid { stroke: var(--line); stroke-width: 1; }
+    .trend-axis-label, .trend-legend-label, .trend-point-label {
+      fill: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 11px;
+      letter-spacing: 0;
+    }
+    .trend-point-label { fill: var(--text); font-weight: 650; }
+    .trend-line, .trend-legend-line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .trend-point { fill: var(--surface); stroke-width: 3; }
+    .trend-primary { stroke: var(--accent); }
+    .trend-secondary { stroke: var(--good); }
+    .trend-critical { stroke: var(--critical); }
+    .trend-caption { margin-top: 8px; color: var(--muted); font-size: 13px; }
+    .verdict, .data-note {
+      margin: 16px 0;
+      padding: 14px 16px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      background: var(--accent-soft);
+    }
+    .verdict { font-size: 17px; }
+    .data-note { border-left-color: var(--warning); background: var(--warning-soft); }
+    .issue { margin: 20px 0 28px; padding-left: 16px; border-left: 3px solid var(--line); }
+    .issue-critical { border-left-color: var(--critical); }
+    .issue-warning { border-left-color: var(--warning); }
+    .decision-list { margin: 16px 0 28px; border-bottom: 1px solid var(--line); }
+    .decision-item {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 14px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+    }
+    .decision-copy { min-width: 0; }
+    .decision-copy h3 { margin: 0 0 6px; }
+    .decision-copy p { margin: 5px 0; }
+    .decision-meta { color: var(--muted); font-size: 14px; }
+    .priority {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      height: 28px;
+      margin-right: 6px;
+      padding: 0 7px;
+      border-radius: 6px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .decision-item > .priority { width: 42px; height: 42px; margin: 1px 0 0; border-radius: 8px; }
+    .decision-item:nth-child(1) > .priority { color: var(--critical); background: var(--critical-soft); }
+    .decision-item:nth-child(2) > .priority { color: var(--warning); background: var(--warning-soft); }
+    .decision-item:nth-child(3) > .priority { color: var(--accent); background: var(--accent-soft); }
+    .decision-item:nth-child(4) > .priority { color: var(--muted); background: var(--soft); }
+    .appendix { margin-top: 52px; padding-top: 20px; border-top: 2px solid var(--line); }
+    .appendix h2 { border-left-color: var(--muted); }
+    .status-good { color: var(--good); font-weight: 650; }
+    .status-warning { color: var(--warning); font-weight: 650; }
+    .status-critical { color: var(--critical); font-weight: 650; }
+    .table-wrap { width: 100%; margin: 10px 0 20px; overflow-x: auto; }
+    table { width: 100%; min-width: 600px; border-collapse: collapse; background: var(--surface); font-size: 14px; }
+    th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { border-bottom-width: 2px; color: var(--muted); font-weight: 650; }
+    tr:last-child td { border-bottom: 0; }
+    footer { margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #171a1d;
+        --surface: #20252a;
+        --text: #eef1f3;
+        --muted: #aab2b9;
+        --line: #394149;
+        --soft: #2a3036;
+        --accent: #86b9f2;
+        --accent-soft: #1f3449;
+        --good: #70c99a;
+        --good-soft: #18382a;
+        --warning: #f0bd63;
+        --warning-soft: #3b2d16;
+        --critical: #ff9288;
+        --critical-soft: #432522;
+        --header-bg: #20263b;
+        --header-text: #ffffff;
+        --header-muted: #d6dbe6;
+        --shadow: none;
+      }
+    }
+    @media (max-width: 800px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .signal-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 1100px) {
+      .evidence-grid { grid-template-columns: 1fr; gap: 20px; margin: 16px 0 22px; }
+      .evidence-column .trend-svg { min-width: 640px; }
+    }
+    @media (max-width: 600px) {
+      .page { width: min(100% - 28px, 1180px); padding-top: 24px; }
+      header { margin-bottom: 24px; padding: 22px 20px; }
+      h1 { font-size: 26px; }
+      h2 { font-size: 20px; }
+      section { margin-top: 30px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .summary-metric { min-height: 0; }
+      .metric-value { font-size: 25px; }
+      .distribution-row {
+        grid-template-columns: minmax(78px, 0.7fr) minmax(100px, 1.3fr) auto;
+        gap: 8px;
+      }
+      .decision-item { grid-template-columns: 46px minmax(0, 1fr); gap: 10px; }
+      table { min-width: 560px; }
+    }
+    @media (max-width: 360px) {
+      .distribution-row { grid-template-columns: minmax(0, 1fr) auto; }
+      .distribution-label { grid-column: 1; grid-row: 1; }
+      progress.distribution-bar { grid-column: 1 / -1; grid-row: 2; }
+      .distribution-value { grid-column: 2; grid-row: 1; }
+    }
+    @media print {
+      :root {
+        color-scheme: light;
+        --bg: #fff;
+        --surface: #fff;
+        --text: #111;
+        --muted: #555;
+        --line: #ccc;
+        --soft: #f5f5f5;
+        --accent-soft: #f3f6fa;
+        --good-soft: #f1f8f4;
+        --warning-soft: #fff8eb;
+        --critical-soft: #fff3f2;
+        --shadow: none;
+      }
+      .page { width: 100%; padding: 0; }
+      header { border: 0; border-radius: 0; background: transparent; color: var(--text); box-shadow: none; }
+      header .meta, header .source-line, header h1 { color: var(--text); }
+      .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .signal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .trend-svg { min-width: 0; }
+      h2, h3, table, .summary-metric, .signal, .decision-item, .issue, .data-note, .trend-chart, .evidence-column { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="meta">生成时间：2026-07-22 23:56 AWST</div>
+      <h1>Blotz 2026年6月产品分析报告</h1>
+      <div class="source-line">报告周期：2026-06</div>
+    </header>
+    <main>
+<section>
+  <h2>决策摘要</h2>
+  <blockquote class="verdict"><strong>本月决策：优先修复可靠性</strong><br>新版 AI 任务生成已经出现清晰的使用与接受信号，但失败影响范围和“未生成可用任务”问题足以改变投入顺序。7 月应先降低 AI 关键失败，再扩大功能范围。</blockquote>
+  <p class="section-intro">6 月有 75 位用户完成 343 次新版 AI 任务生成，其中 274 次被接受；同期记录到 202 条 AI 失败事件，影响 57 位用户。失败事件与最终会话结果目前不能逐次对应，因此本报告不计算失败率。</p>
+  <p class="source-status"><strong>数据源：</strong><span class="status-good">App Store Connect 完整</span>；<span class="status-good">PostHog 完整</span>。</p>
+  <div class="summary-grid">
+    <article class="summary-metric">
+      <div class="metric-label">新版 AI 会话接受率</div>
+      <div class="metric-value">79.88%</div>
+      <div class="metric-note">274 / 343 次会话被用户接受</div>
+    </article>
+    <article class="summary-metric">
+      <div class="metric-label">AI 失败影响</div>
+      <div class="metric-value">202 条</div>
+      <div class="metric-note">涉及 57 位用户，不能解读为失败率</div>
+    </article>
+    <article class="summary-metric">
+      <div class="metric-label">月活跃用户</div>
+      <div class="metric-value">249</div>
+      <div class="metric-note">150 位用户当月只活跃 1 天</div>
+    </article>
+    <article class="summary-metric">
+      <div class="metric-label">6 月安装用户回访</div>
+      <div class="metric-value">16.12%</div>
+      <div class="metric-note">次日回访率；第 7 天为 6.61%</div>
+    </article>
+  </div>
+  <div class="signal-grid">
+    <article class="signal signal-positive">
+      <div class="signal-label">最大正向信号</div>
+      <h3>AI 任务生成已产生可见用户价值</h3>
+      <p>343 次会话覆盖 75 位用户，274 次被接受、仅 10 次被放弃。接受结果与使用规模共同表明用户能够从当前流程中获得价值，但不能据此推断回访或任务完成得到提升。</p>
+    </article>
+    <article class="signal signal-risk">
+      <div class="signal-label">最大风险</div>
+      <h3>生成结果与链路可靠性同时受损</h3>
+      <p>202 条失败事件影响 57 位用户，其中 103 条为生成阶段的 <code>NoTasksExtracted</code>，另有 52 条 <code>NetworkError</code>。这两类问题直接影响用户能否获得可用结果。</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>一、产品健康</h2>
+  <p class="section-intro">月活跃规模需要结合使用频率与安装后回访理解。6 月用户以低频使用为主，手动任务创建也集中在部分活跃用户中。</p>
+  <div class="evidence-grid">
+    <div class="evidence-column">
+  <h3>活跃与核心任务</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>指标</th><th>6 月结果</th><th>产品含义</th></tr></thead>
+      <tbody>
+        <tr><td>月活跃用户（MAU）</td><td>249</td><td>当月至少一次在登录后区域活跃 5 秒</td></tr>
+        <tr><td>平均周活跃用户</td><td>73.60</td><td>月内各周的平均活跃规模</td></tr>
+        <tr><td>平均日活跃用户</td><td>19.13</td><td>月内每日平均活跃规模</td></tr>
+        <tr><td>人均活跃天数</td><td>2.31 天</td><td>整体使用频率仍偏轻</td></tr>
+        <tr><td>手动创建任务</td><td>217 个</td><td>69 位创建者；每位月活跃用户 0.87 个</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>当月使用频率</h3>
+  <div class="distribution-list">
+    <div class="distribution-row">
+      <span class="distribution-label">活跃 1 天</span>
+      <progress class="distribution-bar distribution-critical" value="150" max="249" aria-label="活跃一天的用户数">60.24%</progress>
+      <span class="distribution-value">150 人 · 60.24%</span>
+    </div>
+    <div class="distribution-row">
+      <span class="distribution-label">活跃 2–3 天</span>
+      <progress class="distribution-bar distribution-accent" value="63" max="249" aria-label="活跃二至三天的用户数">25.30%</progress>
+      <span class="distribution-value">63 人 · 25.30%</span>
+    </div>
+    <div class="distribution-row">
+      <span class="distribution-label">活跃 4–7 天</span>
+      <progress class="distribution-bar distribution-accent" value="23" max="249" aria-label="活跃四至七天的用户数">9.24%</progress>
+      <span class="distribution-value">23 人 · 9.24%</span>
+    </div>
+    <div class="distribution-row">
+      <span class="distribution-label">活跃 8 天以上</span>
+      <progress class="distribution-bar distribution-good" value="13" max="249" aria-label="活跃八天以上的用户数">5.22%</progress>
+      <span class="distribution-value">13 人 · 5.22%</span>
+    </div>
+  </div>
+  <p><strong>观察：</strong>150 位用户只在 6 月活跃 1 天，占月活跃用户的 60.24%。这是当月使用频率分层，不是按安装月份分组的回访率，也不能单独定位用户停止使用的原因。</p>
+    </div>
+    <div class="evidence-column">
+  <h3>按安装月份分组的回访</h3>
+  <figure class="trend-chart"><div class="trend-chart-scroll"><svg class="trend-svg" viewBox="0 0 760 300" role="img" aria-labelledby="retention-chart-title retention-chart-description"><title id="retention-chart-title">按安装月份分组的回访趋势</title><desc id="retention-chart-description">展示已成熟安装月份的次日和第 7 天回访率。</desc><line class="trend-grid" x1="52" y1="246.0" x2="740" y2="246.0"></line><text class="trend-axis-label" x="44" y="250.0" text-anchor="end">0%</text><line class="trend-grid" x1="52" y1="202.8" x2="740" y2="202.8"></line><text class="trend-axis-label" x="44" y="206.8" text-anchor="end">5%</text><line class="trend-grid" x1="52" y1="159.6" x2="740" y2="159.6"></line><text class="trend-axis-label" x="44" y="163.6" text-anchor="end">10%</text><line class="trend-grid" x1="52" y1="116.4" x2="740" y2="116.4"></line><text class="trend-axis-label" x="44" y="120.4" text-anchor="end">15%</text><line class="trend-grid" x1="52" y1="73.2" x2="740" y2="73.2"></line><text class="trend-axis-label" x="44" y="77.2" text-anchor="end">20%</text><line class="trend-grid" x1="52" y1="30.0" x2="740" y2="30.0"></line><text class="trend-axis-label" x="44" y="34.0" text-anchor="end">25%</text><text class="trend-axis-label" x="52.0" y="280" text-anchor="middle">2026-01</text><text class="trend-axis-label" x="189.6" y="280" text-anchor="middle">2026-02</text><text class="trend-axis-label" x="327.2" y="280" text-anchor="middle">2026-03</text><text class="trend-axis-label" x="464.8" y="280" text-anchor="middle">2026-04</text><text class="trend-axis-label" x="602.4" y="280" text-anchor="middle">2026-05</text><text class="trend-axis-label" x="740.0" y="280" text-anchor="middle">2026-06</text><polyline class="trend-line trend-primary" points="52.0,122.6 189.6,140.6 327.2,54.0 464.8,90.3 602.4,89.3 740.0,106.8"></polyline><circle class="trend-point trend-primary" cx="52.0" cy="122.6" r="4"></circle><circle class="trend-point trend-primary" cx="189.6" cy="140.6" r="4"></circle><circle class="trend-point trend-primary" cx="327.2" cy="54.0" r="4"></circle><circle class="trend-point trend-primary" cx="464.8" cy="90.3" r="4"></circle><circle class="trend-point trend-primary" cx="602.4" cy="89.3" r="4"></circle><circle class="trend-point trend-primary" cx="740.0" cy="106.8" r="4"></circle><line class="trend-legend-line trend-primary" x1="488" y1="14" x2="508" y2="14"></line><text class="trend-legend-label" x="515" y="18">次日回访率</text><polyline class="trend-line trend-secondary" points="52.0,217.5 189.6,224.9 327.2,150.0 464.8,207.1 602.4,215.4 740.0,188.9"></polyline><circle class="trend-point trend-secondary" cx="52.0" cy="217.5" r="4"></circle><circle class="trend-point trend-secondary" cx="189.6" cy="224.9" r="4"></circle><circle class="trend-point trend-secondary" cx="327.2" cy="150.0" r="4"></circle><circle class="trend-point trend-secondary" cx="464.8" cy="207.1" r="4"></circle><circle class="trend-point trend-secondary" cx="602.4" cy="215.4" r="4"></circle><circle class="trend-point trend-secondary" cx="740.0" cy="188.9" r="4"></circle><line class="trend-legend-line trend-secondary" x1="614" y1="14" x2="634" y2="14"></line><text class="trend-legend-label" x="641" y="18">第 7 天回访率</text></svg></div><figcaption class="trend-caption">仅展示截至 2026-06 已成熟的次日和第 7 天回访；精确值与样本量见相邻数据表。</figcaption></figure>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>安装月份</th><th>用户</th><th>次日回访率</th><th>第 7 天回访率</th><th>第 30 天回访率</th></tr></thead>
+      <tbody>
+        <tr><td>2026-04</td><td>111</td><td>18.02%</td><td>4.50%</td><td>2.70%</td></tr>
+        <tr><td>2026-05</td><td>452</td><td>18.14%</td><td>3.54%</td><td>0.89%</td></tr>
+        <tr><td><strong>2026-06</strong></td><td><strong>242</strong></td><td><strong>16.12%</strong></td><td><strong>6.61%</strong></td><td>观察期未成熟</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>观察：</strong>6 月安装用户的次日回访率为 16.12%，第 7 天回访率为 6.61%。第 30 天观察窗口尚未完整经过，因此不展示百分比，也不按零处理。</p>
+  <aside class="data-note">回访数据以 PostHog 识别为同一人的用户记录为基础，从首次 <code>Application Installed</code> 到指定日期的 <code>Application Opened</code> 判断回访；它不是 App Store 下载转化。手动任务事件也没有可靠记录周期任务和截止日期属性，因此不做相关拆分。</aside>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>二、AI 使用价值</h2>
+  <p class="section-intro">新版 AI 任务生成从会话结果看已有价值信号。输出数量用于描述产出规模，不代表生成质量；人均会话数也只是总体使用强度，不代表多少用户实际回来重复使用。</p>
+  <div class="evidence-grid">
+    <div class="evidence-column">
+  <h3>会话规模与结果</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>指标</th><th>结果</th><th>证据解读</th></tr></thead>
+      <tbody>
+        <tr><td>AI 用户 / 会话</td><td>75 / 343</td><td>平均每位 AI 用户 4.57 次会话，仅表示总体使用强度</td></tr>
+        <tr><td>接受 / 拒绝 / 放弃</td><td>274 / 59 / 10</td><td>接受率 79.88%，拒绝率 17.20%，放弃率 2.92%</td></tr>
+        <tr><td>每会话平均轮次</td><td>1.08</td><td>描述交互轮数，不代表流程质量</td></tr>
+        <tr><td>每会话平均生成任务</td><td>1.48</td><td>描述任务输出量</td></tr>
+        <tr><td>每会话平均生成笔记</td><td>0.17</td><td>描述笔记输出量</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>会话结果构成</h3>
+  <div class="distribution-list">
+    <div class="distribution-row">
+      <span class="distribution-label">接受</span>
+      <progress class="distribution-bar distribution-good" value="274" max="343" aria-label="被接受的 AI 会话数">79.88%</progress>
+      <span class="distribution-value">274 · 79.88%</span>
+    </div>
+    <div class="distribution-row">
+      <span class="distribution-label">拒绝</span>
+      <progress class="distribution-bar distribution-critical" value="59" max="343" aria-label="被拒绝的 AI 会话数">17.20%</progress>
+      <span class="distribution-value">59 · 17.20%</span>
+    </div>
+    <div class="distribution-row">
+      <span class="distribution-label">放弃</span>
+      <progress class="distribution-bar distribution-accent" value="10" max="343" aria-label="被放弃的 AI 会话数">2.92%</progress>
+      <span class="distribution-value">10 · 2.92%</span>
+    </div>
+  </div>
+    </div>
+    <div class="evidence-column">
+  <h3>输入方式构成</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>互斥输入方式</th><th>会话</th><th>占全部会话</th></tr></thead>
+      <tbody>
+        <tr><td>仅语音</td><td>214</td><td>62.39%</td></tr>
+        <tr><td>仅文本</td><td>125</td><td>36.44%</td></tr>
+        <tr><td>语音与文本混合</td><td>2</td><td>0.58%</td></tr>
+        <tr><td>输入方式未知</td><td>2</td><td>0.58%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="data-note">四类输入方式互斥且合计 343 次会话。另有“包含语音”和“包含文本”的兼容计数会在混合会话中重叠，本报告不使用那两个字段计算构成。2 次未知输入方式会话说明埋点仍有小范围缺口。</aside>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>三、可靠性与性能</h2>
+  <p class="section-intro">失败事件显示，当前风险不只来自网络或录音链路，也来自 AI 流程完成后没有产出可用任务。优先级应先放在覆盖面最大的失败组合。</p>
+  <div class="evidence-grid">
+    <div class="evidence-column">
+  <h3>主要失败组合</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>失败阶段与错误码</th><th>事件数</th><th>用户影响</th></tr></thead>
+      <tbody>
+        <tr><td>生成阶段 · <code>NoTasksExtracted</code></td><td>103</td><td>流程完成但没有生成可用任务，构成结果质量与相关性风险</td></tr>
+        <tr><td>转写阶段 · <code>NetworkError</code></td><td>39</td><td>语音输入链路受网络错误影响</td></tr>
+        <tr><td>权限阶段 · <code>PermissionDenied</code></td><td>16</td><td>用户无法开始语音输入</td></tr>
+        <tr><td>录音阶段 · <code>RecordingStartFailed</code></td><td>15</td><td>录音无法正常开始</td></tr>
+        <tr><td>发送阶段 · <code>NetworkError</code></td><td>13</td><td>输入提交过程受网络错误影响</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>覆盖范围：</strong>6 月共记录 202 条 AI 失败事件，影响 57 位用户。按阶段汇总为生成 103 条、转写 42 条、录音 23 条、发送 18 条、权限 16 条；上表只展示快照中可直接对应的主要“阶段 + 错误码”组合。</p>
+    </div>
+    <div class="evidence-column">
+  <h3>周分组观察</h3>
+  <figure class="trend-chart"><div class="trend-chart-scroll"><svg class="trend-svg" viewBox="0 0 760 300" role="img" aria-labelledby="failure-chart-title failure-chart-description"><title id="failure-chart-title">AI 失败事件周变化</title><desc id="failure-chart-description">展示目标月各周记录到的 AI 失败事件数。</desc><line class="trend-grid" x1="52" y1="246.0" x2="740" y2="246.0"></line><text class="trend-axis-label" x="44" y="250.0" text-anchor="end">0</text><line class="trend-grid" x1="52" y1="202.8" x2="740" y2="202.8"></line><text class="trend-axis-label" x="44" y="206.8" text-anchor="end">20</text><line class="trend-grid" x1="52" y1="159.6" x2="740" y2="159.6"></line><text class="trend-axis-label" x="44" y="163.6" text-anchor="end">40</text><line class="trend-grid" x1="52" y1="116.4" x2="740" y2="116.4"></line><text class="trend-axis-label" x="44" y="120.4" text-anchor="end">60</text><line class="trend-grid" x1="52" y1="73.2" x2="740" y2="73.2"></line><text class="trend-axis-label" x="44" y="77.2" text-anchor="end">80</text><line class="trend-grid" x1="52" y1="30.0" x2="740" y2="30.0"></line><text class="trend-axis-label" x="44" y="34.0" text-anchor="end">100</text><text class="trend-axis-label" x="52.0" y="280" text-anchor="middle">06-07*</text><text class="trend-axis-label" x="281.3" y="280" text-anchor="middle">06-14</text><text class="trend-axis-label" x="510.7" y="280" text-anchor="middle">06-21</text><text class="trend-axis-label" x="740.0" y="280" text-anchor="middle">06-28*</text><polyline class="trend-line trend-critical" points="52.0,189.8 281.3,140.2 510.7,43.0 740.0,174.7"></polyline><circle class="trend-point trend-critical" cx="52.0" cy="189.8" r="4"></circle><text class="trend-point-label" x="52.0" y="179.8" text-anchor="middle">26</text><circle class="trend-point trend-critical" cx="281.3" cy="140.2" r="4"></circle><text class="trend-point-label" x="281.3" y="130.2" text-anchor="middle">49</text><circle class="trend-point trend-critical" cx="510.7" cy="43.0" r="4"></circle><text class="trend-point-label" x="510.7" y="33.0" text-anchor="middle">94</text><circle class="trend-point trend-critical" cx="740.0" cy="174.7" r="4"></circle><text class="trend-point-label" x="740.0" y="164.7" text-anchor="middle">33</text><line class="trend-legend-line trend-critical" x1="614" y1="14" x2="634" y2="14"></line><text class="trend-legend-label" x="641" y="18">失败事件</text></svg></div><figcaption class="trend-caption">星号表示该周数据覆盖不完整，不用于判断趋势已改善或恶化。</figcaption></figure>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>周分组标签</th><th>失败事件</th><th>受影响用户</th></tr></thead>
+      <tbody>
+        <tr><td>2026-06-07</td><td>26</td><td>9</td></tr>
+        <tr><td>2026-06-14</td><td>49</td><td>19</td></tr>
+        <tr><td>2026-06-21</td><td>94</td><td>30</td></tr>
+        <tr><td>2026-06-28</td><td>33</td><td>11</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>观察：</strong>标记为 2026-06-21 的分组记录 94 条失败、影响 30 位用户，是月内最高分组。失败事件从 6 月 11 日才开始记录，且月初、月底分组覆盖不完整，因此不能用边界周声称可靠性已经改善或恶化。</p>
+  <aside class="data-note">202 条失败事件不是失败率。当前没有把一次 AI 尝试、期间失败过程和最终会话结果准确对应起来的统一编号，失败事件也可能与 343 次最终会话存在重叠。</aside>
+    </div>
+  </div>
+  <h3>AI 任务拆解</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>使用次数</th><th>用户</th><th>成功率</th><th>平均耗时</th><th>平均子任务数</th></tr></thead>
+      <tbody><tr><td>194</td><td>77</td><td>96.39%</td><td>10.00 秒</td><td>3.52</td></tr></tbody>
+    </table>
+  </div>
+  <p>AI 任务拆解覆盖 77 位用户，成功率较高；平均耗时 10.00 秒仍是需要关注的等待体验信号。但平均值不能代表典型等待时间或较慢请求的等待时间，也不足以自行设定性能目标。</p>
+</section>
+
+<section>
+  <h2>四、获取与用户结构</h2>
+  <p class="section-intro">App Store 数据用于描述获取与商店页面表现；PostHog 数据用于描述产品内活跃结构。两者没有可靠的用户归因连接，不能排列成同一条转化路径。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>App Store 指标</th><th>6 月结果</th><th>口径</th></tr></thead>
+      <tbody>
+        <tr><td>首次下载</td><td>183</td><td>Apple 标准报告记录的首次下载</td></tr>
+        <tr><td>重新下载</td><td>13</td><td>用户再次下载 App</td></tr>
+        <tr><td>总下载</td><td>196</td><td>首次下载与重新下载之和</td></tr>
+        <tr><td>产品页浏览</td><td>517</td><td>产品页访问次数</td></tr>
+        <tr><td>下载按钮点击</td><td>87</td><td>产品页下载按钮点击次数</td></tr>
+        <tr><td>点击 / 浏览比例</td><td>16.83%</td><td>87 / 517，不代表 87 位用户完成下载</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>另有 544 次 App 更新和 7 次从备份恢复，均不计入首次下载或重新下载。下载主要来自 App Store search：168 次，占总下载 85.71%；其次为 App referrer 20 次和 App Store browse 6 次。</p>
+  <h3>主要下载地区</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>地区</th><th>下载</th><th>占总下载</th></tr></thead>
+      <tbody>
+        <tr><td>中国</td><td>139</td><td>70.92%</td></tr>
+        <tr><td>澳大利亚</td><td>31</td><td>15.82%</td></tr>
+        <tr><td>美国</td><td>11</td><td>5.61%</td></tr>
+        <tr><td>中国香港</td><td>4</td><td>2.04%</td></tr>
+        <tr><td>中国台湾</td><td>2</td><td>1.02%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>活跃用户的 App 版本</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>月内最后观察到的版本</th><th>用户</th><th>占月活跃用户</th></tr></thead>
+      <tbody>
+        <tr><td>1.1.2</td><td>153</td><td>61.45%</td></tr>
+        <tr><td>1.1.1</td><td>61</td><td>24.50%</td></tr>
+        <tr><td>1.2.0</td><td>14</td><td>5.62%</td></tr>
+        <tr><td>其他或未知</td><td>21</td><td>8.43%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>版本分布只描述每位活跃用户在 6 月最后观察到的版本，不能证明某个版本造成了使用差异。页面事件还记录到 Notes 1,613 次访问、198 位访问者，以及 GashaponMachine 159 次访问、70 位访问者；这两个页面不是完整功能使用排名。</p>
+  <aside class="data-note"><code>note_created</code> 查询成功但 6 月记录为 0，而 Notes 页面有访问记录。现有数据只能确认事件记录结果，不能判断这是实际没有创建笔记还是创建事件覆盖问题，因此不展示 AI 笔记占比。</aside>
+</section>
+
+<section>
+  <h2>五、本月决策</h2>
+  <div class="decision-list">
+    <article class="decision-item">
+      <span class="priority">P1</span>
+      <div class="decision-copy">
+        <h3>先修复没有生成可用任务的问题</h3>
+        <p><strong>用户影响：</strong>生成阶段的 <code>NoTasksExtracted</code> 共 103 条，占全部 202 条失败事件中最大的一类，意味着用户完成流程后仍可能拿不到可用任务。</p>
+        <p><strong>证据边界：</strong>当前只能统计事件量，不能计算有多少次独立尝试失败，也不能把错误与最终接受结果逐次对应。</p>
+        <p><strong>产品动作：</strong>围绕输入可理解性、无任务结果提示与恢复路径处理这一失败组合，优先保证用户能得到可编辑的结果或明确的下一步。</p>
+        <p class="decision-meta"><strong>下月验证：</strong>跟踪生成阶段 <code>NoTasksExtracted</code> 的事件数和受影响用户数；<strong>完善数据后验证：</strong>加入统一尝试编号后计算独立尝试失败率与恢复成功率。</p>
+      </div>
+    </article>
+    <article class="decision-item">
+      <span class="priority">P2</span>
+      <div class="decision-copy">
+        <h3>收敛语音链路中的网络、权限与录音失败</h3>
+        <p><strong>用户影响：</strong>转写阶段网络错误 39 条、权限拒绝 16 条、录音启动失败 15 条，都会阻断以语音为主的输入流程；仅语音会话占全部会话 62.39%。</p>
+        <p><strong>证据边界：</strong>输入方式构成与失败分布来自不同聚合，不能据此计算语音失败率或断言语音导致失败。</p>
+        <p><strong>产品动作：</strong>改善权限前置说明、录音启动反馈、网络失败后的重试与输入保留。</p>
+        <p class="decision-meta"><strong>下月验证：</strong>分别跟踪 <code>NetworkError</code>、<code>PermissionDenied</code>、<code>RecordingStartFailed</code> 的事件数与受影响用户数。</p>
+      </div>
+    </article>
+    <article class="decision-item">
+      <span class="priority">P3</span>
+      <div class="decision-copy">
+        <h3>把低频活跃作为产品健康约束</h3>
+        <p><strong>用户影响：</strong>150 位月活跃用户只活跃 1 天，占 60.24%；6 月安装用户次日回访率为 16.12%，第 7 天回访率为 6.61%。</p>
+        <p><strong>证据边界：</strong>现有数据能确认低频使用与回访结果，但不能定位具体流失步骤，也不能证明 AI 改善或损害回访。</p>
+        <p><strong>产品动作：</strong>可靠性修复期间持续观察用户是否更频繁回到产品，不把扩大功能数量作为本月首要动作。</p>
+        <p class="decision-meta"><strong>下月验证：</strong>继续跟踪活跃 1 天用户占比、次日回访率和第 7 天回访率，并按安装月份保持同口径比较。</p>
+      </div>
+    </article>
+    <article class="decision-item">
+      <span class="priority">P4</span>
+      <div class="decision-copy">
+        <h3>核实 AI 任务拆解等待体验</h3>
+        <p><strong>用户影响：</strong>194 次任务拆解平均耗时 10.00 秒，虽然成功率为 96.39%，等待仍可能影响体验。</p>
+        <p><strong>证据边界：</strong>平均耗时不能说明大多数用户的典型等待时间，也不能揭示较慢请求的尾部体验。</p>
+        <p><strong>产品动作：</strong>先检查等待过程的反馈与可取消性，再依据更完整的耗时分布决定性能投入。</p>
+        <p class="decision-meta"><strong>完善数据后验证：</strong>记录并展示典型等待时间和较慢请求等待时间，结合产品目标评估。</p>
+      </div>
+    </article>
+  </div>
+  <blockquote class="verdict"><strong>结论：优先修复可靠性</strong><br>保留并巩固已经出现的 AI 使用价值，按“无可用任务 → 语音链路 → 低频活跃 → 拆解等待体验”的顺序推进。当前证据支持修复优先级，但不支持 AI 对回访、任务完成或业务结果的因果结论。</blockquote>
+</section>
+
+<section class="appendix">
+  <h2>数据附录</h2>
+  <p class="section-intro">以下事件用于对账本月关键结论。时间为 PostHog 中首次和最后观察到事件的时间范围。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>关键事件</th><th>6 月事件数</th><th>6 月用户</th><th>首次出现</th><th>最后出现</th></tr></thead>
+      <tbody>
+        <tr><td><code>Application Installed</code></td><td>249</td><td>247</td><td>2025-10-13</td><td>2026-07-22</td></tr>
+        <tr><td><code>Application Opened</code></td><td>1,400</td><td>386</td><td>2025-10-13</td><td>2026-07-22</td></tr>
+        <tr><td><code>active_user_5s</code></td><td>622</td><td>249</td><td>2025-12-27</td><td>2026-07-22</td></tr>
+        <tr><td><code>create_task_manually</code></td><td>217</td><td>69</td><td>2025-12-27</td><td>2026-07-22</td></tr>
+        <tr><td><code>ai_task_interaction_completed</code></td><td>0</td><td>0</td><td>2025-10-13</td><td>2026-04-18</td></tr>
+        <tr><td><code>create_task_by_ai</code></td><td>125</td><td>45</td><td>2025-12-27</td><td>2026-06-16</td></tr>
+        <tr><td><code>ai_task_generation_session</code></td><td>343</td><td>75</td><td>2026-05-14</td><td>2026-07-22</td></tr>
+        <tr><td><code>ai_task_generation_failed</code></td><td>202</td><td>57</td><td>2026-06-11</td><td>2026-07-22</td></tr>
+        <tr><td><code>breakdown_task</code></td><td>194</td><td>77</td><td>2025-12-27</td><td>2026-07-22</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="data-note">AI 任务生成埋点经历三代：<code>ai_task_interaction_completed</code> 覆盖至 2026-04，<code>create_task_by_ai</code> 覆盖至 2026-06-16，<code>ai_task_generation_session</code> 从 2026-05-14 开始。三代事件的记录单位不同且存在重叠，不能把事件数直接相加或连成趋势。App Store Connect 未提供 6 月崩溃报告，因此本报告不评价崩溃质量；这不影响已覆盖的下载与产品页指标。</aside>
+</section>
+    </main>
+    <footer>本报告由 App Store Connect 与 PostHog 聚合数据生成。缺失数据不会按 0 处理，产品结论以报告中的证据边界为准。</footer>
+  </div>
+</body>
+</html>
