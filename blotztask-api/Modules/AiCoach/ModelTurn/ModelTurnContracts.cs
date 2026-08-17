@@ -93,12 +93,14 @@ public sealed record ModelTurnRequest(
     ConsentEvidence? ConsentEvidence,
     ModelTurnLimits Limits);
 
-public enum ModelPurpose { Clarification }
-public enum TurnObjectiveKey { ClarifyOneCoreRequirement }
+public enum ModelPurpose { Clarification, TaskDraft }
+public enum TurnObjectiveKey { ClarifyOneCoreRequirement, ProposeOneOffTaskDraft }
 public enum ModelInvariantKey
 {
     OneQuestionPerTurn,
     NoArtifact,
+    AtMostOneProposedArtifact,
+    ProposedArtifactIsNotFormalTask,
     NoSilentSchedule,
     NoBusinessSideEffects,
     StateIsServerControlled
@@ -179,6 +181,7 @@ public sealed record PreparedMemoryContext(
     string LatestUserMessage);
 
 public sealed record ModelToolCall(
+    string ProviderCallId,
     string ToolName,
     JsonElement Arguments);
 
@@ -189,13 +192,17 @@ public sealed record ModelToolResult(
     JsonElement? Output,
     string? RejectionCode);
 
+public sealed record ModelToolExchange(
+    ModelToolCall Call,
+    ModelToolResult Result);
+
 public sealed record ModelGatewayRequest(
     Guid UserId,
     AssembledModelPrompt Prompt,
     ModelExecutionFrame Frame,
     PreparedMemoryContext Memory,
     IReadOnlyList<ModelToolSchema> Tools,
-    IReadOnlyList<ModelToolResult> ToolResults);
+    IReadOnlyList<ModelToolExchange> ToolExchanges);
 
 public sealed record ModelGatewayResponse(
     ControlledModelOutcome? Outcome,

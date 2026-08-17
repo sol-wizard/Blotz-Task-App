@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.AI.OpenAI;
 using BlotzTask.Extension.Options;
+using BlotzTask.Modules.AiCoach.Capabilities;
 using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
 using OpenAI.Chat;
@@ -64,8 +65,11 @@ public sealed class AzureOpenAiCoachModelGateway(
             || string.IsNullOrWhiteSpace(_apiKey)
             || string.IsNullOrWhiteSpace(_deploymentId))
             return Failure("model_gateway_not_configured");
-        if (request.Tools.Count != 0 || request.ToolResults.Count != 0)
+        if (request.Frame.Purpose == ModelPurpose.Clarification
+            && (request.Tools.Count != 0 || request.ToolExchanges.Count != 0))
             return Failure("clarification_toolset_must_be_empty");
+        if (!HasValidToolHistory(request.ToolExchanges))
+            return Failure("tool_continuation_invalid");
 
         try
         {
@@ -102,7 +106,10 @@ public sealed class AzureOpenAiCoachModelGateway(
                 var toolCalls = completion.Value.ToolCalls.Select(toolCall =>
                 {
                     using var arguments = JsonDocument.Parse(toolCall.FunctionArguments);
-                    return new ModelToolCall(toolCall.FunctionName, arguments.RootElement.Clone());
+                    return new ModelToolCall(
+                        toolCall.Id,
+                        toolCall.FunctionName,
+                        arguments.RootElement.Clone());
                 }).ToArray();
                 return new ModelGatewayResponse(null, toolCalls, false, null);
             }
@@ -186,8 +193,48 @@ public sealed class AzureOpenAiCoachModelGateway(
                 ? new UserChatMessage(message.Content)
                 : new AssistantChatMessage(message.Content));
         }
+
+        foreach (var exchange in request.ToolExchanges.OrderBy(item => item.Result.InvocationIndex))
+        {
+            var call = ChatToolCall.CreateFunctionToolCall(
+                exchange.Call.ProviderCallId,
+                exchange.Call.ToolName,
+                BinaryData.FromString(exchange.Call.Arguments.GetRawText()));
+            messages.Add(new AssistantChatMessage(new[] { call }));
+            messages.Add(new ToolChatMessage(
+                exchange.Call.ProviderCallId,
+                RenderToolResult(exchange.Result)));
+        }
         return messages;
     }
+
+    private static bool HasValidToolHistory(IReadOnlyList<ModelToolExchange> exchanges)
+    {
+        var providerIds = new HashSet<string>(StringComparer.Ordinal);
+        var invocationIndexes = new HashSet<int>();
+        foreach (var exchange in exchanges)
+        {
+            if (string.IsNullOrWhiteSpace(exchange.Call.ProviderCallId)
+                || string.IsNullOrWhiteSpace(exchange.Call.ToolName)
+                || exchange.Call.Arguments.ValueKind != JsonValueKind.Object
+                || exchange.Result.InvocationIndex < 1
+                || exchange.Result.ToolName != exchange.Call.ToolName
+                || !providerIds.Add(exchange.Call.ProviderCallId)
+                || !invocationIndexes.Add(exchange.Result.InvocationIndex))
+                return false;
+        }
+        return true;
+    }
+
+    private static string RenderToolResult(ModelToolResult result) => JsonSerializer.Serialize(new
+    {
+        succeeded = result.Succeeded,
+        output = result.Output,
+        rejectionCode = result.RejectionCode,
+        notice = result.Succeeded
+            ? "The candidate passed this turn's validation only. It is not persisted and no formal task was created."
+            : "The candidate was rejected and was not persisted. No formal task was created."
+    }, CapabilityJsonContract.Options);
 
     private static string? Validate(ControlledModelOutcome? outcome)
     {

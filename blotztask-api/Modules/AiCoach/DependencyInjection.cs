@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IModelMemoryPreparer, AiCoachMemoryPreparer>();
         services.AddScoped<IAiCoachModelGateway, AzureOpenAiCoachModelGateway>();
         services.AddSingleton<ICapabilityResultValidator, FoundationCapabilityResultValidator>();
+        services.AddSingleton<ICapabilityResultValidator, OneOffTaskDraftResultValidator>();
         services.AddSingleton<IModelTurnCompletionPolicy, FoundationModelTurnCompletionPolicy>();
         services.AddScoped<IModelTurnPipeline, ModelTurnPipeline>();
 
@@ -47,11 +48,14 @@ public static class DependencyInjection
         services.AddSingleton<IArtifactRegistry, ArtifactRegistry>();
         services.AddScoped<IArtifactDetailLoader, TaskDraftArtifactDetailLoader>();
         services.AddScoped<IArtifactDetailLoaderRegistry, ArtifactDetailLoaderRegistry>();
+        services.AddScoped<IArtifactCommitHandler, TaskDraftArtifactCommitHandler>();
+        services.AddScoped<IArtifactCommitRegistry, ArtifactCommitRegistry>();
 
         services.AddSingleton<IConversationTransitionHandler, UserMessageReceivedTransitionHandler>();
         services.AddSingleton<IConversationTransitionHandler, ConversationExpiredTransitionHandler>();
         services.AddSingleton<IConversationTransitionHandler, ModelTurnCompletedTransitionHandler>();
         services.AddSingleton<IConversationTransitionHandler, ClarificationRequestedTransitionHandler>();
+        services.AddSingleton<IConversationTransitionHandler, OneOffTaskDraftProposedTransitionHandler>();
         services.AddSingleton<IConversationTransitionHandler, ModelGenerationFailedTransitionHandler>();
         services.AddSingleton<IConversationTransitionHandler, QuotaBlockedTransitionHandler>();
         services.AddSingleton<IConversationTransitionHandler, ContentFilteredTransitionHandler>();
@@ -62,7 +66,8 @@ public static class DependencyInjection
         services.AddSingleton<IConversationMutationHandler, AddConversationMessageMutationHandler>();
         services.AddSingleton<IConversationMutationHandler, ExpireConversationMutationHandler>();
         services.AddSingleton<IConversationMutationHandler, AddAssistantMessageMutationHandler>();
-        services.AddSingleton<IConversationMutationRegistry, ConversationMutationRegistry>();
+        services.AddScoped<IConversationMutationHandler, CommitProposedArtifactMutationHandler>();
+        services.AddScoped<IConversationMutationRegistry, ConversationMutationRegistry>();
 
         services.AddScoped<IConversationEffectHandler, GenerateModelTurnEffectHandler>();
         services.AddScoped<IConversationEffectDispatcher, ConversationEffectDispatcher>();
@@ -118,6 +123,7 @@ internal sealed class AiCoachFoundationStartupValidator(
             || transitions.Resolve(typeof(ConversationExpired)) is null
             || transitions.Resolve(typeof(ModelTurnCompleted)) is null
             || transitions.Resolve(typeof(ClarificationRequested)) is null
+            || transitions.Resolve(typeof(OneOffTaskDraftProposed)) is null
             || transitions.Resolve(typeof(ModelGenerationFailed)) is null
             || transitions.Resolve(typeof(QuotaBlocked)) is null
             || transitions.Resolve(typeof(ContentFiltered)) is null)

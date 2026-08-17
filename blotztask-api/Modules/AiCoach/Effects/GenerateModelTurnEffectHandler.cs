@@ -36,6 +36,7 @@ public sealed class GenerateModelTurnEffectHandler(
             .ThenByDescending(message => message.Sequence)
             .FirstAsync(cancellationToken);
 
+        var (purpose, objective) = DetermineObjective(conversation.State);
         var request = new ModelTurnRequest(
             effect.Id,
             projector.ToDomain(conversation),
@@ -44,8 +45,8 @@ public sealed class GenerateModelTurnEffectHandler(
                 latestUserMessage.Id,
                 latestUserMessage.Content,
                 latestUserMessage.CreatedAt),
-            ModelPurpose.Clarification,
-            TurnObjectiveKey.ClarifyOneCoreRequirement,
+            purpose,
+            objective,
             null,
             ModelTurnLimits.Foundation);
         var result = await pipeline.ExecuteAsync(request, cancellationToken);
@@ -53,6 +54,15 @@ public sealed class GenerateModelTurnEffectHandler(
 
         ConversationEvent resultEvent = result.CompletionReason switch
         {
+            ModelTurnCompletionReason.Completed
+                when result.Outcome is { Kind: ControlledModelOutcomeKind.Reply } outcome
+                    && result.Turn.ProposedArtifact is { } proposal =>
+                new OneOffTaskDraftProposed(
+                    effect.Id,
+                    effect.BaseConversationVersion,
+                    outcome,
+                    proposal,
+                    now),
             ModelTurnCompletionReason.Completed
                 when result.Outcome is { Kind: ControlledModelOutcomeKind.Clarification } outcome =>
                 new ClarificationRequested(effect.Id, effect.BaseConversationVersion, outcome, now),
@@ -72,6 +82,18 @@ public sealed class GenerateModelTurnEffectHandler(
 
         return new ConversationEventResult(effect.Id, effect.BaseConversationVersion, resultEvent);
     }
+
+    private static (ModelPurpose Purpose, TurnObjectiveKey Objective) DetermineObjective(
+        ConversationState state) => state switch
+        {
+            ConversationState.Conversing => (
+                ModelPurpose.Clarification,
+                TurnObjectiveKey.ClarifyOneCoreRequirement),
+            ConversationState.Clarifying => (
+                ModelPurpose.TaskDraft,
+                TurnObjectiveKey.ProposeOneOffTaskDraft),
+            _ => throw new ModelTurnViolationException("model_turn_objective_not_supported")
+        };
 
     private static GenerationBlockedReason BlockedReason(ModelTurnCompletionReason reason) => reason switch
     {

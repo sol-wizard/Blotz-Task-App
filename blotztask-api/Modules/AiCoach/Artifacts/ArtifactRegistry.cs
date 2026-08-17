@@ -3,6 +3,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Contracts;
 using BlotzTask.Modules.AiCoach.Domain;
 using BlotzTask.Modules.AiCoach.StateMachine;
+using BlotzTask.Modules.AiCoach.ModelTurn;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.AiCoach.Artifacts;
@@ -59,6 +60,84 @@ public interface IArtifactDetailLoader
 public interface IArtifactDetailLoaderRegistry
 {
     Task LoadAsync(AiConversationArtifact artifact, CancellationToken cancellationToken);
+}
+
+public interface IArtifactCommitHandler
+{
+    ArtifactType Type { get; }
+    int SchemaVersion { get; }
+    void Commit(
+        AiConversation conversation,
+        ProposedArtifactChange proposal,
+        Guid createdByEffectId,
+        DateTimeOffset occurredAt);
+}
+
+public interface IArtifactCommitRegistry
+{
+    void Commit(
+        AiConversation conversation,
+        ProposedArtifactChange proposal,
+        Guid createdByEffectId,
+        DateTimeOffset occurredAt);
+}
+
+public sealed class ArtifactCommitRegistry(IEnumerable<IArtifactCommitHandler> handlers)
+    : IArtifactCommitRegistry
+{
+    private readonly IReadOnlyDictionary<(ArtifactType, int), IArtifactCommitHandler> _handlers = Build(handlers);
+
+    public void Commit(
+        AiConversation conversation,
+        ProposedArtifactChange proposal,
+        Guid createdByEffectId,
+        DateTimeOffset occurredAt)
+    {
+        if (!_handlers.TryGetValue((proposal.Type, proposal.SchemaVersion), out var handler))
+            throw new UnsupportedArtifactSchemaException(proposal.Type, proposal.SchemaVersion);
+        handler.Commit(conversation, proposal, createdByEffectId, occurredAt);
+    }
+
+    private static IReadOnlyDictionary<(ArtifactType, int), IArtifactCommitHandler> Build(
+        IEnumerable<IArtifactCommitHandler> handlers)
+    {
+        var all = handlers.ToArray();
+        var duplicate = all.GroupBy(handler => (handler.Type, handler.SchemaVersion))
+            .FirstOrDefault(group => group.Count() > 1);
+        if (duplicate is not null)
+            throw new InvalidOperationException($"Artifact commit handler '{duplicate.Key}' is registered more than once.");
+        return all.ToDictionary(handler => (handler.Type, handler.SchemaVersion));
+    }
+}
+
+public sealed class TaskDraftArtifactCommitHandler(BlotzTaskDbContext db) : IArtifactCommitHandler
+{
+    public ArtifactType Type => ArtifactType.TaskDraft;
+    public int SchemaVersion => 1;
+
+    public void Commit(
+        AiConversation conversation,
+        ProposedArtifactChange proposal,
+        Guid createdByEffectId,
+        DateTimeOffset occurredAt)
+    {
+        if (proposal.Detail is not AiTaskDraftArtifact detail)
+            throw new InvalidOperationException("Task Draft proposal detail is invalid.");
+        if (detail.ArtifactId != proposal.ArtifactId)
+            throw new InvalidOperationException("Task Draft header and detail IDs must match.");
+
+        var artifact = AiConversationArtifact.Create(
+            proposal.ArtifactId,
+            conversation.Id,
+            proposal.Type,
+            proposal.SchemaVersion,
+            createdByEffectId,
+            occurredAt);
+        artifact.AttachDetail(detail);
+        db.AiConversationArtifacts.Add(artifact);
+        db.AiTaskDraftArtifacts.Add(detail);
+        conversation.SetCurrentArtifact(artifact);
+    }
 }
 
 public sealed class ArtifactDetailLoaderRegistry(IEnumerable<IArtifactDetailLoader> loaders)
@@ -143,11 +222,7 @@ public sealed class TaskDraftArtifactHandler : ArtifactHandler<AiTaskDraftArtifa
 
     public override IReadOnlySet<ConversationAction> ResolveAllowedActions(
         ArtifactStatus status,
-        ConversationState state) =>
-        status == ArtifactStatus.Pending && state == ConversationState.DraftPending
-            ? new HashSet<ConversationAction>
-                { ConversationAction.UpdateArtifact, ConversationAction.RejectArtifact, ConversationAction.PersistTask }
-            : new HashSet<ConversationAction>();
+        ConversationState state) => new HashSet<ConversationAction>();
 }
 
 public sealed class UnsupportedArtifactSchemaException(ArtifactType type, int schemaVersion)

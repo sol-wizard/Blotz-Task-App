@@ -123,7 +123,8 @@ public sealed class FoundationCapabilityDefinitions : ICapabilityDefinitionProvi
             new HashSet<AiCoachMode> { AiCoachMode.Execute },
             new HashSet<ConversationState> { ConversationState.Conversing, ConversationState.Clarifying },
             CurrentArtifactRequirement.RequiresNone, new HashSet<ArtifactType>(),
-            ConsentRequirement.ModePolicy, CapabilityExecutionSemantics.ProposesArtifact),
+            ConsentRequirement.ModePolicy, CapabilityExecutionSemantics.ProposesArtifact,
+            typeof(CreateOneOffDraftCapabilityHandler)),
         Define<UpdateArtifactCapabilityInput, UpdateArtifactCapabilityOutput>(
             CapabilityIds.UpdateArtifact,
             "update_artifact",
@@ -158,11 +159,11 @@ public sealed class FoundationCapabilityDefinitions : ICapabilityDefinitionProvi
         IReadOnlySet<CapabilityInvoker> invokers, IReadOnlySet<AiCoachMode> modes,
         IReadOnlySet<ConversationState> states, CurrentArtifactRequirement artifactRequirement,
         IReadOnlySet<ArtifactType> artifactTypes, ConsentRequirement consent,
-        CapabilityExecutionSemantics semantics) =>
+        CapabilityExecutionSemantics semantics, Type? handlerType = null) =>
         new(id, toolName, description, 1, 1, 1, invokers, modes, states,
             artifactRequirement, artifactTypes, consent, semantics,
             CapabilityConcurrencyPolicy.SequentialOnly, typeof(TInput), typeof(TOutput),
-            typeof(FoundationCapabilityHandler<TInput, TOutput>));
+            handlerType ?? typeof(FoundationCapabilityHandler<TInput, TOutput>));
 }
 
 public interface ICapabilityRegistry

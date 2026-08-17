@@ -42,7 +42,8 @@ public interface IModelToolsetProjector
         TurnObjectiveKey objective);
 }
 
-public sealed class ModelToolsetProjector : IModelToolsetProjector
+public sealed class ModelToolsetProjector(
+    ICapabilityToolSchemaRegistry schemas) : IModelToolsetProjector
 {
     public IReadOnlyList<ModelToolSchema> Project(
         AiCoachModeDefinition mode,
@@ -54,6 +55,19 @@ public sealed class ModelToolsetProjector : IModelToolsetProjector
         if (purpose == ModelPurpose.Clarification
             && objective == TurnObjectiveKey.ClarifyOneCoreRequirement)
             return [];
+
+        if (purpose == ModelPurpose.TaskDraft
+            && objective == TurnObjectiveKey.ProposeOneOffTaskDraft)
+        {
+            if (mode.Mode != AiCoachMode.Execute
+                || state is not (ConversationState.Conversing or ConversationState.Clarifying)
+                || currentArtifactType is not null)
+                return [];
+
+            return schemas.GetModelToolset(mode, state, currentArtifactType)
+                .Where(tool => tool.CapabilityId == CapabilityIds.CreateOneOffDraft)
+                .ToArray();
+        }
 
         throw new ModelTurnViolationException("toolset_projection_not_registered");
     }

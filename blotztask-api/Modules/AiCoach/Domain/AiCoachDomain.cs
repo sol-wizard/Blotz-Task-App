@@ -18,7 +18,10 @@ public enum ArtifactStatus { Pending, Processing, Accepted, Rejected, Superseded
 public enum TaskDraftKind { OneOff }
 public enum ConversationEffectStatus { Pending, Running, Completed, Failed, Superseded }
 
-public interface IArtifactDetail;
+public interface IArtifactDetail
+{
+    Guid ArtifactId { get; }
+}
 
 public sealed class AiConversation
 {
@@ -203,12 +206,28 @@ public sealed class AiConversationArtifact
 
     public static AiConversationArtifact Create(
         Guid conversationId, ArtifactType type, int schemaVersion, DateTimeOffset now, Guid? effectId = null) =>
+        Create(Guid.NewGuid(), conversationId, type, schemaVersion, effectId, now);
+
+    public static AiConversationArtifact Create(
+        Guid artifactId, Guid conversationId, ArtifactType type, int schemaVersion,
+        Guid? createdByEffectId, DateTimeOffset now)
+    {
+        if (artifactId == Guid.Empty) throw new ArgumentException("Artifact ID is required.", nameof(artifactId));
+        if (conversationId == Guid.Empty)
+            throw new ArgumentException("Conversation ID is required.", nameof(conversationId));
+        if (schemaVersion < 1)
+            throw new ArgumentOutOfRangeException(nameof(schemaVersion), "Schema version must be positive.");
+        if (createdByEffectId == Guid.Empty)
+            throw new ArgumentException("Created-by effect ID cannot be empty.", nameof(createdByEffectId));
+
+        return
         new()
         {
-            Id = Guid.NewGuid(), ConversationId = conversationId, Type = type,
+            Id = artifactId, ConversationId = conversationId, Type = type,
             SchemaVersion = schemaVersion, Version = 1, Status = ArtifactStatus.Pending,
-            CreatedByEffectId = effectId, CreatedAt = now, UpdatedAt = now
+            CreatedByEffectId = createdByEffectId, CreatedAt = now, UpdatedAt = now
         };
+    }
 
     public void StartProcessing(DateTimeOffset now) => Transition(ArtifactStatus.Pending, ArtifactStatus.Processing, now);
     public void Accept(DateTimeOffset now) => Transition(ArtifactStatus.Processing, ArtifactStatus.Accepted, now);
@@ -217,7 +236,10 @@ public sealed class AiConversationArtifact
 
     public void AttachDetail(IArtifactDetail detail)
     {
-        Detail = detail ?? throw new ArgumentNullException(nameof(detail));
+        ArgumentNullException.ThrowIfNull(detail);
+        if (detail.ArtifactId != Id)
+            throw new InvalidOperationException("Artifact detail ID must match its header ID.");
+        Detail = detail;
     }
 
     private void Transition(ArtifactStatus required, ArtifactStatus next, DateTimeOffset now)
@@ -242,6 +264,70 @@ public sealed class AiTaskDraftArtifact : IArtifactDetail
     public DateOnly StartDateLocal { get; private set; }
     public DateOnly EndDateLocal { get; private set; }
     public int? LabelId { get; private set; }
+
+    public static AiTaskDraftArtifact CreateOneOff(
+        Guid artifactId,
+        string title,
+        string? description,
+        DateTimeOffset startTimeUtc,
+        DateTimeOffset endTimeUtc,
+        string timeZoneId,
+        DateOnly startDateLocal,
+        DateOnly endDateLocal,
+        int? labelId)
+    {
+        if (artifactId == Guid.Empty) throw new ArgumentException("Artifact ID is required.", nameof(artifactId));
+
+        var normalizedTitle = title?.Trim() ?? string.Empty;
+        if (normalizedTitle.Length == 0)
+            throw new ArgumentException("Task draft title is required.", nameof(title));
+        if (normalizedTitle.Length > 300)
+            throw new ArgumentException("Task draft title cannot exceed 300 characters.", nameof(title));
+
+        var normalizedDescription = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        if (normalizedDescription?.Length > 4_000)
+            throw new ArgumentException("Task draft description cannot exceed 4000 characters.", nameof(description));
+
+        var normalizedTimeZoneId = timeZoneId?.Trim() ?? string.Empty;
+        if (normalizedTimeZoneId.Length == 0
+            || normalizedTimeZoneId.Length > 100
+            || !TimeZoneInfo.TryConvertIanaIdToWindowsId(normalizedTimeZoneId, out _))
+            throw new ArgumentException("Task draft time zone is invalid.", nameof(timeZoneId));
+
+        TimeZoneInfo timeZone;
+        try
+        {
+            timeZone = TimeZoneInfo.FindSystemTimeZoneById(normalizedTimeZoneId);
+        }
+        catch (Exception exception) when (exception is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            throw new ArgumentException("Task draft time zone is invalid.", nameof(timeZoneId), exception);
+        }
+
+        if (startTimeUtc.Offset != TimeSpan.Zero || endTimeUtc.Offset != TimeSpan.Zero)
+            throw new ArgumentException("Task draft instants must be normalized to UTC.");
+        if (endTimeUtc <= startTimeUtc)
+            throw new ArgumentException("Task draft end time must be after its start time.", nameof(endTimeUtc));
+        if (DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(startTimeUtc, timeZone).DateTime) != startDateLocal
+            || DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(endTimeUtc, timeZone).DateTime) != endDateLocal)
+            throw new ArgumentException("Task draft local dates do not match its UTC instants.");
+        if (labelId is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(labelId), "Task draft label ID must be positive.");
+
+        return new AiTaskDraftArtifact
+        {
+            ArtifactId = artifactId,
+            Kind = TaskDraftKind.OneOff,
+            Title = normalizedTitle,
+            Description = normalizedDescription,
+            StartTimeUtc = startTimeUtc,
+            EndTimeUtc = endTimeUtc,
+            TimeZoneId = normalizedTimeZoneId,
+            StartDateLocal = startDateLocal,
+            EndDateLocal = endDateLocal,
+            LabelId = labelId
+        };
+    }
 }
 
 public sealed class AiConversationEffect

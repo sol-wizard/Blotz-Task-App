@@ -26,6 +26,12 @@ public sealed record ModelTurnCompleted(
 public sealed record ClarificationRequested(
     Guid EffectId, int BaseConversationVersion, ControlledModelOutcome Outcome,
     DateTimeOffset OccurredAt) : ConversationEvent;
+public sealed record OneOffTaskDraftProposed(
+    Guid EffectId,
+    int BaseConversationVersion,
+    ControlledModelOutcome Outcome,
+    ProposedArtifactChange Proposal,
+    DateTimeOffset OccurredAt) : ConversationEvent;
 public sealed record ModelGenerationFailed(
     Guid EffectId, int BaseConversationVersion, string ErrorCode,
     GenerationBlockedReason BlockedReason, DateTimeOffset OccurredAt) : ConversationEvent;
@@ -39,6 +45,10 @@ public sealed record AddConversationMessageMutation(Guid MessageId, string Conte
 public sealed record ExpireConversationMutation(DateTimeOffset ExpiredAt) : DomainMutation;
 public sealed record AddAssistantMessageMutation(
     Guid MessageId, string Content, DateTimeOffset CreatedAt) : DomainMutation;
+public sealed record CommitProposedArtifactMutation(
+    ProposedArtifactChange Proposal,
+    Guid CreatedByEffectId,
+    DateTimeOffset CreatedAt) : DomainMutation;
 
 public abstract record ConversationEffectRequest;
 public sealed record GenerateModelTurnEffectRequest(
@@ -169,11 +179,16 @@ public sealed class UserMessageReceivedTransitionHandler(IAllowedActionResolver 
         var next = current.State == ConversationState.Clarifying
             ? ConversationState.Clarifying
             : ConversationState.Conversing;
+        var modelRequest = current.State == ConversationState.Clarifying
+            ? new GenerateModelTurnEffectRequest(
+                ModelPurpose.TaskDraft,
+                TurnObjectiveKey.ProposeOneOffTaskDraft)
+            : new GenerateModelTurnEffectRequest(
+                ModelPurpose.Clarification,
+                TurnObjectiveKey.ClarifyOneCoreRequirement);
         return new TransitionResult(true, null, next, GenerationStatus.Running, null,
             [new AddConversationMessageMutation(input.MessageId, content, input.OccurredAt)],
-            [new GenerateModelTurnEffectRequest(
-                ModelPurpose.Clarification,
-                TurnObjectiveKey.ClarifyOneCoreRequirement)],
+            [modelRequest],
             [],
             actions.Resolve(current.LifecycleStatus, next, GenerationStatus.Running, null));
     }
@@ -221,6 +236,52 @@ public sealed class ClarificationRequestedTransitionHandler(IAllowedActionResolv
             ? TransitionResult.Rejected(current, RuleViolation.InvalidState)
             : Complete(current, ConversationState.Clarifying, input.EffectId,
                 input.Outcome.AssistantMessage, input.OccurredAt);
+}
+
+public sealed class OneOffTaskDraftProposedTransitionHandler(IAllowedActionResolver actions)
+    : ConversationTransitionHandler<OneOffTaskDraftProposed>
+{
+    public override TransitionResult Reduce(
+        ConversationSnapshot current,
+        OneOffTaskDraftProposed input,
+        AiCoachModeDefinition mode)
+    {
+        if (current.GenerationStatus != GenerationStatus.Running
+            || current.CurrentArtifact is not null
+            || input.Proposal.Type != ArtifactType.TaskDraft
+            || input.Proposal.SchemaVersion != 1)
+            return TransitionResult.Rejected(current, RuleViolation.InvalidState);
+
+        var artifact = new CurrentArtifactSnapshot(
+            input.Proposal.ArtifactId,
+            input.Proposal.Type,
+            input.Proposal.SchemaVersion,
+            1,
+            ArtifactStatus.Pending);
+        return new TransitionResult(
+            true,
+            null,
+            ConversationState.DraftPending,
+            GenerationStatus.Idle,
+            null,
+            [
+                new AddAssistantMessageMutation(
+                    input.EffectId,
+                    input.Outcome.AssistantMessage,
+                    input.OccurredAt),
+                new CommitProposedArtifactMutation(
+                    input.Proposal,
+                    input.EffectId,
+                    input.OccurredAt)
+            ],
+            [],
+            [],
+            actions.Resolve(
+                current.LifecycleStatus,
+                ConversationState.DraftPending,
+                GenerationStatus.Idle,
+                artifact));
+    }
 }
 
 public sealed class ModelGenerationFailedTransitionHandler(IAllowedActionResolver actions)

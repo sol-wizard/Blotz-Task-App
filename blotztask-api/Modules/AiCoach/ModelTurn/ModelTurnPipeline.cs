@@ -44,6 +44,7 @@ public interface ICapabilityResultValidator
     ModelTurnValidationResult Validate(
         CapabilityDefinition definition,
         object result,
+        ProposedArtifactChange? proposal,
         TurnView turn);
 }
 
@@ -58,7 +59,10 @@ public enum ModelTurnCompletionDecision { Complete, Continue, Fail }
 
 public interface IModelTurnCompletionPolicy
 {
-    ModelTurnCompletionDecision Decide(ModelGatewayResponse response, TurnView turn);
+    ModelTurnCompletionDecision Decide(
+        ModelTurnRequest request,
+        ModelGatewayResponse response,
+        TurnView turn);
 }
 
 public interface IModelTurnObserver
@@ -110,7 +114,7 @@ public sealed class ModelTurnPipeline(
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(request.Limits.RequestTimeout);
 
-        var toolResults = new List<ModelToolResult>();
+        var toolExchanges = new List<ModelToolExchange>();
         var iterations = 0;
         var capabilityCalls = 0;
         var schemaCorrections = 0;
@@ -137,7 +141,7 @@ public sealed class ModelTurnPipeline(
                         frame,
                         memory,
                         tools,
-                        toolResults),
+                        toolExchanges),
                     timeout.Token);
 
                 if (response.FailureCode is not null)
@@ -162,9 +166,54 @@ public sealed class ModelTurnPipeline(
                         cancellationToken);
                 }
 
+                if (response.ToolCalls.Count > 1)
+                    return await CompleteAsync(
+                        new ModelTurnResult(
+                            ModelTurnCompletionReason.CapabilityRejected,
+                            null,
+                            turn,
+                            iterations,
+                            "multiple_capability_calls_not_allowed"),
+                        turnObservers,
+                        cancellationToken);
+                if (response.ToolCalls.Count > 0
+                    && (response.IsComplete || response.Outcome is not null))
+                    return await CompleteAsync(
+                        new ModelTurnResult(
+                            ModelTurnCompletionReason.CapabilityRejected,
+                            null,
+                            turn,
+                            iterations,
+                            "tool_continuation_invalid"),
+                        turnObservers,
+                        cancellationToken);
+
                 var schemaCorrectionRequested = false;
                 foreach (var toolCall in response.ToolCalls)
                 {
+                    if (turn.ProposedArtifact is not null)
+                        return await CompleteAsync(
+                            new ModelTurnResult(
+                                ModelTurnCompletionReason.CapabilityRejected,
+                                null,
+                                turn,
+                                iterations,
+                                "artifact_already_proposed_in_current_turn"),
+                            turnObservers,
+                            cancellationToken);
+                    if (string.IsNullOrWhiteSpace(toolCall.ProviderCallId)
+                        || toolExchanges.Any(exchange =>
+                            exchange.Call.ProviderCallId == toolCall.ProviderCallId))
+                        return await CompleteAsync(
+                            new ModelTurnResult(
+                                ModelTurnCompletionReason.CapabilityRejected,
+                                null,
+                                turn,
+                                iterations,
+                                "tool_continuation_invalid"),
+                            turnObservers,
+                            cancellationToken);
+
                     capabilityCalls++;
                     var invocationIndex = capabilityCalls;
                     if (capabilityCalls > request.Limits.MaxCapabilityCalls)
@@ -210,12 +259,14 @@ public sealed class ModelTurnPipeline(
                                 turnObservers,
                                 cancellationToken);
 
-                        toolResults.Add(new ModelToolResult(
-                            invocationIndex,
-                            toolCall.ToolName,
-                            false,
-                            null,
-                            "schema_validation_failed"));
+                        toolExchanges.Add(new ModelToolExchange(
+                            toolCall,
+                            new ModelToolResult(
+                                invocationIndex,
+                                toolCall.ToolName,
+                                false,
+                                null,
+                                "schema_validation_failed")));
                         schemaCorrectionRequested = true;
                         break;
                     }
@@ -239,7 +290,11 @@ public sealed class ModelTurnPipeline(
 
                         foreach (var validator in resultValidators)
                         {
-                            var validation = validator.Validate(definition, output, turn);
+                            var validation = validator.Validate(
+                                definition,
+                                output,
+                                proposals.Artifact,
+                                turn);
                             if (!validation.Accepted)
                                 throw new CapabilityRejectedException(
                                     validation.RejectionCode ?? "capability_result_invalid",
@@ -271,12 +326,20 @@ public sealed class ModelTurnPipeline(
                             }
                         }
 
-                        toolResults.Add(new ModelToolResult(
-                            invocationIndex,
-                            toolCall.ToolName,
-                            true,
-                            JsonSerializer.SerializeToElement(output, output.GetType(), CapabilityJsonContract.Options),
-                            null));
+                        toolExchanges.Add(new ModelToolExchange(
+                            toolCall,
+                            new ModelToolResult(
+                                invocationIndex,
+                                toolCall.ToolName,
+                                true,
+                                JsonSerializer.SerializeToElement(new
+                                {
+                                    candidateArtifactId = proposals.Artifact?.ArtifactId,
+                                    candidateStatus = "validated_for_current_turn",
+                                    persisted = false,
+                                    formalTaskCreated = false
+                                }, CapabilityJsonContract.Options),
+                                null)));
                     }
                     catch (CapabilityRejectedException exception)
                     {
@@ -319,7 +382,7 @@ public sealed class ModelTurnPipeline(
                 if (schemaCorrectionRequested)
                     continue;
 
-                var decision = completionPolicy.Decide(response, turn);
+                var decision = completionPolicy.Decide(request, response, turn);
                 if (decision == ModelTurnCompletionDecision.Complete)
                     return await CompleteAsync(
                         new ModelTurnResult(
@@ -412,9 +475,12 @@ public sealed class FoundationModelTurnInputValidator : IModelTurnInputValidator
             return ModelTurnValidationResult.Reject("conversation_context_invalid");
         if (request.Mode.Mode != Domain.AiCoachMode.Execute
             || request.TriggeringEvent is not StateMachine.UserMessageReceived
-            || request.Purpose != ModelPurpose.Clarification
-            || request.Objective != TurnObjectiveKey.ClarifyOneCoreRequirement)
+            || request.Snapshot.State is not (Domain.ConversationState.Conversing
+                or Domain.ConversationState.Clarifying)
+            || !IsSupportedObjective(request.Purpose, request.Objective))
             return ModelTurnValidationResult.Reject("model_turn_objective_not_supported");
+        if (request.Snapshot.CurrentArtifact is not null)
+            return ModelTurnValidationResult.Reject("model_turn_current_artifact_not_supported");
         if (request.Limits.MaxModelIterations < 1
             || request.Limits.MaxCapabilityCalls < 0
             || request.Limits.MaxSchemaCorrectionAttempts < 0
@@ -422,6 +488,11 @@ public sealed class FoundationModelTurnInputValidator : IModelTurnInputValidator
             return ModelTurnValidationResult.Reject("model_turn_limits_invalid");
         return ModelTurnValidationResult.Allow;
     }
+
+    private static bool IsSupportedObjective(ModelPurpose purpose, TurnObjectiveKey objective) =>
+        (purpose, objective) is
+            (ModelPurpose.Clarification, TurnObjectiveKey.ClarifyOneCoreRequirement)
+            or (ModelPurpose.TaskDraft, TurnObjectiveKey.ProposeOneOffTaskDraft);
 }
 
 public sealed class FoundationExecutionFrameBuilder(
@@ -437,6 +508,21 @@ public sealed class FoundationExecutionFrameBuilder(
                 request.Objective)
             .Select(tool => tool.CapabilityId)
             .ToHashSet();
+        var invariants = new HashSet<ModelInvariantKey>
+        {
+            ModelInvariantKey.OneQuestionPerTurn,
+            ModelInvariantKey.NoSilentSchedule,
+            ModelInvariantKey.NoBusinessSideEffects,
+            ModelInvariantKey.StateIsServerControlled
+        };
+        if (request.Purpose == ModelPurpose.Clarification)
+            invariants.Add(ModelInvariantKey.NoArtifact);
+        else
+        {
+            invariants.Add(ModelInvariantKey.AtMostOneProposedArtifact);
+            invariants.Add(ModelInvariantKey.ProposedArtifactIsNotFormalTask);
+        }
+
         return new ModelExecutionFrame(
             request.Mode.ExecutionFrameVersion,
             request.Snapshot.ConversationId,
@@ -445,14 +531,7 @@ public sealed class FoundationExecutionFrameBuilder(
             request.Snapshot.State,
             request.Purpose,
             request.Objective,
-            new HashSet<ModelInvariantKey>
-            {
-                ModelInvariantKey.OneQuestionPerTurn,
-                ModelInvariantKey.NoArtifact,
-                ModelInvariantKey.NoSilentSchedule,
-                ModelInvariantKey.NoBusinessSideEffects,
-                ModelInvariantKey.StateIsServerControlled
-            },
+            invariants,
             allowed,
             turn.CurrentArtifact);
     }
@@ -471,6 +550,7 @@ public sealed class FoundationCapabilityResultValidator : ICapabilityResultValid
     public ModelTurnValidationResult Validate(
         CapabilityDefinition definition,
         object result,
+        ProposedArtifactChange? proposal,
         TurnView turn) =>
         result.GetType() == definition.OutputType
             ? ModelTurnValidationResult.Allow
@@ -479,12 +559,46 @@ public sealed class FoundationCapabilityResultValidator : ICapabilityResultValid
 
 public sealed class FoundationModelTurnCompletionPolicy : IModelTurnCompletionPolicy
 {
-    public ModelTurnCompletionDecision Decide(ModelGatewayResponse response, TurnView turn)
+    public ModelTurnCompletionDecision Decide(
+        ModelTurnRequest request,
+        ModelGatewayResponse response,
+        TurnView turn)
     {
-        if (response.IsComplete && response.ToolCalls.Count == 0 && response.Outcome is not null)
-            return ModelTurnCompletionDecision.Complete;
         if (!response.IsComplete && response.ToolCalls.Count > 0)
             return ModelTurnCompletionDecision.Continue;
+        if (!response.IsComplete || response.ToolCalls.Count > 0 || response.Outcome is null)
+            return ModelTurnCompletionDecision.Fail;
+
+        if (request.Purpose == ModelPurpose.Clarification)
+            return turn.ProposedArtifact is null
+                && response.Outcome.Kind == ControlledModelOutcomeKind.Clarification
+                ? ModelTurnCompletionDecision.Complete
+                : ModelTurnCompletionDecision.Fail;
+
+        if (request.Purpose == ModelPurpose.TaskDraft)
+        {
+            if (turn.ProposedArtifact is null)
+                return response.Outcome.Kind == ControlledModelOutcomeKind.Clarification
+                    ? ModelTurnCompletionDecision.Complete
+                    : ModelTurnCompletionDecision.Fail;
+
+            return response.Outcome.Kind == ControlledModelOutcomeKind.Reply
+                && !DeclaresFormalPersistence(response.Outcome.AssistantMessage)
+                ? ModelTurnCompletionDecision.Complete
+                : ModelTurnCompletionDecision.Fail;
+        }
+
         return ModelTurnCompletionDecision.Fail;
+    }
+
+    private static bool DeclaresFormalPersistence(string message)
+    {
+        var normalized = message.Trim().ToLowerInvariant();
+        string[] forbiddenClaims =
+        [
+            "task has been created", "task was created", "task is saved",
+            "task has been saved", "正式任务已创建", "任务已创建", "任务已保存"
+        ];
+        return forbiddenClaims.Any(normalized.Contains);
     }
 }

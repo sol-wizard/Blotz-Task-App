@@ -81,6 +81,7 @@ internal static class FoundationModePolicies
             [typeof(ConversationExpired)] = states.Where(state => state != ConversationState.Closed).ToHashSet(),
             [typeof(ModelTurnCompleted)] = ModelResultStates(states),
             [typeof(ClarificationRequested)] = ModelResultStates(states),
+            [typeof(OneOffTaskDraftProposed)] = ModelResultStates(states),
             [typeof(ModelGenerationFailed)] = ModelResultStates(states),
             [typeof(QuotaBlocked)] = ModelResultStates(states),
             [typeof(ContentFiltered)] = ModelResultStates(states)

@@ -61,6 +61,19 @@ public sealed class ExpireConversationMutationHandler : ConversationMutationHand
         conversation.Expire(mutation.ExpiredAt);
 }
 
+public sealed class CommitProposedArtifactMutationHandler(IArtifactCommitRegistry artifacts)
+    : ConversationMutationHandler<CommitProposedArtifactMutation>
+{
+    public override void Apply(
+        AiConversation conversation,
+        CommitProposedArtifactMutation mutation) =>
+        artifacts.Commit(
+            conversation,
+            mutation.Proposal,
+            mutation.CreatedByEffectId,
+            mutation.CreatedAt);
+}
+
 public interface IConversationMutationRegistry
 {
     void Apply(AiConversation conversation, IReadOnlyList<DomainMutation> mutations);
@@ -318,7 +331,7 @@ internal sealed class AiConversationKernel(
                 resultTransition.NextGenerationStatus,
                 resultTransition.NextBlockedReason,
                 timeProvider.GetUtcNow());
-            if (resultEvent is ModelTurnCompleted or ClarificationRequested)
+            if (resultEvent is ModelTurnCompleted or ClarificationRequested or OneOffTaskDraftProposed)
                 currentEffect.Complete(timeProvider.GetUtcNow());
             else
                 currentEffect.Fail(ResultErrorCode(resultEvent), timeProvider.GetUtcNow());
@@ -330,6 +343,16 @@ internal sealed class AiConversationKernel(
                 var latest = await application.GetAsync(userId, conversationId, CancellationToken.None);
                 return new ConversationDispatchResult(false, null, latest);
             }
+            catch (DbUpdateException exception)
+            {
+                logger.LogWarning(
+                    exception,
+                    "AI Coach result transaction failed for effect {EffectId}.",
+                    currentEffect.Id);
+                store.ClearTracking();
+                var latest = await application.GetAsync(userId, conversationId, CancellationToken.None);
+                return new ConversationDispatchResult(false, null, latest);
+            }
         }
 
         return new ConversationDispatchResult(true, null, conversation);
@@ -337,22 +360,26 @@ internal sealed class AiConversationKernel(
 
     private static AiConversationEffect CreateEffect(
         AiConversation conversation,
-        ConversationEffectRequest request) => request switch
-        {
-            GenerateModelTurnEffectRequest
-                {
-                    Purpose: ModelPurpose.Clarification,
-                    Objective: TurnObjectiveKey.ClarifyOneCoreRequirement
-                } => AiConversationEffect.Create(
+        ConversationEffectRequest request)
+    {
+        if (request is not GenerateModelTurnEffectRequest modelTurn
+            || !IsSupportedModelTurn(modelTurn))
+            throw new InvalidOperationException(
+                $"Unsupported conversation effect request '{request.GetType().Name}'.");
+
+        return AiConversationEffect.Create(
                 conversation.Id,
                 conversation.Version,
                 GenerateModelTurnEffectHandler.Type,
                 GenerateModelTurnEffectHandler.Version,
                 $"model-turn:{conversation.Id}:{conversation.Version}",
-                conversation.UpdatedAt),
-            _ => throw new InvalidOperationException(
-                $"Unsupported conversation effect request '{request.GetType().Name}'.")
-        };
+                conversation.UpdatedAt);
+    }
+
+    private static bool IsSupportedModelTurn(GenerateModelTurnEffectRequest request) =>
+        (request.Purpose, request.Objective) is
+            (ModelPurpose.Clarification, TurnObjectiveKey.ClarifyOneCoreRequirement)
+            or (ModelPurpose.TaskDraft, TurnObjectiveKey.ProposeOneOffTaskDraft);
 
     private static string ResultErrorCode(ConversationEvent resultEvent) => resultEvent switch
     {
