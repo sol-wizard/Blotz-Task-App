@@ -29,7 +29,7 @@ export default function SettingsAboutScreen() {
       ? PRIVACY_POLICY_URLS.zh
       : PRIVACY_POLICY_URLS.en;
 
-    void WebBrowser.openBrowserAsync(privacyPolicyUrl);
+    WebBrowser.openBrowserAsync(privacyPolicyUrl).catch(() => Linking.openURL(privacyPolicyUrl));
   };
 
   const handleFeedback = () => {
