@@ -127,6 +127,8 @@ Design reference (established in the first run of this skill, keep consistent we
 - **Type**: Baloo 2 (rounded display, for headings/labels/eyebrows) + Karla (body) inlined as base64 `@font-face` data URIs — both are Latin-only subsets, so Chinese glyphs fall through automatically to the system CJK stack (`"PingFang SC", "Microsoft YaHei"`) with no separate font-switching logic needed. Don't try to embed a CJK webfont — the file size makes it impractical.
 - **Layout**: single-column report card. No color-key legend — three plainly-labeled sections are self-explanatory without one. Each "Also fixed" line sits below its bucket's item cards, visually quieter (smaller, muted color, no card styling) so it reads as a footnote, not a fourth headline item.
 
+**CSS pitfall hit once, don't reintroduce it:** the toggle works by hiding `[data-lang="zh"]` by default and flipping visibility based on `html[lang]`. That base rule has low specificity (one attribute selector), so if a language-tagged element *also* carries its own class with a display rule (e.g. a hypothetical `.standfirst[data-lang] { display: block }`), the compound selector can outrank the hide rule and both languages render at once — this happened to the standfirst paragraph in the first version and had to be fixed after publish. Keep every language variant as a bare `[data-lang="en"|"zh"]` span/element with no additional class-plus-attribute selector touching `display`; if a block element genuinely needs its own display rule, put it on a wrapper, not on the same element carrying `data-lang`.
+
 ## Notes
 
 - This skill is entirely read-only against GitHub. It never edits the project board, comments on issues, or touches PRs.
