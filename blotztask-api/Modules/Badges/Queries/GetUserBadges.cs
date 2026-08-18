@@ -56,6 +56,9 @@ public class BadgeDto
     public int Id { get; set; }
     public required string Name { get; set; }
     public required string IconUrl { get; set; }
+    // Position in this response, ordered by earned date — not the UserBadge.DisplayOrder column.
     public int DisplayOrder { get; set; }
+
+    // The user's chosen preview slot from UserBadge.DisplayOrder, null when the badge is not equipped.
     public int? EquippedSlot { get; set; }
 }
