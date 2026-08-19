@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -25,9 +25,8 @@ export default function ReviewScreen() {
   const { userProfile } = useUserProfile();
   // Default to Weekly — it produces fresh content more often than Monthly.
   const [activeTab, setActiveTab] = useState<ReviewTab>(ReviewPeriodType.Weekly);
-  // Latest viewable month is last month — the current one is still in progress.
+  // Latest reviewable month is last month — the current one is still in progress.
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
-  const latestSelectableMonth = startOfMonth(new Date());
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const [isTipDismissed, setIsTipDismissed] = useState(false);
   const [isWeeklyShareAvailable, setIsWeeklyShareAvailable] = useState(false);
@@ -60,8 +59,7 @@ export default function ReviewScreen() {
     isMonthlyTab && !hasNoReviewableMonth,
   );
 
-  const isAtLatestMonth = isSameMonth(selectedMonth, latestSelectableMonth);
-  const isCurrentMonth = isAtLatestMonth;
+  const isCurrentMonth = isSameMonth(selectedMonth, new Date());
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatLocalizedDate(selectedMonth, "yearMonth");
@@ -83,7 +81,7 @@ export default function ReviewScreen() {
   };
 
   const handleNextMonth = () => {
-    if (!isAtLatestMonth) setSelectedMonth((month) => addMonths(month, 1));
+    if (!isCurrentMonth) setSelectedMonth((month) => addMonths(month, 1));
   };
 
   return (
@@ -106,7 +104,7 @@ export default function ReviewScreen() {
           onShareAvailableChange={setIsWeeklyShareAvailable}
         />
       ) : hasNoReviewableMonth ? (
-        <ReviewComingSoon showRecordToday />
+        <ReviewComingSoon />
       ) : (
         <>
           <View className="px-5 mb-4">
@@ -115,7 +113,7 @@ export default function ReviewScreen() {
               onPrev={handlePrevMonth}
               onNext={handleNextMonth}
               disablePrev={isAtEarliestMonth}
-              disableNext={isAtLatestMonth}
+              disableNext={isCurrentMonth}
             />
           </View>
           <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
@@ -130,7 +128,7 @@ export default function ReviewScreen() {
               <View
                 ref={monthlyShareCardRef}
                 collapsable={false}
-                className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
+                className="min-h-[317px] rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
               >
                 <LetterHeader displayPeriod={displayMonth} />
                 <LetterCardContent
@@ -144,9 +142,6 @@ export default function ReviewScreen() {
                   periodName={monthName}
                 />
               </View>
-              <Text className="text-xs font-baloo text-secondary/50 mt-4 text-center">
-                {t("monthlyReview.aiDisclosure")}
-              </Text>
             </View>
           </ScrollView>
         </>

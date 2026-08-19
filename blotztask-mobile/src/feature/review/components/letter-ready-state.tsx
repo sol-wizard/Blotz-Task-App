@@ -1,7 +1,8 @@
 import { Pressable, Text, View } from "react-native";
-import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
 import { ReviewPeriodType } from "../models/review-dto";
+import { Image } from "expo-image";
+import { PNGIMAGES } from "@/shared/constants/assets";
 
 type Props = {
   period: ReviewPeriodType;
@@ -16,16 +17,29 @@ export function LetterReadyState({ period, periodName, onRead }: Props) {
 
   return (
     <View className="items-center pt-4 pb-4">
-      <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-white">
-        <MaterialCommunityIcons name="email-outline" size={36} color="#9AD513" />
-      </View>
-      <Text className="mt-4 text-center text-base font-balooBold text-secondary">
-        {t(`${ns}.readyTitle`, { period: periodName })}
+      <Image
+        source={PNGIMAGES.letterReadyToOpen}
+        style={{ width: 72, height: 72 }}
+        contentFit="contain"
+      />
+      <Text className="mt-2 text-center text-base font-balooBold text-secondary">
+        {t(`${ns}.readyTitle`, { periodLabel: periodName })}
       </Text>
 
-      <Pressable onPress={onRead} className="mt-12 rounded-full bg-highlight px-6 py-3">
+      <Pressable onPress={onRead} className="mt-16 rounded-full bg-highlight px-6 py-3">
         <Text className="font-balooBold text-white">{t(`${ns}.readLetter`)}</Text>
       </Pressable>
+      <Image
+        source={PNGIMAGES.letterStamp}
+        style={{
+          position: "absolute",
+          width: 300,
+          height: 360,
+          right: -70,
+          bottom: -140,
+        }}
+        contentFit="contain"
+      />
     </View>
   );
 }

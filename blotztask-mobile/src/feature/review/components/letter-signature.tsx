@@ -2,42 +2,32 @@ import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { PNGIMAGES } from "@/shared/constants/assets";
-import { FormDivider } from "@/shared/components/form-divider";
 
 export function LetterSignature() {
   const { t } = useTranslation("settings");
 
   return (
     <>
-      <View className="flex-row justify-center mb-6">
-        <FormDivider />
-      </View>
-      <View className="flex-row items-center">
-        <View className="flex-1">
+      <View className="relative">
+        <View>
           <Text className="text-sm font-baloo text-secondary/60 italic">{t("review.signOff")}</Text>
+
           <Text className="text-2xl font-balooBold text-secondary mt-1">
             {t("review.signature")}
           </Text>
         </View>
-        <View className="items-center">
-          <View
-            className="w-14 h-14 rounded-full items-center justify-center bg-white"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-          >
-            <Image
-              source={PNGIMAGES.blotzIcon}
-              style={{ width: 40, height: 40 }}
-              contentFit="contain"
-            />
-          </View>
-          <Text className="mt-1 text-xs font-balooBold text-[#94C933]">Blotz task</Text>
-        </View>
+
+        <Image
+          source={PNGIMAGES.letterStamp}
+          style={{
+            position: "absolute",
+            width: 320,
+            height: 480,
+            right: -60,
+            bottom: -220,
+          }}
+          contentFit="contain"
+        />
       </View>
     </>
   );

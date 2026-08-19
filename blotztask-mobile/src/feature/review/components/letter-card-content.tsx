@@ -17,7 +17,7 @@ type Props = {
   onGenerate: () => void;
   period: ReviewPeriodType;
   isCurrentMonth?: boolean;
-  periodName?: string;
+  periodName: string;
 };
 
 export function LetterCardContent({
@@ -58,15 +58,12 @@ export function LetterCardContent({
       <>
         <LetterBody recipientName={recipientName} body={report.letter ?? ""} />
         <LetterSignature />
-
-        {period === ReviewPeriodType.Weekly && (
-          <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
-            {t(`${ns}.aiDisclosure`)}
-          </Text>
-        )}
+        <Text className="text-xs font-baloo text-secondary/50 mt-6 text-center">
+          {t(`${ns}.aiDisclosure`)}
+        </Text>
       </>
     );
   }
 
-  return <LetterReadyState period={period} periodName={periodName ?? ""} onRead={onGenerate} />;
+  return <LetterReadyState period={period} periodName={periodName} onRead={onGenerate} />;
 }

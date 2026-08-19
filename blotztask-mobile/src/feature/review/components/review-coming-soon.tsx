@@ -7,28 +7,19 @@ type Props = {
   // Default to the monthly copy; weekly passes its own title/body.
   title?: string;
   body?: string;
-  showRecordToday?: boolean;
 };
 
-export function ReviewComingSoon({ title, body, showRecordToday = false }: Props) {
+export function ReviewComingSoon({ title, body }: Props) {
   const { t } = useTranslation("settings");
   const router = useRouter();
 
   return (
     <View className="flex-1 items-center justify-center px-10">
-      {showRecordToday ? (
-        <MaterialCommunityIcons name="email-outline" size={40} color="#9AD513" />
-      ) : (
-        <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-white">
-          <MaterialCommunityIcons name="email-outline" size={36} color="#9AD513" />
-        </View>
-      )}
+      <View className=" h-20 w-20 items-center justify-center rounded-full bg-white">
+        <MaterialCommunityIcons name="email-outline" size={36} color="#9AD513" />
+      </View>
 
-      <Text
-        className={`mb-2 text-center font-balooBold text-secondary ${
-          showRecordToday ? "mt-6 text-base" : "text-xl"
-        }`}
-      >
+      <Text className="mb-2 mt-6 text-center text-base font-balooBold text-secondary">
         {title ?? t("monthlyReview.comingSoonTitle")}
       </Text>
 
@@ -36,14 +27,12 @@ export function ReviewComingSoon({ title, body, showRecordToday = false }: Props
         {body ?? t("monthlyReview.comingSoonBody")}
       </Text>
 
-      {showRecordToday && (
-        <Pressable
-          onPress={() => router.push("/task-create")}
-          className="mt-8 rounded-full bg-highlight px-10 py-3"
-        >
-          <Text className="font-balooBold text-white">Record Today</Text>
-        </Pressable>
-      )}
+      <Pressable
+        onPress={() => router.push("/task-create")}
+        className="mt-8 rounded-full bg-highlight px-10 py-3"
+      >
+        <Text className="font-balooBold text-white">{t("monthlyReview.recordToday")}</Text>
+      </Pressable>
     </View>
   );
 }

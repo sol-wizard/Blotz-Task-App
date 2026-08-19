@@ -1,5 +1,5 @@
 import { RefObject, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { addWeeks, format, isAfter, isSameWeek, subWeeks } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
