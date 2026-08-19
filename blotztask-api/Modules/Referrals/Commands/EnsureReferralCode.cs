@@ -24,7 +24,18 @@ public class EnsureReferralCodeHandler(
                 CreatedAtUtc = DateTime.UtcNow
             };
             db.ReferralCodes.Add(referralCode);
-            await db.SaveChangesAsync(ct);
+
+            try
+            {
+                await db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                // Another concurrent request already created the row for this user
+                // (unique index on OwnerUserId) — fall back to reading it instead of failing.
+                db.Entry(referralCode).State = EntityState.Detached;
+                referralCode = await db.ReferralCodes.FirstAsync(r => r.OwnerUserId == userId, ct);
+            }
         }
 
         referralCode.Code = generator.Encode(referralCode.Id);
