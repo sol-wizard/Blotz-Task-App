@@ -71,7 +71,8 @@
     "feedback": "Share Feedback",
     "privacyPolicy": "Privacy Policy",
     "followUs": "Follow Us",
-    "xiaohongshu": "Xiaohongshu"
+    "xiaohongshu": "Xiaohongshu",
+    "version": "Version {{version}} ({{buildNumber}})"
   },
   "monthlyReview": {
     "letterLabel": "Monthly Letter",

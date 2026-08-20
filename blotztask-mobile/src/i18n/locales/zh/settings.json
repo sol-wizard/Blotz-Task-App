@@ -72,7 +72,8 @@
     "feedback": "意见反馈",
     "privacyPolicy": "隐私声明",
     "followUs": "关注我们",
-    "xiaohongshu": "小红书"
+    "xiaohongshu": "小红书",
+    "version": "版本 {{version}}（{{buildNumber}}）"
   },
   "monthlyReview": {
     "letterLabel": "月度信件",
