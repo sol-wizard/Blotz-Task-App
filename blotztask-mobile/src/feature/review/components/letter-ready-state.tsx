@@ -5,15 +5,15 @@ import { Image } from "expo-image";
 import { PNGIMAGES } from "@/shared/constants/assets";
 
 type Props = {
-  period: ReviewPeriodType;
-  periodName: string;
-  onRead: () => void;
+  periodType: ReviewPeriodType;
+  periodLabel: string;
+  onGenerate: () => void;
 };
 
-export function LetterReadyState({ period, periodName, onRead }: Props) {
+export function LetterReadyState({ periodType, periodLabel, onGenerate }: Props) {
   const { t } = useTranslation("settings");
 
-  const ns = period === ReviewPeriodType.Weekly ? "weeklyReview" : "monthlyReview";
+  const ns = periodType === ReviewPeriodType.Weekly ? "weeklyReview" : "monthlyReview";
 
   return (
     <View className="items-center pt-4 pb-4">
@@ -23,23 +23,12 @@ export function LetterReadyState({ period, periodName, onRead }: Props) {
         contentFit="contain"
       />
       <Text className="mt-2 text-center text-base font-balooBold text-secondary">
-        {t(`${ns}.readyTitle`, { periodLabel: periodName })}
+        {t(`${ns}.readyTitle`, { periodLabel })}
       </Text>
 
-      <Pressable onPress={onRead} className="mt-16 rounded-full bg-highlight px-6 py-3">
+      <Pressable onPress={onGenerate} className="mt-16 rounded-full bg-highlight px-6 py-3">
         <Text className="font-balooBold text-white">{t(`${ns}.readLetter`)}</Text>
       </Pressable>
-      <Image
-        source={PNGIMAGES.letterStamp}
-        style={{
-          position: "absolute",
-          width: 300,
-          height: 360,
-          right: -70,
-          bottom: -140,
-        }}
-        contentFit="contain"
-      />
     </View>
   );
 }

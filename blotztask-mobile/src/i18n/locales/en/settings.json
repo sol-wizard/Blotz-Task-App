@@ -94,7 +94,7 @@
     "sharing": "Sharing...",
     "shareError": "Couldn't share. Please try again.",
     "greeting": "Dear {{name}},",
-    "dateLabel": "Date",
+
     "signOff": "Warmly,",
     "signature": "Blotz",
     "defaultRecipient": "Friend",

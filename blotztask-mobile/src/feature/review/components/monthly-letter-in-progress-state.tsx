@@ -39,17 +39,6 @@ export function MonthlyLetterInProgressState() {
       >
         <Text className="font-balooBold text-white">{t("monthlyReview.recordToday")}</Text>
       </Pressable>
-      <Image
-        source={PNGIMAGES.letterStamp}
-        style={{
-          position: "absolute",
-          width: 300,
-          height: 360,
-          right: -70,
-          bottom: -140,
-        }}
-        contentFit="contain"
-      />
     </View>
   );
 }

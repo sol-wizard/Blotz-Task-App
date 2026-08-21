@@ -4,9 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
 
 type Props = {
-  // Default to the monthly copy; weekly passes its own title/body.
-  title?: string;
-  body?: string;
+  title: string;
+  body: string;
 };
 
 export function ReviewComingSoon({ title, body }: Props) {
@@ -19,13 +18,9 @@ export function ReviewComingSoon({ title, body }: Props) {
         <MaterialCommunityIcons name="email-outline" size={36} color="#9AD513" />
       </View>
 
-      <Text className="mb-2 mt-6 text-center text-base font-balooBold text-secondary">
-        {title ?? t("monthlyReview.comingSoonTitle")}
-      </Text>
+      <Text className="mb-2 mt-6 text-center text-base font-balooBold text-secondary">{title}</Text>
 
-      <Text className="text-center text-base font-baloo leading-6 text-secondary/70">
-        {body ?? t("monthlyReview.comingSoonBody")}
-      </Text>
+      <Text className="text-center text-base font-baloo leading-6 text-secondary/70">{body}</Text>
 
       <Pressable
         onPress={() => router.push("/task-create")}

@@ -12,7 +12,7 @@ import { PeriodSelector } from "../components/period-selector";
 import { ReviewComingSoon } from "../components/review-coming-soon";
 import { ReviewHeader } from "../components/review-header";
 import { ReviewTipBanner } from "../components/review-tip-banner";
-import { ReviewTab, ReviewTabs } from "../components/review-tabs";
+import { ReviewTabs } from "../components/review-tabs";
 import { WeeklyReviewView } from "../components/weekly-review-view";
 import { useReview } from "../hooks/useReviewReport";
 import { useReviewShare } from "../hooks/useReviewShare";
@@ -23,9 +23,7 @@ export default function ReviewScreen() {
   const router = useRouter();
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  // Default to Weekly — it produces fresh content more often than Monthly.
-  const [activeTab, setActiveTab] = useState<ReviewTab>(ReviewPeriodType.Weekly);
-  // Latest reviewable month is last month — the current one is still in progress.
+  const [activeTab, setActiveTab] = useState<ReviewPeriodType>(ReviewPeriodType.Weekly);
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const [isTipDismissed, setIsTipDismissed] = useState(false);
@@ -104,7 +102,10 @@ export default function ReviewScreen() {
           onShareAvailableChange={setIsWeeklyShareAvailable}
         />
       ) : hasNoReviewableMonth ? (
-        <ReviewComingSoon />
+        <ReviewComingSoon
+          title={t("monthlyReview.comingSoonTitle")}
+          body={t("monthlyReview.comingSoonBody")}
+        />
       ) : (
         <>
           <View className="px-5 mb-4">
@@ -128,18 +129,21 @@ export default function ReviewScreen() {
               <View
                 ref={monthlyShareCardRef}
                 collapsable={false}
-                className="min-h-[317px] rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
+                className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
               >
-                <LetterHeader displayPeriod={displayMonth} />
+                <LetterHeader
+                  periodLabel={displayMonth}
+                  letterLabel={t("monthlyReview.letterLabel")}
+                />
                 <LetterCardContent
                   isLoading={isLoading}
                   report={report}
                   recipientName={recipientName}
                   isGenerating={isGenerating}
                   onGenerate={generate}
-                  period={ReviewPeriodType.Monthly}
+                  periodType={ReviewPeriodType.Monthly}
                   isCurrentMonth={isCurrentMonth}
-                  periodName={monthName}
+                  periodLabel={monthName}
                 />
               </View>
             </View>
