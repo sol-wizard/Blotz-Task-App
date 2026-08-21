@@ -14,10 +14,12 @@ import { GradientColor } from "@/shared/components/gradient-color";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+export type CarouselExitOutcome = "completed" | "skipped";
+
 interface IntroCarouselProps<T> {
   data: readonly T[];
   renderItem: (item: T) => React.ReactNode;
-  onFinish: () => void | Promise<void>;
+  onFinish: (outcome: CarouselExitOutcome, lastItemReached: T) => void | Promise<void>;
   continueLabel: string;
   finishLabel: string;
   skipLabel: string;
@@ -46,7 +48,7 @@ export function IntroCarousel<T>({
 
   const handleNext = () => {
     if (isLast) {
-      void onFinish();
+      void onFinish("completed", data[activeIndex]);
       return;
     }
     const next = activeIndex + 1;
@@ -77,7 +79,7 @@ export function IntroCarousel<T>({
           </View>
         </GradientColor>
         <View className="flex-1 items-end">
-          <Pressable onPress={() => void onFinish()} hitSlop={10}>
+          <Pressable onPress={() => void onFinish("skipped", data[activeIndex])} hitSlop={10}>
             <Text className="text-xl font-baloo text-black/40">{skipLabel}</Text>
           </Pressable>
         </View>
