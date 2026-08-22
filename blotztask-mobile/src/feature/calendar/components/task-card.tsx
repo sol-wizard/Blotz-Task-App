@@ -15,7 +15,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { cancelNotification } from "@/shared/util/cancel-notification";
-import { formatDateRange } from "../util/format-date-range";
+import { formatTaskCardTimeRange } from "../util/format-task-card-time-range";
 import { formatTaskEndTime } from "../util/format-task-end-time";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
@@ -54,7 +54,14 @@ interface TaskCardProps {
   onRowOpen?: (refObject: React.RefObject<SwipeableMethods | null>) => void;
 }
 
-const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRowOpen }: TaskCardProps) => {
+const TaskCard = ({
+  task,
+  deleteTask,
+  isDeleting,
+  selectedDay,
+  onOpenMode,
+  onRowOpen,
+}: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -71,12 +78,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
   const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
-  const {
-    toggleTask,
-    deleteRecurringOccurrence,
-    isToggling,
-    isDeletingRecurringOccurrence,
-  } = useTaskMutations();
+  const { toggleTask, deleteRecurringOccurrence, isToggling, isDeletingRecurringOccurrence } =
+    useTaskMutations();
   const {
     completeOccurrence,
     materializeOccurrenceAsync,
@@ -86,10 +89,9 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
 
   // Derived values
   const hasSubtasks = !!task.subtasks?.length;
-  const timePeriod = formatDateRange({
+  const timePeriod = formatTaskCardTimeRange({
     startTime: task.startTime,
     endTime: task.endTime,
-    selectedDay,
   });
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
   const isLoading =
@@ -246,7 +248,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
 
     setShowSwitchModal(false);
     swipeRef.current?.close();
-    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: pendingFocusTaskId } });
+    router.push({
+      pathname: "/(protected)/pomodoro-focus",
+      params: { taskId: pendingFocusTaskId },
+    });
     setPendingFocusTaskId(null);
   };
 
@@ -343,7 +348,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode, onRow
               <Pressable className="flex-1 " onPress={handleOpenTaskDetails} disabled={isLoading}>
                 <View className="flex-row items-center" style={{ gap: 4 }}>
                   <Text
-                    className={`text-xl font-semibold font-inter ${
+                    className={`flex-1 text-xl font-semibold font-inter ${
                       task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
                     }`}
                     style={
