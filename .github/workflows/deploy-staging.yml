@@ -1,0 +1,185 @@
+name: Staging - Release app and API
+
+# One button for a full staging release. Runs in this order, and the order matters:
+#   1. work out the new version (once, shared by both platforms)
+#   2. build iOS and Android in parallel, each writing that version into eas.json,
+#      then eas build --auto-submit -> TestFlight / Play internal track
+#   3. only once BOTH have SUCCEEDED, deploy the API to staging
+#   4. verify the API is actually up via /health
+#   5. commit the released version in eas.json back to main
+#
+# Step 2 deliberately does NOT use --no-wait: that only triggers the build and
+# returns immediately. If the API were deployed first and the app build then
+# failed, staging would be left with a backend ahead of the app - exactly the
+# drift this workflow exists to remove. The cost is the runner waiting out the
+# 10-20 minutes EAS takes to build.
+#
+# iOS and Android are separate matrix legs rather than `--platform all` so that
+# a failure on one platform can be retried on its own with GitHub's "Re-run
+# failed jobs" button, instead of spending a second EAS build on the platform
+# that already succeeded.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'How to bump the version'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - none
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Work out the new version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump the preview version
+        id: bump
+        working-directory: blotztask-mobile
+        run: |
+          set -euo pipefail
+          IOS_CURRENT=$(jq -r '.build.preview.ios.env.APP_VERSION' eas.json)
+          ANDROID_CURRENT=$(jq -r '.build.preview.android.env.APP_VERSION' eas.json)
+
+          # Both platforms ship from the same button, so they must share a base
+          # version - otherwise one "patch" choice would mean two different results.
+          if [ "$IOS_CURRENT" != "$ANDROID_CURRENT" ]; then
+            echo "::error::preview versions are out of sync (iOS $IOS_CURRENT, Android $ANDROID_CURRENT). Align them in eas.json first."
+            exit 1
+          fi
+
+          IFS=. read -r MAJOR MINOR PATCH <<< "$IOS_CURRENT"
+          case "${{ inputs.version_bump }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            none)  ;;
+            *) echo "::error::unknown version_bump"; exit 1 ;;
+          esac
+
+          NEW="$MAJOR.$MINOR.$PATCH"
+          echo "new_version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "### Staging release \`$IOS_CURRENT\` -> \`$NEW\`" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: version
+    runs-on: ubuntu-latest
+    strategy:
+      # Let the other platform finish rather than cancelling it. The EAS build is
+      # already running in the cloud and would be paid for either way.
+      fail-fast: false
+      matrix:
+        platform: [ios, android]
+    defaults:
+      run:
+        working-directory: blotztask-mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: blotztask-mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # eas.json is only changed on the runner. Nothing is committed until the
+      # very end, so a failed build leaves main untouched - no rollback needed.
+      - name: Write the new version into eas.json
+        run: |
+          set -euo pipefail
+          jq --arg v "${{ needs.version.outputs.new_version }}" '
+              .build.preview.ios.env.APP_VERSION = $v
+            | .build.preview.android.env.APP_VERSION = $v
+          ' eas.json > eas.json.tmp && mv eas.json.tmp eas.json
+
+      - name: Build and submit
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Apple Developer capabilities are managed by hand, same as build.ps1
+          EXPO_NO_CAPABILITY_SYNC: '1'
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile preview \
+            --auto-submit \
+            --non-interactive
+
+  deploy-api:
+    name: Deploy API to staging
+    needs: build
+    uses: ./.github/workflows/deploy-staging-api.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+
+  verify-and-record:
+    name: Health check and record version
+    needs: [version, build, deploy-api]
+    runs-on: ubuntu-latest
+    steps:
+      # Retries because the Azure Web App takes a moment to come back up after a
+      # deploy. /health also covers the database, which matters here because the
+      # deploy runs EF migrations immediately beforehand.
+      - name: Check the staging API is healthy
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 6 --retry-delay 10 --retry-all-errors \
+            https://app-blotz-task-api-stag.azurewebsites.net/health)
+          echo "/health returned: $BODY"
+          if [ "$BODY" != "Healthy" ]; then
+            echo "::error::staging API is not healthy"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Commit the released version back to main
+        run: |
+          set -euo pipefail
+          NEW="${{ needs.version.outputs.new_version }}"
+          jq --arg v "$NEW" '
+              .build.preview.ios.env.APP_VERSION = $v
+            | .build.preview.android.env.APP_VERSION = $v
+          ' blotztask-mobile/eas.json > eas.json.tmp && mv eas.json.tmp blotztask-mobile/eas.json
+
+          if git diff --quiet -- blotztask-mobile/eas.json; then
+            echo "eas.json is already at $NEW, nothing to commit"
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add blotztask-mobile/eas.json
+          git commit -m "chore: staging release $NEW"
+          # main may have moved during the 10-20 minute build
+          git pull --rebase origin main
+          git push origin main
