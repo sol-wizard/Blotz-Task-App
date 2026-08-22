@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBadgeDetailQuery } from "../hooks/useBadgeDetailQuery";
+import { useEquipBadgeMutation } from "../hooks/useEquipBadgeMutation";
 import { BadgeShareCard } from "@/feature/badge/components/badge-share-card";
 import { useReviewShare } from "@/feature/review/hooks/useReviewShare";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
@@ -24,6 +25,8 @@ export default function BadgeDetailsScreen() {
   const params = useLocalSearchParams<{ badgeId: string }>();
   const badgeId = Number(params.badgeId);
   const { badgeDetail, isBadgeDetailLoading, isBadgeDetailError } = useBadgeDetailQuery(badgeId);
+  const { equipBadge, isEquipping } = useEquipBadgeMutation();
+  const isEquipped = badgeDetail?.equippedSlot != null;
 
   return (
     <SafeAreaView className="flex-1 bg-[#F5FAF8]">
@@ -79,18 +82,18 @@ export default function BadgeDetailsScreen() {
               </Text>
             </View>
 
-            <View className="mt-8 flex-row items-center justify-center">
-              {/* TODO: restore this once equipping a reward is implemented — it was
-                  a console.log placeholder with no behaviour behind it.
+            <View className="mt-8 flex-row items-center justify-center" style={{ gap: 12 }}>
               <Pressable
-                className="h-14 min-w-36 rounded-full border border-highlight bg-white/60 px-5 items-center justify-center"
-                onPress={() => console.log("Equip reward", badgeDetail.id)}
+                className={`h-14 min-w-36 rounded-full border border-highlight bg-white/60 px-5 items-center justify-center ${
+                  isEquipped || isEquipping ? "opacity-60" : "opacity-100"
+                }`}
+                onPress={() => equipBadge(badgeDetail.id)}
+                disabled={isEquipped || isEquipping}
               >
                 <Text className="text-lg font-balooBold text-highlight">
-                  {t("details.equipReward")}
+                  {isEquipped ? t("details.equipped") : t("details.equipReward")}
                 </Text>
               </Pressable>
-              */}
 
               <Pressable
                 className={`h-14 min-w-36 rounded-full bg-highlight px-5 items-center justify-center shadow-lg shadow-lime-300 ${
