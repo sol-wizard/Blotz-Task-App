@@ -31,6 +31,8 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
 import { addHours, format } from "date-fns";
 import { RecurrenceEndSection } from "./components/recurrence-end-section";
+import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import { LabelDTO } from "@/shared/models/label-dto";
 
 export type TaskFormDirtyFields = Readonly<Partial<Record<keyof TaskFormField, boolean>>>;
 
@@ -41,10 +43,19 @@ export type TaskFormProps = {
   | { mode: "edit"; dto: TaskUpsertDTO; recurrenceEditMode?: "hidden" | "futureOnly" }
 );
 
-const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) => {
-  // Queries
-  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
-  const { labels = [], isLoading } = useAllLabels();
+type LoadedTaskFormProps = TaskFormProps & {
+  userPreferences: UserPreferencesDTO | undefined;
+  labels: LabelDTO[];
+};
+
+const LoadedTaskForm = ({
+  mode,
+  dto,
+  recurrenceEditMode,
+  onSubmit,
+  userPreferences,
+  labels,
+}: LoadedTaskFormProps) => {
   const { t } = useTranslation("tasks");
 
   // Derived values
@@ -54,6 +65,7 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
   });
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
+  const [hasChangedTab, setHasChangedTab] = useState(false);
 
   // Form
   const form = useForm<TaskFormField>({
@@ -68,10 +80,6 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
   const recurrence = useWatch({ control, name: "recurrence" });
   const isRecurringTaskForm =
     shouldShowRecurrence && recurrence !== "never" && recurrence !== "custom";
-
-  if (isUserPreferencesLoading) {
-    return <LoadingScreen />;
-  }
 
   // Handlers
   const handleFormSubmit = async (data: TaskFormField) => {
@@ -129,9 +137,12 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
+    if (next === isActiveTab) return;
+
     const startDate = getValues("startDate");
     const startTime = getValues("startTime");
 
+    setHasChangedTab(true);
     setIsActiveTab(next);
     clearErrors(["endDate", "endTime"]);
 
@@ -197,35 +208,40 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === SegmentButtonValue.Reminder && <ReminderTab />}
-        {isActiveTab === SegmentButtonValue.Event && <EventTab />}
+        {isActiveTab === SegmentButtonValue.Reminder && (
+          <ReminderTab animateOnEnter={hasChangedTab} />
+        )}
+        {isActiveTab === SegmentButtonValue.Event && (
+          <EventTab animateOnEnter={hasChangedTab} />
+        )}
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
         {shouldShowRecurrence && (
-          <>
+          <Animated.View layout={MotionAnimations.layout}>
             <RecurrenceSelect control={control} />
             <RecurrenceEndSection control={control} />
-            <FormDivider />
-          </>
+          </Animated.View>
         )}
 
         {!isRecurringTaskForm && (
-          <>
-            <AlertSelect control={control} />
+          <Animated.View
+            entering={
+              formState.dirtyFields.recurrence ? MotionAnimations.upEntering : undefined
+            }
+            exiting={MotionAnimations.outExiting}
+            layout={MotionAnimations.layout}
+          >
             <FormDivider />
-          </>
+            <AlertSelect control={control} />
+          </Animated.View>
         )}
+
+        <FormDivider animateLayout={shouldShowRecurrence} />
 
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>
-          {isLoading ? (
-            <Text className="font-baloo text-lg text-primary mt-3">
-              {t("common:loading.categories")}
-            </Text>
-          ) : (
-            <LabelSelect control={control} labels={labels} />
-          )}
+          <LabelSelect control={control} labels={labels} />
         </Animated.View>
       </ScrollView>
 
@@ -246,6 +262,17 @@ const TaskForm = ({ mode, dto, recurrenceEditMode, onSubmit }: TaskFormProps) =>
     </View>
     </FormProvider>
   );
+};
+
+const TaskForm = (props: TaskFormProps) => {
+  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
+  const { labels, isLoading: areLabelsLoading } = useAllLabels();
+
+  if (isUserPreferencesLoading || areLabelsLoading) {
+    return <LoadingScreen />;
+  }
+
+  return <LoadedTaskForm {...props} userPreferences={userPreferences} labels={labels} />;
 };
 
 export default TaskForm;
