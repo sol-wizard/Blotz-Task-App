@@ -4,7 +4,7 @@
 name: Staging - Build and deploy WebApi to Azure Web App
 
 # No longer runs on merges to main. The staging API now ships together with the
-# app, from deploy-staging.yml, so the two can never drift apart.
+# app, from release-staging.yml, so the two can never drift apart.
 # workflow_dispatch is kept as a manual escape hatch for an API-only redeploy.
 on:
   workflow_call:
