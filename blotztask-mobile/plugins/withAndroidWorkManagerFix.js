@@ -1,4 +1,4 @@
-import { withProjectBuildGradle, createRunOncePlugin } from "expo/config-plugins";
+const { withProjectBuildGradle, createRunOncePlugin } = require("expo/config-plugins");
 const PLUGIN_NAME = "withAndroidWorkManagerFix";
 const MARKER_START = "// @generated begin withAndroidWorkManagerFix";
 const MARKER_END = "// @generated end withAndroidWorkManagerFix";
