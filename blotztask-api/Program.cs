@@ -1,5 +1,6 @@
 using BlotzTask.Extension;
 using BlotzTask.Middleware;
+using BlotzTask.Modules.AiCoach;
 using BlotzTask.Modules.AiUsage;
 using BlotzTask.Modules.Badges;
 using BlotzTask.Modules.BreakDown;
@@ -30,6 +31,7 @@ builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 builder.Services.AddHostedService<QueuedHostedService>();
 
 // Feature modules
+builder.Services.AddAiCoachModule();
 builder.Services.AddAiUsageModule();
 builder.Services.AddBadgeModule(builder.Configuration);
 builder.Services.AddChatTaskGeneratorModule();
