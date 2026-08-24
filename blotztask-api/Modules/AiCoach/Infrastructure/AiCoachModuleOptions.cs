@@ -1,8 +1,8 @@
 namespace BlotzTask.Modules.AiCoach.Infrastructure;
 
 /// <summary>
-/// Centralized model-turn limits and module settings (tech design §21.11: the model loop must
-/// never be an unbounded while; §25.10: limits live in versioned central config). Bound from the
+/// Centralized model-turn limits and module settings (v3 tech design §21: the model loop must
+/// never be an unbounded while; limits live in versioned central config). Bound from the
 /// "AiCoach" configuration section; DeploymentId falls back to AzureOpenAI:AiModels:TaskGeneration.
 /// </summary>
 public sealed class AiCoachModuleOptions
@@ -11,17 +11,27 @@ public sealed class AiCoachModuleOptions
 
     public string DeploymentId { get; set; } = "";
 
+    /// <summary>
+    /// Total gateway calls per turn (v3 §21). Schema corrections, regenerations and (future)
+    /// read-only tool continuations all share this budget — they never stack on top of it.
+    /// </summary>
     public int MaxModelIterations { get; set; } = 4;
 
-    public int MaxCapabilityCallsPerTurn { get; set; } = 3;
-
     public int MaxSchemaCorrectionAttempts { get; set; } = 1;
+
+    public int MaxRegenerationAttempts { get; set; } = 1;
 
     public int ModelRequestTimeoutSeconds { get; set; } = 60;
 
     /// <summary>
-    /// Absolute lifetime of an in-memory Execution conversation (ExpiresAt semantics on the
-    /// store; Execution mode is a per-session conversation, requirements §14.1).
+    /// Lease window recorded on a tracked effect (v3 §7.4). v1 executes effects in-process, so
+    /// the lease is informational — but the shape matches the future worker model.
+    /// </summary>
+    public int EffectLeaseSeconds { get; set; } = 180;
+
+    /// <summary>
+    /// Absolute lifetime of an in-memory conversation (ExpiresAt semantics on the store;
+    /// Execution mode is a per-session conversation).
     /// </summary>
     public int ConversationLifetimeHours { get; set; } = 24;
 

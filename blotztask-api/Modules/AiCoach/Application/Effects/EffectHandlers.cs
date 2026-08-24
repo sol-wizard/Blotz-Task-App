@@ -1,5 +1,5 @@
 using System.ClientModel;
-using BlotzTask.Modules.AiCoach.Ai.ModelTurn;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Infrastructure;
@@ -35,12 +35,12 @@ public interface IConversationEffectHandler
 }
 
 /// <summary>
-/// Runs one model turn: quota check, bounded tool loop, usage recording, and mapping of every
-/// outcome onto a stable result event. All model calls share the existing monthly AI quota
-/// (requirements §15).
+/// Runs one model turn: quota check, the single-turn runtime (policy + guards inside), usage
+/// recording, and mapping of every outcome onto a stable result event. All model calls share
+/// the existing monthly AI quota.
 /// </summary>
 public sealed class GenerateModelTurnEffectHandler(
-    IModelTurnExecutor executor,
+    IModelTurnRuntime runtime,
     ICheckAiQuotaService checkQuota,
     IRecordAiUsageService recordUsage,
     AiCoachUsageTracker usageTracker,
@@ -58,17 +58,17 @@ public sealed class GenerateModelTurnEffectHandler(
         }
         catch (AiQuotaExceededException)
         {
-            return new ModelGenerationFailed(
+            return new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.QuotaExceeded);
         }
 
-        ModelTurnResult result;
+        ModelTurnRunResult result;
         try
         {
             var timeZone = ResolveTimeZone(context.TimeZoneId);
             var userLocalNow = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), timeZone);
 
-            result = await executor.ExecuteAsync(
+            result = await runtime.ExecuteAsync(
                 new ModelTurnRequest(
                     context.Snapshot,
                     context.EffectId,
@@ -87,7 +87,7 @@ public sealed class GenerateModelTurnEffectHandler(
                 401 or 403 => AiGenerationErrorCode.ConfigurationError,
                 _ => AiGenerationErrorCode.Unknown,
             };
-            return new ModelGenerationFailed(context.EffectId, context.BaseConversationVersion, code);
+            return new ModelTurnFailed(context.EffectId, context.BaseConversationVersion, code);
         }
 
         if (result.TotalTokens > 0)
@@ -100,8 +100,8 @@ public sealed class GenerateModelTurnEffectHandler(
                 TotalTokens = result.TotalTokens,
             }, ct);
 
-            // Session cost visibility (§27): one line per turn with the running conversation
-            // total, so watching the console while using the app shows what the session costs.
+            // Session cost visibility: one line per turn with the running conversation total,
+            // so watching the console while using the app shows what the session costs.
             var usage = usageTracker.Add(
                 context.ConversationId, result.InputTokens, result.OutputTokens, modelCalls: 1);
             var opts = options.Value;
@@ -118,17 +118,16 @@ public sealed class GenerateModelTurnEffectHandler(
             ModelTurnCompletionReason.Completed => new ModelTurnCompleted(
                 context.EffectId,
                 context.BaseConversationVersion,
-                result.AssistantMessage!,
-                result.ProposedDraft),
-            ModelTurnCompletionReason.ContentFiltered => new ModelGenerationFailed(
+                result.Outcome!),
+            ModelTurnCompletionReason.ContentFiltered => new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.ContentFiltered),
-            ModelTurnCompletionReason.TimedOut => new ModelGenerationFailed(
+            ModelTurnCompletionReason.TimedOut => new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.TimedOut),
-            ModelTurnCompletionReason.Cancelled => new ModelGenerationFailed(
+            ModelTurnCompletionReason.Cancelled => new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.Cancelled),
-            ModelTurnCompletionReason.ModelUnavailable => new ModelGenerationFailed(
+            ModelTurnCompletionReason.ModelUnavailable => new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.ModelUnavailable),
-            _ => new ModelGenerationFailed(
+            _ => new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.InvalidModelResponse),
         };
     }
@@ -147,31 +146,32 @@ public sealed class GenerateModelTurnEffectHandler(
 }
 
 /// <summary>
-/// Persists a confirmed draft card as formal tasks through the EXISTING task command handler
-/// (tech design §22 / brief step 7), one task per item, in card order. Items already saved by
-/// an earlier attempt are not on <see cref="ValidatedTaskDraft.Items"/> and are never recreated.
-/// Note on transaction boundaries (§22.10): AddTaskCommandHandler commits its own SaveChanges;
-/// since v1 conversations are in-memory (no shared DB transaction is possible anyway),
-/// consistency is maintained by the effect result events — the items created before a failure
-/// are reported on the failure event so the draft records them, and a lost response is
-/// replayed via the command receipt.
+/// Persists a confirmed proposal set as formal tasks through the EXISTING task command handler
+/// (Level-4 side effect, deterministic code only — v3 §18), one task per proposal, in card
+/// order. Proposals already saved by an earlier attempt are not on
+/// <see cref="ValidatedProposalSet.ToPersist"/> and are never recreated.
+/// Note on transaction boundaries: AddTaskCommandHandler commits its own SaveChanges; since v1
+/// conversations are in-memory (no shared DB transaction is possible anyway), consistency is
+/// maintained by the effect result events — proposals created before a failure are reported on
+/// the failure event so the set records them, and a lost response is replayed via the command
+/// receipt.
 /// </summary>
-public sealed class PersistDraftEffectHandler(
+public sealed class PersistProposalSetEffectHandler(
     AddTaskCommandHandler addTaskCommandHandler,
-    ILogger<PersistDraftEffectHandler> logger) : IConversationEffectHandler
+    ILogger<PersistProposalSetEffectHandler> logger) : IConversationEffectHandler
 {
-    public bool CanHandle(ConversationEffectRequest request) => request is PersistDraftEffectRequest;
+    public bool CanHandle(ConversationEffectRequest request) => request is PersistProposalSetEffectRequest;
 
     public async Task<ConversationEvent?> ExecuteAsync(EffectExecutionContext context, CancellationToken ct)
     {
-        var request = (PersistDraftEffectRequest)context.Request;
-        var draft = request.ValidatedDraft;
-        var itemsById = draft.Payload.Items.ToDictionary(i => i.ItemId);
+        var request = (PersistProposalSetEffectRequest)context.Request;
+        var validated = request.Validated;
+        var proposalsById = validated.Proposals.ToDictionary(p => p.ProposalId);
 
-        var persisted = new List<PersistedDraftItem>(draft.Items.Count);
-        foreach (var resolved in draft.Items)
+        var persisted = new List<PersistedProposal>(validated.ToPersist.Count);
+        foreach (var resolved in validated.ToPersist)
         {
-            var item = itemsById[resolved.ItemId];
+            var proposal = proposalsById[resolved.ProposalId];
             try
             {
                 var taskId = await addTaskCommandHandler.Handle(new AddTaskCommand
@@ -179,37 +179,38 @@ public sealed class PersistDraftEffectHandler(
                     UserId = context.UserId,
                     TaskDetails = new AddTaskItemDto
                     {
-                        Title = item.Title,
-                        Description = item.Description ?? string.Empty,
+                        Title = proposal.Title,
+                        Description = proposal.Description ?? string.Empty,
                         StartTime = resolved.StartUtc,
                         EndTime = resolved.EndUtc,
                         TimeType = TaskTimeType.RangeTime,
-                        LabelId = item.LabelId,
+                        LabelId = proposal.LabelId,
                     },
                 }, ct);
 
-                persisted.Add(new PersistedDraftItem(item.ItemId, taskId));
+                persisted.Add(new PersistedProposal(proposal.ProposalId, taskId));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Failed to persist draft {ArtifactId} item {ItemId} ({Done}/{Total} created) for conversation {ConversationId}",
-                    request.ArtifactId, item.ItemId, persisted.Count, draft.Items.Count, context.ConversationId);
-                return new DraftPersistenceFailed(
-                    context.EffectId, request.ArtifactId, "TaskPersistenceFailed", persisted);
+                    "Failed to persist proposal set {ProposalSetId} item {ProposalId} ({Done}/{Total} created) for conversation {ConversationId}",
+                    request.ProposalSetId, proposal.ProposalId, persisted.Count, validated.ToPersist.Count,
+                    context.ConversationId);
+                return new ProposalSetPersistenceFailed(
+                    context.EffectId, request.ProposalSetId, "TaskPersistenceFailed", persisted);
             }
         }
 
-        // Items saved on an earlier attempt count toward the final result too.
-        var alreadyPersisted = draft.Payload.Items
-            .Where(i => i.PersistedTaskId.HasValue)
-            .Select(i => new PersistedDraftItem(i.ItemId, i.PersistedTaskId!.Value));
+        // Proposals saved on an earlier attempt count toward the final result too.
+        var alreadyPersisted = validated.Proposals
+            .Where(p => p.PersistedTaskId.HasValue)
+            .Select(p => new PersistedProposal(p.ProposalId, p.PersistedTaskId!.Value));
 
-        return new DraftPersistenceSucceeded(
+        return new ProposalSetPersistenceSucceeded(
             context.EffectId,
-            request.ArtifactId,
+            request.ProposalSetId,
             alreadyPersisted.Concat(persisted).ToList(),
             request.Action,
-            draft.FocusMinutes);
+            validated.FocusMinutes);
     }
 }

@@ -1,15 +1,18 @@
-using BlotzTask.Modules.AiCoach.Domain.Artifacts;
+using BlotzTask.Modules.AiCoach.Domain.Policy;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
 
 /// <summary>
-/// Everything that can drive the state machine is expressed as an event (tech design §9.2, §11).
-/// Naming convention (§11): *Requested = submitted input request; *Completed/*Generated = model or
-/// effect results; *Succeeded/*Failed = committed deterministic business facts.
+/// Everything that can drive the Kernel is expressed as an event (v3 tech design §7.5): the
+/// Kernel deterministically maps Current Snapshot + ConversationEvent onto a
+/// <see cref="StateTransition"/>. Model candidates are NOT events — they reach the Kernel only
+/// after Post-Policy and all mandatory Guards, folded into <see cref="ValidatedTurnOutcome"/>.
+/// Unknown events are uniformly rejected as UnsupportedEvent, never a default jump.
 /// </summary>
 public abstract record ConversationEvent;
 
-// ---------- User input events (§11.1) ----------
+// ---------- User input events ----------
 
 public sealed record UserMessageReceived(
     Guid MessageId,
@@ -17,36 +20,33 @@ public sealed record UserMessageReceived(
     DateTimeOffset OccurredAt) : ConversationEvent;
 
 /// <summary>
-/// User confirmed the current draft with one of the three primary actions. Field validation
-/// and local-time resolution happen BEFORE dispatch (Application layer, tech design §22.6/§22.7);
-/// the reducer only performs snapshot-level checks (state, artifact identity, action allowed).
+/// User confirmed the current proposal set with one of the primary actions. Field validation
+/// and local-time resolution happen BEFORE dispatch (Application layer, v3 §18); the Kernel
+/// only performs snapshot-level checks (phase, set identity, action allowed).
 /// </summary>
-public sealed record ConfirmTaskDraftRequested(
+public sealed record ConfirmProposalSetRequested(
     Guid CommandId,
-    Guid ArtifactId,
+    Guid ProposalSetId,
     ConversationAction Action,
-    ValidatedTaskDraft ValidatedDraft) : ConversationEvent;
+    ValidatedProposalSet Validated) : ConversationEvent;
 
-public sealed record RejectTaskDraftRequested(
+public sealed record RejectProposalSetRequested(
     Guid CommandId,
-    Guid ArtifactId) : ConversationEvent;
+    Guid ProposalSetId) : ConversationEvent;
 
-// ---------- Model result events (§11.2) ----------
+// ---------- Model result events ----------
 
 /// <summary>
-/// A model effect finished one full turn (tech design §11.3 ModelTurnCompleted). The proposed
-/// draft, when present, has already passed the Capability Guard + artifact validation inside the
-/// Model Turn Executor; the reducer still decides whether it is accepted in the current state.
-/// In Execution mode a completed turn without a draft is, by §8.1 of the requirements, a
-/// clarification question.
+/// A model turn finished and its candidate survived Post-Policy and the Guard pipeline. The
+/// <see cref="ValidatedTurnOutcome"/> carries the FINAL strategy — the Kernel picks the
+/// transition purely from it plus the current snapshot.
 /// </summary>
 public sealed record ModelTurnCompleted(
     Guid EffectId,
     int BaseConversationVersion,
-    string AssistantMessage,
-    TaskDraftPayload? ProposedDraft) : ConversationEvent;
+    ValidatedTurnOutcome Outcome) : ConversationEvent;
 
-public sealed record ModelGenerationFailed(
+public sealed record ModelTurnFailed(
     Guid EffectId,
     int BaseConversationVersion,
     AiGenerationErrorCode ErrorCode) : ConversationEvent;
@@ -63,47 +63,64 @@ public enum AiGenerationErrorCode
     ConfigurationError = 7,
 }
 
-// ---------- Deterministic business result events (§11.3) ----------
+/// <summary>
+/// The turn after the whole pipeline: Post-Policy decision + guard-approved response text and
+/// (when the final strategy is ShowProposalSet) the accepted proposal payload. This is the ONLY
+/// shape in which model output ever reaches the Kernel.
+/// </summary>
+public sealed record ValidatedTurnOutcome(
+    ConversationStrategy FinalStrategy,
+    StrategyDecisionType DecisionType,
+    StrategyReasonCode ReasonCode,
+    string AssistantMessage,
+    string? Question,
+    IReadOnlyList<TaskProposal>? AcceptedProposals,
+    bool FallbackUsed);
 
-/// <summary>One draft item that became a formal task.</summary>
-public sealed record PersistedDraftItem(Guid ItemId, int TaskId);
+// ---------- Deterministic business result events ----------
 
-/// <summary>Every item on the card is now a formal task.</summary>
-public sealed record DraftPersistenceSucceeded(
+/// <summary>One proposal that became a formal task.</summary>
+public sealed record PersistedProposal(Guid ProposalId, int TaskId);
+
+/// <summary>Every proposal on the set is now a formal task.</summary>
+public sealed record ProposalSetPersistenceSucceeded(
     Guid EffectId,
-    Guid ArtifactId,
-    IReadOnlyList<PersistedDraftItem> PersistedItems,
+    Guid ProposalSetId,
+    IReadOnlyList<PersistedProposal> PersistedProposals,
     ConversationAction Action,
     int FocusMinutes) : ConversationEvent;
 
 /// <summary>
-/// At least one item could not be saved. <paramref name="PersistedItems"/> carries the ones
-/// that DID succeed before the failure so the draft records them and a retry only creates
+/// At least one proposal could not be saved. <paramref name="PersistedProposals"/> carries the
+/// ones that DID succeed before the failure so the set records them and a retry only creates
 /// the remaining tasks (never duplicates).
 /// </summary>
-public sealed record DraftPersistenceFailed(
+public sealed record ProposalSetPersistenceFailed(
     Guid EffectId,
-    Guid ArtifactId,
+    Guid ProposalSetId,
     string ErrorCode,
-    IReadOnlyList<PersistedDraftItem> PersistedItems) : ConversationEvent
+    IReadOnlyList<PersistedProposal> PersistedProposals) : ConversationEvent
 {
-    public DraftPersistenceFailed(Guid effectId, Guid artifactId, string errorCode)
-        : this(effectId, artifactId, errorCode, []) { }
+    public ProposalSetPersistenceFailed(Guid effectId, Guid proposalSetId, string errorCode)
+        : this(effectId, proposalSetId, errorCode, []) { }
 }
 
-/// <summary>Resolved instants for one draft item (local date/time against its IANA zone).</summary>
-public sealed record ValidatedTaskDraftItem(
-    Guid ItemId,
+/// <summary>Resolved instants for one proposal (local date/time against its IANA zone).</summary>
+public sealed record ValidatedProposalItem(
+    Guid ProposalId,
     DateTimeOffset StartUtc,
     DateTimeOffset EndUtc);
 
 /// <summary>
-/// Draft after server-side re-validation (tech design §22.7): the normalized payload to write
-/// back, each item's start/end as instants, and the server-computed focus minutes
-/// (= min(15, ceil(duration)) of the single task — never model-decided; only meaningful for
-/// start_now, which is only offered on single-task cards).
+/// Proposal set after server-side re-validation of the user's edits (v3 §18): the normalized
+/// proposals to write back, each unpersisted proposal's start/end as instants, and the
+/// server-computed focus minutes (= min(15, ceil(duration)) of the single task — never
+/// model-decided; only meaningful for start_now, which is only offered on single-task cards).
 /// </summary>
-public sealed record ValidatedTaskDraft(
-    TaskDraftPayload Payload,
-    IReadOnlyList<ValidatedTaskDraftItem> Items,
-    int FocusMinutes);
+public sealed record ValidatedProposalSet(
+    IReadOnlyList<TaskProposal> Proposals,
+    IReadOnlyList<ValidatedProposalItem> ToPersist,
+    int FocusMinutes)
+{
+    public bool IsSingle => Proposals.Count == 1;
+}

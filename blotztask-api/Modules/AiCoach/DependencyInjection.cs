@@ -1,17 +1,15 @@
 using BlotzTask.Extension.Options;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
-using BlotzTask.Modules.AiCoach.Ai.ModelTurn;
 using BlotzTask.Modules.AiCoach.Ai.Prompts;
-using BlotzTask.Modules.AiCoach.Ai.Tools;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
 using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Application.Effects;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Application.Projections;
-using BlotzTask.Modules.AiCoach.Domain.Artifacts;
-using BlotzTask.Modules.AiCoach.Domain.Capabilities;
-using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Guards;
+using BlotzTask.Modules.AiCoach.Domain.Kernel;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
-using BlotzTask.Modules.AiCoach.Domain.Rules;
+using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 
@@ -36,40 +34,9 @@ public static class DependencyInjection
         services.AddSingleton<ModeDefinitionRegistry>(_ =>
         {
             var registry = new ModeDefinitionRegistry();
+            // v1 registers Execution only. Clarify/Companion definitions exist for policy-level
+            // tests but have no prompt profile yet, so they must not be reachable.
             registry.Register(ExecutionModeDefinition.Create());
-            return registry;
-        });
-
-        services.AddSingleton<CapabilityRegistry>(_ =>
-        {
-            var registry = new CapabilityRegistry();
-            // The ONLY model capability in v1: one call proposes the whole draft card (1..N
-            // one-off tasks, product decision 2026-08-22). Unlike the old ChatTaskGenerator
-            // "CreateTasks", nothing is saved here — the card is a candidate the user confirms.
-            registry.Register(new CapabilityDefinition(
-                Id: CapabilityId.DraftOneOffCreate,
-                CapabilityVersion: 1,
-                InputSchemaVersion: CreateTaskDraftsHandler.SchemaVersion,
-                OutputSchemaVersion: 1,
-                AllowedInvokers: new HashSet<CapabilityInvoker> { CapabilityInvoker.Model },
-                AllowedModes: new HashSet<AiCoachMode> { AiCoachMode.Execution },
-                // DraftPending is deliberately included: a create request with a pending draft
-                // must reach the domain-invariant check and return PendingDraftAlreadyExists
-                // (§19.3), not a generic state rejection.
-                AllowedStates: new HashSet<ConversationState>
-                {
-                    ConversationState.Conversing,
-                    ConversationState.Clarifying,
-                    ConversationState.DraftPending,
-                },
-                AllowedCurrentArtifacts: new HashSet<ArtifactType> { ArtifactType.TaskDraft },
-                ConsentRequirement: ConsentRequirement.None,
-                ExecutionSemantics: CapabilityExecutionSemantics.ProposesArtifact,
-                ConcurrencyPolicy: CapabilityConcurrencyPolicy.SequentialOnly,
-                ToolName: CapabilityToolProjector.DraftToolName,
-                ToolDescription: CapabilityToolProjector.DraftToolDescription,
-                InputType: typeof(CreateTaskDraftsInput),
-                HandlerType: typeof(CreateTaskDraftsHandler)));
             return registry;
         });
 
@@ -80,17 +47,19 @@ public static class DependencyInjection
             return registry;
         });
 
-        // ---- Domain services (stateless -> singletons) ----
-        services.AddSingleton<IConversationReducer, ConversationReducer>();
-        services.AddSingleton<ICapabilityGuard, CapabilityGuard>();
-        services.AddSingleton<CreateTaskDraftsHandler>();
+        // ---- Pure domain services (stateless -> singletons) ----
+        services.AddSingleton<IConversationKernel, ConversationKernel>();
+        services.AddSingleton<IConversationPrePolicy, ConversationPrePolicy>();
+        services.AddSingleton<IConversationPostPolicy, ConversationPostPolicy>();
+        services.AddSingleton<IEvidenceGuard, EvidenceGuard>();
+        services.AddSingleton<IResponseGuard, ResponseGuard>();
+        services.AddSingleton<IProposalSetGuard, ProposalSetGuard>();
 
         // ---- AI pipeline ----
         services.AddSingleton<IModelPromptAssembler, ModelPromptAssembler>();
-        services.AddSingleton<IModelExecutionFrameBuilder, ExecutionModeFrameBuilder>();
-        services.AddSingleton<ICapabilityDispatcher, CapabilityDispatcher>();
+        services.AddSingleton<IModelContextBuilder, ModelContextBuilder>();
         services.AddSingleton<IModelGateway, AzureOpenAiModelGateway>();
-        services.AddSingleton<IModelTurnExecutor, ModelTurnExecutor>();
+        services.AddSingleton<IModelTurnRuntime, ModelTurnRuntime>();
 
         services.AddSingleton<AiCoachUsageTracker>(sp =>
         {
@@ -107,16 +76,16 @@ public static class DependencyInjection
 
         // ---- Application (scoped: effect handlers depend on scoped DB-backed services) ----
         services.AddScoped<IConversationEffectHandler, GenerateModelTurnEffectHandler>();
-        services.AddScoped<IConversationEffectHandler, PersistDraftEffectHandler>();
-        services.AddScoped<IConversationKernel, ConversationKernel>();
+        services.AddScoped<IConversationEffectHandler, PersistProposalSetEffectHandler>();
+        services.AddScoped<IConversationApplication, ConversationApplication>();
         services.AddScoped<StartConversationCommandHandler>();
         services.AddScoped<TranscribeAudioCommandHandler>();
         services.AddScoped<SendMessageCommandHandler>();
         services.AddScoped<ConfirmDraftCommandHandler>();
         services.AddScoped<RejectDraftCommandHandler>();
 
-        // Fail-fast startup validation (tech design §21.12): a broken registry must stop the
-        // app from starting, not surface mid-conversation.
+        // Fail-fast startup validation (v3 §16.1 spirit): a broken registry must stop the app
+        // from starting, not surface mid-conversation.
         services.AddHostedService<AiCoachStartupValidator>();
 
         return services;
@@ -130,19 +99,27 @@ public static class DependencyInjection
 }
 
 public sealed class AiCoachStartupValidator(
-    IServiceProvider services,
-    CapabilityRegistry capabilityRegistry,
     ModeDefinitionRegistry modeRegistry,
     PromptModuleRegistry promptRegistry,
-    // ReSharper disable once UnusedParameter.Local — forces the usage tracker singleton (and
-    // its TEMPORARY projector wiring) to initialize at startup, not on first model call.
     AiCoachUsageTracker usageTracker) : IHostedService
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        capabilityRegistry.Validate(scope.ServiceProvider, modeRegistry.Definitions.ToList());
+        // Forces the usage tracker singleton (and its TEMPORARY projector wiring) to
+        // initialize at startup, not on first model call.
+        _ = usageTracker;
+
         promptRegistry.Validate();
+
+        // Every registered mode must resolve its prompt profile — a conversation must never be
+        // creatable against an unregistered PromptVersion.
+        foreach (var mode in modeRegistry.Definitions)
+        {
+            if (!promptRegistry.IsRegistered(mode.PromptVersion))
+                throw new InvalidOperationException(
+                    $"Mode '{mode.Mode}' references unregistered prompt profile '{mode.PromptVersion}'.");
+        }
+
         return Task.CompletedTask;
     }
 

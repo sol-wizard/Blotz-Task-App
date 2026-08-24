@@ -16,7 +16,14 @@ public interface IModelGateway
 public sealed record ModelGatewayRequest(
     string SystemPrompt,
     IReadOnlyList<GatewayMessage> Messages,
-    IReadOnlyList<GatewayToolDefinition> Tools);
+    IReadOnlyList<GatewayToolDefinition> Tools,
+    ResponseFormatSpec? ResponseFormat = null);
+
+/// <summary>
+/// Vendor-neutral structured-output request (v3 tech design §10): the model must reply with a
+/// single JSON document matching <paramref name="JsonSchema"/> (strict mode).
+/// </summary>
+public sealed record ResponseFormatSpec(string Name, string JsonSchema);
 
 public sealed record GatewayToolDefinition(
     string Name,

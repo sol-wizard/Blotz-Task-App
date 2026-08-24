@@ -2,27 +2,55 @@ using BlotzTask.Modules.AiCoach.Domain.Conversations;
 
 namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
-/// <summary>
-/// Deterministic server-side prompt assembly (tech design §25.5). Same PromptVersion + snapshot
-/// projection => same modules in the same order, recorded in a body-free manifest. The model
-/// never chooses modules; there is deliberately no load_skill-style tool.
-/// </summary>
-public interface IModelPromptAssembler
+public enum PromptModuleKind
 {
-    AssembledModelPrompt Assemble(PromptAssemblyRequest request);
+    Core = 0,
+    Mode = 1,
+    Phase = 2,
+    Artifact = 3,
 }
+
+public enum PromptModulePlacement
+{
+    StaticPrefix = 0,
+    DynamicSuffix = 1,
+}
+
+/// <summary>
+/// Versioned, code-reviewed prompt module (v3 tech design §9). Content ships with the app as
+/// readonly constants — never assembled from user input, model output or database text. The
+/// model cannot load, replace or unload modules; selection is fully server-side and
+/// deterministic.
+/// </summary>
+public sealed record PromptModuleDefinition(
+    string Id,
+    int Version,
+    PromptModuleKind Kind,
+    PromptModulePlacement Placement,
+    IReadOnlySet<AiCoachMode> AllowedModes,
+    IReadOnlySet<ConversationPhase> AllowedPhases,
+    bool IsRequired,
+    string Content);
+
+/// <summary>
+/// Immutable prompt profile referenced by a conversation's pinned PromptVersion (v3 §6).
+/// Changing any module content requires a new module version and a new profile version.
+/// </summary>
+public sealed record PromptProfile(
+    string PromptVersion,
+    IReadOnlyList<PromptModuleDefinition> Modules);
 
 public sealed record PromptAssemblyRequest(
     string PromptVersion,
     AiCoachMode Mode,
-    ConversationState State);
+    ConversationPhase Phase);
 
 public sealed record AssembledModelPrompt(
     string StaticPrefix,
     string DynamicSuffix,
     PromptManifest Manifest);
 
-/// <summary>Body-free record of what was assembled (§25.8), for logging and evaluation.</summary>
+/// <summary>Body-free record of what was assembled (v3 §9 PromptManifest), for logging.</summary>
 public sealed record PromptManifest(
     string PromptVersion,
     IReadOnlyList<string> StaticModules,
@@ -43,7 +71,9 @@ public sealed class PromptModuleRegistry
             ? profile
             : throw new InvalidOperationException($"Prompt profile '{promptVersion}' is not registered.");
 
-    /// <summary>Startup validation (§25.11): unique module ids, required core modules present.</summary>
+    public bool IsRegistered(string promptVersion) => _profiles.ContainsKey(promptVersion);
+
+    /// <summary>Startup validation: unique module ids, required core module present.</summary>
     public void Validate()
     {
         foreach (var profile in _profiles.Values)
@@ -66,16 +96,26 @@ public sealed class PromptModuleRegistry
     }
 }
 
+/// <summary>
+/// Deterministic server-side prompt assembly (v3 tech design §9). Same PromptVersion + snapshot
+/// projection => same modules in the same order, recorded in a body-free manifest. The model
+/// never chooses modules.
+/// </summary>
+public interface IModelPromptAssembler
+{
+    AssembledModelPrompt Assemble(PromptAssemblyRequest request);
+}
+
 public sealed class ModelPromptAssembler(PromptModuleRegistry registry) : IModelPromptAssembler
 {
     public AssembledModelPrompt Assemble(PromptAssemblyRequest request)
     {
         var profile = registry.Get(request.PromptVersion);
 
-        // Fixed assembly order (§25.5): core -> mode -> state -> artifact -> capability guidance.
-        // Profile registration order already encodes kind ordering; filter by applicability.
+        // Fixed assembly order: core -> mode -> phase -> artifact. Profile registration order
+        // already encodes kind ordering; filter by applicability.
         var applicable = profile.Modules
-            .Where(m => m.AllowedModes.Contains(request.Mode) && m.AllowedStates.Contains(request.State))
+            .Where(m => m.AllowedModes.Contains(request.Mode) && m.AllowedPhases.Contains(request.Phase))
             .ToList();
 
         var staticModules = applicable.Where(m => m.Placement == PromptModulePlacement.StaticPrefix).ToList();

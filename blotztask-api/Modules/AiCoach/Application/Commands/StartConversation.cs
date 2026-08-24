@@ -21,8 +21,9 @@ public class StartConversationCommand
 }
 
 /// <summary>
-/// Creates a fresh Execution-mode conversation (requirements §8.1: every entry into Execution
-/// mode starts a new in-memory session). Version metadata is pinned at creation (§13).
+/// Creates a fresh Execution-mode conversation (every entry into Execution mode starts a new
+/// in-memory session). Runtime versions are pinned at creation (v3 §6) from the mode
+/// definition; an active conversation never picks up new versions on deploy.
 /// </summary>
 public class StartConversationCommandHandler(
     IConversationStore store,
@@ -50,10 +51,7 @@ public class StartConversationCommandHandler(
             UserId = command.UserId,
             Mode = AiCoachMode.Execution,
             TimeZoneId = command.TimeZoneId,
-            PromptVersion = mode.PromptVersion,
-            RuleVersion = mode.RuleVersion,
-            ToolsetVersion = mode.ToolsetVersion,
-            ExecutionFrameVersion = mode.ExecutionFrameVersion,
+            RuntimeVersions = mode.ToRuntimeVersions(protocolVersion: 2),
             CreatedAt = now,
             ExpiresAt = now.AddHours(options.Value.ConversationLifetimeHours),
         };

@@ -1,6 +1,7 @@
 using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Application.Projections;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -145,7 +146,7 @@ public class AiCoachController(
             case ConversationRuleViolationException violation:
                 result = Conflict(new
                 {
-                    errorCode = violation.Violation.ToString(),
+                    errorCode = violation.Rejection.ToWireCode(),
                     conversationSnapshot = ConversationSnapshotProjector.ToDto(violation.Conversation),
                 });
                 return true;

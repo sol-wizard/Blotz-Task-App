@@ -14,7 +14,7 @@ public class SendMessageRequest
     [StringLength(2000, MinimumLength = 1)]
     public required string Content { get; init; }
 
-    /// <summary>Optimistic concurrency (§18): the conversationVersion the client last saw.</summary>
+    /// <summary>Optimistic concurrency: the conversationVersion the client last saw.</summary>
     public int? ExpectedVersion { get; init; }
 }
 
@@ -27,11 +27,11 @@ public class SendMessageCommand
     public int? ExpectedVersion { get; init; }
 }
 
-public class SendMessageCommandHandler(IConversationKernel kernel, TimeProvider clock)
+public class SendMessageCommandHandler(IConversationApplication application, TimeProvider clock)
 {
     public async Task<ConversationSnapshotDto> Handle(SendMessageCommand command, CancellationToken ct = default)
     {
-        var conversation = await kernel.DispatchAsync(
+        var conversation = await application.DispatchAsync(
             command.UserId,
             command.ConversationId,
             command.ExpectedVersion,

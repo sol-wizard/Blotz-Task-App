@@ -3,13 +3,15 @@ using System.Security.Cryptography;
 using System.Text;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Application.Projections;
-using BlotzTask.Modules.AiCoach.Domain.Artifacts;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 
 namespace BlotzTask.Modules.AiCoach.Application.Commands;
 
-// ---------- Contract (tech design §22.4) ----------
+// ---------- Wire contract (schema-2 client, unchanged) ----------
+// "Draft" in these DTO names is the client-facing vocabulary; internally the confirmed thing
+// is the conversation's current ProposalSet (v3 §18).
 
 public class ConfirmDraftRequest
 {
@@ -23,8 +25,8 @@ public class ConfirmDraftRequest
 
 /// <summary>
 /// The card as the user confirms it. Items the user removed from the card are simply absent;
-/// every item present must already be on the draft (the client cannot add tasks the model
-/// never proposed — that is a new conversation turn).
+/// every item present must already be on the set (the client cannot add tasks the model never
+/// proposed — that is a new conversation turn).
 /// </summary>
 public class EditedDraftDto
 {
@@ -71,13 +73,13 @@ public class ClientDirectiveDto
     public required bool ReturnToAi { get; init; }
 }
 
-/// <summary>Field-level validation failure — mapped to HTTP 422 with a stable code (§22.14).</summary>
+/// <summary>Field-level validation failure — mapped to HTTP 422 with a stable code.</summary>
 public sealed class DraftFieldValidationException(string errorCode, string message) : Exception(message)
 {
     public string ErrorCode { get; } = errorCode;
 }
 
-/// <summary>Idempotency conflicts and already-processed drafts — mapped to HTTP 409 (§22.14).</summary>
+/// <summary>Idempotency conflicts and already-processed sets — mapped to HTTP 409.</summary>
 public sealed class DraftConflictException(string errorCode, string message, ConversationSnapshotDto? snapshot = null)
     : Exception(message)
 {
@@ -94,19 +96,19 @@ public class ConfirmDraftCommand
 }
 
 /// <summary>
-/// Draft confirmation (TS-004). Deterministic user command — no model involved. Guarantees for
-/// v1 (in-memory receipts standing in for the AiCoachCommandReceipt table):
-/// - the same draft can only be confirmed once; replays return the first result (§22.5);
+/// Proposal set confirmation (v3 §18): a deterministic user command — zero model calls.
+/// Guarantees (in-memory receipts standing in for the Command Receipt table, §18.1):
+/// - the same set can only be confirmed once; replays return the first result;
 /// - the same commandId with different content returns IdempotencyKeyReused;
-/// - all user-edited fields are re-validated server-side, per item (§22.7);
-/// - items already saved by an earlier (partially failed) attempt keep their stored values and
-///   are not created again;
+/// - all user-edited fields are re-validated server-side, per proposal;
+/// - proposals already saved by an earlier (partially failed) attempt keep their stored values
+///   and are not created again;
 /// - start_now requires exactly one task on the card, shifts it to "now" keeping the full
-///   duration, and focusMinutes = min(15, ceil(duration)) is computed HERE, never by the model (§22.7).
+///   duration, and focusMinutes = min(15, ceil(duration)) is computed HERE, never by the model.
 /// </summary>
 public class ConfirmDraftCommandHandler(
     IConversationStore store,
-    IConversationKernel kernel,
+    IConversationApplication application,
     TimeProvider clock)
 {
     private const string CommandType = "confirm_draft";
@@ -121,8 +123,8 @@ public class ConfirmDraftCommandHandler(
 
         if (request.EditedDraft?.Items is null || request.EditedDraft.Items.Count == 0)
             throw new DraftFieldValidationException("InvalidDraftFields", "The draft must keep at least one task.");
-        if (request.EditedDraft.Items.Count > TaskDraftPayload.MaxItems)
-            throw new DraftFieldValidationException("InvalidDraftFields", $"The draft may hold at most {TaskDraftPayload.MaxItems} tasks.");
+        if (request.EditedDraft.Items.Count > ProposalSet.MaxProposals)
+            throw new DraftFieldValidationException("InvalidDraftFields", $"The draft may hold at most {ProposalSet.MaxProposals} tasks.");
         if (request.EditedDraft.Items.Select(i => i.ItemId).Distinct().Count() != request.EditedDraft.Items.Count)
             throw new DraftFieldValidationException("InvalidDraftFields", "Duplicate task item.");
         if (action == ConversationAction.StartNow && request.EditedDraft.Items.Count != 1)
@@ -130,8 +132,8 @@ public class ConfirmDraftCommandHandler(
 
         var requestHash = ComputeRequestHash(command.DraftId, request);
 
-        // ---- Receipt / replay checks under the conversation lock (§22.5) ----
-        TaskDraftPayload stored;
+        // ---- Receipt / replay checks under the conversation lock (v3 §18.1) ----
+        IReadOnlyList<TaskProposal> stored;
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await LoadOwnedAsync(command.UserId, command.ConversationId, ct);
@@ -148,40 +150,38 @@ public class ConfirmDraftCommandHandler(
                     ConversationSnapshotProjector.ToDto(conversation));
             }
 
-            // Same draft already confirmed by a different command: replay the first result (§22.5).
+            // Same set already confirmed by a different command: replay the first result.
             var firstConfirm = conversation.Receipts.Values.FirstOrDefault(r =>
-                r.ArtifactId == command.DraftId
+                r.ProposalSetId == command.DraftId
                 && r.CommandType == CommandType
                 && r.Status == CommandReceiptStatus.Succeeded);
             if (firstConfirm?.Result is ConfirmDraftResultDto firstResult)
                 return firstResult;
 
-            var artifact = conversation.CurrentArtifact;
-            if (artifact is null || artifact.Id != command.DraftId)
+            var set = conversation.CurrentProposalSet;
+            if (set is null || set.Id != command.DraftId)
                 throw new DraftConflictException(
-                    artifact is null ? "DraftNotFound" : "StaleDraftVersion",
+                    set is null ? "DraftNotFound" : "StaleDraftVersion",
                     "The draft is no longer current.",
                     ConversationSnapshotProjector.ToDto(conversation));
 
-            if (artifact.Status == ArtifactStatus.Rejected)
+            if (set.Status == ProposalSetStatus.Rejected)
                 throw new DraftConflictException("DraftAlreadyRejected", "The draft was rejected.");
-            if (artifact.Status == ArtifactStatus.Processing)
+            if (set.Status == ProposalSetStatus.Processing)
                 throw new DraftConflictException("DraftConfirmationInProgress",
                     "Another confirmation for this draft is in progress.");
 
             if (conversation.Version != request.ExpectedConversationVersion)
                 throw new ConversationVersionConflictException(conversation);
-            if (artifact.Version != request.ExpectedDraftVersion)
+            if (set.Version != request.ExpectedDraftVersion)
                 throw new DraftConflictException("StaleDraftVersion",
                     "The draft changed since the client last saw it.",
                     ConversationSnapshotProjector.ToDto(conversation));
 
-            if (artifact.Payload is not TaskDraftPayload draftPayload)
-                throw new DraftConflictException("DraftNotFound", "The current artifact is not a task draft.");
-            stored = draftPayload;
+            stored = set.Proposals;
 
             // Field validation runs before the receipt is recorded so a 422 leaves no trace.
-            ValidateItemsBelongToDraft(request.EditedDraft, stored);
+            ValidateItemsBelongToSet(request.EditedDraft, stored);
 
             conversation.RecordReceipt(new CommandReceipt(
                 request.CommandId, command.DraftId, CommandType, requestHash,
@@ -189,8 +189,8 @@ public class ConfirmDraftCommandHandler(
             await store.SaveAsync(conversation, ct);
         }
 
-        // ---- Field validation + time resolution (§22.7) ----
-        ValidatedTaskDraft validated;
+        // ---- Field validation + time resolution ----
+        ValidatedProposalSet validated;
         try
         {
             validated = ValidateAndResolve(action.Value, request, stored);
@@ -201,15 +201,15 @@ public class ConfirmDraftCommandHandler(
             throw;
         }
 
-        // ---- Dispatch through the kernel (transaction A -> PersistDraft effect -> transaction B) ----
+        // ---- Dispatch (Transaction A -> PersistProposalSet effect -> Transaction B) ----
         Conversation finalConversation;
         try
         {
-            finalConversation = await kernel.DispatchAsync(
+            finalConversation = await application.DispatchAsync(
                 command.UserId,
                 command.ConversationId,
                 expectedVersion: null, // versions were checked above together with the receipt
-                new ConfirmTaskDraftRequested(request.CommandId, command.DraftId, action.Value, validated),
+                new ConfirmProposalSetRequested(request.CommandId, command.DraftId, action.Value, validated),
                 ct);
         }
         catch (Exception)
@@ -219,11 +219,11 @@ public class ConfirmDraftCommandHandler(
         }
 
         // ---- Build + store the result for replays ----
-        var finalArtifact = finalConversation.CurrentArtifact;
-        var succeeded = finalArtifact is { Status: ArtifactStatus.Accepted };
-        var persistedTaskIds = (finalArtifact?.Payload as TaskDraftPayload)?.Items
-            .Where(i => i.PersistedTaskId.HasValue)
-            .Select(i => i.PersistedTaskId!.Value)
+        var finalSet = finalConversation.CurrentProposalSet;
+        var succeeded = finalSet is { Status: ProposalSetStatus.Completed };
+        var persistedTaskIds = finalSet?.Proposals
+            .Where(p => p.PersistedTaskId.HasValue)
+            .Select(p => p.PersistedTaskId!.Value)
             .ToList() ?? [];
 
         var result = new ConfirmDraftResultDto
@@ -255,9 +255,9 @@ public class ConfirmDraftCommandHandler(
         return result;
     }
 
-    private static void ValidateItemsBelongToDraft(EditedDraftDto edited, TaskDraftPayload stored)
+    private static void ValidateItemsBelongToSet(EditedDraftDto edited, IReadOnlyList<TaskProposal> stored)
     {
-        var known = stored.Items.Select(i => i.ItemId).ToHashSet();
+        var known = stored.Select(p => p.ProposalId).ToHashSet();
         var unknown = edited.Items.FirstOrDefault(i => !known.Contains(i.ItemId));
         if (unknown is not null)
             throw new DraftFieldValidationException("InvalidDraftFields",
@@ -265,23 +265,23 @@ public class ConfirmDraftCommandHandler(
 
         // A task that was already created must not be dropped from the card: the card is the
         // record of what this confirmation produced.
-        var droppedPersisted = stored.Items.FirstOrDefault(i =>
-            i.PersistedTaskId.HasValue && edited.Items.All(e => e.ItemId != i.ItemId));
+        var droppedPersisted = stored.FirstOrDefault(p =>
+            p.PersistedTaskId.HasValue && edited.Items.All(e => e.ItemId != p.ProposalId));
         if (droppedPersisted is not null)
             throw new DraftFieldValidationException("InvalidDraftFields",
-                $"Task item {droppedPersisted.ItemId} was already saved and cannot be removed.");
+                $"Task item {droppedPersisted.ProposalId} was already saved and cannot be removed.");
     }
 
-    private ValidatedTaskDraft ValidateAndResolve(
+    private ValidatedProposalSet ValidateAndResolve(
         ConversationAction action,
         ConfirmDraftRequest request,
-        TaskDraftPayload stored)
+        IReadOnlyList<TaskProposal> stored)
     {
         var now = clock.GetUtcNow();
-        var storedById = stored.Items.ToDictionary(i => i.ItemId);
+        var storedById = stored.ToDictionary(p => p.ProposalId);
 
-        var items = new List<TaskDraftItem>(request.EditedDraft.Items.Count);
-        var resolved = new List<ValidatedTaskDraftItem>(request.EditedDraft.Items.Count);
+        var proposals = new List<TaskProposal>(request.EditedDraft.Items.Count);
+        var toPersist = new List<ValidatedProposalItem>(request.EditedDraft.Items.Count);
         var focusMinutes = 0;
 
         foreach (var edited in request.EditedDraft.Items)
@@ -291,7 +291,7 @@ public class ConfirmDraftCommandHandler(
             // Already a formal task (earlier attempt of this card): keep it exactly as saved.
             if (existing.PersistedTaskId.HasValue)
             {
-                items.Add(existing);
+                proposals.Add(existing);
                 continue;
             }
 
@@ -328,7 +328,7 @@ public class ConfirmDraftCommandHandler(
                 throw new DraftFieldValidationException("InvalidDraftFields",
                     "End time must be after start time (at least one minute).");
 
-            // start_now: shift to now, keep the full duration (§22.7). Only reachable with one item.
+            // start_now: shift to now, keep the full duration. Only reachable with one item.
             if (action == ConversationAction.StartNow)
             {
                 startUtc = now;
@@ -336,15 +336,15 @@ public class ConfirmDraftCommandHandler(
                 focusMinutes = Math.Min(15, (int)Math.Ceiling(duration.TotalMinutes));
             }
 
-            items.Add(new TaskDraftItem(
+            proposals.Add(new TaskProposal(
                 edited.ItemId,
                 title,
                 string.IsNullOrWhiteSpace(edited.Description) ? null : edited.Description.Trim(),
                 date, startTime, endTime, edited.TimeZoneId, edited.LabelId));
-            resolved.Add(new ValidatedTaskDraftItem(edited.ItemId, startUtc, endUtc));
+            toPersist.Add(new ValidatedProposalItem(edited.ItemId, startUtc, endUtc));
         }
 
-        return new ValidatedTaskDraft(new TaskDraftPayload(items), resolved, focusMinutes);
+        return new ValidatedProposalSet(proposals, toPersist, focusMinutes);
     }
 
     private static DateTimeOffset ResolveLocal(DateOnly date, TimeOnly time, TimeZoneInfo timeZone)
@@ -356,7 +356,7 @@ public class ConfirmDraftCommandHandler(
         return new DateTimeOffset(local, timeZone.GetUtcOffset(local));
     }
 
-    /// <summary>Canonicalized business fields only (§22.5) — no field order, no transport noise.</summary>
+    /// <summary>Canonicalized business fields only — no field order, no transport noise.</summary>
     private static string ComputeRequestHash(Guid draftId, ConfirmDraftRequest request)
     {
         var builder = new StringBuilder();

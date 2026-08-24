@@ -20,18 +20,18 @@ public class RejectDraftCommand
 }
 
 /// <summary>
-/// "不要这个": single short transition — artifact Rejected, current pointer cleared, back to
-/// Conversing. No task is created and no new draft is auto-generated (requirements §10.2, §22.8).
+/// "不要这个": single short transition — set Rejected, current pointer cleared, phase FollowUp
+/// (v3 §7.5). No task is created and no new card is auto-generated.
 /// </summary>
 public class RejectDraftCommandHandler(
     IConversationStore store,
-    IConversationKernel kernel)
+    IConversationApplication application)
 {
     private const string CommandType = "reject_draft";
 
     public async Task<ConversationSnapshotDto> Handle(RejectDraftCommand command, CancellationToken ct = default)
     {
-        // Idempotent replay (§17.2).
+        // Idempotent replay (v3 §18.1).
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await store.FindAsync(command.ConversationId, ct);
@@ -49,11 +49,11 @@ public class RejectDraftCommandHandler(
             await store.SaveAsync(conversation, ct);
         }
 
-        var updated = await kernel.DispatchAsync(
+        var updated = await application.DispatchAsync(
             command.UserId,
             command.ConversationId,
             command.Request.ExpectedConversationVersion,
-            new RejectTaskDraftRequested(command.Request.CommandId, command.DraftId),
+            new RejectProposalSetRequested(command.Request.CommandId, command.DraftId),
             ct);
 
         var dto = ConversationSnapshotProjector.ToDto(updated);

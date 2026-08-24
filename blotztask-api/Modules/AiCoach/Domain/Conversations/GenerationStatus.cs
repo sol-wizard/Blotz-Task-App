@@ -1,9 +1,9 @@
 namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
 
 /// <summary>
-/// Orthogonal model-generation dimension (tech design §10). Quota exhaustion, content
+/// Orthogonal model-generation dimension (v3 tech design §6). Quota exhaustion, content
 /// filtering and model outages set <see cref="Blocked"/> plus a <see cref="BlockedReason"/> —
-/// they never fabricate a new <see cref="ConversationState"/>.
+/// they never fabricate a new <see cref="ConversationPhase"/>.
 /// </summary>
 public enum GenerationStatus
 {
@@ -22,13 +22,7 @@ public enum BlockedReason
     Other = 5,
 }
 
-public enum ConversationLifecycleStatus
-{
-    Active = 0,
-    Closed = 1,
-}
-
-/// <summary>Lifecycle of a persisted (in-memory for v1) conversation effect (tech design §10/§17.4).</summary>
+/// <summary>Lifecycle of a persisted (in-memory for v1) conversation effect (v3 tech design §7.4).</summary>
 public enum EffectStatus
 {
     Pending = 0,
@@ -36,4 +30,5 @@ public enum EffectStatus
     Completed = 2,
     Failed = 3,
     Superseded = 4,
+    Cancelled = 5,
 }

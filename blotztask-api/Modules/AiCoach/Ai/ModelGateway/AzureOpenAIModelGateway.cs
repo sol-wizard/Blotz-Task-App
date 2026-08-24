@@ -33,6 +33,15 @@ public sealed class AzureOpenAiModelGateway(
         }
 
         var chatOptions = new ChatCompletionOptions();
+
+        if (request.ResponseFormat is not null)
+        {
+            chatOptions.ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
+                request.ResponseFormat.Name,
+                BinaryData.FromString(request.ResponseFormat.JsonSchema),
+                jsonSchemaIsStrict: true);
+        }
+
         foreach (var tool in request.Tools)
         {
             chatOptions.Tools.Add(ChatTool.CreateFunctionTool(

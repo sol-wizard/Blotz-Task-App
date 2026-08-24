@@ -1,12 +1,14 @@
-using BlotzTask.Modules.AiCoach.Domain.Artifacts;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 
 namespace BlotzTask.Modules.AiCoach.Application.Projections;
 
 /// <summary>
-/// The client protocol response body (tech design §18). The shape is FIXED by the design doc;
-/// when TS-005 replaces this HTTP transport with SignalR the same body is pushed unchanged.
+/// The client protocol response body — schema 2, UNCHANGED from the previous backend: the
+/// mobile client is preserved as-is, so the v3 runtime projects onto this exact shape
+/// (ProposalSet -> task_draft artifact envelope, ConversationPhase -> state string).
+/// Do not add transport-specific fields here.
 /// </summary>
 public sealed class ConversationSnapshotDto
 {
@@ -25,7 +27,7 @@ public sealed class ConversationSnapshotDto
     /// <summary>
     /// TEMPORARY (Ben, 2026-08-24): running token/cost total of this conversation, surfaced in
     /// the app while testing so token usage is visible without watching the API console.
-    /// NOT part of the §18 protocol — remove together with the client's debug line.
+    /// NOT part of the protocol — remove together with the client's debug line.
     /// </summary>
     public DebugUsageDto? DebugUsage { get; init; }
 }
@@ -56,8 +58,8 @@ public sealed class TaskDraftPayloadDto
     /// <summary>Sum of all items' durations.</summary>
     public required int EstimatedMinutes { get; init; }
     /// <summary>
-    /// Server-computed min(15, estimated minutes) preview (requirements §11.1). Only for a
-    /// single-task card — a focus timer is for one task, so a multi-task card has none.
+    /// Server-computed min(15, estimated minutes) preview. Only for a single-task card — a
+    /// focus timer is for one task, so a multi-task card has none.
     /// </summary>
     public int? FocusMinutes { get; init; }
 }
@@ -104,15 +106,7 @@ public static class ConversationSnapshotProjector
                 AiCoachMode.Companion => "companion",
                 _ => "unknown",
             },
-            State = conversation.State switch
-            {
-                ConversationState.Conversing => "conversing",
-                ConversationState.Clarifying => "clarifying",
-                ConversationState.DraftPending => "draft_pending",
-                ConversationState.DraftHandled => "draft_handled",
-                ConversationState.Closed => "closed",
-                _ => "conversing",
-            },
+            State = conversation.Phase.ToWireValue(),
             GenerationStatus = conversation.GenerationStatus switch
             {
                 Domain.Conversations.GenerationStatus.Running => "running",
@@ -129,7 +123,7 @@ public static class ConversationSnapshotProjector
                 _ => "other",
             },
             AssistantMessage = lastAssistantMessage,
-            CurrentArtifact = ToEnvelopeDto(conversation.CurrentArtifact),
+            CurrentArtifact = ToEnvelopeDto(conversation.CurrentProposalSet),
             AllowedActions = conversation.AllowedActions
                 .Select(a => a.ToWireValue())
                 .OrderBy(a => a, StringComparer.Ordinal)
@@ -148,27 +142,27 @@ public static class ConversationSnapshotProjector
         };
     }
 
-    private static ArtifactEnvelopeDto? ToEnvelopeDto(ConversationArtifact? artifact)
+    private static ArtifactEnvelopeDto? ToEnvelopeDto(ProposalSet? set)
     {
-        if (artifact?.Payload is not TaskDraftPayload draft)
+        if (set is null)
             return null;
 
-        var items = draft.Items.Select(item =>
+        var items = set.Proposals.Select(p =>
         {
             var minutes = (int)Math.Ceiling(
-                (item.EndTime.ToTimeSpan() - item.StartTime.ToTimeSpan()).TotalMinutes);
+                (p.EndTime.ToTimeSpan() - p.StartTime.ToTimeSpan()).TotalMinutes);
             return new TaskDraftItemDto
             {
-                ItemId = item.ItemId,
-                Title = item.Title,
-                Description = item.Description,
-                Date = item.Date.ToString("yyyy-MM-dd"),
-                StartTime = item.StartTime.ToString("HH:mm"),
-                EndTime = item.EndTime.ToString("HH:mm"),
-                TimeZoneId = item.TimeZoneId,
-                LabelId = item.LabelId,
+                ItemId = p.ProposalId,
+                Title = p.Title,
+                Description = p.Description,
+                Date = p.Date.ToString("yyyy-MM-dd"),
+                StartTime = p.StartTime.ToString("HH:mm"),
+                EndTime = p.EndTime.ToString("HH:mm"),
+                TimeZoneId = p.TimeZoneId,
+                LabelId = p.LabelId,
                 EstimatedMinutes = minutes,
-                PersistedTaskId = item.PersistedTaskId,
+                PersistedTaskId = p.PersistedTaskId,
             };
         }).ToList();
 
@@ -176,16 +170,17 @@ public static class ConversationSnapshotProjector
 
         return new ArtifactEnvelopeDto
         {
-            Id = artifact.Id,
-            Type = artifact.Type.ToWireValue(),
-            SchemaVersion = artifact.SchemaVersion,
-            Version = artifact.Version,
-            Status = artifact.Status.ToWireValue(),
+            Id = set.Id,
+            // The wire type stays "task_draft": the schema-2 client's card is unchanged.
+            Type = "task_draft",
+            SchemaVersion = ProposalSet.SchemaVersion,
+            Version = set.Version,
+            Status = set.Status.ToWireValue(),
             Payload = new TaskDraftPayloadDto
             {
                 Items = items,
                 EstimatedMinutes = totalMinutes,
-                FocusMinutes = draft.IsSingle ? Math.Min(15, Math.Max(1, totalMinutes)) : null,
+                FocusMinutes = set.IsSingle ? Math.Min(15, Math.Max(1, totalMinutes)) : null,
             },
         };
     }

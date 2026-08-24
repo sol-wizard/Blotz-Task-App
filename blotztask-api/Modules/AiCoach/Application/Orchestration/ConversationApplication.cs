@@ -1,18 +1,19 @@
 using BlotzTask.Modules.AiCoach.Application.Effects;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Kernel;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
-using BlotzTask.Modules.AiCoach.Domain.Rules;
 using BlotzTask.Modules.AiCoach.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
 
-public interface IConversationKernel
+public interface IConversationApplication
 {
     /// <summary>
-    /// Runs one full dispatch cycle: reduce the input event, apply + save ("transaction A"),
-    /// execute requested effects outside the lock, then reduce each effect's result event
-    /// ("transaction B") — the two-phase protocol of tech design §16.1 mapped onto the
-    /// in-memory store. Returns the conversation after the cycle settles.
+    /// Runs one full dispatch cycle (v3 tech design §7): reduce the input event through the
+    /// Kernel and commit under the conversation lock ("Transaction A"), execute requested
+    /// effects outside the lock, then commit each effect's result event ("Transaction B").
+    /// Returns the conversation after the cycle settles.
     /// </summary>
     Task<Conversation> DispatchAsync(
         Guid userId,
@@ -22,32 +23,33 @@ public interface IConversationKernel
         CancellationToken ct);
 }
 
-/// <summary>Thrown when the conversation does not exist or belongs to another user (mapped to 404, §22.6).</summary>
+/// <summary>Thrown when the conversation does not exist or belongs to another user (mapped to 404).</summary>
 public sealed class ConversationNotFoundException()
     : Exception("Conversation not found.");
 
-/// <summary>Version conflict: the caller acted on a stale snapshot. Carries the latest one (§18).</summary>
+/// <summary>Version conflict: the caller acted on a stale snapshot. Carries the latest one.</summary>
 public sealed class ConversationVersionConflictException(Conversation conversation)
     : Exception("Conversation version conflict.")
 {
     public Conversation Conversation { get; } = conversation;
 }
 
-/// <summary>A reducer or guard rejected the input deterministically. Carries the latest conversation.</summary>
-public sealed class ConversationRuleViolationException(RuleViolation violation, Conversation conversation)
-    : Exception($"Rejected by conversation rules: {violation}.")
+/// <summary>The Kernel rejected the input deterministically. Carries the latest conversation.</summary>
+public sealed class ConversationRuleViolationException(TransitionRejection rejection, Conversation conversation)
+    : Exception($"Rejected by conversation rules: {rejection}.")
 {
-    public RuleViolation Violation { get; } = violation;
+    public TransitionRejection Rejection { get; } = rejection;
     public Conversation Conversation { get; } = conversation;
 }
 
-public sealed class ConversationKernel(
+public sealed class ConversationApplication(
     IConversationStore store,
-    IConversationReducer reducer,
+    IConversationKernel kernel,
     ModeDefinitionRegistry modeRegistry,
     IEnumerable<IConversationEffectHandler> effectHandlers,
+    IOptions<AiCoachModuleOptions> options,
     TimeProvider clock,
-    ILogger<ConversationKernel> logger) : IConversationKernel
+    ILogger<ConversationApplication> logger) : IConversationApplication
 {
     /// <summary>Backstop against effect chains that never settle (v1 chains are length 1).</summary>
     private const int MaxEffectChainLength = 5;
@@ -94,10 +96,10 @@ public sealed class ConversationKernel(
                     context.EffectId, conversationId);
                 resultEvent = context.Request switch
                 {
-                    GenerateModelTurnEffectRequest => new ModelGenerationFailed(
+                    GenerateModelTurnEffectRequest => new ModelTurnFailed(
                         context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.Unknown),
-                    PersistDraftEffectRequest persist => new DraftPersistenceFailed(
-                        context.EffectId, persist.ArtifactId, "TaskPersistenceFailed"),
+                    PersistProposalSetEffectRequest persist => new ProposalSetPersistenceFailed(
+                        context.EffectId, persist.ProposalSetId, "TaskPersistenceFailed"),
                     _ => null,
                 };
             }
@@ -115,7 +117,7 @@ public sealed class ConversationKernel(
         return conversation;
     }
 
-    /// <summary>"Transaction A": reduce the input event under the conversation lock and persist.</summary>
+    /// <summary>Transaction A: reduce the input event under the conversation lock and persist.</summary>
     private async Task<(Conversation, IReadOnlyList<EffectExecutionContext>)> ReduceAndCommitAsync(
         Guid userId,
         Guid conversationId,
@@ -130,15 +132,15 @@ public sealed class ConversationKernel(
         if (expectedVersion.HasValue && conversation.Version != expectedVersion.Value)
             throw new ConversationVersionConflictException(conversation);
 
-        var contexts = ReduceApplySave(conversation, input, out var result);
-        if (!result.IsAccepted)
-            throw new ConversationRuleViolationException(result.Violation, conversation);
+        var contexts = ReduceApplySave(conversation, input, out var transition);
+        if (!transition.IsAccepted)
+            throw new ConversationRuleViolationException(transition.Rejection, conversation);
 
         await store.SaveAsync(conversation, ct);
         return (conversation, contexts);
     }
 
-    /// <summary>"Transaction B": validate the effect is still awaited, reduce its result, persist.</summary>
+    /// <summary>Transaction B: validate the effect is still awaited, reduce its result, persist (v3 §7.3).</summary>
     private async Task<(Conversation, IReadOnlyList<EffectExecutionContext>)> CommitEffectResultAsync(
         Guid userId,
         Guid conversationId,
@@ -154,24 +156,24 @@ public sealed class ConversationKernel(
         var effect = conversation.FindEffect(context.EffectId);
         if (effect is null || effect.Status is not (EffectStatus.Pending or EffectStatus.Running))
         {
-            // Late or duplicate result — must not overwrite newer state (§17.4).
+            // Late or duplicate result — must not overwrite newer state (v3 §7.4).
             logger.LogWarning("Dropping stale effect result {EffectId} for conversation {ConversationId}",
                 context.EffectId, conversationId);
             return (conversation, []);
         }
 
-        var contexts = ReduceApplySave(conversation, resultEvent, out var result);
-        if (!result.IsAccepted)
+        var contexts = ReduceApplySave(conversation, resultEvent, out var transition);
+        if (!transition.IsAccepted)
         {
             effect.MarkSuperseded(now);
             await store.SaveAsync(conversation, ct);
             logger.LogWarning(
-                "Effect result {EffectId} rejected by reducer ({Violation}) for conversation {ConversationId}",
-                context.EffectId, result.Violation, conversationId);
+                "Effect result {EffectId} rejected by kernel ({Rejection}) for conversation {ConversationId}",
+                context.EffectId, transition.Rejection, conversationId);
             return (conversation, []);
         }
 
-        var failed = resultEvent is ModelGenerationFailed or DraftPersistenceFailed;
+        var failed = resultEvent is ModelTurnFailed or ProposalSetPersistenceFailed;
         if (failed)
             effect.MarkFailed(now, resultEvent.GetType().Name);
         else
@@ -184,15 +186,18 @@ public sealed class ConversationKernel(
     private List<EffectExecutionContext> ReduceApplySave(
         Conversation conversation,
         ConversationEvent input,
-        out TransitionResult result)
+        out StateTransition transition)
     {
         var mode = modeRegistry.Get(conversation.Mode);
         var snapshot = conversation.ToSnapshot();
-        result = reducer.Reduce(snapshot, input, mode);
-        if (!result.IsAccepted)
+        transition = kernel.Apply(snapshot, input, mode);
+        if (!transition.IsAccepted)
             return [];
 
-        var tracked = conversation.ApplyTransition(result, clock.GetUtcNow());
+        var tracked = conversation.ApplyTransition(
+            transition,
+            clock.GetUtcNow(),
+            TimeSpan.FromSeconds(options.Value.EffectLeaseSeconds));
 
         // Capture everything effects need while still under the lock, so execution itself
         // runs lock-free on a consistent view.
@@ -217,7 +222,7 @@ public sealed class ConversationKernel(
     private async Task<Conversation> LoadOwnedAsync(Guid userId, Guid conversationId, CancellationToken ct)
     {
         var conversation = await store.FindAsync(conversationId, ct);
-        // Ownership failures map to 404 to avoid resource enumeration (§22.6).
+        // Ownership failures map to 404 to avoid resource enumeration.
         if (conversation is null || conversation.UserId != userId)
             throw new ConversationNotFoundException();
         return conversation;
