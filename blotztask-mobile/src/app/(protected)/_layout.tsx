@@ -86,6 +86,7 @@ export default function ProtectedLayout() {
             options={{ headerShown: false, gestureEnabled: false }}
           />
           <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
+          <Stack.Screen name="ai-home" options={{ headerShown: false }} />
           <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
           <Stack.Screen name="badge-details" options={{ headerShown: false }} />
         </Stack>

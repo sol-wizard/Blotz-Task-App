@@ -1,0 +1,60 @@
+{
+  "home": {
+    "greeting": "Hi, I'm Blotz",
+    "intro": "Tell me what you want to do — I'll help you take the next step",
+    "comingSoon": "Coming soon",
+    "modes": {
+      "execution": {
+        "title": "I know what I want to do",
+        "subtitle": "Create a task right away"
+      },
+      "clarify": {
+        "title": "I have stuff — help me sort out the next step",
+        "subtitle": "Untangle your thoughts, find the first step"
+      },
+      "companion": {
+        "title": "I just want to talk",
+        "subtitle": "Whatever's on your mind, tell me"
+      }
+    },
+    "pickModeFirst": "Pick a mode above to start"
+  },
+  "chat": {
+    "title": "Execution mode",
+    "inputPlaceholder": "What do you want to do?",
+    "thinking": "Thinking…",
+    "connecting": "Connecting…",
+    "startError": "Couldn't connect — tap to retry",
+    "sendError": "Failed to send, try again",
+    "quotaBlocked": "You've used this month's AI quota. You can still create tasks manually.",
+    "contentFiltered": "That message triggered the safety filter — try rephrasing.",
+    "modelUnavailable": "The AI is temporarily unavailable. Try again soon.",
+    "createManually": "Create task manually",
+    "listening": "Listening…",
+    "transcribeFailed": "Couldn't catch that, try again",
+    "holdToTalk": "Hold to talk"
+  },
+  "draft": {
+    "startNow": "Start now",
+    "addToTaskList": "Add to task list",
+    "reject": "Not this one",
+    "edit": "Edit",
+    "saveFailed": "Saving the task failed — the card is still here, you can retry.",
+    "focusPreview": "Focus for {{minutes}} min",
+    "taskCount": "{{count}} tasks",
+    "removeTask": "Remove this task",
+    "alreadySaved": "Saved",
+    "addAllToTaskList": "Add all to task list ({{count}})",
+    "rejectAll": "None of these"
+  },
+  "editModal": {
+    "title": "Edit task",
+    "taskTitle": "Title",
+    "date": "Date",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "save": "Save",
+    "cancel": "Cancel",
+    "endBeforeStart": "End time must be after start time"
+  }
+}

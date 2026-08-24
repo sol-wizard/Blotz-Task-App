@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { Redirect } from "expo-router";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
@@ -8,28 +9,31 @@ import { useEffect } from "react";
 
 SplashScreen.preventAutoHideAsync();
 
-// Configure notification handling
-Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    const isBadge = notification.request.content.data?.type === "badge";
-    return {
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-      shouldShowBanner: !isBadge,
-      shouldShowList: !isBadge,
-    };
-  },
-});
-
-Notifications.setNotificationCategoryAsync("task-reminder", [
-  {
-    identifier: "MARK_DONE",
-    buttonTitle: "Mark as done",
-    options: {
-      opensAppToForeground: true,
+// Configure notification handling. Native only: these APIs throw on web, and this module
+// is also evaluated by Expo Router's web/SSR pre-render, which crashes the dev server.
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async (notification) => {
+      const isBadge = notification.request.content.data?.type === "badge";
+      return {
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: !isBadge,
+        shouldShowList: !isBadge,
+      };
     },
-  },
-]);
+  });
+
+  void Notifications.setNotificationCategoryAsync("task-reminder", [
+    {
+      identifier: "MARK_DONE",
+      buttonTitle: "Mark as done",
+      options: {
+        opensAppToForeground: true,
+      },
+    },
+  ]);
+}
 
 /**
  * Root index route - handles initial navigation based on auth state.

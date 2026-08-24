@@ -1,0 +1,60 @@
+{
+  "home": {
+    "greeting": "嗨，我是 Blotz",
+    "intro": "告诉我你想做什么，我陪你迈出下一步",
+    "comingSoon": "即将推出",
+    "modes": {
+      "execution": {
+        "title": "我知道我要做什么",
+        "subtitle": "直接创建任务"
+      },
+      "clarify": {
+        "title": "我有事儿，帮我梳理下一步",
+        "subtitle": "理清思路，找到第一步"
+      },
+      "companion": {
+        "title": "我想聊聊",
+        "subtitle": "想到什么，都可以和我聊聊"
+      }
+    },
+    "pickModeFirst": "先选择上面的一个模式开始"
+  },
+  "chat": {
+    "title": "执行模式",
+    "inputPlaceholder": "想做什么？告诉我",
+    "thinking": "正在想…",
+    "connecting": "正在连接…",
+    "startError": "没连上，点击重试",
+    "sendError": "发送失败，再试一次",
+    "quotaBlocked": "本月的 AI 额度用完了，你仍然可以手动创建任务。",
+    "contentFiltered": "这条消息触发了安全过滤，换个说法试试。",
+    "modelUnavailable": "AI 暂时不可用，稍后再试。",
+    "createManually": "手动创建任务",
+    "listening": "正在听…",
+    "transcribeFailed": "没听清，再试一次",
+    "holdToTalk": "按住说话"
+  },
+  "draft": {
+    "startNow": "现在就开始",
+    "addToTaskList": "加到任务列表",
+    "reject": "不要这个",
+    "edit": "编辑",
+    "saveFailed": "任务保存失败了，卡片还在，可以重试。",
+    "focusPreview": "专注 {{minutes}} 分钟",
+    "taskCount": "{{count}} 个任务",
+    "removeTask": "移除这个任务",
+    "alreadySaved": "已保存",
+    "addAllToTaskList": "全部加到任务列表（{{count}}）",
+    "rejectAll": "都不要"
+  },
+  "editModal": {
+    "title": "编辑任务",
+    "taskTitle": "标题",
+    "date": "日期",
+    "startTime": "开始时间",
+    "endTime": "结束时间",
+    "save": "保存",
+    "cancel": "取消",
+    "endBeforeStart": "结束时间要晚于开始时间"
+  }
+}

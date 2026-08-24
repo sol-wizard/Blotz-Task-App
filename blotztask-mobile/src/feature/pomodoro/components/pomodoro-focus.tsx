@@ -15,9 +15,18 @@ import { formatDuration } from "../utils/format-duration";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
 
 export const PomodoroFocus = () => {
-  const { taskId } = useLocalSearchParams<{ taskId: string }>();
+  const { taskId, focusMinutes } = useLocalSearchParams<{
+    taskId: string;
+    focusMinutes?: string;
+  }>();
   const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
+
+  // AI Coach Focus Sprint: the server-computed min(15, task minutes) overrides the user's
+  // default pomodoro length and always counts down. Absent for normal pomodoro entries.
+  const parsedFocusMinutes = focusMinutes ? Number.parseInt(focusMinutes, 10) : Number.NaN;
+  const sprintMinutes =
+    Number.isFinite(parsedFocusMinutes) && parsedFocusMinutes > 0 ? parsedFocusMinutes : null;
 
   const { session, stopTimer, togglePause, lastCompletion } = usePomodoroTimer();
   const elapsedSeconds = session?.taskId === taskId ? session.elapsedSeconds : 0;
@@ -36,10 +45,15 @@ export const PomodoroFocus = () => {
       if (!currentSession || currentSession.taskId !== taskId) {
         usePomodoroTimer
           .getState()
-          .startTimer(taskId, settings.sound, settings.isCountdown, settings.timing);
+          .startTimer(
+            taskId,
+            settings.sound,
+            sprintMinutes !== null ? true : settings.isCountdown,
+            sprintMinutes ?? settings.timing,
+          );
       }
     }
-  }, [taskId, settings]);
+  }, [taskId, settings, sprintMinutes]);
 
   useEffect(() => {
     if (!lastCompletion || lastCompletion.completionId <= seenCompletionIdRef.current) return;
@@ -53,8 +67,10 @@ export const PomodoroFocus = () => {
   if (!settings || !taskId) return null;
 
   const isPaused = session?.taskId === taskId ? session.isPaused : true;
-  const displaySeconds = settings.isCountdown
-    ? Math.max(0, settings.timing * 60 - elapsedSeconds)
+  const effectiveCountdown = sprintMinutes !== null ? true : settings.isCountdown;
+  const effectiveMinutes = sprintMinutes ?? settings.timing;
+  const displaySeconds = effectiveCountdown
+    ? Math.max(0, effectiveMinutes * 60 - elapsedSeconds)
     : elapsedSeconds;
   const displayTimeStr = formatDuration(displaySeconds);
   const milestoneKey = getMilestoneKey(elapsedSeconds);

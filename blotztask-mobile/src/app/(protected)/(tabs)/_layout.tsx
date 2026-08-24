@@ -97,7 +97,7 @@ export default function ProtectedTabsLayout() {
             tabBarButton: () => (
               <Pressable
                 className="flex-1 items-center justify-center"
-                onPress={() => router.push("/ai-task-sheet")}
+                onPress={() => router.push("/ai-home")}
               >
                 <GradientCircle size={58}>
                   <ASSETS.whiteBun
