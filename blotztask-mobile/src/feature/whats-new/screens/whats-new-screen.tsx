@@ -110,11 +110,12 @@ function IntroCard({ card }: { card: Extract<WhatsNewCard, { type: "intro" }> })
 }
 
 function ScreenshotCard({ card }: { card: Extract<WhatsNewCard, { type: "screenshot" }> }) {
-  const { t } = useTranslation("whatsNew");
+  const { t, i18n } = useTranslation("whatsNew");
+  const image = i18n.language === "en" ? card.imageEn : card.imageZh;
   return (
     <View className="flex-1 items-center px-6 pt-4 pb-2">
       <View className="w-full flex-1 rounded-3xl overflow-hidden mb-6">
-        <Image source={card.image} style={{ flex: 1, width: "100%" }} contentFit="contain" />
+        <Image source={image} style={{ flex: 1, width: "100%" }} contentFit="contain" />
       </View>
       <Text className="text-2xl font-balooBold text-black text-center mb-2">
         {t(card.titleKey)}
