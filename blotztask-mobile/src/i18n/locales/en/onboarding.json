@@ -1,7 +1,8 @@
 {
   "actions": {
     "skip": "Skip",
-    "continue": "Continue"
+    "continue": "Continue",
+    "start": "Get Started"
   },
   "ai-voice": {
     "title": "Just say it, \nWe'll handle the rest.",
@@ -10,6 +11,14 @@
   "breakdown": {
     "title": "Big goals, \nbroken down",
     "subtitle": "Tell AI what you want to achieve. It breaks the goal into small, clear steps you can actually follow."
+  },
+  "invite": {
+    "title": "Got an invite code?",
+    "subtitle": "Enter a friend's code to get started together.",
+    "codePlaceholder": "Enter code",
+    "redeemButton": "Redeem",
+    "redeeming": "Redeeming...",
+    "redeemSuccess": "Code redeemed successfully!"
   },
   "notes": {
     "title": "Catch ideas \nbefore they fade",
