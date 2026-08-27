@@ -10,22 +10,35 @@ namespace BlotzTask.Modules.AiCoach.Domain.Policy;
 /// </summary>
 public static class FallbackCatalog
 {
-    public static string For(StrategyReasonCode reason, string? lastUserMessage)
+    public static string For(
+        StrategyReasonCode reason,
+        string? lastUserMessage,
+        bool allowQuestion = true)
     {
         var chinese = ContainsCjk(lastUserMessage);
+        if (reason == StrategyReasonCode.PendingProposalSetAlreadyExists)
+        {
+            return chinese
+                ? "当前卡片还在等待处理。你可以先调整、确认或删除它，我再继续添加新的安排。"
+                : "The current card is still waiting. Adjust, confirm, or delete it first, then I can add more plans.";
+        }
+
+        if (!allowQuestion)
+        {
+            return chinese
+                ? "我已经记录了这项安排，但暂时无法生成可确认的时间卡片。"
+                : "I recorded this plan, but I could not generate a confirmable time card yet.";
+        }
+
         return reason switch
         {
-            StrategyReasonCode.PendingProposalSetAlreadyExists => chinese
-                ? "当前这张卡片还在等你确认，可以先保存或删掉它，我再帮你安排新的。"
-                : "The current card is still waiting for you — save or reject it first, then I'll set up the next one.",
-
             StrategyReasonCode.ProposalSetMissing or StrategyReasonCode.ProposalSetInvalid => chinese
                 ? "你希望安排在什么时候？"
                 : "When would you like to schedule it?",
 
             StrategyReasonCode.ExplicitActionIntentRequired or StrategyReasonCode.EvidenceInvalid => chinese
-                ? "你想先做哪件具体的事？"
-                : "Which concrete thing do you want to start with?",
+                ? "我还不能确认要安排的具体内容。请换一种说法，或直接让我给一个保守建议。"
+                : "I could not verify what to schedule. Rephrase it, or ask me to make a conservative suggestion.",
 
             _ => chinese
                 ? "抱歉，我刚才没处理好。再说一次你想安排什么？"

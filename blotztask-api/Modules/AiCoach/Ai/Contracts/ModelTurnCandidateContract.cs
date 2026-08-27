@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BlotzTask.Modules.AiCoach.Domain.Candidates;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
@@ -38,7 +39,11 @@ public static class ModelTurnCandidateContract
             {
                 type = "object",
                 additionalProperties = false,
-                required = new[] { "intent", "userExpressedActionIntent", "actionIntentQuote", "userRejectedAction" },
+                required = new[]
+                {
+                    "intent", "userExpressedActionIntent", "actionIntentQuote", "userRejectedAction", "coachDecompositionAuthorized",
+                    "planningItems", "constraint", "constraintEvidenceQuote", "clarificationDisposition",
+                },
                 properties = new
                 {
                     intent = new
@@ -65,6 +70,56 @@ public static class ModelTurnCandidateContract
                         type = "boolean",
                         description = "True when the current message declines or cancels acting.",
                     },
+                    coachDecompositionAuthorized = new
+                    {
+                        type = "boolean",
+                        description = "True only when the user explicitly authorizes you to break a goal or domain into safe default actions (for example: you decide, help me plan, generate a plan).",
+                    },
+                    planningItems = new
+                    {
+                        type = "array",
+                        description = "Only goals, domains, or actionable items explicitly named in the CURRENT user message. "
+                                      + "Never copy items from earlier messages or the active planning intent. "
+                                      + "If the current message only asks to edit, add to, confirm, reject, or discuss an existing card, use an empty array.",
+                        items = new
+                        {
+                            type = "object",
+                            additionalProperties = false,
+                            required = new[] { "text", "evidenceQuote", "kind" },
+                            properties = new
+                            {
+                                text = new { type = "string", description = "A short normalized label for the item." },
+                                evidenceQuote = new
+                                {
+                                    type = "string",
+                                    description = "An exact substring of the current user message proving this item was named.",
+                                },
+                                kind = new
+                                {
+                                    type = "string",
+                                    @enum = new[] { "domain", "goal", "action" },
+                                    description = "domain or goal is not directly schedulable; action is concrete and schedulable.",
+                                },
+                            },
+                        },
+                    },
+                    constraint = new
+                    {
+                        type = new[] { "string", "null" },
+                        description = "A deadline or scheduling constraint explicitly stated in the current message; null if absent.",
+                    },
+                    constraintEvidenceQuote = new
+                    {
+                        type = new[] { "string", "null" },
+                        description = "Exact substring proving the constraint; null when constraint is null.",
+                    },
+                    clarificationDisposition = new
+                    {
+                        type = "string",
+                        @enum = new[] { "not_applicable", "answered", "cannot_provide", "delegated_to_coach", "rejected_question" },
+                        description = "How the CURRENT message responds to the open clarification, if one exists. "
+                                      + "Use cannot_provide for answers such as '不知道' and delegated_to_coach for '你决定'.",
+                    },
                 },
             },
             strategy = new
@@ -82,7 +137,7 @@ public static class ModelTurnCandidateContract
             {
                 type = "object",
                 additionalProperties = false,
-                required = new[] { "type", "text", "question" },
+                required = new[] { "type", "text", "question", "questionTopic" },
                 properties = new
                 {
                     type = new
@@ -109,6 +164,12 @@ public static class ModelTurnCandidateContract
                         type = new[] { "string", "null" },
                         description = "For question types only: the single question you are asking "
                                       + "(also contained in text). Null for other types.",
+                    },
+                    questionTopic = new
+                    {
+                        type = new[] { "string", "null" },
+                        @enum = new[] { "concrete_step", "priority", "scope", "deadline", "other", null },
+                        description = "The information slot this question asks about. Required for question responses; null otherwise.",
                     },
                 },
             },
@@ -214,12 +275,13 @@ public static class ModelTurnCandidateContract
         var text = dto.Response.Text.Trim();
         var question = string.IsNullOrWhiteSpace(dto.Response.Question) ? null : dto.Response.Question.Trim();
 
+        var questionTopic = ParseClarificationTopic(dto.Response.QuestionTopic);
         AssistantResponseCandidate? response = dto.Response.Type switch
         {
             "listening" => new ListeningResponse(text),
-            "gentle_question" when question is not null => new GentleQuestionResponse(text, question),
-            "clarifying_question" when question is not null => new ClarifyingQuestionResponse(text, question),
-            "goal_choice" when question is not null => new GoalChoiceResponse(text, question),
+            "gentle_question" when question is not null => new GentleQuestionResponse(text, question, questionTopic),
+            "clarifying_question" when question is not null => new ClarifyingQuestionResponse(text, question, questionTopic),
+            "goal_choice" when question is not null => new GoalChoiceResponse(text, question, questionTopic),
             "proposal_introduction" => new ProposalIntroductionResponse(text),
             "gentle_question" or "clarifying_question" or "goal_choice" =>
                 null, // question missing — reported below
@@ -258,12 +320,39 @@ public static class ModelTurnCandidateContract
             _ => IntentType.Unknown,
         };
 
+        var planningItems = dto.Signals.PlanningItems?
+            .Where(item => !string.IsNullOrWhiteSpace(item.Text) && !string.IsNullOrWhiteSpace(item.EvidenceQuote))
+            .Select(item => new PlanningItemCandidate(
+                item.Text!.Trim(),
+                item.EvidenceQuote!.Trim(),
+                item.Kind switch
+                {
+                    "domain" => PlanningItemKind.Domain,
+                    "goal" => PlanningItemKind.Goal,
+                    _ => PlanningItemKind.Action,
+                }))
+            .ToList() ?? [];
+
+        var disposition = dto.Signals.ClarificationDisposition switch
+        {
+            "answered" => ClarificationDisposition.Answered,
+            "cannot_provide" => ClarificationDisposition.CannotProvide,
+            "delegated_to_coach" => ClarificationDisposition.DelegatedToCoach,
+            "rejected_question" => ClarificationDisposition.RejectedQuestion,
+            _ => ClarificationDisposition.NotApplicable,
+        };
+
         return ParseResult.Success(new ModelTurnCandidate(
             new InterpretationSignals(
                 intent,
                 dto.Signals.UserExpressedActionIntent,
                 string.IsNullOrWhiteSpace(dto.Signals.ActionIntentQuote) ? null : dto.Signals.ActionIntentQuote,
-                dto.Signals.UserRejectedAction),
+                dto.Signals.UserRejectedAction,
+                dto.Signals.CoachDecompositionAuthorized,
+                planningItems,
+                string.IsNullOrWhiteSpace(dto.Signals.Constraint) ? null : dto.Signals.Constraint.Trim(),
+                string.IsNullOrWhiteSpace(dto.Signals.ConstraintEvidenceQuote) ? null : dto.Signals.ConstraintEvidenceQuote.Trim(),
+                disposition),
             strategy.Value,
             response,
             proposalSet));
@@ -300,6 +389,15 @@ public static class ModelTurnCandidateContract
                && TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
     }
 
+    private static ClarificationTopic ParseClarificationTopic(string? value) => value switch
+    {
+        "priority" => ClarificationTopic.Priority,
+        "scope" => ClarificationTopic.Scope,
+        "deadline" => ClarificationTopic.Deadline,
+        "other" => ClarificationTopic.Other,
+        _ => ClarificationTopic.ConcreteStep,
+    };
+
     public sealed record ParseResult(ModelTurnCandidate? Candidate, string? Error)
     {
         public bool IsSuccess => Candidate is not null;
@@ -325,6 +423,18 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("userExpressedActionIntent")] public bool UserExpressedActionIntent { get; init; }
         [JsonPropertyName("actionIntentQuote")] public string? ActionIntentQuote { get; init; }
         [JsonPropertyName("userRejectedAction")] public bool UserRejectedAction { get; init; }
+        [JsonPropertyName("coachDecompositionAuthorized")] public bool CoachDecompositionAuthorized { get; init; }
+        [JsonPropertyName("planningItems")] public List<PlanningItemJson>? PlanningItems { get; init; }
+        [JsonPropertyName("constraint")] public string? Constraint { get; init; }
+        [JsonPropertyName("constraintEvidenceQuote")] public string? ConstraintEvidenceQuote { get; init; }
+        [JsonPropertyName("clarificationDisposition")] public string? ClarificationDisposition { get; init; }
+    }
+
+    private sealed class PlanningItemJson
+    {
+        [JsonPropertyName("text")] public string? Text { get; init; }
+        [JsonPropertyName("evidenceQuote")] public string? EvidenceQuote { get; init; }
+        [JsonPropertyName("kind")] public string? Kind { get; init; }
     }
 
     private sealed class ResponseJson
@@ -332,6 +442,7 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("type")] public string? Type { get; init; }
         [JsonPropertyName("text")] public string? Text { get; init; }
         [JsonPropertyName("question")] public string? Question { get; init; }
+        [JsonPropertyName("questionTopic")] public string? QuestionTopic { get; init; }
     }
 
     private sealed class ProposalSetJson

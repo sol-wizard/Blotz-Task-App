@@ -113,7 +113,22 @@ public sealed record RecordPersistedTaskMutation(Guid ProposalSetId, Guid Propos
 public sealed record ClearCurrentProposalSetMutation(Guid ProposalSetId) : DomainMutation;
 
 /// <summary>The assistant asked (another) question: track it and count the round.</summary>
-public sealed record SetOpenQuestionMutation(string Question) : DomainMutation;
+public sealed record SetOpenQuestionMutation(
+    string Question,
+    Guid? PlanningIntentId = null,
+    ClarificationTopic Topic = ClarificationTopic.ConcreteStep) : DomainMutation;
+
+public sealed record UpsertPlanningIntentMutation(ActivePlanningIntentSnapshot Intent) : DomainMutation;
+
+public sealed record RecordClarificationAttemptMutation(
+    Guid IntentId,
+    ClarificationTopic Topic) : DomainMutation;
+
+public sealed record UpdatePlanningIntentStatusMutation(
+    Guid IntentId,
+    PlanningIntentStatus Status) : DomainMutation;
+
+public sealed record ResolveOpenQuestionMutation(ClarificationResolution Resolution) : DomainMutation;
 
 public sealed record ClearOpenQuestionMutation : DomainMutation;
 

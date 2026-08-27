@@ -89,18 +89,26 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
             if (current.CurrentProposalSet is { IsOpen: true })
                 return StateTransition.Rejected(TransitionRejection.PendingProposalSetAlreadyExists);
 
+            var mutations = new List<DomainMutation>
+            {
+                new AppendAssistantMessageMutation(outcome.AssistantMessage),
+                new CreateProposalSetMutation(outcome.AcceptedProposals),
+                new ClearOpenQuestionMutation(),
+            };
+            if (outcome.PlanningIntentUpdate is not null)
+                mutations.Insert(0, new UpsertPlanningIntentMutation(outcome.PlanningIntentUpdate));
+            else if (current.ActivePlanningIntent is not null)
+                mutations.Insert(0, new UpdatePlanningIntentStatusMutation(
+                    current.ActivePlanningIntent.IntentId,
+                    PlanningIntentStatus.ProposalPending));
+
             return StateTransition.MoveTo(
                 ConversationPhase.ActionPending,
                 GenerationStatus.Idle,
                 ActionSets.ForPendingSet(outcome.AcceptedProposals.Count == 1),
                 addFacts: Facts.Of(ConversationFact.HasPendingProposalSet),
                 removeFacts: Facts.Of(ConversationFact.HasRunningModelEffect, ConversationFact.HasOpenQuestion),
-                mutations:
-                [
-                    new AppendAssistantMessageMutation(outcome.AssistantMessage),
-                    new CreateProposalSetMutation(outcome.AcceptedProposals),
-                    new ClearOpenQuestionMutation(),
-                ],
+                mutations: mutations,
                 events: [new ProposalSetCreated(outcome.AcceptedProposals.Count)]);
         }
 
@@ -110,20 +118,48 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
             && current.Phase != ConversationPhase.ActionPending
             && !string.IsNullOrWhiteSpace(outcome.Question))
         {
+            var intent = outcome.PlanningIntentUpdate ?? current.ActivePlanningIntent;
+            var topic = outcome.QuestionTopic ?? ClarificationTopic.ConcreteStep;
+            var mutations = new List<DomainMutation>();
+            if (outcome.PlanningIntentUpdate is not null)
+                mutations.Add(new UpsertPlanningIntentMutation(outcome.PlanningIntentUpdate));
+            mutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage));
+            mutations.Add(new SetOpenQuestionMutation(outcome.Question!, intent?.IntentId, topic));
+            if (intent is not null)
+                mutations.Add(new RecordClarificationAttemptMutation(intent.IntentId, topic));
+
             return StateTransition.MoveTo(
                 ConversationPhase.ActionPreparing,
                 GenerationStatus.Idle,
                 ActionSets.ChatOnly,
                 addFacts: Facts.Of(ConversationFact.HasOpenQuestion),
                 removeFacts: Facts.Of(ConversationFact.HasRunningModelEffect),
-                mutations:
-                [
-                    new AppendAssistantMessageMutation(outcome.AssistantMessage),
-                    new SetOpenQuestionMutation(outcome.Question!),
-                ]);
+                mutations: mutations);
         }
 
         // Plain reply: the phase and any pending card stay untouched.
+        var plainMutations = new List<DomainMutation>();
+        if (outcome.PlanningIntentUpdate is not null)
+            plainMutations.Add(new UpsertPlanningIntentMutation(outcome.PlanningIntentUpdate));
+        if (outcome.ClarificationResolution is not null && current.OpenQuestion is not null)
+        {
+            plainMutations.Add(new ResolveOpenQuestionMutation(outcome.ClarificationResolution.Value));
+            plainMutations.Add(new ClearOpenQuestionMutation());
+            if (current.ActivePlanningIntent is { } intent
+                && outcome.ClarificationResolution is ClarificationResolution.UserCannotProvide
+                    or ClarificationResolution.DelegatedToCoach
+                    or ClarificationResolution.Superseded)
+            {
+                plainMutations.Add(new UpdatePlanningIntentStatusMutation(
+                    intent.IntentId,
+                    PlanningStateRules.NextIntentStatus(
+                        intent.Status,
+                        outcome.ClarificationResolution,
+                        proposalAccepted: false)));
+            }
+        }
+        plainMutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage));
+
         return StateTransition.MoveTo(
             current.Phase,
             GenerationStatus.Idle,
@@ -131,7 +167,7 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
                 ? ActionSets.ForPendingSet(current.CurrentProposalSet)
                 : ActionSets.ChatOnly,
             removeFacts: Facts.Of(ConversationFact.HasRunningModelEffect),
-            mutations: [new AppendAssistantMessageMutation(outcome.AssistantMessage)]);
+            mutations: plainMutations);
     }
 }
 
@@ -231,7 +267,7 @@ public sealed class ConfirmProposalSetRequestedHandler : IConversationTransition
 
 /// <summary>
 /// User rejected the set: terminal Rejected, current set cleared, phase FollowUp (v3 §7.5).
-/// No task is created and no new card is auto-generated.
+/// The planning intent remains recoverable so a later user message can request a revised draft.
 /// </summary>
 public sealed class RejectProposalSetRequestedHandler : IConversationTransitionHandler<RejectProposalSetRequested>
 {
@@ -254,17 +290,25 @@ public sealed class RejectProposalSetRequestedHandler : IConversationTransitionH
         if (current.CurrentProposalSet.Status is not (ProposalSetStatus.Pending or ProposalSetStatus.PartiallyFailed))
             return StateTransition.Rejected(TransitionRejection.InvalidPhase);
 
+        var mutations = new List<DomainMutation>
+        {
+            new UpdateProposalSetStatusMutation(input.ProposalSetId, ProposalSetStatus.Rejected),
+            new ClearCurrentProposalSetMutation(input.ProposalSetId),
+        };
+        if (current.ActivePlanningIntent is not null)
+        {
+            mutations.Add(new UpdatePlanningIntentStatusMutation(
+                current.ActivePlanningIntent.IntentId,
+                PlanningIntentStatus.ReadyForProposal));
+        }
+
         return StateTransition.MoveTo(
             ConversationPhase.FollowUp,
             GenerationStatus.Idle,
             ActionSets.ChatOnly,
             addFacts: Facts.Of(ConversationFact.HasRejectedProposal),
             removeFacts: Facts.Of(ConversationFact.HasPendingProposalSet),
-            mutations:
-            [
-                new UpdateProposalSetStatusMutation(input.ProposalSetId, ProposalSetStatus.Rejected),
-                new ClearCurrentProposalSetMutation(input.ProposalSetId),
-            ],
+            mutations: mutations,
             events: [new ProposalSetRejected(input.ProposalSetId)]);
     }
 }
@@ -296,6 +340,12 @@ public sealed class ProposalSetPersistenceSucceededHandler
         foreach (var item in input.PersistedProposals)
             mutations.Add(new RecordPersistedTaskMutation(input.ProposalSetId, item.ProposalId, item.TaskId));
         mutations.Add(new UpdateProposalSetStatusMutation(input.ProposalSetId, ProposalSetStatus.Completed));
+        if (current.ActivePlanningIntent is not null)
+        {
+            mutations.Add(new UpdatePlanningIntentStatusMutation(
+                current.ActivePlanningIntent.IntentId,
+                PlanningIntentStatus.Completed));
+        }
 
         return StateTransition.MoveTo(
             ConversationPhase.FollowUp,

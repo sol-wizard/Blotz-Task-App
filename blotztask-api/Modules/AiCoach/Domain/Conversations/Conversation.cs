@@ -26,6 +26,7 @@ public sealed class Conversation
     public BlockedReason BlockedReason { get; private set; } = BlockedReason.None;
     public int Version { get; private set; }
     public OpenQuestionSnapshot? OpenQuestion { get; private set; }
+    public ActivePlanningIntentSnapshot? ActivePlanningIntent { get; private set; }
     public ProposalSet? CurrentProposalSet { get; private set; }
 
     private readonly HashSet<ConversationFact> _facts = [];
@@ -62,7 +63,8 @@ public sealed class Conversation
         OpenQuestion,
         new HashSet<ConversationFact>(_facts),
         AllowedActions,
-        RuntimeVersions);
+        RuntimeVersions,
+        ActivePlanningIntent);
 
     public TrackedEffect? FindEffect(Guid effectId) => _effects.FirstOrDefault(e => e.Id == effectId);
 
@@ -172,7 +174,39 @@ public sealed class Conversation
                 break;
 
             case SetOpenQuestionMutation m:
-                OpenQuestion = new OpenQuestionSnapshot(m.Question, (OpenQuestion?.RoundsAsked ?? 0) + 1);
+                var previousAttempts = OpenQuestion is { } current
+                                       && current.PlanningIntentId == m.PlanningIntentId
+                                       && current.Topic == m.Topic
+                    ? current.RoundsAsked
+                    : 0;
+                OpenQuestion = new OpenQuestionSnapshot(
+                    m.Question,
+                    previousAttempts + 1,
+                    m.PlanningIntentId,
+                    m.Topic,
+                    ClarificationResolution.AwaitingAnswer);
+                break;
+
+            case UpsertPlanningIntentMutation m:
+                ActivePlanningIntent = m.Intent;
+                break;
+
+            case RecordClarificationAttemptMutation m when ActivePlanningIntent?.IntentId == m.IntentId:
+                ActivePlanningIntent = ActivePlanningIntent with
+                {
+                    AskedTopics = new HashSet<ClarificationTopic>(
+                        (ActivePlanningIntent.AskedTopics ?? new HashSet<ClarificationTopic>())
+                        .Append(m.Topic)),
+                    Status = PlanningIntentStatus.Collecting,
+                };
+                break;
+
+            case UpdatePlanningIntentStatusMutation m when ActivePlanningIntent?.IntentId == m.IntentId:
+                ActivePlanningIntent = ActivePlanningIntent with { Status = m.Status };
+                break;
+
+            case ResolveOpenQuestionMutation m when OpenQuestion is not null:
+                OpenQuestion = OpenQuestion with { Resolution = m.Resolution };
                 break;
 
             case ClearOpenQuestionMutation:

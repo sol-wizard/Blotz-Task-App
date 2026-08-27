@@ -1,4 +1,5 @@
 using BlotzTask.Modules.AiCoach.Domain.Policy;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Candidates;
 
@@ -23,7 +24,25 @@ public sealed record InterpretationSignals(
     IntentType Intent,
     bool UserExpressedActionIntent,
     string? ActionIntentQuote,
-    bool UserRejectedAction);
+    bool UserRejectedAction,
+    bool CoachDecompositionAuthorized = false,
+    IReadOnlyList<PlanningItemCandidate>? PlanningItems = null,
+    string? Constraint = null,
+    string? ConstraintEvidenceQuote = null,
+    ClarificationDisposition ClarificationDisposition = ClarificationDisposition.NotApplicable);
+
+/// <summary>A model-proposed item plus a literal quote used by Evidence Guard.</summary>
+public sealed record PlanningItemCandidate(
+    string Text,
+    string EvidenceQuote,
+    PlanningItemKind Kind = PlanningItemKind.Action);
+
+public enum PlanningItemKind
+{
+    Domain = 0,
+    Goal = 1,
+    Action = 2,
+}
 
 public enum IntentType
 {
@@ -45,11 +64,20 @@ public abstract record AssistantResponseCandidate(string Text);
 
 public sealed record ListeningResponse(string Text) : AssistantResponseCandidate(Text);
 
-public sealed record GentleQuestionResponse(string Text, string Question) : AssistantResponseCandidate(Text);
+public sealed record GentleQuestionResponse(
+    string Text,
+    string Question,
+    ClarificationTopic Topic = ClarificationTopic.ConcreteStep) : AssistantResponseCandidate(Text);
 
-public sealed record ClarifyingQuestionResponse(string Text, string Question) : AssistantResponseCandidate(Text);
+public sealed record ClarifyingQuestionResponse(
+    string Text,
+    string Question,
+    ClarificationTopic Topic = ClarificationTopic.ConcreteStep) : AssistantResponseCandidate(Text);
 
-public sealed record GoalChoiceResponse(string Text, string Question) : AssistantResponseCandidate(Text);
+public sealed record GoalChoiceResponse(
+    string Text,
+    string Question,
+    ClarificationTopic Topic = ClarificationTopic.Priority) : AssistantResponseCandidate(Text);
 
 public sealed record ProposalIntroductionResponse(string Text) : AssistantResponseCandidate(Text);
 

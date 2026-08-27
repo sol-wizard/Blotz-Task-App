@@ -16,22 +16,82 @@ public interface IEvidenceGuard
     EvidenceVerdict Verify(InterpretationSignals signals, string currentUserMessage);
 }
 
-public sealed record EvidenceVerdict(bool ActionIntentVerified, string? Detail);
+public sealed record VerifiedPlanningItem(string Text, string EvidenceQuote, PlanningItemKind Kind);
+
+public sealed record EvidenceVerdict(
+    bool ActionIntentVerified,
+    IReadOnlyList<VerifiedPlanningItem> PlanningItems,
+    IReadOnlyList<VerifiedPlanningItem> ActionItems,
+    bool CoachDecompositionAuthorized,
+    string? Constraint,
+    string? ConstraintEvidenceQuote,
+    string? Detail);
 
 public sealed class EvidenceGuard : IEvidenceGuard
 {
     public EvidenceVerdict Verify(InterpretationSignals signals, string currentUserMessage)
     {
-        if (!signals.UserExpressedActionIntent)
-            return new EvidenceVerdict(false, null);
+        var details = new List<string>();
+        var verifiedItems = new List<VerifiedPlanningItem>();
 
-        if (string.IsNullOrWhiteSpace(signals.ActionIntentQuote))
-            return new EvidenceVerdict(false, "Action intent was claimed without an evidence quote.");
+        foreach (var item in signals.PlanningItems ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(item.Text)
+                || string.IsNullOrWhiteSpace(item.EvidenceQuote)
+                || !ContainsQuote(currentUserMessage, item.EvidenceQuote))
+            {
+                details.Add($"Planning item '{item.Text}' has no valid quote in the current message.");
+                continue;
+            }
 
-        return Normalize(currentUserMessage).Contains(Normalize(signals.ActionIntentQuote), StringComparison.OrdinalIgnoreCase)
-            ? new EvidenceVerdict(true, null)
-            : new EvidenceVerdict(false, "The evidence quote does not appear in the current user message.");
+            verifiedItems.Add(new VerifiedPlanningItem(item.Text.Trim(), item.EvidenceQuote.Trim(), item.Kind));
+        }
+
+        string? verifiedConstraint = null;
+        string? verifiedConstraintQuote = null;
+        if (!string.IsNullOrWhiteSpace(signals.Constraint))
+        {
+            if (!string.IsNullOrWhiteSpace(signals.ConstraintEvidenceQuote)
+                && ContainsQuote(currentUserMessage, signals.ConstraintEvidenceQuote))
+            {
+                verifiedConstraint = signals.Constraint.Trim();
+                verifiedConstraintQuote = signals.ConstraintEvidenceQuote.Trim();
+            }
+            else
+            {
+                details.Add("The planning constraint has no valid quote in the current message.");
+            }
+        }
+
+        var actionIntentVerified = false;
+        if (signals.UserExpressedActionIntent)
+        {
+            if (string.IsNullOrWhiteSpace(signals.ActionIntentQuote))
+            {
+                details.Add("Action intent was claimed without an evidence quote.");
+            }
+            else if (ContainsQuote(currentUserMessage, signals.ActionIntentQuote))
+            {
+                actionIntentVerified = true;
+            }
+            else
+            {
+                details.Add("The action-intent quote does not appear in the current user message.");
+            }
+        }
+
+        return new EvidenceVerdict(
+            actionIntentVerified,
+            verifiedItems,
+            verifiedItems.Where(item => item.Kind == PlanningItemKind.Action).ToList(),
+            signals.CoachDecompositionAuthorized && actionIntentVerified,
+            verifiedConstraint,
+            verifiedConstraintQuote,
+            details.Count == 0 ? null : string.Join(" ", details));
     }
+
+    private static bool ContainsQuote(string message, string quote) =>
+        Normalize(message).Contains(Normalize(quote), StringComparison.OrdinalIgnoreCase);
 
     private static string Normalize(string text) =>
         string.Concat(text.Where(c => !char.IsWhiteSpace(c)));

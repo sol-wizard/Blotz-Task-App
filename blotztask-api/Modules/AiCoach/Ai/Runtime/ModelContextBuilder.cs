@@ -80,8 +80,20 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
             lines.Add($"Current draft card: {summary} ({set.Status})");
         }
 
+        if (snapshot.ActivePlanningIntent is { CanSupportProposal: true } intent)
+        {
+            lines.Add("Active user-verified planning intent: "
+                      + string.Join(", ", intent.Items.Select(item => $"\"{item.Text}\"")));
+            if (!string.IsNullOrWhiteSpace(intent.Constraint))
+                lines.Add($"Active user-verified constraint: {intent.Constraint}");
+            if (intent.AskedTopics is { Count: > 0 })
+                lines.Add("Clarification slots already used: " + string.Join(", ", intent.AskedTopics));
+        }
+
         if (snapshot.OpenQuestion is { } question)
-            lines.Add($"Your open question (asked {question.RoundsAsked}x): \"{question.Question}\" - never repeat it.");
+            lines.Add($"Your open question about {question.Topic} (asked {question.RoundsAsked}x): "
+                      + $"\"{question.Question}\". This slot is spent: do not repeat or replace it with another question; "
+                      + "use the answer or a safe default.");
 
         lines.AddRange(new[]
         {

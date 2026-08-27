@@ -19,14 +19,19 @@ public sealed record ConversationSnapshot(
     OpenQuestionSnapshot? OpenQuestion,
     IReadOnlySet<ConversationFact> Facts,
     IReadOnlySet<ConversationAction> AllowedActions,
-    ConversationRuntimeVersions RuntimeVersions);
+    ConversationRuntimeVersions RuntimeVersions,
+    ActivePlanningIntentSnapshot? ActivePlanningIntent = null);
 
 /// <summary>
-/// The unanswered question the assistant asked, plus how many question rounds have been spent
-/// (product rule: after two rounds without the missing information the model must propose a
-/// conservative plan instead of asking again — enforced via the Execution Frame objective).
+/// A structured clarification bound to a planning intent and information slot. Attempts are
+/// counted per intent + topic, rather than as a global conversation question counter.
 /// </summary>
-public sealed record OpenQuestionSnapshot(string Question, int RoundsAsked);
+public sealed record OpenQuestionSnapshot(
+    string Question,
+    int RoundsAsked,
+    Guid? PlanningIntentId = null,
+    ClarificationTopic Topic = ClarificationTopic.ConcreteStep,
+    ClarificationResolution Resolution = ClarificationResolution.AwaitingAnswer);
 
 /// <summary>
 /// Versions pinned when the conversation is created (v3 tech design §6): an active conversation

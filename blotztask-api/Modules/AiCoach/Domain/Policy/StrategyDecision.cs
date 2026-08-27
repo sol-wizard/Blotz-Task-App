@@ -37,4 +37,7 @@ public enum StrategyReasonCode
     ResponseInvalid = 9,
     ModelResponseInvalid = 10,
     UserRejectedAction = 11,
+    ClarificationSlotAlreadyAsked = 12,
+    ActionableIntentRequiresProposal = 13,
+    ClarificationResolvedRequiresProposal = 14,
 }

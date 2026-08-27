@@ -51,7 +51,8 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
         outcome.AcceptedProposals.Should().NotBeNull(
             $"delegation must yield a card, but the turn ended in {outcome.FinalStrategy} "
             + $"({outcome.ReasonCode}) with reply: \"{outcome.AssistantMessage}\"");
-        outcome.AcceptedProposals!.Count.Should().BeInRange(2, 4, "a goal breaks into the first few small steps");
+        outcome.AcceptedProposals!.Should().NotBeEmpty(
+            "the runtime may generate one or more conservative, reversible proposals");
         outcome.AssistantMessage.Should().NotContain("哪件具体的事", "never repeat the clarifying question");
         output.WriteLine($"proposals: {string.Join(" | ", outcome.AcceptedProposals.Select(p => $"{p.Title} {p.Date} {p.StartTime}"))}");
         output.WriteLine($"reply: {outcome.AssistantMessage}");
@@ -76,23 +77,22 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task PureGoal_FirstTurn_AsksOneQuestion_NoProposals()
+    public async Task BroadGoal_FirstTurn_ProducesConservativeProposal()
     {
         var result = await RunTurnAsync(
             ConversationPhase.Conversing,
             openQuestion: null,
-            [User("我想要在两周内完成论文摘要")]);
+            [User("我想改善自己的生活安排")]);
         if (result is null) return;
 
         result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
         var outcome = result.Outcome!;
-        outcome.AcceptedProposals.Should().BeNull(
-            $"a pure goal earns one clarifying question first, but the model proposed: "
-            + $"{(outcome.AcceptedProposals is null ? "-" : string.Join(", ", outcome.AcceptedProposals.Select(p => p.Title)))}");
-        outcome.FallbackUsed.Should().BeFalse(
-            $"the model itself should choose to ask, not be downgraded ({outcome.ReasonCode})");
-        outcome.AssistantMessage.Should().Contain("？", "the whole reply is one question");
-        output.WriteLine($"question: {outcome.AssistantMessage}");
+        outcome.AcceptedProposals.Should().NotBeNull(
+            $"a broad low-risk goal should receive a conservative starter card, but the turn ended in "
+            + $"{outcome.FinalStrategy} ({outcome.ReasonCode}) with reply: \"{outcome.AssistantMessage}\"");
+        outcome.AcceptedProposals!.Should().NotBeEmpty();
+        outcome.AssistantMessage.Should().NotContain("哪件具体的事", "the coach should provide a default instead of deflecting the decision");
+        output.WriteLine($"proposals: {string.Join(" | ", outcome.AcceptedProposals.Select(p => $"{p.Title} {p.Date} {p.StartTime}"))}");
     }
 
     // ---------- Real-pipeline harness ----------

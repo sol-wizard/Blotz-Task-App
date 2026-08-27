@@ -75,7 +75,10 @@ public sealed record ValidatedTurnOutcome(
     string AssistantMessage,
     string? Question,
     IReadOnlyList<TaskProposal>? AcceptedProposals,
-    bool FallbackUsed);
+    bool FallbackUsed,
+    ActivePlanningIntentSnapshot? PlanningIntentUpdate = null,
+    ClarificationTopic? QuestionTopic = null,
+    ClarificationResolution? ClarificationResolution = null);
 
 // ---------- Deterministic business result events ----------
 
