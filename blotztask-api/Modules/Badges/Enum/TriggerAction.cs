@@ -2,5 +2,7 @@ namespace BlotzTask.Modules.Badges.Enum;
 
 public enum TriggerAction
 {
-    TaskComplete
+    TaskComplete,
+    //To do
+    InviteRedeemed
 }
