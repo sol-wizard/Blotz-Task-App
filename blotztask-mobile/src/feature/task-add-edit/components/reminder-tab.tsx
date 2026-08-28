@@ -10,7 +10,7 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { TimeFormValues } from "../models/task-form-schema";
 
-export const ReminderTab = ({ animateOnEnter = false }: { animateOnEnter?: boolean }) => {
+export const ReminderTab = ({ animateOnEnter = true }: { animateOnEnter?: boolean }) => {
   const { control, setValue, clearErrors } = useFormContext<TimeFormValues>();
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 

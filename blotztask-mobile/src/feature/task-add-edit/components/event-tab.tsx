@@ -20,7 +20,7 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({ animateOnEnter = false }: { animateOnEnter?: boolean }) => {
+export const EventTab = ({ animateOnEnter = true }: { animateOnEnter?: boolean }) => {
   const { control, trigger, clearErrors } = useFormContext<TimeFormValues>();
 
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
