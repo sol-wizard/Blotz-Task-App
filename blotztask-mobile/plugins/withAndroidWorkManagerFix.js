@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { withProjectBuildGradle, createRunOncePlugin } = require("expo/config-plugins");
 const PLUGIN_NAME = "withAndroidWorkManagerFix";
 const MARKER_START = "// @generated begin withAndroidWorkManagerFix";
