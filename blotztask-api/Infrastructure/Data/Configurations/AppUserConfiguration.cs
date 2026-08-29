@@ -12,5 +12,6 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.HasIndex(u => u.Auth0UserId)
             .IsUnique();
+
     }
 }
