@@ -1,6 +1,6 @@
 import { BadgePreviewDTO } from "../models/badge-preview-dto";
 
-const PREVIEW_SLOTS = 3;
+export const PREVIEW_SLOTS = 3;
 
 type EquippedBadge = BadgePreviewDTO & { equippedSlot: number };
 
