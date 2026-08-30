@@ -1,3 +1,7 @@
+import widgetConfig from "./app-widget.config.cjs";
+
+const { androidWidgetConfig, iosWidgetConfig } = widgetConfig;
+
 export default {
   expo: {
     name: "BlotzTask",
@@ -12,6 +16,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask",
+      usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         CFBundleDevelopmentRegion: "en",
@@ -31,12 +36,16 @@ export default {
         NSLocationWhenInUseUsageDescription:
           "BlotzTask uses your location to provide location-aware features when you choose to use them. Your location is not stored.",
       },
-      appleTeamId: "LXC29JARY5",
+      appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? "Z6GFDAYSP9",
       icon: "./assets/images-png/blotz-icon.png",
     },
     android: {
       package: "com.blotz.blotztask",
       permissions: ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"],
+      blockedPermissions: [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+      ],
     },
     web: {
       bundler: "metro",
@@ -67,13 +76,6 @@ export default {
         },
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
-      [
-        "expo-calendar",
-        {
-          calendarPermission:
-            "BlotzTask needs calendar access to sync your tasks into Apple Calendar.",
-        },
-      ],
       "expo-asset",
       "expo-build-properties",
       "@react-native-vector-icons/ionicons",
@@ -92,6 +94,12 @@ export default {
         },
       ],
       "expo-status-bar",
+      [
+        "expo-widgets",
+        iosWidgetConfig,
+      ],
+      ["react-native-android-widget", androidWidgetConfig],
+      "./plugins/withAndroidWorkManagerFix",
     ],
     experiments: {
       typedRoutes: true,

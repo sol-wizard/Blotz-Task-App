@@ -31,6 +31,8 @@ import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
+import { mapExtractedRecurringToDTO } from "../utils/map-extracted-recurring-to-dto";
+import { mapRecurringToCreateDTO } from "../utils/map-recurring-to-create-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
@@ -63,10 +65,12 @@ export default function AiTaskSheetScreen() {
     turns,
     streamedTasks,
     streamedNotes,
+    streamedRecurringTasks,
     submitAudioForTranscription,
     sendTextMessage,
     deleteDraftTask,
     deleteDraftNote,
+    deleteDraftRecurringTask,
   } = useAiTaskGenerator({
     setIsAiGenerating,
   });
@@ -74,7 +78,8 @@ export default function AiTaskSheetScreen() {
   const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
-  const { addTaskAsync, isAdding } = useTaskMutations();
+  const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
+    useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
   // Request mic permission on mount; navigate back if denied
@@ -96,8 +101,12 @@ export default function AiTaskSheetScreen() {
   const displayTasks = streamedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
+  const displayRecurringTasks = streamedRecurringTasks.map((task) =>
+    mapExtractedRecurringToDTO(task, labels ?? []),
+  );
   const displayNotes = streamedNotes;
-  const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
+  const hasContent =
+    streamedTasks.length > 0 || streamedRecurringTasks.length > 0 || streamedNotes.length > 0;
 
   // --- Handlers ---
   const handleDismiss = () => {
@@ -124,10 +133,24 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleAddAll = async () => {
-    if (isAdding || isNoteCreating) return;
+    if (isAdding || isNoteCreating || isCreatingRecurringTask) return;
 
     const results = await Promise.allSettled([
-      ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
+      ...displayTasks.map(async (task) => {
+        // Fire per successful task, not behind the all-succeed gate below, so a partial
+        // failure still records the tasks that did land.
+        const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
+        analytics.trackTaskCreated({ taskId, source: "ai", isRecurring: false, hasDeadline: false });
+      }),
+      ...displayRecurringTasks.map(async (task) => {
+        const { recurringTaskId } = await createRecurringTaskAsync(mapRecurringToCreateDTO(task));
+        analytics.trackTaskCreated({
+          taskId: recurringTaskId,
+          source: "ai",
+          isRecurring: true,
+          hasDeadline: false,
+        });
+      }),
       ...displayNotes.map((n) => createNoteAsync({ text: n.text, isPersistent: false })),
     ]);
 
@@ -194,8 +217,10 @@ export default function AiTaskSheetScreen() {
               <Animated.View className="w-full flex-1" style={listKeyboardPad}>
                 <AiResultList
                   aiTasks={displayTasks}
+                  aiRecurringTasks={displayRecurringTasks}
                   aiNotes={displayNotes}
                   onDeleteTask={deleteDraftTask}
+                  onDeleteRecurring={deleteDraftRecurringTask}
                   onDeleteNote={deleteDraftNote}
                   isGenerating={isAiGenerating}
                 />

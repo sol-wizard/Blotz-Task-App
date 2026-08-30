@@ -5,10 +5,8 @@ param organizationName = 'blotz'
 param projectName = 'task'
 param location = 'australiaeast'
 
-param breakdownDeploymentName = 'gpt-5.2-chat'
-param breakdownModelName = 'gpt-5.2-chat'
-param breakdownModelVersion = '2025-12-11'
-
+// Staging also carries a gpt-5-mini deployment (capacity 500) left over from earlier testing.
+// Nothing in the API references it - it is not modelled here.
 param taskGenerationDeploymentName = 'gpt-5.4-mini'
 param taskGenerationModelName = 'gpt-5.4-mini'
 param taskGenerationModelVersion = '2026-03-17'
@@ -46,3 +44,13 @@ param auth0ManagementClientId = 'xWylVePDs5giZLBopYT1qHecBv2WijQh'
 param auth0ManagementAudience = 'https://dev-k72xachs0fr6nebp.us.auth0.com/api/v2/'
 // Auth0 Management Client Secret - overridden at deploy time
 param auth0ManagementClientSecret = ''
+
+// Mobile force-update policy. LatestVersion drives the soft "update available" prompt;
+// MinimumSupportedVersion is the hard wall - only raise it once that build is live in the store.
+param iosLatestVersion = '1.1.0'
+param iosMinimumSupportedVersion = '1.0.9'
+param iosStoreUrl = 'https://apps.apple.com/us/app/blotztask-adhd-time-manager/id6752492404'
+
+param androidLatestVersion = '1.0.0'
+param androidMinimumSupportedVersion = '1.0.0'
+param androidStoreUrl = 'https://play.google.com/store/apps/details?id=com.blotz.blotztask&hl=en'

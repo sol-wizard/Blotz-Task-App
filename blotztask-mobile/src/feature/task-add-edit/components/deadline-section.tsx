@@ -1,11 +1,10 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import Toast from "react-native-toast-message";
 import { Control, UseFormGetValues, useController } from "react-hook-form";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import TaskFormField, { hasDeadlineWarning } from "../models/task-form-schema";
+import TaskFormField, { hasDeadlineConflict } from "../models/task-form-schema";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
@@ -63,13 +62,20 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
     name: "endDate",
   });
 
-  useEffect(() => {
-    if (!isDeadline) return;
-    const formValues = getValues();
-    if (hasDeadlineWarning({ ...formValues })) {
-      Toast.show({ type: "warning", text1: t("form.invalidDeadlineRange"), visibilityTime: 3000 });
-    }
-  }, [deadlineDate, deadlineTime]);
+  const {
+    field: { value: endTime },
+  } = useController({
+    control,
+    name: "endTime",
+  });
+
+  const isDeadlineInvalid = hasDeadlineConflict({
+    isDeadline,
+    endDate,
+    endTime,
+    deadlineDate,
+    deadlineTime,
+  });
 
   const deadlineDateDisplayText = deadlineDate
     ? formatLocalizedDate(deadlineDate, "abbrevMonthDayYear")
@@ -134,6 +140,14 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
               </Pressable>
             </View>
           </Animated.View>
+
+          {isDeadlineInvalid && (
+            <Animated.View layout={MotionAnimations.layout}>
+              <Text className="text-red-500 text-sm mt-2 font-baloo">
+                {t("form.invalidDeadlineRange")}
+              </Text>
+            </Animated.View>
+          )}
 
           {activeSelector === "deadlineDate" && (
             <Animated.View

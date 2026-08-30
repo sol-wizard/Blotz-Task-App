@@ -59,6 +59,10 @@ export const PNGIMAGES = {
   pomodoroImgCafeNook: require("../../../assets/images-png/pomodoro-img-cafeNook.png"),
   pomodoroImgChoose: require("../../../assets/images-png/pomodoro-img-choose.png"),
   pomodoroImgNoSound: require("../../../assets/images-png/pomodoro-img-noSound.png"),
+  letterEnvelope: require("../../../assets/images-png/letter-envelope.png"),
+  letterReadyToOpen: require("../../../assets/images-png/letter-ready-to-open.png"),
+  letterStamp: require("../../../assets/images-png/letter-stamp.png"),
+  letterHeaderIcon: require("../../../assets/images-png/letter-header-icon.png"),
 } as const;
 
 export const SVGIMAGES = {

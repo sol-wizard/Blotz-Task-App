@@ -18,3 +18,5 @@ package-lock.json
 # bicep build outputs (generated)
 infra/main.json
 infra/*.ps1
+# What's New preview artifact (generated per release, not for commit)
+.claude/skills/generate-whatsnew/blotz-whatsnew*.html

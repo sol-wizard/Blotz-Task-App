@@ -71,7 +71,7 @@ public class AiTaskGenerateChatHub(
         WireStreamingCallbacks(chatContext, ct);
 
         // 3. Run the AI — it will call tools (CreateTask, CreateNote, etc.) which trigger the callbacks above
-        var resultMessage = await aiChatService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
+        var resultMessage = await aiChatService.GenerateAiResponse(userId, resolvedMessage, message, chatContext, ct);
 
         // 4. Clear callbacks so stale tool calls from a previous turn cannot push to the client
         ClearStreamingCallbacks(chatContext);
@@ -115,6 +115,14 @@ public class AiTaskGenerateChatHub(
     {
         if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
             chatContext.Tools.RemoveDraftNoteById(noteId);
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteDraftRecurringTask(Guid recurringTaskId)
+    {
+        if (Context.Items.TryGetValue("ChatContext", out var ctxObj) && ctxObj is AiChatContext chatContext)
+            chatContext.Tools.RemoveDraftRecurringTaskById(recurringTaskId);
 
         return Task.CompletedTask;
     }
@@ -165,12 +173,15 @@ public class AiTaskGenerateChatHub(
             await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
         chatContext.Tools.OnNoteStreamed = async note =>
             await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+        chatContext.Tools.OnRecurringTaskStreamed = async recurringTask =>
+            await Clients.Caller.SendAsync("ReceiveRecurringTaskExtracted", recurringTask, ct);
     }
 
     private static void ClearStreamingCallbacks(AiChatContext chatContext)
     {
         chatContext.Tools.OnTaskStreamed = null;
         chatContext.Tools.OnNoteStreamed = null;
+        chatContext.Tools.OnRecurringTaskStreamed = null;
     }
 
     #endregion

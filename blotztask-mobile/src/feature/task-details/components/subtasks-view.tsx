@@ -7,24 +7,38 @@ import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
+import { hasTaskItemId } from "@/shared/util/task-occurrence-identity";
+import { BreakdownTaskTarget } from "../services/subtask-service";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
+  breakdownTarget?: BreakdownTaskTarget;
+  onBreakdownComplete?: (parentTaskId: number) => void;
 };
 
-const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
+const SubtasksView = ({
+  parentTask,
+  breakdownTarget,
+  onBreakdownComplete,
+}: SubtaskViewProps) => {
   const { t } = useTranslation("tasks");
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
+  const parentTaskId = hasTaskItemId(parentTask) ? parentTask.id : null;
+  const canBreakDown = breakdownTarget != null;
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
-    parentTask.id,
+    parentTaskId,
   );
 
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
 
-  const handleBreakDown = () => {
-    if (isBreakingDownAndReplacingSubtasks || parentTask.id == null) return;
-    breakDownAndReplaceSubtasks(parentTask.id);
+  const handleBreakDown = async () => {
+    if (!breakdownTarget || isBreakingDownAndReplacingSubtasks) return;
+
+    const result = await breakDownAndReplaceSubtasks(breakdownTarget);
+    if (result?.taskItemId != null) {
+      onBreakdownComplete?.(result.taskItemId);
+    }
   };
 
   const isLoading = isBreakingDownAndReplacingSubtasks || isLoadingSubtasks;
@@ -61,8 +75,8 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
     <View>
       <Pressable
         onPress={handleBreakDown}
-        disabled={isLoading}
-        style={{ backgroundColor: isLoading ? "#D1D5DB" : bgColor }}
+        disabled={isLoading || !canBreakDown}
+        style={{ backgroundColor: isLoading || !canBreakDown ? "#D1D5DB" : bgColor }}
         className="flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full"
       >
         {isLoading ? (

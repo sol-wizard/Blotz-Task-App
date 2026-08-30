@@ -19,19 +19,28 @@ public class GetBadgeByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetBadgeByI
 
         var preference = await db.UserPreferences.FindAsync(query.UserId, ct);
         var language = preference?.PreferredLanguage ?? Language.En;
-        var badge = await db.Badges.FindAsync(query.BadgeId, ct);
 
-        if (badge == null)
-            throw new NotFoundException($"Badge with ID {query.BadgeId} not found.");
+        // Only badges the user has actually earned are returned, so the obtained date is always available.
+        var earnedBadge = await db.UserBadges
+            .Where(ub => ub.UserId == query.UserId && ub.BadgeId == query.BadgeId)
+            .Join(db.Badges,
+                ub => ub.BadgeId,
+                badge => badge.Id,
+                (ub, badge) => new { Badge = badge, ub.EarnedAtUtc, EquippedSlot = ub.DisplayOrder })
+            .FirstOrDefaultAsync(ct);
 
+        if (earnedBadge == null)
+            throw new NotFoundException($"Badge with ID {query.BadgeId} not found for the current user.");
 
         return new BadgeByIdItemDto
         {
-            Id = badge.Id,
-            Name = language == Language.Zh ? badge.NameZh : badge.NameEn,
-            Description = language == Language.Zh ? badge.DescriptionZh : badge.DescriptionEn,
-            IconUrl = badge.IconUrl,
-            Category = badge.Category.ToString(),
+            Id = earnedBadge.Badge.Id,
+            Name = language == Language.Zh ? earnedBadge.Badge.NameZh : earnedBadge.Badge.NameEn,
+            Description = language == Language.Zh ? earnedBadge.Badge.DescriptionZh : earnedBadge.Badge.DescriptionEn,
+            IconUrl = earnedBadge.Badge.IconUrl,
+            Category = earnedBadge.Badge.Category.ToString(),
+            ObtainedAt = earnedBadge.EarnedAtUtc,
+            EquippedSlot = earnedBadge.EquippedSlot,
         };
     }
 }
@@ -43,4 +52,6 @@ public class BadgeByIdItemDto
     public required string Description { get; set; }
     public required string IconUrl { get; set; }
     public required string Category { get; set; }
+    public required DateTimeOffset ObtainedAt { get; set; }
+    public int? EquippedSlot { get; set; }
 }

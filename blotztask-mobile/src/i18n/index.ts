@@ -17,14 +17,16 @@ import enAiTaskGenerate from "./locales/en/ai-task-generate.json";
 import zhAiTaskGenerate from "./locales/zh/ai-task-generate.json";
 import enOnboarding from "./locales/en/onboarding.json";
 import zhOnboarding from "./locales/zh/onboarding.json";
-import enPrivacyPolicy from "./locales/en/privacy-policy.json";
-import zhPrivacyPolicy from "./locales/zh/privacy-policy.json";
 import enDeadline from "./locales/en/deadline.json";
 import zhDeadline from "./locales/zh/deadline.json";
 import enPomodoro from "./locales/en/pomodoro.json";
 import zhPomodoro from "./locales/zh/pomodoro.json";
 import enBadge from "./locales/en/badge.json";
 import zhBadge from "./locales/zh/badge.json";
+import enWidget from "./locales/en/widget.json";
+import zhWidget from "./locales/zh/widget.json";
+import enWhatsNew from "./locales/en/whats-new.json";
+import zhWhatsNew from "./locales/zh/whats-new.json";
 
 // Get device language code (e.g., 'en', 'zh')
 const getDeviceLanguage = (): string => {
@@ -51,10 +53,11 @@ i18n.use(initReactI18next).init({
       notes: enNotes,
       aiTaskGenerate: enAiTaskGenerate,
       onboarding: enOnboarding,
-      privacyPolicy: enPrivacyPolicy,
       deadline: enDeadline,
       pomodoro: enPomodoro,
       badge: enBadge,
+      widget: enWidget,
+      whatsNew: enWhatsNew,
     },
     zh: {
       common: zhCommon,
@@ -64,10 +67,11 @@ i18n.use(initReactI18next).init({
       notes: zhNotes,
       aiTaskGenerate: zhAiTaskGenerate,
       onboarding: zhOnboarding,
-      privacyPolicy: zhPrivacyPolicy,
       deadline: zhDeadline,
       pomodoro: zhPomodoro,
       badge: zhBadge,
+      widget: zhWidget,
+      whatsNew: zhWhatsNew,
     },
   },
   lng: getDeviceLanguage(), // Will be overridden by user preference from backend

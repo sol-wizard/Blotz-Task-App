@@ -1,5 +1,5 @@
 {
-  "achievementUnlocked": "成就解锁！",
+  "achievementUnlocked": " 成就解锁！",
   "shareCardHeadline": "成就解锁！",
   "obtainedOn": "获得于 {{date}}",
   "view": "查看",
@@ -9,10 +9,10 @@
     "title": "成就"
   },
   "wall": {
-    "title": "徽章墙"
+    "title": "徽章墙",
+    "earnedCount": "已获得 {{count}} 个徽章"
   },
   "details": {
-    "category": "类别：{{category}}",
     "equipReward": "装备奖励",
     "notFound": "未找到徽章"
   }

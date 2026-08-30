@@ -78,10 +78,16 @@ public class DateTimeResolveService
 
         var selectedTime = values[0];
 
-        if (selectedTime.TryGetValue("type", out var type) && type == "duration")
+        // Recurring ("set", e.g. "every Monday") and "duration" phrases have no single absolute
+        // value — the recognizer yields the literal "not resolved" for sets. Leave the original
+        // text untouched so recurrence intent survives for the AI to extract, instead of splicing
+        // "not resolved" into the message. One-off relative dates (type "date"/"datetime") still resolve.
+        if (selectedTime.TryGetValue("type", out var type) && type is "duration" or "set")
             return null;
 
-        if (selectedTime.TryGetValue("value", out var v) && !string.IsNullOrWhiteSpace(v))
+        if (selectedTime.TryGetValue("value", out var v)
+            && !string.IsNullOrWhiteSpace(v)
+            && !string.Equals(v, "not resolved", StringComparison.OrdinalIgnoreCase))
             return v;
 
         if (selectedTime.TryGetValue("start", out var s) &&

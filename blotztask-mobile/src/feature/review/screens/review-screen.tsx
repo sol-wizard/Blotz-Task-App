@@ -12,7 +12,7 @@ import { PeriodSelector } from "../components/period-selector";
 import { ReviewComingSoon } from "../components/review-coming-soon";
 import { ReviewHeader } from "../components/review-header";
 import { ReviewTipBanner } from "../components/review-tip-banner";
-import { ReviewTab, ReviewTabs } from "../components/review-tabs";
+import { ReviewTabs } from "../components/review-tabs";
 import { WeeklyReviewView } from "../components/weekly-review-view";
 import { useReview } from "../hooks/useReviewReport";
 import { useReviewShare } from "../hooks/useReviewShare";
@@ -23,9 +23,7 @@ export default function ReviewScreen() {
   const router = useRouter();
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  // Default to Weekly — it produces fresh content more often than Monthly.
-  const [activeTab, setActiveTab] = useState<ReviewTab>(ReviewPeriodType.Weekly);
-  // Latest viewable month is last month — the current one is still in progress.
+  const [activeTab, setActiveTab] = useState<ReviewPeriodType>(ReviewPeriodType.Weekly);
   const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const [isTipDismissed, setIsTipDismissed] = useState(false);
@@ -38,6 +36,8 @@ export default function ReviewScreen() {
   const activeShareCardRef = isMonthlyTab ? monthlyShareCardRef : weeklyShareCardRef;
   const { isSharingImage, shareImage } = useReviewShare({
     captureTargetRef: activeShareCardRef,
+    source: isMonthlyTab ? "monthly_review" : "weekly_review",
+    contentType: "review",
   });
   // Don't let users page back before sign-up month — those months are always empty.
   const earliestReviewableMonth = userProfile?.signUpAt
@@ -57,10 +57,11 @@ export default function ReviewScreen() {
     isMonthlyTab && !hasNoReviewableMonth,
   );
 
-  const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
+  const isCurrentMonth = isSameMonth(selectedMonth, new Date());
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatLocalizedDate(selectedMonth, "yearMonth");
+  const monthName = formatLocalizedDate(selectedMonth, "month");
   const recipientName = userProfile?.displayName ?? t("review.defaultRecipient");
   const showShareButton = isMonthlyTab
     ? report !== null && !hasNoReviewableMonth
@@ -78,7 +79,7 @@ export default function ReviewScreen() {
   };
 
   const handleNextMonth = () => {
-    if (!isAtLatestMonth) setSelectedMonth((month) => addMonths(month, 1));
+    if (!isCurrentMonth) setSelectedMonth((month) => addMonths(month, 1));
   };
 
   return (
@@ -101,7 +102,10 @@ export default function ReviewScreen() {
           onShareAvailableChange={setIsWeeklyShareAvailable}
         />
       ) : hasNoReviewableMonth ? (
-        <ReviewComingSoon />
+        <ReviewComingSoon
+          title={t("monthlyReview.comingSoonTitle")}
+          body={t("monthlyReview.comingSoonBody")}
+        />
       ) : (
         <>
           <View className="px-5 mb-4">
@@ -110,7 +114,7 @@ export default function ReviewScreen() {
               onPrev={handlePrevMonth}
               onNext={handleNextMonth}
               disablePrev={isAtEarliestMonth}
-              disableNext={isAtLatestMonth}
+              disableNext={isCurrentMonth}
             />
           </View>
           <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
@@ -128,9 +132,8 @@ export default function ReviewScreen() {
                 className="rounded-3xl bg-[#FFFBF3] px-7 pt-7 pb-8"
               >
                 <LetterHeader
-                  displayPeriod={displayMonth}
-                  recipientName={recipientName}
-                  pictureUrl={userProfile?.pictureUrl}
+                  periodLabel={displayMonth}
+                  letterLabel={t("monthlyReview.letterLabel")}
                 />
                 <LetterCardContent
                   isLoading={isLoading}
@@ -138,7 +141,9 @@ export default function ReviewScreen() {
                   recipientName={recipientName}
                   isGenerating={isGenerating}
                   onGenerate={generate}
-                  period={ReviewPeriodType.Monthly}
+                  periodType={ReviewPeriodType.Monthly}
+                  isCurrentMonth={isCurrentMonth}
+                  periodLabel={monthName}
                 />
               </View>
             </View>

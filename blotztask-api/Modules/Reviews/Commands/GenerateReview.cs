@@ -2,7 +2,7 @@ using System.ClientModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Azure.AI.OpenAI;
-using BlotzTask.Extension;
+using BlotzTask.Extension.Options;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Reviews.Domain;
@@ -12,6 +12,7 @@ using BlotzTask.Modules.Reviews.Prompts;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OpenAI.Chat;
 
 namespace BlotzTask.Modules.Reviews.Commands;
@@ -34,7 +35,7 @@ public class GenerateReviewCommand
 public class GenerateReviewCommandHandler(
     BlotzTaskDbContext db,
     AzureOpenAIClient azureOpenAIClient,
-    AgentFrameworkServiceExtensions.AzureAIOptions aiOptions,
+    IOptions<AzureOpenAIOptions> aiOptions,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService,
     ILogger<GenerateReviewCommandHandler> logger)
@@ -43,7 +44,7 @@ public class GenerateReviewCommandHandler(
     // o-series reasoning models — if Breakdown points at a non-reasoning model (e.g. GPT-4o),
     // the option is ignored. Revisit once we decide whether review needs its own
     // deployment (likely a reasoning model for better reflection quality).
-    private readonly string _deploymentId = aiOptions.BreakdownDeploymentId;
+    private readonly string _deploymentId = aiOptions.Value.AiModels.Breakdown.DeploymentId;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

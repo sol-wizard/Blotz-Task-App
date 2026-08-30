@@ -2,16 +2,15 @@ import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { GradientColor } from "@/shared/components/gradient-color";
-import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
 import { getPreviewBadges } from "@/feature/badge/utils/get-preview-badges";
 import { BadgeCard } from "@/feature/badge/components/badge-card";
+import { BadgePreviewDTO } from "@/feature/badge/models/badge-preview-dto";
 
 const PREVIEW_SLOTS = 3;
 
-export function BadgePreviewSection() {
+export function BadgePreviewSection({ badges }: { badges: BadgePreviewDTO[] }) {
   const router = useRouter();
   const { t } = useTranslation("badge");
-  const { badges } = useBadgesQuery();
 
   const previewBadges = getPreviewBadges(badges);
 

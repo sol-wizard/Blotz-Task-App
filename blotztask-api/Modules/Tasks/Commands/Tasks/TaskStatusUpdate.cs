@@ -1,12 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Shared.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
 public class TaskStatusUpdateCommand
 {
     [Required] public int TaskId { get; init; }
+
+    [Required] public required Guid UserId { get; init; }
 
     public bool? IsDone { get; init; }
 }
@@ -17,7 +20,8 @@ public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskS
     {
         logger.LogInformation("Finding task {Id}", command.TaskId);
 
-        var task = await db.TaskItems.FindAsync(command.TaskId, ct);
+        var task = await db.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == command.TaskId && t.UserId == command.UserId, ct);
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} was not found.");
 
