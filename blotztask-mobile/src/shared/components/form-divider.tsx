@@ -9,7 +9,7 @@ type FormDividerProps = {
 
 export const FormDivider = ({
   marginVertical = 16,
-  animateLayout = false,
+  animateLayout = true,
 }: FormDividerProps) => {
   return (
     <Animated.View

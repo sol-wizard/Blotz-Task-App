@@ -118,7 +118,9 @@ export default function SettingsScreen() {
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </Pressable>
-              {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
+              {index < menuItems.length - 1 && (
+                <FormDivider marginVertical={2} animateLayout={false} />
+              )}
             </View>
           ))}
         </View>
