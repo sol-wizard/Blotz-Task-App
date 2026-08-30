@@ -21,7 +21,6 @@ export default function BadgeWallScreen() {
   const { badges } = useBadgesQuery();
   const router = useRouter();
 
-  // The API returns badges in earned-date order; render them as-is.
   const gridItems: BadgeGridItem[] = badges.map((badge) => ({ key: String(badge.id), badge }));
 
   const remainder = gridItems.length % NUM_COLUMNS;

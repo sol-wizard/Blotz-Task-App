@@ -82,7 +82,7 @@ export default function BadgeDetailsScreen() {
               </Text>
             </View>
 
-            <View className="mt-8 flex-row items-center justify-center" style={{ gap: 12 }}>
+            <View className="mt-8 flex-row items-center justify-center gap-3">
               <Pressable
                 className={`h-14 min-w-36 rounded-full border border-highlight bg-white/60 px-5 items-center justify-center ${
                   isEquipped || isEquipping ? "opacity-60" : "opacity-100"
