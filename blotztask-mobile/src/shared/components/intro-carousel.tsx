@@ -20,6 +20,7 @@ interface IntroCarouselProps<T> {
   data: readonly T[];
   renderItem: (item: T) => React.ReactNode;
   onFinish: (outcome: CarouselExitOutcome, lastItemReached: T) => void | Promise<void>;
+  onItemViewed?: (item: T) => void;
   continueLabel: string;
   finishLabel: string;
   skipLabel: string;
@@ -31,6 +32,7 @@ export function IntroCarousel<T>({
   data,
   renderItem,
   onFinish,
+  onItemViewed,
   continueLabel,
   finishLabel,
   skipLabel,
@@ -39,11 +41,20 @@ export function IntroCarousel<T>({
 }: IntroCarouselProps<T>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const lastViewedIndexRef = useRef(0);
   const isLast = activeIndex === data.length - 1;
+
+  const updateActiveIndex = (index: number) => {
+    setActiveIndex(index);
+    if (lastViewedIndexRef.current === index) return;
+
+    lastViewedIndexRef.current = index;
+    onItemViewed?.(data[index]);
+  };
 
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setActiveIndex(index);
+    updateActiveIndex(index);
   };
 
   const handleNext = () => {
@@ -53,14 +64,14 @@ export function IntroCarousel<T>({
     }
     const next = activeIndex + 1;
     flatListRef.current?.scrollToIndex({ index: next, animated: true });
-    setActiveIndex(next);
+    updateActiveIndex(next);
   };
 
   const handleBack = () => {
     if (activeIndex === 0) return;
     const prev = activeIndex - 1;
     flatListRef.current?.scrollToIndex({ index: prev, animated: true });
-    setActiveIndex(prev);
+    updateActiveIndex(prev);
   };
 
   return (

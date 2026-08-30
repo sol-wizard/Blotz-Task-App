@@ -98,6 +98,18 @@ export const analytics = {
     });
   },
 
+  /** Fires when the user reaches the onboarding screen. */
+  trackOnboardingStarted() {
+    posthog.capture(EVENTS.ONBOARDING_STARTED);
+  },
+
+  /** Fires when an onboarding section becomes visible. */
+  trackOnboardingStepViewed(params: { step: OnboardingSection }) {
+    posthog.capture(EVENTS.ONBOARDING_STEP_VIEWED, {
+      step: params.step,
+    });
+  },
+
   /**
    * Fires after the user's onboarded state is persisted.
    * `outcome` separates users who reached the final tutorial section from users who skipped.

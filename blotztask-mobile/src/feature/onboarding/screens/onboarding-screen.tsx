@@ -7,6 +7,7 @@ import { IntroCarousel, type CarouselExitOutcome } from "@/shared/components/int
 import type { OnboardingSection } from "@/shared/constants/posthog-events";
 import { analytics } from "@/shared/services/analytics";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 
@@ -17,6 +18,15 @@ export default function OnboardingScreen() {
   const { markAsSeen } = useWhatsNewSeen();
   const { t } = useTranslation("onboarding");
   useLanguageInit();
+
+  useEffect(() => {
+    analytics.trackOnboardingStarted();
+    analytics.trackOnboardingStepViewed({ step: SECTIONS[0] });
+  }, []);
+
+  const handleSectionViewed = (step: OnboardingSection) => {
+    analytics.trackOnboardingStepViewed({ step });
+  };
 
   const handleFinish = async (
     outcome: CarouselExitOutcome,
@@ -39,6 +49,7 @@ export default function OnboardingScreen() {
         </>
       )}
       onFinish={handleFinish}
+      onItemViewed={handleSectionViewed}
       continueLabel={t("actions.continue")}
       finishLabel={t("actions.continue")}
       skipLabel={t("actions.skip")}

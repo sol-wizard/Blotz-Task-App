@@ -23,6 +23,8 @@ export const EVENTS = {
   SHARE_SHEET_OPENED: "share_sheet_opened",
   SHARE_COMPLETED: "share_completed",
   SHARE_FAILED: "share_failed",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
   ONBOARDING_COMPLETED: "onboarding_completed",
 } as const;
 
