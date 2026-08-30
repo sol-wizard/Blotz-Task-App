@@ -66,6 +66,7 @@ const LoadedTaskForm = ({
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
   const [hasChangedTab, setHasChangedTab] = useState(false);
+  const [hasChangedRecurrence, setHasChangedRecurrence] = useState(false);
 
   // Form
   const form = useForm<TaskFormField>({
@@ -219,20 +220,23 @@ const LoadedTaskForm = ({
         <FormDivider />
         {shouldShowRecurrence && (
           <Animated.View layout={MotionAnimations.layout}>
-            <RecurrenceSelect control={control} />
+            <RecurrenceSelect
+              control={control}
+              onRecurrenceChange={() => {
+                setHasChangedRecurrence(true);
+              }}
+            />
             <RecurrenceEndSection control={control} />
           </Animated.View>
         )}
 
         {!isRecurringTaskForm && (
           <Animated.View
-            entering={
-              formState.dirtyFields.recurrence ? MotionAnimations.upEntering : undefined
-            }
+            entering={hasChangedRecurrence ? MotionAnimations.upEntering : undefined}
             exiting={MotionAnimations.outExiting}
             layout={MotionAnimations.layout}
           >
-            <FormDivider />
+            {shouldShowRecurrence && <FormDivider />}
             <AlertSelect control={control} />
           </Animated.View>
         )}
