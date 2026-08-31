@@ -96,4 +96,4 @@ export type ShareContentType = "review" | "badge";
 // onboarding
 export type OnboardingOutcome = "completed" | "skipped";
 
-export type OnboardingSection = "ai-voice" | "note" | "breakdown";
+export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
