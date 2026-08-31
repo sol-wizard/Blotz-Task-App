@@ -26,6 +26,8 @@ interface IntroCarouselProps<T> {
   skipLabel: string;
   dotContainerClassName?: string;
   activeDotClassName?: string;
+  /** Disables Skip and Continue/Finish while a step has its own pending action (e.g. a redeem request in flight). */
+  disableActions?: boolean;
 }
 
 export function IntroCarousel<T>({
@@ -38,6 +40,7 @@ export function IntroCarousel<T>({
   skipLabel,
   dotContainerClassName = "mb-6",
   activeDotClassName = "w-5 bg-black",
+  disableActions = false,
 }: IntroCarouselProps<T>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -90,7 +93,7 @@ export function IntroCarousel<T>({
           </View>
         </GradientColor>
         <View className="flex-1 items-end">
-          <Pressable onPress={() => void onFinish("skipped", data[activeIndex])} hitSlop={10}>
+          <Pressable onPress={() => void onFinish("skipped", data[activeIndex])} hitSlop={10} disabled={disableActions}>
             <Text className="text-xl font-baloo text-black/40">{skipLabel}</Text>
           </Pressable>
         </View>
@@ -128,7 +131,13 @@ export function IntroCarousel<T>({
             );
           })}
         </View>
-        <Pressable onPress={handleNext} className="w-[46%] h-[48px] bg-[#8BCC5A] rounded-full py-4">
+        <Pressable
+          onPress={handleNext}
+          disabled={disableActions}
+          className={`w-[46%] h-[48px] rounded-full py-4 ${
+            disableActions ? "bg-gray-200" : "bg-[#8BCC5A]"
+          }`}
+        >
           <Text className="text-white text-lg font-baloo text-center">
             {isLast ? finishLabel : continueLabel}
           </Text>
