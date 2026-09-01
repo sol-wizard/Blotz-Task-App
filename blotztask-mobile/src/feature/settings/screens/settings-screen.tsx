@@ -13,12 +13,13 @@ import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { BadgePreviewSection } from "@/feature/settings/components/badge-preview-section";
 import { useTranslation } from "react-i18next";
 import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
+import LoadingScreen from "@/shared/components/loading-screen";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { userProfile } = useUserProfile();
+  const { userProfile, isUserProfileLoading } = useUserProfile();
   const { t } = useTranslation("settings");
-  const { badges } = useBadgesQuery();
+  const { badges, isLoading: areBadgesLoading } = useBadgesQuery();
   const queryClient = useQueryClient();
 
   useFocusEffect(
@@ -26,6 +27,10 @@ export default function SettingsScreen() {
       queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     }, [queryClient]),
   );
+
+  if (isUserProfileLoading || areBadgesLoading) {
+    return <LoadingScreen />;
+  }
 
   const menuItems: SettingsMenuItem[] = [
     {
@@ -119,7 +124,9 @@ export default function SettingsScreen() {
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </Pressable>
-              {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
+              {index < menuItems.length - 1 && (
+                <FormDivider marginVertical={2} animateLayout={false} />
+              )}
             </View>
           ))}
         </View>
