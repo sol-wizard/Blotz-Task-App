@@ -14,8 +14,16 @@ import { BadgePreviewSection } from "@/feature/settings/components/badge-preview
 import { useTranslation } from "react-i18next";
 import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
 import LoadingScreen from "@/shared/components/loading-screen";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsScreen() {
+  useFocusEffect(
+    useCallback(() => {
+      analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS);
+    }, []),
+  );
+
   const router = useRouter();
   const { userProfile, isUserProfileLoading } = useUserProfile();
   const { t } = useTranslation("settings");

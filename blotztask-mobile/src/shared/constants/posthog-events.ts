@@ -29,6 +29,17 @@ export const SCREEN_NAMES = {
   SIGN_IN: "SignIn",
   NOTES: "Notes",
   GASHAPON_MACHINE: "GashaponMachine",
+  SETTINGS: "Settings",
+  SETTINGS_ALL_TASKS: "SettingsAllTasks",
+  SETTINGS_INVITE: "SettingsInvite",
+  SETTINGS_REVIEW: "SettingsReview",
+  BADGE_WALL: "BadgeWall",
+  DDL: "Ddl",
+  MONTHLY_CALENDAR: "MonthlyCalendar",
+  NOTE_EDITOR: "NoteEditor",
+  POMODORO_FOCUS: "PomodoroFocus",
+  TASK_CREATE: "TaskCreate",
+  TASK_DETAILS: "TaskDetails",
 } as const;
 
 /** Which sign-in button was used. `sms` is only rendered outside production. */
