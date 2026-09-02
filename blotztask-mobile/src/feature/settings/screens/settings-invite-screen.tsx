@@ -1,6 +1,4 @@
-import React, { useEffect } from "react";
-import { analytics } from "@/shared/services/analytics";
-import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
+import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -12,10 +10,6 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { useMyReferralCode } from "@/feature/referral/hooks/useMyReferralCode";
 
 export default function SettingsInviteScreen() {
-  useEffect(() => {
-    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_INVITE);
-  }, []);
-
   const { t } = useTranslation("settings");
   const { referralCode, isLoading } = useMyReferralCode();
 

@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { analytics } from "@/shared/services/analytics";
-import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
+import React, { useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "@/shared/components/task-status-row";
@@ -18,10 +16,6 @@ import { useAllTasksQuery } from "@/feature/settings/hooks/useAllTasksQuery";
 import { useSwipeableManager } from "@/feature/notes/hooks/useSwipeableManager";
 
 export default function SettingsAllTasksScreen() {
-  useEffect(() => {
-    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_ALL_TASKS);
-  }, []);
-
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
   const { isDeleting, deleteTask } = useTaskMutations();
