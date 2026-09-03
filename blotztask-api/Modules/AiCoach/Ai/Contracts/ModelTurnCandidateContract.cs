@@ -13,12 +13,12 @@ namespace BlotzTask.Modules.AiCoach.Ai.Contracts;
 /// Output Schema Guard. The JSON schema handed to the model as a structured-output response
 /// format and the runtime validation both derive from this single file, so they cannot drift.
 ///
-/// The strategy enum deliberately exposes only the strategies a v1 model turn may candidate
+/// The strategy enum deliberately exposes only the strategies a model turn may candidate
 /// (no update/supersede/close): what is not in the output contract can never be proposed.
 /// </summary>
 public static class ModelTurnCandidateContract
 {
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = 2;
 
     public const string ResponseFormatName = "model_turn_candidate";
 
@@ -32,18 +32,14 @@ public static class ModelTurnCandidateContract
     {
         type = "object",
         additionalProperties = false,
-        required = new[] { "signals", "strategy", "response", "proposalSet" },
+        required = new[] { "interpretation", "suggestedAction", "response", "proposalSet" },
         properties = new
         {
-            signals = new
+            interpretation = new
             {
                 type = "object",
                 additionalProperties = false,
-                required = new[]
-                {
-                    "intent", "userExpressedActionIntent", "actionIntentQuote", "userRejectedAction", "coachDecompositionAuthorized",
-                    "planningItems", "constraint", "constraintEvidenceQuote", "clarificationDisposition",
-                },
+                required = new[] { "intent", "planningItems", "constraints", "disposition" },
                 properties = new
                 {
                     intent = new
@@ -51,29 +47,6 @@ public static class ModelTurnCandidateContract
                         type = "string",
                         @enum = new[] { "small_talk", "goal", "concrete_action", "question", "emotional", "unknown" },
                         description = "What the CURRENT user message mainly is.",
-                    },
-                    userExpressedActionIntent = new
-                    {
-                        type = "boolean",
-                        description = "True ONLY when the current message names concrete doable thing(s) or "
-                                      + "explicitly hands the planning decision to you (\"帮我安排\", \"you decide\", "
-                                      + "\"list what I need to do\"). Never true for moods, wishes or pure goals.",
-                    },
-                    actionIntentQuote = new
-                    {
-                        type = new[] { "string", "null" },
-                        description = "EXACT substring of the current user message proving the action intent. "
-                                      + "Required when userExpressedActionIntent is true; null otherwise.",
-                    },
-                    userRejectedAction = new
-                    {
-                        type = "boolean",
-                        description = "True when the current message declines or cancels acting.",
-                    },
-                    coachDecompositionAuthorized = new
-                    {
-                        type = "boolean",
-                        description = "True only when the user explicitly authorizes you to break a goal or domain into safe default actions (for example: you decide, help me plan, generate a plan).",
                     },
                     planningItems = new
                     {
@@ -85,44 +58,75 @@ public static class ModelTurnCandidateContract
                         {
                             type = "object",
                             additionalProperties = false,
-                            required = new[] { "text", "evidenceQuote", "kind" },
+                            required = new[] { "text", "kind", "evidence" },
                             properties = new
                             {
-                                text = new { type = "string", description = "A short normalized label for the item." },
-                                evidenceQuote = new
-                                {
-                                    type = "string",
-                                    description = "An exact substring of the current user message proving this item was named.",
-                                },
+                                text = new { type = "string", description = "A concise item name that appears literally inside evidence.quote." },
                                 kind = new
                                 {
                                     type = "string",
                                     @enum = new[] { "domain", "goal", "action" },
                                     description = "domain or goal is not directly schedulable; action is concrete and schedulable.",
                                 },
+                                evidence = new
+                                {
+                                    type = "object",
+                                    additionalProperties = false,
+                                    required = new[] { "quote" },
+                                    properties = new
+                                    {
+                                        quote = new { type = "string", description = "Exact substring from the current user message." },
+                                    },
+                                },
                             },
                         },
                     },
-                    constraint = new
+                    constraints = new
                     {
-                        type = new[] { "string", "null" },
-                        description = "A deadline or scheduling constraint explicitly stated in the current message; null if absent.",
+                        type = "array",
+                        items = new
+                        {
+                            type = "object",
+                            additionalProperties = false,
+                            required = new[] { "text", "evidence" },
+                            properties = new
+                            {
+                                text = new { type = "string", description = "A concise constraint that appears literally inside evidence.quote." },
+                                evidence = new
+                                {
+                                    type = "object",
+                                    additionalProperties = false,
+                                    required = new[] { "quote" },
+                                    properties = new { quote = new { type = "string" } },
+                                },
+                            },
+                        },
                     },
-                    constraintEvidenceQuote = new
+                    disposition = new
                     {
-                        type = new[] { "string", "null" },
-                        description = "Exact substring proving the constraint; null when constraint is null.",
-                    },
-                    clarificationDisposition = new
-                    {
-                        type = "string",
-                        @enum = new[] { "not_applicable", "answered", "cannot_provide", "delegated_to_coach", "rejected_question" },
-                        description = "How the CURRENT message responds to the open clarification, if one exists. "
-                                      + "Use cannot_provide for answers such as '不知道' and delegated_to_coach for '你决定'.",
+                        type = "object",
+                        additionalProperties = false,
+                        required = new[] { "kind", "evidence" },
+                        properties = new
+                        {
+                            kind = new
+                            {
+                                type = "string",
+                                @enum = new[] { "not_applicable", "answered", "cannot_provide", "delegated_to_coach", "rejected_action" },
+                            },
+                            evidence = new
+                            {
+                                type = new[] { "object", "null" },
+                                additionalProperties = false,
+                                required = new[] { "quote" },
+                                properties = new { quote = new { type = "string" } },
+                            },
+                        },
+                        description = "The user's explicit disposition with an exact quote. Evidence is null only for not_applicable.",
                     },
                 },
             },
-            strategy = new
+            suggestedAction = new
             {
                 type = "string",
                 @enum = new[]
@@ -262,12 +266,12 @@ public static class ModelTurnCandidateContract
             return ParseResult.Failed($"Output is not valid JSON for the required schema: {ex.Message}");
         }
 
-        if (dto?.Signals is null || dto.Response is null)
-            return ParseResult.Failed("signals and response are required.");
+        if (dto?.Interpretation is null || dto.Response is null)
+            return ParseResult.Failed("interpretation and response are required.");
 
-        var strategy = ConversationStrategyExtensions.FromWireValue(dto.Strategy ?? "");
+        var strategy = ConversationStrategyExtensions.FromWireValue(dto.SuggestedAction ?? "");
         if (strategy is null)
-            return ParseResult.Failed($"Unknown strategy '{dto.Strategy}'.");
+            return ParseResult.Failed($"Unknown suggestedAction '{dto.SuggestedAction}'.");
 
         if (string.IsNullOrWhiteSpace(dto.Response.Text))
             return ParseResult.Failed("response.text must not be empty.");
@@ -310,7 +314,7 @@ public static class ModelTurnCandidateContract
             proposalSet = new ProposalSetCandidate(proposals);
         }
 
-        var intent = dto.Signals.Intent switch
+        var intent = dto.Interpretation.Intent switch
         {
             "small_talk" => IntentType.SmallTalk,
             "goal" => IntentType.Goal,
@@ -320,11 +324,10 @@ public static class ModelTurnCandidateContract
             _ => IntentType.Unknown,
         };
 
-        var planningItems = dto.Signals.PlanningItems?
-            .Where(item => !string.IsNullOrWhiteSpace(item.Text) && !string.IsNullOrWhiteSpace(item.EvidenceQuote))
+        var planningItems = dto.Interpretation.PlanningItems?
             .Select(item => new PlanningItemCandidate(
-                item.Text!.Trim(),
-                item.EvidenceQuote!.Trim(),
+                item.Text?.Trim() ?? string.Empty,
+                new EvidenceReference(item.Evidence?.Quote?.Trim() ?? string.Empty),
                 item.Kind switch
                 {
                     "domain" => PlanningItemKind.Domain,
@@ -333,26 +336,28 @@ public static class ModelTurnCandidateContract
                 }))
             .ToList() ?? [];
 
-        var disposition = dto.Signals.ClarificationDisposition switch
+        var constraints = dto.Interpretation.Constraints?
+            .Select(item => new ConstraintCandidate(
+                item.Text?.Trim() ?? string.Empty,
+                new EvidenceReference(item.Evidence?.Quote?.Trim() ?? string.Empty)))
+            .ToList() ?? [];
+
+        var disposition = dto.Interpretation.Disposition?.Kind switch
         {
-            "answered" => ClarificationDisposition.Answered,
-            "cannot_provide" => ClarificationDisposition.CannotProvide,
-            "delegated_to_coach" => ClarificationDisposition.DelegatedToCoach,
-            "rejected_question" => ClarificationDisposition.RejectedQuestion,
-            _ => ClarificationDisposition.NotApplicable,
+            "answered" => UserTurnDisposition.Answered,
+            "cannot_provide" => UserTurnDisposition.CannotProvide,
+            "delegated_to_coach" => UserTurnDisposition.DelegatedToCoach,
+            "rejected_action" => UserTurnDisposition.RejectedAction,
+            _ => UserTurnDisposition.NotApplicable,
         };
+        var dispositionCandidate = new UserTurnDispositionCandidate(
+            disposition,
+            dto.Interpretation.Disposition?.Evidence is null
+                ? null
+                : new EvidenceReference(dto.Interpretation.Disposition.Evidence.Quote?.Trim() ?? string.Empty));
 
         return ParseResult.Success(new ModelTurnCandidate(
-            new InterpretationSignals(
-                intent,
-                dto.Signals.UserExpressedActionIntent,
-                string.IsNullOrWhiteSpace(dto.Signals.ActionIntentQuote) ? null : dto.Signals.ActionIntentQuote,
-                dto.Signals.UserRejectedAction,
-                dto.Signals.CoachDecompositionAuthorized,
-                planningItems,
-                string.IsNullOrWhiteSpace(dto.Signals.Constraint) ? null : dto.Signals.Constraint.Trim(),
-                string.IsNullOrWhiteSpace(dto.Signals.ConstraintEvidenceQuote) ? null : dto.Signals.ConstraintEvidenceQuote.Trim(),
-                disposition),
+            new InterpretationCandidate(intent, planningItems, constraints, dispositionCandidate),
             strategy.Value,
             response,
             proposalSet));
@@ -411,30 +416,42 @@ public static class ModelTurnCandidateContract
 
     private sealed class CandidateJson
     {
-        [JsonPropertyName("signals")] public SignalsJson? Signals { get; init; }
-        [JsonPropertyName("strategy")] public string? Strategy { get; init; }
+        [JsonPropertyName("interpretation")] public InterpretationJson? Interpretation { get; init; }
+        [JsonPropertyName("suggestedAction")] public string? SuggestedAction { get; init; }
         [JsonPropertyName("response")] public ResponseJson? Response { get; init; }
         [JsonPropertyName("proposalSet")] public ProposalSetJson? ProposalSet { get; init; }
     }
 
-    private sealed class SignalsJson
+    private sealed class InterpretationJson
     {
         [JsonPropertyName("intent")] public string? Intent { get; init; }
-        [JsonPropertyName("userExpressedActionIntent")] public bool UserExpressedActionIntent { get; init; }
-        [JsonPropertyName("actionIntentQuote")] public string? ActionIntentQuote { get; init; }
-        [JsonPropertyName("userRejectedAction")] public bool UserRejectedAction { get; init; }
-        [JsonPropertyName("coachDecompositionAuthorized")] public bool CoachDecompositionAuthorized { get; init; }
         [JsonPropertyName("planningItems")] public List<PlanningItemJson>? PlanningItems { get; init; }
-        [JsonPropertyName("constraint")] public string? Constraint { get; init; }
-        [JsonPropertyName("constraintEvidenceQuote")] public string? ConstraintEvidenceQuote { get; init; }
-        [JsonPropertyName("clarificationDisposition")] public string? ClarificationDisposition { get; init; }
+        [JsonPropertyName("constraints")] public List<ConstraintJson>? Constraints { get; init; }
+        [JsonPropertyName("disposition")] public DispositionJson? Disposition { get; init; }
     }
 
     private sealed class PlanningItemJson
     {
         [JsonPropertyName("text")] public string? Text { get; init; }
-        [JsonPropertyName("evidenceQuote")] public string? EvidenceQuote { get; init; }
         [JsonPropertyName("kind")] public string? Kind { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
+    }
+
+    private sealed class ConstraintJson
+    {
+        [JsonPropertyName("text")] public string? Text { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
+    }
+
+    private sealed class EvidenceJson
+    {
+        [JsonPropertyName("quote")] public string? Quote { get; init; }
+    }
+
+    private sealed class DispositionJson
+    {
+        [JsonPropertyName("kind")] public string? Kind { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
     }
 
     private sealed class ResponseJson

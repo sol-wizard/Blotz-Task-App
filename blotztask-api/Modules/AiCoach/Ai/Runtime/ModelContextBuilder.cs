@@ -80,12 +80,15 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
             lines.Add($"Current draft card: {summary} ({set.Status})");
         }
 
-        if (snapshot.ActivePlanningIntent is { CanSupportProposal: true } intent)
+        if (snapshot.ActivePlanningIntent is { Items.Count: > 0 } intent)
         {
             lines.Add("Active user-verified planning intent: "
                       + string.Join(", ", intent.Items.Select(item => $"\"{item.Text}\"")));
-            if (!string.IsNullOrWhiteSpace(intent.Constraint))
-                lines.Add($"Active user-verified constraint: {intent.Constraint}");
+            if (intent.Constraints.Count > 0)
+            {
+                lines.Add("Active user-verified constraints: "
+                          + string.Join(", ", intent.Constraints.Select(constraint => $"\"{constraint.Text}\"")));
+            }
             if (intent.AskedTopics is { Count: > 0 })
                 lines.Add("Clarification slots already used: " + string.Join(", ", intent.AskedTopics));
         }

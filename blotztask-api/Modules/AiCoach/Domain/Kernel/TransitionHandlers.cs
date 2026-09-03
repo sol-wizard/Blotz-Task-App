@@ -145,18 +145,6 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
         {
             plainMutations.Add(new ResolveOpenQuestionMutation(outcome.ClarificationResolution.Value));
             plainMutations.Add(new ClearOpenQuestionMutation());
-            if (current.ActivePlanningIntent is { } intent
-                && outcome.ClarificationResolution is ClarificationResolution.UserCannotProvide
-                    or ClarificationResolution.DelegatedToCoach
-                    or ClarificationResolution.Superseded)
-            {
-                plainMutations.Add(new UpdatePlanningIntentStatusMutation(
-                    intent.IntentId,
-                    PlanningStateRules.NextIntentStatus(
-                        intent.Status,
-                        outcome.ClarificationResolution,
-                        proposalAccepted: false)));
-            }
         }
         plainMutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage));
 

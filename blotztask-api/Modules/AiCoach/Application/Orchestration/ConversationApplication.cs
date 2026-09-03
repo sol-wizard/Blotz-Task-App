@@ -4,6 +4,8 @@ using BlotzTask.Modules.AiCoach.Domain.Kernel;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
 
@@ -61,28 +63,48 @@ public sealed class ConversationApplication(
         ConversationEvent input,
         CancellationToken ct)
     {
+        var dispatchStarted = Stopwatch.GetTimestamp();
+        logger.LogInformation(
+            "AiCoach.Dispatch.Started ConversationId={ConversationId} InputEvent={InputEvent} ExpectedVersion={ExpectedVersion} InputPayload={InputPayload}",
+            conversationId,
+            input.GetType().Name,
+            expectedVersion,
+            SerializeForLog(input));
+
         var (conversation, pendingEffects) =
             await ReduceAndCommitAsync(userId, conversationId, expectedVersion, input, ct);
 
         // Effects run outside the lock (a model call must never block other transitions), and
         // each result event goes through its own locked reduce+commit cycle.
         var chainLength = 0;
+        var effectsExecuted = 0;
         var queue = new Queue<EffectExecutionContext>(pendingEffects);
         while (queue.TryDequeue(out var context))
         {
             if (++chainLength > MaxEffectChainLength)
             {
                 logger.LogError(
-                    "Effect chain exceeded {Max} for conversation {ConversationId} — stopping.",
-                    MaxEffectChainLength, conversationId);
+                    "AiCoach.EffectChain.LimitExceeded ConversationId={ConversationId} MaxChainLength={MaxChainLength}",
+                    conversationId,
+                    MaxEffectChainLength);
                 break;
             }
+            effectsExecuted++;
 
             var handler = effectHandlers.FirstOrDefault(h => h.CanHandle(context.Request))
                           ?? throw new InvalidOperationException(
                               $"No effect handler for {context.Request.GetType().Name}.");
 
             ConversationEvent? resultEvent;
+            var effectStarted = Stopwatch.GetTimestamp();
+            logger.LogInformation(
+                "AiCoach.Effect.Started ConversationId={ConversationId} EffectId={EffectId} EffectType={EffectType} BaseConversationVersion={BaseConversationVersion} ChainPosition={ChainPosition} EffectPayload={EffectPayload}",
+                conversationId,
+                context.EffectId,
+                context.Request.GetType().Name,
+                context.BaseConversationVersion,
+                chainLength,
+                SerializeForLog(context.Request));
             try
             {
                 resultEvent = await handler.ExecuteAsync(context, ct);
@@ -92,8 +114,16 @@ public sealed class ConversationApplication(
                 // Effect handlers are expected to convert failures into result events themselves;
                 // anything escaping here is a system fault — fail the effect, keep the
                 // conversation consistent.
-                logger.LogError(ex, "Effect {EffectId} crashed for conversation {ConversationId}",
-                    context.EffectId, conversationId);
+                logger.LogError(
+                    ex,
+                    "AiCoach.Effect.Crashed ConversationId={ConversationId} EffectId={EffectId} EffectType={EffectType} Result={Result} ExceptionType={ExceptionType} ExceptionMessage={ExceptionMessage} EffectPayload={EffectPayload}",
+                    conversationId,
+                    context.EffectId,
+                    context.Request.GetType().Name,
+                    "UnhandledException",
+                    ex.GetType().Name,
+                    ex.Message,
+                    SerializeForLog(context.Request));
                 resultEvent = context.Request switch
                 {
                     GenerateModelTurnEffectRequest => new ModelTurnFailed(
@@ -104,6 +134,16 @@ public sealed class ConversationApplication(
                 };
             }
 
+            logger.LogInformation(
+                "AiCoach.Effect.ExecutionCompleted ConversationId={ConversationId} EffectId={EffectId} EffectType={EffectType} ResultEvent={ResultEvent} HasResult={HasResult} ElapsedMs={ElapsedMs} ResultPayload={ResultPayload}",
+                conversationId,
+                context.EffectId,
+                context.Request.GetType().Name,
+                resultEvent?.GetType().Name,
+                resultEvent is not null,
+                Stopwatch.GetElapsedTime(effectStarted).TotalMilliseconds,
+                SerializeForLog(resultEvent));
+
             if (resultEvent is null)
                 continue;
 
@@ -113,6 +153,16 @@ public sealed class ConversationApplication(
             foreach (var next in nextEffects)
                 queue.Enqueue(next);
         }
+
+        logger.LogInformation(
+            "AiCoach.Dispatch.Completed ConversationId={ConversationId} InputEvent={InputEvent} ConversationVersion={ConversationVersion} Phase={Phase} GenerationStatus={GenerationStatus} EffectCount={EffectCount} ElapsedMs={ElapsedMs}",
+            conversationId,
+            input.GetType().Name,
+            conversation.Version,
+            conversation.Phase,
+            conversation.GenerationStatus,
+            effectsExecuted,
+            Stopwatch.GetElapsedTime(dispatchStarted).TotalMilliseconds);
 
         return conversation;
     }
@@ -125,18 +175,36 @@ public sealed class ConversationApplication(
         ConversationEvent input,
         CancellationToken ct)
     {
+        var transactionStarted = Stopwatch.GetTimestamp();
         using var _ = await store.AcquireLockAsync(conversationId, ct);
 
         var conversation = await LoadOwnedAsync(userId, conversationId, ct);
 
         if (expectedVersion.HasValue && conversation.Version != expectedVersion.Value)
+        {
+            logger.LogWarning(
+                "AiCoach.Transaction.VersionConflict ConversationId={ConversationId} Transaction={Transaction} InputEvent={InputEvent} ExpectedVersion={ExpectedVersion} ActualVersion={ActualVersion}",
+                conversationId,
+                "Input",
+                input.GetType().Name,
+                expectedVersion.Value,
+                conversation.Version);
             throw new ConversationVersionConflictException(conversation);
+        }
 
         var contexts = ReduceApplySave(conversation, input, out var transition);
         if (!transition.IsAccepted)
             throw new ConversationRuleViolationException(transition.Rejection, conversation);
 
         await store.SaveAsync(conversation, ct);
+        logger.LogInformation(
+            "AiCoach.Transaction.Committed ConversationId={ConversationId} Transaction={Transaction} InputEvent={InputEvent} ConversationVersion={ConversationVersion} EffectCount={EffectCount} ElapsedMs={ElapsedMs}",
+            conversationId,
+            "Input",
+            input.GetType().Name,
+            conversation.Version,
+            contexts.Count,
+            Stopwatch.GetElapsedTime(transactionStarted).TotalMilliseconds);
         return (conversation, contexts);
     }
 
@@ -148,6 +216,7 @@ public sealed class ConversationApplication(
         ConversationEvent resultEvent,
         CancellationToken ct)
     {
+        var transactionStarted = Stopwatch.GetTimestamp();
         using var _ = await store.AcquireLockAsync(conversationId, ct);
 
         var conversation = await LoadOwnedAsync(userId, conversationId, ct);
@@ -157,8 +226,12 @@ public sealed class ConversationApplication(
         if (effect is null || effect.Status is not (EffectStatus.Pending or EffectStatus.Running))
         {
             // Late or duplicate result — must not overwrite newer state (v3 §7.4).
-            logger.LogWarning("Dropping stale effect result {EffectId} for conversation {ConversationId}",
-                context.EffectId, conversationId);
+            logger.LogWarning(
+                "AiCoach.EffectResult.Dropped ConversationId={ConversationId} EffectId={EffectId} ResultEvent={ResultEvent} Reason={Reason}",
+                conversationId,
+                context.EffectId,
+                resultEvent.GetType().Name,
+                TransitionRejection.StaleEffectResult);
             return (conversation, []);
         }
 
@@ -168,8 +241,12 @@ public sealed class ConversationApplication(
             effect.MarkSuperseded(now);
             await store.SaveAsync(conversation, ct);
             logger.LogWarning(
-                "Effect result {EffectId} rejected by kernel ({Rejection}) for conversation {ConversationId}",
-                context.EffectId, transition.Rejection, conversationId);
+                "AiCoach.EffectResult.Superseded ConversationId={ConversationId} EffectId={EffectId} ResultEvent={ResultEvent} Rejection={Rejection} ConversationVersion={ConversationVersion}",
+                conversationId,
+                context.EffectId,
+                resultEvent.GetType().Name,
+                transition.Rejection,
+                conversation.Version);
             return (conversation, []);
         }
 
@@ -180,6 +257,15 @@ public sealed class ConversationApplication(
             effect.MarkCompleted(now);
 
         await store.SaveAsync(conversation, ct);
+        logger.LogInformation(
+            "AiCoach.EffectResult.Committed ConversationId={ConversationId} EffectId={EffectId} ResultEvent={ResultEvent} EffectStatus={EffectStatus} ConversationVersion={ConversationVersion} NextEffectCount={NextEffectCount} ElapsedMs={ElapsedMs}",
+            conversationId,
+            context.EffectId,
+            resultEvent.GetType().Name,
+            effect.Status,
+            conversation.Version,
+            contexts.Count,
+            Stopwatch.GetElapsedTime(transactionStarted).TotalMilliseconds);
         return (conversation, contexts);
     }
 
@@ -191,6 +277,20 @@ public sealed class ConversationApplication(
         var mode = modeRegistry.Get(conversation.Mode);
         var snapshot = conversation.ToSnapshot();
         transition = kernel.Apply(snapshot, input, mode);
+        logger.LogInformation(
+            "AiCoach.KernelTransition.Evaluated ConversationId={ConversationId} InputEvent={InputEvent} ConversationVersion={ConversationVersion} FromPhase={FromPhase} Accepted={Accepted} Rejection={Rejection} ToPhase={ToPhase} GenerationStatus={GenerationStatus} MutationCount={MutationCount} EffectCount={EffectCount} DomainEventCount={DomainEventCount} AllowedActionCount={AllowedActionCount}",
+            conversation.Id,
+            input.GetType().Name,
+            snapshot.Version,
+            snapshot.Phase,
+            transition.IsAccepted,
+            transition.Rejection,
+            transition.IsAccepted ? transition.NextPhase : snapshot.Phase,
+            transition.IsAccepted ? transition.NextGenerationStatus : snapshot.GenerationStatus,
+            transition.Mutations.Count,
+            transition.Effects.Count,
+            transition.Events.Count,
+            transition.AllowedActions.Count);
         if (!transition.IsAccepted)
             return [];
 
@@ -227,4 +327,8 @@ public sealed class ConversationApplication(
             throw new ConversationNotFoundException();
         return conversation;
     }
+
+    private static string SerializeForLog(object? value) => value is null
+        ? "null"
+        : JsonSerializer.Serialize(value, value.GetType());
 }

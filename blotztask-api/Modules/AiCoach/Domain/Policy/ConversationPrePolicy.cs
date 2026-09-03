@@ -47,7 +47,7 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
             // generation. Keeping ContinueListening here creates a silent loop where the
             // assistant acknowledges the user's delegation without advancing the intent.
             if (snapshot.ActivePlanningIntent?.Status == PlanningIntentStatus.ReadyForProposal
-                && PlanningStateRules.CanGenerateProposal(snapshot)
+                && snapshot.OpenQuestion is null
                 && policy.AllowsProposalCreation)
             {
                 allowed = new HashSet<ConversationStrategy>
@@ -64,7 +64,6 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
                         MaxResponseLength: policy.MaxResponseLength),
                     ProposalConstraints: new ProposalConstraints(
                         MaxProposals: policy.MaxProposalsPerSet,
-                        RequiresExplicitActionIntent: policy.RequiresExplicitActionIntentForProposal,
                         ProposalAllowed: proposalAllowed));
             }
 
@@ -77,7 +76,9 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
             };
             // One clarification cycle gets one information-slot question. Once a question is
             // open, the next turn must use the answer or a safe default rather than ask again.
-            if (snapshot.OpenQuestion is null)
+            var clarificationAttempts = snapshot.ActivePlanningIntent?.AskedTopics?.Count ?? 0;
+            if (snapshot.OpenQuestion is null
+                && clarificationAttempts < policy.Planning.MaxClarificationAttempts)
             {
                 strategies.Add(ConversationStrategy.AskGentleQuestion);
                 strategies.Add(ConversationStrategy.AskClarifyingQuestion);
@@ -98,7 +99,6 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
                 MaxResponseLength: policy.MaxResponseLength),
             ProposalConstraints: new ProposalConstraints(
                 MaxProposals: policy.MaxProposalsPerSet,
-                RequiresExplicitActionIntent: policy.RequiresExplicitActionIntentForProposal,
                 ProposalAllowed: proposalAllowed));
     }
 

@@ -46,10 +46,27 @@ public sealed record ConversationPolicyDefinition(
     int MaxQuestionsPerTurn,
     int MaxProposalsPerSet,
     int MaxResponseLength,
-    bool RequiresExplicitActionIntentForProposal,
     bool AllowsProposalCreation,
     bool AllowsModelProposalSetUpdates,
-    bool AllowsPartialProposalConfirmation);
+    bool AllowsPartialProposalConfirmation,
+    PlanningPolicyDefinition Planning,
+    ProposalGenerationPolicy ProposalGeneration);
+
+public sealed record PlanningPolicyDefinition(
+    string Version,
+    int MaxClarificationAttempts,
+    bool AllowConservativeGoalProposal,
+    bool AllowCoachDecomposition,
+    bool AllowSafeDefaultsWhenClarificationUnavailable);
+
+public sealed record ProposalGenerationPolicy(
+    string Version,
+    int DefaultDurationMinutes,
+    int MinimumLeadMinutes,
+    int SlotGranularityMinutes,
+    TimeOnly WorkingDayStart,
+    TimeOnly WorkingDayEnd,
+    bool AllowSameDay);
 
 public sealed class ModeDefinitionRegistry
 {
@@ -88,21 +105,24 @@ public static class ExecutionModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Execution,
-        RuleVersion: "execution-rules-v3",
-        PromptVersion: "execution-prompts-v6",
+        RuleVersion: "execution-rules-v4",
+        PromptVersion: "execution-prompts-v7",
         ToolsetVersion: "execution-toolset-v3",
         MemoryProfileVersion: "execution-memory-v1",
         Policy: new ConversationPolicyDefinition(
-            Version: "execution-policy-v1",
+            Version: "execution-policy-v2",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
-            RequiresExplicitActionIntentForProposal: true,
             AllowsProposalCreation: true,
             // Card edits stay a client-local concern in v1 (validated UX): the model discusses
             // the pending card, it never rewrites it.
             AllowsModelProposalSetUpdates: false,
-            AllowsPartialProposalConfirmation: true),
+            AllowsPartialProposalConfirmation: true,
+            Planning: new PlanningPolicyDefinition("execution-planning-v1", 1, true, true, true),
+            ProposalGeneration: new ProposalGenerationPolicy(
+                "execution-proposal-generation-v1", 30, 15, 15,
+                new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportedPhases: SharedPhases.All,
         AllowedReadOnlyCapabilities: new HashSet<string>(),
         PersistencePolicy: ConversationPersistencePolicy.InMemoryOnly);
@@ -125,10 +145,13 @@ public static class ClarifyModeDefinition
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
-            RequiresExplicitActionIntentForProposal: true,
             AllowsProposalCreation: true,
             AllowsModelProposalSetUpdates: false,
-            AllowsPartialProposalConfirmation: true),
+            AllowsPartialProposalConfirmation: true,
+            Planning: new PlanningPolicyDefinition("clarify-planning-v1", 1, false, true, true),
+            ProposalGeneration: new ProposalGenerationPolicy(
+                "clarify-proposal-generation-v1", 30, 15, 15,
+                new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportedPhases: SharedPhases.All,
         AllowedReadOnlyCapabilities: new HashSet<string>(),
         PersistencePolicy: ConversationPersistencePolicy.SingleActiveServerConversation);
@@ -152,10 +175,13 @@ public static class CompanionModeDefinition
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
-            RequiresExplicitActionIntentForProposal: true,
             AllowsProposalCreation: true,
             AllowsModelProposalSetUpdates: false,
-            AllowsPartialProposalConfirmation: true),
+            AllowsPartialProposalConfirmation: true,
+            Planning: new PlanningPolicyDefinition("companion-planning-v1", 1, false, false, false),
+            ProposalGeneration: new ProposalGenerationPolicy(
+                "companion-proposal-generation-v1", 30, 15, 15,
+                new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportedPhases: SharedPhases.All,
         AllowedReadOnlyCapabilities: new HashSet<string>(),
         PersistencePolicy: ConversationPersistencePolicy.SingleActiveServerConversation);

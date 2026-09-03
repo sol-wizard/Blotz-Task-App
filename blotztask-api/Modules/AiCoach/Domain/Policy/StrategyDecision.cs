@@ -9,7 +9,24 @@ public sealed record StrategyDecision(
     StrategyDecisionType DecisionType,
     StrategyReasonCode ReasonCode,
     bool AcceptResponseCandidate,
-    bool AcceptProposalSetCandidate);
+    bool AcceptProposalSetCandidate,
+    RegenerationDirective? Regeneration = null,
+    PolicyFallbackPlan? Fallback = null);
+
+public sealed record RegenerationDirective(
+    ConversationStrategy RequiredStrategy,
+    IReadOnlyList<string> RequiredFields,
+    IReadOnlySet<Planning.AllowedAssumption> AllowedAssumptions);
+
+public enum PolicyFallbackAction
+{
+    SafeResponse = 0,
+    DeterministicProposal = 1,
+}
+
+public sealed record PolicyFallbackPlan(
+    PolicyFallbackAction Action,
+    ConversationStrategy FailureStrategy);
 
 public enum StrategyDecisionType
 {
@@ -33,11 +50,8 @@ public enum StrategyReasonCode
     ProposalSetMissing = 5,
     ProposalSetInvalid = 6,
     PendingProposalSetAlreadyExists = 7,
-    TooManyQuestions = 8,
-    ResponseInvalid = 9,
-    ModelResponseInvalid = 10,
-    UserRejectedAction = 11,
-    ClarificationSlotAlreadyAsked = 12,
-    ActionableIntentRequiresProposal = 13,
-    ClarificationResolvedRequiresProposal = 14,
+    ResponseInvalid = 8,
+    UserRejectedAction = 9,
+    ClarificationSlotAlreadyAsked = 10,
+    ActionableIntentRequiresProposal = 11,
 }

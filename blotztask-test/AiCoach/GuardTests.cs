@@ -3,6 +3,7 @@ using BlotzTask.Modules.AiCoach.Domain.Candidates;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Guards;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
+using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using FluentAssertions;
@@ -24,13 +25,13 @@ public class GuardTests
     {
         // Arrange
         var guard = new EvidenceGuard();
-        var signals = new InterpretationSignals(IntentType.ConcreteAction, true, "帮我列出可能需要完成的任务", false);
+        var interpretation = Interpretation("任务", "帮我列出可能需要完成的任务");
 
         // Act
-        var verdict = guard.Verify(signals, "帮我列出可能需要完成的任务");
+        var verdict = guard.Verify(interpretation, "帮我列出可能需要完成的任务");
 
         // Assert
-        verdict.ActionIntentVerified.Should().BeTrue(because: "the quote is literally in the current message");
+        verdict.Items.Should().ContainSingle(because: "the quote is literally in the current message");
     }
 
     [Fact]
@@ -38,13 +39,13 @@ public class GuardTests
     {
         // Arrange
         var guard = new EvidenceGuard();
-        var signals = new InterpretationSignals(IntentType.ConcreteAction, true, "help me plan this", false);
+        var interpretation = Interpretation("plan", "help me plan this");
 
         // Act
-        var verdict = guard.Verify(signals, "Could you  help me\nplan this today?");
+        var verdict = guard.Verify(interpretation, "Could you  help me\nplan this today?");
 
         // Assert
-        verdict.ActionIntentVerified.Should().BeTrue(because: "quoting must not fail on formatting differences");
+        verdict.Items.Should().ContainSingle(because: "quoting must not fail on formatting differences");
     }
 
     [Fact]
@@ -52,14 +53,15 @@ public class GuardTests
     {
         // Arrange
         var guard = new EvidenceGuard();
-        var signals = new InterpretationSignals(IntentType.ConcreteAction, true, "帮我安排明天的任务", false);
+        var interpretation = Interpretation("明天的任务", "帮我安排明天的任务");
 
         // Act
-        var verdict = guard.Verify(signals, "我今天有点累");
+        var verdict = guard.Verify(interpretation, "我今天有点累");
 
         // Assert
-        verdict.ActionIntentVerified.Should().BeFalse(
+        verdict.Items.Should().BeEmpty(
             because: "a quote that is not in the current message is model inference, not user evidence");
+        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.QuoteNotFound);
     }
 
     [Fact]
@@ -67,20 +69,63 @@ public class GuardTests
     {
         // Arrange
         var guard = new EvidenceGuard();
-        var signals = new InterpretationSignals(IntentType.ConcreteAction, true, null, false);
+        var interpretation = Interpretation("明天的任务", "");
 
         // Act
-        var verdict = guard.Verify(signals, "帮我安排明天的任务");
+        var verdict = guard.Verify(interpretation, "帮我安排明天的任务");
 
         // Assert
-        verdict.ActionIntentVerified.Should().BeFalse(because: "UserExplicit evidence requires the quote itself");
+        verdict.Items.Should().BeEmpty(because: "UserExplicit evidence requires the quote itself");
+        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.MissingQuote);
     }
+
+    [Fact]
+    public void Evidence_FabricatedDisposition_DoesNotBecomeVerifiedAuthorization()
+    {
+        var guard = new EvidenceGuard();
+        var interpretation = new InterpretationCandidate(
+            IntentType.Goal,
+            [new PlanningItemCandidate("写论文", new EvidenceReference("写论文"), PlanningItemKind.Goal)],
+            [],
+            new UserTurnDispositionCandidate(
+                UserTurnDisposition.DelegatedToCoach,
+                new EvidenceReference("你决定")));
+
+        var verdict = guard.Verify(interpretation, "我想写论文");
+
+        verdict.Disposition.Should().Be(UserTurnDisposition.NotApplicable);
+        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.QuoteNotFound);
+    }
+
+    [Fact]
+    public void Evidence_DelegationQuote_CannotProveAnInventedPlanningItem()
+    {
+        var guard = new EvidenceGuard();
+        var interpretation = new InterpretationCandidate(
+            IntentType.Goal,
+            [new PlanningItemCandidate("检索参考资料", new EvidenceReference("帮我安排"), PlanningItemKind.Action)],
+            [],
+            new UserTurnDispositionCandidate(
+                UserTurnDisposition.DelegatedToCoach,
+                new EvidenceReference("帮我安排")));
+
+        var verdict = guard.Verify(interpretation, "帮我安排");
+
+        verdict.Items.Should().BeEmpty();
+        verdict.Disposition.Should().Be(UserTurnDisposition.DelegatedToCoach);
+        verdict.Evidence.VerifiedClaims.Should().Be(1,
+            because: "a verified disposition is itself a verified evidence claim");
+        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.ClaimNotSupportedByQuote);
+    }
+
+    private static InterpretationCandidate Interpretation(string text, string quote) => new(
+        IntentType.ConcreteAction,
+        [new PlanningItemCandidate(text, new EvidenceReference(quote), PlanningItemKind.Action)]);
 
     // ---------- ProposalSet Guard ----------
 
     private static readonly ProposalConstraints Constraints = new(
         MaxProposals: ProposalSet.MaxProposals,
-        RequiresExplicitActionIntent: true,
         ProposalAllowed: true);
 
     private static ConversationSnapshot EmptySnapshot()
@@ -222,10 +267,11 @@ public class GuardTests
         // Arrange
         const string json = """
         {
-          "signals": { "intent": "concrete_action", "userExpressedActionIntent": true,
-                       "actionIntentQuote": "明天要上班", "userRejectedAction": false },
-          "strategy": "show_proposal_set",
-          "response": { "type": "proposal_introduction", "text": "建议 9 点开始，精神最好。", "question": null },
+          "interpretation": { "intent": "concrete_action",
+            "planningItems": [ { "text": "上班", "kind": "action", "evidence": { "quote": "明天要上班" } } ],
+            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "建议 9 点开始，精神最好。", "question": null, "questionTopic": null },
           "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "上班",
             "description": null, "date": "2026-08-26", "startTime": "09:00", "endTime": "17:00",
             "labelId": null } ] }
@@ -238,10 +284,35 @@ public class GuardTests
         // Assert
         result.IsSuccess.Should().BeTrue(result.Error);
         var candidate = result.Candidate!;
-        candidate.StrategyCandidate.Should().Be(ConversationStrategy.ShowProposalSet);
+        candidate.SuggestedAction.Should().Be(ConversationStrategy.ShowProposalSet);
         candidate.ResponseCandidate.Should().BeOfType<ProposalIntroductionResponse>();
         candidate.ProposalSetCandidate!.Proposals.Single().Date.Should().Be(new DateOnly(2026, 8, 26));
-        candidate.Signals.ActionIntentQuote.Should().Be("明天要上班");
+        candidate.Interpretation.PlanningItems!.Single().Evidence.Quote.Should().Be("明天要上班");
+    }
+
+    [Fact]
+    public void Parser_MissingPlanningEvidence_RemainsVisibleToEvidenceGuard()
+    {
+        const string json = """
+        {
+          "interpretation": { "intent": "concrete_action",
+            "planningItems": [ { "text": "上班", "kind": "action" } ],
+            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "排好了。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "上班",
+            "description": null, "date": "2026-08-26", "startTime": "09:00", "endTime": "17:00",
+            "labelId": null } ] }
+        }
+        """;
+
+        var parsed = ModelTurnCandidateContract.Parse(json);
+        var verified = new EvidenceGuard().Verify(parsed.Candidate!.Interpretation, "明天要上班");
+
+        parsed.IsSuccess.Should().BeTrue(parsed.Error);
+        verified.Items.Should().BeEmpty();
+        verified.Evidence.SubmittedClaims.Should().Be(1);
+        verified.Evidence.Issues.Should().Contain(EvidenceIssue.MissingQuote);
     }
 
     [Fact]
@@ -250,10 +321,9 @@ public class GuardTests
         // Arrange
         const string json = """
         {
-          "signals": { "intent": "goal", "userExpressedActionIntent": false,
-                       "actionIntentQuote": null, "userRejectedAction": false },
-          "strategy": "ask_clarifying_question",
-          "response": { "type": "clarifying_question", "text": "你想先做哪件具体的事？", "question": null },
+          "interpretation": { "intent": "goal", "planningItems": [], "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "ask_clarifying_question",
+          "response": { "type": "clarifying_question", "text": "你想先做哪件具体的事？", "question": null, "questionTopic": "concrete_step" },
           "proposalSet": null
         }
         """;
@@ -272,10 +342,11 @@ public class GuardTests
         // Arrange
         const string json = """
         {
-          "signals": { "intent": "concrete_action", "userExpressedActionIntent": true,
-                       "actionIntentQuote": "上班", "userRejectedAction": false },
-          "strategy": "show_proposal_set",
-          "response": { "type": "proposal_introduction", "text": "好的。", "question": null },
+          "interpretation": { "intent": "concrete_action",
+            "planningItems": [ { "text": "上班", "kind": "action", "evidence": { "quote": "上班" } } ],
+            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "好的。", "question": null, "questionTopic": null },
           "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "上班",
             "description": null, "date": "26/08/2026", "startTime": "09:00", "endTime": "17:00",
             "labelId": null } ] }
@@ -291,26 +362,25 @@ public class GuardTests
     }
 
     [Fact]
-    public void Parser_StrategyOutsideTheV1OutputEnum_StillParsesForPolicyToReject()
+    public void Parser_KnownStrategyOutsideTheOutputEnum_StillParsesForPolicyToReject()
     {
         // Arrange
         const string json = """
         {
-          "signals": { "intent": "goal", "userExpressedActionIntent": false,
-                       "actionIntentQuote": null, "userRejectedAction": false },
-          "strategy": "update_proposal_set",
-          "response": { "type": "listening", "text": "好的。", "question": null },
+          "interpretation": { "intent": "goal", "planningItems": [], "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "update_proposal_set",
+          "response": { "type": "listening", "text": "好的。", "question": null, "questionTopic": null },
           "proposalSet": null
         }
         """;
 
-        // Act — update_proposal_set is a valid domain strategy but NOT in the v1 output contract.
+        // Act — update_proposal_set is a valid domain strategy but not in the model output contract.
         var result = ModelTurnCandidateContract.Parse(json);
 
         // Assert
         result.IsSuccess.Should().BeTrue(
             because: "the wire value maps to a known strategy; Post-Policy decides whether it is allowed");
-        result.Candidate!.StrategyCandidate.Should().Be(ConversationStrategy.UpdateProposalSet);
+        result.Candidate!.SuggestedAction.Should().Be(ConversationStrategy.UpdateProposalSet);
     }
 
     [Fact]

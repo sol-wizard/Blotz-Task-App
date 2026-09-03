@@ -5,9 +5,11 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
-using Microsoft.Extensions.Options;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Enums;
+using System.Diagnostics;
+using System.Text.Json;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.AiCoach.Application.Effects;
 
@@ -52,12 +54,30 @@ public sealed class GenerateModelTurnEffectHandler(
 
     public async Task<ConversationEvent?> ExecuteAsync(EffectExecutionContext context, CancellationToken ct)
     {
+        var effectStarted = Stopwatch.GetTimestamp();
+        logger.LogInformation(
+            "AiCoach.ModelEffect.Started ConversationId={ConversationId} EffectId={EffectId} BaseConversationVersion={BaseConversationVersion} Mode={Mode} RuleVersion={RuleVersion} PolicyVersion={PolicyVersion} PromptVersion={PromptVersion}",
+            context.ConversationId,
+            context.EffectId,
+            context.BaseConversationVersion,
+            context.ModeDefinition.Mode,
+            context.ModeDefinition.RuleVersion,
+            context.ModeDefinition.Policy.Version,
+            context.ModeDefinition.PromptVersion);
         try
         {
             await checkQuota.CheckQuotaAsync(context.UserId, ct);
         }
-        catch (AiQuotaExceededException)
+        catch (AiQuotaExceededException ex)
         {
+            logger.LogWarning(
+                ex,
+                "AiCoach.ModelEffect.QuotaRejected ConversationId={ConversationId} EffectId={EffectId} Result={Result} ElapsedMs={ElapsedMs} ExceptionMessage={ExceptionMessage}",
+                context.ConversationId,
+                context.EffectId,
+                AiGenerationErrorCode.QuotaExceeded,
+                Stopwatch.GetElapsedTime(effectStarted).TotalMilliseconds,
+                ex.Message);
             return new ModelTurnFailed(
                 context.EffectId, context.BaseConversationVersion, AiGenerationErrorCode.QuotaExceeded);
         }
@@ -80,13 +100,21 @@ public sealed class GenerateModelTurnEffectHandler(
         }
         catch (ClientResultException ex)
         {
-            logger.LogError(ex, "Azure OpenAI call failed with status {Status}", ex.Status);
             var code = ex.Status switch
             {
                 429 or >= 500 => AiGenerationErrorCode.ModelUnavailable,
                 401 or 403 => AiGenerationErrorCode.ConfigurationError,
                 _ => AiGenerationErrorCode.Unknown,
             };
+            logger.LogError(
+                ex,
+                "AiCoach.ModelEffect.GatewayFailed ConversationId={ConversationId} EffectId={EffectId} Status={Status} Result={Result} ElapsedMs={ElapsedMs} ExceptionMessage={ExceptionMessage}",
+                context.ConversationId,
+                context.EffectId,
+                ex.Status,
+                code,
+                Stopwatch.GetElapsedTime(effectStarted).TotalMilliseconds,
+                ex.Message);
             return new ModelTurnFailed(context.EffectId, context.BaseConversationVersion, code);
         }
 
@@ -104,14 +132,27 @@ public sealed class GenerateModelTurnEffectHandler(
             // so watching the console while using the app shows what the session costs.
             var usage = usageTracker.Add(
                 context.ConversationId, result.InputTokens, result.OutputTokens, modelCalls: 1);
-            var opts = options.Value;
-            var cost = usage.EstimateUsd(opts.InputTokenUsdPerMillion, opts.OutputTokenUsdPerMillion);
+            var moduleOptions = options.Value;
+            var estimatedCostUsd = usage.EstimateUsd(
+                moduleOptions.InputTokenUsdPerMillion,
+                moduleOptions.OutputTokenUsdPerMillion);
             logger.LogInformation(
-                "AiCoach usage: conversation {ConversationId} turn={Turn} turnTokens={TurnTokens} (in={InputTokens}/out={OutputTokens}) | conversation total={TotalTokens} (in={TotalInput}/out={TotalOutput}){Cost}",
+                "AiCoach.Usage.Recorded ConversationId={ConversationId} Turn={Turn} TurnTokens={TurnTokens} InputTokens={InputTokens} OutputTokens={OutputTokens} ConversationTotalTokens={ConversationTotalTokens} ConversationInputTokens={ConversationInputTokens} ConversationOutputTokens={ConversationOutputTokens} EstimatedCostUsd={EstimatedCostUsd}",
                 context.ConversationId, usage.Turns, result.TotalTokens, result.InputTokens, result.OutputTokens,
-                usage.TotalTokens, usage.InputTokens, usage.OutputTokens,
-                cost is null ? " | cost: set AiCoach:InputTokenUsdPerMillion + OutputTokenUsdPerMillion to see $" : $" | est ${cost:F4}");
+                usage.TotalTokens, usage.InputTokens, usage.OutputTokens, estimatedCostUsd);
         }
+
+        logger.LogInformation(
+            "AiCoach.ModelEffect.Completed ConversationId={ConversationId} EffectId={EffectId} CompletionReason={CompletionReason} HasOutcome={HasOutcome} InputTokens={InputTokens} OutputTokens={OutputTokens} TotalTokens={TotalTokens} ElapsedMs={ElapsedMs} Outcome={Outcome}",
+            context.ConversationId,
+            context.EffectId,
+            result.CompletionReason,
+            result.Outcome is not null,
+            result.InputTokens,
+            result.OutputTokens,
+            result.TotalTokens,
+            Stopwatch.GetElapsedTime(effectStarted).TotalMilliseconds,
+            JsonSerializer.Serialize(result.Outcome));
 
         return result.CompletionReason switch
         {
@@ -164,14 +205,38 @@ public sealed class PersistProposalSetEffectHandler(
 
     public async Task<ConversationEvent?> ExecuteAsync(EffectExecutionContext context, CancellationToken ct)
     {
+        var effectStarted = Stopwatch.GetTimestamp();
         var request = (PersistProposalSetEffectRequest)context.Request;
         var validated = request.Validated;
         var proposalsById = validated.Proposals.ToDictionary(p => p.ProposalId);
+
+        logger.LogInformation(
+            "AiCoach.ProposalPersistence.Started ConversationId={ConversationId} EffectId={EffectId} ProposalSetId={ProposalSetId} Action={Action} ProposalCount={ProposalCount} ToPersistCount={ToPersistCount} AlreadyPersistedCount={AlreadyPersistedCount} Proposals={Proposals}",
+            context.ConversationId,
+            context.EffectId,
+            request.ProposalSetId,
+            request.Action,
+            validated.Proposals.Count,
+            validated.ToPersist.Count,
+            validated.Proposals.Count - validated.ToPersist.Count,
+            JsonSerializer.Serialize(validated.Proposals));
 
         var persisted = new List<PersistedProposal>(validated.ToPersist.Count);
         foreach (var resolved in validated.ToPersist)
         {
             var proposal = proposalsById[resolved.ProposalId];
+            var attempt = persisted.Count + 1;
+            var itemStarted = Stopwatch.GetTimestamp();
+            logger.LogInformation(
+                "AiCoach.ProposalPersistence.ItemStarted ConversationId={ConversationId} EffectId={EffectId} ProposalSetId={ProposalSetId} ProposalId={ProposalId} Attempt={Attempt} Total={Total} Title={Title} Description={Description}",
+                context.ConversationId,
+                context.EffectId,
+                request.ProposalSetId,
+                proposal.ProposalId,
+                attempt,
+                validated.ToPersist.Count,
+                proposal.Title,
+                proposal.Description);
             try
             {
                 var taskId = await addTaskCommandHandler.Handle(new AddTaskCommand
@@ -189,13 +254,36 @@ public sealed class PersistProposalSetEffectHandler(
                 }, ct);
 
                 persisted.Add(new PersistedProposal(proposal.ProposalId, taskId));
+                logger.LogInformation(
+                    "AiCoach.ProposalPersistence.ItemCommitted ConversationId={ConversationId} EffectId={EffectId} ProposalSetId={ProposalSetId} ProposalId={ProposalId} TaskId={TaskId} Attempt={Attempt} ElapsedMs={ElapsedMs} Title={Title} Description={Description}",
+                    context.ConversationId,
+                    context.EffectId,
+                    request.ProposalSetId,
+                    proposal.ProposalId,
+                    taskId,
+                    attempt,
+                    Stopwatch.GetElapsedTime(itemStarted).TotalMilliseconds,
+                    proposal.Title,
+                    proposal.Description);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex,
-                    "Failed to persist proposal set {ProposalSetId} item {ProposalId} ({Done}/{Total} created) for conversation {ConversationId}",
-                    request.ProposalSetId, proposal.ProposalId, persisted.Count, validated.ToPersist.Count,
-                    context.ConversationId);
+                logger.LogError(
+                    ex,
+                    "AiCoach.ProposalPersistence.Failed ConversationId={ConversationId} EffectId={EffectId} ProposalSetId={ProposalSetId} ProposalId={ProposalId} Result={Result} ExceptionType={ExceptionType} ExceptionMessage={ExceptionMessage} PersistedCount={PersistedCount} Total={Total} Attempt={Attempt} ElapsedMs={ElapsedMs} Title={Title} Description={Description}",
+                    context.ConversationId,
+                    context.EffectId,
+                    request.ProposalSetId,
+                    proposal.ProposalId,
+                    "TaskPersistenceFailed",
+                    ex.GetType().Name,
+                    ex.Message,
+                    persisted.Count,
+                    validated.ToPersist.Count,
+                    attempt,
+                    Stopwatch.GetElapsedTime(effectStarted).TotalMilliseconds,
+                    proposal.Title,
+                    proposal.Description);
                 return new ProposalSetPersistenceFailed(
                     context.EffectId, request.ProposalSetId, "TaskPersistenceFailed", persisted);
             }
@@ -204,7 +292,19 @@ public sealed class PersistProposalSetEffectHandler(
         // Proposals saved on an earlier attempt count toward the final result too.
         var alreadyPersisted = validated.Proposals
             .Where(p => p.PersistedTaskId.HasValue)
-            .Select(p => new PersistedProposal(p.ProposalId, p.PersistedTaskId!.Value));
+            .Select(p => new PersistedProposal(p.ProposalId, p.PersistedTaskId!.Value))
+            .ToList();
+
+        logger.LogInformation(
+            "AiCoach.ProposalPersistence.Completed ConversationId={ConversationId} EffectId={EffectId} ProposalSetId={ProposalSetId} Action={Action} PersistedCount={PersistedCount} NewlyPersistedCount={NewlyPersistedCount} ElapsedMs={ElapsedMs} Result={Result}",
+            context.ConversationId,
+            context.EffectId,
+            request.ProposalSetId,
+            request.Action,
+            alreadyPersisted.Count + persisted.Count,
+            persisted.Count,
+            Stopwatch.GetElapsedTime(effectStarted).TotalMilliseconds,
+            "Committed");
 
         return new ProposalSetPersistenceSucceeded(
             context.EffectId,

@@ -9,33 +9,37 @@ namespace BlotzTask.Modules.AiCoach.Domain.Candidates;
 /// it. The model never returns free text outside this contract.
 /// </summary>
 public sealed record ModelTurnCandidate(
-    InterpretationSignals Signals,
-    ConversationStrategy StrategyCandidate,
+    InterpretationCandidate Interpretation,
+    ConversationStrategy SuggestedAction,
     AssistantResponseCandidate ResponseCandidate,
     ProposalSetCandidate? ProposalSetCandidate);
 
 /// <summary>
-/// What the model believes it understood (v3 tech design §10.1), reduced to the signals v1
-/// policy actually consumes. <see cref="ActionIntentQuote"/> is the UserExplicit evidence for
-/// <see cref="UserExpressedActionIntent"/>: a literal quote from the CURRENT user message,
-/// verified by the Evidence Guard — model inference alone can never open the proposal path.
+/// What the model believes it understood (v3 tech design §10.1). Planning items, constraints,
+/// and turn disposition are untrusted claims until Evidence Guard verifies their literal quotes
+/// against the current user message.
 /// </summary>
-public sealed record InterpretationSignals(
+public sealed record InterpretationCandidate(
     IntentType Intent,
-    bool UserExpressedActionIntent,
-    string? ActionIntentQuote,
-    bool UserRejectedAction,
-    bool CoachDecompositionAuthorized = false,
     IReadOnlyList<PlanningItemCandidate>? PlanningItems = null,
-    string? Constraint = null,
-    string? ConstraintEvidenceQuote = null,
-    ClarificationDisposition ClarificationDisposition = ClarificationDisposition.NotApplicable);
+    IReadOnlyList<ConstraintCandidate>? Constraints = null,
+    UserTurnDispositionCandidate? Disposition = null);
 
 /// <summary>A model-proposed item plus a literal quote used by Evidence Guard.</summary>
 public sealed record PlanningItemCandidate(
     string Text,
-    string EvidenceQuote,
+    EvidenceReference Evidence,
     PlanningItemKind Kind = PlanningItemKind.Action);
+
+public sealed record ConstraintCandidate(
+    string Text,
+    EvidenceReference Evidence);
+
+public sealed record EvidenceReference(string Quote);
+
+public sealed record UserTurnDispositionCandidate(
+    UserTurnDisposition Kind,
+    EvidenceReference? Evidence);
 
 public enum PlanningItemKind
 {

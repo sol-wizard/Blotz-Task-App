@@ -1,195 +1,188 @@
 using BlotzTask.Modules.AiCoach.Domain.Candidates;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
+using BlotzTask.Modules.AiCoach.Domain.Planning;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Policy;
 
-/// <summary>
-/// Everything the Post-Policy is allowed to see (v3 tech design §13.7): assembled inputs only —
-/// no store, no model, no clock. <see cref="ActionIntentEvidenceVerified"/> is the Evidence
-/// Guard's verdict on the candidate's action-intent quote; the policy itself never re-reads the
-/// user message.
-/// </summary>
 public sealed record PolicyContext(
     ConversationSnapshot Snapshot,
     StrategyEnvelope Envelope,
     ModelTurnCandidate Candidate,
     AiCoachModeDefinition Mode,
-    bool ActionIntentEvidenceVerified,
-    bool SpecificGoalEvidenceVerified = false);
+    VerifiedPlanningContext VerifiedPlanning,
+    PlanningDecision Planning);
 
-/// <summary>
-/// Post-Policy (v3 tech design §12/§13): decides the FINAL strategy for the turn. It may accept
-/// the model's candidate, downgrade it to a lower risk level, or demand one regeneration —
-/// it can never upgrade to a higher risk level and can never trigger a business side effect.
-/// </summary>
 public interface IConversationPostPolicy
 {
     StrategyDecision Decide(PolicyContext context);
 }
 
+/// <summary>
+/// The only owner of the final conversation strategy. It consumes verified facts and the
+/// readiness calculator's decision; it never reinterprets evidence or generates payload data.
+/// </summary>
 public sealed class ConversationPostPolicy : IConversationPostPolicy
 {
     public StrategyDecision Decide(PolicyContext context)
     {
         var candidate = context.Candidate;
-        var strategy = candidate.StrategyCandidate;
+        var strategy = candidate.SuggestedAction;
         var envelope = context.Envelope;
 
-        // 1. Envelope check: a strategy outside the allowed space is never executed. The classic
-        //    case is ShowProposalSet while a card is already pending -> discuss the existing one.
         if (!envelope.AllowedStrategies.Contains(strategy))
         {
-            if (strategy.AsksQuestion() && context.Snapshot.OpenQuestion is not null)
+            if (strategy.AsksQuestion()
+                && context.Planning.Allows(AllowedPlanningAction.GenerateProposal)
+                && envelope.ProposalConstraints.ProposalAllowed)
             {
-                return new StrategyDecision(
-                    ConversationStrategy.ShowProposalSet,
-                    StrategyDecisionType.RequiresRegeneration,
-                    StrategyReasonCode.ClarificationSlotAlreadyAsked,
-                    AcceptResponseCandidate: false,
-                    AcceptProposalSetCandidate: false);
+                return RegenerateProposal(context, StrategyReasonCode.ActionableIntentRequiresProposal);
             }
 
             return strategy == ConversationStrategy.ShowProposalSet
                    && context.Snapshot.CurrentProposalSet is { IsOpen: true }
-                ? Downgrade(ConversationStrategy.DiscussExistingProposal, StrategyReasonCode.PendingProposalSetAlreadyExists)
+                ? Downgrade(ConversationStrategy.DiscussExistingProposal,
+                    StrategyReasonCode.PendingProposalSetAlreadyExists)
                 : Downgrade(SafeFallbackStrategy(envelope), StrategyReasonCode.StrategyNotInEnvelope);
         }
 
-        // 2. The typed response must match the strategy (v3 §14.2 mapping). A mismatch means the
-        //    model broke the output contract — worth one regeneration before falling back.
+        if (strategy == ConversationStrategy.ShowProposalSet
+            && context.VerifiedPlanning.Evidence.HasInvalidClaims)
+        {
+            return RegenerateProposal(context, StrategyReasonCode.EvidenceInvalid);
+        }
+
         if (!ResponseMatches(strategy, candidate.ResponseCandidate))
-            return new StrategyDecision(strategy, StrategyDecisionType.RequiresRegeneration,
-                StrategyReasonCode.ResponseTypeMismatch, AcceptResponseCandidate: false, AcceptProposalSetCandidate: false);
+        {
+            return new StrategyDecision(
+                strategy,
+                StrategyDecisionType.RequiresRegeneration,
+                StrategyReasonCode.ResponseTypeMismatch,
+                AcceptResponseCandidate: false,
+                AcceptProposalSetCandidate: false,
+                new RegenerationDirective(strategy, ["response"], context.Planning.AllowedAssumptions.ToHashSet()),
+                FallbackFor(context, strategy));
+        }
 
-        // 3. Question strategies must actually carry their single question.
         if (strategy.AsksQuestion() && string.IsNullOrWhiteSpace(QuestionOf(candidate.ResponseCandidate)))
-            return new StrategyDecision(strategy, StrategyDecisionType.RequiresRegeneration,
-                StrategyReasonCode.ResponseInvalid, AcceptResponseCandidate: false, AcceptProposalSetCandidate: false);
+        {
+            return new StrategyDecision(
+                strategy,
+                StrategyDecisionType.RequiresRegeneration,
+                StrategyReasonCode.ResponseInvalid,
+                AcceptResponseCandidate: false,
+                AcceptProposalSetCandidate: false,
+                new RegenerationDirective(strategy, ["response.question"], context.Planning.AllowedAssumptions.ToHashSet()),
+                FallbackFor(context, strategy));
+        }
 
-        // Evidence Guard has already verified concrete work in the current message. Asking the
-        // user to choose among those tasks is no longer a valid interpretation; the model must
-        // turn the verified intent into a proposal instead of reopening clarification.
+        if (context.VerifiedPlanning.Disposition == UserTurnDisposition.RejectedAction)
+        {
+            return strategy == ConversationStrategy.ShowProposalSet
+                ? Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.UserRejectedAction)
+                : Accept(strategy, acceptProposal: false);
+        }
+
         if (strategy.AsksQuestion()
-            && context.ActionIntentEvidenceVerified
-            && context.Candidate.Signals.PlanningItems is { Count: > 0 }
-            && (candidate.Signals.CoachDecompositionAuthorized
-                || context.Snapshot.ActivePlanningIntent?.CanSupportProposal == true))
+            && !context.Planning.Allows(AllowedPlanningAction.AskClarification))
         {
-            return new StrategyDecision(
-                ConversationStrategy.ShowProposalSet,
-                StrategyDecisionType.RequiresRegeneration,
-                StrategyReasonCode.ActionableIntentRequiresProposal,
-                AcceptResponseCandidate: false,
-                AcceptProposalSetCandidate: false);
+            return context.Planning.Allows(AllowedPlanningAction.GenerateProposal)
+                ? RegenerateProposal(context, StrategyReasonCode.ActionableIntentRequiresProposal)
+                : Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.ClarificationSlotAlreadyAsked);
         }
 
-        // A low-risk goal/domain is enough to start a reversible discovery step. Do not make
-        // the user choose a category before the coach has offered a useful default proposal.
-        if (strategy.AsksQuestion() && context.SpecificGoalEvidenceVerified)
-        {
-            return new StrategyDecision(
-                ConversationStrategy.ShowProposalSet,
-                StrategyDecisionType.RequiresRegeneration,
-                StrategyReasonCode.ActionableIntentRequiresProposal,
-                AcceptResponseCandidate: false,
-                AcceptProposalSetCandidate: false);
-        }
-
-        // Once the current message answers the single open clarification, an acknowledgement
-        // is not a valid terminal outcome when planning material exists. Continue directly to
-        // the conservative proposal path in this turn.
-        if (strategy != ConversationStrategy.ShowProposalSet
-            && context.Snapshot.OpenQuestion is not null
-            && (candidate.Signals.PlanningItems is { Count: > 0 }
-                || context.Snapshot.ActivePlanningIntent?.Items.Count > 0))
-        {
-            return new StrategyDecision(
-                ConversationStrategy.ShowProposalSet,
-                StrategyDecisionType.RequiresRegeneration,
-                StrategyReasonCode.ClarificationResolvedRequiresProposal,
-                AcceptResponseCandidate: false,
-                AcceptProposalSetCandidate: false);
-        }
-
-        // 4. Proposal path: every gate of v3 §13.4 in order.
         if (strategy == ConversationStrategy.ShowProposalSet)
-        {
-            if (candidate.ProposalSetCandidate is null || candidate.ProposalSetCandidate.Proposals.Count == 0)
-                return ProposalFailure(context, StrategyReasonCode.ProposalSetMissing);
+            return DecideProposal(context);
 
-            if (!envelope.ProposalConstraints.ProposalAllowed)
-                return Downgrade(SafeFallbackStrategy(envelope), StrategyReasonCode.PendingProposalSetAlreadyExists);
-
-            if (envelope.ProposalConstraints.RequiresExplicitActionIntent)
-            {
-                var hasCurrentExplicitIntent =
-                    (candidate.Signals.UserExpressedActionIntent && context.ActionIntentEvidenceVerified)
-                    || (candidate.Signals.ClarificationDisposition is ClarificationDisposition.Answered
-                        or ClarificationDisposition.DelegatedToCoach
-                        or ClarificationDisposition.CannotProvide
-                        && candidate.Signals.PlanningItems is { Count: > 0 });
-                var hasSpecificCoachSuggestion = context.SpecificGoalEvidenceVerified;
-                var hasActiveVerifiedIntent = context.Snapshot.ActivePlanningIntent?.CanSupportProposal == true
-                    || (context.Snapshot.OpenQuestion is not null
-                        && context.Snapshot.ActivePlanningIntent?.Items.Count > 0);
-
-                if (candidate.Signals.UserRejectedAction
-                    || (candidate.Signals.UserExpressedActionIntent
-                        && !context.ActionIntentEvidenceVerified
-                        && !hasActiveVerifiedIntent
-                        && !candidate.Signals.CoachDecompositionAuthorized
-                        && !hasSpecificCoachSuggestion))
-                    return ProposalFailure(context, StrategyReasonCode.EvidenceInvalid);
-
-                if (candidate.Signals.UserRejectedAction
-                    || (!hasCurrentExplicitIntent
-                        && !candidate.Signals.CoachDecompositionAuthorized
-                        && !hasSpecificCoachSuggestion
-                        && !hasActiveVerifiedIntent))
-                    return ProposalFailure(context, StrategyReasonCode.ExplicitActionIntentRequired);
-
-                // The intent must be backed by a verified UserExplicit quote from the current
-                // message or an active intent previously committed from such evidence.
-                if (!hasCurrentExplicitIntent && !hasActiveVerifiedIntent && !hasSpecificCoachSuggestion)
-                    return ProposalFailure(context, StrategyReasonCode.EvidenceInvalid);
-            }
-
-            if (candidate.ProposalSetCandidate.Proposals.Count > envelope.ProposalConstraints.MaxProposals)
-                return ProposalFailure(context, StrategyReasonCode.ProposalSetInvalid);
-
-            return new StrategyDecision(strategy, StrategyDecisionType.Accepted, StrategyReasonCode.None,
-                AcceptResponseCandidate: true, AcceptProposalSetCandidate: true);
-        }
-
-        // 5. Non-proposal strategies: accept the candidate; any stray ProposalSetCandidate is
-        //    silently discarded (it was never accepted, so nothing may be persisted from it).
-        return new StrategyDecision(strategy, StrategyDecisionType.Accepted, StrategyReasonCode.None,
-            AcceptResponseCandidate: true, AcceptProposalSetCandidate: false);
+        return Accept(strategy, acceptProposal: false);
     }
 
-    /// <summary>Downgrades never keep the candidate text — the fallback catalog speaks instead.</summary>
-    private static StrategyDecision Downgrade(ConversationStrategy target, StrategyReasonCode reason) =>
-        new(target, StrategyDecisionType.Downgraded, reason,
-            AcceptResponseCandidate: false, AcceptProposalSetCandidate: false);
+    private static StrategyDecision DecideProposal(PolicyContext context)
+    {
+        if (!context.Envelope.ProposalConstraints.ProposalAllowed)
+        {
+            return Downgrade(
+                SafeFallbackStrategy(context.Envelope),
+                StrategyReasonCode.PendingProposalSetAlreadyExists);
+        }
+
+        if (!context.Planning.Allows(AllowedPlanningAction.GenerateProposal))
+        {
+            var reason = context.Planning.Readiness == PlanningReadiness.Blocked
+                ? StrategyReasonCode.UserRejectedAction
+                : context.VerifiedPlanning.Evidence.HasInvalidClaims
+                    ? StrategyReasonCode.EvidenceInvalid
+                    : StrategyReasonCode.ExplicitActionIntentRequired;
+            return Downgrade(QuestionFallback(context), reason);
+        }
+
+        if (context.Candidate.ProposalSetCandidate is null
+            || context.Candidate.ProposalSetCandidate.Proposals.Count == 0)
+        {
+            return ProposalFailure(context, StrategyReasonCode.ProposalSetMissing);
+        }
+
+        if (context.Candidate.ProposalSetCandidate.Proposals.Count
+            > context.Envelope.ProposalConstraints.MaxProposals)
+        {
+            return ProposalFailure(context, StrategyReasonCode.ProposalSetInvalid);
+        }
+
+        return Accept(ConversationStrategy.ShowProposalSet, acceptProposal: true) with
+        {
+            Fallback = new PolicyFallbackPlan(
+                PolicyFallbackAction.DeterministicProposal,
+                QuestionFallback(context)),
+        };
+    }
+
+    private static StrategyDecision RegenerateProposal(
+        PolicyContext context,
+        StrategyReasonCode reason) =>
+        new(
+            ConversationStrategy.ShowProposalSet,
+            StrategyDecisionType.RequiresRegeneration,
+            reason,
+            AcceptResponseCandidate: false,
+            AcceptProposalSetCandidate: false,
+            new RegenerationDirective(
+                ConversationStrategy.ShowProposalSet,
+                ["response", "proposalSet"],
+                context.Planning.AllowedAssumptions.ToHashSet()),
+            new PolicyFallbackPlan(
+                PolicyFallbackAction.DeterministicProposal,
+                QuestionFallback(context)));
 
     private static StrategyDecision ProposalFailure(PolicyContext context, StrategyReasonCode reason)
     {
-        var proposalOnly = context.Envelope.AllowedStrategies.Contains(ConversationStrategy.ShowProposalSet)
-                           && !context.Envelope.AllowedStrategies.Contains(ConversationStrategy.AskClarifyingQuestion)
-                           && !context.Envelope.AllowedStrategies.Contains(ConversationStrategy.ContinueListening);
-        return proposalOnly
-            ? new StrategyDecision(
-                ConversationStrategy.ShowProposalSet,
-                StrategyDecisionType.RequiresRegeneration,
-                reason,
-                AcceptResponseCandidate: false,
-                AcceptProposalSetCandidate: false)
+        var canGenerate = context.Planning.Allows(AllowedPlanningAction.GenerateProposal);
+        return canGenerate
+            ? RegenerateProposal(context, reason)
             : Downgrade(QuestionFallback(context), reason);
     }
 
+    private static StrategyDecision Accept(ConversationStrategy strategy, bool acceptProposal) =>
+        new(strategy, StrategyDecisionType.Accepted, StrategyReasonCode.None,
+            AcceptResponseCandidate: true, AcceptProposalSetCandidate: acceptProposal,
+            Fallback: new PolicyFallbackPlan(PolicyFallbackAction.SafeResponse, strategy));
+
+    private static StrategyDecision Downgrade(ConversationStrategy target, StrategyReasonCode reason) =>
+        new(target, StrategyDecisionType.Downgraded, reason,
+            AcceptResponseCandidate: false, AcceptProposalSetCandidate: false,
+            Fallback: new PolicyFallbackPlan(PolicyFallbackAction.SafeResponse, target));
+
+    private static PolicyFallbackPlan FallbackFor(
+        PolicyContext context,
+        ConversationStrategy strategy) =>
+        strategy == ConversationStrategy.ShowProposalSet
+            ? new PolicyFallbackPlan(
+                PolicyFallbackAction.DeterministicProposal,
+                QuestionFallback(context))
+            : new PolicyFallbackPlan(PolicyFallbackAction.SafeResponse, strategy);
+
     private static ConversationStrategy QuestionFallback(PolicyContext context) =>
-        context.Snapshot.OpenQuestion is null
+        context.Planning.Allows(AllowedPlanningAction.AskClarification)
+        && context.Envelope.AllowedStrategies.Contains(ConversationStrategy.AskClarifyingQuestion)
             ? ConversationStrategy.AskClarifyingQuestion
             : ConversationStrategy.ContinueListening;
 
@@ -215,9 +208,9 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
 
     private static string? QuestionOf(AssistantResponseCandidate response) => response switch
     {
-        GentleQuestionResponse r => r.Question,
-        ClarifyingQuestionResponse r => r.Question,
-        GoalChoiceResponse r => r.Question,
+        GentleQuestionResponse value => value.Question,
+        ClarifyingQuestionResponse value => value.Question,
+        GoalChoiceResponse value => value.Question,
         _ => null,
     };
 }

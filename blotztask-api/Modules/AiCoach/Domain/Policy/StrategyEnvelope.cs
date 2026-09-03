@@ -19,5 +19,4 @@ public sealed record ResponseConstraints(
 
 public sealed record ProposalConstraints(
     int MaxProposals,
-    bool RequiresExplicitActionIntent,
     bool ProposalAllowed);

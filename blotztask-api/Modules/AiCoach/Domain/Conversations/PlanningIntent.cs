@@ -11,23 +11,20 @@ public sealed record ActivePlanningIntentSnapshot(
     Guid IntentId,
     Guid SourceMessageId,
     IReadOnlyList<PlanningItemSnapshot> Items,
-    string? Constraint,
+    IReadOnlyList<PlanningConstraintSnapshot> Constraints,
     PlanningIntentStatus Status,
-    IReadOnlySet<ClarificationTopic>? AskedTopics = null,
-    bool HasExplicitActionIntent = false,
-    string? ConstraintEvidenceQuote = null)
-{
-    public bool CanSupportProposal =>
-        HasExplicitActionIntent
-        && Items.Any(item => item.Kind == PlanningItemKind.Action)
-        && Status is PlanningIntentStatus.Collecting or PlanningIntentStatus.ReadyForProposal;
-}
+    IReadOnlySet<ClarificationTopic>? AskedTopics = null);
 
 public sealed record PlanningItemSnapshot(
     string Text,
     string EvidenceQuote,
     Guid SourceMessageId,
     PlanningItemKind Kind = PlanningItemKind.Action);
+
+public sealed record PlanningConstraintSnapshot(
+    string Text,
+    string EvidenceQuote,
+    Guid SourceMessageId);
 
 public enum PlanningIntentStatus
 {
@@ -50,13 +47,13 @@ public enum ClarificationTopic
     Other = 4,
 }
 
-public enum ClarificationDisposition
+public enum UserTurnDisposition
 {
     NotApplicable = 0,
     Answered = 1,
     CannotProvide = 2,
     DelegatedToCoach = 3,
-    RejectedQuestion = 4,
+    RejectedAction = 4,
 }
 
 public enum ClarificationResolution

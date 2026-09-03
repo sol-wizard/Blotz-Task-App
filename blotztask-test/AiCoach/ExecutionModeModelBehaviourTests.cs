@@ -3,10 +3,13 @@ using Azure.AI.OpenAI;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Ai.Prompts;
 using BlotzTask.Modules.AiCoach.Ai.Runtime;
+using BlotzTask.Modules.AiCoach.Domain.Candidates;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Guards;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
+using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -36,14 +39,21 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
     {
         // Regression (2026-08-24 screenshot): user hands the decision to the model; the model
         // must create a card with the first small steps, never re-ask "你想先做哪一件具体的事".
+        var sourceMessageId = Guid.NewGuid();
         var result = await RunTurnAsync(
             ConversationPhase.ActionPreparing,
             new OpenQuestionSnapshot("你想先从哪件具体的事开始？", 1),
             [
-                User("我想要在两周内完成论文摘要"),
+                User("我想要在两周内完成论文摘要", sourceMessageId),
                 Assistant("你想先从哪件具体的事开始？"),
                 User("帮我列出可能需要完成的任务"),
-            ]);
+            ],
+            new ActivePlanningIntentSnapshot(
+                Guid.NewGuid(),
+                sourceMessageId,
+                [new PlanningItemSnapshot("论文摘要", "我想要在两周内完成论文摘要", sourceMessageId, PlanningItemKind.Goal)],
+                [new PlanningConstraintSnapshot("两周内", "两周内", sourceMessageId)],
+                PlanningIntentStatus.Collecting));
         if (result is null) return; // no credentials — skipped
 
         result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
@@ -100,13 +110,17 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
     private static ConversationMessage User(string content) =>
         new(Guid.NewGuid(), ConversationMessageRole.User, content, DateTimeOffset.UtcNow);
 
+    private static ConversationMessage User(string content, Guid messageId) =>
+        new(messageId, ConversationMessageRole.User, content, DateTimeOffset.UtcNow);
+
     private static ConversationMessage Assistant(string content) =>
         new(Guid.NewGuid(), ConversationMessageRole.Assistant, content, DateTimeOffset.UtcNow);
 
     private async Task<ModelTurnRunResult?> RunTurnAsync(
         ConversationPhase phase,
         OpenQuestionSnapshot? openQuestion,
-        IReadOnlyList<ConversationMessage> messages)
+        IReadOnlyList<ConversationMessage> messages,
+        ActivePlanningIntentSnapshot? activePlanningIntent = null)
     {
         var credentials = TryLoadAzureCredentials();
         if (credentials is null)
@@ -128,6 +142,8 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
             new ConversationPrePolicy(),
             new ConversationPostPolicy(),
             new EvidenceGuard(),
+            new PlanningReadinessCalculator(),
+            new DeterministicProposalGenerator(),
             new ResponseGuard(),
             new ProposalSetGuard(),
             options,
@@ -145,7 +161,8 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
                 ? new HashSet<ConversationFact>()
                 : new HashSet<ConversationFact> { ConversationFact.HasOpenQuestion },
             AllowedActions: new HashSet<ConversationAction>(),
-            RuntimeVersions: mode.ToRuntimeVersions(2));
+            RuntimeVersions: mode.ToRuntimeVersions(2),
+            ActivePlanningIntent: activePlanningIntent);
 
         var userLocalNow = TimeZoneInfo.ConvertTime(
             DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId));

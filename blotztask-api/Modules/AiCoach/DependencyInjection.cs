@@ -10,6 +10,8 @@ using BlotzTask.Modules.AiCoach.Domain.Guards;
 using BlotzTask.Modules.AiCoach.Domain.Kernel;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
+using BlotzTask.Modules.AiCoach.Domain.Planning;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 
@@ -51,6 +53,8 @@ public static class DependencyInjection
         services.AddSingleton<IConversationKernel, ConversationKernel>();
         services.AddSingleton<IConversationPrePolicy, ConversationPrePolicy>();
         services.AddSingleton<IConversationPostPolicy, ConversationPostPolicy>();
+        services.AddSingleton<IPlanningReadinessCalculator, PlanningReadinessCalculator>();
+        services.AddSingleton<IDeterministicProposalGenerator, DeterministicProposalGenerator>();
         services.AddSingleton<IEvidenceGuard, EvidenceGuard>();
         services.AddSingleton<IResponseGuard, ResponseGuard>();
         services.AddSingleton<IProposalSetGuard, ProposalSetGuard>();
