@@ -8,6 +8,7 @@ import {
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type MicPermissionOutcome,
   type LoginConnection,
   type LoginErrorCode,
   type LoginFailureReason,
@@ -153,6 +154,26 @@ export const analytics = {
     };
     if (params.durationMs !== undefined) properties.duration_ms = params.durationMs;
     posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
+  },
+
+  /**
+   * Fires when the AI sheet mounts. The denominator for AI attempts: the session event fires
+   * only on exit and drops itself when no turn was recorded, so opens were previously invisible.
+   */
+  trackAiTaskSheetOpened() {
+    posthog.capture(EVENTS.AI_TASK_SHEET_OPENED);
+  },
+
+  /**
+   * Fires once per AI sheet open, when the mic permission question has an answer.
+   * `outcome` is classified from the state read *before* asking; that is the only way to
+   * separate a fresh rejection (`denied`) from one the OS will not re-prompt for (`blocked`).
+   */
+  trackMicPermissionResolved(params: { outcome: MicPermissionOutcome; errorCode?: string }) {
+    posthog.capture(EVENTS.MIC_PERMISSION_RESOLVED, {
+      outcome: params.outcome,
+      ...(params.errorCode ? { error_code: params.errorCode } : {}),
+    });
   },
 
   /**
