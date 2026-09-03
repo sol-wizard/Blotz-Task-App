@@ -116,11 +116,11 @@ export const analytics = {
    */
   trackOnboardingCompleted(params: {
     outcome: OnboardingOutcome;
-    lastSectionReached: OnboardingSection;
+    exit_section: OnboardingSection;
   }) {
     posthog.capture(EVENTS.ONBOARDING_COMPLETED, {
       outcome: params.outcome,
-      last_section_reached: params.lastSectionReached,
+      last_section_reached: params.exit_section,
     });
   },
 

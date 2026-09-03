@@ -14,7 +14,12 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 
-const SECTIONS = ["ai-voice", "note", "breakdown", "invite"] as const satisfies readonly OnboardingSection[];
+const SECTIONS = [
+  "ai-voice",
+  "note",
+  "breakdown",
+  "invite",
+] as const satisfies readonly OnboardingSection[];
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
@@ -30,16 +35,13 @@ export default function OnboardingScreen() {
   const handleSectionViewed = (step: OnboardingSection) => {
     analytics.trackOnboardingStepViewed({ step });
   };
-  
+
   const isRedeemingReferralCode =
     useIsMutating({ mutationKey: REDEEM_REFERRAL_CODE_MUTATION_KEY }) > 0;
 
-  const handleFinish = async (
-    outcome: CarouselExitOutcome,
-    lastSectionReached: OnboardingSection,
-  ) => {
+  const handleFinish = async (outcome: CarouselExitOutcome, exit_section: OnboardingSection) => {
+    analytics.trackOnboardingCompleted({ outcome, exit_section });
     await setUserOnboarded(true);
-    analytics.trackOnboardingCompleted({ outcome, lastSectionReached });
     await markAsSeen();
     router.replace("/(protected)/(tabs)");
   };
