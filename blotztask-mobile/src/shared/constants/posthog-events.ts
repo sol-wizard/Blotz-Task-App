@@ -25,6 +25,9 @@ export const EVENTS = {
   SHARE_SHEET_OPENED: "share_sheet_opened",
   SHARE_COMPLETED: "share_completed",
   SHARE_FAILED: "share_failed",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
+  ONBOARDING_COMPLETED: "onboarding_completed",
 } as const;
 
 export const SCREEN_NAMES = {
@@ -102,3 +105,8 @@ export type ShareEvent =
 export type ShareSource = "weekly_review" | "monthly_review" | "badge";
 
 export type ShareContentType = "review" | "badge";
+
+// onboarding
+export type OnboardingOutcome = "completed" | "skipped";
+
+export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
