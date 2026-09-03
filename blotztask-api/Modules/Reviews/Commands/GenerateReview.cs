@@ -76,7 +76,7 @@ public class GenerateReviewCommandHandler(
                 "Returning existing {PeriodType} review for user {UserId} ({StartLocal}, {TimeZoneId})",
                 period.PeriodType, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-            return MapToDto(existingReport, period, threshold);
+            return await MapToDtoAsync(existingReport, period, threshold, command.UserId, ct);
         }
 
         // A review is a period-end summary, so it is only available once the period has fully ended
@@ -146,22 +146,29 @@ public class GenerateReviewCommandHandler(
                 "Concurrent {PeriodType} review insert for user {UserId} lost the race; returning the existing report",
                 period.PeriodType, command.UserId);
 
-            return MapToDto(winningReport, period, threshold);
+            return await MapToDtoAsync(winningReport, period, threshold, command.UserId, ct);
         }
 
         logger.LogInformation(
             "Saved {PeriodType} review {ReportId} for user {UserId} ({StartLocal}, {TimeZoneId})",
             period.PeriodType, report.Id, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-        return MapToDto(report, period, threshold);
+        return await MapToDtoAsync(report, period, threshold, command.UserId, ct);
     }
 
-    private static ReviewReportDto MapToDto(ReviewReport report, ReviewPeriod period, int threshold) =>
+    // The AI's task set is wider (planned OR completed in the period), so it cannot be reused here.
+    private async Task<ReviewReportDto> MapToDtoAsync(
+        ReviewReport report,
+        ReviewPeriod period,
+        int threshold,
+        Guid userId,
+        CancellationToken ct) =>
         new()
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
+            TasksCompleted = await ReviewMetrics.CountCompletedAsync(db, userId, period, ct),
             Letter = report.AiGeneratedLetter,
             GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report.AiInputTaskCount != null && report.AiInputTaskCount < threshold,

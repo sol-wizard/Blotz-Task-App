@@ -48,12 +48,14 @@ public class GetReviewQueryHandler(
                      && r.PeriodStartUtc == period.StartUtc,
                 ct);
 
+        var tasksCompleted = await ReviewMetrics.CountCompletedAsync(db, query.UserId, period, ct);
+
         return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
-            // letter / generatedAt stay null when no review exists yet.
+            TasksCompleted = tasksCompleted,
             Letter = report?.AiGeneratedLetter,
             GeneratedAtUtc = report is null ? null : DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report?.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
