@@ -3,12 +3,11 @@
 
 name: Staging - Build and deploy WebApi to Azure Web App
 
+# No longer runs on merges to main. The staging API now ships together with the
+# app, from release-staging.yml, so the two can never drift apart.
+# workflow_dispatch is kept as a manual escape hatch for an API-only redeploy.
 on:
-  push:
-    paths:
-      - 'blotztask-api/**'
-    branches:
-      - main
+  workflow_call:
   workflow_dispatch:
 
 permissions:
