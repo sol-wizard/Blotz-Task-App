@@ -1,0 +1,158 @@
+name: Prod - Update version prompt
+
+# Button 3 of the three-button production release, and the button for a
+# force-update on its own - it builds nothing, deploys nothing and touches no
+# store, so it can also run weeks after a release.
+#
+# Run it only once the release is live in both stores. It updates the policy
+# served by GET /api/app-version, and announcing a version the stores have not
+# published yet sends anyone who taps "update" to a page still offering the old
+# one.
+
+on:
+  workflow_dispatch:
+    inputs:
+      latest_version:
+        description: "Version now live in both stores (blank = read from eas.json production)"
+        required: false
+      # Raising the wall is a rare, breaking decision - it is left blank on an
+      # ordinary release and only filled in when a change genuinely cannot support
+      # older clients.
+      minimum_supported_version:
+        description: "DANGER - force-update wall. Everyone below it is locked out. Blank = leave unchanged."
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: release-prod-update-prompt
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Update the app settings
+    runs-on: ubuntu-latest
+    # Both for the AZURE_* secrets, which live on this environment rather than on
+    # the repo, and for its required reviewers - a second pair of eyes on a change
+    # that can lock every user out.
+    environment:
+      name: 'prod'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out what to write
+        id: v
+        run: |
+          set -euo pipefail
+          LATEST="${{ inputs.latest_version }}"
+          if [ -z "$LATEST" ]; then
+            IOS=$(jq -r '.build.production.ios.env.APP_VERSION' blotztask-mobile/eas.json)
+            AND=$(jq -r '.build.production.android.env.APP_VERSION' blotztask-mobile/eas.json)
+            if [ "$IOS" != "$AND" ]; then
+              echo "::error::production versions are out of sync in eas.json (iOS $IOS, Android $AND)."
+              exit 1
+            fi
+            LATEST="$IOS"
+          fi
+
+          SETTINGS="AppVersion__Ios__LatestVersion=$LATEST AppVersion__Android__LatestVersion=$LATEST"
+
+          MIN="${{ inputs.minimum_supported_version }}"
+          if [ -n "$MIN" ]; then
+            # A wall above the newest released version locks out every user with
+            # nothing to install, and nothing in the Azure portal stops you typing
+            # it. This is the one input in the whole release that is not reversible
+            # by simply running the button again.
+            if [ "$(printf '%s\n%s\n' "$MIN" "$LATEST" | sort -V | tail -1)" != "$LATEST" ]; then
+              echo "::error::MinimumSupportedVersion ($MIN) is above LatestVersion ($LATEST) - that locks out every user."
+              exit 1
+            fi
+            SETTINGS="$SETTINGS AppVersion__Ios__MinimumSupportedVersion=$MIN AppVersion__Android__MinimumSupportedVersion=$MIN"
+          fi
+
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "min=$MIN" >> "$GITHUB_OUTPUT"
+          echo "settings=$SETTINGS" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Update prompt"
+            echo "- LatestVersion -> \`$LATEST\`"
+            if [ -n "$MIN" ]; then
+              echo "- :warning: **MinimumSupportedVersion -> \`$MIN\`** - every user below \`$MIN\` will be forced to update."
+            else
+              echo "- MinimumSupportedVersion left unchanged"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Written in place rather than through Bicep. `siteConfig.appSettings` in
+      # infra/modules/appService.bicep is a whole-array replace, so a Bicep run
+      # would also wipe the settings that live on prod but are not modelled there.
+      # This adds and updates only the settings named below and leaves the rest
+      # alone.
+      - name: Apply the app settings
+        run: |
+          az webapp config appsettings set \
+            --name app-blotz-task-api-prod \
+            --resource-group rg-blotz-task-prod \
+            --settings ${{ steps.v.outputs.settings }} \
+            --output none
+
+      - name: azure logout
+        if: always()
+        run: az logout
+
+      # Writing app settings restarts the App Service, so this both waits out the
+      # cold start and confirms the policy the app will actually read.
+      - name: Check the served policy
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-prod.azurewebsites.net/api/app-version)
+          echo "$BODY" | jq .
+          SERVED=$(echo "$BODY" | jq -r '.ios.latestVersion')
+          if [ "$SERVED" != "${{ steps.v.outputs.latest }}" ]; then
+            echo "::error::API is serving latestVersion $SERVED, expected ${{ steps.v.outputs.latest }}"
+            exit 1
+          fi
+
+      # infra/prod.bicepparam declares these same settings. Without this the two
+      # drift apart silently, and the next Bicep run rolls the force-update wall
+      # back to whatever the file still says.
+      - name: Record the values in prod.bicepparam
+        run: |
+          set -euo pipefail
+          LATEST="${{ steps.v.outputs.latest }}"
+          MIN="${{ steps.v.outputs.min }}"
+          sed -i "s/^param iosLatestVersion = .*/param iosLatestVersion = '$LATEST'/" infra/prod.bicepparam
+          sed -i "s/^param androidLatestVersion = .*/param androidLatestVersion = '$LATEST'/" infra/prod.bicepparam
+          if [ -n "$MIN" ]; then
+            sed -i "s/^param iosMinimumSupportedVersion = .*/param iosMinimumSupportedVersion = '$MIN'/" infra/prod.bicepparam
+            sed -i "s/^param androidMinimumSupportedVersion = .*/param androidMinimumSupportedVersion = '$MIN'/" infra/prod.bicepparam
+          fi
+
+      - name: Open a PR with the recorded values
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/version-prompt-${{ steps.v.outputs.latest }}
+          add-paths: infra/prod.bicepparam
+          commit-message: "chore: record prod version prompt ${{ steps.v.outputs.latest }}"
+          title: "chore: record prod version prompt ${{ steps.v.outputs.latest }}"
+          body: |
+            Records the update-prompt policy applied to production by
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.
+
+            - `LatestVersion` -> `${{ steps.v.outputs.latest }}`
+            - `MinimumSupportedVersion` -> `${{ steps.v.outputs.min || 'unchanged' }}`
+
+            The settings are already live. This only keeps `prod.bicepparam` honest
+            so a future Bicep run cannot roll them back.

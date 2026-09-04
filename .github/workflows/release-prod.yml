@@ -1,0 +1,198 @@
+name: Prod - Submit app to the stores
+
+# Button 1 of the three-button production release.
+#
+# Builds the production iOS + Android apps from main, submits them for App Store
+# review and uploads to the Play production track - which stays a draft, so the
+# rollout is still a deliberate console step - then tags the built commit
+# `submitted/<version>`.
+#
+# It deploys no backend on purpose. Store review sits in the middle of a
+# production release, so by the time it passes, main has usually moved on.
+# Button 2 (Prod - Ship backend) deploys the API from the `submitted/<version>`
+# tag once review passes, which is what keeps the API and the binary in step.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: "How to bump the version"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - none
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-prod
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: blotztask-mobile
+
+jobs:
+  version:
+    name: Work out the new version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The "Run workflow" dropdown accepts any branch. Without this, a dispatch
+      # from a feature branch would build that branch's code and submit it to the
+      # stores as a production release.
+      - name: Refuse to release from anything but main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Production releases must run from main, not ${{ github.ref_name }}."
+          exit 1
+
+      - name: Bump the production version
+        id: bump
+        run: |
+          set -euo pipefail
+          IOS_CURRENT=$(jq -r '.build.production.ios.env.APP_VERSION' eas.json)
+          ANDROID_CURRENT=$(jq -r '.build.production.android.env.APP_VERSION' eas.json)
+
+          # Both platforms ship from one button, so they must share a base version -
+          # otherwise a single "patch" choice would mean two different results.
+          if [ "$IOS_CURRENT" != "$ANDROID_CURRENT" ]; then
+            echo "::error::production versions are out of sync (iOS $IOS_CURRENT, Android $ANDROID_CURRENT). Align them in eas.json first."
+            exit 1
+          fi
+
+          IFS=. read -r MAJOR MINOR PATCH <<< "$IOS_CURRENT"
+          case "${{ inputs.version_bump }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            none)  ;;
+            *) echo "::error::unknown version_bump"; exit 1 ;;
+          esac
+
+          NEW="$MAJOR.$MINOR.$PATCH"
+
+          # "none" resubmits the same store version with a fresh build number, which
+          # is what a rejected review or a late fix needs. It rewrites eas.json with
+          # the value already in it, so the pull request below finds nothing to open.
+          jq --arg v "$NEW" '
+              .build.production.ios.env.APP_VERSION = $v
+            | .build.production.android.env.APP_VERSION = $v
+          ' eas.json > eas.json.tmp && mv eas.json.tmp eas.json
+
+          echo "new_version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "### Production release \`$IOS_CURRENT\` -> \`$NEW\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Build numbers come from EAS (\`appVersionSource: remote\`), so a \`none\` bump still produces a new build." >> "$GITHUB_STEP_SUMMARY"
+
+      # The bumped eas.json travels as an artifact so the version is written once
+      # here and simply reused by the jobs below, which run on other machines.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile/eas.json
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: version
+    runs-on: ubuntu-latest
+    strategy:
+      # Let the other platform finish rather than cancelling it. Its EAS build is
+      # already running in the cloud and would be paid for either way.
+      fail-fast: false
+      matrix:
+        platform: [ios, android]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: blotztask-mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile
+
+      # No --no-wait: that would only trigger the build and return immediately,
+      # letting the tag below be pushed before the build result is known.
+      #
+      # The App Store Connect API key lives on the EAS servers rather than in this
+      # repo, which is why the production profile carries no EXPO_ASC_* values.
+      - name: Build and submit
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Apple Developer capabilities are managed by hand, same as build.ps1
+          EXPO_NO_CAPABILITY_SYNC: "1"
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile production \
+            --auto-submit \
+            --non-interactive
+
+  tag-and-record:
+    name: Tag the submitted commit and record the version
+    # Every matrix leg must pass, so a half-submitted release never gets tagged.
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      # This tag is the whole point of button 1. It pins the commit that became the
+      # binaries now sitting in review, so that button 2 can deploy the API from it
+      # days later instead of from whatever main has become by then.
+      #
+      # Forced because a rejected review is resubmitted under the same version, and
+      # the tag should follow the code that was actually submitted last.
+      - name: Tag the built commit as submitted
+        run: |
+          set -euo pipefail
+          TAG="submitted/${{ needs.version.outputs.new_version }}"
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push --force origin "refs/tags/$TAG"
+          echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run **Prod - Ship backend** with this version once store review passes." >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile
+
+      # main is protected and the bot cannot push to it, so this opens a PR to merge
+      # by hand. A "none" bump leaves eas.json untouched and this quietly no-ops.
+      - name: Open a PR with the submitted version
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/prod-release-${{ needs.version.outputs.new_version }}
+          add-paths: blotztask-mobile/eas.json
+          commit-message: "chore: production release ${{ needs.version.outputs.new_version }}"
+          title: "chore: production release ${{ needs.version.outputs.new_version }}"
+          body: |
+            Records the version submitted to the stores by
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.
+
+            Tagged as `submitted/${{ needs.version.outputs.new_version }}`.
+
+            Merge to keep `eas.json` on `main` in step with what is in store review.
