@@ -10,6 +10,7 @@
     "language": "语言",
     "allTasks": "所有任务页面 (测试版)",
     "invite": "邀请好友",
+    "supportUs": "支持我们",
     "about": "关于"
   },
   "betaFeatures": {
@@ -17,7 +18,6 @@
     "allTasks": "所有任务",
     "membershipPlan": "会员计划"
   },
-
   "account": {
     "title": "账户",
     "name": "名字",
@@ -123,5 +123,13 @@
     "myCodeLabel": "你的邀请码",
     "myCodeHint": "将此邀请码分享给好友，邀请他们加入 Blotz。",
     "copied": "已复制到剪贴板"
+  },
+  "supportUs": {
+    "title": "支持 Blotz",
+    "blurb": "Blotz 由一个小团队打造。你的支持能让我们继续做下去 —— 它不解锁任何功能，但对我们意义重大。",
+    "thanks": "感谢你的支持！",
+    "failed": "支付失败，请重试。",
+    "unavailable": "打赏暂时不可用，请稍后再试。",
+    "disclaimer": "打赏是一次性支付，用于支持开发，不会解锁任何功能。"
   }
 }
