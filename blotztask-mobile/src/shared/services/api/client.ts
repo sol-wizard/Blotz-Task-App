@@ -3,13 +3,13 @@ import * as Sentry from "@sentry/react-native";
 import { API_CONFIG } from "./config";
 import { setupRequestInterceptor, setupResponseInterceptor } from "./interceptors";
 
-// trace axios request with Sentry span to record request time
+// Trace axios requests with a Sentry span to record request time.
 function traced<T>(method: string, url: string, run: () => Promise<T>): Promise<T> {
   return Sentry.startSpan(
     {
       // create fix path name
       name: `${method} ${url.split("?")[0].replace(/\/\d+/g, "/:param")}`,
-      op: "http.client",
+      op: "http.client.api",
       attributes: { "http.request.method": method, "url.full": url },
     },
     run,
