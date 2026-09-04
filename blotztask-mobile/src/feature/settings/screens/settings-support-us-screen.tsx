@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorCode, useIAP } from "expo-iap";
 import * as Haptics from "expo-haptics";
+import LottieView from "lottie-react-native";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import LoadingScreen from "@/shared/components/loading-screen";
+import { ASSETS } from "@/shared/constants/assets";
 
 // Must match the Consumable product IDs created in App Store Connect.
 // Array order is the display order — the store returns products unordered.
@@ -19,13 +21,15 @@ export default function SettingsSupportUsScreen() {
   const { t } = useTranslation("settings");
   const [status, setStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const [pendingSku, setPendingSku] = useState<string | null>(null);
+  const [showThanks, setShowThanks] = useState(false);
 
   const { connected, products, fetchProducts, requestPurchase, finishTransaction } = useIAP({
     onPurchaseSuccess: async (purchase) => {
       await finishTransaction({ purchase, isConsumable: true });
       setPendingSku(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Toast.show({ type: "success", text1: t("supportUs.thanks") });
+
+      setShowThanks(true);
     },
     onPurchaseError: (error) => {
       setPendingSku(null);
@@ -95,7 +99,7 @@ export default function SettingsSupportUsScreen() {
                   onPress={() => handleTip(tip.sku)}
                   disabled={pendingSku !== null}
                   className={`flex-row items-center bg-white rounded-2xl px-5 py-4 ${
-                    pendingSku !== null && pendingSku !== tip.sku ? "opacity-50" : ""
+                    pendingSku === tip.sku ? "opacity-50" : ""
                   }`}
                   style={{ borderCurve: "continuous" }}
                 >
@@ -121,6 +125,33 @@ export default function SettingsSupportUsScreen() {
           {t("supportUs.disclaimer")}
         </Text>
       </ScrollView>
+
+      <Modal
+        transparent
+        visible={showThanks}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setShowThanks(false)}
+      >
+        <Pressable
+          className="flex-1 bg-black/50 items-center justify-center px-8"
+          onPress={() => setShowThanks(false)}
+        >
+          <LottieView
+            source={ASSETS.badgeCelebration}
+            autoPlay
+            loop={false}
+            resizeMode="cover"
+            onAnimationFinish={(isCancelled) => {
+              if (!isCancelled) setShowThanks(false);
+            }}
+            style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+          />
+          <Text className="text-3xl font-balooExtraBold text-white text-center">
+            {t("supportUs.thanks")}
+          </Text>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
