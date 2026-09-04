@@ -11,6 +11,7 @@ export type SettingsMenuKey =
   | "notifications"
   | "language"
   | "invite"
+  | "support-us"
   | "about";
 export type SettingsMenuItem = {
   key: SettingsMenuKey;

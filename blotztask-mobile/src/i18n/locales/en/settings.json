@@ -10,6 +10,7 @@
     "language": "Language",
     "allTasks": "All tasks page (beta)",
     "invite": "Invite Friends",
+    "supportUs": "Support Us",
     "about": "About"
   },
   "betaFeatures": {
@@ -95,7 +96,6 @@
     "sharing": "Sharing...",
     "shareError": "Couldn't share. Please try again.",
     "greeting": "Dear {{name}},",
-
     "signOff": "Warmly,",
     "signature": "Blotz",
     "defaultRecipient": "Friend",
@@ -123,5 +123,13 @@
     "myCodeLabel": "Your invite code",
     "myCodeHint": "Share this code with friends so they can join Blotz.",
     "copied": "Copied to clipboard"
+  },
+  "supportUs": {
+    "title": "Support Blotz",
+    "blurb": "Blotz is built by a small team. A tip keeps us going — it unlocks nothing, it just means a lot.",
+    "thanks": "Thank you for supporting Blotz!",
+    "failed": "Payment failed. Please try again.",
+    "unavailable": "Tips aren't available right now. Please try again later.",
+    "disclaimer": "Tips are one-off payments that support development. They don't unlock any features."
   }
 }
