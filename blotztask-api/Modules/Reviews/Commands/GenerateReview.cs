@@ -61,6 +61,17 @@ public class GenerateReviewCommandHandler(
         var period = ReviewPeriod.CreateFromAnchor(command.PeriodType, command.AnchorDate, timeZone);
         var threshold = ReviewConstants.LowActivityTaskThreshold(period.PeriodType);
 
+        // The AI's task set below is wider (planned OR completed in the period), so it cannot be
+        // reused for this count. Every return path below reports the same number.
+        var tasksCompleted = await db.TaskItems
+            .AsNoTracking()
+            .CountAsync(
+                t => t.UserId == command.UserId
+                     && t.CompletedAt != null
+                     && t.CompletedAt >= period.StartUtc
+                     && t.CompletedAt < period.EndUtc,
+                ct);
+
         //TODO: Need to think how we want to handle duplicate reports. If we already have one and still trigger what should we do?
         var existingReport = await db.ReviewReports
             .AsNoTracking()
@@ -76,7 +87,7 @@ public class GenerateReviewCommandHandler(
                 "Returning existing {PeriodType} review for user {UserId} ({StartLocal}, {TimeZoneId})",
                 period.PeriodType, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-            return await MapToDtoAsync(existingReport, period, threshold, command.UserId, ct);
+            return MapToDto(existingReport, period, threshold, tasksCompleted);
         }
 
         // A review is a period-end summary, so it is only available once the period has fully ended
@@ -146,36 +157,27 @@ public class GenerateReviewCommandHandler(
                 "Concurrent {PeriodType} review insert for user {UserId} lost the race; returning the existing report",
                 period.PeriodType, command.UserId);
 
-            return await MapToDtoAsync(winningReport, period, threshold, command.UserId, ct);
+            return MapToDto(winningReport, period, threshold, tasksCompleted);
         }
 
         logger.LogInformation(
             "Saved {PeriodType} review {ReportId} for user {UserId} ({StartLocal}, {TimeZoneId})",
             period.PeriodType, report.Id, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-        return await MapToDtoAsync(report, period, threshold, command.UserId, ct);
+        return MapToDto(report, period, threshold, tasksCompleted);
     }
 
-    // The AI's task set is wider (planned OR completed in the period), so it cannot be reused here.
-    private async Task<ReviewReportDto> MapToDtoAsync(
+    private static ReviewReportDto MapToDto(
         ReviewReport report,
         ReviewPeriod period,
         int threshold,
-        Guid userId,
-        CancellationToken ct) =>
+        int tasksCompleted) =>
         new()
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
-            TasksCompleted = await db.TaskItems
-                .AsNoTracking()
-                .CountAsync(
-                    t => t.UserId == userId
-                         && t.CompletedAt != null
-                         && t.CompletedAt >= period.StartUtc
-                         && t.CompletedAt < period.EndUtc,
-                    ct),
+            TasksCompleted = tasksCompleted,
             Letter = report.AiGeneratedLetter,
             GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
