@@ -13,7 +13,12 @@ import {
   useKeyboardState,
   useReanimatedKeyboardAnimation,
 } from "react-native-keyboard-controller";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -39,6 +44,11 @@ import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
 import { toastConfig } from "@/shared/components/toast-config";
 
+// Presses shorter than this are treated as accidental taps and discarded;
+// anything longer is a real recording and gets uploaded.
+const MIN_HOLD_MS = 300;
+const HOLD_HINT_AUTO_HIDE_MS = 2500;
+
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
@@ -52,6 +62,16 @@ export default function AiTaskSheetScreen() {
   const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+  const micShakeX = useSharedValue(0);
+  const micShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: micShakeX.value }],
+  }));
+
+  useEffect(() => {
+    if (!isHoldHintVisible) return;
+    const timer = setTimeout(() => setIsHoldHintVisible(false), HOLD_HINT_AUTO_HIDE_MS);
+    return () => clearTimeout(timer);
+  }, [isHoldHintVisible]);
 
   const { height: keyboardOffset } = useReanimatedKeyboardAnimation();
   const listKeyboardPad = useAnimatedStyle(() => ({
@@ -171,6 +191,21 @@ export default function AiTaskSheetScreen() {
     void startListening();
   };
 
+  // Accidental tap (released before MIN_HOLD_MS): shake the pill, buzz, and
+  // show the hold hint briefly so the discard is never silent.
+  const handleMicMisfire = () => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    micShakeX.value = withSequence(
+      withTiming(-8, { duration: 50 }),
+      withTiming(8, { duration: 50 }),
+      withTiming(-5, { duration: 50 }),
+      withTiming(5, { duration: 50 }),
+      withTiming(0, { duration: 50 }),
+    );
+    setIsHoldHintVisible(true);
+    void cancelListening();
+  };
+
   const handleMicPressOut = async () => {
     const didSubmit = await stopAndUpload();
     if (didSubmit) {
@@ -273,50 +308,54 @@ export default function AiTaskSheetScreen() {
                   {/* Voice mode: hold-to-talk pill (waveform while recording). Text mode: input. */}
                   <View className="flex-1 items-center justify-center">
                     {inputMode === "voice" ? (
-                      <Pressable
-                        onPressIn={() => {
-                          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          longPressTriggered.current = false;
-                          handleMicPressIn();
-                        }}
-                        onPressOut={() => {
-                          if (!longPressTriggered.current) {
-                            setIsHoldHintVisible(true);
-                            void cancelListening();
-                          } else {
-                            void handleMicPressOut();
-                          }
-                        }}
-                        onLongPress={() => {
-                          longPressTriggered.current = true;
-                        }}
-                        delayLongPress={1000}
-                        className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
-                        style={{
-                          backgroundColor: isRecording
-                            ? "rgba(255,255,255,0.5)"
-                            : "rgba(255,255,255,0.25)",
-                          opacity: isAiGenerating ? 0.4 : 1,
-                        }}
-                        disabled={isAiGenerating}
-                      >
-                        {isRecording ? (
-                          <LottieView
-                            source={LOTTIE_ANIMATIONS.voiceWave}
-                            loop
-                            autoPlay
-                            style={{ width: "100%", height: 40 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <>
-                            <MaterialCommunityIcons name="microphone" size={24} color="white" />
-                            <Text className="text-white font-baloo text-base">
-                              {t("buttons.holdToTalk")}
-                            </Text>
-                          </>
-                        )}
-                      </Pressable>
+                      <Animated.View className="w-full" style={micShakeStyle}>
+                        <Pressable
+                          onPressIn={() => {
+                            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            longPressTriggered.current = false;
+                            handleMicPressIn();
+                          }}
+                          onPressOut={() => {
+                            if (!longPressTriggered.current) {
+                              handleMicMisfire();
+                            } else {
+                              void handleMicPressOut();
+                            }
+                          }}
+                          onLongPress={() => {
+                            longPressTriggered.current = true;
+                          }}
+                          delayLongPress={MIN_HOLD_MS}
+                          className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
+                          style={({ pressed }) => ({
+                            // `pressed` lights the pill up immediately on touch, before
+                            // the recorder state catches up.
+                            backgroundColor:
+                              isRecording || pressed
+                                ? "rgba(255,255,255,0.5)"
+                                : "rgba(255,255,255,0.25)",
+                            opacity: isAiGenerating ? 0.4 : 1,
+                          })}
+                          disabled={isAiGenerating}
+                        >
+                          {isRecording ? (
+                            <LottieView
+                              source={LOTTIE_ANIMATIONS.voiceWave}
+                              loop
+                              autoPlay
+                              style={{ width: "100%", height: 40 }}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <>
+                              <MaterialCommunityIcons name="microphone" size={24} color="white" />
+                              <Text className="text-white font-baloo text-base">
+                                {t("buttons.holdToTalk")}
+                              </Text>
+                            </>
+                          )}
+                        </Pressable>
+                      </Animated.View>
                     ) : (
                       <TextInput
                         autoFocus

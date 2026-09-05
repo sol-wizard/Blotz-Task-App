@@ -4,7 +4,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
@@ -14,6 +14,15 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const { isRecording } = useAudioRecorderState(recorder);
+
+  // Pre-warm the audio session and recorder on mount: a cold prepare takes
+  // 300-650ms, which would otherwise be a dead window right after press-in
+  // where nothing is recorded yet.
+  useEffect(() => {
+    setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true })
+      .then(() => recorder.prepareToRecordAsync())
+      .catch((error) => console.warn("[Mic] Failed to pre-warm recorder.", error));
+  }, [recorder]);
   // Release handlers wait on this so they never race ahead of async recorder setup.
   const startPromiseRef = useRef<Promise<void> | null>(null);
   const cancelRequested = useRef(false);
