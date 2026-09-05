@@ -129,7 +129,7 @@ jobs:
     # `repo:sol-wizard/Blotz-Task-App:environment:prod` - a job without it gets a
     # token Entra ID will not accept.
     environment:
-      name: 'prod'
+      name: "prod"
     steps:
       - name: Azure login
         uses: azure/login@v2
@@ -191,6 +191,14 @@ jobs:
     name: Record the release
     # Last, so a release is only written down once the API is healthy and the
     # update prompt is actually serving the new version.
+    #
+    # TODO: fold tag-release.yml into this job once the two-button flow has
+    # survived a few real releases. It is ~30 lines whose whole job is one
+    # `gh release create`, and this is the only caller that matters - its own
+    # workflow_dispatch is a rarely used manual fallback. Kept separate for now
+    # because it is proven code and none of this has run against a real release
+    # yet; rewriting it would buy one fewer file at the cost of re-verifying
+    # something that already works.
     needs: [meta, update-prompt]
     uses: ./.github/workflows/tag-release.yml
     permissions:
