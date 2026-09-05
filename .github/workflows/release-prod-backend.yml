@@ -138,10 +138,17 @@ jobs:
           tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Only LatestVersion. MinimumSupportedVersion is the force-update wall, and
-      # setting it to the version just released would lock out every user who has
-      # not updated yet - which, minutes after a release, is all of them. It is
-      # raised by hand in the portal on the rare release that needs it.
+      # MinimumSupportedVersion follows LatestVersion, which is what production
+      # already carries. Every release so far has changed the API in ways older
+      # builds cannot talk to, so the wall goes up with the release: from here the
+      # only client that can reach the API is the one it was deployed for.
+      #
+      # This is safe only because the workflow runs AFTER the stores have
+      # published - the users it locks out can all install the version it demands.
+      # Move this step earlier and it becomes a wall with nothing behind it.
+      #
+      # To ship a release without forcing the update, lower
+      # MinimumSupportedVersion in the portal afterwards.
       #
       # `appsettings set` adds and updates only the settings named here; it leaves
       # everything else on the App Service alone.
@@ -152,7 +159,9 @@ jobs:
             --resource-group rg-blotz-task-prod \
             --settings \
               AppVersion__Ios__LatestVersion=${{ needs.meta.outputs.version }} \
+              AppVersion__Ios__MinimumSupportedVersion=${{ needs.meta.outputs.version }} \
               AppVersion__Android__LatestVersion=${{ needs.meta.outputs.version }} \
+              AppVersion__Android__MinimumSupportedVersion=${{ needs.meta.outputs.version }} \
             --output none
 
       - name: azure logout
@@ -168,11 +177,15 @@ jobs:
           BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
             https://app-blotz-task-api-prod.azurewebsites.net/api/app-version)
           echo "$BODY" | jq .
-          SERVED=$(echo "$BODY" | jq -r '.ios.latestVersion')
-          if [ "$SERVED" != "${{ needs.meta.outputs.version }}" ]; then
-            echo "::error::API is serving latestVersion $SERVED, expected ${{ needs.meta.outputs.version }}"
-            exit 1
-          fi
+          EXPECTED="${{ needs.meta.outputs.version }}"
+          for FIELD in .ios.latestVersion .ios.minimumSupportedVersion \
+                       .android.latestVersion .android.minimumSupportedVersion; do
+            SERVED=$(echo "$BODY" | jq -r "$FIELD")
+            if [ "$SERVED" != "$EXPECTED" ]; then
+              echo "::error::API is serving $FIELD = $SERVED, expected $EXPECTED"
+              exit 1
+            fi
+          done
 
   tag-release:
     name: Record the release
