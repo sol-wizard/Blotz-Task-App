@@ -2,10 +2,14 @@ name: Prod - Submit app to the stores
 
 # Button 1 of the two-button production release.
 #
-# Builds the production iOS + Android apps from main, submits them for App Store
-# review and uploads to the Play production track - which stays a draft, so the
-# rollout is still a deliberate console step - then tags the built commit
-# `submitted/<version>`.
+# Builds the production iOS + Android apps from main and uploads them - the iOS
+# build to App Store Connect, the Android bundle to the Play production track -
+# then tags the built commit `submitted/<version>`.
+#
+# Uploading is not submitting. Attaching the build to a version and sending it
+# for App Store review is still done by hand in App Store Connect, and the Play
+# upload lands as a draft (`releaseStatus: "draft"`) that only goes out when
+# someone starts the rollout in the console.
 #
 # It deploys no backend on purpose. Store review sits in the middle of a
 # production release, so by the time it passes, main has usually moved on.
@@ -162,8 +166,8 @@ jobs:
           ref: main
 
       # This tag is the whole point of button 1. It pins the commit that became the
-      # binaries now sitting in review, so that button 2 can deploy the API from it
-      # days later instead of from whatever main has become by then.
+      # binaries now waiting in the store consoles, so that button 2 can deploy the
+      # API from it days later instead of from whatever main has become by then.
       #
       # Forced because a rejected review is resubmitted under the same version, and
       # the tag should follow the code that was actually submitted last.
@@ -174,7 +178,7 @@ jobs:
           git tag -f "$TAG" "$GITHUB_SHA"
           git push --force origin "refs/tags/$TAG"
           echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Run **Prod - Ship backend** with this version once store review passes." >> "$GITHUB_STEP_SUMMARY"
+          echo "Next: submit for review in App Store Connect, then once the release is live in both stores run **Prod - Ship backend** on this tag." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/download-artifact@v4
         with:
@@ -196,4 +200,4 @@ jobs:
 
             Tagged as `submitted/${{ needs.version.outputs.new_version }}`.
 
-            Merge to keep `eas.json` on `main` in step with what is in store review.
+            Merge to keep `eas.json` on `main` in step with what is in the stores.
