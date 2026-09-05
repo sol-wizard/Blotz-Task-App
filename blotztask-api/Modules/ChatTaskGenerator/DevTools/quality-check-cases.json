@@ -222,5 +222,123 @@
       }
     ],
     "recurringExpectations": []
+  },
+  {
+    "id": "rec-update-weekday-only",
+    "setupInputs": ["Create a recurring task called Gym every Monday at 7am until December 31 2027"],
+    "input": "Change Gym to Tuesdays",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["Gym"],
+        "frequency": "Weekly",
+        "daysOfWeek": 2,
+        "startTimeHour": 7,
+        "startDateMatchesTemplate": true
+      }
+    ],
+    "recurringMutation": {
+      "existingTitle": "Gym",
+      "operation": "Update",
+      "changedFields": ["DaysOfWeek"]
+    }
+  },
+  {
+    "id": "rec-clear-end-date",
+    "setupInputs": ["Create a recurring task called Gym every Tuesday at 7am until December 31 2027"],
+    "input": "Make Gym go on forever",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["Gym"],
+        "frequency": "Weekly",
+        "daysOfWeek": 2,
+        "startTimeHour": 7,
+        "startDateMatchesTemplate": true
+      }
+    ],
+    "recurringMutation": {
+      "existingTitle": "Gym",
+      "operation": "Update",
+      "changedFields": ["EndDate"]
+    }
+  },
+  {
+    "id": "rec-remove-preserves-same-title-oneoff",
+    "setupInputs": [
+      "Create a one-off task called Weekly standup tomorrow at 3pm",
+      "Create a recurring task called Weekly standup every Monday at 9am"
+    ],
+    "input": "Stop the weekly standup",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["Weekly standup", "standup"]
+      }
+    ],
+    "recurringExpectations": [],
+    "recurringMutation": {
+      "existingTitle": "Weekly standup",
+      "operation": "Remove",
+      "sameTitledOneOffMustRemain": true
+    }
+  },
+  {
+    "id": "rec-multiple-actions-shared-daily-cadence",
+    "input": "每天下午要洗衣服，還要烘衣服，晚上要出去買晚餐",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 3,
+    "recurringExpectations": [
+      {
+        "titleContains": ["laundry", "wash clothes", "洗衣"],
+        "frequency": "Daily",
+        "interval": 1,
+        "startDateMatchesTemplate": true
+      },
+      {
+        "titleContains": ["dry clothes", "dry laundry", "烘衣"],
+        "frequency": "Daily",
+        "interval": 1,
+        "startDateMatchesTemplate": true
+      },
+      {
+        "titleContains": ["dinner", "晚餐"],
+        "frequency": "Daily",
+        "interval": 1,
+        "startDateMatchesTemplate": true
+      }
+    ]
+  },
+  {
+    "id": "rec-followup-inherits-previous-cadence",
+    "setupInputs": ["Every afternoon do the laundry"],
+    "input": "Also dry the clothes, and buy dinner in the evening",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 3,
+    "recurringExpectations": [
+      {
+        "titleContains": ["laundry", "wash clothes"],
+        "frequency": "Daily",
+        "interval": 1
+      },
+      {
+        "titleContains": ["dry clothes", "dry laundry"],
+        "frequency": "Daily",
+        "interval": 1
+      },
+      {
+        "titleContains": ["dinner"],
+        "frequency": "Daily",
+        "interval": 1
+      }
+    ]
   }
 ]

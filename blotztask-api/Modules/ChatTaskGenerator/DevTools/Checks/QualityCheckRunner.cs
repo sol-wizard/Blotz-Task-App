@@ -5,6 +5,12 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DevTools.Checks;
 
 public static class QualityCheckRunner
 {
+    private static readonly string[] RecurringMutationFields =
+    [
+        "Title", "Description", "TimeType", "LabelName", "TemplateStartTime", "TemplateEndTime",
+        "Frequency", "Interval", "DaysOfWeek", "DayOfMonth", "StartDate", "EndDate"
+    ];
+
     public static void CheckTaskCount(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult)
     {
         var actual = result.ExtractedTasks?.Count ?? 0;
@@ -318,4 +324,101 @@ public static class QualityCheckRunner
             });
         }
     }
+
+    public static void CheckRecurringMutation(
+        QualityCheckCase qualityCheckCase,
+        IReadOnlyList<ExtractedRecurringTask> before,
+        AiGenerateMessage after,
+        QualityCheckCaseResult caseResult)
+    {
+        var expectation = qualityCheckCase.RecurringMutation;
+        if (expectation == null) return;
+
+        var original = before.FirstOrDefault(task =>
+            task.Title.Equals(expectation.ExistingTitle, StringComparison.OrdinalIgnoreCase));
+        if (original == null)
+        {
+            caseResult.Checks.Add(new QualityCheckItem
+            {
+                Field = "recurringMutation.setup",
+                Expected = $"recurring task '{expectation.ExistingTitle}' exists before mutation",
+                Actual = "missing",
+                Passed = false
+            });
+            return;
+        }
+
+        var updated = (after.ExtractedRecurringTasks ?? []).FirstOrDefault(task => task.Id == original.Id);
+        if (expectation.Operation.Equals("Remove", StringComparison.OrdinalIgnoreCase))
+        {
+            caseResult.Checks.Add(new QualityCheckItem
+            {
+                Field = "recurringMutation.remove",
+                Expected = $"recurring task '{expectation.ExistingTitle}' removed",
+                Actual = updated == null ? "removed" : "still present",
+                Passed = updated == null
+            });
+        }
+        else
+        {
+            if (updated == null)
+            {
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = "recurringMutation.update",
+                    Expected = $"recurring task '{expectation.ExistingTitle}' remains",
+                    Actual = "missing",
+                    Passed = false
+                });
+                return;
+            }
+
+            var changed = expectation.ChangedFields.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var field in RecurringMutationFields)
+            {
+                var originalValue = GetRecurringField(original, field);
+                var updatedValue = GetRecurringField(updated, field);
+                var shouldChange = changed.Contains(field);
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = $"recurringMutation.{field}",
+                    Expected = shouldChange ? "changed" : "unchanged",
+                    Actual = Equals(originalValue, updatedValue) ? "unchanged" : "changed",
+                    Passed = shouldChange
+                        ? !Equals(originalValue, updatedValue)
+                        : Equals(originalValue, updatedValue)
+                });
+            }
+        }
+
+        if (expectation.SameTitledOneOffMustRemain)
+        {
+            var oneOffExists = (after.ExtractedTasks ?? []).Any(task =>
+                task.Title.Equals(expectation.ExistingTitle, StringComparison.OrdinalIgnoreCase));
+            caseResult.Checks.Add(new QualityCheckItem
+            {
+                Field = "recurringMutation.sameTitledOneOff",
+                Expected = "one-off task remains",
+                Actual = oneOffExists ? "present" : "missing",
+                Passed = oneOffExists
+            });
+        }
+    }
+
+    private static object? GetRecurringField(ExtractedRecurringTask task, string field) => field switch
+    {
+        "Title" => task.Title,
+        "Description" => task.Description,
+        "TimeType" => task.TimeType,
+        "LabelName" => task.LabelName,
+        "TemplateStartTime" => task.TemplateStartTime,
+        "TemplateEndTime" => task.TemplateEndTime,
+        "Frequency" => task.Frequency,
+        "Interval" => task.Interval,
+        "DaysOfWeek" => task.DaysOfWeek,
+        "DayOfMonth" => task.DayOfMonth,
+        "StartDate" => task.StartDate,
+        "EndDate" => task.EndDate,
+        _ => throw new ArgumentOutOfRangeException(nameof(field), field, "Unknown recurring mutation field")
+    };
 }
