@@ -17,14 +17,9 @@ public class ReferralCodeRedeemedEventHandler(
             "[ReferralCodeRedeemedEventHandler] Started — ReferrerUserId {ReferrerUserId}, RefereeUserId {RefereeUserId}",
             domainEvent.ReferrerUserId, domainEvent.RefereeUserId);
 
-        if (Random.Shared.NextDouble() >= 0.5)
-        {
-            logger.LogInformation(
-                "[ReferralCodeRedeemedEventHandler] Skipped referrer badge award (50% chance) — ReferrerUserId {ReferrerUserId}",
-                domainEvent.ReferrerUserId);
-            return;
-        }
-
+        // No random skip here. The 50% gate in TaskCompletedEventHandler is a deliberate
+        // gacha mechanic for task badges; referral tiers are earned once, so a coin flip
+        // would silently deny a user the badge they just earned.
         var inviteCount = await db.Referrals
             .CountAsync(r => r.ReferrerUserId == domainEvent.ReferrerUserId, ct);
         
