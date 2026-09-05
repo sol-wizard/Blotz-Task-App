@@ -7,6 +7,8 @@ export const EVENTS = {
   LOGIN_FAILED: "login_failed",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
+  AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
+  MIC_PERMISSION_RESOLVED: "mic_permission_resolved",
   ACTIVE_USER_5S: "active_user_5s",
   BREAKDOWN_TASK: "breakdown_task",
   SCREEN_VIEWED: "screen_viewed",
@@ -70,6 +72,17 @@ export type AiTaskFailureStage =
   | "send"
   | "transcription"
   | "generation";
+
+/**
+ * Microphone permission outcome for the AI voice flow. `already_granted` involves no prompt, so
+ * it is not a grant decision. `blocked` (`canAskAgain` false) can only be fixed in Settings.
+ */
+export type MicPermissionOutcome =
+  | "already_granted"
+  | "granted"
+  | "denied"
+  | "blocked"
+  | "error";
 
 export type AiTaskGenerationTurn = {
   turn_index: number;
