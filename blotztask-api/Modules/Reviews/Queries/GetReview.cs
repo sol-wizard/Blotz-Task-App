@@ -48,7 +48,14 @@ public class GetReviewQueryHandler(
                      && r.PeriodStartUtc == period.StartUtc,
                 ct);
 
-        var tasksCompleted = await ReviewMetrics.CountCompletedAsync(db, query.UserId, period, ct);
+        var tasksCompleted = await db.TaskItems
+            .AsNoTracking()
+            .CountAsync(
+                t => t.UserId == query.UserId
+                     && t.CompletedAt != null
+                     && t.CompletedAt >= period.StartUtc
+                     && t.CompletedAt < period.EndUtc,
+                ct);
 
         return new ReviewReportDto
         {

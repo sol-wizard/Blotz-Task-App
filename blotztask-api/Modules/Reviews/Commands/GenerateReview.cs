@@ -168,7 +168,14 @@ public class GenerateReviewCommandHandler(
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
-            TasksCompleted = await ReviewMetrics.CountCompletedAsync(db, userId, period, ct),
+            TasksCompleted = await db.TaskItems
+                .AsNoTracking()
+                .CountAsync(
+                    t => t.UserId == userId
+                         && t.CompletedAt != null
+                         && t.CompletedAt >= period.StartUtc
+                         && t.CompletedAt < period.EndUtc,
+                    ct),
             Letter = report.AiGeneratedLetter,
             GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
