@@ -24,7 +24,7 @@ export function useSyncTodayTasksWidget(): void {
   const widgetTasks = useQueries({
     queries: dates.map((date) => ({
       queryKey: taskKeys.selectedDay(convertToDateTimeOffset(date)),
-      queryFn: () => fetchTasksForDate(date, true),
+      queryFn: () => fetchTasksForDate(date),
       meta: { silent: true },
     })),
     combine: (results): WidgetTaskQueryCollection => ({
