@@ -13,8 +13,14 @@ import { useEffect, useRef } from "react";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 import { formatDuration } from "../utils/format-duration";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export const PomodoroFocus = () => {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.POMODORO_FOCUS);
+  }, []);
+
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
