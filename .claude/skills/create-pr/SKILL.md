@@ -56,7 +56,9 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
 5. **Apply the consistency rules.** These are the point of the skill.
    - All four Status lines present, **exactly one** ticked.
    - Release note `none` **if and only if** Internal or Hidden. Never `none` alongside User-facing or Beta.
-   - User-facing or Beta needs one plain sentence a normal user would understand: no file names, no type names, no "refactored".
+   - User-facing or Beta needs one sentence written as a **marketing announcement, not a changelog entry**: name what got better at a high level, then at most one short clause of scope. Enumerating behavioural details buries what is being announced — details belong in the Summary, never here. Still no file names, no type names, no "refactored".
+     - Too detailed: "The voice button now starts listening the instant you press it, short voice inputs are no longer lost, and an accidental tap clearly shows you need to hold."
+     - Right altitude: "Improved the AI voice input experience — the mic button now responds instantly and short recordings are no longer lost."
    - Strip every `<!-- -->` comment from the template.
    - Keep the whole body tight. `preview-next-release.yml` truncates each body to **1500 characters** before the model sees it, and the template from `## Release note` down is 555 of those. That leaves roughly **900 characters** for the Summary; go over and the Status block is cut off, and the model falls back to guessing from the title.
 
