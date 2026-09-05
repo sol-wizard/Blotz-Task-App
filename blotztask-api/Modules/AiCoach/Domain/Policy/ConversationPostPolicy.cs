@@ -30,6 +30,15 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
         var strategy = candidate.SuggestedAction;
         var envelope = context.Envelope;
 
+        // An explicit user rejection is terminal for the current action attempt. Preserve the
+        // rejection reason even when the model's continuation strategy is not in the phase
+        // envelope; envelope validation must not mask this user decision.
+        if (context.VerifiedPlanning.Disposition == UserTurnDisposition.RejectedAction)
+        {
+            return Downgrade(ConversationStrategy.ContinueListening,
+                StrategyReasonCode.UserRejectedAction);
+        }
+
         if (!envelope.AllowedStrategies.Contains(strategy))
         {
             if (strategy.AsksQuestion()
@@ -52,16 +61,77 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
             return RegenerateProposal(context, StrategyReasonCode.EvidenceInvalid);
         }
 
-        if (!ResponseMatches(strategy, candidate.ResponseCandidate))
+        // A candidate that contains no verified material from the current turn must not be
+        // accepted as a planning response when its interpretation was rejected by Evidence.
+        // This prevents historical claims from being carried forward as a fresh turn.
+        if (context.VerifiedPlanning.Evidence.HasInvalidClaims
+            && context.VerifiedPlanning.Items.Count == 0
+            && context.VerifiedPlanning.Constraints.Count == 0
+            && strategy != ConversationStrategy.ShowProposalSet)
         {
             return new StrategyDecision(
                 strategy,
                 StrategyDecisionType.RequiresRegeneration,
+                StrategyReasonCode.EvidenceInvalid,
+                AcceptResponseCandidate: false,
+                AcceptProposalSetCandidate: false,
+                new RegenerationDirective(
+                    strategy,
+                    ["interpretation", "response"],
+                    context.Planning.AllowedAssumptions.ToHashSet()),
+                FallbackFor(context, strategy));
+        }
+
+        if (strategy != ConversationStrategy.ShowProposalSet
+            && context.Planning.Allows(AllowedPlanningAction.GenerateProposal)
+            && envelope.ProposalConstraints.ProposalAllowed)
+        {
+            var reason = context.VerifiedPlanning.Evidence.HasInvalidClaims
+                ? StrategyReasonCode.EvidenceInvalid
+                : StrategyReasonCode.ActionableIntentRequiresProposal;
+            return RegenerateProposal(context, reason);
+        }
+
+        if (strategy is (ConversationStrategy.ContinueListening
+            or ConversationStrategy.DiscussExistingProposal)
+            && context.Snapshot.CurrentProposalSet is null
+            && context.Snapshot.OpenQuestion is null
+            && context.Snapshot.ActivePlanningIntent is not null
+            && context.VerifiedPlanning.Items.Count == 0
+            && context.VerifiedPlanning.Constraints.Count == 0
+            && context.VerifiedPlanning.Disposition == UserTurnDisposition.Answered
+            )
+        {
+            // An acknowledgement without new planning material must not replay a model
+            // suggestion. Use a deterministic safe response; do not consume another
+            // clarification slot or create a second policy path in Runtime.
+            return Downgrade(ConversationStrategy.ContinueListening,
+                StrategyReasonCode.NoNewPlanningMaterial);
+        }
+
+        if (!ResponseMatches(strategy, candidate.ResponseCandidate))
+        {
+            var requiredStrategy = strategy;
+            if (strategy is (ConversationStrategy.ContinueListening
+                or ConversationStrategy.DiscussExistingProposal)
+                && LooksLikeQuestion(candidate.ResponseCandidate.Text)
+                && context.Planning.Allows(AllowedPlanningAction.AskClarification)
+                && envelope.AllowedStrategies.Contains(ConversationStrategy.AskGentleQuestion))
+            {
+                // The candidate is structurally a question but selected a listening strategy.
+                // Post-Policy owns this correction: the runtime only executes the directive.
+                requiredStrategy = ConversationStrategy.AskGentleQuestion;
+            }
+
+            return new StrategyDecision(
+                requiredStrategy,
+                StrategyDecisionType.RequiresRegeneration,
                 StrategyReasonCode.ResponseTypeMismatch,
                 AcceptResponseCandidate: false,
                 AcceptProposalSetCandidate: false,
-                new RegenerationDirective(strategy, ["response"], context.Planning.AllowedAssumptions.ToHashSet()),
-                FallbackFor(context, strategy));
+                new RegenerationDirective(requiredStrategy, ["response"],
+                    context.Planning.AllowedAssumptions.ToHashSet()),
+                FallbackFor(context, requiredStrategy));
         }
 
         if (strategy.AsksQuestion() && string.IsNullOrWhiteSpace(QuestionOf(candidate.ResponseCandidate)))
@@ -74,13 +144,6 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                 AcceptProposalSetCandidate: false,
                 new RegenerationDirective(strategy, ["response.question"], context.Planning.AllowedAssumptions.ToHashSet()),
                 FallbackFor(context, strategy));
-        }
-
-        if (context.VerifiedPlanning.Disposition == UserTurnDisposition.RejectedAction)
-        {
-            return strategy == ConversationStrategy.ShowProposalSet
-                ? Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.UserRejectedAction)
-                : Accept(strategy, acceptProposal: false);
         }
 
         if (strategy.AsksQuestion()
@@ -197,14 +260,23 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
     private static bool ResponseMatches(ConversationStrategy strategy, AssistantResponseCandidate response) =>
         strategy switch
         {
-            ConversationStrategy.ContinueListening => response is ListeningResponse,
-            ConversationStrategy.DiscussExistingProposal => response is ListeningResponse,
+            ConversationStrategy.ContinueListening => response is ListeningResponse listening
+                && !LooksLikeQuestion(listening.Text),
+            ConversationStrategy.DiscussExistingProposal => response is ListeningResponse discussion
+                && !LooksLikeQuestion(discussion.Text),
             ConversationStrategy.AskGentleQuestion => response is GentleQuestionResponse,
             ConversationStrategy.AskClarifyingQuestion => response is ClarifyingQuestionResponse,
             ConversationStrategy.AskUserToChooseGoal => response is GoalChoiceResponse,
             ConversationStrategy.ShowProposalSet => response is ProposalIntroductionResponse,
             _ => false,
         };
+
+    private static bool LooksLikeQuestion(string text)
+    {
+        var trimmed = text.TrimEnd();
+        return trimmed.EndsWith("?", StringComparison.Ordinal)
+               || trimmed.EndsWith("？", StringComparison.Ordinal);
+    }
 
     private static string? QuestionOf(AssistantResponseCandidate response) => response switch
     {

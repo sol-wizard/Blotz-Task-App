@@ -25,6 +25,7 @@ public sealed class AzureOpenAiModelGateway(
         {
             messages.Add(message switch
             {
+                GatewaySystemMessage system => new SystemChatMessage(system.Content),
                 GatewayUserMessage user => new UserChatMessage(user.Content),
                 GatewayAssistantMessage assistant => ToAssistantMessage(assistant),
                 GatewayToolResultMessage tool => new ToolChatMessage(tool.ToolCallId, tool.Content),

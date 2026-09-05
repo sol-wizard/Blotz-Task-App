@@ -61,6 +61,7 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
     {
         var snapshot = request.Snapshot;
         var envelope = request.Envelope;
+        var proposalPolicy = request.Mode.Policy.ProposalGeneration;
 
         var lines = new List<string>
         {
@@ -71,6 +72,12 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
                 + string.Join(", ", envelope.AllowedStrategies
                     .OrderBy(s => (int)s)
                     .Select(s => s.ToWireValue())),
+            $"Proposal scheduling policy ({proposalPolicy.Version}): default duration "
+                + $"{proposalPolicy.DefaultDurationMinutes} minutes; minimum lead "
+                + $"{proposalPolicy.MinimumLeadMinutes} minutes; "
+                + $"{proposalPolicy.SlotGranularityMinutes}-minute slots; working hours "
+                + $"{proposalPolicy.WorkingDayStart:HH\\:mm}-{proposalPolicy.WorkingDayEnd:HH\\:mm}; "
+                + $"same-day allowed: {proposalPolicy.AllowSameDay}.",
         };
 
         if (snapshot.CurrentProposalSet is { } set && set.IsOpen)
@@ -96,7 +103,7 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
         if (snapshot.OpenQuestion is { } question)
             lines.Add($"Your open question about {question.Topic} (asked {question.RoundsAsked}x): "
                       + $"\"{question.Question}\". This slot is spent: do not repeat or replace it with another question; "
-                      + "use the answer or a safe default.");
+                      + "use a concrete answer or explicit delegation; otherwise offer one brief non-card suggestion.");
 
         lines.AddRange(new[]
         {

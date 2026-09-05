@@ -127,6 +127,10 @@ public class GuardTests
     private static readonly ProposalConstraints Constraints = new(
         MaxProposals: ProposalSet.MaxProposals,
         ProposalAllowed: true);
+    private static readonly ProposalGenerationPolicy SchedulePolicy =
+        ExecutionModeDefinition.Create().Policy.ProposalGeneration;
+    private static readonly DateTimeOffset UserLocalNow =
+        new(2026, 8, 25, 8, 0, 0, TimeSpan.FromHours(10));
 
     private static ConversationSnapshot EmptySnapshot()
     {
@@ -142,9 +146,24 @@ public class GuardTests
         string title = "整理资料",
         int startHour = 9,
         int endHour = 9,
-        int endMinute = 30) => new(
-        "p1", title, null, new DateOnly(2026, 8, 26),
-        new TimeOnly(startHour, 0), new TimeOnly(endHour, endMinute), null);
+        int endMinute = 30,
+        DateOnly? date = null,
+        int startMinute = 0) => new(
+        "p1", title, null, date ?? new DateOnly(2026, 8, 26),
+        new TimeOnly(startHour, startMinute), new TimeOnly(endHour, endMinute), null);
+
+    private static ProposalSetVerdict Validate(
+        ProposalSetCandidate candidate,
+        DateTimeOffset? userLocalNow = null,
+        ProposalGenerationPolicy? policy = null,
+        ConversationSnapshot? snapshot = null) =>
+        new ProposalSetGuard().Validate(
+            candidate,
+            snapshot ?? EmptySnapshot(),
+            Constraints,
+            TimeZone,
+            userLocalNow ?? UserLocalNow,
+            policy ?? SchedulePolicy);
 
     [Fact]
     public void ProposalSet_Valid_MaterializesServerOwnedProposals()
@@ -154,7 +173,7 @@ public class GuardTests
         var candidate = new ProposalSetCandidate([CandidateProposal()]);
 
         // Act
-        var verdict = guard.Validate(candidate, EmptySnapshot(), Constraints, TimeZone);
+        var verdict = Validate(candidate);
 
         // Assert
         verdict.IsValid.Should().BeTrue(verdict.Detail);
@@ -173,7 +192,7 @@ public class GuardTests
             [CandidateProposal(), CandidateProposal("回复邮件", startHour: 10, endHour: 9)]);
 
         // Act
-        var verdict = guard.Validate(candidate, EmptySnapshot(), Constraints, TimeZone);
+        var verdict = Validate(candidate);
 
         // Assert
         verdict.IsValid.Should().BeFalse(because: "one invalid proposal rejects the whole candidate — never half a card");
@@ -187,7 +206,7 @@ public class GuardTests
         var candidate = new ProposalSetCandidate([CandidateProposal(), CandidateProposal()]);
 
         // Act
-        var verdict = guard.Validate(candidate, EmptySnapshot(), Constraints, TimeZone);
+        var verdict = Validate(candidate);
 
         // Assert
         verdict.IsValid.Should().BeFalse();
@@ -210,7 +229,7 @@ public class GuardTests
             mode.ToRuntimeVersions(2));
 
         // Act
-        var verdict = guard.Validate(new ProposalSetCandidate([CandidateProposal()]), snapshot, Constraints, TimeZone);
+        var verdict = Validate(new ProposalSetCandidate([CandidateProposal()]), snapshot: snapshot);
 
         // Assert
         verdict.IsValid.Should().BeFalse(because: "the single-open-set invariant is enforced independently here too");
@@ -224,10 +243,86 @@ public class GuardTests
         var candidate = new ProposalSetCandidate([CandidateProposal(new string('长', 121))]);
 
         // Act
-        var verdict = guard.Validate(candidate, EmptySnapshot(), Constraints, TimeZone);
+        var verdict = Validate(candidate);
 
         // Assert
         verdict.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ProposalSet_AfterWorkingHours_IsRejected()
+    {
+        var candidate = new ProposalSetCandidate(
+            [CandidateProposal(startHour: 22, startMinute: 45, endHour: 23, endMinute: 0)]);
+
+        var verdict = Validate(candidate);
+
+        verdict.IsValid.Should().BeFalse();
+        verdict.Detail.Should().Contain("working hours");
+    }
+
+    [Fact]
+    public void ProposalSet_InsideMinimumLead_IsRejected()
+    {
+        var now = new DateTimeOffset(2026, 8, 26, 8, 50, 0, TimeSpan.FromHours(10));
+        var candidate = new ProposalSetCandidate([CandidateProposal()]);
+
+        var verdict = Validate(candidate, now);
+
+        verdict.IsValid.Should().BeFalse();
+        verdict.Detail.Should().Contain("at least 15 minutes");
+    }
+
+    [Fact]
+    public void ProposalSet_InThePast_IsRejected()
+    {
+        var now = new DateTimeOffset(2026, 8, 26, 10, 0, 0, TimeSpan.FromHours(10));
+        var candidate = new ProposalSetCandidate([CandidateProposal()]);
+
+        var verdict = Validate(candidate, now);
+
+        verdict.IsValid.Should().BeFalse();
+        verdict.Detail.Should().Contain("after the current local time");
+    }
+
+    [Fact]
+    public void ProposalSet_SameDay_WhenPolicyDisallowsIt_IsRejected()
+    {
+        var policy = SchedulePolicy with { AllowSameDay = false };
+        var now = new DateTimeOffset(2026, 8, 26, 8, 0, 0, TimeSpan.FromHours(10));
+        var candidate = new ProposalSetCandidate([CandidateProposal()]);
+
+        var verdict = Validate(candidate, now, policy);
+
+        verdict.IsValid.Should().BeFalse();
+        verdict.Detail.Should().Contain("same-day");
+    }
+
+    [Fact]
+    public void ProposalSet_AtWorkingAndLeadBoundaries_IsAccepted()
+    {
+        var now = new DateTimeOffset(2026, 8, 26, 7, 45, 0, TimeSpan.FromHours(10));
+        var candidate = new ProposalSetCandidate(
+        [
+            CandidateProposal("开始边界", startHour: 8, endHour: 8, endMinute: 30),
+            CandidateProposal("结束边界", startHour: 20, startMinute: 30, endHour: 21, endMinute: 0),
+        ]);
+
+        var verdict = Validate(candidate, now);
+
+        verdict.IsValid.Should().BeTrue(verdict.Detail);
+    }
+
+    [Fact]
+    public void ProposalSet_OutsideSlotGranularity_IsRejected()
+    {
+        var candidate = new ProposalSetCandidate(
+            [CandidateProposal(startHour: 9, startMinute: 10, endHour: 9, endMinute: 40)]);
+
+        var verdict = Validate(candidate);
+
+        verdict.IsValid.Should().BeFalse();
+        verdict.Detail.Should().Contain("15-minute slots");
     }
 
     // ---------- Response Guard ----------

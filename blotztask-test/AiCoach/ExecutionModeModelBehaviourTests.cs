@@ -12,7 +12,7 @@ using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Xunit.Abstractions;
@@ -32,6 +32,21 @@ namespace BlotzTask.Tests.AiCoach;
 /// </summary>
 public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
 {
+    private sealed class OutputLogger<T>(ITestOutputHelper output) : ILogger<T>
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter) =>
+            output.WriteLine($"[{logLevel}] {formatter(state, exception)}");
+    }
+
     // ---------- Scenarios ----------
 
     [Fact]
@@ -87,7 +102,7 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task BroadGoal_FirstTurn_ProducesConservativeProposal()
+    public async Task BroadGoal_FirstTurn_DoesNotProduceProposalWithoutDelegation()
     {
         var result = await RunTurnAsync(
             ConversationPhase.Conversing,
@@ -97,12 +112,8 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
 
         result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
         var outcome = result.Outcome!;
-        outcome.AcceptedProposals.Should().NotBeNull(
-            $"a broad low-risk goal should receive a conservative starter card, but the turn ended in "
-            + $"{outcome.FinalStrategy} ({outcome.ReasonCode}) with reply: \"{outcome.AssistantMessage}\"");
-        outcome.AcceptedProposals!.Should().NotBeEmpty();
-        outcome.AssistantMessage.Should().NotContain("哪件具体的事", "the coach should provide a default instead of deflecting the decision");
-        output.WriteLine($"proposals: {string.Join(" | ", outcome.AcceptedProposals.Select(p => $"{p.Title} {p.Date} {p.StartTime}"))}");
+        outcome.AcceptedProposals.Should().BeNull(
+            "a broad goal does not authorize the coach to invent a task or schedule");
     }
 
     // ---------- Real-pipeline harness ----------
@@ -147,7 +158,7 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
             new ResponseGuard(),
             new ProposalSetGuard(),
             options,
-            NullLogger<ModelTurnRuntime>.Instance);
+            new OutputLogger<ModelTurnRuntime>(output));
 
         const string timeZoneId = "Australia/Sydney";
         var mode = ExecutionModeDefinition.Create();

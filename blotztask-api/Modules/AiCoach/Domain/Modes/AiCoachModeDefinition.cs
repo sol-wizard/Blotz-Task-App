@@ -55,9 +55,7 @@ public sealed record ConversationPolicyDefinition(
 public sealed record PlanningPolicyDefinition(
     string Version,
     int MaxClarificationAttempts,
-    bool AllowConservativeGoalProposal,
-    bool AllowCoachDecomposition,
-    bool AllowSafeDefaultsWhenClarificationUnavailable);
+    bool AllowCoachDecomposition);
 
 public sealed record ProposalGenerationPolicy(
     string Version,
@@ -105,12 +103,12 @@ public static class ExecutionModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Execution,
-        RuleVersion: "execution-rules-v4",
-        PromptVersion: "execution-prompts-v7",
+        RuleVersion: "execution-rules-v5",
+        PromptVersion: "execution-prompts-v8",
         ToolsetVersion: "execution-toolset-v3",
         MemoryProfileVersion: "execution-memory-v1",
         Policy: new ConversationPolicyDefinition(
-            Version: "execution-policy-v2",
+            Version: "execution-policy-v3",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
@@ -119,9 +117,9 @@ public static class ExecutionModeDefinition
             // the pending card, it never rewrites it.
             AllowsModelProposalSetUpdates: false,
             AllowsPartialProposalConfirmation: true,
-            Planning: new PlanningPolicyDefinition("execution-planning-v1", 1, true, true, true),
+            Planning: new PlanningPolicyDefinition("execution-planning-v2", 1, true),
             ProposalGeneration: new ProposalGenerationPolicy(
-                "execution-proposal-generation-v1", 30, 15, 15,
+                "execution-proposal-generation-v2", 30, 15, 15,
                 new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportedPhases: SharedPhases.All,
         AllowedReadOnlyCapabilities: new HashSet<string>(),
@@ -148,7 +146,7 @@ public static class ClarifyModeDefinition
             AllowsProposalCreation: true,
             AllowsModelProposalSetUpdates: false,
             AllowsPartialProposalConfirmation: true,
-            Planning: new PlanningPolicyDefinition("clarify-planning-v1", 1, false, true, true),
+            Planning: new PlanningPolicyDefinition("clarify-planning-v1", 1, true),
             ProposalGeneration: new ProposalGenerationPolicy(
                 "clarify-proposal-generation-v1", 30, 15, 15,
                 new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
@@ -178,7 +176,7 @@ public static class CompanionModeDefinition
             AllowsProposalCreation: true,
             AllowsModelProposalSetUpdates: false,
             AllowsPartialProposalConfirmation: true,
-            Planning: new PlanningPolicyDefinition("companion-planning-v1", 1, false, false, false),
+            Planning: new PlanningPolicyDefinition("companion-planning-v1", 1, false),
             ProposalGeneration: new ProposalGenerationPolicy(
                 "companion-proposal-generation-v1", 30, 15, 15,
                 new TimeOnly(8, 0), new TimeOnly(21, 0), true)),

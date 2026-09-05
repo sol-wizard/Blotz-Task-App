@@ -75,7 +75,8 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
                 ConversationStrategy.ContinueListening,
             };
             // One clarification cycle gets one information-slot question. Once a question is
-            // open, the next turn must use the answer or a safe default rather than ask again.
+            // open, the next turn must use a concrete answer or explicit delegation; a remaining
+            // goal/domain may receive a non-card suggestion, but never another question.
             var clarificationAttempts = snapshot.ActivePlanningIntent?.AskedTopics?.Count ?? 0;
             if (snapshot.OpenQuestion is null
                 && clarificationAttempts < policy.Planning.MaxClarificationAttempts)
@@ -115,17 +116,16 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
         if (snapshot.Phase == ConversationPhase.ActionPreparing)
         {
             return snapshot.OpenQuestion is not null
-                ? "The one clarification opportunity has already been used. Do not ask again; use the user's answer "
-                  + "or a safe default and propose a conservative draft now (short block "
-                  + "at the next sensible time) for whatever the user has named, unless the task itself is "
-                  + "still completely unknown."
+                ? "The one clarification opportunity has already been used. Do not ask again. Create a draft only "
+                  + "when the user names a concrete action or explicitly delegates planning; otherwise offer a "
+                  + "brief suggestion without a card."
                 : "Read the user's answer. If it names concrete task(s) OR asks you to decide/list/plan them, "
                   + "create the draft card now (recommend times yourself).";
         }
 
         return "Understand what the user wants to do. If it is one or more concrete tasks, recommend a time "
-               + "for each (with a reason) and propose the draft card. If it is a low-risk goal or domain, "
-               + "propose one conservative 15-minute discovery or first-step card. Ask one question only "
-               + "when no safe starting point can be formed.";
+               + "for each (with a reason) and propose the draft card. A goal or domain alone does not authorize "
+               + "a card: ask at most one useful clarification question, or offer a brief suggestion if that "
+               + "question opportunity has already been used. Explicitly delegated planning may produce a draft.";
     }
 }

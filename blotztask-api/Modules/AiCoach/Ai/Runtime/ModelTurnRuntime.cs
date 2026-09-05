@@ -103,6 +103,8 @@ public sealed class ModelTurnRuntime(
         var schemaCorrections = 0;
         var regenerations = 0;
         var proposalRegenerations = 0;
+        VerifiedPlanningContext? lockedRepairPlanning = null;
+        PlanningDecision? lockedRepairDecision = null;
         int inputTokens = 0, outputTokens = 0, totalTokens = 0;
 
         while (iterations < limits.MaxModelIterations)
@@ -195,37 +197,49 @@ public sealed class ModelTurnRuntime(
                     parsed.Error,
                     completion.AssistantText);
                 AppendCorrection(transcript, completion.AssistantText,
-                    $"[system] Your output was invalid: {parsed.Error} Respond again following the required format exactly.");
+                    $"Your output was invalid: {parsed.Error} Respond again following the required format exactly.");
                 continue;
             }
 
             var candidate = parsed.Candidate!;
 
             // ---- Evidence Guard -> Post-Policy ----
-            var verifiedPlanning = evidenceGuard.Verify(candidate.Interpretation, currentUserMessage);
+            var candidatePlanning = evidenceGuard.Verify(candidate.Interpretation, currentUserMessage);
+            var usesLockedRepairContext = lockedRepairPlanning is not null;
+            var verifiedPlanning = lockedRepairPlanning ?? candidatePlanning;
             logger.LogInformation(
-                "AiCoach.EvidenceValidation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SubmittedClaims={SubmittedClaims} VerifiedClaims={VerifiedClaims} InvalidClaims={InvalidClaims} VerifiedItemCount={VerifiedItemCount} VerifiedConstraintCount={VerifiedConstraintCount} Disposition={Disposition} IssueCodes={IssueCodes} SubmittedPlanningItems={SubmittedPlanningItems} SubmittedConstraints={SubmittedConstraints} SubmittedDisposition={SubmittedDisposition} VerifiedPlanningItems={VerifiedPlanningItems} VerifiedConstraints={VerifiedConstraints}",
+                "AiCoach.EvidenceValidation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SubmittedClaims={SubmittedClaims} VerifiedClaims={VerifiedClaims} InvalidClaims={InvalidClaims} VerifiedItemCount={VerifiedItemCount} VerifiedConstraintCount={VerifiedConstraintCount} Disposition={Disposition} IssueCodes={IssueCodes} AuthoritySource={AuthoritySource} EffectiveDisposition={EffectiveDisposition} SubmittedPlanningItems={SubmittedPlanningItems} SubmittedConstraints={SubmittedConstraints} SubmittedDisposition={SubmittedDisposition} VerifiedPlanningItems={VerifiedPlanningItems} VerifiedConstraints={VerifiedConstraints} EffectivePlanningItems={EffectivePlanningItems} EffectiveConstraints={EffectiveConstraints}",
                 snapshot.ConversationId,
                 request.EffectId,
                 iterations,
-                verifiedPlanning.Evidence.SubmittedClaims,
-                verifiedPlanning.Evidence.VerifiedClaims,
-                verifiedPlanning.Evidence.Issues.Count,
-                verifiedPlanning.Items.Count,
-                verifiedPlanning.Constraints.Count,
+                candidatePlanning.Evidence.SubmittedClaims,
+                candidatePlanning.Evidence.VerifiedClaims,
+                candidatePlanning.Evidence.Issues.Count,
+                candidatePlanning.Items.Count,
+                candidatePlanning.Constraints.Count,
+                candidatePlanning.Disposition,
+                string.Join(",", candidatePlanning.Evidence.Issues.Distinct()),
+                usesLockedRepairContext ? "LockedRepairContext" : "CurrentCandidate",
                 verifiedPlanning.Disposition,
-                string.Join(",", verifiedPlanning.Evidence.Issues.Distinct()),
                 SerializeForLog(candidate.Interpretation.PlanningItems),
                 SerializeForLog(candidate.Interpretation.Constraints),
                 SerializeForLog(candidate.Interpretation.Disposition),
+                SerializeForLog(candidatePlanning.Items),
+                SerializeForLog(candidatePlanning.Constraints),
                 SerializeForLog(verifiedPlanning.Items),
                 SerializeForLog(verifiedPlanning.Constraints));
-            var planningDecision = planningReadinessCalculator.Calculate(new PlanningReadinessContext(
-                snapshot,
-                verifiedPlanning,
-                request.Mode.Policy.Planning));
+            var planningDecision = lockedRepairDecision
+                ?? planningReadinessCalculator.Calculate(new PlanningReadinessContext(
+                    snapshot,
+                    verifiedPlanning,
+                    request.Mode.Policy.Planning));
+            var resultingPlanningItemCount = (snapshot.ActivePlanningIntent?.Items
+                    .Select(item => item.Text) ?? [])
+                .Concat(verifiedPlanning.Items.Select(item => item.Text))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Count();
             logger.LogInformation(
-                "AiCoach.PlanningReadiness.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Readiness={Readiness} AllowedActions={AllowedActions} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ActiveItemCount={ActiveItemCount} HasOpenQuestion={HasOpenQuestion}",
+                "AiCoach.PlanningReadiness.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Readiness={Readiness} AllowedActions={AllowedActions} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ExistingActiveItemCount={ExistingActiveItemCount} ResultingPlanningItemCount={ResultingPlanningItemCount} HasOpenQuestion={HasOpenQuestion}",
                 snapshot.ConversationId,
                 request.EffectId,
                 iterations,
@@ -234,6 +248,7 @@ public sealed class ModelTurnRuntime(
                 string.Join(",", planningDecision.Reasons),
                 string.Join(",", planningDecision.AllowedAssumptions),
                 snapshot.ActivePlanningIntent?.Items.Count ?? 0,
+                resultingPlanningItemCount,
                 snapshot.OpenQuestion is not null);
 
             var decision = postPolicy.Decide(new PolicyContext(
@@ -244,7 +259,7 @@ public sealed class ModelTurnRuntime(
                 verifiedPlanning,
                 planningDecision));
             logger.LogInformation(
-                "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction} AssistantReply={AssistantReply} ProposalCandidate={ProposalCandidate}",
+                "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction} CandidateReply={CandidateReply} ProposalCandidate={ProposalCandidate}",
                 snapshot.ConversationId,
                 request.EffectId,
                 iterations,
@@ -275,6 +290,7 @@ public sealed class ModelTurnRuntime(
                         decision.ReasonCode,
                         decision.Regeneration.RequiredStrategy,
                         decision.Regeneration.RequiredFields.Count);
+                    LockRepairContextIfVerified(verifiedPlanning, planningDecision);
                     AppendCorrection(
                         transcript,
                         completion.AssistantText,
@@ -346,7 +362,12 @@ public sealed class ModelTurnRuntime(
             if (decision.AcceptProposalSetCandidate && candidate.ProposalSetCandidate is not null)
             {
                 var verdict = proposalSetGuard.Validate(
-                    candidate.ProposalSetCandidate, snapshot, envelope.ProposalConstraints, request.TimeZoneId);
+                    candidate.ProposalSetCandidate,
+                    snapshot,
+                    envelope.ProposalConstraints,
+                    request.TimeZoneId,
+                    request.UserLocalNow,
+                    request.Mode.Policy.ProposalGeneration);
                 logger.LogInformation(
                     "AiCoach.ProposalGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Source={Source} IsValid={IsValid} SubmittedCount={SubmittedCount} AcceptedCount={AcceptedCount} RegenerationAttempt={RegenerationAttempt} ProposalCandidate={ProposalCandidate} AcceptedProposals={AcceptedProposals} GuardDetail={GuardDetail}",
                     snapshot.ConversationId,
@@ -370,12 +391,16 @@ public sealed class ModelTurnRuntime(
                         && iterations < limits.MaxModelIterations)
                     {
                         proposalRegenerations++;
+                        LockRepairContextIfVerified(verifiedPlanning, planningDecision);
                         AppendCorrection(
                             transcript,
                             completion.AssistantText,
-                            "[system] The proposal card failed server validation. Keep every verified planning item, "
-                            + "use a future local time in the user's timezone, avoid the past and default overnight hours, "
-                            + "and return a complete show_proposal_set with valid start/end times.");
+                            "The proposal card failed server validation. Keep every verified planning item, "
+                            + $"use at least {request.Mode.Policy.ProposalGeneration.MinimumLeadMinutes} minutes lead, "
+                            + $"align to {request.Mode.Policy.ProposalGeneration.SlotGranularityMinutes}-minute slots, "
+                            + $"stay within {request.Mode.Policy.ProposalGeneration.WorkingDayStart:HH\\:mm}-"
+                            + $"{request.Mode.Policy.ProposalGeneration.WorkingDayEnd:HH\\:mm} local time, and return a "
+                            + "complete show_proposal_set with valid start/end times.");
                         continue;
                     }
 
@@ -395,7 +420,9 @@ public sealed class ModelTurnRuntime(
                             generated.Candidate,
                             snapshot,
                             envelope.ProposalConstraints,
-                            request.TimeZoneId);
+                            request.TimeZoneId,
+                            request.UserLocalNow,
+                            request.Mode.Policy.ProposalGeneration);
                     logger.LogInformation(
                         "AiCoach.DeterministicProposal.Completed ConversationId={ConversationId} EffectId={EffectId} PolicyVersion={PolicyVersion} CandidateGenerated={CandidateGenerated} IsValid={IsValid} GeneratedCount={GeneratedCount} AcceptedCount={AcceptedCount} AssistantReply={AssistantReply} ProposalCandidate={ProposalCandidate} AcceptedProposals={AcceptedProposals} GuardDetail={GuardDetail}",
                         snapshot.ConversationId,
@@ -505,12 +532,32 @@ public sealed class ModelTurnRuntime(
             return new ModelTurnRunResult(
                 ModelTurnCompletionReason.Completed, outcome, inputTokens, outputTokens, totalTokens);
         }
+
+        void LockRepairContextIfVerified(
+            VerifiedPlanningContext verifiedPlanning,
+            PlanningDecision planningDecision)
+        {
+            if (lockedRepairPlanning is not null || verifiedPlanning.Evidence.HasInvalidClaims)
+                return;
+
+            lockedRepairPlanning = verifiedPlanning;
+            lockedRepairDecision = planningDecision;
+            logger.LogInformation(
+                "AiCoach.RepairContext.Locked ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Readiness={Readiness} Disposition={Disposition} VerifiedItemCount={VerifiedItemCount} VerifiedConstraintCount={VerifiedConstraintCount}",
+                snapshot.ConversationId,
+                request.EffectId,
+                iterations,
+                planningDecision.Readiness,
+                verifiedPlanning.Disposition,
+                verifiedPlanning.Items.Count,
+                verifiedPlanning.Constraints.Count);
+        }
     }
 
     private static void AppendCorrection(List<GatewayMessage> transcript, string? rawOutput, string note)
     {
         transcript.Add(new GatewayAssistantMessage(rawOutput ?? string.Empty, []));
-        transcript.Add(new GatewayUserMessage(note));
+        transcript.Add(new GatewaySystemMessage(note));
     }
 
     private static ActivePlanningIntentSnapshot? BuildPlanningIntentUpdate(
@@ -531,7 +578,15 @@ public sealed class ModelTurnRuntime(
             return null;
 
         var intentId = current?.IntentId ?? Guid.NewGuid();
-        var sourceItems = verifiedPlanning.Items;
+        // When a turn answers an existing clarification, non-action planning claims are
+        // answer material rather than new intent items. Constraints remain projected below;
+        // concrete actions supplied in the same answer are still retained.
+        var sourceItems = snapshot.OpenQuestion is not null
+                          && verifiedPlanning.Disposition is UserTurnDisposition.Answered
+                              or UserTurnDisposition.CannotProvide
+                              or UserTurnDisposition.DelegatedToCoach
+            ? verifiedPlanning.Items.Where(item => item.Kind != PlanningItemKind.Domain).ToList()
+            : verifiedPlanning.Items;
         var items = (current?.Items ?? [])
             .Concat(sourceItems.Select(item => new PlanningItemSnapshot(
                 item.Text,
@@ -608,7 +663,9 @@ public sealed class ModelTurnRuntime(
                 generated.Candidate,
                 snapshot,
                 proposalConstraints,
-                timeZoneId);
+                timeZoneId,
+                localNow,
+                generationPolicy);
         if (fallback.Action == PolicyFallbackAction.DeterministicProposal)
         {
             logger.LogInformation(
@@ -674,7 +731,7 @@ public sealed class ModelTurnRuntime(
         var assumptions = directive.AllowedAssumptions.Count == 0
             ? "none"
             : string.Join(", ", directive.AllowedAssumptions);
-        return $"[system] Return suggestedAction '{directive.RequiredStrategy.ToWireValue()}'. "
+        return $"Return suggestedAction '{directive.RequiredStrategy.ToWireValue()}'. "
                + $"Correct these fields: {fields}. Allowed assumptions: {assumptions}.";
     }
 

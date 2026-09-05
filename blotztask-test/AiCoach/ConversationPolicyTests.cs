@@ -33,6 +33,15 @@ public class ConversationPolicyTests
         [],
         PlanningIntentStatus.ReadyForProposal);
 
+    private static ActivePlanningIntentSnapshot GoalIntent() => new(
+        Guid.NewGuid(),
+        Guid.NewGuid(),
+        [new PlanningItemSnapshot(
+            "改善工作安排", "改善工作安排", Guid.NewGuid(), PlanningItemKind.Goal)],
+        [],
+        PlanningIntentStatus.Collecting,
+        new HashSet<ClarificationTopic> { ClarificationTopic.ConcreteStep });
+
     private static ProposalSetSnapshot PendingSet() => new(
         Guid.NewGuid(), ProposalSet.SchemaVersion, ProposalSetStatus.Pending, 1,
         [new TaskProposal(Guid.NewGuid(), "整理资料", null,
@@ -138,6 +147,21 @@ public class ConversationPolicyTests
     }
 
     [Fact]
+    public void PostPolicy_ContinueListeningWhenProposalIsReady_RequiresProposalRegeneration()
+    {
+        var mode = ExecutionModeDefinition.Create();
+        var decision = Decide(
+            mode,
+            Candidate(ConversationStrategy.ContinueListening, new ListeningResponse("我再想想。")),
+            Verified(PlanningItemKind.Action));
+
+        decision.FinalStrategy.Should().Be(ConversationStrategy.ShowProposalSet);
+        decision.DecisionType.Should().Be(StrategyDecisionType.RequiresRegeneration);
+        decision.ReasonCode.Should().Be(StrategyReasonCode.ActionableIntentRequiresProposal);
+        decision.Fallback!.Action.Should().Be(PolicyFallbackAction.DeterministicProposal);
+    }
+
+    [Fact]
     public void PostPolicy_UserRejection_BlocksProposal()
     {
         var mode = ExecutionModeDefinition.Create();
@@ -179,5 +203,53 @@ public class ConversationPolicyTests
 
         decision.DecisionType.Should().Be(StrategyDecisionType.RequiresRegeneration);
         decision.Regeneration!.RequiredStrategy.Should().Be(ConversationStrategy.AskClarifyingQuestion);
+    }
+
+    [Fact]
+    public void PostPolicy_ContinueListeningWithQuestionText_RequiresCorrection()
+    {
+        var mode = ExecutionModeDefinition.Create();
+        var decision = Decide(
+            mode,
+            Candidate(ConversationStrategy.ContinueListening, new ListeningResponse("你想先做哪件事？")),
+            Verified());
+
+        decision.DecisionType.Should().Be(StrategyDecisionType.RequiresRegeneration);
+        decision.ReasonCode.Should().Be(StrategyReasonCode.ResponseTypeMismatch);
+        decision.FinalStrategy.Should().Be(ConversationStrategy.AskGentleQuestion);
+        decision.Regeneration!.RequiredStrategy.Should().Be(ConversationStrategy.AskGentleQuestion);
+        decision.Regeneration.RequiredFields.Should().BeEquivalentTo(["response"]);
+        decision.AcceptResponseCandidate.Should().BeFalse();
+    }
+
+    [Fact]
+    public void PostPolicy_InvalidCurrentEvidenceWithoutVerifiedMaterial_RequiresCorrection()
+    {
+        var mode = ExecutionModeDefinition.Create();
+        var decision = Decide(
+            mode,
+            Candidate(ConversationStrategy.ContinueListening, new ListeningResponse("好的，我继续帮你整理。")),
+            Verified(invalidEvidence: true));
+
+        decision.DecisionType.Should().Be(StrategyDecisionType.RequiresRegeneration);
+        decision.ReasonCode.Should().Be(StrategyReasonCode.EvidenceInvalid);
+        decision.Regeneration!.RequiredFields.Should().Contain("interpretation");
+    }
+
+    [Fact]
+    public void PostPolicy_AcknowledgementWithoutNewPlanningMaterial_UsesSafeFallback()
+    {
+        var mode = ExecutionModeDefinition.Create();
+        var decision = Decide(
+            mode,
+            Candidate(ConversationStrategy.ContinueListening,
+                new ListeningResponse("我会继续帮你整理。")),
+            Verified(disposition: UserTurnDisposition.Answered),
+            Snapshot(mode, activePlanningIntent: GoalIntent()));
+
+        decision.DecisionType.Should().Be(StrategyDecisionType.Downgraded);
+        decision.ReasonCode.Should().Be(StrategyReasonCode.NoNewPlanningMaterial);
+        decision.FinalStrategy.Should().Be(ConversationStrategy.ContinueListening);
+        decision.Fallback!.Action.Should().Be(PolicyFallbackAction.SafeResponse);
     }
 }

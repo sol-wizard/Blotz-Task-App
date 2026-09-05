@@ -22,17 +22,28 @@ public class PlanningReadinessTests
     }
 
     [Fact]
-    public void GoalWithoutDelegation_UsesModePolicy()
+    public void GoalWithoutDelegation_CannotGenerateProposal()
     {
-        var execution = Calculate(
+        var decision = Calculate(
             ExecutionModeDefinition.Create(),
             [new VerifiedPlanningItem("改善生活", PlanningItemKind.Goal, "改善生活")]);
-        var companion = Calculate(
-            CompanionModeDefinition.Create(),
-            [new VerifiedPlanningItem("改善生活", PlanningItemKind.Goal, "改善生活")]);
 
-        execution.Readiness.Should().Be(PlanningReadiness.ReadyForProposal);
-        companion.Readiness.Should().Be(PlanningReadiness.ReadyForSuggestion);
+        decision.Readiness.Should().Be(PlanningReadiness.ReadyForSuggestion);
+        decision.Allows(AllowedPlanningAction.GenerateProposal).Should().BeFalse();
+        decision.Allows(AllowedPlanningAction.AskClarification).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalWithExplicitDelegation_IsReadyForProposal()
+    {
+        var decision = Calculate(
+            ExecutionModeDefinition.Create(),
+            [new VerifiedPlanningItem("改善生活", PlanningItemKind.Goal, "改善生活")],
+            UserTurnDisposition.DelegatedToCoach);
+
+        decision.Readiness.Should().Be(PlanningReadiness.ReadyForProposal);
+        decision.Allows(AllowedPlanningAction.GenerateProposal).Should().BeTrue();
+        decision.Reasons.Should().Contain(PlanningDecisionReason.UserDelegatedPlanning);
     }
 
     [Fact]
@@ -44,6 +55,7 @@ public class PlanningReadinessTests
             UserTurnDisposition.CannotProvide);
 
         decision.Readiness.Should().NotBe(PlanningReadiness.ReadyForProposal);
+        decision.Allows(AllowedPlanningAction.GenerateProposal).Should().BeFalse();
     }
 
     [Fact]

@@ -23,11 +23,25 @@ public static class FallbackCatalog
                 : "The current card is still waiting. Adjust, confirm, or delete it first, then I can add more plans.";
         }
 
+        if (reason == StrategyReasonCode.NoNewPlanningMaterial)
+        {
+            return chinese
+                ? "我先保留了当前目标。要继续安排时间，还需要一个具体的工作事项。"
+                : "I kept the current goal. To schedule time, I still need one specific work item.";
+        }
+
+        if (reason == StrategyReasonCode.UserRejectedAction)
+        {
+            return chinese
+                ? "好的，先不安排这项活动。当前安排已停止，之后想继续时再告诉我。"
+                : "Okay, I will not schedule this activity for now. The current arrangement is stopped; tell me when you want to continue.";
+        }
+
         if (!allowQuestion)
         {
             return chinese
-                ? "我已经记录了这项安排，但暂时无法生成可确认的时间卡片。"
-                : "I recorded this plan, but I could not generate a confirmable time card yet.";
+                ? "我暂时还不能确认具体安排。当前目标已保留，请补充一个具体事项或明确让我代为安排。"
+                : "I cannot confirm a specific plan yet. The current goal is kept; add one concrete item or clearly ask me to arrange it.";
         }
 
         return reason switch

@@ -81,7 +81,8 @@ public class ModelTurnRuntimeTests
 
     private static ModelTurnRequest Request(
         string userMessage,
-        ActivePlanningIntentSnapshot? activePlanningIntent = null)
+        ActivePlanningIntentSnapshot? activePlanningIntent = null,
+        DateTimeOffset? userLocalNow = null)
     {
         var snapshot = new ConversationSnapshot(
             Guid.NewGuid(), Guid.NewGuid(), AiCoachMode.Execution,
@@ -92,7 +93,8 @@ public class ModelTurnRuntimeTests
         return new ModelTurnRequest(
             snapshot, Guid.NewGuid(), Mode,
             [new ConversationMessage(Guid.NewGuid(), ConversationMessageRole.User, userMessage, DateTimeOffset.UtcNow)],
-            "Australia/Sydney", DateTimeOffset.UtcNow);
+            "Australia/Sydney",
+            userLocalNow ?? new DateTimeOffset(2026, 8, 25, 8, 0, 0, TimeSpan.FromHours(10)));
     }
 
     private const string ValidProposalTurn = """
@@ -194,6 +196,146 @@ public class ModelTurnRuntimeTests
     }
 
     [Fact]
+    public async Task BroadGoalWithoutDelegation_CannotProduceProposal()
+    {
+        const string output = """
+        {
+          "interpretation": { "intent": "goal",
+            "planningItems": [ { "text": "提高英语水平", "kind": "goal", "evidence": { "quote": "提高英语水平" } } ],
+            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "先练习 30 分钟。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "英语练习",
+            "description": null, "date": "2026-08-26", "startTime": "09:00", "endTime": "09:30",
+            "labelId": null } ] }
+        }
+        """;
+        var runtime = Runtime(new ScriptedGateway(output));
+
+        var result = await runtime.ExecuteAsync(Request("我想提高英语水平"), CancellationToken.None);
+
+        result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
+        result.Outcome!.AcceptedProposals.Should().BeNull();
+        result.Outcome.FinalStrategy.Should().Be(ConversationStrategy.AskClarifyingQuestion);
+        result.Outcome.ReasonCode.Should().Be(StrategyReasonCode.ExplicitActionIntentRequired);
+    }
+
+    [Fact]
+    public async Task BroadGoalWithExplicitDelegation_CanProduceProposal()
+    {
+        const string output = """
+        {
+          "interpretation": { "intent": "goal",
+            "planningItems": [ { "text": "提高英语水平", "kind": "goal", "evidence": { "quote": "提高英语水平" } } ],
+            "constraints": [], "disposition": { "kind": "delegated_to_coach", "evidence": { "quote": "你帮我安排" } } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "建议明天 9 点练习 30 分钟。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "英语练习",
+            "description": null, "date": "2026-08-26", "startTime": "09:00", "endTime": "09:30",
+            "labelId": null } ] }
+        }
+        """;
+        var runtime = Runtime(new ScriptedGateway(output));
+
+        var result = await runtime.ExecuteAsync(
+            Request("我想提高英语水平，你帮我安排"), CancellationToken.None);
+
+        result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
+        result.Outcome!.AcceptedProposals.Should().ContainSingle();
+        result.Outcome.FinalStrategy.Should().Be(ConversationStrategy.ShowProposalSet);
+    }
+
+    [Fact]
+    public async Task ModelProposalAfterWorkingHours_IsRejectedAndUsesValidDeterministicFallback()
+    {
+        const string afterHours = """
+        {
+          "interpretation": { "intent": "concrete_action",
+            "planningItems": [ { "text": "整理资料", "kind": "action", "evidence": { "quote": "整理资料" } } ],
+            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "建议今晚整理。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "整理资料",
+            "description": null, "date": "2026-08-26", "startTime": "22:45", "endTime": "23:00",
+            "labelId": null } ] }
+        }
+        """;
+        var gateway = new ScriptedGateway(afterHours, afterHours);
+        var runtime = Runtime(gateway);
+
+        var result = await runtime.ExecuteAsync(Request("整理资料"), CancellationToken.None);
+
+        gateway.Requests.Should().HaveCount(2, "the model gets one bounded chance to correct its schedule");
+        result.Outcome!.FallbackUsed.Should().BeTrue();
+        result.Outcome.AcceptedProposals.Should().ContainSingle();
+        result.Outcome.AcceptedProposals![0].StartTime.ToTimeSpan().Should()
+            .BeGreaterThanOrEqualTo(new TimeOnly(8, 0).ToTimeSpan());
+        result.Outcome.AcceptedProposals[0].EndTime.ToTimeSpan().Should()
+            .BeLessThanOrEqualTo(new TimeOnly(21, 0).ToTimeSpan());
+    }
+
+    [Fact]
+    public async Task ProposalRepair_CannotReplaceVerifiedDelegationWithInternalInstructionEvidence()
+    {
+        const string invalidSchedule = """
+        {
+          "interpretation": { "intent": "goal", "planningItems": [], "constraints": [],
+            "disposition": { "kind": "delegated_to_coach", "evidence": { "quote": "你给我建议" } } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "建议今晚开始。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "英语听力热身",
+            "description": "先听一小段英语音频。", "date": "2026-09-03", "startTime": "23:55", "endTime": "00:25",
+            "labelId": null } ] }
+        }
+        """;
+        const string repairedScheduleWithPollutedInterpretation = """
+        {
+          "interpretation": { "intent": "question", "planningItems": [], "constraints": [],
+            "disposition": { "kind": "answered", "evidence": { "quote": "The proposal card failed server validation." } } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "改到明天早上开始。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "英语听力热身",
+            "description": "先听一小段英语音频。", "date": "2026-09-04", "startTime": "08:00", "endTime": "08:30",
+            "labelId": null } ] }
+        }
+        """;
+        var gateway = new ScriptedGateway(invalidSchedule, repairedScheduleWithPollutedInterpretation);
+        var logger = new CapturingLogger<ModelTurnRuntime>();
+        var runtime = Runtime(gateway, logger);
+        var sourceMessageId = Guid.NewGuid();
+        var activeIntent = new ActivePlanningIntentSnapshot(
+            Guid.NewGuid(),
+            sourceMessageId,
+            [new PlanningItemSnapshot("提高英语水平", "我想提高英语水平", sourceMessageId, PlanningItemKind.Goal)],
+            [],
+            PlanningIntentStatus.Collecting);
+
+        var result = await runtime.ExecuteAsync(
+            Request(
+                "你给我建议",
+                activeIntent,
+                new DateTimeOffset(2026, 9, 3, 23, 52, 0, TimeSpan.FromHours(10))),
+            CancellationToken.None);
+
+        gateway.Requests.Should().HaveCount(2,
+            "the repaired payload must reuse the first verified control context instead of triggering another interpretation retry");
+        result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.ShowProposalSet);
+        result.Outcome.AcceptedProposals.Should().ContainSingle();
+        result.Outcome.AcceptedProposals![0].StartTime.Should().Be(new TimeOnly(8, 0));
+        result.Outcome.FallbackUsed.Should().BeFalse();
+        gateway.Requests[1].Messages.Should().Contain(message => message is GatewaySystemMessage,
+            "internal repair instructions must have a system role");
+        gateway.Requests[1].Messages.OfType<GatewayUserMessage>().Should().OnlyContain(
+            message => message.Content == "你给我建议",
+            "internal repair instructions must never masquerade as user input");
+        var logs = string.Join("\n", logger.Messages);
+        logs.Should().Contain("AiCoach.RepairContext.Locked");
+        logs.Should().Contain("AuthoritySource=LockedRepairContext");
+        logs.Should().Contain("IssueCodes=QuoteNotFound",
+            "the repaired candidate's polluted interpretation remains observable even though it has no authority");
+    }
+
+    [Fact]
     public async Task FabricatedCurrentClaimWithActiveIntent_UsesVerifiedOnlyDeterministicProposal()
     {
         const string fabricated = """
@@ -235,6 +377,8 @@ public class ModelTurnRuntimeTests
         logs.Should().Contain("AiCoach.DeterministicProposal.Completed");
         logs.Should().Contain("Source=DeterministicFallback");
         logs.Should().Contain("帮我安排上班");
+        logs.Should().NotContain("AiCoach.RepairContext.Locked",
+            "a candidate with invalid evidence must never become the authority for later repair attempts");
     }
 
     [Fact]
@@ -253,6 +397,8 @@ public class ModelTurnRuntimeTests
         request.Tools.Should().BeEmpty(because: "v1 registers no read-only tools");
         request.SystemPrompt.Should().Contain("Strategies allowed this turn",
             because: "the execution frame projects the strategy envelope");
+        request.SystemPrompt.Should().Contain("default duration 30 minutes");
+        request.SystemPrompt.Should().Contain("working hours 08:00-21:00");
     }
 
     [Fact]
@@ -291,6 +437,8 @@ public class ModelTurnRuntimeTests
         logs.Should().Contain("AiCoach.SchemaValidation.Completed");
         logs.Should().Contain("AiCoach.EvidenceValidation.Completed");
         logs.Should().Contain("AiCoach.PlanningReadiness.Completed");
+        logs.Should().Contain("ExistingActiveItemCount=0");
+        logs.Should().Contain("ResultingPlanningItemCount=1");
         logs.Should().Contain("AiCoach.PostPolicy.Completed");
         logs.Should().Contain("AiCoach.ResponseGuard.Completed");
         logs.Should().Contain("AiCoach.ProposalGuard.Completed");

@@ -3,7 +3,7 @@ using BlotzTask.Modules.AiCoach.Domain.Conversations;
 namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 /// <summary>
-/// Execution-mode prompt profile "execution-prompts-v7". The behaviour rules are carried over
+/// Execution-mode prompt profile "execution-prompts-v8". The behaviour rules are carried over
 /// from the validated v5 profile (goal-vs-task, delegation-is-go-ahead, multi-task on one card,
 /// recommend-times-never-ask, one question per turn, greeting handling, natural language) —
 /// rewritten from the tool-call contract to the v3 structured-output contract
@@ -60,7 +60,7 @@ public static class ExecutionPromptModules
 
     public static readonly PromptModuleDefinition ModeExecution = new(
         Id: "mode.execution",
-        Version: 7,
+        Version: 8,
         Kind: PromptModuleKind.Mode,
         Placement: PromptModulePlacement.DynamicSuffix,
         AllowedModes: ExecutionOnly,
@@ -70,21 +70,27 @@ public static class ExecutionPromptModules
         """
         Mode: EXECUTION. The user already knows roughly what they want to do and wants to turn it into concrete, small, startable tasks with specific times - usually one, sometimes several in one message ("明天上班，后天上学", "write the report and book the flight").
 
-        Questions are a last resort. Ask one "concrete step" question only when the current message and active planning context contain neither a schedulable action nor any low-risk goal/domain from which you can make a conservative, reversible proposal:
-        - A goal is not automatically a user-explicit task, but any low-risk goal/domain may be turned into a conservative coach-suggested first step. This includes specific goals such as "写论文", "准备考试", "改善睡眠", "健身", and "学英语", as well as broad planning goals such as "改善生活" or "帮我安排一下生活". For a broad goal, propose a neutral 15-minute discovery or prioritization step rather than asking the user to choose a category.
-        - When a safe conservative first step can be proposed, use show_proposal_set instead of asking. Keep the proposal small, reversible, and clearly framed as your recommendation rather than something the user already stated.
-        - Only when the goal/domain is genuinely unsafe, permission-sensitive, or too incomplete to support even a neutral discovery step, use ask_clarifying_question: the entire reply must be exactly one short question. No suggestions, times, lists, or card in that question turn.
+        Apply this decision order:
+        1. Explicit current-turn delegation to decide, plan, arrange, list, or break down work: set disposition.kind=delegated_to_coach and use show_proposal_set. Delegation authorizes decomposing an active user-verified goal even when the current message contains no new planning item.
+        2. A concrete schedulable action in the current message or active planning intent: use show_proposal_set.
+        3. A goal or domain without delegation or a concrete action: do not create a card.
+
+        A draft card requires either a concrete schedulable action or the user's explicit current-turn delegation to plan:
+        - A goal or domain alone (for example "写论文", "改善睡眠", "学英语", or "改善生活") does NOT authorize show_proposal_set. Ask at most one short concrete-step question when that information slot is available.
+        - If the clarification opportunity has already been used and the user still provides only a goal/domain without delegating, use continue_listening and offer one brief, non-card suggestion. Do not invent a task or time.
+        - Explicit delegation means the user asks you to decide, plan, arrange, list, or break down the work. In that case, choose conservative steps and use show_proposal_set.
         - If the message is ONLY a greeting or small talk ("hi", "hello", "你好", "halo"), greet back warmly in a few words and ask the concrete-step question in the same short reply (e.g. "嗨！你想先做哪件具体的事？" / "Hi! What do you want to get done?"). Never answer a greeting with a bare question and no greeting.
         - Write the question in natural, idiomatic language - NEVER translate an instruction template word-for-word. Example phrasings (each in its own language; NEVER copy the example's language - always match the language the user is writing in): Chinese "你想先从哪件具体的事开始？" or "第一步想先做点什么？"; English "Which concrete thing do you want to start with?". Adapt naturally to what the user said.
-        - Ask at most one core question per turn, and never re-ask about something the user already answered. NEVER ask the same question twice in one conversation: if your previous question did not get a direct answer, work with what the user DID say or make a conservative proposal - repeating yourself is a failure.
+        - Ask at most one core question per turn, and never re-ask about something the user already answered. NEVER ask the same question twice in one conversation: if the previous question did not get a direct answer, use a concrete action the user named, honor explicit delegation, or offer one brief non-card suggestion for a goal/domain - repeating yourself is a failure.
         - In interpretation.planningItems, preserve every domain, goal, or activity explicitly named in the CURRENT user message with kind=domain, goal, or action. Each item carries evidence.quote containing an exact quote from that message. Preserve explicit scheduling boundaries in interpretation.constraints with the same evidence shape.
         - planningItems and constraints are current-turn-only evidence. Never repeat historical ActivePlanningIntent items as if they appeared in this message. For requests to edit, confirm, reject, or discuss an existing card, leave them empty unless the user literally names new planning material.
         - interpretation.disposition describes only the user's explicit current response. Put its value in disposition.kind and an exact current-message quote in disposition.evidence.quote. Evidence is null only for not_applicable. Use delegated_to_coach when the user asks you to decide or plan, cannot_provide when they cannot answer, and rejected_action when they decline acting. This field never grants business permission by itself.
+        - Coach-generated decomposition is candidate proposal content, not user evidence. Never place invented steps in interpretation.planningItems or support them with a delegation quote; keep them only in proposalSet.proposals.
 
         The moment the user names doable activities (e.g. "整理参考资料", "回复邮件", "洗衣服"), that IS concrete enough - use suggestedAction show_proposal_set in THAT turn. Do not keep splitting them smaller, and NEVER ask what time they want:
         - A missing time is never a reason to ask another question. Choose a sensible time yourself (based on their local time of day and any day/time hints they gave), put it in the proposal, and in your reply text state the recommended time AND a one-sentence reason. The card lets the user accept or adjust it - that card IS the confirmation step.
         - Never silently invent a time without mentioning it: the recommendation and its reason must appear in your reply text.
-        - Prefer a small first block (25-45 minutes) unless the user said otherwise.
+        - When the user did not specify duration, use the turn frame's versioned default duration. Preserve a user-stated duration when it satisfies the turn frame's scheduling policy; otherwise use the nearest valid editable slot and say so. The server validates these boundaries independently.
         - If the user hands the decision to you IN ANY WORDING - asks you to plan, arrange, break it down, list the tasks, or decide ("你帮我安排", "帮我列出要做的任务", "帮我拆一下", "你觉得呢", "you decide", "list what I need to do", "help me plan this") - classify the disposition as delegated_to_coach. Do NOT ask anything. Choose the first small concrete steps yourself (2-4 for a goal, however many their request implies), give each a recommended time, and use show_proposal_set in that SAME turn. Answering such a request with another question is a failure.
 
         Several things at once - the user decides, never you:
@@ -113,8 +119,8 @@ public static class ExecutionPromptModules
         - If it hands the decision to you (asks you to list, plan, break down or decide the tasks - e.g.
           "帮我列出可能需要完成的任务", "你帮我安排", "you decide"): STOP asking - choose the first 2-4
           small concrete steps yourself, give each a time, and use show_proposal_set NOW.
-        - If the answer is still purely a goal, use a conservative discovery proposal. The clarification
-          opportunity has already been consumed, so do not ask another question.
+        - If the answer is still purely a goal and does not delegate planning, offer one brief suggestion
+          without a card. The clarification opportunity has already been consumed, so do not ask again.
         """);
 
     public static readonly PromptModuleDefinition ProposalCardContract = new(
@@ -152,7 +158,7 @@ public static class ExecutionPromptModules
         """);
 
     public static PromptProfile Profile { get; } = new(
-        PromptVersion: "execution-prompts-v7",
+        PromptVersion: "execution-prompts-v8",
         Modules:
         [
             CoreAgentBoundary,

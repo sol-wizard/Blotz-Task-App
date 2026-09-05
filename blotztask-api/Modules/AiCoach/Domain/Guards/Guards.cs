@@ -1,5 +1,6 @@
 using BlotzTask.Modules.AiCoach.Domain.Candidates;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
@@ -162,7 +163,9 @@ public interface IProposalSetGuard
         ProposalSetCandidate candidate,
         ConversationSnapshot snapshot,
         ProposalConstraints constraints,
-        string conversationTimeZoneId);
+        string conversationTimeZoneId,
+        DateTimeOffset userLocalNow,
+        ProposalGenerationPolicy generationPolicy);
 }
 
 public sealed record ProposalSetVerdict(
@@ -183,7 +186,9 @@ public sealed class ProposalSetGuard : IProposalSetGuard
         ProposalSetCandidate candidate,
         ConversationSnapshot snapshot,
         ProposalConstraints constraints,
-        string conversationTimeZoneId)
+        string conversationTimeZoneId,
+        DateTimeOffset userLocalNow,
+        ProposalGenerationPolicy generationPolicy)
     {
         if (snapshot.CurrentProposalSet is { IsOpen: true })
             return ProposalSetVerdict.Invalid("An open proposal set already exists.");
@@ -208,9 +213,11 @@ public sealed class ProposalSetGuard : IProposalSetGuard
             if (title.Length > MaxTitleLength)
                 return ProposalSetVerdict.Invalid($"{at}: title must be at most {MaxTitleLength} characters.");
 
+            var scheduleError = ProposalScheduleRules.Validate(item, userLocalNow, generationPolicy);
+            if (scheduleError is not null)
+                return ProposalSetVerdict.Invalid($"{at}: {scheduleError}");
+
             var duration = item.EndTime.ToTimeSpan() - item.StartTime.ToTimeSpan();
-            if (duration <= TimeSpan.Zero)
-                return ProposalSetVerdict.Invalid($"{at}: endTime must be after startTime on the same day.");
             if (duration < TimeSpan.FromMinutes(1) || duration > TimeSpan.FromMinutes(MaxDurationMinutes))
                 return ProposalSetVerdict.Invalid(
                     $"{at}: the duration must be between 1 minute and {MaxDurationMinutes} minutes.");

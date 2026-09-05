@@ -56,11 +56,9 @@ public enum PlanningDecisionReason
 {
     NoVerifiedPlanningMaterial = 0,
     VerifiedActionAvailable = 1,
-    ConservativeGoalProposalAllowed = 2,
-    UserDelegatedPlanning = 3,
-    SafeDefaultsAllowed = 4,
-    ClarificationCanHelp = 5,
-    UserRejectedAction = 6,
+    UserDelegatedPlanning = 2,
+    ClarificationCanHelp = 3,
+    UserRejectedAction = 4,
 }
 
 public enum AllowedAssumption
@@ -145,27 +143,6 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
                 PlanningReadiness.ReadyForProposal,
                 [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
                 [PlanningDecisionReason.UserDelegatedPlanning],
-                [AllowedAssumption.CoachDecomposition, AllowedAssumption.DefaultDuration,
-                    AllowedAssumption.NextAvailableSlot]);
-        }
-
-        if (verified.Disposition == UserTurnDisposition.CannotProvide
-            && policy.AllowSafeDefaultsWhenClarificationUnavailable)
-        {
-            return Decision(
-                PlanningReadiness.ReadyForProposal,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
-                [PlanningDecisionReason.SafeDefaultsAllowed],
-                [AllowedAssumption.CoachDecomposition, AllowedAssumption.DefaultDuration,
-                    AllowedAssumption.NextAvailableSlot]);
-        }
-
-        if (policy.AllowConservativeGoalProposal)
-        {
-            return Decision(
-                PlanningReadiness.ReadyForProposal,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
-                [PlanningDecisionReason.ConservativeGoalProposalAllowed],
                 [AllowedAssumption.CoachDecomposition, AllowedAssumption.DefaultDuration,
                     AllowedAssumption.NextAvailableSlot]);
         }

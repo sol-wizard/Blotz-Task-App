@@ -51,6 +51,28 @@ public class DeterministicProposalGeneratorTests
         result.Warnings.Should().Contain(ProposalGenerationWarning.MovedToNextWorkingDay);
     }
 
+    [Fact]
+    public void Generate_WhenSameDayIsDisallowed_UsesNextWorkingDayAndPassesSharedRules()
+    {
+        var mode = ExecutionModeDefinition.Create();
+        var policy = mode.Policy.ProposalGeneration with { AllowSameDay = false };
+        var verified = new VerifiedPlanningContext(
+            [new VerifiedPlanningItem("整理资料", PlanningItemKind.Action, "整理资料")],
+            [], UserTurnDisposition.NotApplicable, new EvidenceSummary(1, 1, []));
+        var snapshot = Snapshot(mode);
+        var decision = new PlanningReadinessCalculator().Calculate(new PlanningReadinessContext(
+            snapshot, verified, mode.Policy.Planning));
+        var localNow = new DateTimeOffset(2026, 9, 3, 9, 0, 0, TimeSpan.FromHours(10));
+
+        var result = new DeterministicProposalGenerator().Generate(new ProposalGenerationContext(
+            snapshot, verified, decision, policy, localNow, "Australia/Sydney", 3));
+
+        var candidate = result.Candidate!.Proposals.Single();
+        candidate.Date.Should().Be(new DateOnly(2026, 9, 4));
+        ProposalScheduleRules.Validate(candidate, localNow, policy).Should().BeNull(
+            "the deterministic generator and proposal guard share the same scheduling rules");
+    }
+
     private static ConversationSnapshot Snapshot(AiCoachModeDefinition mode) => new(
         Guid.NewGuid(), Guid.NewGuid(), mode.Mode, ConversationPhase.Conversing,
         GenerationStatus.Running, BlockedReason.None, 1,

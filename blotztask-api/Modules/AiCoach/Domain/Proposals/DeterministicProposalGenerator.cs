@@ -65,36 +65,23 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
             warnings.Add(ProposalGenerationWarning.ProposalLimitApplied);
 
         var policy = context.Policy;
-        var start = RoundUp(
-            context.UserLocalNow.DateTime.AddMinutes(policy.MinimumLeadMinutes),
-            policy.SlotGranularityMinutes);
-
-        if (!policy.AllowSameDay || start.TimeOfDay < policy.WorkingDayStart.ToTimeSpan())
-        {
-            start = policy.AllowSameDay
-                ? start.Date.Add(policy.WorkingDayStart.ToTimeSpan())
-                : start.Date.AddDays(1).Add(policy.WorkingDayStart.ToTimeSpan());
-        }
-
-        if (start.TimeOfDay.Add(TimeSpan.FromMinutes(policy.DefaultDurationMinutes))
-            > policy.WorkingDayEnd.ToTimeSpan())
-        {
-            start = start.Date.AddDays(1).Add(policy.WorkingDayStart.ToTimeSpan());
+        var requestedStart = context.UserLocalNow.DateTime.AddMinutes(policy.MinimumLeadMinutes);
+        var start = ProposalScheduleRules.NextAllowedStart(
+            requestedStart, context.UserLocalNow, policy, policy.DefaultDurationMinutes);
+        if (start.Date > requestedStart.Date)
             warnings.Add(ProposalGenerationWarning.MovedToNextWorkingDay);
-        }
 
         var proposals = new List<TaskProposalCandidate>();
         var index = 0;
         foreach (var item in sourceItems.Take(context.MaxProposals))
         {
             index++;
-            var end = start.AddMinutes(policy.DefaultDurationMinutes);
-            if (end.TimeOfDay > policy.WorkingDayEnd.ToTimeSpan())
-            {
-                start = start.Date.AddDays(1).Add(policy.WorkingDayStart.ToTimeSpan());
-                end = start.AddMinutes(policy.DefaultDurationMinutes);
+            var nextStart = ProposalScheduleRules.NextAllowedStart(
+                start, context.UserLocalNow, policy, policy.DefaultDurationMinutes);
+            if (nextStart.Date > start.Date)
                 warnings.Add(ProposalGenerationWarning.MovedToNextWorkingDay);
-            }
+            start = nextStart;
+            var end = start.AddMinutes(policy.DefaultDurationMinutes);
 
             var chinese = ContainsCjk(item.Text);
             proposals.Add(new TaskProposalCandidate(
@@ -146,12 +133,6 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
 
     private static bool ContainsCjk(string text) =>
         text.Any(character => character is >= '\u3400' and <= '\u9fff');
-
-    private static DateTime RoundUp(DateTime value, int minutes)
-    {
-        var interval = TimeSpan.FromMinutes(Math.Max(1, minutes)).Ticks;
-        return new DateTime(((value.Ticks + interval - 1) / interval) * interval, value.Kind);
-    }
 
     private sealed record PlanningItemSource(string Text, PlanningItemKind Kind);
 }

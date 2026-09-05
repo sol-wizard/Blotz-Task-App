@@ -54,4 +54,5 @@ public enum StrategyReasonCode
     UserRejectedAction = 9,
     ClarificationSlotAlreadyAsked = 10,
     ActionableIntentRequiresProposal = 11,
+    NoNewPlanningMaterial = 12,
 }

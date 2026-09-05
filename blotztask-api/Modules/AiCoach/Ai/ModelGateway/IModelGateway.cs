@@ -32,6 +32,8 @@ public sealed record GatewayToolDefinition(
 
 public abstract record GatewayMessage;
 
+public sealed record GatewaySystemMessage(string Content) : GatewayMessage;
+
 public sealed record GatewayUserMessage(string Content) : GatewayMessage;
 
 public sealed record GatewayAssistantMessage(
