@@ -1,10 +1,17 @@
 name: Prod - Ship backend
 
-# Button 2 of the three-button production release.
+# Button 2 of the two-button production release.
 #
-# Run this AFTER store review has passed and BEFORE pressing release in App Store
-# Connect / starting the rollout in Play Console. It deploys the production API
+# Run this AFTER you have pressed release in App Store Connect / started the
+# rollout in Play Console AND confirmed the new version is actually live. It
+# deploys the production API, points the in-app update prompt at the new version,
 # and records the release in GitHub.
+#
+# Deploying after the stores publish leaves a short window - the length of this
+# run - where a freshly updated app talks to the old API. The rule that keeps
+# that harmless: if an app change needs a new endpoint, ship the endpoint ahead
+# of the release with a plain "Prod - Build and deploy WebApi" run, the way the
+# badges equip endpoint went out before the app that used it.
 
 on:
   workflow_dispatch:
@@ -110,11 +117,68 @@ jobs:
             exit 1
           fi
 
+  update-prompt:
+    name: Point the update prompt at the new version
+    needs: [meta, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    # Required: the AZURE_* secrets live on this environment, and the managed
+    # identity's federated credential is scoped to
+    # `repo:sol-wizard/Blotz-Task-App:environment:prod` - a job without it gets a
+    # token Entra ID will not accept.
+    environment:
+      name: 'prod'
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Only LatestVersion. MinimumSupportedVersion is the force-update wall, and
+      # setting it to the version just released would lock out every user who has
+      # not updated yet - which, minutes after a release, is all of them. It is
+      # raised by hand in the portal on the rare release that needs it.
+      #
+      # `appsettings set` adds and updates only the settings named here; it leaves
+      # everything else on the App Service alone.
+      - name: Point the update prompt at ${{ needs.meta.outputs.version }}
+        run: |
+          az webapp config appsettings set \
+            --name app-blotz-task-api-prod \
+            --resource-group rg-blotz-task-prod \
+            --settings \
+              AppVersion__Ios__LatestVersion=${{ needs.meta.outputs.version }} \
+              AppVersion__Android__LatestVersion=${{ needs.meta.outputs.version }} \
+            --output none
+
+      - name: azure logout
+        if: always()
+        run: az logout
+
+      # Writing app settings restarts the App Service, so this waits out the cold
+      # start and confirms the policy the app will actually read - a reachable API
+      # is not proof that the new configuration took.
+      - name: Check the served policy
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-prod.azurewebsites.net/api/app-version)
+          echo "$BODY" | jq .
+          SERVED=$(echo "$BODY" | jq -r '.ios.latestVersion')
+          if [ "$SERVED" != "${{ needs.meta.outputs.version }}" ]; then
+            echo "::error::API is serving latestVersion $SERVED, expected ${{ needs.meta.outputs.version }}"
+            exit 1
+          fi
+
   tag-release:
     name: Record the release
-    # Only after the API is confirmed healthy, so a broken deploy never gets
-    # written down as a shipped release.
-    needs: [meta, verify]
+    # Last, so a release is only written down once the API is healthy and the
+    # update prompt is actually serving the new version.
+    needs: [meta, update-prompt]
     uses: ./.github/workflows/tag-release.yml
     permissions:
       contents: write

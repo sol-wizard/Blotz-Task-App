@@ -1,6 +1,6 @@
 name: Prod - Submit app to the stores
 
-# Button 1 of the three-button production release.
+# Button 1 of the two-button production release.
 #
 # Builds the production iOS + Android apps from main, submits them for App Store
 # review and uploads to the Play production track - which stays a draft, so the
@@ -10,7 +10,8 @@ name: Prod - Submit app to the stores
 # It deploys no backend on purpose. Store review sits in the middle of a
 # production release, so by the time it passes, main has usually moved on.
 # Button 2 (Prod - Ship backend) deploys the API from the `submitted/<version>`
-# tag once review passes, which is what keeps the API and the binary in step.
+# tag once the release is live in the stores, which is what keeps the API and the
+# binary users installed on one commit.
 
 on:
   workflow_dispatch:
