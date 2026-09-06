@@ -20,7 +20,7 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import LottieView from "lottie-react-native";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { requestRecordingPermissionsAsync } from "expo-audio";
+import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
@@ -82,19 +82,59 @@ export default function AiTaskSheetScreen() {
     useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
-  // Request mic permission on mount; navigate back if denied
+  // Resolve mic permission on mount; navigate back if unusable.
+  // Get-then-request (as in shared/services/notifications.ts) separates denied from blocked.
   useEffect(() => {
-    requestRecordingPermissionsAsync().then(({ granted }) => {
-      if (!granted) {
-        console.warn("[Mic] Permission not granted");
-        analytics.trackAiTaskGenerationFailed({
-          inputMode: "voice",
-          stage: "permission",
-          errorCode: "PermissionDenied",
-        });
-        router.back();
+    analytics.trackAiTaskSheetOpened();
+
+    // Dismissing mid-await would otherwise pop a screen the user has already left.
+    let isActive = true;
+
+    const exitOnUnusableMic = () => {
+      console.warn("[Mic] Permission not granted");
+      analytics.trackAiTaskGenerationFailed({
+        inputMode: "voice",
+        stage: "permission",
+        errorCode: "PermissionDenied",
+      });
+      if (isActive) router.back();
+    };
+
+    const resolveMicPermission = async () => {
+      const current = await getRecordingPermissionsAsync();
+
+      if (current.granted) {
+        analytics.trackMicPermissionResolved({ outcome: "already_granted" });
+        return;
       }
+
+      // No prompt will be shown, so a request here is indistinguishable from a real rejection.
+      if (!current.canAskAgain) {
+        analytics.trackMicPermissionResolved({ outcome: "blocked" });
+        exitOnUnusableMic();
+        return;
+      }
+
+      const requested = await requestRecordingPermissionsAsync();
+      analytics.trackMicPermissionResolved({
+        outcome: requested.granted ? "granted" : "denied",
+      });
+
+      if (!requested.granted) exitOnUnusableMic();
+    };
+
+    void resolveMicPermission().catch((error: unknown) => {
+      // Previously an unhandled rejection. The sheet still stays open; only the silence is fixed.
+      console.warn("[Mic] Permission check failed.", error);
+      analytics.trackMicPermissionResolved({
+        outcome: "error",
+        errorCode: "PermissionCheckFailed",
+      });
     });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   // --- Derived data ---
