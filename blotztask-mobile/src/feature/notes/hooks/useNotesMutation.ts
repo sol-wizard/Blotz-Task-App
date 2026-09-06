@@ -4,6 +4,10 @@ import { EditNoteDTO } from "../models/edit-note-dto";
 import { noteKeys } from "@/shared/constants/query-key-factory";
 import { CreateNoteDTO } from "../models/create-note-dto";
 
+export const noteMutationKeys = {
+  create: ["notes", "create"] as const,
+};
+
 export const useNotesMutation = () => {
   const queryClient = useQueryClient();
 
@@ -15,6 +19,7 @@ export const useNotesMutation = () => {
   });
 
   const createNoteMutation = useMutation({
+    mutationKey: noteMutationKeys.create,
     mutationFn: (createNoteDto: CreateNoteDTO) => createNote(createNoteDto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.all });
