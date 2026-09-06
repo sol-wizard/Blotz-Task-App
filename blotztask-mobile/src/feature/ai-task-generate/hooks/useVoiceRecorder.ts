@@ -4,7 +4,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
@@ -14,9 +14,35 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const { isRecording } = useAudioRecorderState(recorder);
+
   // Release handlers wait on this so they never race ahead of async recorder setup.
   const startPromiseRef = useRef<Promise<void> | null>(null);
   const cancelRequested = useRef(false);
+
+  // Android throws AudioRecorderAlreadyPreparedException on a second prepare
+  // (iOS silently re-prepares), so track prepared state and only prepare when
+  // needed. stop() releases the native recorder on Android, so the flag resets
+  // after every stop attempt.
+  const isPreparedRef = useRef(false);
+
+  const prepareRecorder = useCallback(async (): Promise<void> => {
+    if (isPreparedRef.current) return;
+    await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+    await recorder.prepareToRecordAsync();
+    isPreparedRef.current = true;
+  }, [recorder]);
+
+  // Pre-warm on mount: a cold prepare takes 300-650ms, which would otherwise be
+  // a dead window right after press-in where nothing is recorded yet. The
+  // recording audio mode is process-global, so hand it back on unmount.
+  useEffect(() => {
+    prepareRecorder().catch((error) => console.warn("[Mic] Failed to pre-warm recorder.", error));
+    return () => {
+      setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch((error) =>
+        console.warn("[Mic] Failed to reset audio mode.", error),
+      );
+    };
+  }, [prepareRecorder]);
 
   const trackRecordingFailure = (errorCode: string) => {
     analytics.trackAiTaskGenerationFailed({
@@ -39,8 +65,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
   const startRecording = async (): Promise<void> => {
     try {
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await recorder.prepareToRecordAsync();
+      await prepareRecorder();
       if (cancelRequested.current) return;
       recorder.record();
     } catch (error) {
@@ -54,13 +79,23 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     cancelRequested.current = true;
     await startPromiseRef.current;
 
-    if (recorder.isRecording) {
-      try {
-        await recorder.stop();
-      } catch (error) {
-        console.warn("[Mic] Error cancelling recording.", error);
-        trackRecordingFailure("RecordingCancelFailed");
-      }
+    if (!recorder.isRecording) return;
+
+    try {
+      await recorder.stop();
+    } catch (error) {
+      console.warn("[Mic] Error cancelling recording.", error);
+      trackRecordingFailure("RecordingCancelFailed");
+      return;
+    } finally {
+      isPreparedRef.current = false;
+    }
+
+    // Best-effort cleanup of the discarded take, mirroring stopAndUpload.
+    try {
+      if (recorder.uri) new ExpoFile(recorder.uri).delete();
+    } catch (error) {
+      console.warn("[Mic] Failed to delete cancelled recording file.", error);
     }
   };
 
@@ -80,6 +115,8 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       console.warn("[Mic] Error stopping recording.", error);
       trackRecordingFailure("RecordingStopFailed");
       return false;
+    } finally {
+      isPreparedRef.current = false;
     }
 
     const uri = recorder.uri;
