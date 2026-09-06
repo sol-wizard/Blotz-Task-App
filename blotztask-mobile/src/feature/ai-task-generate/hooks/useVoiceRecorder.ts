@@ -19,9 +19,17 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const startPromiseRef = useRef<Promise<void> | null>(null);
   const cancelRequested = useRef(false);
 
+  // Android throws AudioRecorderAlreadyPreparedException on a second prepare
+  // (iOS silently re-prepares), so track prepared state and only prepare when
+  // needed. stop() releases the native recorder on Android, so the flag resets
+  // after every stop attempt.
+  const isPreparedRef = useRef(false);
+
   const prepareRecorder = useCallback(async (): Promise<void> => {
+    if (isPreparedRef.current) return;
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
     await recorder.prepareToRecordAsync();
+    isPreparedRef.current = true;
   }, [recorder]);
 
   // Pre-warm on mount: a cold prepare takes 300-650ms, which would otherwise be
@@ -79,6 +87,8 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       console.warn("[Mic] Error cancelling recording.", error);
       trackRecordingFailure("RecordingCancelFailed");
       return;
+    } finally {
+      isPreparedRef.current = false;
     }
 
     // Best-effort cleanup of the discarded take, mirroring stopAndUpload.
@@ -105,6 +115,8 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       console.warn("[Mic] Error stopping recording.", error);
       trackRecordingFailure("RecordingStopFailed");
       return false;
+    } finally {
+      isPreparedRef.current = false;
     }
 
     const uri = recorder.uri;
