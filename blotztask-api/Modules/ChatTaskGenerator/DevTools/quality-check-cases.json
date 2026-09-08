@@ -245,7 +245,7 @@
     "expectedNoteCount": 0,
     "expectations": [
       {
-        "titleContains": ["猫"],
+        "titleContains": ["cat", "猫"],
         "startDateOffset": 1,
         "startTimeHourMin": 18,
         "startTimeHourMax": 23,
