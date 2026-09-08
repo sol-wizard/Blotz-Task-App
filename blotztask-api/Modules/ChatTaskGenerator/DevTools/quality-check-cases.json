@@ -222,5 +222,35 @@
       }
     ],
     "recurringExpectations": []
+  },
+  {
+    "id": "tonight-lands-in-the-evening",
+    "input": "Feed the cat tonight",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["cat"],
+        "startDateOffset": 0,
+        "startTimeHourMin": 18,
+        "startTimeHourMax": 23,
+        "label": "Life"
+      }
+    ]
+  },
+  {
+    "id": "zh-tomorrow-night-lands-in-the-evening",
+    "input": "明晚我要喂猫",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["猫"],
+        "startDateOffset": 1,
+        "startTimeHourMin": 18,
+        "startTimeHourMax": 23,
+        "label": "Life"
+      }
+    ]
   }
 ]
