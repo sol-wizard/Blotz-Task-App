@@ -23,6 +23,14 @@ const DATE_FORMAT_PATTERNS = {
     en: "MMMM yyyy",
     zh: "yyyy年M月",
   },
+  abbrevMonthDay: {
+    en: "MMM d",
+    zh: "M月d日",
+  },
+  month: {
+    en: "MMMM",
+    zh: "M月",
+  },
 };
 
 type LocalizedDateFormatPreset = keyof typeof DATE_FORMAT_PATTERNS;

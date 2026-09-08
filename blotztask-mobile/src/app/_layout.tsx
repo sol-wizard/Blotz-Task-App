@@ -33,7 +33,7 @@ Sentry.init({
   enabled: process.env.EXPO_PUBLIC_APP_ENV !== "development",
   sendDefaultPii: true,
   enableNative: true,
-  replaysSessionSampleRate: 0.1,
+  tracesSampleRate: 0.4,
   replaysOnErrorSampleRate: 1,
   enableAutoSessionTracking: true,
   integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],

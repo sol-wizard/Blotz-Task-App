@@ -26,7 +26,7 @@ public class GetBadgeByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetBadgeByI
             .Join(db.Badges,
                 ub => ub.BadgeId,
                 badge => badge.Id,
-                (ub, badge) => new { Badge = badge, ub.EarnedAtUtc })
+                (ub, badge) => new { Badge = badge, ub.EarnedAtUtc, EquippedSlot = ub.DisplayOrder })
             .FirstOrDefaultAsync(ct);
 
         if (earnedBadge == null)
@@ -40,6 +40,7 @@ public class GetBadgeByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetBadgeByI
             IconUrl = earnedBadge.Badge.IconUrl,
             Category = earnedBadge.Badge.Category.ToString(),
             ObtainedAt = earnedBadge.EarnedAtUtc,
+            EquippedSlot = earnedBadge.EquippedSlot,
         };
     }
 }
@@ -52,4 +53,5 @@ public class BadgeByIdItemDto
     public required string IconUrl { get; set; }
     public required string Category { get; set; }
     public required DateTimeOffset ObtainedAt { get; set; }
+    public int? EquippedSlot { get; set; }
 }

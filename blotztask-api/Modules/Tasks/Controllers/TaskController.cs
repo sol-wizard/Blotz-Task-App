@@ -173,7 +173,7 @@ public class TaskController(
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var command = new TaskStatusUpdateCommand { TaskId = id };
+        var command = new TaskStatusUpdateCommand { TaskId = id, UserId = userId };
         var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
 
         if (result == null)

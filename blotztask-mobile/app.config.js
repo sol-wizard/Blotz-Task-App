@@ -16,6 +16,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: process.env.BUNDLE_IDENTIFIER ?? "com.Blotz.BlotzTask",
+      usesAppleSignIn: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         CFBundleDevelopmentRegion: "en",
@@ -35,7 +36,7 @@ export default {
         NSLocationWhenInUseUsageDescription:
           "BlotzTask uses your location to provide location-aware features when you choose to use them. Your location is not stored.",
       },
-      appleTeamId: "LXC29JARY5",
+      appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? "Z6GFDAYSP9",
       icon: "./assets/images-png/blotz-icon.png",
     },
     android: {

@@ -40,7 +40,11 @@ public class SubTaskController(
     [HttpPut("subtask-completion-status/{id}")]
     public async Task<IActionResult> UpdateSubtaskStatus(int id, CancellationToken ct)
     {
-        var message = await updateSubtaskStatusCommandHandler.Handle(new UpdateSubtaskStatusCommand { SubtaskId = id }, ct);
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var message = await updateSubtaskStatusCommandHandler.Handle(
+            new UpdateSubtaskStatusCommand { SubtaskId = id, UserId = userId }, ct);
         return Ok(message);
     }
 
@@ -70,7 +74,10 @@ public class SubTaskController(
     [HttpDelete("subtasks/{subtaskId}")]
     public async Task<IActionResult> DeleteSubtask(int subtaskId, CancellationToken ct)
     {
-        var command = new DeleteSubtaskCommand { SubtaskId = subtaskId };
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var command = new DeleteSubtaskCommand { SubtaskId = subtaskId, UserId = userId };
         var result = await deleteSubtaskCommandHandler.Handle(command, ct);
         return Ok(result);
     }

@@ -1,11 +1,14 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { ReviewPeriodType, ReviewReportDTO } from "../models/review-dto";
 import { LetterBody } from "./letter-body";
-import { LetterEmptyState } from "./letter-empty-state";
+
 import { LetterGeneratingState } from "./letter-generating-state";
 import { LetterSignature } from "./letter-signature";
+import { MonthlyLetterInProgressState } from "./monthly-letter-in-progress-state";
+import { LetterReadyState } from "./letter-ready-state";
+import { LetterStamp } from "./letter-stamp";
 
 type Props = {
   isLoading: boolean;
@@ -13,7 +16,9 @@ type Props = {
   recipientName: string;
   isGenerating: boolean;
   onGenerate: () => void;
-  period: ReviewPeriodType;
+  periodType: ReviewPeriodType;
+  isCurrentMonth?: boolean;
+  periodLabel: string;
 };
 
 export function LetterCardContent({
@@ -22,14 +27,16 @@ export function LetterCardContent({
   recipientName,
   isGenerating,
   onGenerate,
-  period,
+  periodType,
+  isCurrentMonth = false,
+  periodLabel,
 }: Props) {
   const { t } = useTranslation("settings");
-  const ns = period === ReviewPeriodType.Weekly ? "weeklyReview" : "monthlyReview";
+  const ns = periodType === ReviewPeriodType.Weekly ? "weeklyReview" : "monthlyReview";
+  let content;
 
   if (isLoading) {
-    // TODO: replace with a shared inline loading component once one exists.
-    return (
+    content = (
       <View className="py-12 items-center">
         <CustomSpinner size={48} />
         <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
@@ -37,14 +44,12 @@ export function LetterCardContent({
         </Text>
       </View>
     );
-  }
-
-  if (isGenerating) {
-    return <LetterGeneratingState />;
-  }
-
-  if (report) {
-    return (
+  } else if (isGenerating) {
+    content = <LetterGeneratingState />;
+  } else if (isCurrentMonth) {
+    content = <MonthlyLetterInProgressState />;
+  } else if (report) {
+    content = (
       <>
         <LetterBody recipientName={recipientName} body={report.letter ?? ""} />
         <LetterSignature />
@@ -53,21 +58,15 @@ export function LetterCardContent({
         </Text>
       </>
     );
+  } else {
+    content = (
+      <LetterReadyState periodType={periodType} periodLabel={periodLabel} onGenerate={onGenerate} />
+    );
   }
-
-  // No report yet → empty state.
   return (
-    <>
-      <LetterEmptyState period={period} />
-      <View className="items-center mb-6">
-        <Pressable
-          onPress={onGenerate}
-          disabled={isGenerating}
-          className="px-5 py-2 rounded-full bg-secondary"
-        >
-          <Text className="text-white font-balooBold">{t(`${ns}.generate`)}</Text>
-        </Pressable>
-      </View>
-    </>
+    <View className="relative">
+      <LetterStamp />
+      {content}
+    </View>
   );
 }

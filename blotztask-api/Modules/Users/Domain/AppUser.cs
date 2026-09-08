@@ -20,4 +20,5 @@ public class AppUser
     
     [MaxLength(100)]
     public string? Timezone { get; set; }
+
 }

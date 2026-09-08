@@ -3,10 +3,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
+import * as WebBrowser from "expo-web-browser";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import * as Application from "expo-application";
 
 const WEBSITE_URL = "https://www.blotztask.com/";
+const PRIVACY_POLICY_URLS = {
+  en: "https://www.blotztask.com/en/privacy/",
+  zh: "https://www.blotztask.com/zh/privacy/",
+} as const;
 const FEEDBACK_URL =
   "https://m3cetbcyp2d.usttp.larksuite.com/share/base/form/shrusf712jJdjDC4l6gJkXcc8Yf";
 const XIAOHONGSHU_URL =
@@ -14,7 +19,7 @@ const XIAOHONGSHU_URL =
 
 export default function SettingsAboutScreen() {
   const router = useRouter();
-  const { t } = useTranslation("settings");
+  const { t , i18n } = useTranslation("settings");
   const version = Application.nativeApplicationVersion ?? "—";
   const buildNumber = Application.nativeBuildVersion ?? "—";
 
@@ -23,7 +28,11 @@ export default function SettingsAboutScreen() {
   };
 
   const handlePrivacyPolicy = () => {
-    router.push("/settings/privacy-policy");
+    const privacyPolicyUrl = i18n.resolvedLanguage?.startsWith("zh")
+      ? PRIVACY_POLICY_URLS.zh
+      : PRIVACY_POLICY_URLS.en;
+
+    WebBrowser.openBrowserAsync(privacyPolicyUrl).catch(() => Linking.openURL(privacyPolicyUrl));
   };
 
   const handleFeedback = () => {
@@ -79,7 +88,7 @@ export default function SettingsAboutScreen() {
                 {t("about.privacyPolicy")}
               </Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
+            <MaterialCommunityIcons name="open-in-new" size={20} color="#444964" />
           </Pressable>
         </View>
 

@@ -7,10 +7,7 @@ import i18n from "@/i18n";
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      if (
-        isAxiosError(error) &&
-        (error.response?.status === 401 || error.response?.status === 403)
-      ) {
+      if (isAxiosError(error) && error.response?.status === 401) {
         return;
       }
       if (query.meta?.silent) return;
@@ -28,10 +25,7 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
-      if (
-        isAxiosError(error) &&
-        (error.response?.status === 401 || error.response?.status === 403)
-      ) {
+      if (isAxiosError(error) && error.response?.status === 401) {
         return;
       }
       if (mutation.meta?.silent) return;
@@ -39,7 +33,7 @@ export const queryClient = new QueryClient({
       if (__DEV__) console.error("[Mutation Error]", error);
       Sentry.captureException(error, { tags: { source: "mutation" } });
 
-      const msg = getErrorMessage(error);
+      const msg = getErrorMessage(error, mutation.meta);
 
       Toast.show({
         type: "error",
@@ -70,11 +64,15 @@ export const queryClient = new QueryClient({
   },
 });
 
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: unknown, meta?: Record<string, unknown>): string {
   if (isAxiosError(error)) {
     const status = error.response?.status;
     if (!error.response) return i18n.t("errors.network");
     if (status && status >= 500) return i18n.t("errors.server");
+    const errorMap = meta?.errorMap as Record<number, string> | undefined;
+    if (status && errorMap?.[status]) {
+      return i18n.t(errorMap[status]);
+    }
     if (status === 400 || status === 422) return i18n.t("errors.validation");
     return i18n.t("errors.default");
   }

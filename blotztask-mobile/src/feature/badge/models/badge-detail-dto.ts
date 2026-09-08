@@ -5,4 +5,5 @@ export interface BadgeDetailDTO {
   category: string;
   description: string;
   obtainedAt: string;
+  equippedSlot: number | null;
 }

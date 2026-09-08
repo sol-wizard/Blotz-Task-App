@@ -1,0 +1,186 @@
+name: Staging - Release app and API
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'How to bump the version'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - none
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: blotztask-mobile
+
+jobs:
+  version:
+    name: Work out the new version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The "Run workflow" dropdown accepts any branch. Without this, a dispatch
+      # from a feature branch would build that branch's code and submit it to the
+      # stores as a staging release, while the version PR is opened against main.
+      - name: Refuse to release from anything but main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Staging releases must run from main, not ${{ github.ref_name }}."
+          exit 1
+
+      - name: Bump the preview version
+        id: bump
+        run: |
+          set -euo pipefail
+          IOS_CURRENT=$(jq -r '.build.preview.ios.env.APP_VERSION' eas.json)
+          ANDROID_CURRENT=$(jq -r '.build.preview.android.env.APP_VERSION' eas.json)
+
+          # Both platforms ship from one button, so they must share a base version -
+          # otherwise a single "patch" choice would mean two different results.
+          if [ "$IOS_CURRENT" != "$ANDROID_CURRENT" ]; then
+            echo "::error::preview versions are out of sync (iOS $IOS_CURRENT, Android $ANDROID_CURRENT). Align them in eas.json first."
+            exit 1
+          fi
+
+          IFS=. read -r MAJOR MINOR PATCH <<< "$IOS_CURRENT"
+          case "${{ inputs.version_bump }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            none)  ;;
+            *) echo "::error::unknown version_bump"; exit 1 ;;
+          esac
+
+          NEW="$MAJOR.$MINOR.$PATCH"
+          jq --arg v "$NEW" '
+              .build.preview.ios.env.APP_VERSION = $v
+            | .build.preview.android.env.APP_VERSION = $v
+          ' eas.json > eas.json.tmp && mv eas.json.tmp eas.json
+
+          echo "new_version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "### Staging release \`$IOS_CURRENT\` -> \`$NEW\`" >> "$GITHUB_STEP_SUMMARY"
+
+      # The bumped eas.json travels as an artifact so the version is written once
+      # here and simply reused by the jobs below, which run on other machines.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile/eas.json
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: version
+    runs-on: ubuntu-latest
+    strategy:
+      # Let the other platform finish rather than cancelling it. Its EAS build is
+      # already running in the cloud and would be paid for either way.
+      fail-fast: false
+      matrix:
+        platform: [ios, android]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: blotztask-mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile
+
+      # No --no-wait: that would only trigger the build and return immediately,
+      # letting the API deploy below run before the build result is known.
+      - name: Build and submit
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Apple Developer capabilities are managed by hand, same as build.ps1
+          EXPO_NO_CAPABILITY_SYNC: '1'
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile preview \
+            --auto-submit \
+            --non-interactive
+
+  deploy-api:
+    name: Deploy API to staging
+    # Every matrix leg must pass, so a failed app build never reaches the API.
+    needs: build
+    uses: ./.github/workflows/deploy-staging-api.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+
+  record-and-verify:
+    name: Record version and health check
+    needs: [version, build, deploy-api]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile
+
+      # Recorded before the health check: by now both apps are submitted, so the
+      # version has shipped whatever the API is doing. main is protected and the
+      # bot cannot push to it, so this opens a PR to merge by hand.
+      - name: Open a PR with the released version
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/staging-release-${{ needs.version.outputs.new_version }}
+          add-paths: blotztask-mobile/eas.json
+          commit-message: "chore: staging release ${{ needs.version.outputs.new_version }}"
+          title: "chore: staging release ${{ needs.version.outputs.new_version }}"
+          body: |
+            Records the version released to staging by
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.
+
+            Merge to keep `eas.json` on `main` in step with what is in TestFlight
+            and the Play internal track.
+
+      # Retries ride out the App Service warm-up after the deploy - a cold .NET
+      # start can take a couple of minutes. /health also covers the database,
+      # which matters because the deploy runs EF migrations right before it.
+      - name: Check the staging API is healthy
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-stag.azurewebsites.net/health)
+          echo "/health returned: $BODY"
+          if [ "$BODY" != "Healthy" ]; then
+            echo "::error::staging API is not healthy"
+            exit 1
+          fi

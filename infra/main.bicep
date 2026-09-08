@@ -18,10 +18,6 @@ param auth0Audience string
 param auth0ManagementClientId string
 param auth0ManagementAudience string
 
-param breakdownDeploymentName string
-param breakdownModelName string
-param breakdownModelVersion string
-
 param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
@@ -39,6 +35,14 @@ param appInsightsSamplingPercentage int = 5
 // App Service SKU settings
 param appServiceSkuName string
 param appServiceSkuTier string
+
+// Mobile force-update policy (served by GET /api/app-version)
+param iosLatestVersion string
+param iosMinimumSupportedVersion string
+param iosStoreUrl string
+param androidLatestVersion string
+param androidMinimumSupportedVersion string
+param androidStoreUrl string
 
 // Database (DTU model)
 param dbMaxSizeGb int
@@ -116,6 +120,12 @@ module webAppForAPI 'modules/appService.bicep' = {
     auth0Audience: auth0Audience
     auth0ManagementClientId: auth0ManagementClientId
     auth0ManagementAudience: auth0ManagementAudience
+    iosLatestVersion: iosLatestVersion
+    iosMinimumSupportedVersion: iosMinimumSupportedVersion
+    iosStoreUrl: iosStoreUrl
+    androidLatestVersion: androidLatestVersion
+    androidMinimumSupportedVersion: androidMinimumSupportedVersion
+    androidStoreUrl: androidStoreUrl
   }
 }
 
@@ -169,9 +179,6 @@ module openAi 'modules/openAi.bicep' = {
     projectName: namePrefix
     keyVaultName: kv.outputs.name
     foundryProjectName: 'proj-${namePrefix}-${environment}'
-    breakdownDeploymentName: breakdownDeploymentName
-    breakdownModelName: breakdownModelName
-    breakdownModelVersion: breakdownModelVersion
     taskGenerationDeploymentName: taskGenerationDeploymentName
     taskGenerationModelName: taskGenerationModelName
     taskGenerationModelVersion: taskGenerationModelVersion

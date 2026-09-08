@@ -8,6 +8,7 @@ import {
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type MicPermissionOutcome,
   type LoginConnection,
   type LoginErrorCode,
   type LoginFailureReason,
@@ -15,6 +16,8 @@ import {
   type ShareEvent,
   type ShareSource,
   type ShareContentType,
+  type OnboardingOutcome,
+  type OnboardingSection,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -96,6 +99,32 @@ export const analytics = {
     });
   },
 
+  /** Fires when the user reaches the onboarding screen. */
+  trackOnboardingStarted() {
+    posthog.capture(EVENTS.ONBOARDING_STARTED);
+  },
+
+  /** Fires when an onboarding section becomes visible. */
+  trackOnboardingStepViewed(params: { step: OnboardingSection }) {
+    posthog.capture(EVENTS.ONBOARDING_STEP_VIEWED, {
+      step: params.step,
+    });
+  },
+
+  /**
+   * Fires after the user's onboarded state is persisted.
+   * `outcome` separates users who reached the final tutorial section from users who skipped.
+   */
+  trackOnboardingCompleted(params: {
+    outcome: OnboardingOutcome;
+    exit_section: OnboardingSection;
+  }) {
+    posthog.capture(EVENTS.ONBOARDING_COMPLETED, {
+      outcome: params.outcome,
+      last_section_reached: params.exit_section,
+    });
+  },
+
   /**
    * We treat a user as "active" if they stay on the app for more than 5 seconds.
    * Fires once per calendar day. Used to calculate Daily Active Users (DAU) and retention.
@@ -153,6 +182,26 @@ export const analytics = {
     };
     if (params.durationMs !== undefined) properties.duration_ms = params.durationMs;
     posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
+  },
+
+  /**
+   * Fires when the AI sheet mounts. The denominator for AI attempts: the session event fires
+   * only on exit and drops itself when no turn was recorded, so opens were previously invisible.
+   */
+  trackAiTaskSheetOpened() {
+    posthog.capture(EVENTS.AI_TASK_SHEET_OPENED);
+  },
+
+  /**
+   * Fires once per AI sheet open, when the mic permission question has an answer.
+   * `outcome` is classified from the state read *before* asking; that is the only way to
+   * separate a fresh rejection (`denied`) from one the OS will not re-prompt for (`blocked`).
+   */
+  trackMicPermissionResolved(params: { outcome: MicPermissionOutcome; errorCode?: string }) {
+    posthog.capture(EVENTS.MIC_PERMISSION_RESOLVED, {
+      outcome: params.outcome,
+      ...(params.errorCode ? { error_code: params.errorCode } : {}),
+    });
   },
 
   /**

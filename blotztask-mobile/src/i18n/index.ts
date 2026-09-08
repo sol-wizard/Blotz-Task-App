@@ -17,8 +17,6 @@ import enAiTaskGenerate from "./locales/en/ai-task-generate.json";
 import zhAiTaskGenerate from "./locales/zh/ai-task-generate.json";
 import enOnboarding from "./locales/en/onboarding.json";
 import zhOnboarding from "./locales/zh/onboarding.json";
-import enPrivacyPolicy from "./locales/en/privacy-policy.json";
-import zhPrivacyPolicy from "./locales/zh/privacy-policy.json";
 import enDeadline from "./locales/en/deadline.json";
 import zhDeadline from "./locales/zh/deadline.json";
 import enPomodoro from "./locales/en/pomodoro.json";
@@ -55,7 +53,6 @@ i18n.use(initReactI18next).init({
       notes: enNotes,
       aiTaskGenerate: enAiTaskGenerate,
       onboarding: enOnboarding,
-      privacyPolicy: enPrivacyPolicy,
       deadline: enDeadline,
       pomodoro: enPomodoro,
       badge: enBadge,
@@ -70,7 +67,6 @@ i18n.use(initReactI18next).init({
       notes: zhNotes,
       aiTaskGenerate: zhAiTaskGenerate,
       onboarding: zhOnboarding,
-      privacyPolicy: zhPrivacyPolicy,
       deadline: zhDeadline,
       pomodoro: zhPomodoro,
       badge: zhBadge,

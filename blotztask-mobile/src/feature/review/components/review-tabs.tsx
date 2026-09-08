@@ -2,17 +2,15 @@ import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { ReviewPeriodType } from "../models/review-dto";
 
-export type ReviewTab = ReviewPeriodType;
-
 type Props = {
-  activeTab: ReviewTab;
-  onChange: (tab: ReviewTab) => void;
+  activeTab: ReviewPeriodType;
+  onChange: (tab: ReviewPeriodType) => void;
 };
 
 export function ReviewTabs({ activeTab, onChange }: Props) {
   const { t } = useTranslation("settings");
 
-  const tabs: { key: ReviewTab; label: string }[] = [
+  const tabs: { key: ReviewPeriodType; label: string }[] = [
     { key: ReviewPeriodType.Weekly, label: t("review.weeklyTab") },
     { key: ReviewPeriodType.Monthly, label: t("review.monthlyTab") },
   ];
@@ -30,9 +28,7 @@ export function ReviewTabs({ activeTab, onChange }: Props) {
             }`}
           >
             <Text
-              className={`text-sm font-balooBold ${
-                isActive ? "text-white" : "text-secondary/60"
-              }`}
+              className={`text-sm font-balooBold ${isActive ? "text-white" : "text-secondary/60"}`}
             >
               {tab.label}
             </Text>
