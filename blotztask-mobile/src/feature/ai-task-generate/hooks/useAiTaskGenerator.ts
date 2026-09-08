@@ -290,6 +290,16 @@ function buildTurn(
     generated_notes: (result.extractedNotes ?? []).map((note) => ({
       text: note.text,
     })),
+    generated_recurring_tasks: (result.extractedRecurringTasks ?? []).map((recurring) => ({
+      title: recurring.title,
+      description: recurring.description ?? "",
+      frequency: recurring.frequency,
+      interval: recurring.interval,
+      days_of_week: recurring.days_of_week,
+      template_start_time: recurring.template_start_time,
+      template_end_time: recurring.template_end_time,
+      task_label: recurring.task_label,
+    })),
   };
 }
 
