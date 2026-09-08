@@ -10,6 +10,8 @@ public class ReviewReportDto
     public DateOnly PeriodStartLocal { get; set; }
     public DateOnly PeriodEndLocalExclusive { get; set; }
 
+    public int TasksCompleted { get; set; }
+
     // Null until the review has been generated.
     public string? Letter { get; set; }
     public bool IsLowActivity { get; set; }

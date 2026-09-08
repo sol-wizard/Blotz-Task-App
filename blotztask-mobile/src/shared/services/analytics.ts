@@ -16,6 +16,8 @@ import {
   type ShareEvent,
   type ShareSource,
   type ShareContentType,
+  type OnboardingOutcome,
+  type OnboardingSection,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -94,6 +96,32 @@ export const analytics = {
       reason: params.reason,
       error_code: params.errorCode,
       duration_ms: params.durationMs,
+    });
+  },
+
+  /** Fires when the user reaches the onboarding screen. */
+  trackOnboardingStarted() {
+    posthog.capture(EVENTS.ONBOARDING_STARTED);
+  },
+
+  /** Fires when an onboarding section becomes visible. */
+  trackOnboardingStepViewed(params: { step: OnboardingSection }) {
+    posthog.capture(EVENTS.ONBOARDING_STEP_VIEWED, {
+      step: params.step,
+    });
+  },
+
+  /**
+   * Fires after the user's onboarded state is persisted.
+   * `outcome` separates users who reached the final tutorial section from users who skipped.
+   */
+  trackOnboardingCompleted(params: {
+    outcome: OnboardingOutcome;
+    exit_section: OnboardingSection;
+  }) {
+    posthog.capture(EVENTS.ONBOARDING_COMPLETED, {
+      outcome: params.outcome,
+      last_section_reached: params.exit_section,
     });
   },
 
