@@ -63,18 +63,23 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  // Pre-warm on mount: a cold prepare takes 300-650ms, which would otherwise be
-  // a dead window right after press-in where nothing is recorded yet. The
-  // recording audio mode is process-global, so hand it back on unmount.
+  // Set the recording audio mode up front, but do NOT open the mic input until press-in:
+  // iOS silences haptics while an audio input is open, so a recorder pre-warmed on mount
+  // swallowed the press haptic on the first hold. Opening on press costs 150-260ms on an
+  // iPhone 17 Pro (measured 2026-09-10), and the haptic is dispatched before it starts.
+  // Any haptic fired while recording must wait for the recorder to stop, for the same reason.
+  // The recording audio mode is process-global, so hand it back on unmount.
   useEffect(() => {
-    prepareRecorder().catch((error) => console.warn("[Mic] Failed to pre-warm recorder.", error));
+    setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true }).catch((error) =>
+      console.warn("[Mic] Failed to set recording audio mode.", error),
+    );
     return () => {
       stopMetering();
       setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch((error) =>
         console.warn("[Mic] Failed to reset audio mode.", error),
       );
     };
-  }, [prepareRecorder]);
+  }, []);
 
   const trackRecordingFailure = (errorCode: string) => {
     analytics.trackAiTaskGenerationFailed({

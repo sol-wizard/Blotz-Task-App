@@ -50,6 +50,18 @@ import { toastConfig } from "@/shared/components/toast-config";
 const MIN_HOLD_MS = 300;
 const HOLD_HINT_AUTO_HIDE_MS = 2500;
 
+// Hold-to-talk pill: white with the sheet's blue while idle, brand green while pressed or
+// recording (the waveform Lottie is white, so it needs a coloured ground).
+const MIC_PILL_IDLE_FG = "#2F80ED";
+const MIC_PILL_ACTIVE_BG = "#9AD513";
+const micPillShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.18,
+  shadowRadius: 8,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 5,
+} as const;
+
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
@@ -239,14 +251,15 @@ export default function AiTaskSheetScreen() {
   };
 
   // Released before MIN_HOLD_MS: discard, but never silently.
-  const handleMicMisfire = () => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  const handleMicMisfire = async () => {
     micShakeX.value = withSequence(
       ...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 50 })),
     );
     setIsHoldHintVisible(true);
     hideHoldHintLater();
-    void cancelListening();
+    // Release the mic first: iOS mutes haptics while an audio input is open.
+    await cancelListening();
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   };
 
   const handleMicSubmit = async () => {
@@ -260,7 +273,7 @@ export default function AiTaskSheetScreen() {
     if (heldLongEnough.current) {
       void handleMicSubmit();
     } else {
-      handleMicMisfire();
+      void handleMicMisfire();
     }
   };
 
@@ -371,34 +384,55 @@ export default function AiTaskSheetScreen() {
                         onPressOut={handleMicRelease}
                         onLongPress={markHeldLongEnough}
                         delayLongPress={MIN_HOLD_MS}
-                        className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
-                        style={({ pressed }) => ({
-                          // `pressed` lights the pill up immediately on touch, before
-                          // the recorder state catches up.
-                          backgroundColor:
-                            isRecording || pressed
-                              ? "rgba(255,255,255,0.5)"
-                              : "rgba(255,255,255,0.25)",
-                          opacity: isAiGenerating ? 0.4 : 1,
-                        })}
+                        pressRetentionOffset={24}
+                        className="w-full"
                         disabled={isAiGenerating}
                       >
-                        {isRecording ? (
-                          <LottieView
-                            source={LOTTIE_ANIMATIONS.voiceWave}
-                            loop
-                            autoPlay
-                            style={{ width: "100%", height: 40 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <>
-                            <MaterialCommunityIcons name="microphone" size={24} color="white" />
-                            <Text className="text-white font-baloo text-base">
-                              {t("buttons.holdToTalk")}
-                            </Text>
-                          </>
-                        )}
+                        {({ pressed }) => {
+                          // `pressed` flips the pill on the same frame as the touch, before the
+                          // recorder state catches up. Solid fill + shadow so it reads as a real
+                          // button against the gradient; the translucent pill looked like a label.
+                          const isActive = isRecording || pressed;
+                          return (
+                            <Animated.View
+                              className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
+                              style={[
+                                micPillShadow,
+                                {
+                                  backgroundColor: isActive ? MIC_PILL_ACTIVE_BG : "white",
+                                  opacity: isAiGenerating ? 0.5 : 1,
+                                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                                  transitionProperty: ["transform", "backgroundColor"],
+                                  transitionDuration: 120,
+                                },
+                              ]}
+                            >
+                              {isRecording ? (
+                                <LottieView
+                                  source={LOTTIE_ANIMATIONS.voiceWave}
+                                  loop
+                                  autoPlay
+                                  style={{ width: "100%", height: 40 }}
+                                  resizeMode="contain"
+                                />
+                              ) : (
+                                <>
+                                  <MaterialCommunityIcons
+                                    name="microphone"
+                                    size={24}
+                                    color={isActive ? "white" : MIC_PILL_IDLE_FG}
+                                  />
+                                  <Text
+                                    className="font-balooBold text-base"
+                                    style={{ color: isActive ? "white" : MIC_PILL_IDLE_FG }}
+                                  >
+                                    {t("buttons.holdToTalk")}
+                                  </Text>
+                                </>
+                              )}
+                            </Animated.View>
+                          );
+                        }}
                       </Pressable>
                     ) : (
                       <TextInput
