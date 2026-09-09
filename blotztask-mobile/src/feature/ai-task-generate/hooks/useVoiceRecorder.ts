@@ -9,24 +9,17 @@ import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
+import { usePeakLevelMeter } from "./usePeakLevelMeter";
 
-// Whisper invents text ("Thank you.") when the audio holds no speech, so a take whose loudest
-// moment never rises above this level is discarded before upload. Metering is dBFS on both
-// platforms (iOS averagePower, Android converted from maxAmplitude). Measured on an iPhone
-// 2026-09-10: a quiet room reads about -51, speech played from a laptop across the desk -42 to -35,
-// speech at max volume -15. -45 sits between silence and quiet speech; tune from the dev log below.
+// Takes that never get louder than this are dropped before upload: Whisper invents text
+// ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
 const SPEECH_LEVEL_DBFS = -45;
-const METER_POLL_MS = 100;
 
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
   const { isRecording } = useAudioRecorderState(recorder);
-
-  // Loudest level seen during the current take. Polled into a ref rather than through
-  // useAudioRecorderState so the 100ms ticks don't re-render the whole sheet.
-  const peakLevelRef = useRef(Number.NEGATIVE_INFINITY);
-  const meterIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const meter = usePeakLevelMeter(recorder);
 
   // Release handlers wait on this so they never race ahead of async recorder setup.
   const startPromiseRef = useRef<Promise<void> | null>(null);
@@ -45,36 +38,14 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     isPreparedRef.current = true;
   }, [recorder]);
 
-  const startMetering = () => {
-    stopMetering();
-    peakLevelRef.current = Number.NEGATIVE_INFINITY;
-    meterIntervalRef.current = setInterval(() => {
-      const status = recorder.getStatus();
-      // iOS reports 0 dB (full scale) for averagePower while idle, so only trust a live take.
-      if (!status.isRecording || status.metering === undefined) return;
-      peakLevelRef.current = Math.max(peakLevelRef.current, status.metering);
-    }, METER_POLL_MS);
-  };
-
-  const stopMetering = () => {
-    if (meterIntervalRef.current !== null) {
-      clearInterval(meterIntervalRef.current);
-      meterIntervalRef.current = null;
-    }
-  };
-
-  // Set the recording audio mode up front, but do NOT open the mic input until press-in:
-  // iOS silences haptics while an audio input is open, so a recorder pre-warmed on mount
-  // swallowed the press haptic on the first hold. Opening on press costs 150-260ms on an
-  // iPhone 17 Pro (measured 2026-09-10), and the haptic is dispatched before it starts.
-  // Any haptic fired while recording must wait for the recorder to stop, for the same reason.
-  // The recording audio mode is process-global, so hand it back on unmount.
+  // Set the audio mode here, but open the mic only on press-in (150-260ms): iOS mutes haptics
+  // while the mic is open, so pre-warming on mount silenced the first press. Mode is global;
+  // hand it back on unmount.
   useEffect(() => {
     setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true }).catch((error) =>
       console.warn("[Mic] Failed to set recording audio mode.", error),
     );
     return () => {
-      stopMetering();
       setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch((error) =>
         console.warn("[Mic] Failed to reset audio mode.", error),
       );
@@ -105,7 +76,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       await prepareRecorder();
       if (cancelRequested.current) return;
       recorder.record();
-      startMetering();
+      meter.start();
     } catch (error) {
       Toast.show({ type: "error", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
@@ -126,7 +97,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       trackRecordingFailure("RecordingCancelFailed");
       return;
     } finally {
-      stopMetering();
+      meter.stop();
       isPreparedRef.current = false;
     }
 
@@ -159,7 +130,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       trackRecordingFailure("RecordingStopFailed");
       return false;
     } finally {
-      stopMetering();
+      meter.stop();
       isPreparedRef.current = false;
     }
 
@@ -169,10 +140,10 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       return false;
     }
 
-    // Nothing loud enough to be speech: don't let Whisper make something up.
-    if (peakLevelRef.current < SPEECH_LEVEL_DBFS) {
+    const peakDbfs = meter.peakDbfs();
+    if (peakDbfs < SPEECH_LEVEL_DBFS) {
       Toast.show({ type: "error", text1: t("errors.emptyAudio") });
-      console.warn(`[Mic] No speech detected (peak ${peakLevelRef.current} dBFS); take discarded.`);
+      console.warn(`[Mic] No speech detected (peak ${peakDbfs.toFixed(1)} dBFS); take discarded.`);
       trackRecordingFailure("NoSpeechDetected");
       discardRecordingFile(uri);
       return false;
