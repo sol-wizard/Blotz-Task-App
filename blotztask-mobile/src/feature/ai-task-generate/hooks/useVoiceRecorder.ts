@@ -10,10 +10,23 @@ import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
 
+// Whisper invents text ("Thank you.") when the audio holds no speech, so a take whose loudest
+// moment never rises above this level is discarded before upload. Metering is dBFS on both
+// platforms (iOS averagePower, Android converted from maxAmplitude). Measured on an iPhone
+// 2026-09-10: a quiet room reads about -51, speech played from a laptop across the desk -42 to -35,
+// speech at max volume -15. -45 sits between silence and quiet speech; tune from the dev log below.
+const SPEECH_LEVEL_DBFS = -45;
+const METER_POLL_MS = 100;
+
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const { t } = useTranslation("aiTaskGenerate");
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
   const { isRecording } = useAudioRecorderState(recorder);
+
+  // Loudest level seen during the current take. Polled into a ref rather than through
+  // useAudioRecorderState so the 100ms ticks don't re-render the whole sheet.
+  const peakLevelRef = useRef(Number.NEGATIVE_INFINITY);
+  const meterIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Release handlers wait on this so they never race ahead of async recorder setup.
   const startPromiseRef = useRef<Promise<void> | null>(null);
@@ -32,12 +45,31 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     isPreparedRef.current = true;
   }, [recorder]);
 
+  const startMetering = () => {
+    stopMetering();
+    peakLevelRef.current = Number.NEGATIVE_INFINITY;
+    meterIntervalRef.current = setInterval(() => {
+      const status = recorder.getStatus();
+      // iOS reports 0 dB (full scale) for averagePower while idle, so only trust a live take.
+      if (!status.isRecording || status.metering === undefined) return;
+      peakLevelRef.current = Math.max(peakLevelRef.current, status.metering);
+    }, METER_POLL_MS);
+  };
+
+  const stopMetering = () => {
+    if (meterIntervalRef.current !== null) {
+      clearInterval(meterIntervalRef.current);
+      meterIntervalRef.current = null;
+    }
+  };
+
   // Pre-warm on mount: a cold prepare takes 300-650ms, which would otherwise be
   // a dead window right after press-in where nothing is recorded yet. The
   // recording audio mode is process-global, so hand it back on unmount.
   useEffect(() => {
     prepareRecorder().catch((error) => console.warn("[Mic] Failed to pre-warm recorder.", error));
     return () => {
+      stopMetering();
       setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch((error) =>
         console.warn("[Mic] Failed to reset audio mode.", error),
       );
@@ -68,6 +100,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       await prepareRecorder();
       if (cancelRequested.current) return;
       recorder.record();
+      startMetering();
     } catch (error) {
       Toast.show({ type: "error", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
@@ -88,14 +121,19 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       trackRecordingFailure("RecordingCancelFailed");
       return;
     } finally {
+      stopMetering();
       isPreparedRef.current = false;
     }
 
-    // Best-effort cleanup of the discarded take, mirroring stopAndUpload.
+    if (recorder.uri) discardRecordingFile(recorder.uri);
+  };
+
+  // Best-effort cleanup of a temp recording; failure here shouldn't surface as an AI failure.
+  const discardRecordingFile = (uri: string) => {
     try {
-      if (recorder.uri) new ExpoFile(recorder.uri).delete();
+      new ExpoFile(uri).delete();
     } catch (error) {
-      console.warn("[Mic] Failed to delete cancelled recording file.", error);
+      console.warn("[Mic] Failed to delete temp recording file.", error);
     }
   };
 
@@ -116,12 +154,24 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       trackRecordingFailure("RecordingStopFailed");
       return false;
     } finally {
+      stopMetering();
       isPreparedRef.current = false;
     }
 
     const uri = recorder.uri;
     if (!uri) {
       trackRecordingFailure("EmptyAudio");
+      return false;
+    }
+
+    if (__DEV__) console.log(`[Mic] Peak level ${peakLevelRef.current.toFixed(1)} dBFS.`);
+
+    // Nothing loud enough to be speech: don't let Whisper make something up.
+    if (peakLevelRef.current < SPEECH_LEVEL_DBFS) {
+      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
+      console.warn(`[Mic] No speech detected (peak ${peakLevelRef.current} dBFS); take discarded.`);
+      trackRecordingFailure("NoSpeechDetected");
+      discardRecordingFile(uri);
       return false;
     }
 
@@ -137,13 +187,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       return false;
     }
 
-    // Best-effort cleanup of the temp recording; failure here shouldn't surface as an AI failure.
-    try {
-      new ExpoFile(uri).delete();
-    } catch (error) {
-      console.warn("[Mic] Failed to delete temp recording file.", error);
-    }
-
+    discardRecordingFile(uri);
     return true;
   };
 
