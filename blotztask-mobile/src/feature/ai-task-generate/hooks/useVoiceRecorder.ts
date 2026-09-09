@@ -169,8 +169,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       return false;
     }
 
-    if (__DEV__) console.log(`[Mic] Peak level ${peakLevelRef.current.toFixed(1)} dBFS.`);
-
     // Nothing loud enough to be speech: don't let Whisper make something up.
     if (peakLevelRef.current < SPEECH_LEVEL_DBFS) {
       Toast.show({ type: "error", text1: t("errors.emptyAudio") });
