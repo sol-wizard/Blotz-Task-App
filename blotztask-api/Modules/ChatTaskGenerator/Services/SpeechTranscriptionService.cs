@@ -6,11 +6,32 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechTranscriptionService> logger)
 {
+    // Whisper picks the script for Mandarin on its own and, with no steer, often writes Traditional
+    // characters for Simplified-Chinese speakers (about 1 in 7 Chinese voice inputs in PostHog).
+    // A short prompt in the target script fixes the choice. Bilingual so English audio is unaffected —
+    // this is a style hint only; language is still auto-detected, so no Language option is set.
+    private const string TranscriptionPrompt =
+        "以下是普通话的句子。The following is in English or Simplified Chinese.";
+
     public async Task<string> TranscribeAsync(IFormFile audio, CancellationToken ct = default)
     {
         if (audio.Length <= 0)
             throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
 
+        var transcript = await RequestTranscriptAsync(audio, ct);
+
+        // Backstop behind the app's mic-level gate.
+        if (NoSpeechTranscripts.Matches(transcript))
+        {
+            logger.LogInformation("Transcript is a known no-speech phrase, treating as empty audio: {Transcript}", transcript);
+            throw new AiTaskGenerationException(AiErrorCode.EmptyAudio, "No speech was detected in the audio.");
+        }
+
+        return transcript;
+    }
+
+    private async Task<string> RequestTranscriptAsync(IFormFile audio, CancellationToken ct)
+    {
         try
         {
             await using var stream = audio.OpenReadStream();
@@ -20,7 +41,8 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
                 audio.FileName,
                 new AudioTranscriptionOptions
                 {
-                    ResponseFormat = AudioTranscriptionFormat.Text
+                    ResponseFormat = AudioTranscriptionFormat.Text,
+                    Prompt = TranscriptionPrompt
                 },
                 ct
             );
