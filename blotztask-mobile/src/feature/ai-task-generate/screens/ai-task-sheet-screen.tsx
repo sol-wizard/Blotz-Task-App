@@ -22,15 +22,14 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import LottieView from "lottie-react-native";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
-import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
+import { HoldToTalkPill } from "../component/hold-to-talk-pill";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -239,14 +238,15 @@ export default function AiTaskSheetScreen() {
   };
 
   // Released before MIN_HOLD_MS: discard, but never silently.
-  const handleMicMisfire = () => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  const handleMicMisfire = async () => {
     micShakeX.value = withSequence(
       ...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 50 })),
     );
     setIsHoldHintVisible(true);
     hideHoldHintLater();
-    void cancelListening();
+    await cancelListening(); // iOS mutes haptics while the mic is open
+
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   };
 
   const handleMicSubmit = async () => {
@@ -260,7 +260,7 @@ export default function AiTaskSheetScreen() {
     if (heldLongEnough.current) {
       void handleMicSubmit();
     } else {
-      handleMicMisfire();
+      void handleMicMisfire();
     }
   };
 
@@ -366,40 +366,14 @@ export default function AiTaskSheetScreen() {
                     style={micShakeStyle}
                   >
                     {inputMode === "voice" ? (
-                      <Pressable
+                      <HoldToTalkPill
+                        isRecording={isRecording}
+                        disabled={isAiGenerating}
+                        minHoldMs={MIN_HOLD_MS}
                         onPressIn={handleMicPressIn}
                         onPressOut={handleMicRelease}
-                        onLongPress={markHeldLongEnough}
-                        delayLongPress={MIN_HOLD_MS}
-                        className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
-                        style={({ pressed }) => ({
-                          // `pressed` lights the pill up immediately on touch, before
-                          // the recorder state catches up.
-                          backgroundColor:
-                            isRecording || pressed
-                              ? "rgba(255,255,255,0.5)"
-                              : "rgba(255,255,255,0.25)",
-                          opacity: isAiGenerating ? 0.4 : 1,
-                        })}
-                        disabled={isAiGenerating}
-                      >
-                        {isRecording ? (
-                          <LottieView
-                            source={LOTTIE_ANIMATIONS.voiceWave}
-                            loop
-                            autoPlay
-                            style={{ width: "100%", height: 40 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <>
-                            <MaterialCommunityIcons name="microphone" size={24} color="white" />
-                            <Text className="text-white font-baloo text-base">
-                              {t("buttons.holdToTalk")}
-                            </Text>
-                          </>
-                        )}
-                      </Pressable>
+                        onHeldLongEnough={markHeldLongEnough}
+                      />
                     ) : (
                       <TextInput
                         autoFocus
