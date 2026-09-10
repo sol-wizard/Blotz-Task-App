@@ -93,6 +93,18 @@ export type AiTaskGenerationTurn = {
   generated_notes: {
     text: string;
   }[];
+  // Recurring drafts were missing from this event, so a "gym every Monday" session read as
+  // zero output in PostHog even when the user saved it.
+  generated_recurring_tasks: {
+    title: string;
+    description: string;
+    frequency: string;
+    interval: number;
+    days_of_week: number | null;
+    template_start_time: string;
+    template_end_time: string;
+    task_label: string;
+  }[];
 };
 
 // sharing records
