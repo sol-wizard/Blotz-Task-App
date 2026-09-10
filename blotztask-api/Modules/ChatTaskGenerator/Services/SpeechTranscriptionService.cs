@@ -11,6 +11,20 @@ public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechT
         if (audio.Length <= 0)
             throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
 
+        var transcript = await RequestTranscriptAsync(audio, ct);
+
+        // Backstop behind the app's mic-level gate.
+        if (NoSpeechTranscripts.Matches(transcript))
+        {
+            logger.LogInformation("Transcript is a known no-speech phrase, treating as empty audio: {Transcript}", transcript);
+            throw new AiTaskGenerationException(AiErrorCode.EmptyAudio, "No speech was detected in the audio.");
+        }
+
+        return transcript;
+    }
+
+    private async Task<string> RequestTranscriptAsync(IFormFile audio, CancellationToken ct)
+    {
         try
         {
             await using var stream = audio.OpenReadStream();

@@ -194,7 +194,7 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    if (error.errorCode !== "QuotaExceeded") {
+    if (error.errorCode !== "QuotaExceeded" && error.errorCode !== "EmptyAudio") {
       setStreamedTasks([]);
       setStreamedNotes([]);
       setStreamedRecurringTasks([]);
