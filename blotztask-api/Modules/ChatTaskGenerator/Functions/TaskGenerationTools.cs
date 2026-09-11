@@ -87,57 +87,133 @@ public class TaskGenerationTools()
         [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after startDate.")] DateOnly? endDate)
     {
         ToolCallCount++;
-
-        // Friendly -> strict translation lives here, not in the model: named weekdays -> WeeklyDayFlags
-        // bitmask, interval clamped, and the fields the endpoint couples to frequency normalized so a
-        // creation failure reflects a genuine extraction error rather than a redundant field.
-        var weeklyMask = daysOfWeek is { Length: > 0 } ? ToWeeklyBitmask(daysOfWeek) : 0;
-        var task = new ExtractedRecurringTask
+        await AddRecurringTask(new RecurringTaskInput
         {
-            Id = Guid.NewGuid(),
             Title = title,
             Description = description,
             TimeType = timeType,
-            LabelName = label,
+            Label = label,
             TemplateStartTime = templateStartTime,
             TemplateEndTime = templateEndTime,
             Frequency = frequency,
-            Interval = interval < 1 ? 1 : interval,
-            DaysOfWeek = frequency == RecurrenceFrequency.Weekly && weeklyMask != 0 ? weeklyMask : null,
-            DayOfMonth = frequency == RecurrenceFrequency.Monthly ? dayOfMonth : null,
-            StartDate = startDate,
+            Interval = interval,
+            DaysOfWeek = daysOfWeek,
+            DayOfMonth = dayOfMonth,
             EndDate = endDate
-        };
-        RecurringTasks.Add(task);
-        if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
+        });
         return "Recurring task added.";
     }
 
-    // No-op guards: editing/removing recurring tasks via chat is not supported yet. These give the
-    // model a safe place to route those intents so it does NOT reach for UpdateTask/RemoveTask (which
-    // act only on the one-off Tasks list and would change or delete the wrong item). They mutate no
-    // state; the ToolCallCount bump keeps the run from tripping the "no tool called" error and doubles
-    // as telemetry. Next PBI replaces these bodies with the real recurring update/remove.
     [Description(
-        "Call this when the user wants to change, reschedule, or edit a recurring task they previously created with CreateRecurringTask (e.g. 'move my weekly gym to Tuesdays', 'make the standup 30 minutes'). " +
-        "Editing recurring tasks in chat is not supported yet, so this records the request without changing anything. " +
-        "Never use UpdateTask for a recurring task; UpdateTask acts only on one-off tasks and would change the wrong item.")]
-    public string UpdateRecurringTask(
-        [Description("Short paraphrase of the change the user asked for, e.g. 'move weekly gym to Tuesdays'")] string requestedChange)
+        "Add multiple recurring tasks from one message. Prefer this over CreateRecurringTask whenever the user mentions two or more distinct repeating actions. " +
+        "Create one item per independently completable action, even when actions share the same cadence or are connected by words such as 'and', 'also', 'then', or 'plus'. " +
+        "Apply a cadence stated once to all following actions it logically governs. Do not merge several actions into one title and do not keep only the last action.")]
+    public async Task<string> CreateRecurringTasks(
+        [Description("One item for every distinct recurring action mentioned by the user, in the order mentioned")]
+        RecurringTaskInput[] recurringTasks)
     {
         ToolCallCount++;
-        return $"Editing recurring tasks in chat isn't supported yet, so no change was made ({requestedChange}).";
+        foreach (var recurringTask in recurringTasks)
+        {
+            await AddRecurringTask(recurringTask);
+        }
+
+        return $"{recurringTasks.Length} recurring task(s) added.";
+    }
+
+    [Description(
+        "Call this when the user wants to change, reschedule, or edit a recurring task they previously created with CreateRecurringTask (e.g. 'move my weekly gym to Tuesdays', 'make the standup 30 minutes'). " +
+        "Only provide fields the user asked to change; omitted fields remain unchanged. Never use UpdateTask for a recurring task. " +
+        "When changing frequency to Weekly, provide daysOfWeek. When changing it to Monthly, provide dayOfMonth.")]
+    public string UpdateRecurringTask(
+        [Description("Current title of the recurring task to update")] string existingTitle,
+        [Description("New title, or null to leave unchanged")] string? title = null,
+        [Description("New description, or null to leave unchanged")] string? description = null,
+        [Description("New time type, or null to leave unchanged")] TaskTimeType? timeType = null,
+        [Description("New label, or null to leave unchanged")] LabelNameEnum? label = null,
+        [Description("New first-occurrence start local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged")] DateTime? templateStartTime = null,
+        [Description("New first-occurrence end local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged")] DateTime? templateEndTime = null,
+        [Description("New frequency, or null to leave unchanged")] RecurrenceFrequency? frequency = null,
+        [Description("New repeat interval, or null to leave unchanged")] int? interval = null,
+        [Description("Replacement weekdays for a Weekly task, or null to leave unchanged. Name the days directly, e.g. [Tuesday].")] DayOfWeek[]? daysOfWeek = null,
+        [Description("Replacement day of month (1-31) for a Monthly task, or null to leave unchanged")] int? dayOfMonth = null,
+        [Description("New first occurrence date yyyy-MM-dd, or null to leave unchanged")] DateOnly? startDate = null,
+        [Description("New last recurrence date yyyy-MM-dd, or null to leave unchanged")] DateOnly? endDate = null,
+        [Description("True only when the user explicitly wants to remove the end date and repeat forever; otherwise false")] bool clearEndDate = false)
+    {
+        ToolCallCount++;
+        var task = RecurringTasks.FirstOrDefault(t =>
+            t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
+        if (task == null) return "Recurring task not found.";
+
+        task.Title = title ?? task.Title;
+        task.Description = description ?? task.Description;
+        task.TimeType = timeType ?? task.TimeType;
+        task.LabelName = label ?? task.LabelName;
+
+        var previousStart = task.TemplateStartTime;
+        if (templateStartTime.HasValue)
+        {
+            task.TemplateStartTime = templateStartTime.Value;
+        }
+        else if (startDate.HasValue)
+        {
+            task.TemplateStartTime = task.TemplateStartTime.Date == startDate.Value.ToDateTime(TimeOnly.MinValue)
+                ? task.TemplateStartTime
+                : startDate.Value.ToDateTime(TimeOnly.FromDateTime(task.TemplateStartTime));
+        }
+
+        if (templateEndTime.HasValue)
+        {
+            task.TemplateEndTime = templateEndTime.Value;
+        }
+        else if (task.TemplateStartTime != previousStart)
+        {
+            task.TemplateEndTime += task.TemplateStartTime - previousStart;
+        }
+
+        if (task.TimeType == TaskTimeType.SingleTime)
+        {
+            task.TemplateEndTime = task.TemplateStartTime;
+        }
+        else if (task.TemplateEndTime <= task.TemplateStartTime)
+        {
+            task.TemplateEndTime = task.TemplateStartTime.AddHours(1);
+        }
+
+        var updatedFrequency = frequency ?? task.Frequency;
+        var updatedDays = daysOfWeek ?? FromWeeklyBitmask(task.DaysOfWeek);
+        var updatedEndDate = clearEndDate ? null : endDate ?? task.EndDate;
+        var pattern = NormalizeRecurringPattern(
+            updatedFrequency,
+            interval ?? task.Interval,
+            updatedDays,
+            dayOfMonth ?? task.DayOfMonth,
+            task.TemplateStartTime,
+            updatedEndDate);
+
+        task.Frequency = pattern.Frequency;
+        task.Interval = pattern.Interval;
+        task.DaysOfWeek = pattern.DaysOfWeek;
+        task.DayOfMonth = pattern.DayOfMonth;
+        task.StartDate = pattern.StartDate;
+        task.EndDate = pattern.EndDate;
+
+        return "Recurring task updated.";
     }
 
     [Description(
         "Call this when the user wants to delete or remove a recurring task they previously created with CreateRecurringTask (e.g. 'delete my recurring gym', 'stop the weekly standup'). " +
-        "Removing recurring tasks in chat is not supported yet, so this records the request without changing anything. " +
-        "Never use RemoveTask for a recurring task; RemoveTask acts only on one-off tasks and would delete the wrong item.")]
+        "Match only recurring task drafts. Never use RemoveTask for a recurring task; RemoveTask acts only on one-off tasks.")]
     public string RemoveRecurringTask(
-        [Description("Short paraphrase of what the user asked to remove, e.g. 'delete weekly gym'")] string requestedChange)
+        [Description("Recurring task title")] string title)
     {
         ToolCallCount++;
-        return $"Removing recurring tasks in chat isn't supported yet, so nothing was removed ({requestedChange}).";
+        var task = RecurringTasks.FirstOrDefault(t =>
+            t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+        if (task == null) return "Recurring task not found.";
+        RecurringTasks.Remove(task);
+        return "Recurring task removed.";
     }
 
     // Maps named weekdays (System.DayOfWeek: Sun=0..Sat=6) to the WeeklyDayFlags bitmask
@@ -160,6 +236,81 @@ public class TaskGenerationTools()
             };
         }
         return mask;
+    }
+
+    private static DayOfWeek[]? FromWeeklyBitmask(int? mask)
+    {
+        if (mask is null or 0) return null;
+
+        return Enum.GetValues<DayOfWeek>()
+            .Where(day => (mask.Value & ToWeeklyBitmask([day])) != 0)
+            .ToArray();
+    }
+
+    private static RecurringPattern NormalizeRecurringPattern(
+        RecurrenceFrequency frequency,
+        int interval,
+        IEnumerable<DayOfWeek>? daysOfWeek,
+        int? dayOfMonth,
+        DateTime templateStartTime,
+        DateOnly? endDate)
+    {
+        var startDate = DateOnly.FromDateTime(templateStartTime);
+        var weeklyMask = daysOfWeek == null ? 0 : ToWeeklyBitmask(daysOfWeek);
+
+        if (frequency == RecurrenceFrequency.Weekly && weeklyMask == 0)
+        {
+            weeklyMask = ToWeeklyBitmask([templateStartTime.DayOfWeek]);
+        }
+
+        var normalizedDayOfMonth = dayOfMonth is >= 1 and <= 31
+            ? dayOfMonth
+            : startDate.Day;
+
+        return new RecurringPattern(
+            frequency,
+            Math.Max(1, interval),
+            frequency == RecurrenceFrequency.Weekly ? weeklyMask : null,
+            frequency == RecurrenceFrequency.Monthly ? normalizedDayOfMonth : null,
+            startDate,
+            endDate < startDate ? startDate : endDate);
+    }
+
+    private sealed record RecurringPattern(
+        RecurrenceFrequency Frequency,
+        int Interval,
+        int? DaysOfWeek,
+        int? DayOfMonth,
+        DateOnly StartDate,
+        DateOnly? EndDate);
+
+    private async Task AddRecurringTask(RecurringTaskInput input)
+    {
+        var pattern = NormalizeRecurringPattern(
+            input.Frequency,
+            input.Interval,
+            input.DaysOfWeek,
+            input.DayOfMonth,
+            input.TemplateStartTime,
+            input.EndDate);
+        var task = new ExtractedRecurringTask
+        {
+            Id = Guid.NewGuid(),
+            Title = input.Title,
+            Description = input.Description,
+            TimeType = input.TimeType,
+            LabelName = input.Label,
+            TemplateStartTime = input.TemplateStartTime,
+            TemplateEndTime = input.TemplateEndTime,
+            Frequency = pattern.Frequency,
+            Interval = pattern.Interval,
+            DaysOfWeek = pattern.DaysOfWeek,
+            DayOfMonth = pattern.DayOfMonth,
+            StartDate = pattern.StartDate,
+            EndDate = pattern.EndDate
+        };
+        RecurringTasks.Add(task);
+        if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
     }
 
     [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item.")]
@@ -260,4 +411,40 @@ public class TaskGenerationTools()
     public bool RemoveDraftNoteById(Guid id) => Notes.RemoveAll(n => n.Id == id) > 0;
 
     public bool RemoveDraftRecurringTaskById(Guid id) => RecurringTasks.RemoveAll(t => t.Id == id) > 0;
+}
+
+public class RecurringTaskInput
+{
+    [Description("Short title for exactly one independently completable action")]
+    public required string Title { get; init; }
+
+    [Description("Description or empty")]
+    public required string Description { get; init; }
+
+    [Description("SingleTime for a moment with no duration; RangeTime for a start and end time")]
+    public required TaskTimeType TimeType { get; init; }
+
+    [Description("Work, Life, Learning, or Health")]
+    public required LabelNameEnum Label { get; init; }
+
+    [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss")]
+    public required DateTime TemplateStartTime { get; init; }
+
+    [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss")]
+    public required DateTime TemplateEndTime { get; init; }
+
+    [Description("Daily, Weekly, Monthly, or Yearly")]
+    public required RecurrenceFrequency Frequency { get; init; }
+
+    [Description("Repeat every N periods; use 1 unless the user says otherwise")]
+    public int Interval { get; init; } = 1;
+
+    [Description("Required named weekdays for Weekly; empty otherwise")]
+    public DayOfWeek[] DaysOfWeek { get; init; } = [];
+
+    [Description("Required day 1-31 for Monthly; null otherwise")]
+    public int? DayOfMonth { get; init; }
+
+    [Description("Optional last recurrence date yyyy-MM-dd; null means open-ended")]
+    public DateOnly? EndDate { get; init; }
 }
