@@ -9,6 +9,9 @@ public static class ReviewConstants
     public const int WeeklyLowActivityTaskThreshold = 3;
     public const int MonthlyLowActivityTaskThreshold = 10;
 
+    // Three is enough to break a rut without crowding the prompt.
+    public const int RecentThemesToAvoid = 3;
+
     public static int LowActivityTaskThreshold(ReviewPeriodType periodType) => periodType switch
     {
         ReviewPeriodType.Weekly => WeeklyLowActivityTaskThreshold,

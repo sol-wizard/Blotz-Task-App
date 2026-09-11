@@ -14,7 +14,12 @@ public class ReviewReport
     public DateTimeOffset PeriodStartUtc { get; set; }
     public DateTimeOffset PeriodEndUtc { get; set; }
 
+    // AiGeneratedLetter holds the body. Theme and OneThingToTryNext are null on reports written
+    // before the letter was split, and whenever the model had nothing genuine to put there.
     public string AiGeneratedLetter { get; set; } = string.Empty;
+    public string? Theme { get; set; }
+    public string? OneThingToTryNext { get; set; }
+
     public string AiInputJson { get; set; } = string.Empty;
     public int? AiInputTaskCount { get; set; }
     public string AiModel { get; set; } = string.Empty;
