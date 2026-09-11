@@ -164,7 +164,7 @@ public class DataSeeder
         return recurringOverride;
     }
 
-    public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null)
+    public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null, DateTimeOffset? completedAt = null)
     {
         var task = new TaskItem
         {
@@ -173,6 +173,8 @@ public class DataSeeder
             StartTime = start,
             EndTime = end,
             TimeType = start == end ? TaskTimeType.SingleTime : TaskTimeType.RangeTime,
+            IsDone = completedAt is not null,
+            CompletedAt = completedAt,
             CreatedAt = createdAt?.DateTime ?? DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

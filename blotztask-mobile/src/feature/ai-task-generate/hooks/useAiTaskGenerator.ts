@@ -194,7 +194,7 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
-    if (error.errorCode !== "QuotaExceeded") {
+    if (error.errorCode !== "QuotaExceeded" && error.errorCode !== "EmptyAudio") {
       setStreamedTasks([]);
       setStreamedNotes([]);
       setStreamedRecurringTasks([]);
@@ -289,6 +289,16 @@ function buildTurn(
     })),
     generated_notes: (result.extractedNotes ?? []).map((note) => ({
       text: note.text,
+    })),
+    generated_recurring_tasks: (result.extractedRecurringTasks ?? []).map((recurring) => ({
+      title: recurring.title,
+      description: recurring.description ?? "",
+      frequency: recurring.frequency,
+      interval: recurring.interval,
+      days_of_week: recurring.days_of_week,
+      template_start_time: recurring.template_start_time,
+      template_end_time: recurring.template_end_time,
+      task_label: recurring.task_label,
     })),
   };
 }

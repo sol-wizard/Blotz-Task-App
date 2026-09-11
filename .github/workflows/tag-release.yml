@@ -1,8 +1,9 @@
 name: Tag Release
 
 # Records a SHIPPED release (iOS + Android, which ship together) in GitHub.
-# Run this manually AFTER you have built and submitted to both stores — the
-# builds themselves stay local via build.ps1 / `eas build --local`.
+# Normally called by release-prod-backend.yml (button 2), once the production API
+# has been deployed from the release tag and answered its health check.
+# workflow_dispatch stays for recording a release by hand.
 #
 # It creates a `release/<date>` tag + a published GitHub Release whose notes are
 # auto-generated from every PR merged since the previous release. This published
@@ -10,6 +11,23 @@ name: Tag Release
 # It builds and submits nothing, and needs no Expo/App Store credentials.
 
 on:
+  workflow_call:
+    inputs:
+      ios_version:
+        type: string
+        required: false
+      ios_build:
+        type: string
+        required: false
+      android_version:
+        type: string
+        required: false
+      android_build:
+        type: string
+        required: false
+      commit:
+        type: string
+        required: false
   workflow_dispatch:
     inputs:
       ios_version:
@@ -25,7 +43,7 @@ on:
         description: "Android version code / build from Play Console"
         required: false
       commit:
-        description: "Commit SHA that was built (blank = latest main)"
+        description: "What was built - a commit SHA, branch, or tag such as submitted/1.3.1 (blank = latest main)"
         required: false
 
 permissions:
@@ -56,6 +74,7 @@ jobs:
             echo "ios_v=$IOS_V"
             echo "and_v=$AND_V"
             echo "tag=release/$(date -u +%Y-%m-%d)"
+            echo "sha=$(git rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
       - name: Create tag and published release with auto-generated notes
@@ -64,5 +83,5 @@ jobs:
         run: |
           gh release create "${{ steps.meta.outputs.tag }}" \
             --title "Release ${{ steps.meta.outputs.tag }} — iOS ${{ steps.meta.outputs.ios_v }} (${{ inputs.ios_build }}) · Android ${{ steps.meta.outputs.and_v }} (${{ inputs.android_build }})" \
-            --target "${{ github.sha }}" \
+            --target "${{ steps.meta.outputs.sha }}" \
             --generate-notes

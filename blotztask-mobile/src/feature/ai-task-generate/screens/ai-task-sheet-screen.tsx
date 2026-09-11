@@ -13,19 +13,23 @@ import {
   useKeyboardState,
   useReanimatedKeyboardAnimation,
 } from "react-native-keyboard-controller";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import LottieView from "lottie-react-native";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
-import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
+import { HoldToTalkPill } from "../component/hold-to-talk-pill";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -36,8 +40,14 @@ import { mapRecurringToCreateDTO } from "../utils/map-recurring-to-create-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
+import { useDebouncedCallback } from "use-debounce";
 import { analytics } from "@/shared/services/analytics";
 import { toastConfig } from "@/shared/components/toast-config";
+
+// Presses shorter than this are treated as accidental taps and discarded;
+// anything longer is a real recording and gets uploaded.
+const MIN_HOLD_MS = 300;
+const HOLD_HINT_AUTO_HIDE_MS = 2500;
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
@@ -49,9 +59,17 @@ export default function AiTaskSheetScreen() {
   // Interface opens in voice mode by default; the keyboard toggle switches to text.
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
-  const longPressTriggered = useRef(false);
+  const heldLongEnough = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+  const hideHoldHintLater = useDebouncedCallback(
+    () => setIsHoldHintVisible(false),
+    HOLD_HINT_AUTO_HIDE_MS,
+  );
+  const micShakeX = useSharedValue(0);
+  const micShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: micShakeX.value }],
+  }));
 
   const { height: keyboardOffset } = useReanimatedKeyboardAnimation();
   const listKeyboardPad = useAnimatedStyle(() => ({
@@ -180,7 +198,12 @@ export default function AiTaskSheetScreen() {
         // Fire per successful task, not behind the all-succeed gate below, so a partial
         // failure still records the tasks that did land.
         const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
-        analytics.trackTaskCreated({ taskId, source: "ai", isRecurring: false, hasDeadline: false });
+        analytics.trackTaskCreated({
+          taskId,
+          source: "ai",
+          isRecurring: false,
+          hasDeadline: false,
+        });
       }),
       ...displayRecurringTasks.map(async (task) => {
         const { recurringTaskId } = await createRecurringTaskAsync(mapRecurringToCreateDTO(task));
@@ -207,15 +230,42 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    heldLongEnough.current = false;
+    hideHoldHintLater.cancel();
     setIsHoldHintVisible(false);
     void startListening();
   };
 
-  const handleMicPressOut = async () => {
+  // Released before MIN_HOLD_MS: discard, but never silently.
+  const handleMicMisfire = async () => {
+    micShakeX.value = withSequence(
+      ...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 50 })),
+    );
+    setIsHoldHintVisible(true);
+    hideHoldHintLater();
+    await cancelListening(); // iOS mutes haptics while the mic is open
+
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  };
+
+  const handleMicSubmit = async () => {
     const didSubmit = await stopAndUpload();
     if (didSubmit) {
       hasSubmittedAiRequest.current = true;
     }
+  };
+
+  const handleMicRelease = () => {
+    if (heldLongEnough.current) {
+      void handleMicSubmit();
+    } else {
+      void handleMicMisfire();
+    }
+  };
+
+  const markHeldLongEnough = () => {
+    heldLongEnough.current = true;
   };
 
   const handleSwitchToText = () => {
@@ -311,52 +361,19 @@ export default function AiTaskSheetScreen() {
                   </Pressable>
 
                   {/* Voice mode: hold-to-talk pill (waveform while recording). Text mode: input. */}
-                  <View className="flex-1 items-center justify-center">
+                  <Animated.View
+                    className="flex-1 items-center justify-center"
+                    style={micShakeStyle}
+                  >
                     {inputMode === "voice" ? (
-                      <Pressable
-                        onPressIn={() => {
-                          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          longPressTriggered.current = false;
-                          handleMicPressIn();
-                        }}
-                        onPressOut={() => {
-                          if (!longPressTriggered.current) {
-                            setIsHoldHintVisible(true);
-                            void cancelListening();
-                          } else {
-                            void handleMicPressOut();
-                          }
-                        }}
-                        onLongPress={() => {
-                          longPressTriggered.current = true;
-                        }}
-                        delayLongPress={1000}
-                        className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
-                        style={{
-                          backgroundColor: isRecording
-                            ? "rgba(255,255,255,0.5)"
-                            : "rgba(255,255,255,0.25)",
-                          opacity: isAiGenerating ? 0.4 : 1,
-                        }}
+                      <HoldToTalkPill
+                        isRecording={isRecording}
                         disabled={isAiGenerating}
-                      >
-                        {isRecording ? (
-                          <LottieView
-                            source={LOTTIE_ANIMATIONS.voiceWave}
-                            loop
-                            autoPlay
-                            style={{ width: "100%", height: 40 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <>
-                            <MaterialCommunityIcons name="microphone" size={24} color="white" />
-                            <Text className="text-white font-baloo text-base">
-                              {t("buttons.holdToTalk")}
-                            </Text>
-                          </>
-                        )}
-                      </Pressable>
+                        minHoldMs={MIN_HOLD_MS}
+                        onPressIn={handleMicPressIn}
+                        onPressOut={handleMicRelease}
+                        onHeldLongEnough={markHeldLongEnough}
+                      />
                     ) : (
                       <TextInput
                         autoFocus
@@ -371,7 +388,7 @@ export default function AiTaskSheetScreen() {
                         className={`w-full text-white font-baloo text-base px-4 bg-white/25 rounded-full h-14 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
                       />
                     )}
-                  </View>
+                  </Animated.View>
                 </View>
                 {hasContent && !isKeyboardVisible && (
                   <Pressable
