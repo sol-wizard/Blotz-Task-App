@@ -60,7 +60,7 @@ export default {
       [
         "react-native-auth0",
         {
-          domain: "dev-k72xachs0fr6nebp.us.auth0.com",
+          domain: "auth.blotztask.com",
         },
       ],
       "expo-font",

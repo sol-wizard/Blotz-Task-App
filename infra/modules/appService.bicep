@@ -13,6 +13,7 @@ param enableAppServiceDiagnostics bool = false
 // Auth0 Configuration
 param auth0Domain string
 param auth0Audience string
+param auth0CustomDomain string = ''
 param auth0ManagementClientId string
 param auth0ManagementAudience string
 
@@ -81,6 +82,10 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'Auth0__Audience'
           value: auth0Audience
+        }
+        {
+          name: 'Auth0__CustomDomain'
+          value: auth0CustomDomain
         }
         {
           name: 'Auth0__Management__ClientId'
