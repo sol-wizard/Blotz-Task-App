@@ -40,10 +40,9 @@ public class GenerateReviewCommandHandler(
     IRecordAiUsageService recordAiUsageService,
     ILogger<GenerateReviewCommandHandler> logger)
 {
-    // TODO: Reusing the Breakdown deployment for v1. ReasoningEffortLevel is only honoured on
-    // o-series reasoning models — if Breakdown points at a non-reasoning model (e.g. GPT-4o),
-    // the option is ignored. Revisit once we decide whether review needs its own
-    // deployment (likely a reasoning model for better reflection quality).
+    // TODO: Reusing the Breakdown deployment for v1, which currently resolves to gpt-5.4-mini —
+    // a reasoning model, so ReasoningEffortLevel below is honoured. Revisit if review ever needs
+    // its own deployment; it shares capacity with task generation, breakdown and time estimation.
     private readonly string _deploymentId = aiOptions.Value.AiModels.Breakdown.DeploymentId;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -91,6 +90,7 @@ public class GenerateReviewCommandHandler(
             var aiInputJson = JsonSerializer.Serialize(tasks, JsonOptions);
 
             var preferredLanguage = await LoadPreferredLanguageAsync(command.UserId, ct);
+            var recentThemes = await LoadRecentThemesAsync(command.UserId, period, ct);
             await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
 
             var (letter, model, usage) = await GenerateLetterAsync(
@@ -98,6 +98,7 @@ public class GenerateReviewCommandHandler(
                 preferredLanguage.ToDisplayName(),
                 period.ToDisplayLabel(),
                 aiInputJson,
+                recentThemes,
                 ct);
 
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
@@ -114,7 +115,9 @@ public class GenerateReviewCommandHandler(
                 PeriodType = period.PeriodType,
                 PeriodStartUtc = period.StartUtc,
                 PeriodEndUtc = period.EndUtc,
-                AiGeneratedLetter = letter,
+                AiGeneratedLetter = letter.Body,
+                Theme = letter.Theme,
+                OneThingToTryNext = letter.OneThingToTryNext,
                 AiInputJson = aiInputJson,
                 AiInputTaskCount = tasks.Count,
                 AiModel = model,
@@ -177,6 +180,8 @@ public class GenerateReviewCommandHandler(
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
             TasksCompleted = tasksCompleted,
             Letter = report.AiGeneratedLetter,
+            Theme = report.Theme,
+            OneThingToTryNext = report.OneThingToTryNext,
             GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
         };
@@ -210,6 +215,23 @@ public class GenerateReviewCommandHandler(
             .ToListAsync(ct);
     }
 
+    private async Task<List<string>> LoadRecentThemesAsync(
+        Guid userId,
+        ReviewPeriod period,
+        CancellationToken ct)
+    {
+        return await db.ReviewReports
+            .AsNoTracking()
+            .Where(r => r.UserId == userId
+                        && r.PeriodType == period.PeriodType
+                        && r.PeriodStartUtc < period.StartUtc
+                        && r.Theme != null)
+            .OrderByDescending(r => r.PeriodStartUtc)
+            .Take(ReviewConstants.RecentThemesToAvoid)
+            .Select(r => r.Theme!)
+            .ToListAsync(ct);
+    }
+
     private Task<Language> LoadPreferredLanguageAsync(Guid userId, CancellationToken ct)
     {
         return db.UserPreferences
@@ -219,20 +241,28 @@ public class GenerateReviewCommandHandler(
             .FirstOrDefaultAsync(ct);
     }
 
-    private async Task<(string Letter, string Model, ChatTokenUsage? Usage)> GenerateLetterAsync(
+    private async Task<(ReviewLetter Letter, string Model, ChatTokenUsage? Usage)> GenerateLetterAsync(
         ReviewPeriodType periodType,
         string preferredLanguage,
         string displayPeriodLabel,
         string aiInputJson,
+        IReadOnlyCollection<string> recentThemes,
         CancellationToken ct)
     {
-        var prompt = ReviewPrompts.GetReviewPrompt(periodType, preferredLanguage, displayPeriodLabel, aiInputJson);
+        var prompt = ReviewPrompts.GetReviewPrompt(
+            periodType, preferredLanguage, displayPeriodLabel, aiInputJson, recentThemes);
         var chatClient = azureOpenAIClient.GetChatClient(_deploymentId);
 
 #pragma warning disable OPENAI001 // ReasoningEffortLevel is experimental in Azure.AI.OpenAI 2.8.0-beta.
         var options = new ChatCompletionOptions
         {
-            ReasoningEffortLevel = ChatReasoningEffortLevel.Medium
+            ReasoningEffortLevel = ChatReasoningEffortLevel.Medium,
+            // Pin the model to the letter's shape. A content filter or a refusal can still come back
+            // as prose, which is why the parse below falls back instead of throwing.
+            ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
+                jsonSchemaFormatName: ReviewPrompts.ReviewLetterSchemaName,
+                jsonSchema: ReviewPrompts.ReviewLetterSchema,
+                jsonSchemaIsStrict: true),
         };
 #pragma warning restore OPENAI001
 
@@ -247,11 +277,11 @@ public class GenerateReviewCommandHandler(
                 options,
                 ct);
 
-            var letter = response.Value.Content.Count > 0
+            var rawResponse = response.Value.Content.Count > 0
                 ? response.Value.Content[0].Text ?? string.Empty
                 : string.Empty;
 
-            if (string.IsNullOrWhiteSpace(letter))
+            if (string.IsNullOrWhiteSpace(rawResponse))
             {
                 logger.LogWarning("AI returned empty letter for review (deployment={DeploymentId})", _deploymentId);
                 throw new AiTaskGenerationException(
@@ -259,9 +289,19 @@ public class GenerateReviewCommandHandler(
                     "AI returned an empty review letter.");
             }
 
+            var letter = ReviewLetterParser.Parse(rawResponse);
+
+            if (letter.Theme is null)
+            {
+                // Expected for a quiet period, but also what a schema-less response looks like.
+                logger.LogInformation(
+                    "Review letter has no theme (deployment={DeploymentId}, periodType={PeriodType})",
+                    _deploymentId, periodType);
+            }
+
             logger.LogInformation(
                 "Review generated (deployment={DeploymentId}, length={Length})",
-                _deploymentId, letter.Length);
+                _deploymentId, letter.Body.Length);
 
             return (letter, _deploymentId, response.Value.Usage);
         }

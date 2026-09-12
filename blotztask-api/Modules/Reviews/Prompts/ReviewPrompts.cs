@@ -4,12 +4,30 @@ namespace BlotzTask.Modules.Reviews.Prompts;
 
 public static class ReviewPrompts
 {
+    public const string ReviewLetterSchemaName = "review_letter";
+
+    // Strict mode requires every property in "required", so the optional parts allow null instead.
+    public static BinaryData ReviewLetterSchema { get; } = BinaryData.FromString(
+        """
+        {
+          "type": "object",
+          "properties": {
+            "theme": { "type": ["string", "null"] },
+            "body": { "type": "string" },
+            "oneThingToTryNext": { "type": ["string", "null"] }
+          },
+          "required": ["theme", "body", "oneThingToTryNext"],
+          "additionalProperties": false
+        }
+        """);
+
     // One prompt, parameterized by period type, so weekly and monthly wording can't drift apart.
     public static string GetReviewPrompt(
         ReviewPeriodType periodType,
         string preferredLanguage,
         string displayPeriodLabel,
-        string taskJson)
+        string taskJson,
+        IReadOnlyCollection<string> recentThemes)
     {
         var isWeekly = periodType == ReviewPeriodType.Weekly;
 
@@ -22,6 +40,14 @@ public static class ReviewPrompts
             ? "what this week seemed to be about — its shape, intentions, and how the days leaned"
             : "the broader patterns or themes across the month";
 
+        // Steering, not a ban list — a genuinely repeating period should still repeat its theme.
+        var themesToAvoid = recentThemes.Count == 0
+            ? "This is their first review of this kind, so there are no earlier themes to consider."
+            : $"""
+               Themes from their recent {periodNoun}s, most recent first: {string.Join("; ", recentThemes)}.
+               Prefer a theme that is genuinely new. Only repeat one of these if this {periodNoun} really was about the same thing.
+               """;
+
         return $"""
                 You are Blotz, a warm but honest time-management coach who writes the user a {reviewKind} reflection letter — like a thoughtful life coach looking back on their {periodNoun} with them.
 
@@ -29,15 +55,21 @@ public static class ReviewPrompts
 
                 First, decide which tasks carry real signal about how the user actually spent or intended their time. Disregard entries that are not genuine activity — placeholder, sample or example content, tests, or text that reads as random rather than a real task. Base everything below only on the tasks that remain.
 
-                If little or no genuine activity remains after that, do NOT invent themes, patterns, or meaning. Write just two or three warm, honest sentences acknowledging it was a quiet {periodNoun}, and stop there.
+                If little or no genuine activity remains after that, do NOT invent themes, patterns, or meaning. Put two or three warm, honest sentences acknowledging it was a quiet {periodNoun} in "body", leave "theme" and "oneThingToTryNext" null, and stop there.
 
-                Otherwise, write ONE short {reviewKind} review letter:
+                Otherwise, write ONE short {reviewKind} review letter in three parts:
 
-                Length and shape:
+                "theme" — the one or two things that genuinely stood out this {periodNoun} (a project finished, a move, an exam period), named as a short phrase rather than a sentence. This is not a summary of everything they did. If nothing genuinely stood out, set it to null rather than naming something ordinary.
+
+                "body" — the letter itself, written around that theme rather than listing tasks:
                 - Keep it short — {lengthTarget}.
                 - Open with one specific, honest observation grounded in the data (not a generic compliment).
                 - Then a sentence or two on {focus}.
                 - Close with one gentle, encouraging sentence.
+
+                "oneThingToTryNext" — one concrete suggestion for next {periodNoun}, a single sentence, grounded in behaviour you can actually see in the data (e.g. tasks consistently completed after midnight → suggest moving a few before 11pm). Never generic time-management advice. If the data does not support a specific suggestion, set it to null.
+
+                {themesToAvoid}
 
                 Rules:
                 - Reflect on what the {periodNoun} meant — themes, intentions, how their time leaned — not completion rates or finished-vs-unfinished counts.
@@ -46,8 +78,8 @@ public static class ReviewPrompts
                 - Do not invent facts. Only state things visible in the data. Never manufacture insight the data does not support.
                 - The user may share this letter publicly, so protect privacy: speak in general themes, never quote or expose sensitive specifics (health, relationships, finances, names) from task text.
                 - Planned duration is reserved time, not time spent — never describe it as effort or total it.
-                - No external comparisons. No markdown, bullets, or tables — plain prose only.
-                - Return only the final letter content. No preamble, no "Sure, here's...".
+                - No external comparisons. No markdown, bullets, or tables — every field is plain prose.
+                - Return only the JSON object. No preamble, no "Sure, here's...".
 
                 Preferred language: {preferredLanguage}.
                 {(isWeekly ? "Week" : "Month")}: {displayPeriodLabel}.

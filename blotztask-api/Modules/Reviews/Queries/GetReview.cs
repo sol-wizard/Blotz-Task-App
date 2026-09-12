@@ -66,6 +66,8 @@ public class GetReviewQueryHandler(
             // A report may not exist yet (not generated, or the period hasn't ended).
             // The DTO is still returned with the metrics; letter/generatedAt stay null.
             Letter = report?.AiGeneratedLetter,
+            Theme = report?.Theme,
+            OneThingToTryNext = report?.OneThingToTryNext,
             GeneratedAtUtc = report is null ? null : DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report?.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
         };
