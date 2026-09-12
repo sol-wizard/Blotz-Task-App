@@ -20,12 +20,23 @@ public class CompanionModeRuntimeTests
 {
     private static readonly AiCoachModeDefinition Mode = CompanionModeDefinition.Create();
 
-    private sealed class ScriptedGateway(string output) : IModelGateway
+    private sealed class ScriptedGateway(params string[] outputs) : IModelGateway
     {
+        private int _calls;
+
+        public int CallCount => _calls;
+        public List<ModelGatewayRequest> Requests { get; } = [];
+
         public Task<ModelCompletionResult> CompleteAsync(
             ModelGatewayRequest request,
-            CancellationToken cancellationToken) => Task.FromResult(new ModelCompletionResult(
-            output, [], ModelFinishReason.Stop, 100, 50, 150));
+            CancellationToken cancellationToken)
+        {
+            var output = outputs[Math.Min(_calls, outputs.Length - 1)];
+            Requests.Add(request);
+            _calls++;
+            return Task.FromResult(new ModelCompletionResult(
+                output, [], ModelFinishReason.Stop, 100, 50, 150));
+        }
     }
 
     [Fact]
@@ -181,16 +192,51 @@ public class CompanionModeRuntimeTests
     }
 
     [Fact]
-    public async Task Handle_ListeningRequest_DowngradesQuestionAndPersistsPreference()
+    public async Task Handle_TurnScopedAdviceRequestWithoutKeyword_AcceptsConcreteAdvice()
     {
         // Arrange
         const string output = """
         {
           "interpretation": {
+            "intent": "question", "planningItems": [], "constraints": [],
+            "disposition": { "kind": "not_applicable", "evidence": null },
+            "actionRequest": { "kind": "advice_request", "evidence": { "quote": "具体办法是什么" } },
+            "supportRequest": { "kind": "wants_advice", "evidence": { "quote": "具体办法是什么" }, "scope": "turn" }
+          },
+          "suggestedAction": "continue_listening",
+          "response": { "type": "listening", "text": "先把今天必须完成的事情缩成一件，再为它留出二十分钟。",
+            "question": null, "questionTopic": null, "supportMove": "offer_advice" },
+          "proposalSet": null
+        }
+        """;
+        var gateway = new ScriptedGateway(output);
+
+        // Act
+        var result = await Runtime(gateway).ExecuteAsync(
+            Request("具体办法是什么"), CancellationToken.None);
+
+        // Assert
+        result.Outcome!.ReasonCode.Should().Be(StrategyReasonCode.None,
+            because: "the verified advice request authorizes the model's advice response");
+        result.Outcome.AssistantMessage.Should().Be("先把今天必须完成的事情缩成一件，再为它留出二十分钟。",
+            because: "the concrete model response must survive the deterministic pipeline unchanged");
+        result.Outcome.FallbackUsed.Should().BeFalse(
+            because: "a correct advice response must not degrade to the generic listening fallback");
+        gateway.CallCount.Should().Be(1,
+            because: "a valid first response must not consume the bounded regeneration budget");
+    }
+
+    [Fact]
+    public async Task Handle_ListeningRequest_RegeneratesReflectionWithoutPersistingTurnPreference()
+    {
+        // Arrange
+        const string rejected = """
+        {
+          "interpretation": {
             "intent": "emotional", "planningItems": [], "constraints": [],
             "disposition": { "kind": "not_applicable", "evidence": null },
             "actionRequest": { "kind": "none", "evidence": null },
-            "supportRequest": { "kind": "wants_listening", "evidence": { "quote": "你听我说就好" } }
+            "supportRequest": { "kind": "wants_listening", "evidence": { "quote": "你听我说就好" }, "scope": "turn" }
           },
           "suggestedAction": "ask_gentle_question",
           "response": { "type": "gentle_question", "text": "发生了什么？", "question": "发生了什么？",
@@ -198,24 +244,106 @@ public class CompanionModeRuntimeTests
           "proposalSet": null
         }
         """;
+        const string repaired = """
+        {
+          "interpretation": {
+            "intent": "emotional", "planningItems": [], "constraints": [],
+            "disposition": { "kind": "not_applicable", "evidence": null },
+            "actionRequest": { "kind": "none", "evidence": null },
+            "supportRequest": { "kind": "wants_listening", "evidence": { "quote": "你听我说就好" }, "scope": "turn" }
+          },
+          "suggestedAction": "continue_listening",
+          "response": { "type": "listening", "text": "今天已经够难熬了，你不用急着把它讲得很完整。",
+            "question": null, "questionTopic": null, "supportMove": "reflect" },
+          "proposalSet": null
+        }
+        """;
+        var gateway = new ScriptedGateway(rejected, repaired);
 
         // Act
-        var result = await Runtime(output).ExecuteAsync(
+        var result = await Runtime(gateway).ExecuteAsync(
             Request("你听我说就好，今天很糟"), CancellationToken.None);
 
         // Assert
         result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.ContinueListening,
             because: "an explicit listening request outranks the model's question");
-        result.Outcome.SupportPreferenceUpdate!.Kind.Should().Be(SupportRequestKind.WantsListening,
-            because: "the verified preference is committed for later turns in this conversation");
+        result.Outcome.AssistantMessage.Should().Be("今天已经够难熬了，你不用急着把它讲得很完整。",
+            because: "the repaired response must replace the rejected question with a grounded reflection");
+        result.Outcome.SupportPreferenceUpdate.Should().BeNull(
+            because: "a turn-scoped listening request must not become a conversation preference");
+        gateway.CallCount.Should().Be(2,
+            because: "the policy permits one bounded response regeneration");
     }
 
-    private static ModelTurnRuntime Runtime(string output)
+    [Fact]
+    public async Task Handle_SecondGentleQuestion_RegeneratesSubstantiveListeningResponse()
+    {
+        // Arrange
+        const string rejected = """
+        {
+          "interpretation": {
+            "intent": "emotional", "planningItems": [], "constraints": [],
+            "disposition": { "kind": "not_applicable", "evidence": null },
+            "actionRequest": { "kind": "none", "evidence": null },
+            "supportRequest": { "kind": "unspecified", "evidence": null, "scope": "turn" }
+          },
+          "suggestedAction": "ask_gentle_question",
+          "response": { "type": "gentle_question", "text": "像是你整天都在硬撑。今天最消耗你的是什么？",
+            "question": "今天最消耗你的是什么？", "questionTopic": "other", "supportMove": "gentle_question" },
+          "proposalSet": null
+        }
+        """;
+        const string repaired = """
+        {
+          "interpretation": {
+            "intent": "emotional", "planningItems": [], "constraints": [],
+            "disposition": { "kind": "not_applicable", "evidence": null },
+            "actionRequest": { "kind": "none", "evidence": null },
+            "supportRequest": { "kind": "unspecified", "evidence": null, "scope": "turn" }
+          },
+          "suggestedAction": "continue_listening",
+          "response": { "type": "listening", "text": "听起来你白天一直在撑，到家以后才终于没有力气回应任何人。",
+            "question": null, "questionTopic": null, "supportMove": "reflect" },
+          "proposalSet": null
+        }
+        """;
+        var gateway = new ScriptedGateway(rejected, repaired);
+        var request = Request("回到家连话都不想说") with
+        {
+            RecentMessages =
+            [
+                new ConversationMessage(Guid.NewGuid(), ConversationMessageRole.Assistant,
+                    "这种累更像身体上的，还是心里被掏空了？", DateTimeOffset.UtcNow.AddMinutes(-1),
+                    ConversationStrategy.AskGentleQuestion),
+                new ConversationMessage(Guid.NewGuid(), ConversationMessageRole.User,
+                    "回到家连话都不想说", DateTimeOffset.UtcNow),
+            ],
+        };
+
+        // Act
+        var result = await Runtime(gateway).ExecuteAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.ContinueListening,
+            because: "Companion does not ask in consecutive turns by default");
+        result.Outcome.AssistantMessage.Should().Be("听起来你白天一直在撑，到家以后才终于没有力气回应任何人。",
+            because: "the final reply must use the policy-compliant regenerated response");
+        result.Outcome.FallbackUsed.Should().BeFalse(
+            because: "a successful response repair is not a deterministic fallback");
+        gateway.CallCount.Should().Be(2,
+            because: "the second question is repaired through the one permitted regeneration");
+        gateway.Requests[0].SystemPrompt.Should().Contain(
+            "Default to a substantive non-question reply",
+            because: "the model must receive the committed question-cadence context before proposing a reply");
+    }
+
+    private static ModelTurnRuntime Runtime(IModelGateway gateway)
     {
         var prompts = new PromptModuleRegistry();
+        prompts.Register(CompanionPromptModules.LegacyProfile);
         prompts.Register(CompanionPromptModules.Profile);
         return new ModelTurnRuntime(
-            new ScriptedGateway(output),
+            gateway,
             new ModelContextBuilder(new ModelPromptAssembler(prompts)),
             new ConversationPrePolicy(),
             new ConversationPostPolicy(),
@@ -228,6 +356,8 @@ public class CompanionModeRuntimeTests
             Options.Create(new AiCoachModuleOptions()),
             NullLogger<ModelTurnRuntime>.Instance);
     }
+
+    private static ModelTurnRuntime Runtime(string output) => Runtime(new ScriptedGateway(output));
 
     private static ModelTurnRequest Request(string userMessage)
     {

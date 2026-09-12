@@ -151,6 +151,55 @@ public class GuardTests
             because: "an explicit response-style request must remain available to Support Policy");
     }
 
+    [Fact]
+    public void Evidence_TurnScopedAdviceRequest_WithLiteralCurrentQuote_IsVerified()
+    {
+        // Arrange
+        const string message = "具体办法是什么";
+        var interpretation = new InterpretationCandidate(
+            IntentType.Question,
+            SupportRequest: new SupportRequestCandidate(
+                SupportRequestKind.WantsAdvice,
+                new EvidenceReference(message),
+                SupportPreferenceScope.Turn));
+
+        // Act
+        var verdict = new EvidenceGuard().Verify(interpretation, message);
+
+        // Assert
+        verdict.SupportRequest.Should().Be(
+            new VerifiedSupportRequest(
+                SupportRequestKind.WantsAdvice,
+                message,
+                SupportPreferenceScope.Turn),
+            because: "Evidence Guard verifies the current quote and must not replace the model's open-language interpretation with a keyword whitelist");
+        verdict.Evidence.Issues.Should().NotContain(
+            EvidenceIssue.ClaimNotSupportedByQuote,
+            because: "semantic interpretation belongs to the model for a non-persistent turn preference");
+    }
+
+    [Fact]
+    public void Evidence_TurnScopedAdviceRequest_WithQuoteOutsideCurrentMessage_IsRejected()
+    {
+        // Arrange
+        var interpretation = new InterpretationCandidate(
+            IntentType.Question,
+            SupportRequest: new SupportRequestCandidate(
+                SupportRequestKind.WantsAdvice,
+                new EvidenceReference("具体办法是什么"),
+                SupportPreferenceScope.Turn));
+
+        // Act
+        var verdict = new EvidenceGuard().Verify(interpretation, "我再想想");
+
+        // Assert
+        verdict.SupportRequest.Should().BeNull(
+            because: "model-owned semantics do not relax the requirement for evidence from the current user message");
+        verdict.Evidence.Issues.Should().Contain(
+            EvidenceIssue.QuoteNotFound,
+            because: "a historical or fabricated quote must never authorize the current response preference");
+    }
+
     [Theory]
     [InlineData(SupportRequestKind.WantsListening, "我最难受的是觉得自己总是这样")]
     [InlineData(SupportRequestKind.WantsListening, "你陪我聊一会儿就好")]
@@ -163,18 +212,22 @@ public class GuardTests
         string message)
     {
         // Arrange
+        var scope = claimedKind == SupportRequestKind.WantsAdvice
+            ? SupportPreferenceScope.Conversation
+            : SupportPreferenceScope.Turn;
         var interpretation = new InterpretationCandidate(
             IntentType.Emotional,
             SupportRequest: new SupportRequestCandidate(
                 claimedKind,
-                new EvidenceReference(message)));
+                new EvidenceReference(message),
+                scope));
 
         // Act
         var verdict = new EvidenceGuard().Verify(interpretation, message);
 
         // Assert
         verdict.SupportRequest.Should().BeNull(
-            because: "a quote must semantically support the claimed response preference");
+            because: "retained prototype checks reject conflicting response preferences, especially persistent ones");
         verdict.Evidence.Issues.Should().Contain(
             EvidenceIssue.ClaimNotSupportedByQuote,
             because: "the rejected model claim must remain observable");

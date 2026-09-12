@@ -8,7 +8,7 @@ namespace BlotzTask.Modules.AiCoach.Domain.Guards;
 
 /// <summary>
 /// Evidence Guard (v3 tech design §14.1). Planning claims must carry literal quotes from the
-/// current user message. Typed request evidence must also support the claimed request kind;
+/// current user message. Prototype semantic checks remain fail-closed where explicitly retained;
 /// readiness and strategy remain owned by their dedicated policy layers.
 /// </summary>
 public interface IEvidenceGuard
@@ -159,7 +159,13 @@ public sealed class EvidenceGuard : IEvidenceGuard
         if (!TryVerifyQuote(candidate.Evidence, currentUserMessage, issues, out var quote))
             return null;
 
-        if (!SupportRequestEvidenceMatches(candidate.Kind, quote!))
+        // A turn-scoped advice request is non-persistent and has no formal side effect. Once its
+        // literal current-message quote is verified, open-language interpretation remains model-owned;
+        // the prototype keyword list must not override it. Conversation-scoped preferences retain
+        // the conservative prototype check because they affect later turns.
+        if ((candidate.Kind != SupportRequestKind.WantsAdvice
+             || candidate.Scope != SupportPreferenceScope.Turn)
+            && !SupportRequestEvidenceMatches(candidate.Kind, quote!))
         {
             issues.Add(EvidenceIssue.ClaimNotSupportedByQuote);
             return null;

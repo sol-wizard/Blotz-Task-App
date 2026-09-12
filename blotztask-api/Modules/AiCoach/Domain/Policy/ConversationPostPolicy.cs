@@ -67,7 +67,10 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                 : strategy == ConversationStrategy.AskGentleQuestion
                     ? StrategyReasonCode.QuestionCadenceExhausted
                     : StrategyReasonCode.SupportMoveNotAllowed;
-            return Downgrade(ConversationStrategy.ContinueListening, reason);
+            return RegenerateResponse(
+                ConversationStrategy.ContinueListening,
+                reason,
+                context.Planning.AllowedAssumptions.ToHashSet());
         }
 
         if (!envelope.AllowedStrategies.Contains(strategy))
@@ -179,6 +182,19 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
             new PolicyFallbackPlan(
                 PolicyFallbackAction.DeterministicProposal,
                 QuestionFallback(context)));
+
+    private static StrategyDecision RegenerateResponse(
+        ConversationStrategy strategy,
+        StrategyReasonCode reason,
+        IReadOnlySet<AllowedAssumption> allowedAssumptions) =>
+        new(
+            strategy,
+            StrategyDecisionType.RequiresRegeneration,
+            reason,
+            AcceptResponseCandidate: false,
+            AcceptProposalSetCandidate: false,
+            new RegenerationDirective(strategy, ["response"], allowedAssumptions),
+            new PolicyFallbackPlan(PolicyFallbackAction.SafeResponse, strategy));
 
     private static StrategyDecision ProposalFailure(PolicyContext context, StrategyReasonCode reason)
     {

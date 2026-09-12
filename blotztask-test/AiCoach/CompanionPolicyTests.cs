@@ -67,11 +67,14 @@ public class CompanionPolicyTests
     }
 
     [Fact]
-    public void Handle_ExplicitListeningPreference_DisallowsAdviceAndQuestions()
+    public void Handle_TurnScopedListeningRequest_DisallowsAdviceAndQuestionsWithoutPersistingPreference()
     {
         // Arrange
         var currentMessageId = Guid.NewGuid();
-        var request = new VerifiedSupportRequest(SupportRequestKind.WantsListening, "你听我说就好");
+        var request = new VerifiedSupportRequest(
+            SupportRequestKind.WantsListening,
+            "你听我说就好",
+            SupportPreferenceScope.Turn);
 
         // Act
         var decision = new SupportPolicyCalculator().Calculate(new SupportPolicyContext(
@@ -84,8 +87,29 @@ public class CompanionPolicyTests
             because: "explicit listening takes priority over unsolicited advice");
         decision.Allows(SupportMove.GentleQuestion).Should().BeFalse(
             because: "the user asked only to be heard");
+        decision.PreferenceUpdate.Should().BeNull(
+            because: "a one-turn listening request must not silently become a conversation preference");
+    }
+
+    [Fact]
+    public void Handle_ConversationScopedListeningRequest_PersistsPreference()
+    {
+        // Arrange
+        var currentMessageId = Guid.NewGuid();
+        var request = new VerifiedSupportRequest(
+            SupportRequestKind.WantsListening,
+            "接下来这段对话都只听我说",
+            SupportPreferenceScope.Conversation);
+
+        // Act
+        var decision = new SupportPolicyCalculator().Calculate(new SupportPolicyContext(
+            Snapshot(), request, null, currentMessageId, Mode.SupportPolicy!));
+
+        // Assert
         decision.PreferenceUpdate.Should().NotBeNull(
-            because: "the verified preference must survive later turns in this in-memory conversation");
+            because: "an explicit ongoing listening preference must be available to later turns");
+        decision.PreferenceUpdate!.Kind.Should().Be(SupportRequestKind.WantsListening,
+            because: "the stored preference must preserve the verified support style");
     }
 
     [Theory]
@@ -196,9 +220,9 @@ public class CompanionPolicyTests
             because: "the creation API must expose the selected registered mode");
         stored!.Mode.Should().Be(AiCoachMode.Companion,
             because: "mode is pinned on the authoritative in-memory conversation");
-        stored.RuntimeVersions.ModelContractSchemaVersion.Should().Be(3,
+        stored.RuntimeVersions.ModelContractSchemaVersion.Should().Be(4,
             because: "Companion is pinned to the schema that carries Action and Support requests");
-        stored.RuntimeVersions.SupportPolicyVersion.Should().Be("companion-support-v1",
+        stored.RuntimeVersions.SupportPolicyVersion.Should().Be("companion-support-v2",
             because: "the active conversation must not silently switch support policy");
     }
 

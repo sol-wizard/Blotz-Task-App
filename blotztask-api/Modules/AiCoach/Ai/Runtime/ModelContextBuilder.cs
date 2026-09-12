@@ -38,7 +38,7 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
     public ModelContext Build(ModelContextRequest request)
     {
         var prompt = promptAssembler.Assemble(new PromptAssemblyRequest(
-            request.Mode.PromptVersion, request.Snapshot.Mode, request.Snapshot.Phase));
+            request.Snapshot.RuntimeVersions.PromptVersion, request.Snapshot.Mode, request.Snapshot.Phase));
 
         var frame = RenderFrame(request);
 
@@ -104,6 +104,13 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
 
         if (snapshot.CompanionContext?.ExplicitPreference is { } preference)
             lines.Add($"User-verified support preference for this conversation: {preference.Kind}.");
+
+        var previousAssistantStrategy = request.RecentMessages
+            .LastOrDefault(message => message.Role == ConversationMessageRole.Assistant)?.Strategy;
+        if (previousAssistantStrategy == ConversationStrategy.AskGentleQuestion)
+        {
+            lines.Add("The previous assistant turn asked a gentle question. Default to a substantive non-question reply; ask again only when the current user explicitly requests question-led exploration.");
+        }
 
         lines.AddRange(new[]
         {

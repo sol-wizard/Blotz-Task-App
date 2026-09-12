@@ -209,7 +209,7 @@ public static class CompanionModeDefinition
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Companion,
         RuleVersion: "companion-rules-v3",
-        PromptVersion: "companion-prompts-v3",
+        PromptVersion: "companion-prompts-v4",
         ToolsetVersion: "companion-toolset-v1",
         MemoryProfileVersion: "companion-memory-v1",
         ModelContractSchemaVersion: 4,

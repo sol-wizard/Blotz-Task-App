@@ -49,6 +49,7 @@ public static class DependencyInjection
         {
             var registry = new PromptModuleRegistry();
             registry.Register(ExecutionPromptModules.Profile);
+            registry.Register(CompanionPromptModules.LegacyProfile);
             registry.Register(CompanionPromptModules.Profile);
             return registry;
         });

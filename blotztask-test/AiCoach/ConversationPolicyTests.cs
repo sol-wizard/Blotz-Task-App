@@ -4,6 +4,7 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Domain.Support;
 using FluentAssertions;
 
 namespace BlotzTask.Tests.AiCoach;
@@ -59,13 +60,14 @@ public class ConversationPolicyTests
         AiCoachModeDefinition mode,
         ModelTurnCandidate candidate,
         VerifiedPlanningContext verified,
-        ConversationSnapshot? snapshot = null)
+        ConversationSnapshot? snapshot = null,
+        SupportDecision? support = null)
     {
         snapshot ??= Snapshot(mode);
         var planning = _readiness.Calculate(new PlanningReadinessContext(
             snapshot, verified, mode.Policy.Planning));
         return _postPolicy.Decide(new PolicyContext(
-            snapshot, _prePolicy.Build(snapshot, mode), candidate, mode, verified, planning));
+            snapshot, _prePolicy.Build(snapshot, mode), candidate, mode, verified, planning, support));
     }
 
     private static ModelTurnCandidate Candidate(
@@ -179,5 +181,36 @@ public class ConversationPolicyTests
 
         decision.DecisionType.Should().Be(StrategyDecisionType.RequiresRegeneration);
         decision.Regeneration!.RequiredStrategy.Should().Be(ConversationStrategy.AskClarifyingQuestion);
+    }
+
+    [Fact]
+    public void PostPolicy_QuestionCadenceExhausted_ReturnsStructuredResponseRegenerationDirective()
+    {
+        // Arrange
+        var mode = CompanionModeDefinition.Create();
+        var candidate = new ModelTurnCandidate(
+            new InterpretationCandidate(IntentType.Emotional),
+            ConversationStrategy.AskGentleQuestion,
+            new GentleQuestionResponse("今天最难的部分是什么？", "今天最难的部分是什么？"),
+            null,
+            SupportMove.GentleQuestion);
+        var support = new SupportDecision(
+            new HashSet<SupportMove> { SupportMove.Acknowledge, SupportMove.Reflect },
+            [SupportDecisionReason.QuestionCadenceExhausted]);
+
+        // Act
+        var decision = Decide(mode, candidate, Verified(), support: support);
+
+        // Assert
+        decision.FinalStrategy.Should().Be(ConversationStrategy.ContinueListening,
+            because: "question cadence permits a non-question Companion response, not another question");
+        decision.DecisionType.Should().Be(StrategyDecisionType.RequiresRegeneration,
+            because: "Post-Policy owns the constrained response repair plan");
+        decision.ReasonCode.Should().Be(StrategyReasonCode.QuestionCadenceExhausted,
+            because: "the policy reason must remain observable across the repair");
+        decision.Regeneration!.RequiredFields.Should().ContainSingle().Which.Should().Be("response",
+            because: "the verified interpretation and policy decisions are not available for replacement");
+        decision.Fallback!.FailureStrategy.Should().Be(ConversationStrategy.ContinueListening,
+            because: "the recovery plan must remain within the allowed non-question strategy");
     }
 }
