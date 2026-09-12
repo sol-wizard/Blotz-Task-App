@@ -8,7 +8,9 @@
     "saving": "保存中...",
     "goBack": "返回",
     "signOut": "退出登录",
-    "ok": "确定"
+    "ok": "确定",
+    "signingIn": "登录中...",
+    "retry": "重试"
   },
   "status": {
     "todo": "待办",
@@ -61,6 +63,11 @@
       "alreadyRedeemed": "你已经兑换过邀请码了。"
     },
     "pushTokenFailed": "该设备不支持推送通知。",
-    "physicalDeviceRequired": "推送通知需要在真机上运行。"
+    "physicalDeviceRequired": "推送通知需要在真机上运行。",
+    "loginNetwork": "无法连接登录服务，请检查网络后重试。",
+    "loginInProgress": "上一次登录仍在进行，请稍候或重启应用。",
+    "loginFailed": "登录失败，请重试。",
+    "sessionExpired": "登录已失效，请重新登录。",
+    "loadFailed": "无法加载账号信息。"
   }
 }

@@ -8,7 +8,9 @@
     "saving": "Saving...",
     "goBack": "Go back",
     "signOut": "Sign Out",
-    "ok": "OK"
+    "ok": "OK",
+    "signingIn": "Signing in...",
+    "retry": "Retry"
   },
   "status": {
     "todo": "To Do",
@@ -61,6 +63,11 @@
       "alreadyRedeemed": "You have already redeemed an invite code."
     },
     "pushTokenFailed": "Push notifications are not available on this device.",
-    "physicalDeviceRequired": "Push notifications require a physical device."
+    "physicalDeviceRequired": "Push notifications require a physical device.",
+    "loginNetwork": "Couldn't reach the sign-in service. Check your connection and try again.",
+    "loginInProgress": "A sign-in is already in progress. Wait a moment or restart the app.",
+    "loginFailed": "Sign-in failed. Please try again.",
+    "sessionExpired": "Your session expired. Please sign in again.",
+    "loadFailed": "Couldn't load your account."
   }
 }
