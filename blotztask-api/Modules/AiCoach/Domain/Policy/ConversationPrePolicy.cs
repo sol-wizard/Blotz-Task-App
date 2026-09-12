@@ -43,36 +43,15 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
         }
         else
         {
-            // Once clarification is resolved, the conversation must move to proposal
-            // generation. Keeping ContinueListening here creates a silent loop where the
-            // assistant acknowledges the user's delegation without advancing the intent.
-            if (snapshot.ActivePlanningIntent?.Status == PlanningIntentStatus.ReadyForProposal
-                && snapshot.OpenQuestion is null
-                && policy.AllowsProposalCreation)
-            {
-                allowed = new HashSet<ConversationStrategy>
-                {
-                    ConversationStrategy.ShowProposalSet,
-                };
-                proposalAllowed = true;
-                return new StrategyEnvelope(
-                    TurnObjective: "Generate a conservative draft proposal from the verified planning intent; do not ask another question.",
-                    AllowedStrategies: allowed,
-                    AllowedCapabilities: mode.AllowedReadOnlyCapabilities,
-                    ResponseConstraints: new ResponseConstraints(
-                        MaxQuestions: policy.MaxQuestionsPerTurn,
-                        MaxResponseLength: policy.MaxResponseLength),
-                    ProposalConstraints: new ProposalConstraints(
-                        MaxProposals: policy.MaxProposalsPerSet,
-                        ProposalAllowed: proposalAllowed));
-            }
-
+            // Readiness is material, not a command. Always let the current turn decline,
+            // change topic or ask for a perspective before Post-Policy chooses a strategy.
             // Broad first-version envelope (v3 §8.3): don't pre-trim normal conversation paths.
             // Whether a ProposalSet is actually shown is decided later by evidence + Post-Policy
             // + Guards, not here.
             var strategies = new HashSet<ConversationStrategy>
             {
                 ConversationStrategy.ContinueListening,
+                ConversationStrategy.AskGentleQuestion,
             };
             // One clarification cycle gets one information-slot question. Once a question is
             // open, the next turn must use the answer or a safe default rather than ask again.
@@ -80,7 +59,6 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
             if (snapshot.OpenQuestion is null
                 && clarificationAttempts < policy.Planning.MaxClarificationAttempts)
             {
-                strategies.Add(ConversationStrategy.AskGentleQuestion);
                 strategies.Add(ConversationStrategy.AskClarifyingQuestion);
                 strategies.Add(ConversationStrategy.AskUserToChooseGoal);
             }
@@ -91,7 +69,7 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
         }
 
         return new StrategyEnvelope(
-            TurnObjective: BuildTurnObjective(snapshot, hasOpenSet),
+            TurnObjective: BuildTurnObjective(snapshot, hasOpenSet, mode),
             AllowedStrategies: allowed,
             AllowedCapabilities: mode.AllowedReadOnlyCapabilities,
             ResponseConstraints: new ResponseConstraints(
@@ -107,25 +85,17 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
     /// carried over from the validated execution-frame objectives. Clarification attempts are
     /// bounded by structured intent/topic state, not by comparing question strings.
     /// </summary>
-    private static string BuildTurnObjective(ConversationSnapshot snapshot, bool hasOpenSet)
+    private static string BuildTurnObjective(
+        ConversationSnapshot snapshot,
+        bool hasOpenSet,
+        AiCoachModeDefinition mode)
     {
         if (hasOpenSet)
-            return "A draft card is awaiting the user's decision. Reply briefly; do NOT create another draft.";
+            return mode.TurnObjectives.PendingProposal;
 
         if (snapshot.Phase == ConversationPhase.ActionPreparing)
-        {
-            return snapshot.OpenQuestion is not null
-                ? "The one clarification opportunity has already been used. Do not ask again; use the user's answer "
-                  + "or a safe default and propose a conservative draft now (short block "
-                  + "at the next sensible time) for whatever the user has named, unless the task itself is "
-                  + "still completely unknown."
-                : "Read the user's answer. If it names concrete task(s) OR asks you to decide/list/plan them, "
-                  + "create the draft card now (recommend times yourself).";
-        }
+            return mode.TurnObjectives.ActionPreparing;
 
-        return "Understand what the user wants to do. If it is one or more concrete tasks, recommend a time "
-               + "for each (with a reason) and propose the draft card. If it is a low-risk goal or domain, "
-               + "propose one conservative 15-minute discovery or first-step card. Ask one question only "
-               + "when no safe starting point can be formed.";
+        return mode.TurnObjectives.Default;
     }
 }

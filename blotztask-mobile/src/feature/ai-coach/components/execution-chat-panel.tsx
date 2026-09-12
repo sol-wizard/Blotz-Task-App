@@ -15,7 +15,7 @@ import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { useVoiceRecorder } from "@/feature/ai-task-generate/hooks/useVoiceRecorder";
 import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
-import { EditedDraftDto } from "../models/ai-coach-dto";
+import { AvailableAiCoachMode, EditedDraftDto } from "../models/ai-coach-dto";
 import { transcribeAudio } from "../services/ai-coach-service";
 import { TaskDraftCard } from "./task-draft-card";
 
@@ -35,24 +35,25 @@ function MessageBubble({ item }: { item: ChatItem }) {
 }
 
 interface ExecutionChatPanelProps {
-  /** False = mode not picked yet: input bar shows greyed, no conversation is started. */
-  enabled: boolean;
+  /** Null = mode not picked yet: input bar shows greyed, no conversation is started. */
+  mode: AvailableAiCoachMode | null;
   /** Page content (greeting + mode cards) that scrolls together with the transcript. */
   header: ReactNode;
 }
 
 /**
- * Execution-mode chat (requirements §8.1), living directly on AI Home (single-page per PM
+ * Shared Execution/Companion chat, living directly on AI Home (single-page per PM
  * decision 2026-08-22). The input bar is always on screen — grey until `enabled` — and the
  * transcript grows in place below the header, so picking a mode never feels like a page jump.
  * The draft card and every action button appear only when the server's snapshot allows them.
  */
-export function ExecutionChatPanel({ enabled, header }: ExecutionChatPanelProps) {
+export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
   const { t } = useTranslation("aiCoach");
-  const { snapshot, messages, status, start, send, confirm, reject } = useAiCoachChat(enabled);
+  const { snapshot, messages, status, start, send, confirm, reject } = useAiCoachChat(mode);
   const [input, setInput] = useState("");
   const [transcribing, setTranscribing] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const enabled = mode !== null;
 
   // Hold-to-talk: the transcript lands in the input box for review — never auto-sent.
   const { isRecording, startListening, stopAndUpload } = useVoiceRecorder(async (uri) => {
@@ -68,8 +69,7 @@ export function ExecutionChatPanel({ enabled, header }: ExecutionChatPanelProps)
   });
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
-  const canSend =
-    status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
+  const canSend = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
   const showDraft =
     snapshot?.currentArtifact != null &&
     (snapshot.currentArtifact.status === "pending" ||
@@ -123,9 +123,10 @@ export function ExecutionChatPanel({ enabled, header }: ExecutionChatPanelProps)
         </View>
       );
     }
-    const key = snapshot.blockedReason === "content_filtered"
-      ? "chat.contentFiltered"
-      : "chat.modelUnavailable";
+    const key =
+      snapshot.blockedReason === "content_filtered"
+        ? "chat.contentFiltered"
+        : "chat.modelUnavailable";
     return (
       <View className="bg-white border border-gray-200 rounded-2xl p-3 my-2">
         <Text className="font-baloo text-sm text-primary">{t(key)}</Text>
@@ -203,7 +204,11 @@ export function ExecutionChatPanel({ enabled, header }: ExecutionChatPanelProps)
             isRecording
               ? t("chat.listening")
               : enabled
-                ? t("chat.inputPlaceholder")
+                ? t(
+                    mode === "Companion"
+                      ? "chat.companionInputPlaceholder"
+                      : "chat.inputPlaceholder",
+                  )
                 : t("home.pickModeFirst")
           }
           placeholderTextColor={isRecording ? "#F56767" : "#8C8C8C"}

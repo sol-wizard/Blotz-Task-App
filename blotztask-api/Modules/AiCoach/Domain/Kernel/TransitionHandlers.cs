@@ -91,10 +91,11 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
 
             var mutations = new List<DomainMutation>
             {
-                new AppendAssistantMessageMutation(outcome.AssistantMessage),
+                new AppendAssistantMessageMutation(outcome.AssistantMessage, outcome.FinalStrategy),
                 new CreateProposalSetMutation(outcome.AcceptedProposals),
                 new ClearOpenQuestionMutation(),
             };
+            AddSupportPreferenceMutation(mutations, outcome);
             if (outcome.PlanningIntentUpdate is not null)
                 mutations.Insert(0, new UpsertPlanningIntentMutation(outcome.PlanningIntentUpdate));
             else if (current.ActivePlanningIntent is not null)
@@ -114,7 +115,8 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
 
         // A question strategy without a card on screen enters/stays in ActionPreparing and
         // records the question so rounds are counted (asked-twice rule).
-        if (outcome.FinalStrategy.AsksQuestion()
+        if (outcome.FinalStrategy is ConversationStrategy.AskClarifyingQuestion
+                or ConversationStrategy.AskUserToChooseGoal
             && current.Phase != ConversationPhase.ActionPending
             && !string.IsNullOrWhiteSpace(outcome.Question))
         {
@@ -123,7 +125,8 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
             var mutations = new List<DomainMutation>();
             if (outcome.PlanningIntentUpdate is not null)
                 mutations.Add(new UpsertPlanningIntentMutation(outcome.PlanningIntentUpdate));
-            mutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage));
+            AddSupportPreferenceMutation(mutations, outcome);
+            mutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage, outcome.FinalStrategy));
             mutations.Add(new SetOpenQuestionMutation(outcome.Question!, intent?.IntentId, topic));
             if (intent is not null)
                 mutations.Add(new RecordClarificationAttemptMutation(intent.IntentId, topic));
@@ -137,25 +140,49 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
                 mutations: mutations);
         }
 
-        // Plain reply: the phase and any pending card stay untouched.
+        // Plain reply ends a consumed planning question; an existing card stays current.
         var plainMutations = new List<DomainMutation>();
         if (outcome.PlanningIntentUpdate is not null)
             plainMutations.Add(new UpsertPlanningIntentMutation(outcome.PlanningIntentUpdate));
-        if (outcome.ClarificationResolution is not null && current.OpenQuestion is not null)
+        var abandonedSet = outcome.PlanningIntentUpdate?.Status == PlanningIntentStatus.Abandoned
+            && current.CurrentProposalSet is { Status: ProposalSetStatus.Pending };
+        if (abandonedSet)
         {
-            plainMutations.Add(new ResolveOpenQuestionMutation(outcome.ClarificationResolution.Value));
+            plainMutations.Add(new UpdateProposalSetStatusMutation(
+                current.CurrentProposalSet!.Id, ProposalSetStatus.Rejected));
+            plainMutations.Add(new ClearCurrentProposalSetMutation(current.CurrentProposalSet.Id));
+        }
+        if (current.OpenQuestion is not null)
+        {
+            plainMutations.Add(new ResolveOpenQuestionMutation(
+                outcome.ClarificationResolution ?? ClarificationResolution.Superseded));
             plainMutations.Add(new ClearOpenQuestionMutation());
         }
-        plainMutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage));
+        AddSupportPreferenceMutation(plainMutations, outcome);
+        plainMutations.Add(new AppendAssistantMessageMutation(outcome.AssistantMessage, outcome.FinalStrategy));
 
         return StateTransition.MoveTo(
-            current.Phase,
+            !abandonedSet && current.CurrentProposalSet is { IsOpen: true }
+                ? ConversationPhase.ActionPending : ConversationPhase.Conversing,
             GenerationStatus.Idle,
-            current.Phase == ConversationPhase.ActionPending
+            !abandonedSet && current.Phase == ConversationPhase.ActionPending
                 ? ActionSets.ForPendingSet(current.CurrentProposalSet)
                 : ActionSets.ChatOnly,
-            removeFacts: Facts.Of(ConversationFact.HasRunningModelEffect),
+            removeFacts: abandonedSet
+                ? Facts.Of(ConversationFact.HasRunningModelEffect, ConversationFact.HasOpenQuestion,
+                    ConversationFact.HasPendingProposalSet)
+                : Facts.Of(ConversationFact.HasRunningModelEffect, ConversationFact.HasOpenQuestion),
             mutations: plainMutations);
+    }
+
+    private static void AddSupportPreferenceMutation(
+        ICollection<DomainMutation> mutations,
+        ValidatedTurnOutcome outcome)
+    {
+        if (outcome.ClearSupportPreference)
+            mutations.Add(new ClearSupportPreferenceMutation());
+        else if (outcome.SupportPreferenceUpdate is not null)
+            mutations.Add(new SetSupportPreferenceMutation(outcome.SupportPreferenceUpdate));
     }
 }
 
@@ -287,7 +314,7 @@ public sealed class RejectProposalSetRequestedHandler : IConversationTransitionH
         {
             mutations.Add(new UpdatePlanningIntentStatusMutation(
                 current.ActivePlanningIntent.IntentId,
-                PlanningIntentStatus.ReadyForProposal));
+                PlanningIntentStatus.Rejected));
         }
 
         return StateTransition.MoveTo(

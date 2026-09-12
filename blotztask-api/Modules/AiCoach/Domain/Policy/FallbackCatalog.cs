@@ -19,15 +19,30 @@ public static class FallbackCatalog
         if (reason == StrategyReasonCode.PendingProposalSetAlreadyExists)
         {
             return chinese
-                ? "当前卡片还在等待处理。你可以先调整、确认或删除它，我再继续添加新的安排。"
-                : "The current card is still waiting. Adjust, confirm, or delete it first, then I can add more plans.";
+                ? "当前草案还在，你可以随时编辑或拒绝它，也可以继续聊。新的卡片需要在当前草案处理后生成。"
+                : "Your draft is still available to edit or dismiss, and we can keep talking. A new card can be made once this one is resolved.";
+        }
+
+        if (reason == StrategyReasonCode.PauseRequested)
+            return chinese ? "好，我先停下来。" : "Okay, I’ll pause here.";
+
+        if (reason == StrategyReasonCode.UserRejectedAction)
+            return chinese ? "好，先不继续这项安排。" : "Okay, we won't continue planning that.";
+
+        if (reason is StrategyReasonCode.SupportMoveNotAllowed
+            or StrategyReasonCode.AdviceNotRequested
+            or StrategyReasonCode.QuestionCadenceExhausted)
+        {
+            return chinese
+                ? "我在听，你可以按自己的节奏继续说。"
+                : "I'm listening; continue at your own pace.";
         }
 
         if (!allowQuestion)
         {
             return chinese
-                ? "我已经记录了这项安排，但暂时无法生成可确认的时间卡片。"
-                : "I recorded this plan, but I could not generate a confirmable time card yet.";
+                ? "抱歉，这次没能形成合适的回复。你可以继续说明或稍后重试。"
+                : "Sorry, I could not produce a suitable response this time. You can continue or try again shortly.";
         }
 
         return reason switch

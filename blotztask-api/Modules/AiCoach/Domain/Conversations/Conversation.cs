@@ -27,6 +27,7 @@ public sealed class Conversation
     public int Version { get; private set; }
     public OpenQuestionSnapshot? OpenQuestion { get; private set; }
     public ActivePlanningIntentSnapshot? ActivePlanningIntent { get; private set; }
+    public CompanionContextSnapshot? CompanionContext { get; private set; }
     public ProposalSet? CurrentProposalSet { get; private set; }
 
     private readonly HashSet<ConversationFact> _facts = [];
@@ -64,7 +65,8 @@ public sealed class Conversation
         new HashSet<ConversationFact>(_facts),
         AllowedActions,
         RuntimeVersions,
-        ActivePlanningIntent);
+        ActivePlanningIntent,
+        CompanionContext);
 
     public TrackedEffect? FindEffect(Guid effectId) => _effects.FirstOrDefault(e => e.Id == effectId);
 
@@ -140,7 +142,8 @@ public sealed class Conversation
                 break;
 
             case AppendAssistantMessageMutation m:
-                AppendMessage(new ConversationMessage(Guid.NewGuid(), ConversationMessageRole.Assistant, m.Content, now));
+                AppendMessage(new ConversationMessage(
+                    Guid.NewGuid(), ConversationMessageRole.Assistant, m.Content, now, m.Strategy));
                 break;
 
             case CreateProposalSetMutation m:
@@ -213,6 +216,14 @@ public sealed class Conversation
                 OpenQuestion = null;
                 break;
 
+            case SetSupportPreferenceMutation m:
+                CompanionContext = new CompanionContextSnapshot(m.Preference);
+                break;
+
+            case ClearSupportPreferenceMutation:
+                CompanionContext = null;
+                break;
+
             default:
                 throw new InvalidOperationException($"Unsupported mutation {mutation.GetType().Name}.");
         }
@@ -253,7 +264,8 @@ public sealed record ConversationMessage(
     Guid Id,
     ConversationMessageRole Role,
     string Content,
-    DateTimeOffset At);
+    DateTimeOffset At,
+    Policy.ConversationStrategy? Strategy = null);
 
 /// <summary>
 /// In-memory stand-in for the persisted Effect run record (v3 §7.4). v1 executes effects

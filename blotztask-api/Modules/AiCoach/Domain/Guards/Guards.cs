@@ -8,8 +8,8 @@ namespace BlotzTask.Modules.AiCoach.Domain.Guards;
 
 /// <summary>
 /// Evidence Guard (v3 tech design §14.1). Planning claims must carry literal quotes from the
-/// current user message. It validates provenance only; readiness and strategy remain owned by
-/// their dedicated policy layers.
+/// current user message. Typed request evidence must also support the claimed request kind;
+/// readiness and strategy remain owned by their dedicated policy layers.
 /// </summary>
 public interface IEvidenceGuard
 {
@@ -25,6 +25,8 @@ public sealed class EvidenceGuard : IEvidenceGuard
         var verifiedConstraints = new List<VerifiedConstraint>();
         var submittedClaims = 0;
         var verifiedDispositionClaims = 0;
+        VerifiedActionRequest? verifiedActionRequest = null;
+        VerifiedSupportRequest? verifiedSupportRequest = null;
 
         foreach (var item in interpretation.PlanningItems ?? [])
         {
@@ -101,6 +103,22 @@ public sealed class EvidenceGuard : IEvidenceGuard
             }
         }
 
+        if (interpretation.ActionRequest is not null)
+        {
+            if (interpretation.ActionRequest.Kind != ActionRequestKind.None)
+                submittedClaims++;
+            verifiedActionRequest = VerifyActionRequest(
+                interpretation.ActionRequest, currentUserMessage, issues, ref verifiedDispositionClaims);
+        }
+
+        if (interpretation.SupportRequest is not null)
+        {
+            if (interpretation.SupportRequest.Kind != SupportRequestKind.Unspecified)
+                submittedClaims++;
+            verifiedSupportRequest = VerifySupportRequest(
+                interpretation.SupportRequest, currentUserMessage, issues, ref verifiedDispositionClaims);
+        }
+
         return new VerifiedPlanningContext(
             verifiedItems,
             verifiedConstraints,
@@ -108,7 +126,113 @@ public sealed class EvidenceGuard : IEvidenceGuard
             new EvidenceSummary(
                 submittedClaims,
                 verifiedItems.Count + verifiedConstraints.Count + verifiedDispositionClaims,
-                issues));
+                issues),
+            verifiedActionRequest,
+            verifiedSupportRequest);
+    }
+
+    private static VerifiedActionRequest? VerifyActionRequest(
+        ActionRequestCandidate candidate,
+        string currentUserMessage,
+        List<EvidenceIssue> issues,
+        ref int verifiedClaims)
+    {
+        if (candidate.Kind == ActionRequestKind.None)
+            return new VerifiedActionRequest(ActionRequestKind.None, null);
+
+        if (!TryVerifyQuote(candidate.Evidence, currentUserMessage, issues, out var quote))
+            return null;
+
+        verifiedClaims++;
+        return new VerifiedActionRequest(candidate.Kind, quote);
+    }
+
+    private static VerifiedSupportRequest? VerifySupportRequest(
+        SupportRequestCandidate candidate,
+        string currentUserMessage,
+        List<EvidenceIssue> issues,
+        ref int verifiedClaims)
+    {
+        if (candidate.Kind == SupportRequestKind.Unspecified)
+            return new VerifiedSupportRequest(SupportRequestKind.Unspecified, null);
+
+        if (!TryVerifyQuote(candidate.Evidence, currentUserMessage, issues, out var quote))
+            return null;
+
+        if (!SupportRequestEvidenceMatches(candidate.Kind, quote!))
+        {
+            issues.Add(EvidenceIssue.ClaimNotSupportedByQuote);
+            return null;
+        }
+
+        verifiedClaims++;
+        return new VerifiedSupportRequest(candidate.Kind, quote, candidate.Scope);
+    }
+
+    /// <summary>
+    /// Fail-closed verifier for the two currently supported locales. These markers establish
+    /// that the quote is about how the assistant should respond, rather than merely being an
+    /// emotional statement that the model chose to answer by listening.
+    /// </summary>
+    private static bool SupportRequestEvidenceMatches(SupportRequestKind kind, string quote)
+    {
+        var text = Normalize(quote).ToLowerInvariant();
+        var rejectsAdvice = ContainsAny(text,
+            "不要建议", "不用建议", "别建议", "不需要建议",
+            "noadvice", "don'tadvise", "donotadvise", "don'twantadvice",
+            "donotwantadvice", "notlookingforadvice");
+        var rejectsQuestions = ContainsAny(text,
+            "别问", "不要问", "不想回答", "stopasking", "don'task", "donotask");
+        var clearsPreference = ContainsAny(text,
+            "恢复默认", "之前说的不用管", "可以问", "可以建议", "清除偏好",
+            "forgetthat", "clearmypreference", "youcanask", "adviceisokay");
+
+        return kind switch
+        {
+            SupportRequestKind.WantsListening => ContainsAny(text,
+                "听我", "听着", "听就好", "只想说", "让我说", "倾听",
+                "listen", "hearmeout", "letmevent", "justvent"),
+            SupportRequestKind.WantsExploration => !rejectsQuestions && !clearsPreference && ContainsAny(text,
+                "问我", "一起想", "陪我想", "帮我想", "探索", "聊聊为什么",
+                "askme", "explore", "thinkthrough"),
+            SupportRequestKind.WantsPerspective => ContainsAny(text,
+                "你怎么看", "你的看法", "你的观点", "你觉得呢",
+                "whatdoyouthink", "yourperspective", "yourview"),
+            SupportRequestKind.WantsAdvice => !rejectsAdvice && !clearsPreference && ContainsAny(text,
+                "建议", "怎么办", "怎么做", "我该", "该怎么",
+                "whatshouldi", "advice", "suggest"),
+            SupportRequestKind.RejectsAdvice => rejectsAdvice,
+            SupportRequestKind.WantsPause => ContainsAny(text,
+                "先停", "暂停", "别问", "不要问", "不想聊", "安静",
+                "pause", "stopasking", "don'task", "donotask", "quiet"),
+            SupportRequestKind.ClearsPreference => clearsPreference,
+            _ => false,
+        };
+    }
+
+    private static bool ContainsAny(string text, params string[] markers) =>
+        markers.Any(marker => text.Contains(marker, StringComparison.OrdinalIgnoreCase));
+
+    private static bool TryVerifyQuote(
+        EvidenceReference? evidence,
+        string currentUserMessage,
+        List<EvidenceIssue> issues,
+        out string? quote)
+    {
+        quote = evidence?.Quote?.Trim();
+        if (string.IsNullOrWhiteSpace(quote))
+        {
+            issues.Add(EvidenceIssue.MissingQuote);
+            return false;
+        }
+
+        if (!ContainsQuote(currentUserMessage, quote))
+        {
+            issues.Add(EvidenceIssue.QuoteNotFound);
+            return false;
+        }
+
+        return true;
     }
 
     private static bool ContainsQuote(string message, string quote) =>

@@ -78,7 +78,9 @@ public sealed record ValidatedTurnOutcome(
     bool FallbackUsed,
     ActivePlanningIntentSnapshot? PlanningIntentUpdate = null,
     ClarificationTopic? QuestionTopic = null,
-    ClarificationResolution? ClarificationResolution = null);
+    ClarificationResolution? ClarificationResolution = null,
+    SupportPreferenceSnapshot? SupportPreferenceUpdate = null,
+    bool ClearSupportPreference = false);
 
 // ---------- Deterministic business result events ----------
 

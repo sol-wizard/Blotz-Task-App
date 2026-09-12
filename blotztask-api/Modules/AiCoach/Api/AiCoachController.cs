@@ -35,6 +35,7 @@ public class AiCoachController(
         {
             UserId = GetUserId(),
             TimeZoneId = request.TimeZoneId,
+            Mode = request.Mode,
         }, ct);
         return Ok(dto);
     }

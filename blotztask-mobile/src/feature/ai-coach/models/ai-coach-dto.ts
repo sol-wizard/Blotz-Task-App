@@ -11,6 +11,9 @@ export type ConversationActionWire =
   | "reject_draft"
   | "retry_confirm";
 
+/** Modes currently registered by the backend and exposed by the mobile client. */
+export type AvailableAiCoachMode = "Execution" | "Companion";
+
 export type ConversationStateWire =
   | "conversing"
   | "clarifying"
@@ -69,7 +72,7 @@ export interface ConversationSnapshotDto {
   protocolVersion: number;
   conversationId: string;
   conversationVersion: number;
-  mode: string;
+  mode: AvailableAiCoachMode;
   state: ConversationStateWire;
   generationStatus: GenerationStatusWire;
   blockedReason: BlockedReasonWire | null;

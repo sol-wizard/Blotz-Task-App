@@ -7,6 +7,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import { GradientCircle } from "@/shared/components/gradient-circle";
 import { ReturnButton } from "@/shared/components/return-button";
 import { ExecutionChatPanel } from "../components/execution-chat-panel";
+import { AvailableAiCoachMode } from "../models/ai-coach-dto";
 
 interface ModeCardProps {
   title: string;
@@ -17,7 +18,14 @@ interface ModeCardProps {
   onPress?: () => void;
 }
 
-function ModeCard({ title, subtitle, disabled, selected, comingSoonLabel, onPress }: ModeCardProps) {
+function ModeCard({
+  title,
+  subtitle,
+  disabled,
+  selected,
+  comingSoonLabel,
+  onPress,
+}: ModeCardProps) {
   return (
     <Pressable
       className={`bg-white rounded-2xl px-5 py-4 mb-3 shadow-sm border ${
@@ -48,11 +56,11 @@ function ModeCard({ title, subtitle, disabled, selected, comingSoonLabel, onPres
  * AI Home (requirements §6, single-page per PM decision 2026-08-22): greeting, Blotz IP, the
  * three mode cards AND the chat live on one page. The input bar is visible from the start but
  * greyed out; tapping a mode activates it and the conversation grows in place below the cards —
- * no view swap, no navigation. V1 ships Execution only; Clarify and Companion are coming-soon.
+ * no view swap, no navigation. Execution and Companion are available; Clarify is coming-soon.
  */
 export default function AiHomeScreen() {
   const { t } = useTranslation("aiCoach");
-  const [modePicked, setModePicked] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<AvailableAiCoachMode | null>(null);
 
   const header = (
     <View className="px-1">
@@ -61,17 +69,15 @@ export default function AiHomeScreen() {
           <ASSETS.whiteBun width={36} height={36} style={{ position: "absolute" } as const} />
         </GradientCircle>
         <Text className="font-balooBold text-xl text-secondary mt-3">{t("home.greeting")}</Text>
-        <Text className="font-baloo text-sm text-primary mt-1 text-center">
-          {t("home.intro")}
-        </Text>
+        <Text className="font-baloo text-sm text-primary mt-1 text-center">{t("home.intro")}</Text>
       </View>
 
       <ModeCard
         title={t("home.modes.execution.title")}
         subtitle={t("home.modes.execution.subtitle")}
         disabled={false}
-        selected={modePicked}
-        onPress={() => setModePicked(true)}
+        selected={selectedMode === "Execution"}
+        onPress={() => setSelectedMode("Execution")}
       />
       <ModeCard
         title={t("home.modes.clarify.title")}
@@ -82,8 +88,9 @@ export default function AiHomeScreen() {
       <ModeCard
         title={t("home.modes.companion.title")}
         subtitle={t("home.modes.companion.subtitle")}
-        disabled
-        comingSoonLabel={t("home.comingSoon")}
+        disabled={false}
+        selected={selectedMode === "Companion"}
+        onPress={() => setSelectedMode("Companion")}
       />
     </View>
   );
@@ -94,7 +101,7 @@ export default function AiHomeScreen() {
         <ReturnButton onPress={() => router.back()} />
       </View>
 
-      <ExecutionChatPanel enabled={modePicked} header={header} />
+      <ExecutionChatPanel key={selectedMode ?? "unselected"} mode={selectedMode} header={header} />
     </SafeAreaView>
   );
 }

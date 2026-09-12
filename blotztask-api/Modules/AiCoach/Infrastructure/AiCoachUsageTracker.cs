@@ -12,14 +12,20 @@ public sealed class AiCoachUsageTracker
 {
     private readonly ConcurrentDictionary<Guid, ConversationUsage> _byConversation = new();
 
-    public ConversationUsage Add(Guid conversationId, int inputTokens, int outputTokens, int modelCalls)
+    public ConversationUsage Add(
+        Guid conversationId,
+        int inputTokens,
+        int outputTokens,
+        int totalTokens,
+        int modelCalls)
     {
         return _byConversation.AddOrUpdate(
             conversationId,
-            _ => new ConversationUsage(inputTokens, outputTokens, modelCalls, 1),
+            _ => new ConversationUsage(inputTokens, outputTokens, totalTokens, modelCalls, 1),
             (_, current) => new ConversationUsage(
                 current.InputTokens + inputTokens,
                 current.OutputTokens + outputTokens,
+                current.TotalTokens + totalTokens,
                 current.ModelCalls + modelCalls,
                 current.Turns + 1));
     }
@@ -30,10 +36,13 @@ public sealed class AiCoachUsageTracker
     public void Forget(Guid conversationId) => _byConversation.TryRemove(conversationId, out _);
 }
 
-public sealed record ConversationUsage(long InputTokens, long OutputTokens, long ModelCalls, long Turns)
+public sealed record ConversationUsage(
+    long InputTokens,
+    long OutputTokens,
+    long TotalTokens,
+    long ModelCalls,
+    long Turns)
 {
-    public long TotalTokens => InputTokens + OutputTokens;
-
     /// <summary>USD estimate from per-million prices; null when prices are not configured.</summary>
     public decimal? EstimateUsd(decimal inputUsdPerMillion, decimal outputUsdPerMillion) =>
         inputUsdPerMillion <= 0 && outputUsdPerMillion <= 0

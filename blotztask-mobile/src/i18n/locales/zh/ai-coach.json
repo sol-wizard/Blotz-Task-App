@@ -22,6 +22,7 @@
   "chat": {
     "title": "执行模式",
     "inputPlaceholder": "想做什么？告诉我",
+    "companionInputPlaceholder": "想聊什么？告诉我",
     "thinking": "正在想…",
     "connecting": "正在连接…",
     "startError": "没连上，点击重试",

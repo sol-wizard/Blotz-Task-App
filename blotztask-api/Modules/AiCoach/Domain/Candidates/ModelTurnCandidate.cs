@@ -12,7 +12,8 @@ public sealed record ModelTurnCandidate(
     InterpretationCandidate Interpretation,
     ConversationStrategy SuggestedAction,
     AssistantResponseCandidate ResponseCandidate,
-    ProposalSetCandidate? ProposalSetCandidate);
+    ProposalSetCandidate? ProposalSetCandidate,
+    SupportMove? SuggestedSupportMove = null);
 
 /// <summary>
 /// What the model believes it understood (v3 tech design §10.1). Planning items, constraints,
@@ -23,7 +24,9 @@ public sealed record InterpretationCandidate(
     IntentType Intent,
     IReadOnlyList<PlanningItemCandidate>? PlanningItems = null,
     IReadOnlyList<ConstraintCandidate>? Constraints = null,
-    UserTurnDispositionCandidate? Disposition = null);
+    UserTurnDispositionCandidate? Disposition = null,
+    ActionRequestCandidate? ActionRequest = null,
+    SupportRequestCandidate? SupportRequest = null);
 
 /// <summary>A model-proposed item plus a literal quote used by Evidence Guard.</summary>
 public sealed record PlanningItemCandidate(
@@ -36,6 +39,53 @@ public sealed record ConstraintCandidate(
     EvidenceReference Evidence);
 
 public sealed record EvidenceReference(string Quote);
+
+public sealed record ActionRequestCandidate(
+    ActionRequestKind Kind,
+    EvidenceReference? Evidence);
+
+public enum ActionRequestKind
+{
+    None = 0,
+    ActionMention = 1,
+    AdviceRequest = 2,
+    ExplicitPlanningRequest = 3,
+    DirectInstruction = 4,
+    ReferencedInstruction = 5,
+}
+
+public sealed record SupportRequestCandidate(
+    SupportRequestKind Kind,
+    EvidenceReference? Evidence,
+    SupportPreferenceScope Scope = SupportPreferenceScope.Turn);
+
+public enum SupportPreferenceScope
+{
+    Turn = 0,
+    Conversation = 1,
+}
+
+public enum SupportRequestKind
+{
+    Unspecified = 0,
+    WantsListening = 1,
+    WantsExploration = 2,
+    WantsPerspective = 3,
+    WantsAdvice = 4,
+    RejectsAdvice = 5,
+    WantsPause = 6,
+    ClearsPreference = 7,
+}
+
+public enum SupportMove
+{
+    Acknowledge = 0,
+    Reflect = 1,
+    GentleQuestion = 2,
+    OfferPerspective = 3,
+    OfferAdvice = 4,
+    RespectPause = 5,
+}
 
 public sealed record UserTurnDispositionCandidate(
     UserTurnDisposition Kind,

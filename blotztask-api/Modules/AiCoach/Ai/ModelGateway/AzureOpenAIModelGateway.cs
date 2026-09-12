@@ -26,6 +26,7 @@ public sealed class AzureOpenAiModelGateway(
             messages.Add(message switch
             {
                 GatewayUserMessage user => new UserChatMessage(user.Content),
+                GatewaySystemMessage system => new SystemChatMessage(system.Content),
                 GatewayAssistantMessage assistant => ToAssistantMessage(assistant),
                 GatewayToolResultMessage tool => new ToolChatMessage(tool.ToolCallId, tool.Content),
                 _ => throw new InvalidOperationException($"Unsupported gateway message {message.GetType().Name}."),

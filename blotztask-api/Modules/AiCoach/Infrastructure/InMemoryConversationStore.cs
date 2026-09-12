@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace BlotzTask.Modules.AiCoach.Infrastructure;
 
 /// <summary>
-/// Conversation storage abstraction. Execution mode v1 uses the in-memory implementation below
+/// Conversation storage abstraction. Execution and Companion use the in-memory implementation below
 /// (open question §29.1, approved by Ben): no table, no EF migration. Swapping to a database
 /// later means adding a persistent implementation of this interface — the kernel, reducer and
 /// API contract do not change.
@@ -39,7 +39,7 @@ public sealed class InMemoryConversationStore(IMemoryCache cache) : IConversatio
     public Task SaveAsync(Conversation conversation, CancellationToken ct)
     {
         // ExpiresAt semantics: the entry disappears at the conversation's absolute expiry —
-        // Execution mode conversations are per-session and never survive long-term (§14.1).
+        // In-memory conversations are per-session and never survive long-term.
         cache.Set(Key(conversation.Id), conversation, new MemoryCacheEntryOptions
         {
             AbsoluteExpiration = conversation.ExpiresAt,

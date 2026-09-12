@@ -22,6 +22,7 @@
   "chat": {
     "title": "Execution mode",
     "inputPlaceholder": "What do you want to do?",
+    "companionInputPlaceholder": "What's on your mind?",
     "thinking": "Thinking…",
     "connecting": "Connecting…",
     "startError": "Couldn't connect — tap to retry",

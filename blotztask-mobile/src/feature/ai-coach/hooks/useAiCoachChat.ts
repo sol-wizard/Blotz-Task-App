@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import uuid from "react-native-uuid";
 import {
+  AvailableAiCoachMode,
   ConfirmDraftResultDto,
   ConversationConflictDto,
   ConversationSnapshotDto,
@@ -25,25 +26,25 @@ export interface ConfirmOutcome {
 }
 
 /**
- * Execution-mode conversation state. The server snapshot is authoritative: this hook only
+ * AI Coach conversation state. The server snapshot is authoritative: this hook only
  * keeps the local chat transcript for display and forwards user intents. Buttons come from
  * snapshot.allowedActions — never decided here.
  *
- * `enabled` gates the conversation start: the chat UI can sit idle (grey input on AI Home)
- * until the user picks a mode, then flipping it to true starts the conversation in place.
+ * A null `mode` keeps the chat idle on AI Home. Selecting a mode starts a conversation; AI Home
+ * remounts the panel when that selection changes because the backend pins the mode at creation.
  */
-export function useAiCoachChat(enabled: boolean = true) {
+export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") {
   const [snapshot, setSnapshot] = useState<ConversationSnapshotDto | null>(null);
   const [messages, setMessages] = useState<ChatItem[]>([]);
-  const [status, setStatus] = useState<ChatStatus>(enabled ? "connecting" : "idle");
-  const startedRef = useRef(false);
+  const [status, setStatus] = useState<ChatStatus>(mode ? "connecting" : "idle");
 
   const applySnapshot = useCallback((next: ConversationSnapshotDto, appendAssistant: boolean) => {
     setSnapshot(next);
     if (appendAssistant && next.assistantMessage) {
       const text = next.assistantMessage;
       setMessages((prev) =>
-        prev.length > 0 && prev[prev.length - 1].role === "assistant" &&
+        prev.length > 0 &&
+        prev[prev.length - 1].role === "assistant" &&
         prev[prev.length - 1].text === text
           ? prev
           : [...prev, { id: uuid.v4() as string, role: "assistant", text }],
@@ -52,23 +53,40 @@ export function useAiCoachChat(enabled: boolean = true) {
   }, []);
 
   const start = useCallback(async () => {
+    if (!mode) {
+      setStatus("idle");
+      return;
+    }
+
     setStatus("connecting");
     try {
-      const dto = await aiCoachService.startConversation();
+      const dto = await aiCoachService.startConversation(mode);
       applySnapshot(dto, false);
       setStatus("ready");
     } catch {
       setStatus("startFailed");
     }
-  }, [applySnapshot]);
+  }, [applySnapshot, mode]);
 
   useEffect(() => {
-    // Every entry into Execution mode starts a fresh conversation (requirements §8.1).
-    if (enabled && !startedRef.current) {
-      startedRef.current = true;
-      void start();
-    }
-  }, [enabled, start]);
+    if (!mode) return;
+
+    let cancelled = false;
+    void aiCoachService.startConversation(mode).then(
+      (dto) => {
+        if (cancelled) return;
+        applySnapshot(dto, false);
+        setStatus("ready");
+      },
+      () => {
+        if (!cancelled) setStatus("startFailed");
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applySnapshot, mode]);
 
   const resyncFromConflict = useCallback(
     (error: unknown): string | null => {

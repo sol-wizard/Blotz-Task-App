@@ -8,6 +8,7 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Domain.Support;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -72,6 +73,7 @@ public class ModelTurnRuntimeTests
             new ConversationPostPolicy(),
             new EvidenceGuard(),
             new PlanningReadinessCalculator(),
+            new SupportPolicyCalculator(),
             new DeterministicProposalGenerator(),
             new ResponseGuard(),
             new ProposalSetGuard(),
@@ -141,6 +143,8 @@ public class ModelTurnRuntimeTests
         result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed,
             because: "one schema correction attempt is allowed (v3 §21)");
         gateway.Requests.Should().HaveCount(2);
+        gateway.Requests[1].Messages.Should().ContainSingle(message => message is GatewaySystemMessage,
+            because: "schema correction is server control input, never user evidence");
         result.TotalTokens.Should().Be(300, because: "both calls' tokens are accounted");
     }
 

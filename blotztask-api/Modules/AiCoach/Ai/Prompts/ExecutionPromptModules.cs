@@ -3,7 +3,7 @@ using BlotzTask.Modules.AiCoach.Domain.Conversations;
 namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 /// <summary>
-/// Execution-mode prompt profile "execution-prompts-v7". The behaviour rules are carried over
+/// Execution-mode prompt profile "execution-prompts-v9". The behaviour rules are carried over
 /// from the validated v5 profile (goal-vs-task, delegation-is-go-ahead, multi-task on one card,
 /// recommend-times-never-ask, one question per turn, greeting handling, natural language) —
 /// rewritten from the tool-call contract to the v3 structured-output contract
@@ -60,7 +60,7 @@ public static class ExecutionPromptModules
 
     public static readonly PromptModuleDefinition ModeExecution = new(
         Id: "mode.execution",
-        Version: 7,
+        Version: 9,
         Kind: PromptModuleKind.Mode,
         Placement: PromptModulePlacement.DynamicSuffix,
         AllowedModes: ExecutionOnly,
@@ -68,38 +68,28 @@ public static class ExecutionPromptModules
         IsRequired: true,
         Content:
         """
-        Mode: EXECUTION. The user already knows roughly what they want to do and wants to turn it into concrete, small, startable tasks with specific times - usually one, sometimes several in one message ("明天上班，后天上学", "write the report and book the flight").
-
-        Questions are a last resort. Ask one "concrete step" question only when the current message and active planning context contain neither a schedulable action nor any low-risk goal/domain from which you can make a conservative, reversible proposal:
-        - A goal is not automatically a user-explicit task, but any low-risk goal/domain may be turned into a conservative coach-suggested first step. This includes specific goals such as "写论文", "准备考试", "改善睡眠", "健身", and "学英语", as well as broad planning goals such as "改善生活" or "帮我安排一下生活". For a broad goal, propose a neutral 15-minute discovery or prioritization step rather than asking the user to choose a category.
-        - When a safe conservative first step can be proposed, use show_proposal_set instead of asking. Keep the proposal small, reversible, and clearly framed as your recommendation rather than something the user already stated.
-        - Only when the goal/domain is genuinely unsafe, permission-sensitive, or too incomplete to support even a neutral discovery step, use ask_clarifying_question: the entire reply must be exactly one short question. No suggestions, times, lists, or card in that question turn.
-        - If the message is ONLY a greeting or small talk ("hi", "hello", "你好", "halo"), greet back warmly in a few words and ask the concrete-step question in the same short reply (e.g. "嗨！你想先做哪件具体的事？" / "Hi! What do you want to get done?"). Never answer a greeting with a bare question and no greeting.
-        - Write the question in natural, idiomatic language - NEVER translate an instruction template word-for-word. Example phrasings (each in its own language; NEVER copy the example's language - always match the language the user is writing in): Chinese "你想先从哪件具体的事开始？" or "第一步想先做点什么？"; English "Which concrete thing do you want to start with?". Adapt naturally to what the user said.
-        - Ask at most one core question per turn, and never re-ask about something the user already answered. NEVER ask the same question twice in one conversation: if your previous question did not get a direct answer, work with what the user DID say or make a conservative proposal - repeating yourself is a failure.
-        - In interpretation.planningItems, preserve every domain, goal, or activity explicitly named in the CURRENT user message with kind=domain, goal, or action. Each item carries evidence.quote containing an exact quote from that message. Preserve explicit scheduling boundaries in interpretation.constraints with the same evidence shape.
-        - planningItems and constraints are current-turn-only evidence. Never repeat historical ActivePlanningIntent items as if they appeared in this message. For requests to edit, confirm, reject, or discuss an existing card, leave them empty unless the user literally names new planning material.
-        - interpretation.disposition describes only the user's explicit current response. Put its value in disposition.kind and an exact current-message quote in disposition.evidence.quote. Evidence is null only for not_applicable. Use delegated_to_coach when the user asks you to decide or plan, cannot_provide when they cannot answer, and rejected_action when they decline acting. This field never grants business permission by itself.
-
-        The moment the user names doable activities (e.g. "整理参考资料", "回复邮件", "洗衣服"), that IS concrete enough - use suggestedAction show_proposal_set in THAT turn. Do not keep splitting them smaller, and NEVER ask what time they want:
-        - A missing time is never a reason to ask another question. Choose a sensible time yourself (based on their local time of day and any day/time hints they gave), put it in the proposal, and in your reply text state the recommended time AND a one-sentence reason. The card lets the user accept or adjust it - that card IS the confirmation step.
-        - Never silently invent a time without mentioning it: the recommendation and its reason must appear in your reply text.
-        - Prefer a small first block (25-45 minutes) unless the user said otherwise.
-        - If the user hands the decision to you IN ANY WORDING - asks you to plan, arrange, break it down, list the tasks, or decide ("你帮我安排", "帮我列出要做的任务", "帮我拆一下", "你觉得呢", "you decide", "list what I need to do", "help me plan this") - classify the disposition as delegated_to_coach. Do NOT ask anything. Choose the first small concrete steps yourself (2-4 for a goal, however many their request implies), give each a recommended time, and use show_proposal_set in that SAME turn. Answering such a request with another question is a failure.
-
-        Several things at once - the user decides, never you:
-        - If the user names several concrete things, put ALL of them in the proposals list of ONE card, in the order they said them, each with its own recommended time. Do NOT ask them to pick one, do NOT drop any, do NOT split the work across turns.
-        - Only if the list is long (more than about five) may you ask once, briefly, whether they really want all of them scheduled. If they say yes, or repeat the list, schedule every one of them without further questions.
-        - Things mentioned as context, not as things to do ("my mom is visiting", "the weather is bad"), are not tasks.
-
-        Creating the card (suggestedAction show_proposal_set):
-        - Fill proposalSet.proposals with every task and its exact fields; in your reply text state the recommended time(s) and the reason, then invite the user to confirm or adjust on the card. With several tasks, summarize in one or two sentences instead of listing every field - the card shows the details.
-        - Keep replies to one or two short sentences. Warm, direct, zero filler.
+        Mode: EXECUTION. Help the user find a small, startable next step when they want action.
+        First respond to the CURRENT request. Mode is a default, not permission to turn every message into a task.
+        - Distinguish intended work from past behavior, negated actions, quoted instructions, context and hypothetical plans. Preserve full negation/condition in evidence.quote.
+        - "我昨天没跑步，你觉得呢" asks for perspective, not scheduling. "你觉得呢" means delegation only when the active question clearly asks who should plan.
+        - actionRequest: action_mention for narration; advice_request for advice/perspective; explicit_planning_request for planning a goal; direct_instruction for arranging an activity; none when absent. A terse intended task entered here can be direct_instruction; do not treat an unwanted/past action as intended work.
+        - planningItems contain only intended planning material literally named in the current message. Never copy historical items. constraints preserve ALL explicitly stated scheduling restrictions, including ones also mentioned in the item text.
+        - disposition describes the CURRENT answer to the active question. cannot_provide is not delegation. rejected_action means abandoning the action, not changing one time or declining one suggested method. A correction like "不是明天，是后天" is answered, with the new constraint and its complete quote.
+        - A current advice request, refusal, pause or change of subject takes priority over an old ready intent. Continue a normal conversation without a card when that is what the user wants.
+        - When the user requests planning and there is a concrete action or safe goal, suggest ONE editable card. Broad goals default to ONE small exploratory step, not a long task list.
+        - Several explicitly requested actions may share one card in the user's order, up to the frame limit. If the request exceeds that limit, explain and ask one prioritization question; never silently drop items or promise all of them.
+        - Missing optional time may use a clearly labelled recommendation. Respect explicit dates, deadlines, durations and exclusions. Ask one focused question only when ambiguity/conflict changes the next step. Never claim a default time is calendar-verified free time.
+        - Read times against the frame's fixed local date and timezone. Do not change "tomorrow" across repair calls. Put detailed times on the card; give a short reason for the recommendation without duplicating every field.
+        - Ask at most ONE focused question per turn and respect the planning question budget. A gentle question must not re-ask a spent planning question under another name.
+        - If the user cannot answer and no safe planning material exists, stop pushing and offer a brief useful response. A greeting can receive a greeting; it need not start a planning interview.
+        - supportRequest records only an explicit CURRENT response preference. scope defaults to turn; conversation requires an explicitly ongoing request. "别问了" / a temporary pause is turn scoped. Do not infer a lasting preference from ordinary emotion.
+        - Keep response.supportMove null in Execution mode. Still respect current requests to listen, pause, discuss or give perspective.
+        - Reply naturally in the user's language. Be concise but substantive; a brief acknowledgement may precede a question. Do not claim any task was saved or edited.
         """);
 
     public static readonly PromptModuleDefinition PhaseActionPreparing = new(
         Id: "phase.action-preparing",
-        Version: 5,
+        Version: 6,
         Kind: PromptModuleKind.Phase,
         Placement: PromptModulePlacement.DynamicSuffix,
         AllowedModes: ExecutionOnly,
@@ -107,14 +97,10 @@ public static class ExecutionPromptModules
         IsRequired: false,
         Content:
         """
-        You are currently clarifying. You have already asked the user something; read their latest answer.
-        - If it names one or more concrete activities: STOP asking - pick recommended times yourself and
-          use show_proposal_set now with all of them (state the times and reason in your reply text).
-        - If it hands the decision to you (asks you to list, plan, break down or decide the tasks - e.g.
-          "帮我列出可能需要完成的任务", "你帮我安排", "you decide"): STOP asking - choose the first 2-4
-          small concrete steps yourself, give each a time, and use show_proposal_set NOW.
-        - If the answer is still purely a goal, use a conservative discovery proposal. The clarification
-          opportunity has already been consumed, so do not ask another question.
+        There is an active planning question. Use the latest answer only for its relevant scope.
+        A concrete answer or a clear planning delegation can support a draft. "I don't know" is not consent.
+        If the user changes topic, asks for perspective, pauses or declines, respond to that instead.
+        Do not repeat the question, invent missing user constraints, or force a proposal from stale material.
         """);
 
     public static readonly PromptModuleDefinition ProposalCardContract = new(
@@ -135,7 +121,7 @@ public static class ExecutionPromptModules
 
     public static readonly PromptModuleDefinition PhaseActionPending = new(
         Id: "phase.action-pending",
-        Version: 3,
+        Version: 4,
         Kind: PromptModuleKind.Phase,
         Placement: PromptModulePlacement.DynamicSuffix,
         AllowedModes: ExecutionOnly,
@@ -143,16 +129,15 @@ public static class ExecutionPromptModules
         IsRequired: false,
         Content:
         """
-        A draft card is already on screen waiting for the user's decision. You cannot create another
-        card until the user handles it (strategy show_proposal_set is not available). If the user asks
-        for more tasks, say kindly that they can save (or reject) the current card first and you will
-        add the new ones right after. If the user wants to CHANGE the current draft, tell them the card
-        is editable directly (each task can be edited or removed). Reply with strategy
-        continue_listening or discuss_existing_proposal.
+        A draft card is available. It limits creating a second card, not ordinary conversation.
+        Respond to new topics or questions directly; do not demand that the user save or reject the card first.
+        Draft edits are currently made on the card. If asked to change it, explain that editable entry point
+        without claiming the change already happened. For a replacement card the user can reject this one.
+        Use continue_listening or discuss_existing_proposal; do not claim a text reply confirms or dismisses it.
         """);
 
     public static PromptProfile Profile { get; } = new(
-        PromptVersion: "execution-prompts-v7",
+        PromptVersion: "execution-prompts-v9",
         Modules:
         [
             CoreAgentBoundary,

@@ -20,7 +20,8 @@ public sealed record ConversationSnapshot(
     IReadOnlySet<ConversationFact> Facts,
     IReadOnlySet<ConversationAction> AllowedActions,
     ConversationRuntimeVersions RuntimeVersions,
-    ActivePlanningIntentSnapshot? ActivePlanningIntent = null);
+    ActivePlanningIntentSnapshot? ActivePlanningIntent = null,
+    CompanionContextSnapshot? CompanionContext = null);
 
 /// <summary>
 /// A structured clarification bound to a planning intent and information slot. Attempts are
@@ -43,4 +44,15 @@ public sealed record ConversationRuntimeVersions(
     string PromptVersion,
     string ToolsetVersion,
     string MemoryProfileVersion,
-    int ProtocolVersion);
+    int ProtocolVersion,
+    int ModelContractSchemaVersion = 2,
+    string? SupportPolicyVersion = null);
+
+public sealed record CompanionContextSnapshot(
+    SupportPreferenceSnapshot? ExplicitPreference);
+
+public sealed record SupportPreferenceSnapshot(
+    Candidates.SupportRequestKind Kind,
+    Guid SourceMessageId,
+    string EvidenceQuote,
+    long EstablishedAtConversationVersion);

@@ -8,7 +8,18 @@ public sealed record VerifiedPlanningContext(
     IReadOnlyList<VerifiedPlanningItem> Items,
     IReadOnlyList<VerifiedConstraint> Constraints,
     UserTurnDisposition Disposition,
-    EvidenceSummary Evidence);
+    EvidenceSummary Evidence,
+    VerifiedActionRequest? ActionRequest = null,
+    VerifiedSupportRequest? SupportRequest = null);
+
+public sealed record VerifiedActionRequest(
+    ActionRequestKind Kind,
+    string? EvidenceQuote);
+
+public sealed record VerifiedSupportRequest(
+    SupportRequestKind Kind,
+    string? EvidenceQuote,
+    SupportPreferenceScope Scope = SupportPreferenceScope.Turn);
 
 public sealed record VerifiedPlanningItem(
     string Text,
@@ -61,6 +72,9 @@ public enum PlanningDecisionReason
     SafeDefaultsAllowed = 4,
     ClarificationCanHelp = 5,
     UserRejectedAction = 6,
+    EvidenceInvalid = 8,
+    CurrentRequestIsConversational = 9,
+    ExplicitActionRequestRequired = 7,
 }
 
 public enum AllowedAssumption
@@ -104,10 +118,30 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
                 [PlanningDecisionReason.UserRejectedAction]);
         }
 
-        var activeIntent = context.Snapshot.ActivePlanningIntent is
-            { Status: PlanningIntentStatus.Collecting or PlanningIntentStatus.ReadyForProposal } reusable
-            ? reusable
-            : null;
+        if (verified.Evidence.HasInvalidClaims)
+        {
+            return Decision(PlanningReadiness.Insufficient,
+                [AllowedPlanningAction.ContinueConversation], [PlanningDecisionReason.EvidenceInvalid]);
+        }
+
+        // A request for advice, a narration or a pause is not an instruction to schedule,
+        // even if it contains an activity or an old intent is ready.
+        if (verified.SupportRequest?.Kind == SupportRequestKind.WantsPause
+            || verified.ActionRequest?.Kind == ActionRequestKind.None
+                && verified.Disposition == UserTurnDisposition.NotApplicable
+            || verified.ActionRequest?.Kind is ActionRequestKind.AdviceRequest or ActionRequestKind.ActionMention
+            || verified.SupportRequest?.Kind is SupportRequestKind.WantsListening
+                or SupportRequestKind.WantsPerspective or SupportRequestKind.WantsAdvice
+                or SupportRequestKind.WantsPause or SupportRequestKind.RejectsAdvice
+                && verified.ActionRequest?.Kind is not (ActionRequestKind.DirectInstruction
+                    or ActionRequestKind.ExplicitPlanningRequest))
+        {
+            return Decision(PlanningReadiness.ReadyForSuggestion,
+                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
+                [PlanningDecisionReason.CurrentRequestIsConversational]);
+        }
+
+        var activeIntent = PlanningStateRules.ReusableIntent(context.Snapshot, verified);
         var clarificationAttempts = activeIntent?.AskedTopics?.Count ?? 0;
         var canAskClarification = clarificationAttempts < policy.MaxClarificationAttempts
                                   && context.Snapshot.OpenQuestion is null;
@@ -118,6 +152,15 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
 
         if (items.Count == 0)
         {
+            if (policy.ProposalTrigger == ProposalTriggerPolicy.CurrentTurnDirectInstruction
+                && verified.ActionRequest?.Kind != ActionRequestKind.DirectInstruction)
+            {
+                return Decision(
+                    PlanningReadiness.ReadyForSuggestion,
+                    [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
+                    [PlanningDecisionReason.ExplicitActionRequestRequired]);
+            }
+
             return canAskClarification
                 ? Decision(
                     PlanningReadiness.ReadyForClarification,
@@ -129,13 +172,23 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
                     [PlanningDecisionReason.NoVerifiedPlanningMaterial]);
         }
 
-        if (items.Contains(PlanningItemKind.Action))
+        if (items.Contains(PlanningItemKind.Action)
+            && ProposalTriggerSatisfied(policy.ProposalTrigger, verified))
         {
             return Decision(
                 PlanningReadiness.ReadyForProposal,
                 [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
                 [PlanningDecisionReason.VerifiedActionAvailable],
                 [AllowedAssumption.DefaultDuration, AllowedAssumption.NextAvailableSlot]);
+        }
+
+        if (items.Contains(PlanningItemKind.Action)
+            && policy.ProposalTrigger == ProposalTriggerPolicy.CurrentTurnDirectInstruction)
+        {
+            return Decision(
+                PlanningReadiness.ReadyForSuggestion,
+                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
+                [PlanningDecisionReason.ExplicitActionRequestRequired]);
         }
 
         if (verified.Disposition == UserTurnDisposition.DelegatedToCoach
@@ -181,6 +234,21 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
                 [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
                 [PlanningDecisionReason.ClarificationCanHelp]);
     }
+
+    private static bool ProposalTriggerSatisfied(
+        ProposalTriggerPolicy trigger,
+        VerifiedPlanningContext verified) => trigger switch
+    {
+        ProposalTriggerPolicy.ActionAvailable => true,
+        ProposalTriggerPolicy.ExplicitPlanningRequestOrDelegation =>
+            verified.ActionRequest?.Kind is ActionRequestKind.ExplicitPlanningRequest
+                or ActionRequestKind.DirectInstruction
+                or ActionRequestKind.ReferencedInstruction
+            || verified.Disposition == UserTurnDisposition.DelegatedToCoach,
+        ProposalTriggerPolicy.CurrentTurnDirectInstruction =>
+            verified.ActionRequest?.Kind == ActionRequestKind.DirectInstruction,
+        _ => false,
+    };
 
     private static PlanningDecision Decision(
         PlanningReadiness readiness,

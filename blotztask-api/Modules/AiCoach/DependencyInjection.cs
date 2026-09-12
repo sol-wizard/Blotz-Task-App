@@ -1,4 +1,5 @@
 using BlotzTask.Extension.Options;
+using BlotzTask.Modules.AiCoach.Ai.Contracts;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Ai.Prompts;
 using BlotzTask.Modules.AiCoach.Ai.Runtime;
@@ -12,6 +13,7 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Domain.Support;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 
@@ -36,9 +38,10 @@ public static class DependencyInjection
         services.AddSingleton<ModeDefinitionRegistry>(_ =>
         {
             var registry = new ModeDefinitionRegistry();
-            // v1 registers Execution only. Clarify/Companion definitions exist for policy-level
-            // tests but have no prompt profile yet, so they must not be reachable.
             registry.Register(ExecutionModeDefinition.Create());
+            // Product-approved deviation from v3 §17.4.9: Companion is reachable without the
+            // proposed Safety layer. Do not describe this registration as safety-complete.
+            registry.Register(CompanionModeDefinition.Create());
             return registry;
         });
 
@@ -46,6 +49,7 @@ public static class DependencyInjection
         {
             var registry = new PromptModuleRegistry();
             registry.Register(ExecutionPromptModules.Profile);
+            registry.Register(CompanionPromptModules.Profile);
             return registry;
         });
 
@@ -54,6 +58,7 @@ public static class DependencyInjection
         services.AddSingleton<IConversationPrePolicy, ConversationPrePolicy>();
         services.AddSingleton<IConversationPostPolicy, ConversationPostPolicy>();
         services.AddSingleton<IPlanningReadinessCalculator, PlanningReadinessCalculator>();
+        services.AddSingleton<ISupportPolicyCalculator, SupportPolicyCalculator>();
         services.AddSingleton<IDeterministicProposalGenerator, DeterministicProposalGenerator>();
         services.AddSingleton<IEvidenceGuard, EvidenceGuard>();
         services.AddSingleton<IResponseGuard, ResponseGuard>();
@@ -122,6 +127,10 @@ public sealed class AiCoachStartupValidator(
             if (!promptRegistry.IsRegistered(mode.PromptVersion))
                 throw new InvalidOperationException(
                     $"Mode '{mode.Mode}' references unregistered prompt profile '{mode.PromptVersion}'.");
+            if (mode.ModelContractSchemaVersion != ModelTurnCandidateContract.SchemaVersion)
+                throw new InvalidOperationException(
+                    $"Mode '{mode.Mode}' requires model contract schema {mode.ModelContractSchemaVersion}, "
+                    + $"but runtime schema {ModelTurnCandidateContract.SchemaVersion} is active.");
         }
 
         return Task.CompletedTask;

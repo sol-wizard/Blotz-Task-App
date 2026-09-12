@@ -18,7 +18,7 @@ namespace BlotzTask.Modules.AiCoach.Ai.Contracts;
 /// </summary>
 public static class ModelTurnCandidateContract
 {
-    public const int SchemaVersion = 2;
+    public const int SchemaVersion = 4;
 
     public const string ResponseFormatName = "model_turn_candidate";
 
@@ -39,7 +39,10 @@ public static class ModelTurnCandidateContract
             {
                 type = "object",
                 additionalProperties = false,
-                required = new[] { "intent", "planningItems", "constraints", "disposition" },
+                required = new[]
+                {
+                    "intent", "planningItems", "constraints", "disposition", "actionRequest", "supportRequest",
+                },
                 properties = new
                 {
                     intent = new
@@ -124,6 +127,37 @@ public static class ModelTurnCandidateContract
                         },
                         description = "The user's explicit disposition with an exact quote. Evidence is null only for not_applicable.",
                     },
+                    actionRequest = EvidenceKindSchema(
+                        new[]
+                        {
+                            "none", "action_mention", "advice_request", "explicit_planning_request",
+                            "direct_instruction", "referenced_instruction",
+                        },
+                        "How the CURRENT message relates to action. Only direct_instruction may authorize a Companion proposal."),
+                    supportRequest = new
+                    {
+                        type = "object", additionalProperties = false,
+                        required = new[] { "kind", "evidence", "scope" },
+                        properties = new
+                        {
+                            kind = new { type = "string", @enum = new[]
+                            {
+                                "unspecified", "wants_listening", "wants_exploration", "wants_perspective",
+                                "wants_advice", "rejects_advice", "wants_pause", "clears_preference",
+                            } },
+                            evidence = new
+                            {
+                                type = new[] { "object", "null" }, additionalProperties = false,
+                                required = new[] { "quote" },
+                                properties = new { quote = new { type = "string" } },
+                            },
+                            scope = new
+                            {
+                                type = "string", @enum = new[] { "turn", "conversation" },
+                                description = "Default turn. Use conversation ONLY for an explicit ongoing response preference; quote must include its duration/scope. A one-off question or pause is turn scoped.",
+                            },
+                        },
+                    },
                 },
             },
             suggestedAction = new
@@ -141,7 +175,7 @@ public static class ModelTurnCandidateContract
             {
                 type = "object",
                 additionalProperties = false,
-                required = new[] { "type", "text", "question", "questionTopic" },
+                required = new[] { "type", "text", "question", "questionTopic", "supportMove" },
                 properties = new
                 {
                     type = new
@@ -174,6 +208,16 @@ public static class ModelTurnCandidateContract
                         type = new[] { "string", "null" },
                         @enum = new[] { "concrete_step", "priority", "scope", "deadline", "other", null },
                         description = "The information slot this question asks about. Required for question responses; null otherwise.",
+                    },
+                    supportMove = new
+                    {
+                        type = new[] { "string", "null" },
+                        @enum = new[]
+                        {
+                            "acknowledge", "reflect", "gentle_question", "offer_perspective",
+                            "offer_advice", "respect_pause", null,
+                        },
+                        description = "Companion response move. Null outside Companion mode.",
                     },
                 },
             },
@@ -356,12 +400,79 @@ public static class ModelTurnCandidateContract
                 ? null
                 : new EvidenceReference(dto.Interpretation.Disposition.Evidence.Quote?.Trim() ?? string.Empty));
 
+        var actionRequest = new ActionRequestCandidate(
+            ParseActionRequest(dto.Interpretation.ActionRequest?.Kind),
+            ToEvidence(dto.Interpretation.ActionRequest?.Evidence));
+        var supportRequest = new SupportRequestCandidate(
+            ParseSupportRequest(dto.Interpretation.SupportRequest?.Kind),
+            ToEvidence(dto.Interpretation.SupportRequest?.Evidence),
+            dto.Interpretation.SupportRequest?.Scope == "conversation"
+                ? SupportPreferenceScope.Conversation : SupportPreferenceScope.Turn);
+
         return ParseResult.Success(new ModelTurnCandidate(
-            new InterpretationCandidate(intent, planningItems, constraints, dispositionCandidate),
+            new InterpretationCandidate(
+                intent, planningItems, constraints, dispositionCandidate, actionRequest, supportRequest),
             strategy.Value,
             response,
-            proposalSet));
+            proposalSet,
+            ParseSupportMove(dto.Response.SupportMove)));
     }
+
+    private static object EvidenceKindSchema(string[] kinds, string description) => new
+    {
+        type = "object",
+        additionalProperties = false,
+        required = new[] { "kind", "evidence" },
+        properties = new
+        {
+            kind = new { type = "string", @enum = kinds },
+            evidence = new
+            {
+                type = new[] { "object", "null" },
+                additionalProperties = false,
+                required = new[] { "quote" },
+                properties = new { quote = new { type = "string" } },
+            },
+        },
+        description,
+    };
+
+    private static EvidenceReference? ToEvidence(EvidenceJson? evidence) => evidence is null
+        ? null
+        : new EvidenceReference(evidence.Quote?.Trim() ?? string.Empty);
+
+    private static ActionRequestKind ParseActionRequest(string? value) => value switch
+    {
+        "action_mention" => ActionRequestKind.ActionMention,
+        "advice_request" => ActionRequestKind.AdviceRequest,
+        "explicit_planning_request" => ActionRequestKind.ExplicitPlanningRequest,
+        "direct_instruction" => ActionRequestKind.DirectInstruction,
+        "referenced_instruction" => ActionRequestKind.ReferencedInstruction,
+        _ => ActionRequestKind.None,
+    };
+
+    private static SupportRequestKind ParseSupportRequest(string? value) => value switch
+    {
+        "wants_listening" => SupportRequestKind.WantsListening,
+        "wants_exploration" => SupportRequestKind.WantsExploration,
+        "wants_perspective" => SupportRequestKind.WantsPerspective,
+        "wants_advice" => SupportRequestKind.WantsAdvice,
+        "rejects_advice" => SupportRequestKind.RejectsAdvice,
+        "wants_pause" => SupportRequestKind.WantsPause,
+        "clears_preference" => SupportRequestKind.ClearsPreference,
+        _ => SupportRequestKind.Unspecified,
+    };
+
+    private static SupportMove? ParseSupportMove(string? value) => value switch
+    {
+        "acknowledge" => SupportMove.Acknowledge,
+        "reflect" => SupportMove.Reflect,
+        "gentle_question" => SupportMove.GentleQuestion,
+        "offer_perspective" => SupportMove.OfferPerspective,
+        "offer_advice" => SupportMove.OfferAdvice,
+        "respect_pause" => SupportMove.RespectPause,
+        _ => null,
+    };
 
     private static (TaskProposalCandidate? Proposal, string? Error) ParseProposal(ProposalJson item, int index)
     {
@@ -428,6 +539,8 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("planningItems")] public List<PlanningItemJson>? PlanningItems { get; init; }
         [JsonPropertyName("constraints")] public List<ConstraintJson>? Constraints { get; init; }
         [JsonPropertyName("disposition")] public DispositionJson? Disposition { get; init; }
+        [JsonPropertyName("actionRequest")] public EvidenceKindJson? ActionRequest { get; init; }
+        [JsonPropertyName("supportRequest")] public EvidenceKindJson? SupportRequest { get; init; }
     }
 
     private sealed class PlanningItemJson
@@ -454,12 +567,20 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
     }
 
+    private sealed class EvidenceKindJson
+    {
+        [JsonPropertyName("scope")] public string? Scope { get; init; }
+        [JsonPropertyName("kind")] public string? Kind { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
+    }
+
     private sealed class ResponseJson
     {
         [JsonPropertyName("type")] public string? Type { get; init; }
         [JsonPropertyName("text")] public string? Text { get; init; }
         [JsonPropertyName("question")] public string? Question { get; init; }
         [JsonPropertyName("questionTopic")] public string? QuestionTopic { get; init; }
+        [JsonPropertyName("supportMove")] public string? SupportMove { get; init; }
     }
 
     private sealed class ProposalSetJson

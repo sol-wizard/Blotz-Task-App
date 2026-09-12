@@ -128,19 +128,42 @@ public sealed class GenerateModelTurnEffectHandler(
                 TotalTokens = result.TotalTokens,
             }, ct);
 
-            // Session cost visibility: one line per turn with the running conversation total,
-            // so watching the console while using the app shows what the session costs.
-            var usage = usageTracker.Add(
-                context.ConversationId, result.InputTokens, result.OutputTokens, modelCalls: 1);
-            var moduleOptions = options.Value;
-            var estimatedCostUsd = usage.EstimateUsd(
-                moduleOptions.InputTokenUsdPerMillion,
-                moduleOptions.OutputTokenUsdPerMillion);
-            logger.LogInformation(
-                "AiCoach.Usage.Recorded ConversationId={ConversationId} Turn={Turn} TurnTokens={TurnTokens} InputTokens={InputTokens} OutputTokens={OutputTokens} ConversationTotalTokens={ConversationTotalTokens} ConversationInputTokens={ConversationInputTokens} ConversationOutputTokens={ConversationOutputTokens} EstimatedCostUsd={EstimatedCostUsd}",
-                context.ConversationId, usage.Turns, result.TotalTokens, result.InputTokens, result.OutputTokens,
-                usage.TotalTokens, usage.InputTokens, usage.OutputTokens, estimatedCostUsd);
         }
+
+        // Canonical token-observability event: exactly one structured event per model turn.
+        // Aggregate TurnTotalTokens (never ConversationTotalTokens) to avoid double-counting
+        // sessions. This deliberately contains identifiers and metrics only, never user or
+        // model content.
+        var usage = usageTracker.Add(
+            context.ConversationId,
+            result.InputTokens,
+            result.OutputTokens,
+            result.TotalTokens,
+            result.ModelCallCount);
+        var moduleOptions = options.Value;
+        var estimatedCostUsd = usage.EstimateUsd(
+            moduleOptions.InputTokenUsdPerMillion,
+            moduleOptions.OutputTokenUsdPerMillion);
+        logger.LogInformation(
+            "AiCoach.TokenUsage ConversationId={ConversationId} EffectId={EffectId} Mode={Mode} Turn={Turn} InputTokens={InputTokens} OutputTokens={OutputTokens} TurnTotalTokens={TurnTotalTokens} ConversationInputTokens={ConversationInputTokens} ConversationOutputTokens={ConversationOutputTokens} ConversationTotalTokens={ConversationTotalTokens} ModelCallCount={ModelCallCount} SchemaCorrectionCount={SchemaCorrectionCount} RegenerationCount={RegenerationCount} ProposalRegenerationCount={ProposalRegenerationCount} PromptVersion={PromptVersion} DeploymentId={DeploymentId} CompletionReason={CompletionReason} EstimatedConversationCostUsd={EstimatedConversationCostUsd}",
+            context.ConversationId,
+            context.EffectId,
+            context.ModeDefinition.Mode,
+            usage.Turns,
+            result.InputTokens,
+            result.OutputTokens,
+            result.TotalTokens,
+            usage.InputTokens,
+            usage.OutputTokens,
+            usage.TotalTokens,
+            result.ModelCallCount,
+            result.SchemaCorrectionCount,
+            result.RegenerationCount,
+            result.ProposalRegenerationCount,
+            context.ModeDefinition.PromptVersion,
+            moduleOptions.DeploymentId,
+            result.CompletionReason,
+            estimatedCostUsd);
 
         logger.LogInformation(
             "AiCoach.ModelEffect.Completed ConversationId={ConversationId} EffectId={EffectId} CompletionReason={CompletionReason} HasOutcome={HasOutcome} InputTokens={InputTokens} OutputTokens={OutputTokens} TotalTokens={TotalTokens} ElapsedMs={ElapsedMs} Outcome={Outcome}",

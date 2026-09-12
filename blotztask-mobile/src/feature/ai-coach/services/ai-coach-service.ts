@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/services/api/client";
 import {
+  AvailableAiCoachMode,
   ConfirmDraftRequestDto,
   ConfirmDraftResultDto,
   ConversationSnapshotDto,
@@ -9,8 +10,13 @@ function deviceTimeZoneId(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
-export async function startConversation(): Promise<ConversationSnapshotDto> {
-  return apiClient.post("/ai-coach/conversations", { timeZoneId: deviceTimeZoneId() });
+export async function startConversation(
+  mode: AvailableAiCoachMode = "Execution",
+): Promise<ConversationSnapshotDto> {
+  return apiClient.post("/ai-coach/conversations", {
+    timeZoneId: deviceTimeZoneId(),
+    mode,
+  });
 }
 
 export async function fetchSnapshot(conversationId: string): Promise<ConversationSnapshotDto> {

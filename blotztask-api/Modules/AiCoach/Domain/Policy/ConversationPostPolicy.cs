@@ -2,6 +2,7 @@ using BlotzTask.Modules.AiCoach.Domain.Candidates;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
+using BlotzTask.Modules.AiCoach.Domain.Support;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Policy;
 
@@ -11,7 +12,8 @@ public sealed record PolicyContext(
     ModelTurnCandidate Candidate,
     AiCoachModeDefinition Mode,
     VerifiedPlanningContext VerifiedPlanning,
-    PlanningDecision Planning);
+    PlanningDecision Planning,
+    SupportDecision? Support = null);
 
 public interface IConversationPostPolicy
 {
@@ -30,6 +32,44 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
         var strategy = candidate.SuggestedAction;
         var envelope = context.Envelope;
 
+        if (context.VerifiedPlanning.SupportRequest?.Kind == SupportRequestKind.WantsPause)
+        {
+            return strategy == ConversationStrategy.ContinueListening
+                   && candidate.ResponseCandidate is ListeningResponse
+                   && (context.Support is null || candidate.SuggestedSupportMove is
+                       SupportMove.Acknowledge or SupportMove.RespectPause)
+                ? Accept(strategy, acceptProposal: false)
+                : Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.PauseRequested);
+        }
+
+        // Current withdrawal takes priority over malformed strategy/payload repair.
+        if (context.VerifiedPlanning.Disposition == UserTurnDisposition.RejectedAction)
+        {
+            return strategy == ConversationStrategy.ContinueListening
+                   && candidate.ResponseCandidate is ListeningResponse
+                ? Accept(strategy, acceptProposal: false)
+                : Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.UserRejectedAction);
+        }
+
+        if (strategy == ConversationStrategy.ShowProposalSet
+            && (context.VerifiedPlanning.Evidence.HasInvalidClaims
+                || !context.Planning.Allows(AllowedPlanningAction.GenerateProposal)))
+        {
+            return Downgrade(ConversationStrategy.ContinueListening,
+                context.VerifiedPlanning.Evidence.HasInvalidClaims
+                    ? StrategyReasonCode.EvidenceInvalid : StrategyReasonCode.ExplicitActionIntentRequired);
+        }
+
+        if (context.Support is not null && !SupportMoveAllowed(candidate, strategy, context.Support))
+        {
+            var reason = candidate.SuggestedSupportMove == SupportMove.OfferAdvice
+                ? StrategyReasonCode.AdviceNotRequested
+                : strategy == ConversationStrategy.AskGentleQuestion
+                    ? StrategyReasonCode.QuestionCadenceExhausted
+                    : StrategyReasonCode.SupportMoveNotAllowed;
+            return Downgrade(ConversationStrategy.ContinueListening, reason);
+        }
+
         if (!envelope.AllowedStrategies.Contains(strategy))
         {
             if (strategy.AsksQuestion()
@@ -44,12 +84,6 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                 ? Downgrade(ConversationStrategy.DiscussExistingProposal,
                     StrategyReasonCode.PendingProposalSetAlreadyExists)
                 : Downgrade(SafeFallbackStrategy(envelope), StrategyReasonCode.StrategyNotInEnvelope);
-        }
-
-        if (strategy == ConversationStrategy.ShowProposalSet
-            && context.VerifiedPlanning.Evidence.HasInvalidClaims)
-        {
-            return RegenerateProposal(context, StrategyReasonCode.EvidenceInvalid);
         }
 
         if (!ResponseMatches(strategy, candidate.ResponseCandidate))
@@ -76,14 +110,7 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                 FallbackFor(context, strategy));
         }
 
-        if (context.VerifiedPlanning.Disposition == UserTurnDisposition.RejectedAction)
-        {
-            return strategy == ConversationStrategy.ShowProposalSet
-                ? Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.UserRejectedAction)
-                : Accept(strategy, acceptProposal: false);
-        }
-
-        if (strategy.AsksQuestion()
+        if (IsPlanningQuestion(strategy)
             && !context.Planning.Allows(AllowedPlanningAction.AskClarification))
         {
             return context.Planning.Allows(AllowedPlanningAction.GenerateProposal)
@@ -178,7 +205,7 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
             ? new PolicyFallbackPlan(
                 PolicyFallbackAction.DeterministicProposal,
                 QuestionFallback(context))
-            : new PolicyFallbackPlan(PolicyFallbackAction.SafeResponse, strategy);
+            : new PolicyFallbackPlan(PolicyFallbackAction.SafeResponse, ConversationStrategy.ContinueListening);
 
     private static ConversationStrategy QuestionFallback(PolicyContext context) =>
         context.Planning.Allows(AllowedPlanningAction.AskClarification)
@@ -187,12 +214,7 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
             : ConversationStrategy.ContinueListening;
 
     private static ConversationStrategy SafeFallbackStrategy(StrategyEnvelope envelope) =>
-        envelope.AllowedStrategies.Contains(ConversationStrategy.DiscussExistingProposal)
-        && !envelope.AllowedStrategies.Contains(ConversationStrategy.AskClarifyingQuestion)
-            ? ConversationStrategy.DiscussExistingProposal
-            : envelope.AllowedStrategies.Contains(ConversationStrategy.AskClarifyingQuestion)
-                ? ConversationStrategy.AskClarifyingQuestion
-                : ConversationStrategy.ContinueListening;
+        ConversationStrategy.ContinueListening;
 
     private static bool ResponseMatches(ConversationStrategy strategy, AssistantResponseCandidate response) =>
         strategy switch
@@ -213,4 +235,25 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
         GoalChoiceResponse value => value.Question,
         _ => null,
     };
+
+    private static bool SupportMoveAllowed(
+        ModelTurnCandidate candidate,
+        ConversationStrategy strategy,
+        SupportDecision support)
+    {
+        if (strategy is ConversationStrategy.ShowProposalSet
+            or ConversationStrategy.DiscussExistingProposal)
+        {
+            return true;
+        }
+
+        var move = strategy.AsksQuestion()
+            ? SupportMove.GentleQuestion
+            : candidate.SuggestedSupportMove;
+        return move is not null && support.Allows(move.Value);
+    }
+
+    private static bool IsPlanningQuestion(ConversationStrategy strategy) =>
+        strategy is ConversationStrategy.AskClarifyingQuestion
+            or ConversationStrategy.AskUserToChooseGoal;
 }

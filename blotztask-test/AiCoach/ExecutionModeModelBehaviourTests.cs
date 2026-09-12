@@ -10,6 +10,7 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Domain.Support;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -143,6 +144,7 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
             new ConversationPostPolicy(),
             new EvidenceGuard(),
             new PlanningReadinessCalculator(),
+            new SupportPolicyCalculator(),
             new DeterministicProposalGenerator(),
             new ResponseGuard(),
             new ProposalSetGuard(),

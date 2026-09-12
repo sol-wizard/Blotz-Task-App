@@ -26,6 +26,7 @@ public enum ProposalGenerationWarning
     MovedToNextWorkingDay = 1,
     ProposalLimitApplied = 2,
     PlanningNotReady = 3,
+    UnresolvedConstraints = 4,
 }
 
 public interface IDeterministicProposalGenerator
@@ -50,6 +51,18 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
                 [ProposalGenerationWarning.PlanningNotReady]);
         }
 
+        // Free-text constraints cannot be safely resolved by this deterministic generator.
+        // Decline fallback instead of silently replacing an explicit time with working hours.
+        var reusable = PlanningStateRules.ReusableIntent(context.Snapshot, context.VerifiedPlanning);
+        if (context.VerifiedPlanning.Evidence.HasInvalidClaims
+            || context.VerifiedPlanning.Constraints.Count > 0
+            || reusable?.Constraints.Count > 0)
+        {
+            return new ProposalGenerationResult(null,
+                "The explicit constraints require a revised proposal.", [],
+                [ProposalGenerationWarning.UnresolvedConstraints]);
+        }
+
         var warnings = new List<ProposalGenerationWarning>();
         var sourceItems = CurrentItems(context);
         if (sourceItems.Count == 0)
@@ -62,7 +75,9 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
         }
 
         if (sourceItems.Count > context.MaxProposals)
-            warnings.Add(ProposalGenerationWarning.ProposalLimitApplied);
+            return new ProposalGenerationResult(null,
+                "The requested items exceed the card limit; none were silently dropped.", [],
+                [ProposalGenerationWarning.ProposalLimitApplied]);
 
         var policy = context.Policy;
         var start = RoundUp(
@@ -124,10 +139,7 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
     {
         var verified = context.VerifiedPlanning.Items
             .Select(item => new PlanningItemSource(item.Text, item.Kind));
-        var activeIntent = context.Snapshot.ActivePlanningIntent is
-            { Status: PlanningIntentStatus.Collecting or PlanningIntentStatus.ReadyForProposal } reusable
-            ? reusable
-            : null;
+        var activeIntent = PlanningStateRules.ReusableIntent(context.Snapshot, context.VerifiedPlanning);
         var persisted = (activeIntent?.Items ?? [])
             .Select(item => new PlanningItemSource(item.Text, item.Kind));
 

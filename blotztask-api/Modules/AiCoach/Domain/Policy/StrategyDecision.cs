@@ -54,4 +54,8 @@ public enum StrategyReasonCode
     UserRejectedAction = 9,
     ClarificationSlotAlreadyAsked = 10,
     ActionableIntentRequiresProposal = 11,
+    SupportMoveNotAllowed = 12,
+    AdviceNotRequested = 13,
+    QuestionCadenceExhausted = 14,
+    PauseRequested = 15,
 }

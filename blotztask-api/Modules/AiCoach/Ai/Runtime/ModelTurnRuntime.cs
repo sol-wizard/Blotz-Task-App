@@ -7,6 +7,7 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Domain.Support;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -38,7 +39,11 @@ public sealed record ModelTurnRunResult(
     ValidatedTurnOutcome? Outcome,
     int InputTokens,
     int OutputTokens,
-    int TotalTokens);
+    int TotalTokens,
+    int ModelCallCount = 0,
+    int SchemaCorrectionCount = 0,
+    int RegenerationCount = 0,
+    int ProposalRegenerationCount = 0);
 
 public interface IModelTurnRuntime
 {
@@ -63,6 +68,7 @@ public sealed class ModelTurnRuntime(
     IConversationPostPolicy postPolicy,
     IEvidenceGuard evidenceGuard,
     IPlanningReadinessCalculator planningReadinessCalculator,
+    ISupportPolicyCalculator supportPolicyCalculator,
     IDeterministicProposalGenerator proposalGenerator,
     IResponseGuard responseGuard,
     IProposalSetGuard proposalSetGuard,
@@ -78,6 +84,8 @@ public sealed class ModelTurnRuntime(
         var currentUser = request.RecentMessages
             .LastOrDefault(m => m.Role == ConversationMessageRole.User);
         var currentUserMessage = currentUser?.Content ?? string.Empty;
+        var previousAssistantStrategy = request.RecentMessages
+            .LastOrDefault(m => m.Role == ConversationMessageRole.Assistant)?.Strategy;
 
         logger.LogInformation(
             "AiCoach.ModelTurn.Started ConversationId={ConversationId} EffectId={EffectId} ConversationVersion={ConversationVersion} Mode={Mode} Phase={Phase} RuleVersion={RuleVersion} PolicyVersion={PolicyVersion} PromptVersion={PromptVersion} ProtocolVersion={ProtocolVersion} MaxIterations={MaxIterations} UserMessage={UserMessage}",
@@ -99,6 +107,7 @@ public sealed class ModelTurnRuntime(
         // Corrections/regenerations extend this transcript so the model sees what it got wrong.
         var transcript = new List<GatewayMessage>(context.Transcript);
 
+        (VerifiedPlanningContext Planning, PlanningDecision Decision, SupportDecision? Support)? repairContext = null;
         var iterations = 0;
         var schemaCorrections = 0;
         var regenerations = 0;
@@ -220,7 +229,9 @@ public sealed class ModelTurnRuntime(
                 SerializeForLog(candidate.Interpretation.Disposition),
                 SerializeForLog(verifiedPlanning.Items),
                 SerializeForLog(verifiedPlanning.Constraints));
-            var planningDecision = planningReadinessCalculator.Calculate(new PlanningReadinessContext(
+            // Payload repairs may not reinterpret the user's request or expand authority.
+            verifiedPlanning = repairContext?.Planning ?? verifiedPlanning;
+            var planningDecision = repairContext?.Decision ?? planningReadinessCalculator.Calculate(new PlanningReadinessContext(
                 snapshot,
                 verifiedPlanning,
                 request.Mode.Policy.Planning));
@@ -236,13 +247,38 @@ public sealed class ModelTurnRuntime(
                 snapshot.ActivePlanningIntent?.Items.Count ?? 0,
                 snapshot.OpenQuestion is not null);
 
+            var supportDecision = repairContext?.Support ?? (request.Mode.SupportPolicy is null
+                ? null
+                : supportPolicyCalculator.Calculate(new SupportPolicyContext(
+                    snapshot,
+                    verifiedPlanning.SupportRequest,
+                    previousAssistantStrategy,
+                    currentUser?.Id,
+                    request.Mode.SupportPolicy)));
+            if (supportDecision is not null)
+            {
+                logger.LogInformation(
+                    "AiCoach.SupportDecision.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} CurrentRequest={CurrentRequest} StoredPreference={StoredPreference} PreviousAssistantStrategy={PreviousAssistantStrategy} AllowedMoves={AllowedMoves} ReasonCodes={ReasonCodes} HasPreferenceUpdate={HasPreferenceUpdate} ClearPreference={ClearPreference}",
+                    snapshot.ConversationId,
+                    request.EffectId,
+                    iterations,
+                    verifiedPlanning.SupportRequest?.Kind,
+                    snapshot.CompanionContext?.ExplicitPreference?.Kind,
+                    previousAssistantStrategy,
+                    string.Join(",", supportDecision.AllowedMoves),
+                    string.Join(",", supportDecision.Reasons),
+                    supportDecision.PreferenceUpdate is not null,
+                    supportDecision.ClearPreference);
+            }
+
             var decision = postPolicy.Decide(new PolicyContext(
                 snapshot,
                 envelope,
                 candidate,
                 request.Mode,
                 verifiedPlanning,
-                planningDecision));
+                planningDecision,
+                supportDecision));
             logger.LogInformation(
                 "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction} AssistantReply={AssistantReply} ProposalCandidate={ProposalCandidate}",
                 snapshot.ConversationId,
@@ -263,7 +299,7 @@ public sealed class ModelTurnRuntime(
             {
                 regenerations++;
                 if (decision.Regeneration is not null
-                    && regenerations <= limits.MaxRegenerationAttempts
+                    && regenerations + proposalRegenerations <= limits.MaxRegenerationAttempts
                     && iterations < limits.MaxModelIterations)
                 {
                     logger.LogWarning(
@@ -275,6 +311,8 @@ public sealed class ModelTurnRuntime(
                         decision.ReasonCode,
                         decision.Regeneration.RequiredStrategy,
                         decision.Regeneration.RequiredFields.Count);
+                    if (!verifiedPlanning.Evidence.HasInvalidClaims)
+                        repairContext = (verifiedPlanning, planningDecision, supportDecision);
                     AppendCorrection(
                         transcript,
                         completion.AssistantText,
@@ -288,6 +326,8 @@ public sealed class ModelTurnRuntime(
                         snapshot,
                         verifiedPlanning,
                         planningDecision,
+                        supportDecision,
+                        request.Mode.Mode,
                         currentUser?.Id,
                         verifiedPlanning.Disposition,
                         currentUserMessage,
@@ -322,6 +362,8 @@ public sealed class ModelTurnRuntime(
                         snapshot,
                         verifiedPlanning,
                         planningDecision,
+                        supportDecision,
+                        request.Mode.Mode,
                         currentUser?.Id,
                         verifiedPlanning.Disposition,
                         currentUserMessage,
@@ -366,10 +408,12 @@ public sealed class ModelTurnRuntime(
                 }
                 else
                 {
-                    if (proposalRegenerations < limits.MaxRegenerationAttempts
+                    if (regenerations + proposalRegenerations < limits.MaxRegenerationAttempts
                         && iterations < limits.MaxModelIterations)
                     {
                         proposalRegenerations++;
+                        if (!verifiedPlanning.Evidence.HasInvalidClaims)
+                            repairContext = (verifiedPlanning, planningDecision, supportDecision);
                         AppendCorrection(
                             transcript,
                             completion.AssistantText,
@@ -442,12 +486,15 @@ public sealed class ModelTurnRuntime(
                 : QuestionOf(candidate.ResponseCandidate);
             var questionTopic = QuestionTopicOf(candidate.ResponseCandidate);
             var clarificationResolution = ToResolution(verifiedPlanning.Disposition);
-            var planningIntentUpdate = BuildPlanningIntentUpdate(
+            var planningIntentUpdate = PlanningStateRules.BuildPlanningIntentUpdate(
                 snapshot,
                 verifiedPlanning,
                 planningDecision,
                 currentUser?.Id,
-                acceptedProposals is not null);
+                acceptedProposals is not null,
+                request.Mode.Mode,
+                planningQuestion: finalStrategy is ConversationStrategy.AskClarifyingQuestion
+                    or ConversationStrategy.AskUserToChooseGoal);
 
             return Complete(new ValidatedTurnOutcome(
                 finalStrategy,
@@ -459,7 +506,9 @@ public sealed class ModelTurnRuntime(
                 fallbackUsed,
                 planningIntentUpdate,
                 questionTopic,
-                clarificationResolution));
+                clarificationResolution,
+                supportDecision?.PreferenceUpdate,
+                supportDecision?.ClearPreference ?? false));
         }
 
         return Fail(ModelTurnCompletionReason.IterationLimitExceeded);
@@ -477,7 +526,16 @@ public sealed class ModelTurnRuntime(
                 proposalRegenerations,
                 Stopwatch.GetElapsedTime(turnStarted).TotalMilliseconds,
                 totalTokens);
-            return new ModelTurnRunResult(reason, null, inputTokens, outputTokens, totalTokens);
+            return new ModelTurnRunResult(
+                reason,
+                null,
+                inputTokens,
+                outputTokens,
+                totalTokens,
+                iterations,
+                schemaCorrections,
+                regenerations,
+                proposalRegenerations);
         }
 
         ModelTurnRunResult Complete(ValidatedTurnOutcome outcome)
@@ -503,63 +561,22 @@ public sealed class ModelTurnRuntime(
                 SerializeForLog(outcome.AcceptedProposals),
                 SerializeForLog(outcome.PlanningIntentUpdate));
             return new ModelTurnRunResult(
-                ModelTurnCompletionReason.Completed, outcome, inputTokens, outputTokens, totalTokens);
+                ModelTurnCompletionReason.Completed,
+                outcome,
+                inputTokens,
+                outputTokens,
+                totalTokens,
+                iterations,
+                schemaCorrections,
+                regenerations,
+                proposalRegenerations);
         }
     }
 
     private static void AppendCorrection(List<GatewayMessage> transcript, string? rawOutput, string note)
     {
         transcript.Add(new GatewayAssistantMessage(rawOutput ?? string.Empty, []));
-        transcript.Add(new GatewayUserMessage(note));
-    }
-
-    private static ActivePlanningIntentSnapshot? BuildPlanningIntentUpdate(
-        ConversationSnapshot snapshot,
-        VerifiedPlanningContext verifiedPlanning,
-        PlanningDecision planningDecision,
-        Guid? currentMessageId,
-        bool proposalAccepted)
-    {
-        if (currentMessageId is null)
-            return null;
-
-        var current = snapshot.ActivePlanningIntent is
-            { Status: PlanningIntentStatus.Collecting or PlanningIntentStatus.ReadyForProposal } reusable
-            ? reusable
-            : null;
-        if (current is null && verifiedPlanning.Items.Count == 0)
-            return null;
-
-        var intentId = current?.IntentId ?? Guid.NewGuid();
-        var sourceItems = verifiedPlanning.Items;
-        var items = (current?.Items ?? [])
-            .Concat(sourceItems.Select(item => new PlanningItemSnapshot(
-                item.Text,
-                item.EvidenceQuote,
-                currentMessageId.Value,
-                item.Kind)))
-            .GroupBy(item => item.Text, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.Last())
-            .ToList();
-        var constraints = (current?.Constraints ?? [])
-            .Concat(verifiedPlanning.Constraints.Select(constraint => new PlanningConstraintSnapshot(
-                constraint.Text,
-                constraint.EvidenceQuote,
-                currentMessageId.Value)))
-            .GroupBy(constraint => constraint.Text, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.Last())
-            .ToList();
-
-        return new ActivePlanningIntentSnapshot(
-            intentId,
-            current?.SourceMessageId ?? currentMessageId.Value,
-            items,
-            constraints,
-            PlanningStateRules.NextIntentStatus(
-                current?.Status ?? PlanningIntentStatus.Collecting,
-                planningDecision,
-                proposalAccepted),
-            current?.AskedTopics);
+        transcript.Add(new GatewaySystemMessage(note));
     }
 
     private static ClarificationResolution? ToResolution(UserTurnDisposition disposition) => disposition switch
@@ -577,6 +594,8 @@ public sealed class ModelTurnRuntime(
         ConversationSnapshot snapshot,
         VerifiedPlanningContext verifiedPlanning,
         PlanningDecision planningDecision,
+        SupportDecision? supportDecision,
+        AiCoachMode mode,
         Guid? currentMessageId,
         UserTurnDisposition disposition,
         string currentUserMessage,
@@ -648,9 +667,12 @@ public sealed class ModelTurnRuntime(
                 Question: null,
                 AcceptedProposals: generatedVerdict.Proposals,
                 FallbackUsed: true,
-                PlanningIntentUpdate: BuildPlanningIntentUpdate(
-                    snapshot, verifiedPlanning, planningDecision, currentMessageId, proposalAccepted: true),
-                ClarificationResolution: resolution);
+                PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
+                    snapshot, verifiedPlanning, planningDecision, currentMessageId,
+                    proposalAccepted: true, mode: mode),
+                ClarificationResolution: resolution,
+                SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
+                ClearSupportPreference: supportDecision?.ClearPreference ?? false);
         }
 
         strategy = fallback.FailureStrategy;
@@ -663,9 +685,14 @@ public sealed class ModelTurnRuntime(
             Question: strategy.AsksQuestion() ? text : null,
             AcceptedProposals: null,
             FallbackUsed: true,
-            PlanningIntentUpdate: BuildPlanningIntentUpdate(
-                snapshot, verifiedPlanning, planningDecision, currentMessageId, proposalAccepted: false),
-            ClarificationResolution: resolution);
+            PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
+                snapshot, verifiedPlanning, planningDecision, currentMessageId,
+                proposalAccepted: false, mode: mode,
+                planningQuestion: strategy is ConversationStrategy.AskClarifyingQuestion
+                    or ConversationStrategy.AskUserToChooseGoal),
+            ClarificationResolution: resolution,
+            SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
+            ClearSupportPreference: supportDecision?.ClearPreference ?? false);
     }
 
     private static string BuildRegenerationInstruction(RegenerationDirective directive)

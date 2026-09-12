@@ -118,6 +118,68 @@ public class GuardTests
         verdict.Evidence.Issues.Should().Contain(EvidenceIssue.ClaimNotSupportedByQuote);
     }
 
+    [Theory]
+    [InlineData(SupportRequestKind.WantsListening, "你听我说就好")]
+    [InlineData(SupportRequestKind.WantsExploration, "陪我想想为什么")]
+    [InlineData(SupportRequestKind.WantsPerspective, "你怎么看这件事")]
+    [InlineData(SupportRequestKind.WantsAdvice, "你觉得我该怎么办")]
+    [InlineData(SupportRequestKind.RejectsAdvice, "我现在不需要建议")]
+    [InlineData(SupportRequestKind.WantsPause, "先别问了")]
+    [InlineData(SupportRequestKind.ClearsPreference, "现在可以问我了")]
+    [InlineData(SupportRequestKind.WantsListening, "Please just listen to me")]
+    [InlineData(SupportRequestKind.WantsExploration, "Help me explore why this keeps happening")]
+    [InlineData(SupportRequestKind.WantsPerspective, "What do you think about this?")]
+    [InlineData(SupportRequestKind.WantsAdvice, "What should I do?")]
+    [InlineData(SupportRequestKind.RejectsAdvice, "I'm not looking for advice")]
+    [InlineData(SupportRequestKind.WantsPause, "Please stop asking questions")]
+    [InlineData(SupportRequestKind.ClearsPreference, "You can ask me questions now")]
+    public void Evidence_ExplicitSupportRequest_IsVerified(
+        SupportRequestKind kind,
+        string message)
+    {
+        // Arrange
+        var interpretation = new InterpretationCandidate(
+            IntentType.Emotional,
+            SupportRequest: new SupportRequestCandidate(kind, new EvidenceReference(message)));
+
+        // Act
+        var verdict = new EvidenceGuard().Verify(interpretation, message);
+
+        // Assert
+        verdict.SupportRequest.Should().Be(
+            new VerifiedSupportRequest(kind, message),
+            because: "an explicit response-style request must remain available to Support Policy");
+    }
+
+    [Theory]
+    [InlineData(SupportRequestKind.WantsListening, "我最难受的是觉得自己总是这样")]
+    [InlineData(SupportRequestKind.WantsListening, "你陪我聊一会儿就好")]
+    [InlineData(SupportRequestKind.WantsAdvice, "我现在不需要建议")]
+    [InlineData(SupportRequestKind.WantsExploration, "先别问了")]
+    [InlineData(SupportRequestKind.WantsAdvice, "I don't want advice")]
+    [InlineData(SupportRequestKind.WantsExploration, "Please don't ask me questions")]
+    public void Evidence_ConflictingOrImplicitSupportClaim_IsRejected(
+        SupportRequestKind claimedKind,
+        string message)
+    {
+        // Arrange
+        var interpretation = new InterpretationCandidate(
+            IntentType.Emotional,
+            SupportRequest: new SupportRequestCandidate(
+                claimedKind,
+                new EvidenceReference(message)));
+
+        // Act
+        var verdict = new EvidenceGuard().Verify(interpretation, message);
+
+        // Assert
+        verdict.SupportRequest.Should().BeNull(
+            because: "a quote must semantically support the claimed response preference");
+        verdict.Evidence.Issues.Should().Contain(
+            EvidenceIssue.ClaimNotSupportedByQuote,
+            because: "the rejected model claim must remain observable");
+    }
+
     private static InterpretationCandidate Interpretation(string text, string quote) => new(
         IntentType.ConcreteAction,
         [new PlanningItemCandidate(text, new EvidenceReference(quote), PlanningItemKind.Action)]);

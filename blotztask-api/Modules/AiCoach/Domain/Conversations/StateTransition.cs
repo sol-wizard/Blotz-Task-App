@@ -1,4 +1,5 @@
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Domain.Policy;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
 
@@ -98,7 +99,9 @@ public abstract record DomainMutation;
 
 public sealed record AppendUserMessageMutation(Guid MessageId, string Content) : DomainMutation;
 
-public sealed record AppendAssistantMessageMutation(string Content) : DomainMutation;
+public sealed record AppendAssistantMessageMutation(
+    string Content,
+    ConversationStrategy Strategy) : DomainMutation;
 
 public sealed record CreateProposalSetMutation(IReadOnlyList<TaskProposal> Proposals) : DomainMutation;
 
@@ -131,6 +134,10 @@ public sealed record UpdatePlanningIntentStatusMutation(
 public sealed record ResolveOpenQuestionMutation(ClarificationResolution Resolution) : DomainMutation;
 
 public sealed record ClearOpenQuestionMutation : DomainMutation;
+
+public sealed record SetSupportPreferenceMutation(SupportPreferenceSnapshot Preference) : DomainMutation;
+
+public sealed record ClearSupportPreferenceMutation : DomainMutation;
 
 // ---------- Domain events (v1 has no outbox — used for structured logging only) ----------
 
