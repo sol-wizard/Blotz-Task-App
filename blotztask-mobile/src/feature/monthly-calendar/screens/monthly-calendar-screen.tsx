@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
@@ -21,6 +23,10 @@ const SNAP_L3 = "80%";
 const SNAP_POINTS = [SNAP_L1, SNAP_L2, SNAP_L3];
 
 export default function MonthlyCalendarScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.MONTHLY_CALENDAR);
+  }, []);
+
   // Hooks
   const { selectedDate } = useLocalSearchParams<{ selectedDate: string }>();
   const [selectedDay, setSelectedDay] = useState(new Date(selectedDate || new Date()));

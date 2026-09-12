@@ -45,6 +45,9 @@ import {
   TaskDetailRouteMode,
 } from "@/feature/task-details/util/task-detail-route-mode";
 import { BreakdownTaskTarget } from "@/feature/task-details/services/subtask-service";
+import { useEffect } from "react";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 function selectTaskByRouteMode({
   mode,
@@ -62,6 +65,10 @@ function selectTaskByRouteMode({
 
 // TODO: This part may need optimization in the future.
 export default function TaskDetailsScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.TASK_DETAILS);
+  }, []);
+
   const router = useRouter();
   const [isExportingToCalendar, setIsExportingToCalendar] = React.useState(false);
   const params = useLocalSearchParams<{
