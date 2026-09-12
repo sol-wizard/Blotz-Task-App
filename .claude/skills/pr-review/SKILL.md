@@ -19,14 +19,22 @@ argument-hint: "[PR number, PR URL, or branch; optional, defaults to current bra
 
 4. Perform senior-level review: correctness, type safety, edge cases, code readability, and how well the solution fits Blotz. Verify claims in the PR description against the actual diff. Ask questions if you get confused. State all assumptions made and shortcuts taken.
 
-5. For Blotz-specific review, pay extra attention when the PR touches: auth/user scoping, mobile-backend DTO contract changes, date/timezone handling, recurring tasks, AI generation, AI quota usage, review reports, notifications, EF/database changes, and release-note checklist correctness.
+5. For Blotz-specific review, pay extra attention when the PR touches: auth/user scoping, mobile-backend DTO contract changes, date/timezone handling, recurring tasks, AI generation, AI quota usage, review reports, notifications, and EF/database changes.
 
 6. Do not care about generic test coverage numbers. Only suggest tests when the changed logic is important or risky, the test would be simple and maintainable, and it protects real Blotz behavior such as recurring tasks, local-day boundaries, user isolation, AI quota, or review period logic.
 
 7. List issues by severity: critical/major/minor. Only raise comments that have real value. Do not invent or pad with low-signal nitpicks. If you don't find meaningful issues, say so plainly instead of manufacturing feedback. Explain issues shortly and concisely with a suggested fix or validation step.
 
-8. If you include a nitpick, style preference, or speculative risk, explicitly label it and tell the user they can ignore it. For example: `nit:` or `speculative — feel free to ignore:`. Keep these separate from real issues so they don't dilute the review.
+8. Do not raise theoretical risks. A race condition, a scaling concern, or a "what if two requests arrive at once" needs a realistic path to happening in this app, and a consequence worse than something that corrects itself. If it self-heals, needs contrived conditions, or the fix costs more than the problem, cut it — do not label it and post it anyway. Labelling is only for a genuine but minor point, such as `nit:` on a readability preference.
 
-9. When posting comments to GitHub, include one PR-level summary comment that says this is an AI-generated PR review. The author should treat the findings as suggestions, use their own judgment, and verify the comments before making changes. Do not repeat this disclaimer in every inline comment.
+9. Write for a junior developer. Short sentences, plain words, no unexplained jargon. Say "you read the list, change it, then save" rather than "read-modify-write". Aim for one to three sentences per comment. If it needs a second paragraph, it is probably two comments or one that should be cut.
 
-10. Keep GitHub comments concise. This is one of the most important rules. Explain enough context so the author understands the issue and why it matters, but avoid long paragraphs. Each comment should be short, actionable, and focused on the specific risk or improvement.
+10. Stay inside what the PR actually changes. A backend PR gets backend comments. Do not write guidance about the author's future frontend or mobile work, even when the same feature spans both and you can see what is coming — that belongs on that PR, and here it just makes the review long and off-topic. Comment on a downstream consumer only when the diff breaks it today.
+
+11. Post inline comments only. No PR-level summary comment, no recap of the review, no AI-generated disclaimer. Every finding attaches to the line it is about. If a finding has no line to attach to, work out which line it most affects and put it there.
+
+12. Everything goes on the PR. Product and UX judgement calls, and questions about why an approach was chosen, are things the author can answer, so raise them as inline comments like any other finding. Do not route findings to a separate notes file.
+
+13. Never comment on the release-note checklist, even when the wrong box is clearly ticked. It is a process detail rather than a code problem, and Ben does not want it raised on the PR.
+
+14. Keep GitHub comments concise. This is one of the most important rules. Explain enough context so the author understands the issue and why it matters, but avoid long paragraphs. Each comment should be short, actionable, and focused on the specific risk or improvement.
