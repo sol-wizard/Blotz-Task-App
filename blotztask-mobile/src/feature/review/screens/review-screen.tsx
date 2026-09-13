@@ -1,4 +1,6 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -19,6 +21,10 @@ import { useReviewShare } from "../hooks/useReviewShare";
 import { ReviewPeriodType } from "../models/review-dto";
 
 export default function ReviewScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_REVIEW);
+  }, []);
+
   // — Hooks ——————————————————————————————————————————————————————
   const router = useRouter();
   const { t } = useTranslation("settings");
