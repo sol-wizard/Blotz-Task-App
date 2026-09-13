@@ -846,6 +846,300 @@ class NoteNormalizationTests(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
 
 
+class LoginFunnelNormalizationTests(unittest.TestCase):
+    HAPPY_USERS = [[210, 168, 113, 91, 55]]
+    HAPPY_ATTEMPTS = [[429, 189, 192, 150, 42]]
+    # succeeded_after_failure, error, exit_only, no_outcome: 2 + 38 + 15 == 168 - 113
+    HAPPY_OUTCOMES = [[51, 2, 38, 15]]
+    # Deliberately unsorted, with two error codes sharing `auth0_error`, so the
+    # normalizer's sort and per-reason aggregation are both exercised.
+    HAPPY_FAILURES = [
+        ["NoTokensReturned", "no_tokens", 12],
+        ["NETWORK_ERROR", "auth0_error", 18],
+        ["USER_CANCELLED", "cancelled", 120],
+        ["ACCESS_DENIED", "auth0_error", 12],
+        ["BROWSER_TERMINATED", "browser_dismissed", 30],
+    ]
+    FAILED_QUERY = {"_collection_status": "failed", "reason": "fixture failure"}
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.collect_posthog = load_script("collect_posthog_login", "collect-posthog.py")
+        cls.normalize_posthog = load_script("normalize_posthog_login", "normalize-posthog.py")
+        cls.build_summary = load_script("build_summary_login", "build-summary.py")
+
+    @staticmethod
+    def ok(results: list[list[object]]) -> dict[str, object]:
+        return {"_collection_status": "ok", "results": results}
+
+    def normalize_login_funnel(
+        self,
+        users: dict[str, object],
+        attempts: dict[str, object],
+        failures: dict[str, object],
+        outcomes: dict[str, object] | None = None,
+    ) -> tuple[dict[str, object], list[str]]:
+        raw_queries = {
+            "login_funnel_users": users,
+            "login_attempts_summary": attempts,
+            "login_failures_by_error_code": failures,
+            "login_outcomes_by_user": outcomes if outcomes is not None else self.ok(self.HAPPY_OUTCOMES),
+        }
+        warnings: list[str] = []
+        with tempfile.TemporaryDirectory(prefix="blotz-login-funnel-test-") as temporary_dir:
+            with mock.patch.object(
+                self.normalize_posthog,
+                "raw_query",
+                side_effect=lambda month, name: raw_queries[name],
+            ):
+                summary = self.normalize_posthog.normalize_login_funnel(
+                    "2026-08",
+                    Path(temporary_dir),
+                    warnings,
+                )
+        return summary, warnings
+
+    def test_queries_split_user_exits_from_errors_and_group_by_person(self) -> None:
+        queries = self.collect_posthog.query_definitions(
+            "2026-08-01 00:00:00",
+            "2026-09-01 00:00:00",
+        )
+        attempts_query = " ".join(queries["login_attempts_summary"].split())
+        users_query = " ".join(queries["login_funnel_users"].split())
+
+        self.assertIn(
+            "properties.reason IN ('cancelled', 'browser_dismissed')) AS user_exit_attempts",
+            attempts_query,
+        )
+        self.assertIn(
+            "properties.reason IN ('no_tokens', 'auth0_error')) AS error_attempts",
+            attempts_query,
+        )
+        self.assertIn("GROUP BY person_id", users_query)
+        self.assertIn("properties.screen_name = 'SignIn'", users_query)
+
+        outcomes_query = " ".join(queries["login_outcomes_by_user"].split())
+        self.assertIn("HAVING starts > 0", outcomes_query)
+        self.assertIn("countIf(successes = 0 AND error_failures > 0) AS error_users", outcomes_query)
+        self.assertIn(
+            "countIf(successes = 0 AND error_failures = 0 AND exit_failures > 0) AS exit_only_users",
+            outcomes_query,
+        )
+        self.assertIn("countIf(successes = 0 AND failures = 0) AS no_outcome_users", outcomes_query)
+
+    def test_happy_path_produces_ratios_and_reason_split(self) -> None:
+        summary, warnings = self.normalize_login_funnel(
+            self.ok(self.HAPPY_USERS),
+            self.ok(self.HAPPY_ATTEMPTS),
+            self.ok(self.HAPPY_FAILURES),
+        )
+
+        self.assertEqual(
+            summary,
+            {
+                "sign_in_screen_users": 210,
+                "started_users": 168,
+                "succeeded_users": 113,
+                "failed_users": 91,
+                "failed_only_users": 55,
+                "sign_in_to_started_ratio": 0.8,
+                "started_to_succeeded_ratio": 0.672619,
+                "steps_monotonic": True,
+                "is_strict_funnel": False,
+                "succeeded_after_failure_users": 51,
+                "not_succeeded_users": 55,
+                "exit_only_users": 38,
+                "error_users": 2,
+                "no_outcome_users": 15,
+                "exit_only_user_ratio": 0.22619,
+                "error_user_ratio": 0.011905,
+                "no_outcome_user_ratio": 0.089286,
+                "started_attempts": 429,
+                "succeeded_attempts": 189,
+                "failed_attempts": 192,
+                "user_exit_attempts": 150,
+                "error_attempts": 42,
+                "unknown_reason_attempts": 0,
+                "unresolved_attempts": 48,
+                "attempt_success_rate": 0.440559,
+                "user_exit_rate": 0.34965,
+                "error_rate": 0.097902,
+                "unresolved_rate": 0.111888,
+                "by_reason": [
+                    {"reason": "cancelled", "category": "user_exit", "count": 120},
+                    {"reason": "auth0_error", "category": "error", "count": 30},
+                    {"reason": "browser_dismissed", "category": "user_exit", "count": 30},
+                    {"reason": "no_tokens", "category": "error", "count": 12},
+                ],
+                "by_error_code": [
+                    {
+                        "error_code": "USER_CANCELLED",
+                        "reason": "cancelled",
+                        "category": "user_exit",
+                        "count": 120,
+                    },
+                    {
+                        "error_code": "BROWSER_TERMINATED",
+                        "reason": "browser_dismissed",
+                        "category": "user_exit",
+                        "count": 30,
+                    },
+                    {
+                        "error_code": "NETWORK_ERROR",
+                        "reason": "auth0_error",
+                        "category": "error",
+                        "count": 18,
+                    },
+                    {
+                        "error_code": "ACCESS_DENIED",
+                        "reason": "auth0_error",
+                        "category": "error",
+                        "count": 12,
+                    },
+                    {
+                        "error_code": "NoTokensReturned",
+                        "reason": "no_tokens",
+                        "category": "error",
+                        "count": 12,
+                    },
+                ],
+            },
+        )
+        self.assertEqual(warnings, [])
+
+    def test_unknown_reason_is_counted_and_warned(self) -> None:
+        summary, warnings = self.normalize_login_funnel(
+            self.ok(self.HAPPY_USERS),
+            self.ok([[429, 189, 192, 150, 40]]),
+            self.ok(self.HAPPY_FAILURES),
+        )
+
+        self.assertEqual(summary["unknown_reason_attempts"], 2)
+        self.assertEqual(summary["error_attempts"], 40)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("unsupported or missing reason", warnings[0])
+
+    def test_more_outcomes_than_starts_disables_unresolved(self) -> None:
+        summary, warnings = self.normalize_login_funnel(
+            self.ok(self.HAPPY_USERS),
+            self.ok([[100, 60, 50, 40, 10]]),
+            self.ok(self.HAPPY_FAILURES),
+        )
+
+        self.assertIsNone(summary["unresolved_attempts"])
+        self.assertIsNone(summary["unresolved_rate"])
+        self.assertEqual(summary["attempt_success_rate"], 0.6)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("more login outcomes", warnings[0])
+
+    def test_successful_empty_queries_produce_real_zeroes(self) -> None:
+        summary, warnings = self.normalize_login_funnel(self.ok([]), self.ok([]), self.ok([]), self.ok([]))
+
+        for key in [
+            "sign_in_screen_users",
+            "started_users",
+            "succeeded_users",
+            "failed_users",
+            "failed_only_users",
+            "succeeded_after_failure_users",
+            "not_succeeded_users",
+            "exit_only_users",
+            "error_users",
+            "no_outcome_users",
+            "started_attempts",
+            "succeeded_attempts",
+            "failed_attempts",
+            "user_exit_attempts",
+            "error_attempts",
+            "unknown_reason_attempts",
+            "unresolved_attempts",
+        ]:
+            with self.subTest(key=key):
+                self.assertEqual(summary[key], 0)
+        for key in [
+            "sign_in_to_started_ratio",
+            "started_to_succeeded_ratio",
+            "attempt_success_rate",
+            "user_exit_rate",
+            "error_rate",
+            "unresolved_rate",
+            "exit_only_user_ratio",
+            "error_user_ratio",
+            "no_outcome_user_ratio",
+        ]:
+            with self.subTest(key=key):
+                self.assertIsNone(summary[key])
+        self.assertIs(summary["steps_monotonic"], True)
+        self.assertEqual(summary["by_reason"], [])
+        self.assertEqual(summary["by_error_code"], [])
+        self.assertEqual(warnings, [])
+
+    def test_failed_queries_keep_every_metric_unavailable(self) -> None:
+        summary, warnings = self.normalize_login_funnel(
+            self.FAILED_QUERY,
+            self.FAILED_QUERY,
+            self.FAILED_QUERY,
+            self.FAILED_QUERY,
+        )
+
+        for key, value in summary.items():
+            with self.subTest(key=key):
+                if key == "is_strict_funnel":
+                    self.assertIs(value, False)
+                elif key in ("by_reason", "by_error_code"):
+                    self.assertEqual(value, [])
+                else:
+                    self.assertIsNone(value)
+        self.assertEqual(len(warnings), 4)
+
+    def test_non_monotonic_steps_disable_user_ratios_and_warn(self) -> None:
+        summary, warnings = self.normalize_login_funnel(
+            self.ok([[100, 120, 130, 10, 5]]),
+            self.ok(self.HAPPY_ATTEMPTS),
+            self.ok(self.HAPPY_FAILURES),
+        )
+
+        self.assertIs(summary["steps_monotonic"], False)
+        self.assertIsNone(summary["sign_in_to_started_ratio"])
+        self.assertIsNone(summary["started_to_succeeded_ratio"])
+        self.assertEqual(summary["attempt_success_rate"], 0.440559)
+        # Non-monotonic steps also make the per-user outcome partition impossible.
+        self.assertEqual(len(warnings), 2)
+        self.assertIn("not monotonic", warnings[0])
+        self.assertIn("do not partition", warnings[1])
+        self.assertIsNone(summary["exit_only_user_ratio"])
+
+    def test_user_outcomes_that_do_not_partition_non_succeeded_users_warn_and_drop_ratios(self) -> None:
+        summary, warnings = self.normalize_login_funnel(
+            self.ok(self.HAPPY_USERS),
+            self.ok(self.HAPPY_ATTEMPTS),
+            self.ok(self.HAPPY_FAILURES),
+            self.ok([[51, 2, 30, 15]]),
+        )
+
+        self.assertEqual(summary["not_succeeded_users"], 55)
+        self.assertEqual(summary["exit_only_users"], 30)
+        self.assertIsNone(summary["exit_only_user_ratio"])
+        self.assertIsNone(summary["error_user_ratio"])
+        self.assertIsNone(summary["no_outcome_user_ratio"])
+        self.assertEqual(summary["started_to_succeeded_ratio"], 0.672619)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("do not partition", warnings[0])
+
+    def test_summary_keys_match_empty_posthog_defaults(self) -> None:
+        summary, _ = self.normalize_login_funnel(
+            self.FAILED_QUERY,
+            self.FAILED_QUERY,
+            self.FAILED_QUERY,
+            self.FAILED_QUERY,
+        )
+
+        self.assertEqual(
+            set(summary),
+            set(self.build_summary.EMPTY_POSTHOG["login_funnel"]),
+        )
+
+
 class SourceExecutionStatusTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

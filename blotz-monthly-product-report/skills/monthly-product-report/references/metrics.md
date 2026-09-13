@@ -35,18 +35,19 @@ Collect only currently instrumented useful events:
 | `ai_task_generation_failed` | Failure count, users, stage, error code, input mode, duration | AI reliability |
 | `breakdown_task` | Usage, users, success rate, duration, generated subtask count | AI breakdown comparison |
 | `note_created` | Total, manual, AI-created, and unknown-source notes; AI share only with complete source coverage | Notes usage, AI assist, and instrumentation health |
-| `screen_viewed` | Notes and Gashapon visits/users only | Limited feature discovery |
+| `screen_viewed` | Notes and Gashapon visits/users only; `SignIn` views feed the login funnel | Limited feature discovery |
 | Event inventory | Event count, user count, first/last seen, current-month health | Instrumentation health |
 | `Application Installed` + `Application Opened` | Mature D1/D7/D30 cohorts | Retention baseline |
 | Three AI event generations + manual task generations | AI/manual user combinations and active days | Behavior mix |
 | `ai_task_generation_failed` | Weekly failure trend | Reliability trend |
 | Geo and `app_version` properties | Active audience by country/version | Audience anomalies |
+| `screen_viewed` (`SignIn`) + `login_started` + `login_succeeded` + `login_failed` | Per-user login steps within the month (saw sign-in screen, tapped continue, succeeded), per-user outcome of those who never logged in (closed the page themselves, hit an error, no recorded outcome), attempt-level counts split into user exits vs real errors, error-code breakdown | Login conversion and Auth0 reliability |
 
 ## Unsupported In First Version
 
 Do not collect or infer:
 
-- Onboarding conversion.
+- Onboarding conversion beyond the instrumented login steps (sign-in screen view, continue tap, login success); post-login onboarding and activation are not measured.
 - New user activation.
 - Task completion.
 - AI-generated task completion.

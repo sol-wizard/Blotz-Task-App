@@ -9,6 +9,7 @@ This reference records the Blotz instrumentation contract at the time this skill
 - Session replay is enabled only in production.
 - Registered super properties include `env`, `platform`, `os_version`, and optionally `app_version`.
 - Authenticated users are identified with Auth0 `user.sub`; `email` and `name` are attached when available.
+- `personProfiles` is `always`: pre-login events on the anonymous distinct id get a person profile and merge into the identified person at `$identify`. Logout calls `reset()`, so the next login starts on a fresh anonymous id that merges again. Query login steps by `person_id`.
 
 ## Events And Properties
 
@@ -122,7 +123,46 @@ Properties:
 
 Current tracked values:
 
+- `SignIn` (login funnel only; not part of `screen_views`)
 - `Notes`
 - `GashaponMachine`
 
-Use only for limited Notes and Gashapon discovery. Do not treat this as full product screen coverage.
+Use only for limited Notes and Gashapon discovery and as the first login funnel step. Do not treat this as full product screen coverage.
+
+### `login_started`
+
+Meaning: The user tapped a sign-in button on the SignIn screen, before the Auth0 browser opens. Fires on the anonymous distinct id before `$identify`.
+
+Properties:
+
+- `connection`: `default` or `sms` (`sms` is only rendered outside production)
+
+Use for the login attempt denominator and the "tapped continue" funnel step.
+
+### `login_succeeded`
+
+Meaning: Auth0 returned both an access token and a refresh token. Fires before the redirect into the authenticated area and before `$identify`, on the same anonymous distinct id as `login_started`.
+
+Properties:
+
+- `connection`
+- `duration_ms`: milliseconds from tap to token receipt
+
+Current caveat: it does not prove the user reached the authenticated area; that last hop is not instrumented.
+
+Use for attempt-level success rate and the "login succeeded" funnel step.
+
+### `login_failed`
+
+Meaning: A login attempt ended without tokens. Exactly one of `login_succeeded` or `login_failed` follows each `login_started` unless the app is killed mid-attempt; those attempts are reported as unresolved, not failed.
+
+Properties:
+
+- `connection`
+- `reason`: `cancelled`, `browser_dismissed`, `no_tokens`, or `auth0_error`
+- `error_code`: one of react-native-auth0 `WebAuthErrorCodes` (for example `USER_CANCELLED`, `BROWSER_TERMINATED`, `NETWORK_ERROR`, `TRANSACTION_ACTIVE_ALREADY`, `ACCESS_DENIED`, `UNKNOWN_ERROR`) or `NoTokensReturned`
+- `duration_ms`
+
+Current caveat: `cancelled` and `browser_dismissed` are user exits, not failures; only `no_tokens` and `auth0_error` measure Auth0 reliability. `reason` is derived from `error_code` in the app, so every error code maps to exactly one reason.
+
+Use for the user-exit vs real-error split (per attempt and per user), top login error codes, and failed-user reach.

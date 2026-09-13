@@ -104,6 +104,38 @@ EMPTY_POSTHOG = {
         "authenticated_active_ratio": None,
         "is_strict_funnel": False,
     },
+    "login_funnel": {
+        "sign_in_screen_users": None,
+        "started_users": None,
+        "succeeded_users": None,
+        "failed_users": None,
+        "failed_only_users": None,
+        "sign_in_to_started_ratio": None,
+        "started_to_succeeded_ratio": None,
+        "steps_monotonic": None,
+        "is_strict_funnel": False,
+        "succeeded_after_failure_users": None,
+        "not_succeeded_users": None,
+        "exit_only_users": None,
+        "error_users": None,
+        "no_outcome_users": None,
+        "exit_only_user_ratio": None,
+        "error_user_ratio": None,
+        "no_outcome_user_ratio": None,
+        "started_attempts": None,
+        "succeeded_attempts": None,
+        "failed_attempts": None,
+        "user_exit_attempts": None,
+        "error_attempts": None,
+        "unknown_reason_attempts": None,
+        "unresolved_attempts": None,
+        "attempt_success_rate": None,
+        "user_exit_rate": None,
+        "error_rate": None,
+        "unresolved_rate": None,
+        "by_reason": [],
+        "by_error_code": [],
+    },
 }
 
 
@@ -313,7 +345,15 @@ def main() -> int:
                 check(
                     "screen_coverage",
                     "warning",
-                    "`screen_viewed` currently covers only Notes and GashaponMachine; do not infer full feature usage.",
+                    "`screen_viewed` currently covers only SignIn, Notes and GashaponMachine; do not infer full feature usage.",
+                ),
+                check(
+                    "posthog_login_funnel_present",
+                    "pass" if posthog["login_funnel"]["started_attempts"] is not None else "warning",
+                    "Login funnel metrics are present; steps are per-user presence within the month, "
+                    "not strictly sequenced attempts, and rates use `login_started` as denominator."
+                    if posthog["login_funnel"]["started_attempts"] is not None
+                    else "Login funnel metrics are missing or unavailable.",
                 ),
             ]
         )

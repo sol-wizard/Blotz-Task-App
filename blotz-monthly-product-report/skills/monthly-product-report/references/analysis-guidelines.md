@@ -76,6 +76,7 @@ Apply these rules when turning metrics into PM conclusions.
 - When cohort data is present, show only mature D1/D7/D30 windows; label immature windows by omission rather than zero.
 - Treat active-day tiers as frequency segments, not retention cohorts.
 - Treat AI/manual combinations as correlations. More active users have more opportunities to use both workflows; the groups do not establish feature conversion or causal lift.
+- The login funnel counts users who saw the sign-in screen, tapped continue, and succeeded within the same month. Steps are per-person presence, not ordered attempts: present user-level step ratios only when `steps_monotonic` is true, use `started_attempts` as the only denominator for attempt-level rates, treat `cancelled` and `browser_dismissed` as user exits rather than reliability failures, and report `unresolved_attempts` as attempts without a recorded outcome, not as failures. Explain what happened to users who never logged in with the per-user buckets (`exit_only_users`, `error_users`, `no_outcome_users`), which partition `not_succeeded_users`; a user who both hit an error and cancelled is an error user. Prefer per-user counts over per-attempt counts in PM-facing tables because retries inflate attempt counts. The sign-in screen also appears after logout, so the funnel is not a new-user or onboarding conversion.
 
 ## Instrumentation Health
 

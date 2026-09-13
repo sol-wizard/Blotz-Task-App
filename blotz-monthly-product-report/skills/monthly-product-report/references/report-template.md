@@ -24,6 +24,9 @@
 - `distinct-user union` 写“按用户去重合并”。
 - Apple `Get` 写“下载按钮点击”，`Restore` 写“从备份恢复”，`Standard/Detailed` 写“标准报告/明细报告”。
 - `Inventory` 写“事件清单”，`person_id` 写“PostHog 识别为同一人的用户记录”。
+- 登录三步写“看到登录页 / 点击继续 / 登录成功”；`login_started` 写“点击继续的登录尝试”。
+- `cancelled`、`browser_dismissed` 写“用户中途退出”；`no_tokens`、`auth0_error` 写“登录出错”；`error_code` 写“错误码”。
+- 按人统计的登录结果写“只是自己关闭了登录页 / 遇到过登录出错 / 没有记录到结果”；`unresolved_attempts` 写“未记录结果的尝试”，两者都不写成失败。
 - 可以在 `<code>` 中保留真实事件名和错误码用于对账，但相邻正文必须用普通中文解释。
 
 ## 报告信息层级
@@ -74,8 +77,12 @@
 - 从备份恢复和更新可作为口径说明，不计入新增或重新下载。
 - 展示 PostHog 活跃用户的地区和每位用户当月最后观察到的 App 版本，作为用户结构和版本异常线索。
 - 不把 App Store 来源或地区直接归因到 PostHog 用户行为，不把 App Store 下载、PostHog 活跃用户和 AI 用户排列成转化漏斗。
-- 展示 Notes 创建和 Notes/Gashapon 页面访问时，明确 screen tracking 只覆盖这两个页面，不作为完整功能排名。
+- 展示 Notes 创建和 Notes/Gashapon 页面访问时，明确 screen tracking 只覆盖登录页、Notes 和 Gashapon 三个页面，不作为完整功能排名。
 - 笔记来源存在未知值时，将未知数量计入总数并说明来源覆盖不完整，不展示 AI 占比。
+- 快照包含 `login_funnel` 且 `steps_monotonic` 为 true 时，可用一张表展示“看到登录页 → 点击继续 → 登录成功”的当月用户数和相对上一步的比例；三步是同一 PostHog 用户记录在当月内是否出现过对应事件，不是按时间顺序的单次尝试，也不是新用户或 App Store 下载转化。`steps_monotonic` 为 false 时只展示人数，不展示比例。
+- 第二张表按人回答“点击继续之后发生了什么”：登录成功（其中先失败后成功的人数）、只是自己关闭了登录页、遇到过登录出错、没有记录到结果，分母都是点击继续的用户数；只在 `exit_only_user_ratio` 等比例不为 null 时展示比例。两张表都按人统计，不要再放一张按次数统计的表。
+- 按次数的尝试统计（`started_attempts`、`user_exit_attempts`、`error_attempts`、`unresolved_attempts`）只在正文用一句话说明，只把“登录出错”解读为登录可靠性问题。
+- 不在报告中放登录错误码表；`by_error_code` 留给工程排查。只有某个错误码对应明确的产品动作时，才在“本月决策”里提一次。
 
 ### 五、本月决策
 
@@ -133,6 +140,35 @@
     <span class="distribution-value">79.88%</span>
   </div>
 </div>
+```
+
+登录漏斗使用两张表格加一条数据说明（数字为示例）：
+
+```html
+<h3>登录漏斗</h3>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>步骤</th><th>用户数</th><th>相对上一步</th></tr></thead>
+    <tbody>
+      <tr><td>看到登录页</td><td>174</td><td>基准</td></tr>
+      <tr><td>点击继续</td><td>168</td><td>96.55%</td></tr>
+      <tr><td>登录成功</td><td>113</td><td>67.26%</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>点击继续之后（按人）</th><th>用户数</th><th>占点击继续的用户</th></tr></thead>
+    <tbody>
+      <tr><td>登录成功</td><td>113</td><td>67.26%</td></tr>
+      <tr><td>其中先失败后成功</td><td>51</td><td>30.36%</td></tr>
+      <tr><td>未登录成功：只是自己关闭了登录页</td><td>38</td><td>22.62%</td></tr>
+      <tr><td>未登录成功：遇到过登录出错</td><td>2</td><td>1.19%</td></tr>
+      <tr><td>未登录成功：没有记录到结果</td><td>15</td><td>8.93%</td></tr>
+    </tbody>
+  </table>
+</div>
+<aside class="data-note">两张表都按 PostHog 识别为同一人的用户记录统计当月是否出现过对应事件，不是严格按时间顺序的单次尝试。“只是自己关闭了登录页”对应 <code>cancelled</code> 和 <code>browser_dismissed</code>，不计入登录可靠性问题；同时遇到出错和自己关闭的人归入“遇到过登录出错”。登录页在退出登录后也会出现，因此不是新用户转化。</aside>
 ```
 
 优先级动作使用无外框的决策列表：

@@ -506,6 +506,159 @@ def normalize_historical_install_proxy(
     return result
 
 
+LOGIN_USER_EXIT_REASONS = ("cancelled", "browser_dismissed")
+LOGIN_ERROR_REASONS = ("no_tokens", "auth0_error")
+
+
+def login_reason_category(reason: Any) -> str:
+    if reason in LOGIN_USER_EXIT_REASONS:
+        return "user_exit"
+    if reason in LOGIN_ERROR_REASONS:
+        return "error"
+    return "unknown"
+
+
+def normalize_login_funnel(month: str, normalized_dir: Path, warnings: list[str]) -> dict[str, Any]:
+    users_raw = raw_query(month, "login_funnel_users")
+    attempts_raw = raw_query(month, "login_attempts_summary")
+    failures_raw = raw_query(month, "login_failures_by_error_code")
+    outcomes_raw = raw_query(month, "login_outcomes_by_user")
+    for name, raw in [
+        ("login_funnel_users", users_raw),
+        ("login_attempts_summary", attempts_raw),
+        ("login_failures_by_error_code", failures_raw),
+        ("login_outcomes_by_user", outcomes_raw),
+    ]:
+        warn_failed(warnings, name, raw)
+
+    # Per-user steps: each count is "person emitted the event at least once this month".
+    users_row = first_row(users_raw)
+    users_default = 0 if not query_failed(users_raw) else None
+    sign_in_screen_users = number(users_row[0]) if users_row else users_default
+    started_users = number(users_row[1]) if users_row else users_default
+    succeeded_users = number(users_row[2]) if users_row else users_default
+    failed_users = number(users_row[3]) if users_row else users_default
+    failed_only_users = number(users_row[4]) if users_row else users_default
+
+    steps_monotonic: bool | None = None
+    if None not in (sign_in_screen_users, started_users, succeeded_users):
+        steps_monotonic = sign_in_screen_users >= started_users >= succeeded_users
+        if not steps_monotonic:
+            warnings.append(
+                "`login_funnel_users` steps are not monotonic "
+                f"({sign_in_screen_users} saw SignIn, {started_users} started, "
+                f"{succeeded_users} succeeded); user-level login ratios are unavailable."
+            )
+
+    # Per-user outcomes for people who tapped: what happened to those who never got in.
+    # A person who hit an error and also cancelled counts as an error user.
+    outcomes_row = first_row(outcomes_raw)
+    outcomes_default = 0 if not query_failed(outcomes_raw) else None
+    succeeded_after_failure_users = number(outcomes_row[0]) if outcomes_row else outcomes_default
+    error_users = number(outcomes_row[1]) if outcomes_row else outcomes_default
+    exit_only_users = number(outcomes_row[2]) if outcomes_row else outcomes_default
+    no_outcome_users = number(outcomes_row[3]) if outcomes_row else outcomes_default
+
+    not_succeeded_users = None
+    if None not in (started_users, succeeded_users):
+        not_succeeded_users = started_users - succeeded_users
+    outcomes_partition = None
+    if None not in (not_succeeded_users, error_users, exit_only_users, no_outcome_users):
+        outcomes_partition = error_users + exit_only_users + no_outcome_users == not_succeeded_users
+        if not outcomes_partition:
+            warnings.append(
+                "`login_outcomes_by_user` buckets do not partition the users who never logged in "
+                f"({error_users} error + {exit_only_users} exit-only + {no_outcome_users} no-outcome "
+                f"!= {not_succeeded_users}); per-user outcome ratios are unavailable."
+            )
+
+    # Attempt-level counts: one `login_started` per tap, then at most one outcome.
+    attempts_row = first_row(attempts_raw)
+    attempts_default = 0 if not query_failed(attempts_raw) else None
+    started_attempts = number(attempts_row[0]) if attempts_row else attempts_default
+    succeeded_attempts = number(attempts_row[1]) if attempts_row else attempts_default
+    failed_attempts = number(attempts_row[2]) if attempts_row else attempts_default
+    user_exit_attempts = number(attempts_row[3]) if attempts_row else attempts_default
+    error_attempts = number(attempts_row[4]) if attempts_row else attempts_default
+
+    unknown_reason_attempts = None
+    if None not in (failed_attempts, user_exit_attempts, error_attempts):
+        unknown_reason_attempts = failed_attempts - user_exit_attempts - error_attempts
+        if unknown_reason_attempts:
+            warnings.append(
+                f"`login_failed` returned {unknown_reason_attempts} event(s) with an unsupported or missing reason."
+            )
+
+    unresolved_attempts = None
+    if None not in (started_attempts, succeeded_attempts, failed_attempts):
+        unresolved_attempts = started_attempts - succeeded_attempts - failed_attempts
+        if unresolved_attempts < 0:
+            warnings.append(
+                "`login_attempts_summary` recorded more login outcomes "
+                f"({succeeded_attempts + failed_attempts}) than `login_started` attempts "
+                f"({started_attempts}); unresolved attempts are unavailable."
+            )
+            unresolved_attempts = None
+
+    # `reason` is derived from `error_code` in the app, so the joint rows are the error-code table.
+    by_error_code = [
+        {
+            "error_code": row[0],
+            "reason": row[1],
+            "category": login_reason_category(row[1]),
+            "count": number(row[2]),
+        }
+        for row in rows(failures_raw)
+    ]
+    by_error_code.sort(key=lambda record: (-(record["count"] or 0), str(record["error_code"])))
+    reason_counts: dict[Any, int] = {}
+    for record in by_error_code:
+        reason_counts[record["reason"]] = reason_counts.get(record["reason"], 0) + int(record["count"] or 0)
+    by_reason = [
+        {"reason": reason, "category": login_reason_category(reason), "count": count}
+        for reason, count in sorted(reason_counts.items(), key=lambda item: (-item[1], str(item[0])))
+    ]
+
+    scalars = {
+        "sign_in_screen_users": sign_in_screen_users,
+        "started_users": started_users,
+        "succeeded_users": succeeded_users,
+        "failed_users": failed_users,
+        "failed_only_users": failed_only_users,
+        "sign_in_to_started_ratio": ratio(started_users, sign_in_screen_users) if steps_monotonic else None,
+        "started_to_succeeded_ratio": ratio(succeeded_users, started_users) if steps_monotonic else None,
+        "steps_monotonic": steps_monotonic,
+        "is_strict_funnel": False,
+        "succeeded_after_failure_users": succeeded_after_failure_users,
+        "not_succeeded_users": not_succeeded_users,
+        "exit_only_users": exit_only_users,
+        "error_users": error_users,
+        "no_outcome_users": no_outcome_users,
+        "exit_only_user_ratio": ratio(exit_only_users, started_users) if outcomes_partition else None,
+        "error_user_ratio": ratio(error_users, started_users) if outcomes_partition else None,
+        "no_outcome_user_ratio": ratio(no_outcome_users, started_users) if outcomes_partition else None,
+        "started_attempts": started_attempts,
+        "succeeded_attempts": succeeded_attempts,
+        "failed_attempts": failed_attempts,
+        "user_exit_attempts": user_exit_attempts,
+        "error_attempts": error_attempts,
+        "unknown_reason_attempts": unknown_reason_attempts,
+        "unresolved_attempts": unresolved_attempts,
+        "attempt_success_rate": ratio(succeeded_attempts, started_attempts),
+        "user_exit_rate": ratio(user_exit_attempts, started_attempts),
+        "error_rate": ratio(error_attempts, started_attempts),
+        "unresolved_rate": ratio(unresolved_attempts, started_attempts),
+    }
+    write_csv(normalized_dir / "posthog_login_funnel.csv", list(scalars.keys()), [scalars])
+    write_csv(normalized_dir / "posthog_login_failures.csv", ["reason", "category", "count"], by_reason)
+    write_csv(
+        normalized_dir / "posthog_login_failure_error_codes.csv",
+        ["error_code", "reason", "category", "count"],
+        by_error_code,
+    )
+    return {**scalars, "by_reason": by_reason, "by_error_code": by_error_code}
+
+
 def main() -> int:
     parser = build_parser("Normalize Blotz monthly PostHog raw query responses.")
     args = parser.parse_args()
@@ -534,6 +687,7 @@ def main() -> int:
     ai_manual_combinations = normalize_ai_manual_combinations(month, normalized_dir, warnings)
     audience = normalize_audience(month, normalized_dir, warnings)
     historical_install_proxy = normalize_historical_install_proxy(month, normalized_dir, warnings)
+    login_funnel = normalize_login_funnel(month, normalized_dir, warnings)
 
     summary = {
         "activity": activity,
@@ -548,6 +702,7 @@ def main() -> int:
         "ai_manual_combinations": ai_manual_combinations,
         "audience": audience,
         "historical_install_proxy": historical_install_proxy,
+        "login_funnel": login_funnel,
         "warnings": warnings,
     }
     write_json(normalized_dir / "posthog_summary.json", summary)

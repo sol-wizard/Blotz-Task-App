@@ -6,7 +6,7 @@ Do not make these claims from the first-version dataset:
 - AI improved task completion.
 - AI improved revenue, subscription conversion, or trial conversion.
 - App Store source quality drove product activation.
-- New user onboarding conversion increased or decreased.
+- New user onboarding conversion increased or decreased. The instrumented login steps (sign-in screen, continue tap, login success) may be reported when the snapshot contains them, but post-login onboarding and activation remain unmeasured.
 - This is a complete feature-usage ranking.
 - Notes/Gashapon screen views represent all feature discovery.
 - Manual vs AI task creation is a perfect like-for-like comparison.
@@ -14,6 +14,7 @@ Do not make these claims from the first-version dataset:
 - Sessions per AI user is a repeat-use rate or proves how many users returned for another session.
 - AI/manual behavior groups represent an AI-to-manual-task conversion path.
 - Failure events divided by AI sessions is the AI failure rate without a stable attempt denominator and join.
+- Login user exits (`cancelled`, `browser_dismissed`) are Auth0 reliability failures, or a login success rate uses any denominator other than `login_started` attempts.
 - A failure stage caused a specific error code when the snapshot lacks their joint distribution.
 - Average duration establishes typical or slow-request waiting time, or justifies an unapproved performance target.
 - Movement between incomplete boundary weeks proves reliability improved or worsened.

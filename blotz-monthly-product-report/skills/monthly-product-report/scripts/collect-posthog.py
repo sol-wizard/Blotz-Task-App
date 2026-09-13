@@ -32,6 +32,9 @@ EVENTS_QUERIED = [
     "breakdown_task",
     "note_created",
     "screen_viewed",
+    "login_started",
+    "login_succeeded",
+    "login_failed",
 ]
 
 
@@ -330,6 +333,66 @@ def query_definitions(start: str, end: str) -> dict[str, str]:
                 WHERE event IN ('Application Installed', '$identify', 'active_user_5s')
                 GROUP BY person_id
                 HAVING installs > 0
+            )
+        """,
+        "login_funnel_users": f"""
+            SELECT
+                countIf(sign_in_views > 0) AS sign_in_screen_users,
+                countIf(starts > 0) AS started_users,
+                countIf(successes > 0) AS succeeded_users,
+                countIf(failures > 0) AS failed_users,
+                countIf(failures > 0 AND successes = 0) AS failed_only_users
+            FROM (
+                SELECT
+                    person_id,
+                    countIf(event = 'screen_viewed' AND properties.screen_name = 'SignIn') AS sign_in_views,
+                    countIf(event = 'login_started') AS starts,
+                    countIf(event = 'login_succeeded') AS successes,
+                    countIf(event = 'login_failed') AS failures
+                FROM events
+                WHERE (
+                    (event = 'screen_viewed' AND properties.screen_name = 'SignIn')
+                    OR event IN ('login_started', 'login_succeeded', 'login_failed')
+                ) AND {window}
+                GROUP BY person_id
+            )
+        """,
+        "login_attempts_summary": f"""
+            SELECT
+                countIf(event = 'login_started') AS started_attempts,
+                countIf(event = 'login_succeeded') AS succeeded_attempts,
+                countIf(event = 'login_failed') AS failed_attempts,
+                countIf(event = 'login_failed' AND properties.reason IN ('cancelled', 'browser_dismissed')) AS user_exit_attempts,
+                countIf(event = 'login_failed' AND properties.reason IN ('no_tokens', 'auth0_error')) AS error_attempts
+            FROM events
+            WHERE event IN ('login_started', 'login_succeeded', 'login_failed') AND {window}
+        """,
+        "login_failures_by_error_code": f"""
+            SELECT properties.error_code AS error_code, properties.reason AS reason, count() AS count
+            FROM events
+            WHERE event = 'login_failed' AND {window}
+            GROUP BY error_code, reason
+            ORDER BY count DESC
+            LIMIT 100
+        """,
+        "login_outcomes_by_user": f"""
+            SELECT
+                countIf(successes > 0 AND failures > 0) AS succeeded_after_failure_users,
+                countIf(successes = 0 AND error_failures > 0) AS error_users,
+                countIf(successes = 0 AND error_failures = 0 AND exit_failures > 0) AS exit_only_users,
+                countIf(successes = 0 AND failures = 0) AS no_outcome_users
+            FROM (
+                SELECT
+                    person_id,
+                    countIf(event = 'login_started') AS starts,
+                    countIf(event = 'login_succeeded') AS successes,
+                    countIf(event = 'login_failed') AS failures,
+                    countIf(event = 'login_failed' AND properties.reason IN ('no_tokens', 'auth0_error')) AS error_failures,
+                    countIf(event = 'login_failed' AND properties.reason IN ('cancelled', 'browser_dismissed')) AS exit_failures
+                FROM events
+                WHERE event IN ('login_started', 'login_succeeded', 'login_failed') AND {window}
+                GROUP BY person_id
+                HAVING starts > 0
             )
         """,
     }
