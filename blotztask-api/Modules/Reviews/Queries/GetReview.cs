@@ -48,12 +48,23 @@ public class GetReviewQueryHandler(
                      && r.PeriodStartUtc == period.StartUtc,
                 ct);
 
+        var tasksCompleted = await db.TaskItems
+            .AsNoTracking()
+            .CountAsync(
+                t => t.UserId == query.UserId
+                     && t.CompletedAt != null
+                     && t.CompletedAt >= period.StartUtc
+                     && t.CompletedAt < period.EndUtc,
+                ct);
+
         return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
-            // letter / generatedAt stay null when no review exists yet.
+            TasksCompleted = tasksCompleted,
+            // A report may not exist yet (not generated, or the period hasn't ended).
+            // The DTO is still returned with the metrics; letter/generatedAt stay null.
             Letter = report?.AiGeneratedLetter,
             GeneratedAtUtc = report is null ? null : DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report?.AiInputTaskCount != null && report.AiInputTaskCount < threshold,

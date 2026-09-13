@@ -15,7 +15,7 @@ public class RedeemReferralCodeCommandHandler(
     BlotzTaskDbContext db,
     ILogger<RedeemReferralCodeCommandHandler> logger)
 {
-    public async Task Handle(RedeemReferralCodeCommand command, CancellationToken ct = default)
+    public async Task<Guid> Handle(RedeemReferralCodeCommand command, CancellationToken ct = default)
     {
         var code = command.Code.Trim().ToUpperInvariant();
 
@@ -47,5 +47,7 @@ public class RedeemReferralCodeCommandHandler(
 
         logger.LogInformation("User {RefereeUserId} redeemed referral code from {ReferrerUserId}",
             command.RefereeUserId, referralCode.OwnerUserId);
+
+        return referralCode.OwnerUserId;
     }
 }
