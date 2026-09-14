@@ -5,6 +5,7 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import { useTranslation } from "react-i18next";
 import * as WebBrowser from "expo-web-browser";
 import { PNGIMAGES } from "@/shared/constants/assets";
+import * as Application from "expo-application";
 
 const WEBSITE_URL = "https://www.blotztask.com/";
 const PRIVACY_POLICY_URLS = {
@@ -18,7 +19,9 @@ const XIAOHONGSHU_URL =
 
 export default function SettingsAboutScreen() {
   const router = useRouter();
-  const { t, i18n } = useTranslation("settings");
+  const { t , i18n } = useTranslation("settings");
+  const version = Application.nativeApplicationVersion ?? "—";
+  const buildNumber = Application.nativeBuildVersion ?? "—";
 
   const handleVisitWebsite = () => {
     Linking.openURL(WEBSITE_URL);
@@ -109,6 +112,9 @@ export default function SettingsAboutScreen() {
             <MaterialCommunityIcons name="open-in-new" size={20} color="#444964" />
           </Pressable>
         </View>
+        <Text className="text-xs font-baloo text-secondary/50 text-center mt-4">
+          {t("about.version", { version, buildNumber })}
+        </Text>
       </View>
     </SafeAreaView>
   );

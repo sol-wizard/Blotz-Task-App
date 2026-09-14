@@ -1,0 +1,62 @@
+name: Update Expo skills
+
+# The official Expo skills under .claude/skills/expo-* are vendored copies, so
+# they do not follow upstream on their own. This refreshes them and opens a PR
+# when anything changed. Kept off the release path on purpose - a failure here
+# should never be able to hold up a release.
+on:
+  schedule:
+    - cron: "0 2 1 * *" # 1st of the month, 02:00 UTC
+  workflow_dispatch: # also runnable by hand, e.g. before an SDK upgrade
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    name: Refresh vendored Expo skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Which skills to refresh is derived from the expo-* directories we already
+      # track, so adding or dropping one is done by committing it, not by editing
+      # this workflow. Only SKILL.md and references/ are vendored - upstream ships
+      # scripts and Codex configs we deliberately leave out.
+      - name: Copy the latest skills from expo/skills
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/expo/skills.git "$RUNNER_TEMP/expo-skills"
+          for dir in .claude/skills/expo-*/; do
+            name=$(basename "$dir")
+            src="$RUNNER_TEMP/expo-skills/plugins/expo/skills/$name"
+            if [ ! -d "$src" ]; then
+              echo "::warning::$name no longer exists upstream - left untouched"
+              continue
+            fi
+            rm -rf "$dir"
+            mkdir -p "$dir"
+            cp "$src/SKILL.md" "$dir/SKILL.md"
+            if [ -d "$src/references" ]; then
+              cp -R "$src/references" "$dir/references"
+            fi
+          done
+
+      - name: Open a PR if anything changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/update-expo-skills
+          add-paths: .claude/skills
+          commit-message: "chore: refresh vendored Expo skills"
+          title: "chore: refresh vendored Expo skills"
+          body: |
+            Refreshes the vendored copies of the official Expo skills from
+            https://github.com/expo/skills.
+
+            These are instructions an AI agent reads, not code that runs. Review
+            the diff as documentation: check that the guidance still matches how
+            this project actually works before merging.
+
+            Opened by
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.

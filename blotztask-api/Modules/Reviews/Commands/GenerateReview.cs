@@ -40,10 +40,9 @@ public class GenerateReviewCommandHandler(
     IRecordAiUsageService recordAiUsageService,
     ILogger<GenerateReviewCommandHandler> logger)
 {
-    // TODO: Reusing the Breakdown deployment for v1. ReasoningEffortLevel is only honoured on
-    // o-series reasoning models — if Breakdown points at a non-reasoning model (e.g. GPT-4o),
-    // the option is ignored. Revisit once we decide whether review needs its own
-    // deployment (likely a reasoning model for better reflection quality).
+    // TODO: Reusing the Breakdown deployment for v1, which currently resolves to gpt-5.4-mini —
+    // a reasoning model, so ReasoningEffortLevel below is honoured. Revisit if review ever needs
+    // its own deployment; it shares capacity with task generation, breakdown and time estimation.
     private readonly string _deploymentId = aiOptions.Value.AiModels.Breakdown.DeploymentId;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -70,102 +69,123 @@ public class GenerateReviewCommandHandler(
                      && r.PeriodStartUtc == period.StartUtc,
                 ct);
 
+        ReviewReport report;
+
         if (existingReport is not null)
         {
             logger.LogInformation(
                 "Returning existing {PeriodType} review for user {UserId} ({StartLocal}, {TimeZoneId})",
                 period.PeriodType, command.UserId, period.StartLocalDate, period.TimeZoneId);
 
-            return MapToDto(existingReport, period, threshold);
+            report = existingReport;
+        }
+        else
+        {
+            // A review is a period-end summary, so it is only available once the period has fully ended
+            // (defence-in-depth — the app shouldn't offer the current/future period).
+            if (!period.HasEnded(DateTimeOffset.UtcNow))
+                throw new ArgumentException("A review is only available after the period has ended.");
+
+            var tasks = await LoadTasksForPeriodAsync(command.UserId, period.StartUtc, period.EndUtc, ct);
+            var aiInputJson = JsonSerializer.Serialize(tasks, JsonOptions);
+
+            var preferredLanguage = await LoadPreferredLanguageAsync(command.UserId, ct);
+            var recentThemes = await LoadRecentThemesAsync(command.UserId, period, ct);
+            await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
+
+            var (letter, model, usage) = await GenerateLetterAsync(
+                period.PeriodType,
+                preferredLanguage.ToDisplayName(),
+                period.ToDisplayLabel(),
+                aiInputJson,
+                recentThemes,
+                ct);
+
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+            {
+                UserId = command.UserId,
+                InputTokens = usage?.InputTokenCount ?? 0,
+                OutputTokens = usage?.OutputTokenCount ?? 0,
+                TotalTokens = usage?.TotalTokenCount ?? 0,
+            }, ct);
+
+            var newReport = new ReviewReport
+            {
+                UserId = command.UserId,
+                PeriodType = period.PeriodType,
+                PeriodStartUtc = period.StartUtc,
+                PeriodEndUtc = period.EndUtc,
+                AiGeneratedLetter = letter.Body,
+                Theme = letter.Theme,
+                OneThingToTryNext = letter.OneThingToTryNext,
+                AiInputJson = aiInputJson,
+                AiInputTaskCount = tasks.Count,
+                AiModel = model,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            db.ReviewReports.Add(newReport);
+            try
+            {
+                await db.SaveChangesAsync(ct);
+
+                logger.LogInformation(
+                    "Saved {PeriodType} review {ReportId} for user {UserId} ({StartLocal}, {TimeZoneId})",
+                    period.PeriodType, newReport.Id, command.UserId, period.StartLocalDate, period.TimeZoneId);
+
+                report = newReport;
+            }
+            catch (DbUpdateException)
+            {
+                // Concurrency guard: two simultaneous requests can both pass the existence check above
+                // and generate, but the unique index (UserId, PeriodType, PeriodStartUtc) lets only one
+                // insert win. Rather than surface a 500 to the loser, detach our rejected row and return
+                // the winner's report. (We accept the rare duplicate AI call — it's cheap.)
+                db.Entry(newReport).State = EntityState.Detached;
+
+                var winningReport = await db.ReviewReports
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        r => r.UserId == command.UserId
+                             && r.PeriodType == period.PeriodType
+                             && r.PeriodStartUtc == period.StartUtc,
+                        ct);
+
+                if (winningReport is null) throw;
+
+                logger.LogInformation(
+                    "Concurrent {PeriodType} review insert for user {UserId} lost the race; returning the existing report",
+                    period.PeriodType, command.UserId);
+
+                report = winningReport;
+            }
         }
 
-        // A review is a period-end summary, so it is only available once the period has fully ended
-        // (defence-in-depth — the app shouldn't offer the current/future period).
-        if (!period.HasEnded(DateTimeOffset.UtcNow))
-            throw new ArgumentException("A review is only available after the period has ended.");
+        // The task set loaded for the AI above is wider (planned OR completed in the period), so it
+        // cannot be reused for this count.
+        var tasksCompleted = await db.TaskItems
+            .AsNoTracking()
+            .CountAsync(
+                t => t.UserId == command.UserId
+                     && t.CompletedAt != null
+                     && t.CompletedAt >= period.StartUtc
+                     && t.CompletedAt < period.EndUtc,
+                ct);
 
-        var tasks = await LoadTasksForPeriodAsync(command.UserId, period.StartUtc, period.EndUtc, ct);
-        var aiInputJson = JsonSerializer.Serialize(tasks, JsonOptions);
-
-        var preferredLanguage = await LoadPreferredLanguageAsync(command.UserId, ct);
-        await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
-
-        var (letter, model, usage) = await GenerateLetterAsync(
-            period.PeriodType,
-            preferredLanguage.ToDisplayName(),
-            period.ToDisplayLabel(),
-            aiInputJson,
-            ct);
-
-        await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
-        {
-            UserId = command.UserId,
-            InputTokens = usage?.InputTokenCount ?? 0,
-            OutputTokens = usage?.OutputTokenCount ?? 0,
-            TotalTokens = usage?.TotalTokenCount ?? 0,
-        }, ct);
-
-        var report = new ReviewReport
-        {
-            UserId = command.UserId,
-            PeriodType = period.PeriodType,
-            PeriodStartUtc = period.StartUtc,
-            PeriodEndUtc = period.EndUtc,
-            AiGeneratedLetter = letter,
-            AiInputJson = aiInputJson,
-            AiInputTaskCount = tasks.Count,
-            AiModel = model,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-
-        db.ReviewReports.Add(report);
-        try
-        {
-            await db.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateException)
-        {
-            // Concurrency guard: two simultaneous requests can both pass the existence check above
-            // and generate, but the unique index (UserId, PeriodType, PeriodStartUtc) lets only one
-            // insert win. Rather than surface a 500 to the loser, detach our rejected row and return
-            // the winner's report. (We accept the rare duplicate AI call — it's cheap.)
-            db.Entry(report).State = EntityState.Detached;
-
-            var winningReport = await db.ReviewReports
-                .AsNoTracking()
-                .FirstOrDefaultAsync(
-                    r => r.UserId == command.UserId
-                         && r.PeriodType == period.PeriodType
-                         && r.PeriodStartUtc == period.StartUtc,
-                    ct);
-
-            if (winningReport is null) throw;
-
-            logger.LogInformation(
-                "Concurrent {PeriodType} review insert for user {UserId} lost the race; returning the existing report",
-                period.PeriodType, command.UserId);
-
-            return MapToDto(winningReport, period, threshold);
-        }
-
-        logger.LogInformation(
-            "Saved {PeriodType} review {ReportId} for user {UserId} ({StartLocal}, {TimeZoneId})",
-            period.PeriodType, report.Id, command.UserId, period.StartLocalDate, period.TimeZoneId);
-
-        return MapToDto(report, period, threshold);
-    }
-
-    private static ReviewReportDto MapToDto(ReviewReport report, ReviewPeriod period, int threshold) =>
-        new()
+        return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
+            TasksCompleted = tasksCompleted,
             Letter = report.AiGeneratedLetter,
+            Theme = report.Theme,
+            OneThingToTryNext = report.OneThingToTryNext,
             GeneratedAtUtc = DateTime.SpecifyKind(report.CreatedAt, DateTimeKind.Utc),
             IsLowActivity = report.AiInputTaskCount != null && report.AiInputTaskCount < threshold,
         };
+    }
 
     private Task<List<ReviewTaskDto>> LoadTasksForPeriodAsync(
         Guid userId,
@@ -195,6 +215,23 @@ public class GenerateReviewCommandHandler(
             .ToListAsync(ct);
     }
 
+    private async Task<List<string>> LoadRecentThemesAsync(
+        Guid userId,
+        ReviewPeriod period,
+        CancellationToken ct)
+    {
+        return await db.ReviewReports
+            .AsNoTracking()
+            .Where(r => r.UserId == userId
+                        && r.PeriodType == period.PeriodType
+                        && r.PeriodStartUtc < period.StartUtc
+                        && r.Theme != null)
+            .OrderByDescending(r => r.PeriodStartUtc)
+            .Take(ReviewConstants.RecentThemesToAvoid)
+            .Select(r => r.Theme!)
+            .ToListAsync(ct);
+    }
+
     private Task<Language> LoadPreferredLanguageAsync(Guid userId, CancellationToken ct)
     {
         return db.UserPreferences
@@ -204,20 +241,28 @@ public class GenerateReviewCommandHandler(
             .FirstOrDefaultAsync(ct);
     }
 
-    private async Task<(string Letter, string Model, ChatTokenUsage? Usage)> GenerateLetterAsync(
+    private async Task<(ReviewLetter Letter, string Model, ChatTokenUsage? Usage)> GenerateLetterAsync(
         ReviewPeriodType periodType,
         string preferredLanguage,
         string displayPeriodLabel,
         string aiInputJson,
+        IReadOnlyCollection<string> recentThemes,
         CancellationToken ct)
     {
-        var prompt = ReviewPrompts.GetReviewPrompt(periodType, preferredLanguage, displayPeriodLabel, aiInputJson);
+        var prompt = ReviewPrompts.GetReviewPrompt(
+            periodType, preferredLanguage, displayPeriodLabel, aiInputJson, recentThemes);
         var chatClient = azureOpenAIClient.GetChatClient(_deploymentId);
 
 #pragma warning disable OPENAI001 // ReasoningEffortLevel is experimental in Azure.AI.OpenAI 2.8.0-beta.
         var options = new ChatCompletionOptions
         {
-            ReasoningEffortLevel = ChatReasoningEffortLevel.Medium
+            ReasoningEffortLevel = ChatReasoningEffortLevel.Medium,
+            // Pin the model to the letter's shape. A response that still comes back unusable (cut off,
+            // filtered, or unparseable) is rejected below rather than saved.
+            ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
+                jsonSchemaFormatName: ReviewPrompts.ReviewLetterSchemaName,
+                jsonSchema: ReviewPrompts.ReviewLetterSchema,
+                jsonSchemaIsStrict: true),
         };
 #pragma warning restore OPENAI001
 
@@ -232,11 +277,23 @@ public class GenerateReviewCommandHandler(
                 options,
                 ct);
 
-            var letter = response.Value.Content.Count > 0
+            // Length and ContentFilter come back as HTTP 200 with half a JSON object. Saving that would
+            // pin the broken letter to the period forever, so fail and let the user retry instead.
+            if (response.Value.FinishReason != ChatFinishReason.Stop)
+            {
+                logger.LogWarning(
+                    "Review letter stopped early (finishReason={FinishReason}, deployment={DeploymentId})",
+                    response.Value.FinishReason, _deploymentId);
+                throw new AiTaskGenerationException(
+                    AiErrorCode.EmptyResponse,
+                    $"Review letter generation stopped early ({response.Value.FinishReason}).");
+            }
+
+            var rawResponse = response.Value.Content.Count > 0
                 ? response.Value.Content[0].Text ?? string.Empty
                 : string.Empty;
 
-            if (string.IsNullOrWhiteSpace(letter))
+            if (string.IsNullOrWhiteSpace(rawResponse))
             {
                 logger.LogWarning("AI returned empty letter for review (deployment={DeploymentId})", _deploymentId);
                 throw new AiTaskGenerationException(
@@ -244,9 +301,29 @@ public class GenerateReviewCommandHandler(
                     "AI returned an empty review letter.");
             }
 
+            var letter = ReviewLetterParser.Parse(rawResponse);
+
+            if (letter is null)
+            {
+                logger.LogWarning(
+                    "AI returned an unparseable review letter (deployment={DeploymentId}, length={Length})",
+                    _deploymentId, rawResponse.Length);
+                throw new AiTaskGenerationException(
+                    AiErrorCode.EmptyResponse,
+                    "AI returned a review letter that does not match the schema.");
+            }
+
+            if (letter.Theme is null)
+            {
+                // Expected for a quiet period.
+                logger.LogInformation(
+                    "Review letter has no theme (deployment={DeploymentId}, periodType={PeriodType})",
+                    _deploymentId, periodType);
+            }
+
             logger.LogInformation(
                 "Review generated (deployment={DeploymentId}, length={Length})",
-                _deploymentId, letter.Length);
+                _deploymentId, letter.Body.Length);
 
             return (letter, _deploymentId, response.Value.Usage);
         }

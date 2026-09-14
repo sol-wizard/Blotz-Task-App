@@ -9,9 +9,13 @@ import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 
 type RecurrenceSelectProps = {
   control: Control<TaskFormField>;
+  onRecurrenceChange?: () => void;
 };
 
-export const RecurrenceSelect = ({ control }: RecurrenceSelectProps) => {
+export const RecurrenceSelect = ({
+  control,
+  onRecurrenceChange,
+}: RecurrenceSelectProps) => {
   const { t } = useTranslation("tasks");
   const recurrenceOptions: DropdownOption<TaskFormField["recurrence"]>[] = [
     { label: t("recurrence.never"), value: "never" },
@@ -42,7 +46,10 @@ export const RecurrenceSelect = ({ control }: RecurrenceSelectProps) => {
           </View>
           <AnimatedDropdown
             value={value}
-            onChange={onChange}
+            onChange={(nextValue) => {
+              onRecurrenceChange?.();
+              onChange(nextValue);
+            }}
             options={recurrenceOptions}
             placeholder={t("recurrence.never")}
             minWidth={230}

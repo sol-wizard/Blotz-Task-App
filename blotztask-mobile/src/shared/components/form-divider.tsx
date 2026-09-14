@@ -2,7 +2,15 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 
-export const FormDivider = ({ marginVertical = 16 }: { marginVertical?: number }) => {
+type FormDividerProps = {
+  marginVertical?: number;
+  animateLayout?: boolean;
+};
+
+export const FormDivider = ({
+  marginVertical = 16,
+  animateLayout = true,
+}: FormDividerProps) => {
   return (
     <Animated.View
       style={{
@@ -14,7 +22,7 @@ export const FormDivider = ({ marginVertical = 16 }: { marginVertical?: number }
         borderStyle: "dashed",
         marginVertical,
       }}
-      layout={MotionAnimations.layout}
+      layout={animateLayout ? MotionAnimations.layout : undefined}
     >
       <View
         style={{

@@ -7,6 +7,8 @@ export const EVENTS = {
   LOGIN_FAILED: "login_failed",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
+  AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
+  MIC_PERMISSION_RESOLVED: "mic_permission_resolved",
   ACTIVE_USER_5S: "active_user_5s",
   BREAKDOWN_TASK: "breakdown_task",
   SCREEN_VIEWED: "screen_viewed",
@@ -23,12 +25,23 @@ export const EVENTS = {
   SHARE_SHEET_OPENED: "share_sheet_opened",
   SHARE_COMPLETED: "share_completed",
   SHARE_FAILED: "share_failed",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
+  ONBOARDING_COMPLETED: "onboarding_completed",
 } as const;
 
 export const SCREEN_NAMES = {
   SIGN_IN: "SignIn",
   NOTES: "Notes",
   GASHAPON_MACHINE: "GashaponMachine",
+  SETTINGS_REVIEW: "SettingsReview",
+  BADGE_WALL: "BadgeWall",
+  DDL: "Ddl",
+  MONTHLY_CALENDAR: "MonthlyCalendar",
+  NOTE_EDITOR: "NoteEditor",
+  POMODORO_FOCUS: "PomodoroFocus",
+  TASK_CREATE: "TaskCreate",
+  TASK_DETAILS: "TaskDetails",
 } as const;
 
 /** Which sign-in button was used. `sms` is only rendered outside production. */
@@ -63,6 +76,17 @@ export type AiTaskFailureStage =
   | "transcription"
   | "generation";
 
+/**
+ * Microphone permission outcome for the AI voice flow. `already_granted` involves no prompt, so
+ * it is not a grant decision. `blocked` (`canAskAgain` false) can only be fixed in Settings.
+ */
+export type MicPermissionOutcome =
+  | "already_granted"
+  | "granted"
+  | "denied"
+  | "blocked"
+  | "error";
+
 export type AiTaskGenerationTurn = {
   turn_index: number;
   input_mode: AiTaskInputMode;
@@ -77,6 +101,18 @@ export type AiTaskGenerationTurn = {
   generated_notes: {
     text: string;
   }[];
+  // Recurring drafts were missing from this event, so a "gym every Monday" session read as
+  // zero output in PostHog even when the user saved it.
+  generated_recurring_tasks: {
+    title: string;
+    description: string;
+    frequency: string;
+    interval: number;
+    days_of_week: number | null;
+    template_start_time: string;
+    template_end_time: string;
+    task_label: string;
+  }[];
 };
 
 // sharing records
@@ -89,3 +125,8 @@ export type ShareEvent =
 export type ShareSource = "weekly_review" | "monthly_review" | "badge";
 
 export type ShareContentType = "review" | "badge";
+
+// onboarding
+export type OnboardingOutcome = "completed" | "skipped";
+
+export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";

@@ -1,7 +1,8 @@
 {
   "actions": {
     "skip": "跳过",
-    "continue": "继续"
+    "continue": "继续",
+    "start": "开始使用"
   },
   "ai-voice": {
     "title": "只需开口，剩下的交给我们",
@@ -10,6 +11,14 @@
   "breakdown": {
     "title": "宏大目标，化整为零",
     "subtitle": "告诉 AI 您的目标。它会将其拆解为清晰的小步骤，让您的计划真正落实。"
+  },
+  "invite": {
+    "title": "有邀请码吗？",
+    "subtitle": "输入朋友的邀请码，一起开启 Blotz 之旅。",
+    "codePlaceholder": "输入邀请码",
+    "redeemButton": "兑换",
+    "redeeming": "兑换中...",
+    "redeemSuccess": "邀请码兑换成功！"
   },
   "notes": {
     "title": "捕捉转瞬即逝的灵感",

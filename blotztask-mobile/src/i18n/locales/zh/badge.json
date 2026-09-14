@@ -14,6 +14,7 @@
   },
   "details": {
     "equipReward": "装备奖励",
+    "equipped": "已装备",
     "notFound": "未找到徽章"
   }
 }

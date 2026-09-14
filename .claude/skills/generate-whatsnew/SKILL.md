@@ -45,20 +45,20 @@ Screenshots must be **real** — never sourced from the web, never mocked up. If
 
 #### 1. Produce the screenshot brief
 
-After settling ②, write a clear brief listing every screenshot needed. For each one, state:
+After settling ②, write a clear brief listing every screenshot needed. Each screenshot card needs **two** screenshots — one with the app in Chinese, one with the app in English (switch language in Settings) — never the same image reused for both. For each card, state:
 
 - **Screen / state**: exactly where in the app to navigate (e.g. "Badges tab → tap any badge → Badge Detail sheet")
 - **What to show**: what should be visible in the frame (e.g. "the badge image, name, description, and progress bar — ideally with the badge already unlocked")
-- **Filename**: the target filename in `blotztask-mobile/assets/images-png/whatsnew/`, e.g. `whatsnew-badge-detail.png`
+- **Filenames**: the target filenames in `blotztask-mobile/assets/images-png/whatsnew/`, one per language, e.g. `whatsnew-badge-detail-zh.png` and `whatsnew-badge-detail-en.png`
 
-Present this list to the developer and ask them to take the screenshots and send them back in the conversation. Screenshots come from a real device or simulator running a build that already has the unreleased features — the developer chooses which.
+Present this list to the developer and ask them to take both language versions of each screenshot and send them back in the conversation. Screenshots come from a real device or simulator running a build that already has the unreleased features — the developer chooses which.
 
 #### 2. Receive and save the screenshots
 
 The developer sends the screenshots directly in the conversation. When they arrive:
 
 1. **Delete all existing files** in `blotztask-mobile/assets/images-png/whatsnew/` — each release replaces the previous one entirely. Old screenshots are dead weight: users have already seen that What's New screen and will never see it again, and each build is self-contained so older installs are unaffected.
-2. Note which filename each image maps to from the brief.
+2. Note which `-zh` / `-en` filename each image maps to from the brief.
 3. Save each one to `blotztask-mobile/assets/images-png/whatsnew/<filename>.png` — this is the final location the app code will reference, so no second move is needed.
 4. If an image is very wide (original device resolution), scale it to ~480 px wide: `sips --resampleWidth 480 <file>`.
 
@@ -80,7 +80,7 @@ Give the artifact to the reviewer (the developer / Ben). Revise whatever they do
 
 Once approved, **Claude edits the code but does not open the PR** (Ben's decision, 2026-07-19).
 
-1. Create a branch and fill the copy and images into the content slot the developer left.
+1. Create a branch and fill the copy into the content slot the developer left. For each screenshot card in `cards.ts`, set both `imageZh` and `imageEn` to the matching `-zh` / `-en` file from ③.
 2. Hand it over: tell them the branch name and which files changed.
 3. **The developer opens the app locally, swipes through the onboarding, confirms it renders correctly — and opens the PR themselves.**
 

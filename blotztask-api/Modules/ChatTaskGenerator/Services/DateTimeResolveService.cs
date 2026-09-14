@@ -19,6 +19,9 @@ public sealed class ResolveDateTimesRequest
 
 public class DateTimeResolveService
 {
+    // Timex suffixes the recognizer uses for a vague part of day: morning, afternoon, evening, night.
+    private static readonly string[] PartOfDayTimexSuffixes = ["TMO", "TAF", "TEV", "TNI"];
+
     public string Resolve(ResolveDateTimesRequest request)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
@@ -48,7 +51,7 @@ public class DateTimeResolveService
             {
                 r.Start,
                 r.End,
-                Value = ExtractResolvedTimeValue(r.Resolution)
+                Value = ExtractResolvedTimeValue(r.Resolution, r.Text)
             })
             .Where(r => !string.IsNullOrWhiteSpace(r.Value))
             .Where(r => r.Start >= 0 && r.End >= r.Start && r.End < message.Length)
@@ -68,7 +71,7 @@ public class DateTimeResolveService
         return newMessage.ToString();
     }
 
-    private static string? ExtractResolvedTimeValue(object? resolution)
+    private static string? ExtractResolvedTimeValue(object? resolution, string originalText)
     {
         if (resolution is not IDictionary<string, object> dict) return null;
         if (!dict.TryGetValue("values", out var valuesObj) || valuesObj is null) return null;
@@ -84,6 +87,21 @@ public class DateTimeResolveService
         // "not resolved" into the message. One-off relative dates (type "date"/"datetime") still resolve.
         if (selectedTime.TryGetValue("type", out var type) && type is "duration" or "set")
             return null;
+
+        // A vague part of day ("明晚", "今天下午", "tomorrow morning") resolves to a fixed window —
+        // evening is 16:00–20:00 — and the model always took the window's start, so "tonight" landed
+        // at 16:00 (a third of all "晚上" tasks in PostHog). Pin the date, keep the user's wording,
+        // and let the model choose the hour. A bare part of day carries no date, so leave it alone.
+        if (type is "datetimerange" or "timerange"
+            && selectedTime.TryGetValue("timex", out var timex)
+            && PartOfDayTimexSuffixes.Any(timex.EndsWith))
+        {
+            if (type == "timerange") return null;
+
+            return selectedTime.TryGetValue("start", out var rangeStart) && rangeStart.Length >= 10
+                ? $"{originalText} ({rangeStart[..10]})"
+                : null;
+        }
 
         if (selectedTime.TryGetValue("value", out var v)
             && !string.IsNullOrWhiteSpace(v)

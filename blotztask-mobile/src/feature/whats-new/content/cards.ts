@@ -7,7 +7,9 @@ export const WHATS_NEW_VERSION = "2026-07";
 type ScreenshotCard = {
   type: "screenshot";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  image: any;
+  imageZh: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  imageEn: any;
   titleKey: string;
   bodyKey: string;
 };
@@ -37,25 +39,29 @@ export const WHATS_NEW_CARDS: WhatsNewCard[] = [
   },
   {
     type: "screenshot",
-    image: require("../../../../assets/images-png/whatsnew/whatsnew-badge-detail.png"),
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-badge-detail.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-badge-detail.png"),
     titleKey: "badge-detail.title",
     bodyKey: "badge-detail.body",
   },
   {
     type: "screenshot",
-    image: require("../../../../assets/images-png/whatsnew/whatsnew-persistent-note.png"),
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-persistent-note.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-persistent-note.png"),
     titleKey: "persistent-note.title",
     bodyKey: "persistent-note.body",
   },
   {
     type: "screenshot",
-    image: require("../../../../assets/images-png/whatsnew/whatsnew-widget.png"),
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-widget.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-widget.png"),
     titleKey: "widget.title",
     bodyKey: "widget.body",
   },
   {
     type: "screenshot",
-    image: require("../../../../assets/images-png/whatsnew/whatsnew-firework.png"),
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-firework.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-firework.png"),
     titleKey: "firework.title",
     bodyKey: "firework.body",
   },

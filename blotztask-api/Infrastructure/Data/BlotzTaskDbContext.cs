@@ -9,7 +9,9 @@ using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
+using BlotzTask.Modules.Referrals.Domain;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace BlotzTask.Infrastructure.Data;
 
@@ -40,6 +42,9 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
     public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
+
+    public DbSet<ReferralCode> ReferralCodes { get; set; }
+    public DbSet<Referral> Referrals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
