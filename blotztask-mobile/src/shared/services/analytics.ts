@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { ReviewPeriodType } from "@/feature/review/models/review-dto";
 import posthog from "@/shared/constants/posthog-client";
+import { AUTH_CONFIG } from "@/shared/services/api/config";
 import {
   EVENTS,
   SCREEN_NAMES,
@@ -59,7 +60,10 @@ export const analytics = {
    * so PostHog joins these to the identified person at `$identify`.
    */
   trackLoginStarted(params: { connection: LoginConnection }) {
-    posthog.capture(EVENTS.LOGIN_STARTED, { connection: params.connection });
+    posthog.capture(EVENTS.LOGIN_STARTED, {
+      connection: params.connection,
+      auth_domain: AUTH_CONFIG.domain,
+    });
   },
 
   /**
@@ -72,6 +76,7 @@ export const analytics = {
   trackLoginSucceeded(params: { connection: LoginConnection; durationMs: number }) {
     posthog.capture(EVENTS.LOGIN_SUCCEEDED, {
       connection: params.connection,
+      auth_domain: AUTH_CONFIG.domain,
       duration_ms: params.durationMs,
     });
   },
@@ -93,6 +98,7 @@ export const analytics = {
   }) {
     posthog.capture(EVENTS.LOGIN_FAILED, {
       connection: params.connection,
+      auth_domain: AUTH_CONFIG.domain,
       reason: params.reason,
       error_code: params.errorCode,
       duration_ms: params.durationMs,

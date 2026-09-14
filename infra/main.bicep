@@ -15,6 +15,7 @@ param auth0ManagementClientSecret string
 // Auth0 Configuration
 param auth0Domain string
 param auth0Audience string
+param auth0CustomDomain string = ''
 param auth0ManagementClientId string
 param auth0ManagementAudience string
 
@@ -118,6 +119,7 @@ module webAppForAPI 'modules/appService.bicep' = {
     appServiceSkuTier: appServiceSkuTier
     auth0Domain: auth0Domain
     auth0Audience: auth0Audience
+    auth0CustomDomain: auth0CustomDomain
     auth0ManagementClientId: auth0ManagementClientId
     auth0ManagementAudience: auth0ManagementAudience
     iosLatestVersion: iosLatestVersion
