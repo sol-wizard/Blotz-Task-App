@@ -151,6 +151,46 @@ public class GetReviewQueryHandlerTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_ReportSavedBeforeTheLetterWasSplit_StillLoadsWithTheNewPartsNull()
+    {
+        // Arrange — a report written before theme/oneThingToTryNext existed: the body is all it has.
+        var userId = await _seeder.CreateUserAsync();
+        var anchor = new DateOnly(2026, 7, 1);
+        var period = Period(ReviewPeriodType.Monthly, anchor);
+
+        await _seeder.CreateReviewReportAsync(userId, ReviewPeriodType.Monthly, period.StartUtc, period.EndUtc,
+            letter: "A letter written before the split.");
+
+        // Act
+        var result = await HandleAsync(userId, ReviewPeriodType.Monthly, anchor);
+
+        // Assert
+        result.Letter.Should().Be("A letter written before the split.", because: "the body still lives in AiGeneratedLetter");
+        result.Theme.Should().BeNull(because: "reports predating the split have no theme and must still load");
+        result.OneThingToTryNext.Should().BeNull(because: "reports predating the split have no suggestion and must still load");
+    }
+
+    [Fact]
+    public async Task Handle_ReportWithAllThreeParts_ReturnsThemAllSeparately()
+    {
+        // Arrange — a report generated after the split, so the app can lay out three blocks.
+        var userId = await _seeder.CreateUserAsync();
+        var anchor = new DateOnly(2026, 7, 1);
+        var period = Period(ReviewPeriodType.Monthly, anchor);
+
+        await _seeder.CreateReviewReportAsync(userId, ReviewPeriodType.Monthly, period.StartUtc, period.EndUtc,
+            letter: "The body.", theme: "Finishing the thesis", oneThingToTryNext: "Move a couple of tasks before 11pm.");
+
+        // Act
+        var result = await HandleAsync(userId, ReviewPeriodType.Monthly, anchor);
+
+        // Assert
+        result.Letter.Should().Be("The body.", because: "letter stays the body's field name for clients already in the stores");
+        result.Theme.Should().Be("Finishing the thesis", because: "the theme is addressable on its own");
+        result.OneThingToTryNext.Should().Be("Move a couple of tasks before 11pm.", because: "the suggestion is addressable on its own");
+    }
+
+    [Fact]
     public async Task Handle_WeeklyPeriod_CountsTheTasksCompletedInThatWeek()
     {
         // Arrange — the week of Mon 13 July 2026 in Sydney (AEST, UTC+10):

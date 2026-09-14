@@ -12,8 +12,11 @@ public class ReviewReportDto
 
     public int TasksCompleted { get; set; }
 
-    // Null until the review has been generated.
+    // Null until the review has been generated. Letter is the body — the name is kept for the
+    // clients already in the stores; Theme and OneThingToTryNext are also null before the split.
     public string? Letter { get; set; }
+    public string? Theme { get; set; }
+    public string? OneThingToTryNext { get; set; }
     public bool IsLowActivity { get; set; }
     public DateTime? GeneratedAtUtc { get; set; }
 }
