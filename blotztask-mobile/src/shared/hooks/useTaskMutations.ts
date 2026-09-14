@@ -99,7 +99,7 @@ const useTaskMutations = () => {
 
   const toggleTaskMutation = useMutation({
     mutationFn: ({ taskId }: ToggleTaskVariables) => toggleTaskCompletion(taskId),
-    onMutate: async (data) => {
+    onMutate: (data) => {
       if (!data?.selectedDay) return;
       const dayKey = format(data.selectedDay, "yyyy-MM-dd");
       const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
@@ -114,7 +114,7 @@ const useTaskMutations = () => {
       if (!context) return;
       queryClient.setQueryData(taskKeys.selectedDay(context.dayKey), context.prevSelectedDayData);
     },
-    onSuccess: async (_data, variables) => {
+    onSuccess: (_data, variables) => {
       taskFirework.playIfCompleting(variables.wasDone);
       if (variables.wasDone) {
         analytics.trackTaskReopened({ taskId: variables.taskId });
