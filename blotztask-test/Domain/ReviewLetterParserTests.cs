@@ -21,28 +21,40 @@ public class ReviewLetterParserTests
         var letter = ReviewLetterParser.Parse(response);
 
         // Assert
-        letter.Theme.Should().Be("Finishing the thesis", because: "the theme is read straight off the JSON");
+        letter.Should().NotBeNull(because: "a response matching the schema is a usable letter");
+        letter!.Theme.Should().Be("Finishing the thesis", because: "the theme is read straight off the JSON");
         letter.Body.Should().Be("You spent most of March circling one thing.", because: "body carries the letter itself");
         letter.OneThingToTryNext.Should().Be("Move a couple of tasks before 11pm.", because: "the suggestion is a separate block for the app to lay out");
     }
 
     [Fact]
-    public void Parse_MalformedResponse_FallsBackToTheWholeResponseAsBody()
+    public void Parse_MalformedResponse_ReturnsNull()
     {
-        // Arrange — a content filter or a refusal can still come back as prose despite the schema.
+        // Arrange — prose instead of the schema's JSON.
         var response = "You had a busy month, and it showed in how you planned your evenings.";
 
         // Act
         var letter = ReviewLetterParser.Parse(response);
 
         // Assert
-        letter.Body.Should().Be(response, because: "an unparseable response is treated as the body rather than failing the request");
-        letter.Theme.Should().BeNull(because: "the fallback cannot recover a theme it never received");
-        letter.OneThingToTryNext.Should().BeNull(because: "the fallback cannot recover a suggestion it never received");
+        letter.Should().BeNull(because: "saving unparseable text would pin it to the period as the letter, so the caller fails the request instead");
     }
 
     [Fact]
-    public void Parse_JsonWithoutABody_FallsBackToTheWholeResponseAsBody()
+    public void Parse_TruncatedJson_ReturnsNull()
+    {
+        // Arrange — what a Length or ContentFilter finish leaves behind: half a JSON object.
+        var response = """{"theme": "Exams", "body": "You spent the wee""";
+
+        // Act
+        var letter = ReviewLetterParser.Parse(response);
+
+        // Assert
+        letter.Should().BeNull(because: "a cut-off letter must not be saved as the user's letter; they retry instead");
+    }
+
+    [Fact]
+    public void Parse_JsonWithoutABody_ReturnsNull()
     {
         // Arrange — valid JSON is not enough; without a body there is no letter to show.
         var response = """{ "theme": "Something", "oneThingToTryNext": "Something else" }""";
@@ -51,8 +63,7 @@ public class ReviewLetterParserTests
         var letter = ReviewLetterParser.Parse(response);
 
         // Assert
-        letter.Body.Should().Be(response, because: "a body-less object is as unusable as malformed JSON, so the same fallback applies");
-        letter.Theme.Should().BeNull(because: "the fallback discards partial parses rather than mixing them with raw text");
+        letter.Should().BeNull(because: "a body-less object is as unusable as malformed JSON");
     }
 
     [Fact]
@@ -67,7 +78,8 @@ public class ReviewLetterParserTests
         var letter = ReviewLetterParser.Parse(response);
 
         // Assert
-        letter.Body.Should().Be("A quiet month, and that is fine.", because: "the body is the one part always present");
+        letter.Should().NotBeNull(because: "a body with null optional fields is still a usable letter");
+        letter!.Body.Should().Be("A quiet month, and that is fine.", because: "the body is the one part always present");
         letter.Theme.Should().BeNull(because: "no theme is invented for a quiet period");
         letter.OneThingToTryNext.Should().BeNull(because: "no suggestion is invented for a quiet period");
     }
@@ -83,7 +95,8 @@ public class ReviewLetterParserTests
         var letter = ReviewLetterParser.Parse(response);
 
         // Assert
-        letter.Theme.Should().BeNull(because: "a whitespace-only theme is the same as having none");
+        letter.Should().NotBeNull(because: "blank optional fields do not make the letter unusable");
+        letter!.Theme.Should().BeNull(because: "a whitespace-only theme is the same as having none");
         letter.OneThingToTryNext.Should().BeNull(because: "an empty suggestion is the same as having none");
     }
 }

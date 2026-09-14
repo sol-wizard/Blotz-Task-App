@@ -257,8 +257,8 @@ public class GenerateReviewCommandHandler(
         var options = new ChatCompletionOptions
         {
             ReasoningEffortLevel = ChatReasoningEffortLevel.Medium,
-            // Pin the model to the letter's shape. A content filter or a refusal can still come back
-            // as prose, which is why the parse below falls back instead of throwing.
+            // Pin the model to the letter's shape. A response that still comes back unusable (cut off,
+            // filtered, or unparseable) is rejected below rather than saved.
             ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
                 jsonSchemaFormatName: ReviewPrompts.ReviewLetterSchemaName,
                 jsonSchema: ReviewPrompts.ReviewLetterSchema,
@@ -277,6 +277,18 @@ public class GenerateReviewCommandHandler(
                 options,
                 ct);
 
+            // Length and ContentFilter come back as HTTP 200 with half a JSON object. Saving that would
+            // pin the broken letter to the period forever, so fail and let the user retry instead.
+            if (response.Value.FinishReason != ChatFinishReason.Stop)
+            {
+                logger.LogWarning(
+                    "Review letter stopped early (finishReason={FinishReason}, deployment={DeploymentId})",
+                    response.Value.FinishReason, _deploymentId);
+                throw new AiTaskGenerationException(
+                    AiErrorCode.EmptyResponse,
+                    $"Review letter generation stopped early ({response.Value.FinishReason}).");
+            }
+
             var rawResponse = response.Value.Content.Count > 0
                 ? response.Value.Content[0].Text ?? string.Empty
                 : string.Empty;
@@ -291,9 +303,19 @@ public class GenerateReviewCommandHandler(
 
             var letter = ReviewLetterParser.Parse(rawResponse);
 
+            if (letter is null)
+            {
+                logger.LogWarning(
+                    "AI returned an unparseable review letter (deployment={DeploymentId}, length={Length})",
+                    _deploymentId, rawResponse.Length);
+                throw new AiTaskGenerationException(
+                    AiErrorCode.EmptyResponse,
+                    "AI returned a review letter that does not match the schema.");
+            }
+
             if (letter.Theme is null)
             {
-                // Expected for a quiet period, but also what a schema-less response looks like.
+                // Expected for a quiet period.
                 logger.LogInformation(
                     "Review letter has no theme (deployment={DeploymentId}, periodType={PeriodType})",
                     _deploymentId, periodType);

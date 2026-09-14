@@ -13,9 +13,9 @@ public static class ReviewLetterParser
         PropertyNameCaseInsensitive = true
     };
 
-    // A content filter, a refusal, or a model ignoring the schema can still hand back prose. That
-    // is not worth a 500, so the whole response becomes the body and the app renders one block.
-    public static ReviewLetter Parse(string rawResponse)
+    // Returns null when the response is not a usable letter (malformed JSON or no body). Saving the
+    // raw text instead would pin a broken letter to the period, so the caller fails the request.
+    public static ReviewLetter? Parse(string rawResponse)
     {
         try
         {
@@ -31,10 +31,10 @@ public static class ReviewLetterParser
         }
         catch (JsonException)
         {
-            // Fall through to the whole-response fallback below.
+            // Treated the same as a missing body.
         }
 
-        return new ReviewLetter(rawResponse.Trim(), null, null);
+        return null;
     }
 
     // The client renders a block only when the value is non-null, so blank has to become null.
