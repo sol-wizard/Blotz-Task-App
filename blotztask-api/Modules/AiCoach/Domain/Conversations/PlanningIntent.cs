@@ -4,8 +4,9 @@ namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
 
 /// <summary>
 /// Recoverable working state for the plan currently being prepared. This is not a Task and does
-/// not authorize a business side effect; it only preserves user-explicit planning context across
-/// turns so policy does not have to reinterpret old messages.
+/// not authorize a business side effect. Text and Kind are revisable model interpretations;
+/// EvidenceQuote preserves the model's cited wording and SourceMessageId records the turn that
+/// captured it; while source matching is disabled, neither field proves provenance or meaning.
 /// </summary>
 public sealed record ActivePlanningIntentSnapshot(
     Guid IntentId,

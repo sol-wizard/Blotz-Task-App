@@ -8,7 +8,7 @@ namespace BlotzTask.Modules.AiCoach.Domain.Proposals;
 public sealed record ProposalGenerationContext(
     ConversationSnapshot Snapshot,
     VerifiedPlanningContext VerifiedPlanning,
-    PlanningDecision PlanningDecision,
+    PlanningAuthority PlanningAuthority,
     ProposalGenerationPolicy Policy,
     DateTimeOffset UserLocalNow,
     string TimeZoneId,
@@ -42,7 +42,7 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
 {
     public ProposalGenerationResult Generate(ProposalGenerationContext context)
     {
-        if (!context.PlanningDecision.Allows(AllowedPlanningAction.GenerateProposal))
+        if (!context.PlanningAuthority.CanGenerateProposal)
         {
             return new ProposalGenerationResult(
                 null,
@@ -54,8 +54,7 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
         // Free-text constraints cannot be safely resolved by this deterministic generator.
         // Decline fallback instead of silently replacing an explicit time with working hours.
         var reusable = PlanningStateRules.ReusableIntent(context.Snapshot, context.VerifiedPlanning);
-        if (context.VerifiedPlanning.Evidence.HasInvalidClaims
-            || context.VerifiedPlanning.Constraints.Count > 0
+        if (context.VerifiedPlanning.Constraints.Count > 0
             || reusable?.Constraints.Count > 0)
         {
             return new ProposalGenerationResult(null,
@@ -131,7 +130,7 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
             useChinese
                 ? $"我先按每项 {policy.DefaultDurationMinutes} 分钟生成了一个可编辑的安排，请确认或调整。"
                 : $"I made an editable {policy.DefaultDurationMinutes}-minute draft for each item. Confirm or adjust it.",
-            context.PlanningDecision.AllowedAssumptions,
+            context.PlanningAuthority.AllowedAssumptions,
             warnings.Distinct().ToList());
     }
 

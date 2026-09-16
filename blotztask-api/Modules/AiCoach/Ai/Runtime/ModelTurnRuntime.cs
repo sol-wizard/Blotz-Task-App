@@ -67,7 +67,7 @@ public sealed class ModelTurnRuntime(
     IConversationPrePolicy prePolicy,
     IConversationPostPolicy postPolicy,
     IEvidenceGuard evidenceGuard,
-    IPlanningReadinessCalculator planningReadinessCalculator,
+    IPlanningAuthorityCalculator planningAuthorityCalculator,
     ISupportPolicyCalculator supportPolicyCalculator,
     IDeterministicProposalGenerator proposalGenerator,
     IResponseGuard responseGuard,
@@ -107,7 +107,7 @@ public sealed class ModelTurnRuntime(
         // Corrections/regenerations extend this transcript so the model sees what it got wrong.
         var transcript = new List<GatewayMessage>(context.Transcript);
 
-        (VerifiedPlanningContext Planning, PlanningDecision Decision, SupportDecision? Support)? repairContext = null;
+        (VerifiedPlanningContext Planning, PlanningAuthority Authority, SupportDecision? Support)? repairContext = null;
         var iterations = 0;
         var schemaCorrections = 0;
         var regenerations = 0;
@@ -231,19 +231,20 @@ public sealed class ModelTurnRuntime(
                 SerializeForLog(verifiedPlanning.Constraints));
             // Payload repairs may not reinterpret the user's request or expand authority.
             verifiedPlanning = repairContext?.Planning ?? verifiedPlanning;
-            var planningDecision = repairContext?.Decision ?? planningReadinessCalculator.Calculate(new PlanningReadinessContext(
+            var planningAuthority = repairContext?.Authority ?? planningAuthorityCalculator.Calculate(new PlanningAuthorityContext(
                 snapshot,
                 verifiedPlanning,
                 request.Mode.Policy.Planning));
             logger.LogInformation(
-                "AiCoach.PlanningReadiness.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Readiness={Readiness} AllowedActions={AllowedActions} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ActiveItemCount={ActiveItemCount} HasOpenQuestion={HasOpenQuestion}",
+                "AiCoach.PlanningAuthority.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsBlocked={IsBlocked} CanGenerateProposal={CanGenerateProposal} CanAskClarifyingQuestion={CanAskClarifyingQuestion} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ActiveItemCount={ActiveItemCount} HasOpenQuestion={HasOpenQuestion}",
                 snapshot.ConversationId,
                 request.EffectId,
                 iterations,
-                planningDecision.Readiness,
-                string.Join(",", planningDecision.AllowedActions),
-                string.Join(",", planningDecision.Reasons),
-                string.Join(",", planningDecision.AllowedAssumptions),
+                planningAuthority.IsBlocked,
+                planningAuthority.CanGenerateProposal,
+                planningAuthority.CanAskClarifyingQuestion,
+                string.Join(",", planningAuthority.Reasons),
+                string.Join(",", planningAuthority.AllowedAssumptions),
                 snapshot.ActivePlanningIntent?.Items.Count ?? 0,
                 snapshot.OpenQuestion is not null);
 
@@ -271,244 +272,94 @@ public sealed class ModelTurnRuntime(
                     supportDecision.ClearPreference);
             }
 
-            var decision = postPolicy.Decide(new PolicyContext(
-                snapshot,
-                envelope,
-                candidate,
-                request.Mode,
-                verifiedPlanning,
-                planningDecision,
-                supportDecision));
-            logger.LogInformation(
-                "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction} AssistantReply={AssistantReply} ProposalCandidate={ProposalCandidate}",
-                snapshot.ConversationId,
-                request.EffectId,
-                iterations,
-                candidate.SuggestedAction,
-                decision.FinalStrategy,
-                decision.DecisionType,
-                decision.ReasonCode,
-                decision.AcceptResponseCandidate,
-                decision.AcceptProposalSetCandidate,
-                decision.Regeneration is not null,
-                decision.Fallback?.Action,
-                candidate.ResponseCandidate.Text,
-                SerializeForLog(candidate.ProposalSetCandidate));
+            var policyContext = new PolicyContext(
+                snapshot, envelope, candidate, request.Mode, verifiedPlanning, planningAuthority, supportDecision);
+            var decision = postPolicy.Decide(policyContext);
 
-            if (decision.DecisionType == StrategyDecisionType.RequiresRegeneration)
-            {
-                regenerations++;
-                if (decision.Regeneration is not null
-                    && regenerations + proposalRegenerations <= limits.MaxRegenerationAttempts
-                    && iterations < limits.MaxModelIterations)
-                {
-                    logger.LogWarning(
-                        "AiCoach.Regeneration.Requested ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} RegenerationAttempt={RegenerationAttempt} ReasonCode={ReasonCode} RequiredStrategy={RequiredStrategy} RequiredFieldCount={RequiredFieldCount}",
-                        snapshot.ConversationId,
-                        request.EffectId,
-                        iterations,
-                        regenerations,
-                        decision.ReasonCode,
-                        decision.Regeneration.RequiredStrategy,
-                        decision.Regeneration.RequiredFields.Count);
-                    if (!verifiedPlanning.Evidence.HasInvalidClaims)
-                        repairContext = (verifiedPlanning, planningDecision, supportDecision);
-                    AppendCorrection(
-                        transcript,
-                        completion.AssistantText,
-                        BuildRegenerationInstruction(decision.Regeneration));
-                    continue;
-                }
-
-                return Complete(FallbackOutcome(
-                        decision.ReasonCode,
-                        decision,
-                        snapshot,
-                        verifiedPlanning,
-                        planningDecision,
-                        supportDecision,
-                        request.Mode.Mode,
-                        currentUser?.Id,
-                        verifiedPlanning.Disposition,
-                        currentUserMessage,
-                        request.TimeZoneId,
-                        request.UserLocalNow,
-                        request.Mode.Policy.ProposalGeneration,
-                        envelope.ProposalConstraints,
-                        request.EffectId,
-                        iterations,
-                        proposalRegenerations));
-            }
-
-            // ---- Response Guard ----
             if (decision.AcceptResponseCandidate)
             {
-                var responseVerdict = responseGuard.Validate(
-                    candidate.ResponseCandidate, envelope.ResponseConstraints);
+                var verdict = responseGuard.Validate(candidate.ResponseCandidate, envelope.ResponseConstraints);
                 logger.LogInformation(
-                    "AiCoach.ResponseGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsValid={IsValid} ResponseType={ResponseType} ResponseText={ResponseText} GuardDetail={GuardDetail}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    responseVerdict.IsValid,
-                    candidate.ResponseCandidate.GetType().Name,
-                    candidate.ResponseCandidate.Text,
-                    responseVerdict.Detail);
-                if (!responseVerdict.IsValid)
-                {
-                    return Complete(FallbackOutcome(
-                        StrategyReasonCode.ResponseInvalid,
-                        decision,
-                        snapshot,
-                        verifiedPlanning,
-                        planningDecision,
-                        supportDecision,
-                        request.Mode.Mode,
-                        currentUser?.Id,
-                        verifiedPlanning.Disposition,
-                        currentUserMessage,
-                        request.TimeZoneId,
-                        request.UserLocalNow,
-                        request.Mode.Policy.ProposalGeneration,
-                        envelope.ProposalConstraints,
-                        request.EffectId,
-                        iterations,
-                        proposalRegenerations));
-                }
+                    "AiCoach.ResponseGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsValid={IsValid} GuardDetail={GuardDetail}",
+                    snapshot.ConversationId, request.EffectId, iterations, verdict.IsValid, verdict.Detail);
+                if (!verdict.IsValid)
+                    decision = postPolicy.Decide(policyContext with
+                    {
+                        Failure = new CandidateValidationFailure(CandidateFailureKind.Response, verdict.Detail!),
+                    });
             }
 
-            // ---- ProposalSet Guard (only when Post-Policy accepted the proposal path) ----
             IReadOnlyList<Domain.Proposals.TaskProposal>? acceptedProposals = null;
-            var finalStrategy = decision.FinalStrategy;
-            var reasonCode = decision.ReasonCode;
-            var fallbackUsed = decision.DecisionType == StrategyDecisionType.Downgraded;
-            var deterministicProposalUsed = false;
-            string? deterministicProposalText = null;
-
             if (decision.AcceptProposalSetCandidate && candidate.ProposalSetCandidate is not null)
             {
                 var verdict = proposalSetGuard.Validate(
                     candidate.ProposalSetCandidate, snapshot, envelope.ProposalConstraints, request.TimeZoneId);
                 logger.LogInformation(
-                    "AiCoach.ProposalGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Source={Source} IsValid={IsValid} SubmittedCount={SubmittedCount} AcceptedCount={AcceptedCount} RegenerationAttempt={RegenerationAttempt} ProposalCandidate={ProposalCandidate} AcceptedProposals={AcceptedProposals} GuardDetail={GuardDetail}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    "Model",
-                    verdict.IsValid,
-                    candidate.ProposalSetCandidate.Proposals.Count,
-                    verdict.Proposals?.Count ?? 0,
-                    proposalRegenerations,
-                    SerializeForLog(candidate.ProposalSetCandidate),
-                    SerializeForLog(verdict.Proposals),
-                    verdict.Detail);
+                    "AiCoach.ProposalGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Source={Source} IsValid={IsValid} GuardDetail={GuardDetail}",
+                    snapshot.ConversationId, request.EffectId, iterations, "Model", verdict.IsValid, verdict.Detail);
                 if (verdict.IsValid)
-                {
                     acceptedProposals = verdict.Proposals;
-                }
                 else
-                {
-                    if (regenerations + proposalRegenerations < limits.MaxRegenerationAttempts
-                        && iterations < limits.MaxModelIterations)
+                    decision = postPolicy.Decide(policyContext with
                     {
-                        proposalRegenerations++;
-                        if (!verifiedPlanning.Evidence.HasInvalidClaims)
-                            repairContext = (verifiedPlanning, planningDecision, supportDecision);
-                        AppendCorrection(
-                            transcript,
-                            completion.AssistantText,
-                            "[system] The proposal card failed server validation. Keep every verified planning item, "
-                            + "use a future local time in the user's timezone, avoid the past and default overnight hours, "
-                            + "and return a complete show_proposal_set with valid start/end times.");
-                        continue;
-                    }
-
-                    // Invalid cards are never partially accepted. After the bounded retry, keep
-                    // the verified intent and build a minimal safe card from it.
-                    var generated = proposalGenerator.Generate(new ProposalGenerationContext(
-                        snapshot,
-                        verifiedPlanning,
-                        planningDecision,
-                        request.Mode.Policy.ProposalGeneration,
-                        request.UserLocalNow,
-                        request.TimeZoneId,
-                        envelope.ProposalConstraints.MaxProposals));
-                    var generatedVerdict = generated.Candidate is null
-                        ? ProposalSetVerdict.Invalid("The deterministic generator produced no candidate.")
-                        : proposalSetGuard.Validate(
-                            generated.Candidate,
-                            snapshot,
-                            envelope.ProposalConstraints,
-                            request.TimeZoneId);
-                    logger.LogInformation(
-                        "AiCoach.DeterministicProposal.Completed ConversationId={ConversationId} EffectId={EffectId} PolicyVersion={PolicyVersion} CandidateGenerated={CandidateGenerated} IsValid={IsValid} GeneratedCount={GeneratedCount} AcceptedCount={AcceptedCount} AssistantReply={AssistantReply} ProposalCandidate={ProposalCandidate} AcceptedProposals={AcceptedProposals} GuardDetail={GuardDetail}",
-                        snapshot.ConversationId,
-                        request.EffectId,
-                        request.Mode.Policy.ProposalGeneration.Version,
-                        generated.Candidate is not null,
-                        generatedVerdict.IsValid,
-                        generated.Candidate?.Proposals.Count ?? 0,
-                        generatedVerdict.Proposals?.Count ?? 0,
-                        generated.AssistantMessage,
-                        SerializeForLog(generated.Candidate),
-                        SerializeForLog(generatedVerdict.Proposals),
-                        generatedVerdict.Detail);
-                    if (generatedVerdict.IsValid)
-                    {
-                        acceptedProposals = generatedVerdict.Proposals;
-                        deterministicProposalText = generated.AssistantMessage;
-                        reasonCode = StrategyReasonCode.ProposalSetInvalid;
-                        fallbackUsed = true;
-                        deterministicProposalUsed = true;
-                    }
-                    else
-                    {
-                        finalStrategy = decision.Fallback?.FailureStrategy
-                            ?? throw new InvalidOperationException(
-                                "Post-Policy must provide a fallback plan for an accepted proposal strategy.");
-                        reasonCode = StrategyReasonCode.ProposalSetInvalid;
-                        fallbackUsed = true;
-                    }
-                }
+                        Failure = new CandidateValidationFailure(CandidateFailureKind.Proposal, verdict.Detail!),
+                    });
             }
 
-            var text = fallbackUsed
-                ? deterministicProposalUsed
-                    ? deterministicProposalText!
-                    : FallbackCatalog.For(
-                    reasonCode,
-                    currentUserMessage,
-                    allowQuestion: finalStrategy.AsksQuestion())
-                : candidate.ResponseCandidate.Text;
+            logger.LogInformation(
+                "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction}",
+                snapshot.ConversationId, request.EffectId, iterations, candidate.SuggestedAction,
+                decision.FinalStrategy, decision.DecisionType, decision.ReasonCode,
+                decision.AcceptResponseCandidate, decision.AcceptProposalSetCandidate,
+                decision.Regeneration is not null, decision.Fallback?.Action);
 
-            var question = fallbackUsed
-                ? (finalStrategy.AsksQuestion() ? text : null)
-                : QuestionOf(candidate.ResponseCandidate);
-            var questionTopic = QuestionTopicOf(candidate.ResponseCandidate);
-            var clarificationResolution = ToResolution(verifiedPlanning.Disposition);
-            var planningIntentUpdate = PlanningStateRules.BuildPlanningIntentUpdate(
-                snapshot,
-                verifiedPlanning,
-                planningDecision,
-                currentUser?.Id,
-                acceptedProposals is not null,
-                request.Mode.Mode,
-                planningQuestion: finalStrategy is ConversationStrategy.AskClarifyingQuestion
-                    or ConversationStrategy.AskUserToChooseGoal);
+            if (decision.DecisionType == StrategyDecisionType.RequiresRegeneration
+                && decision.Regeneration is { } directive
+                && regenerations + proposalRegenerations < limits.MaxRegenerationAttempts
+                && iterations < limits.MaxModelIterations)
+            {
+                // Field names describe the repair protocol; no product reason code selects a path.
+                if (directive.RequiredFields.Contains("proposalSet"))
+                    proposalRegenerations++;
+                else
+                    regenerations++;
+                if (!verifiedPlanning.Evidence.HasInvalidClaims)
+                    repairContext = (verifiedPlanning, planningAuthority, supportDecision);
+                logger.LogInformation(
+                    "AiCoach.Regeneration.Requested ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} RequiredStrategy={RequiredStrategy} RequiredFields={RequiredFields}",
+                    snapshot.ConversationId, request.EffectId, iterations, directive.RequiredStrategy,
+                    string.Join(",", directive.RequiredFields));
+                AppendCorrection(transcript, completion.AssistantText, BuildRegenerationInstruction(directive));
+                continue;
+            }
+
+            if (!decision.AcceptResponseCandidate)
+            {
+                return Complete(FallbackOutcome(
+                    decision.ReasonCode, decision, snapshot, verifiedPlanning, planningAuthority,
+                    supportDecision, request.Mode.Mode, currentUser?.Id, verifiedPlanning.Disposition,
+                    currentUserMessage, request.TimeZoneId, request.UserLocalNow,
+                    request.Mode.Policy.ProposalGeneration, envelope.ProposalConstraints,
+                    request.EffectId, iterations, proposalRegenerations));
+            }
 
             return Complete(new ValidatedTurnOutcome(
-                finalStrategy,
+                decision.FinalStrategy,
                 decision.DecisionType,
-                reasonCode,
-                text,
-                question,
+                decision.ReasonCode,
+                candidate.ResponseCandidate.Text,
+                QuestionOf(candidate.ResponseCandidate),
                 acceptedProposals,
-                fallbackUsed,
-                planningIntentUpdate,
-                questionTopic,
-                clarificationResolution,
-                supportDecision?.PreferenceUpdate,
-                supportDecision?.ClearPreference ?? false));
+                FallbackUsed: false,
+                PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
+                    snapshot, verifiedPlanning, planningAuthority, currentUser?.Id,
+                    acceptedProposals is not null, request.Mode.Mode,
+                    planningQuestion: decision.FinalStrategy is ConversationStrategy.AskClarifyingQuestion
+                        or ConversationStrategy.AskUserToChooseGoal),
+                QuestionTopic: QuestionTopicOf(candidate.ResponseCandidate),
+                ClarificationResolution: ToResolution(verifiedPlanning.Disposition),
+                SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
+                ClearSupportPreference: supportDecision?.ClearPreference ?? false));
         }
 
         return Fail(ModelTurnCompletionReason.IterationLimitExceeded);
@@ -540,6 +391,21 @@ public sealed class ModelTurnRuntime(
 
         ModelTurnRunResult Complete(ValidatedTurnOutcome outcome)
         {
+            // Fallback and generated introductions have the same response limits as model text.
+            // Failure rejects the complete outcome; no message, card or preference is committed.
+            if (outcome.FallbackUsed)
+            {
+                AssistantResponseCandidate response = outcome.FinalStrategy == ConversationStrategy.ShowProposalSet
+                    ? new ProposalIntroductionResponse(outcome.AssistantMessage)
+                    : new ListeningResponse(outcome.AssistantMessage);
+                var verdict = responseGuard.Validate(response, envelope.ResponseConstraints);
+                if (!verdict.IsValid)
+                {
+                    logger.LogWarning("AiCoach.FallbackResponse.Invalid GuardDetail={GuardDetail}", verdict.Detail);
+                    return Fail(ModelTurnCompletionReason.InvalidModelResponse);
+                }
+            }
+
             logger.LogInformation(
                 "AiCoach.ModelTurn.Completed ConversationId={ConversationId} EffectId={EffectId} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} ProposalCount={ProposalCount} FallbackUsed={FallbackUsed} HasPlanningIntentUpdate={HasPlanningIntentUpdate} ClarificationResolution={ClarificationResolution} Iterations={Iterations} SchemaCorrections={SchemaCorrections} Regenerations={Regenerations} ProposalRegenerations={ProposalRegenerations} ElapsedMs={ElapsedMs} TotalTokens={TotalTokens} AssistantReply={AssistantReply} AcceptedProposals={AcceptedProposals} PlanningIntentUpdate={PlanningIntentUpdate}",
                 snapshot.ConversationId,
@@ -593,7 +459,7 @@ public sealed class ModelTurnRuntime(
         StrategyDecision policyDecision,
         ConversationSnapshot snapshot,
         VerifiedPlanningContext verifiedPlanning,
-        PlanningDecision planningDecision,
+        PlanningAuthority planningAuthority,
         SupportDecision? supportDecision,
         AiCoachMode mode,
         Guid? currentMessageId,
@@ -615,7 +481,7 @@ public sealed class ModelTurnRuntime(
             ? proposalGenerator.Generate(new ProposalGenerationContext(
                 snapshot,
                 verifiedPlanning,
-                planningDecision,
+                planningAuthority,
                 generationPolicy,
                 localNow,
                 timeZoneId,
@@ -668,7 +534,7 @@ public sealed class ModelTurnRuntime(
                 AcceptedProposals: generatedVerdict.Proposals,
                 FallbackUsed: true,
                 PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
-                    snapshot, verifiedPlanning, planningDecision, currentMessageId,
+                    snapshot, verifiedPlanning, planningAuthority, currentMessageId,
                     proposalAccepted: true, mode: mode),
                 ClarificationResolution: resolution,
                 SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
@@ -686,7 +552,7 @@ public sealed class ModelTurnRuntime(
             AcceptedProposals: null,
             FallbackUsed: true,
             PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
-                snapshot, verifiedPlanning, planningDecision, currentMessageId,
+                snapshot, verifiedPlanning, planningAuthority, currentMessageId,
                 proposalAccepted: false, mode: mode,
                 planningQuestion: strategy is ConversationStrategy.AskClarifyingQuestion
                     or ConversationStrategy.AskUserToChooseGoal),
@@ -701,8 +567,11 @@ public sealed class ModelTurnRuntime(
         var assumptions = directive.AllowedAssumptions.Count == 0
             ? "none"
             : string.Join(", ", directive.AllowedAssumptions);
-        return $"[system] Return suggestedAction '{directive.RequiredStrategy.ToWireValue()}'. "
-               + $"Correct these fields: {fields}. Allowed assumptions: {assumptions}.";
+        return $"Return suggestedAction '{directive.RequiredStrategy.ToWireValue()}'. "
+               + $"Correct these fields: {fields}. Allowed assumptions: {assumptions}. "
+               + "Keep interpretation unchanged; only the listed payload fields and required strategy may change. "
+               + "Return the complete schema required by this protocol; repeated interpretation cannot expand authority. "
+               + $"Validation detail: {directive.ValidationDetail ?? "none"}.";
     }
 
     private static string SerializeForLog<T>(T value) => JsonSerializer.Serialize(value);

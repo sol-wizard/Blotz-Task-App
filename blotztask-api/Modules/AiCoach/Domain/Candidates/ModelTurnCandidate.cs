@@ -5,8 +5,9 @@ namespace BlotzTask.Modules.AiCoach.Domain.Candidates;
 
 /// <summary>
 /// The model's structured output for one turn (v3 tech design §10). Everything in here is a
-/// CANDIDATE: it becomes business fact only after Post-Policy, the Guards and the Kernel accept
-/// it. The model never returns free text outside this contract.
+/// CANDIDATE: acceptance can commit conversation material, never user confirmation or business
+/// success. Interpretations retain their source and semantic uncertainty after validation.
+/// The model never returns free text outside this contract.
 /// </summary>
 public sealed record ModelTurnCandidate(
     InterpretationCandidate Interpretation,
@@ -17,8 +18,8 @@ public sealed record ModelTurnCandidate(
 
 /// <summary>
 /// What the model believes it understood (v3 tech design §10.1). Planning items, constraints,
-/// and turn disposition are untrusted claims until Evidence Guard verifies their literal quotes
-/// against the current user message.
+/// and turn disposition remain untrusted claims after their required fields are validated.
+/// Literal quote source matching is temporarily disabled.
 /// </summary>
 public sealed record InterpretationCandidate(
     IntentType Intent,
@@ -112,7 +113,7 @@ public enum IntentType
 /// Typed response candidates (v3 tech design §10.2). <c>Text</c> is always the COMPLETE reply
 /// shown to the user; <c>Question</c>, where present, additionally carries just the single
 /// question so the Kernel can track it as the conversation's OpenQuestion. The contract holds
-/// one question, never an array — structure enforces the one-question product rule.
+/// one question field, never an array; this does not prove the text contains only one question.
 /// </summary>
 public abstract record AssistantResponseCandidate(string Text);
 

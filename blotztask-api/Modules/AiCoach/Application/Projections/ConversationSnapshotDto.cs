@@ -5,10 +5,7 @@ using BlotzTask.Modules.AiCoach.Infrastructure;
 namespace BlotzTask.Modules.AiCoach.Application.Projections;
 
 /// <summary>
-/// The client protocol response body — schema 2, UNCHANGED from the previous backend: the
-/// mobile client is preserved as-is, so the v3 runtime projects onto this exact shape
-/// (ProposalSet -> task_draft artifact envelope, ConversationPhase -> state string).
-/// Do not add transport-specific fields here.
+/// The client protocol response body.
 /// </summary>
 public sealed class ConversationSnapshotDto
 {

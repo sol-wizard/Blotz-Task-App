@@ -143,7 +143,7 @@ public class ExecutionModeModelBehaviourTests(ITestOutputHelper output)
             new ConversationPrePolicy(),
             new ConversationPostPolicy(),
             new EvidenceGuard(),
-            new PlanningReadinessCalculator(),
+            new PlanningAuthorityCalculator(),
             new SupportPolicyCalculator(),
             new DeterministicProposalGenerator(),
             new ResponseGuard(),

@@ -84,8 +84,6 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
 
         if (outcome.FinalStrategy == ConversationStrategy.ShowProposalSet && outcome.AcceptedProposals is { Count: > 0 })
         {
-            // Defense in depth: the guards already refuse a second card, and the Kernel
-            // independently refuses to accept one (v3 §13.8 hard invariant).
             if (current.CurrentProposalSet is { IsOpen: true })
                 return StateTransition.Rejected(TransitionRejection.PendingProposalSetAlreadyExists);
 
@@ -251,14 +249,12 @@ public sealed class ConfirmProposalSetRequestedHandler : IConversationTransition
         if (current.GenerationStatus == GenerationStatus.Running)
             return StateTransition.Rejected(TransitionRejection.TurnInProgress);
 
-        if (current.CurrentProposalSet is null || current.CurrentProposalSet.Id != input.ProposalSetId)
+        var set = current.CurrentProposalSet;
+        if (set?.Id != input.ProposalSetId)
             return StateTransition.Rejected(TransitionRejection.ProposalSetNotCurrent);
 
-        if (current.CurrentProposalSet.Status is not (ProposalSetStatus.Pending or ProposalSetStatus.PartiallyFailed))
+        if (set.Status is not (ProposalSetStatus.Pending or ProposalSetStatus.PartiallyFailed))
             return StateTransition.Rejected(TransitionRejection.InvalidPhase);
-
-        if (!current.AllowedActions.Contains(input.Action))
-            return StateTransition.Rejected(TransitionRejection.ActionNotAllowed);
 
         // A focus timer is for one task: start_now is only valid when the card (after the
         // user's edits) holds exactly one.
@@ -299,16 +295,16 @@ public sealed class RejectProposalSetRequestedHandler : IConversationTransitionH
         if (current.GenerationStatus == GenerationStatus.Running)
             return StateTransition.Rejected(TransitionRejection.TurnInProgress);
 
-        if (current.CurrentProposalSet is null || current.CurrentProposalSet.Id != input.ProposalSetId)
+        var set = current.CurrentProposalSet;
+        if (set?.Id != input.ProposalSetId)
             return StateTransition.Rejected(TransitionRejection.ProposalSetNotCurrent);
 
-        if (current.CurrentProposalSet.Status is not (ProposalSetStatus.Pending or ProposalSetStatus.PartiallyFailed))
+        if (set.Status is not (ProposalSetStatus.Pending or ProposalSetStatus.PartiallyFailed))
             return StateTransition.Rejected(TransitionRejection.InvalidPhase);
 
         var mutations = new List<DomainMutation>
         {
             new UpdateProposalSetStatusMutation(input.ProposalSetId, ProposalSetStatus.Rejected),
-            new ClearCurrentProposalSetMutation(input.ProposalSetId),
         };
         if (current.ActivePlanningIntent is not null)
         {
@@ -323,7 +319,7 @@ public sealed class RejectProposalSetRequestedHandler : IConversationTransitionH
             ActionSets.ChatOnly,
             addFacts: Facts.Of(ConversationFact.HasRejectedProposal),
             removeFacts: Facts.Of(ConversationFact.HasPendingProposalSet),
-            mutations: mutations,
+            mutations: [.. mutations, new ClearCurrentProposalSetMutation(input.ProposalSetId)],
             events: [new ProposalSetRejected(input.ProposalSetId)]);
     }
 }
@@ -342,10 +338,11 @@ public sealed class ProposalSetPersistenceSucceededHandler
         ProposalSetPersistenceSucceeded input,
         AiCoachModeDefinition mode)
     {
-        if (current.CurrentProposalSet is null || current.CurrentProposalSet.Id != input.ProposalSetId)
+        var set = current.CurrentProposalSet;
+        if (set?.Id != input.ProposalSetId)
             return StateTransition.Rejected(TransitionRejection.ProposalSetNotCurrent);
 
-        if (current.CurrentProposalSet.Status != ProposalSetStatus.Processing)
+        if (set.Status != ProposalSetStatus.Processing)
             return StateTransition.Rejected(TransitionRejection.InvalidPhase);
 
         if (input.PersistedProposals.Count == 0)
@@ -396,10 +393,11 @@ public sealed class ProposalSetPersistenceFailedHandler
         ProposalSetPersistenceFailed input,
         AiCoachModeDefinition mode)
     {
-        if (current.CurrentProposalSet is null || current.CurrentProposalSet.Id != input.ProposalSetId)
+        var set = current.CurrentProposalSet;
+        if (set?.Id != input.ProposalSetId)
             return StateTransition.Rejected(TransitionRejection.ProposalSetNotCurrent);
 
-        if (current.CurrentProposalSet.Status != ProposalSetStatus.Processing)
+        if (set.Status != ProposalSetStatus.Processing)
             return StateTransition.Rejected(TransitionRejection.InvalidPhase);
 
         var mutations = new List<DomainMutation>();
@@ -410,7 +408,7 @@ public sealed class ProposalSetPersistenceFailedHandler
         return StateTransition.MoveTo(
             ConversationPhase.ActionPending,
             GenerationStatus.Idle,
-            ActionSets.ForPendingSet(current.CurrentProposalSet),
+            ActionSets.ForPendingSet(set),
             addFacts: Facts.Of(ConversationFact.HasPendingProposalSet),
             removeFacts: Facts.Of(ConversationFact.HasProcessingProposalSet),
             mutations: mutations);

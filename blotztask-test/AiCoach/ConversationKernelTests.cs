@@ -188,7 +188,7 @@ public class ConversationKernelTests
 
         // Assert
         transition.IsAccepted.Should().BeFalse(
-            because: "one open Current ProposalSet is a hard Kernel invariant (v3 §13.8)");
+            because: "one open Current ProposalSet is a hard Kernel invariant");
         transition.Rejection.Should().Be(TransitionRejection.PendingProposalSetAlreadyExists);
     }
 

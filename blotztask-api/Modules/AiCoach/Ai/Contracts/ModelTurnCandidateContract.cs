@@ -64,7 +64,7 @@ public static class ModelTurnCandidateContract
                             required = new[] { "text", "kind", "evidence" },
                             properties = new
                             {
-                                text = new { type = "string", description = "A concise item name that appears literally inside evidence.quote." },
+                                text = new { type = "string", description = "A concise interpretation of the quoted item; paraphrasing is allowed. Keep the original wording in evidence.quote." },
                                 kind = new
                                 {
                                     type = "string",
@@ -78,7 +78,7 @@ public static class ModelTurnCandidateContract
                                     required = new[] { "quote" },
                                     properties = new
                                     {
-                                        quote = new { type = "string", description = "Exact substring from the current user message." },
+                                        quote = new { type = "string", description = "Relevant wording from the user's current or recent messages." },
                                     },
                                 },
                             },
@@ -94,7 +94,7 @@ public static class ModelTurnCandidateContract
                             required = new[] { "text", "evidence" },
                             properties = new
                             {
-                                text = new { type = "string", description = "A concise constraint that appears literally inside evidence.quote." },
+                                text = new { type = "string", description = "A concise interpretation of the quoted constraint; preserve its negation, conditions and scope. Keep original wording in evidence.quote." },
                                 evidence = new
                                 {
                                     type = "object",
@@ -133,7 +133,7 @@ public static class ModelTurnCandidateContract
                             "none", "action_mention", "advice_request", "explicit_planning_request",
                             "direct_instruction", "referenced_instruction",
                         },
-                        "How the CURRENT message relates to action. Only direct_instruction may authorize a Companion proposal."),
+                        "How the CURRENT message relates to action. Interpret the request; the server determines whether a proposal is allowed."),
                     supportRequest = new
                     {
                         type = "object", additionalProperties = false,
@@ -195,7 +195,7 @@ public static class ModelTurnCandidateContract
                     {
                         type = "string",
                         description = "The COMPLETE reply shown to the user, in the user's language. "
-                                      + "One or two short sentences; warm, direct, zero filler.",
+                                      + "Be concise but substantive within the frame's length budget; mixed response moves are allowed.",
                     },
                     question = new
                     {
@@ -217,7 +217,7 @@ public static class ModelTurnCandidateContract
                             "acknowledge", "reflect", "gentle_question", "offer_perspective",
                             "offer_advice", "respect_pause", null,
                         },
-                        description = "Companion response move. Null outside Companion mode.",
+                        description = "The main Companion response move, not an exhaustive list of every sentence. Null outside Companion mode.",
                     },
                 },
             },

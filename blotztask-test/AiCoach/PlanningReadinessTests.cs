@@ -6,19 +6,19 @@ using FluentAssertions;
 
 namespace BlotzTask.Tests.AiCoach;
 
-public class PlanningReadinessTests
+public class PlanningAuthorityTests
 {
-    private readonly PlanningReadinessCalculator _calculator = new();
+    private readonly PlanningAuthorityCalculator _calculator = new();
 
     [Fact]
-    public void VerifiedAction_IsReadyForProposal()
+    public void VerifiedAction_GrantsProposalAuthority()
     {
         var decision = Calculate(
             ExecutionModeDefinition.Create(),
             [new VerifiedPlanningItem("写摘要", PlanningItemKind.Action, "写摘要")]);
 
-        decision.Readiness.Should().Be(PlanningReadiness.ReadyForProposal);
-        decision.Allows(AllowedPlanningAction.GenerateProposal).Should().BeTrue();
+        decision.CanGenerateProposal.Should().BeTrue(
+            because: "a verified action satisfies Execution mode's proposal trigger");
     }
 
     [Fact]
@@ -31,8 +31,10 @@ public class PlanningReadinessTests
             CompanionModeDefinition.Create(),
             [new VerifiedPlanningItem("改善生活", PlanningItemKind.Goal, "改善生活")]);
 
-        execution.Readiness.Should().Be(PlanningReadiness.ReadyForProposal);
-        companion.Readiness.Should().Be(PlanningReadiness.ReadyForSuggestion);
+        execution.CanGenerateProposal.Should().BeTrue(
+            because: "Execution permits a conservative proposal for a verified goal");
+        companion.CanGenerateProposal.Should().BeFalse(
+            because: "Companion requires explicit planning authorization");
     }
 
     [Fact]
@@ -43,7 +45,8 @@ public class PlanningReadinessTests
             [new VerifiedPlanningItem("改善生活", PlanningItemKind.Goal, "改善生活")],
             UserTurnDisposition.CannotProvide);
 
-        decision.Readiness.Should().NotBe(PlanningReadiness.ReadyForProposal);
+        decision.CanGenerateProposal.Should().BeFalse(
+            because: "Companion does not grant safe-default authority");
     }
 
     [Fact]
@@ -54,29 +57,55 @@ public class PlanningReadinessTests
             [new VerifiedPlanningItem("写摘要", PlanningItemKind.Action, "写摘要")],
             UserTurnDisposition.RejectedAction);
 
-        decision.Readiness.Should().Be(PlanningReadiness.Blocked);
-        decision.Allows(AllowedPlanningAction.GenerateProposal).Should().BeFalse();
+        decision.IsBlocked.Should().BeTrue(
+            because: "a verified withdrawal is terminal for planning in this turn");
+        decision.CanGenerateProposal.Should().BeFalse();
     }
 
     [Fact]
-    public void PlanningState_UsesReadinessInsteadOfClarificationPresence()
+    public void InvalidEvidence_DoesNotGrantPlanningAuthority()
     {
-        var notReady = new PlanningDecision(
-            PlanningReadiness.ReadyForSuggestion,
-            new HashSet<AllowedPlanningAction> { AllowedPlanningAction.OfferSuggestion },
-            [PlanningDecisionReason.ClarificationCanHelp],
+        // Arrange
+        var mode = ExecutionModeDefinition.Create();
+        var verified = new VerifiedPlanningContext(
+            [new VerifiedPlanningItem("写摘要", PlanningItemKind.Action, "写摘要")],
+            [],
+            UserTurnDisposition.NotApplicable,
+            new EvidenceSummary(1, 1, [EvidenceIssue.QuoteNotFound]));
+
+        // Act
+        var authority = _calculator.Calculate(new PlanningAuthorityContext(
+            Snapshot(mode), verified, mode.Policy.Planning));
+
+        // Assert
+        authority.CanGenerateProposal.Should().BeFalse(
+            because: "invalid current-turn evidence cannot authorize a stateful draft");
+        authority.CanAskClarifyingQuestion.Should().BeFalse(
+            because: "a repair must not use an invalid interpretation to advance planning");
+        authority.Reasons.Should().Contain(PlanningAuthorityReason.EvidenceInvalid);
+    }
+
+    [Fact]
+    public void PlanningState_UsesAuthorityInsteadOfConversationFlowStage()
+    {
+        var noAuthority = new PlanningAuthority(
+            IsBlocked: false,
+            CanGenerateProposal: false,
+            CanAskClarifyingQuestion: false,
+            [PlanningAuthorityReason.ClarificationCanHelp],
             []);
-        var ready = new PlanningDecision(
-            PlanningReadiness.ReadyForProposal,
-            new HashSet<AllowedPlanningAction> { AllowedPlanningAction.GenerateProposal },
-            [PlanningDecisionReason.VerifiedActionAvailable],
+        var proposalAuthority = new PlanningAuthority(
+            IsBlocked: false,
+            CanGenerateProposal: true,
+            CanAskClarifyingQuestion: false,
+            [PlanningAuthorityReason.VerifiedActionAvailable],
             []);
 
         PlanningStateRules.NextIntentStatus(
-                PlanningIntentStatus.Collecting, notReady, proposalAccepted: false)
+                PlanningIntentStatus.Collecting, noAuthority, proposalAccepted: false)
             .Should().Be(PlanningIntentStatus.Collecting);
         PlanningStateRules.NextIntentStatus(
-                PlanningIntentStatus.Collecting, ready, proposalAccepted: false)
+                PlanningIntentStatus.Collecting, proposalAuthority, proposalAccepted: false)
             .Should().Be(PlanningIntentStatus.ReadyForProposal);
     }
 
@@ -97,15 +126,15 @@ public class PlanningReadinessTests
         var verified = new VerifiedPlanningContext(
             [], [], UserTurnDisposition.NotApplicable, new EvidenceSummary(0, 0, []));
 
-        var decision = _calculator.Calculate(new PlanningReadinessContext(
+        var authority = _calculator.Calculate(new PlanningAuthorityContext(
             snapshot, verified, mode.Policy.Planning));
 
-        decision.Readiness.Should().Be(PlanningReadiness.ReadyForClarification);
-        decision.Allows(AllowedPlanningAction.GenerateProposal).Should().BeFalse();
+        authority.CanGenerateProposal.Should().BeFalse(
+            because: "completed planning material is not reusable without a fresh request");
     }
 
     [Fact]
-    public void ExhaustedClarificationBudget_DoesNotAllowAnotherQuestion()
+    public void RepeatedClarificationTopic_DoesNotBlockAnotherQuestion()
     {
         var mode = CompanionModeDefinition.Create();
         var sourceMessageId = Guid.NewGuid();
@@ -122,14 +151,14 @@ public class PlanningReadinessTests
         var verified = new VerifiedPlanningContext(
             [], [], UserTurnDisposition.NotApplicable, new EvidenceSummary(0, 0, []));
 
-        var decision = _calculator.Calculate(new PlanningReadinessContext(
+        var authority = _calculator.Calculate(new PlanningAuthorityContext(
             snapshot, verified, mode.Policy.Planning));
 
-        decision.Readiness.Should().Be(PlanningReadiness.ReadyForSuggestion);
-        decision.Allows(AllowedPlanningAction.AskClarification).Should().BeFalse();
+        authority.CanAskClarifyingQuestion.Should().BeTrue(
+            because: "a prior question does not make a still-needed clarification slot unavailable");
     }
 
-    private PlanningDecision Calculate(
+    private PlanningAuthority Calculate(
         AiCoachModeDefinition mode,
         IReadOnlyList<VerifiedPlanningItem> items,
         UserTurnDisposition disposition = UserTurnDisposition.NotApplicable)
@@ -142,7 +171,7 @@ public class PlanningReadinessTests
         var verified = new VerifiedPlanningContext(
             items, [], disposition, new EvidenceSummary(items.Count, items.Count, []));
 
-        return _calculator.Calculate(new PlanningReadinessContext(
+        return _calculator.Calculate(new PlanningAuthorityContext(
             snapshot, verified, mode.Policy.Planning));
     }
 

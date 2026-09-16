@@ -121,4 +121,5 @@ internal static class ActionSets
 
     public static IReadOnlySet<ConversationAction> ForPendingSet(ProposalSetSnapshot? set) =>
         set is null ? ChatOnly : ForPendingSet(set.IsSingle);
+
 }

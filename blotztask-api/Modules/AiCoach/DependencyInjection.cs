@@ -49,7 +49,9 @@ public static class DependencyInjection
         {
             var registry = new PromptModuleRegistry();
             registry.Register(ExecutionPromptModules.Profile);
+            registry.Register(ExecutionPromptModules.LegacyProfile);
             registry.Register(CompanionPromptModules.LegacyProfile);
+            registry.Register(CompanionPromptModules.V4Profile);
             registry.Register(CompanionPromptModules.Profile);
             return registry;
         });
@@ -58,7 +60,7 @@ public static class DependencyInjection
         services.AddSingleton<IConversationKernel, ConversationKernel>();
         services.AddSingleton<IConversationPrePolicy, ConversationPrePolicy>();
         services.AddSingleton<IConversationPostPolicy, ConversationPostPolicy>();
-        services.AddSingleton<IPlanningReadinessCalculator, PlanningReadinessCalculator>();
+        services.AddSingleton<IPlanningAuthorityCalculator, PlanningAuthorityCalculator>();
         services.AddSingleton<ISupportPolicyCalculator, SupportPolicyCalculator>();
         services.AddSingleton<IDeterministicProposalGenerator, DeterministicProposalGenerator>();
         services.AddSingleton<IEvidenceGuard, EvidenceGuard>();

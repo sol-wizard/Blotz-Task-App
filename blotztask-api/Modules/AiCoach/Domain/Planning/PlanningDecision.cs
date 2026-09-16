@@ -4,6 +4,7 @@ using BlotzTask.Modules.AiCoach.Domain.Modes;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Planning;
 
+/// <summary>Structurally validated model interpretation, not proven or user-confirmed facts.</summary>
 public sealed record VerifiedPlanningContext(
     IReadOnlyList<VerifiedPlanningItem> Items,
     IReadOnlyList<VerifiedConstraint> Constraints,
@@ -46,24 +47,7 @@ public enum EvidenceIssue
     ClaimNotSupportedByQuote = 3,
 }
 
-public enum PlanningReadiness
-{
-    Insufficient = 0,
-    ReadyForClarification = 1,
-    ReadyForSuggestion = 2,
-    ReadyForProposal = 3,
-    Blocked = 4,
-}
-
-public enum AllowedPlanningAction
-{
-    ContinueConversation = 0,
-    AskClarification = 1,
-    OfferSuggestion = 2,
-    GenerateProposal = 3,
-}
-
-public enum PlanningDecisionReason
+public enum PlanningAuthorityReason
 {
     NoVerifiedPlanningMaterial = 0,
     VerifiedActionAvailable = 1,
@@ -72,9 +56,10 @@ public enum PlanningDecisionReason
     SafeDefaultsAllowed = 4,
     ClarificationCanHelp = 5,
     UserRejectedAction = 6,
+    ExplicitActionRequestRequired = 7,
     EvidenceInvalid = 8,
     CurrentRequestIsConversational = 9,
-    ExplicitActionRequestRequired = 7,
+    ExplicitPlanningRequestAuthorized = 10,
 }
 
 public enum AllowedAssumption
@@ -84,44 +69,51 @@ public enum AllowedAssumption
     NextAvailableSlot = 2,
 }
 
-public sealed record PlanningDecision(
-    PlanningReadiness Readiness,
-    IReadOnlySet<AllowedPlanningAction> AllowedActions,
-    IReadOnlyList<PlanningDecisionReason> Reasons,
+/// <summary>
+/// The deterministic planning authority for one verified user turn. It deliberately does not
+/// prescribe a conversation flow: the model chooses whether and how to ask, suggest or plan
+/// from the strategies exposed by Pre-Policy. This module only grants or withholds the stateful
+/// planning actions that need server authority.
+/// </summary>
+public sealed record PlanningAuthority(
+    bool IsBlocked,
+    bool CanGenerateProposal,
+    bool CanAskClarifyingQuestion,
+    IReadOnlyList<PlanningAuthorityReason> Reasons,
     IReadOnlyList<AllowedAssumption> AllowedAssumptions)
 {
-    public bool Allows(AllowedPlanningAction action) => AllowedActions.Contains(action);
+    public bool CanAdvancePlanning => CanGenerateProposal || CanAskClarifyingQuestion;
 }
 
-public sealed record PlanningReadinessContext(
+public sealed record PlanningAuthorityContext(
     ConversationSnapshot Snapshot,
     VerifiedPlanningContext Verified,
     PlanningPolicyDefinition Policy);
 
-public interface IPlanningReadinessCalculator
+public interface IPlanningAuthorityCalculator
 {
-    PlanningDecision Calculate(PlanningReadinessContext context);
+    PlanningAuthority Calculate(PlanningAuthorityContext context);
 }
 
-public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
+public sealed class PlanningAuthorityCalculator : IPlanningAuthorityCalculator
 {
-    public PlanningDecision Calculate(PlanningReadinessContext context)
+    public PlanningAuthority Calculate(PlanningAuthorityContext context)
     {
         var verified = context.Verified;
         var policy = context.Policy;
 
         if (verified.Disposition == UserTurnDisposition.RejectedAction)
         {
-            return Decision(
-                PlanningReadiness.Blocked,
-                [AllowedPlanningAction.ContinueConversation],
-                [PlanningDecisionReason.UserRejectedAction]);
+            return Authority(isBlocked: true, canGenerateProposal: false, canAskClarifyingQuestion: false,
+                [PlanningAuthorityReason.UserRejectedAction]);
         }
 
+        // Evidence Guard still owns structural evidence failures such as missing quotes. Source
+        // matching itself is temporarily disabled, but other invalid evidence remains fail-closed.
         if (verified.Evidence.HasInvalidClaims)
         {
-            return Decision(PlanningReadiness.Insufficient,
-                [AllowedPlanningAction.ContinueConversation], [PlanningDecisionReason.EvidenceInvalid]);
+            return Authority(isBlocked: false, canGenerateProposal: false, canAskClarifyingQuestion: false,
+                [PlanningAuthorityReason.EvidenceInvalid]);
         }
 
         // A request for advice, a narration or a pause is not an instruction to schedule,
@@ -136,15 +128,12 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
                 && verified.ActionRequest?.Kind is not (ActionRequestKind.DirectInstruction
                     or ActionRequestKind.ExplicitPlanningRequest))
         {
-            return Decision(PlanningReadiness.ReadyForSuggestion,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
-                [PlanningDecisionReason.CurrentRequestIsConversational]);
+            return Authority(isBlocked: false, canGenerateProposal: false, canAskClarifyingQuestion: false,
+                [PlanningAuthorityReason.CurrentRequestIsConversational]);
         }
 
         var activeIntent = PlanningStateRules.ReusableIntent(context.Snapshot, verified);
-        var clarificationAttempts = activeIntent?.AskedTopics?.Count ?? 0;
-        var canAskClarification = clarificationAttempts < policy.MaxClarificationAttempts
-                                  && context.Snapshot.OpenQuestion is null;
+        var canAskClarification = context.Snapshot.OpenQuestion is null;
         var items = activeIntent?.Items
             .Select(item => item.Kind)
             .Concat(verified.Items.Select(item => item.Kind))
@@ -155,49 +144,34 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
             if (policy.ProposalTrigger == ProposalTriggerPolicy.CurrentTurnDirectInstruction
                 && verified.ActionRequest?.Kind != ActionRequestKind.DirectInstruction)
             {
-                return Decision(
-                    PlanningReadiness.ReadyForSuggestion,
-                    [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
-                    [PlanningDecisionReason.ExplicitActionRequestRequired]);
+                return Authority(isBlocked: false, canGenerateProposal: false, canAskClarifyingQuestion: false,
+                    [PlanningAuthorityReason.ExplicitActionRequestRequired]);
             }
 
-            return canAskClarification
-                ? Decision(
-                    PlanningReadiness.ReadyForClarification,
-                    [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.AskClarification],
-                    [PlanningDecisionReason.NoVerifiedPlanningMaterial, PlanningDecisionReason.ClarificationCanHelp])
-                : Decision(
-                    PlanningReadiness.Insufficient,
-                    [AllowedPlanningAction.ContinueConversation],
-                    [PlanningDecisionReason.NoVerifiedPlanningMaterial]);
+            return Authority(isBlocked: false, canGenerateProposal: false,
+                canAskClarifyingQuestion: canAskClarification,
+                canAskClarification
+                    ? [PlanningAuthorityReason.NoVerifiedPlanningMaterial, PlanningAuthorityReason.ClarificationCanHelp]
+                    : [PlanningAuthorityReason.NoVerifiedPlanningMaterial]);
         }
 
         if (items.Contains(PlanningItemKind.Action)
             && ProposalTriggerSatisfied(policy.ProposalTrigger, verified))
         {
-            return Decision(
-                PlanningReadiness.ReadyForProposal,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
-                [PlanningDecisionReason.VerifiedActionAvailable],
+            return Authority(isBlocked: false, canGenerateProposal: true, canAskClarifyingQuestion: canAskClarification,
+                [PlanningAuthorityReason.VerifiedActionAvailable],
                 [AllowedAssumption.DefaultDuration, AllowedAssumption.NextAvailableSlot]);
         }
 
-        if (items.Contains(PlanningItemKind.Action)
-            && policy.ProposalTrigger == ProposalTriggerPolicy.CurrentTurnDirectInstruction)
+        if (policy.AllowCoachDecomposition
+            && (verified.Disposition == UserTurnDisposition.DelegatedToCoach
+                || verified.ActionRequest?.Kind == ActionRequestKind.ExplicitPlanningRequest))
         {
-            return Decision(
-                PlanningReadiness.ReadyForSuggestion,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
-                [PlanningDecisionReason.ExplicitActionRequestRequired]);
-        }
-
-        if (verified.Disposition == UserTurnDisposition.DelegatedToCoach
-            && policy.AllowCoachDecomposition)
-        {
-            return Decision(
-                PlanningReadiness.ReadyForProposal,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
-                [PlanningDecisionReason.UserDelegatedPlanning],
+            var reason = verified.Disposition == UserTurnDisposition.DelegatedToCoach
+                ? PlanningAuthorityReason.UserDelegatedPlanning
+                : PlanningAuthorityReason.ExplicitPlanningRequestAuthorized;
+            return Authority(isBlocked: false, canGenerateProposal: true, canAskClarifyingQuestion: canAskClarification,
+                [reason],
                 [AllowedAssumption.CoachDecomposition, AllowedAssumption.DefaultDuration,
                     AllowedAssumption.NextAvailableSlot]);
         }
@@ -205,34 +179,23 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
         if (verified.Disposition == UserTurnDisposition.CannotProvide
             && policy.AllowSafeDefaultsWhenClarificationUnavailable)
         {
-            return Decision(
-                PlanningReadiness.ReadyForProposal,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
-                [PlanningDecisionReason.SafeDefaultsAllowed],
+            return Authority(isBlocked: false, canGenerateProposal: true, canAskClarifyingQuestion: canAskClarification,
+                [PlanningAuthorityReason.SafeDefaultsAllowed],
                 [AllowedAssumption.CoachDecomposition, AllowedAssumption.DefaultDuration,
                     AllowedAssumption.NextAvailableSlot]);
         }
 
         if (policy.AllowConservativeGoalProposal)
         {
-            return Decision(
-                PlanningReadiness.ReadyForProposal,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.GenerateProposal],
-                [PlanningDecisionReason.ConservativeGoalProposalAllowed],
+            return Authority(isBlocked: false, canGenerateProposal: true, canAskClarifyingQuestion: canAskClarification,
+                [PlanningAuthorityReason.ConservativeGoalProposalAllowed],
                 [AllowedAssumption.CoachDecomposition, AllowedAssumption.DefaultDuration,
                     AllowedAssumption.NextAvailableSlot]);
         }
 
-        return canAskClarification
-            ? Decision(
-                PlanningReadiness.ReadyForSuggestion,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion,
-                    AllowedPlanningAction.AskClarification],
-                [PlanningDecisionReason.ClarificationCanHelp])
-            : Decision(
-                PlanningReadiness.ReadyForSuggestion,
-                [AllowedPlanningAction.ContinueConversation, AllowedPlanningAction.OfferSuggestion],
-                [PlanningDecisionReason.ClarificationCanHelp]);
+        return Authority(isBlocked: false, canGenerateProposal: false,
+            canAskClarifyingQuestion: canAskClarification,
+            [PlanningAuthorityReason.ClarificationCanHelp]);
     }
 
     private static bool ProposalTriggerSatisfied(
@@ -250,10 +213,11 @@ public sealed class PlanningReadinessCalculator : IPlanningReadinessCalculator
         _ => false,
     };
 
-    private static PlanningDecision Decision(
-        PlanningReadiness readiness,
-        IReadOnlyList<AllowedPlanningAction> actions,
-        IReadOnlyList<PlanningDecisionReason> reasons,
+    private static PlanningAuthority Authority(
+        bool isBlocked,
+        bool canGenerateProposal,
+        bool canAskClarifyingQuestion,
+        IReadOnlyList<PlanningAuthorityReason> reasons,
         IReadOnlyList<AllowedAssumption>? assumptions = null) =>
-        new(readiness, actions.ToHashSet(), reasons, assumptions ?? []);
+        new(isBlocked, canGenerateProposal, canAskClarifyingQuestion, reasons, assumptions ?? []);
 }

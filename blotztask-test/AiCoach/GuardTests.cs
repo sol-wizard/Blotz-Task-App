@@ -49,7 +49,7 @@ public class GuardTests
     }
 
     [Fact]
-    public void Evidence_FabricatedQuote_IsNotVerified()
+    public void Handle_PlanningClaimWithUnmatchedQuote_SourceValidationIsBypassed()
     {
         // Arrange
         var guard = new EvidenceGuard();
@@ -59,9 +59,11 @@ public class GuardTests
         var verdict = guard.Verify(interpretation, "我今天有点累");
 
         // Assert
-        verdict.Items.Should().BeEmpty(
-            because: "a quote that is not in the current message is model inference, not user evidence");
-        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.QuoteNotFound);
+        verdict.Items.Should().ContainSingle(
+            because: "source matching is temporarily disabled while planning interpretation is evaluated in production");
+        verdict.Evidence.Issues.Should().NotContain(
+            EvidenceIssue.QuoteNotFound,
+            because: "an unmatched quote must not block the planning candidate while source validation is disabled");
     }
 
     [Fact]
@@ -80,7 +82,7 @@ public class GuardTests
     }
 
     [Fact]
-    public void Evidence_FabricatedDisposition_DoesNotBecomeVerifiedAuthorization()
+    public void Handle_DispositionWithUnmatchedQuote_SourceValidationIsBypassed()
     {
         var guard = new EvidenceGuard();
         var interpretation = new InterpretationCandidate(
@@ -93,12 +95,15 @@ public class GuardTests
 
         var verdict = guard.Verify(interpretation, "我想写论文");
 
-        verdict.Disposition.Should().Be(UserTurnDisposition.NotApplicable);
-        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.QuoteNotFound);
+        verdict.Disposition.Should().Be(UserTurnDisposition.DelegatedToCoach,
+            because: "source matching is temporarily disabled for non-empty disposition evidence");
+        verdict.Evidence.Issues.Should().NotContain(
+            EvidenceIssue.QuoteNotFound,
+            because: "an unmatched quote must not reject the disposition while source validation is disabled");
     }
 
     [Fact]
-    public void Evidence_DelegationQuote_CannotProveAnInventedPlanningItem()
+    public void Handle_PlanningItemNotEntailedByQuote_SemanticValidationIsBypassed()
     {
         var guard = new EvidenceGuard();
         var interpretation = new InterpretationCandidate(
@@ -111,11 +116,14 @@ public class GuardTests
 
         var verdict = guard.Verify(interpretation, "帮我安排");
 
-        verdict.Items.Should().BeEmpty();
+        verdict.Items.Should().ContainSingle(
+            because: "quote-to-claim semantic validation is disabled together with source validation");
         verdict.Disposition.Should().Be(UserTurnDisposition.DelegatedToCoach);
-        verdict.Evidence.VerifiedClaims.Should().Be(1,
-            because: "a verified disposition is itself a verified evidence claim");
-        verdict.Evidence.Issues.Should().Contain(EvidenceIssue.ClaimNotSupportedByQuote);
+        verdict.Evidence.VerifiedClaims.Should().Be(2,
+            because: "both non-empty candidates pass while evidence semantics are not enforced");
+        verdict.Evidence.Issues.Should().NotContain(
+            EvidenceIssue.ClaimNotSupportedByQuote,
+            because: "the semantic evidence rule is intentionally disabled");
     }
 
     [Theory]
@@ -152,6 +160,26 @@ public class GuardTests
     }
 
     [Fact]
+    public void Handle_EmotionalExpressionClassifiedAsListening_PreservesModelClassification()
+    {
+        // Arrange
+        const string message = "英文没考好";
+        var interpretation = new InterpretationCandidate(
+            IntentType.Emotional,
+            SupportRequest: new SupportRequestCandidate(
+                SupportRequestKind.WantsListening,
+                new EvidenceReference(message)));
+
+        // Act
+        var verdict = new EvidenceGuard().Verify(interpretation, message);
+
+        // Assert
+        verdict.SupportRequest.Should().Be(
+            new VerifiedSupportRequest(SupportRequestKind.WantsListening, message),
+            because: "the server no longer reinterprets the model's support classification from user-text keywords");
+    }
+
+    [Fact]
     public void Evidence_TurnScopedAdviceRequest_WithLiteralCurrentQuote_IsVerified()
     {
         // Arrange
@@ -179,7 +207,7 @@ public class GuardTests
     }
 
     [Fact]
-    public void Evidence_TurnScopedAdviceRequest_WithQuoteOutsideCurrentMessage_IsRejected()
+    public void Handle_TurnScopedAdviceRequestWithUnmatchedQuote_SourceValidationIsBypassed()
     {
         // Arrange
         var interpretation = new InterpretationCandidate(
@@ -193,16 +221,18 @@ public class GuardTests
         var verdict = new EvidenceGuard().Verify(interpretation, "我再想想");
 
         // Assert
-        verdict.SupportRequest.Should().BeNull(
-            because: "model-owned semantics do not relax the requirement for evidence from the current user message");
-        verdict.Evidence.Issues.Should().Contain(
+        verdict.SupportRequest.Should().Be(
+            new VerifiedSupportRequest(
+                SupportRequestKind.WantsAdvice,
+                "具体办法是什么",
+                SupportPreferenceScope.Turn),
+            because: "source matching is temporarily disabled for a non-empty support request quote");
+        verdict.Evidence.Issues.Should().NotContain(
             EvidenceIssue.QuoteNotFound,
-            because: "a historical or fabricated quote must never authorize the current response preference");
+            because: "an unmatched quote must not reject the support request while source validation is disabled");
     }
 
     [Theory]
-    [InlineData(SupportRequestKind.WantsListening, "我最难受的是觉得自己总是这样")]
-    [InlineData(SupportRequestKind.WantsListening, "你陪我聊一会儿就好")]
     [InlineData(SupportRequestKind.WantsAdvice, "我现在不需要建议")]
     [InlineData(SupportRequestKind.WantsExploration, "先别问了")]
     [InlineData(SupportRequestKind.WantsAdvice, "I don't want advice")]
@@ -372,6 +402,22 @@ public class GuardTests
 
         // Assert
         verdict.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Handle_ListeningResponseWithQuestion_IsAcceptedWithoutTextInspection()
+    {
+        // Arrange
+        var guard = new ResponseGuard();
+
+        // Act
+        var verdict = guard.Validate(
+            new ListeningResponse("你现在最难受的是分数本身，还是担心后面怎么办？"),
+            new ResponseConstraints(1, 1200));
+
+        // Assert
+        verdict.IsValid.Should().BeTrue(
+            because: "Response Guard no longer infers response structure from punctuation in free text");
     }
 
     // ---------- Model Output Schema Guard (contract parser) ----------

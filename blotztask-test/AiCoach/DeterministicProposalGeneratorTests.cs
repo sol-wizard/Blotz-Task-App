@@ -16,11 +16,11 @@ public class DeterministicProposalGeneratorTests
         var verified = new VerifiedPlanningContext(
             [new VerifiedPlanningItem("整理资料", PlanningItemKind.Action, "整理资料")],
             [], UserTurnDisposition.NotApplicable, new EvidenceSummary(1, 1, []));
-        var decision = new PlanningReadinessCalculator().Calculate(new PlanningReadinessContext(
+        var authority = new PlanningAuthorityCalculator().Calculate(new PlanningAuthorityContext(
             Snapshot(mode), verified, mode.Policy.Planning));
 
         var result = new DeterministicProposalGenerator().Generate(new ProposalGenerationContext(
-            Snapshot(mode), verified, decision, mode.Policy.ProposalGeneration,
+            Snapshot(mode), verified, authority, mode.Policy.ProposalGeneration,
             new DateTimeOffset(2026, 9, 3, 9, 2, 0, TimeSpan.FromHours(10)),
             "Australia/Sydney", 3));
 
@@ -38,11 +38,11 @@ public class DeterministicProposalGeneratorTests
             [new VerifiedPlanningItem("整理资料", PlanningItemKind.Action, "整理资料")],
             [], UserTurnDisposition.NotApplicable, new EvidenceSummary(1, 1, []));
         var snapshot = Snapshot(mode);
-        var decision = new PlanningReadinessCalculator().Calculate(new PlanningReadinessContext(
+        var authority = new PlanningAuthorityCalculator().Calculate(new PlanningAuthorityContext(
             snapshot, verified, mode.Policy.Planning));
 
         var result = new DeterministicProposalGenerator().Generate(new ProposalGenerationContext(
-            snapshot, verified, decision, mode.Policy.ProposalGeneration,
+            snapshot, verified, authority, mode.Policy.ProposalGeneration,
             new DateTimeOffset(2026, 9, 3, 20, 50, 0, TimeSpan.FromHours(10)),
             "Australia/Sydney", 3));
 

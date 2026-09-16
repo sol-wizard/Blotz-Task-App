@@ -7,9 +7,9 @@ using BlotzTask.Modules.AiCoach.Domain.Proposals;
 namespace BlotzTask.Modules.AiCoach.Domain.Guards;
 
 /// <summary>
-/// Evidence Guard (v3 tech design §14.1). Planning claims must carry literal quotes from the
-/// current user message. Prototype semantic checks remain fail-closed where explicitly retained;
-/// readiness and strategy remain owned by their dedicated policy layers.
+/// Evidence Guard (v3 tech design §14.1). Claims and quotes must remain non-empty. Literal
+/// source matching is temporarily disabled; readiness and strategy remain owned by their
+/// dedicated policy layers.
 /// </summary>
 public interface IEvidenceGuard
 {
@@ -40,17 +40,13 @@ public sealed class EvidenceGuard : IEvidenceGuard
                 continue;
             }
 
-            if (!ContainsQuote(currentUserMessage, item.Evidence.Quote))
-            {
-                issues.Add(EvidenceIssue.QuoteNotFound);
-                continue;
-            }
-
-            if (!ContainsQuote(item.Evidence.Quote, item.Text))
-            {
-                issues.Add(EvidenceIssue.ClaimNotSupportedByQuote);
-                continue;
-            }
+            // Source validation is intentionally disabled for now. Keep this check close to the
+            // acceptance point so it can be restored if production evidence shows it is needed.
+            // if (!ContainsQuote(currentUserMessage, item.Evidence.Quote))
+            // {
+            //     issues.Add(EvidenceIssue.QuoteNotFound);
+            //     continue;
+            // }
 
             verifiedItems.Add(new VerifiedPlanningItem(
                 item.Text.Trim(), item.Kind, item.Evidence.Quote.Trim()));
@@ -68,17 +64,12 @@ public sealed class EvidenceGuard : IEvidenceGuard
                 continue;
             }
 
-            if (!ContainsQuote(currentUserMessage, constraint.Evidence.Quote))
-            {
-                issues.Add(EvidenceIssue.QuoteNotFound);
-                continue;
-            }
-
-            if (!ContainsQuote(constraint.Evidence.Quote, constraint.Text))
-            {
-                issues.Add(EvidenceIssue.ClaimNotSupportedByQuote);
-                continue;
-            }
+            // Source validation is intentionally disabled for now.
+            // if (!ContainsQuote(currentUserMessage, constraint.Evidence.Quote))
+            // {
+            //     issues.Add(EvidenceIssue.QuoteNotFound);
+            //     continue;
+            // }
 
             verifiedConstraints.Add(new VerifiedConstraint(
                 constraint.Text.Trim(), constraint.Evidence.Quote.Trim()));
@@ -92,14 +83,18 @@ public sealed class EvidenceGuard : IEvidenceGuard
             {
                 issues.Add(EvidenceIssue.MissingQuote);
             }
-            else if (!ContainsQuote(currentUserMessage, candidateDisposition.Evidence.Quote))
-            {
-                issues.Add(EvidenceIssue.QuoteNotFound);
-            }
             else
             {
+                // Source validation is intentionally disabled for now.
+                // if (!ContainsQuote(currentUserMessage, candidateDisposition.Evidence.Quote))
+                // {
+                //     issues.Add(EvidenceIssue.QuoteNotFound);
+                // }
+                // else
+                // {
                 disposition = candidateDisposition.Kind;
                 verifiedDispositionClaims++;
+                // }
             }
         }
 
@@ -159,65 +154,9 @@ public sealed class EvidenceGuard : IEvidenceGuard
         if (!TryVerifyQuote(candidate.Evidence, currentUserMessage, issues, out var quote))
             return null;
 
-        // A turn-scoped advice request is non-persistent and has no formal side effect. Once its
-        // literal current-message quote is verified, open-language interpretation remains model-owned;
-        // the prototype keyword list must not override it. Conversation-scoped preferences retain
-        // the conservative prototype check because they affect later turns.
-        if ((candidate.Kind != SupportRequestKind.WantsAdvice
-             || candidate.Scope != SupportPreferenceScope.Turn)
-            && !SupportRequestEvidenceMatches(candidate.Kind, quote!))
-        {
-            issues.Add(EvidenceIssue.ClaimNotSupportedByQuote);
-            return null;
-        }
-
         verifiedClaims++;
         return new VerifiedSupportRequest(candidate.Kind, quote, candidate.Scope);
     }
-
-    /// <summary>
-    /// Fail-closed verifier for the two currently supported locales. These markers establish
-    /// that the quote is about how the assistant should respond, rather than merely being an
-    /// emotional statement that the model chose to answer by listening.
-    /// </summary>
-    private static bool SupportRequestEvidenceMatches(SupportRequestKind kind, string quote)
-    {
-        var text = Normalize(quote).ToLowerInvariant();
-        var rejectsAdvice = ContainsAny(text,
-            "不要建议", "不用建议", "别建议", "不需要建议",
-            "noadvice", "don'tadvise", "donotadvise", "don'twantadvice",
-            "donotwantadvice", "notlookingforadvice");
-        var rejectsQuestions = ContainsAny(text,
-            "别问", "不要问", "不想回答", "stopasking", "don'task", "donotask");
-        var clearsPreference = ContainsAny(text,
-            "恢复默认", "之前说的不用管", "可以问", "可以建议", "清除偏好",
-            "forgetthat", "clearmypreference", "youcanask", "adviceisokay");
-
-        return kind switch
-        {
-            SupportRequestKind.WantsListening => ContainsAny(text,
-                "听我", "听着", "听就好", "只想说", "让我说", "倾听",
-                "listen", "hearmeout", "letmevent", "justvent"),
-            SupportRequestKind.WantsExploration => !rejectsQuestions && !clearsPreference && ContainsAny(text,
-                "问我", "一起想", "陪我想", "帮我想", "探索", "聊聊为什么",
-                "askme", "explore", "thinkthrough"),
-            SupportRequestKind.WantsPerspective => ContainsAny(text,
-                "你怎么看", "你的看法", "你的观点", "你觉得呢",
-                "whatdoyouthink", "yourperspective", "yourview"),
-            SupportRequestKind.WantsAdvice => !rejectsAdvice && !clearsPreference && ContainsAny(text,
-                "建议", "怎么办", "怎么做", "我该", "该怎么",
-                "whatshouldi", "advice", "suggest"),
-            SupportRequestKind.RejectsAdvice => rejectsAdvice,
-            SupportRequestKind.WantsPause => ContainsAny(text,
-                "先停", "暂停", "别问", "不要问", "不想聊", "安静",
-                "pause", "stopasking", "don'task", "donotask", "quiet"),
-            SupportRequestKind.ClearsPreference => clearsPreference,
-            _ => false,
-        };
-    }
-
-    private static bool ContainsAny(string text, params string[] markers) =>
-        markers.Any(marker => text.Contains(marker, StringComparison.OrdinalIgnoreCase));
 
     private static bool TryVerifyQuote(
         EvidenceReference? evidence,
@@ -232,11 +171,12 @@ public sealed class EvidenceGuard : IEvidenceGuard
             return false;
         }
 
-        if (!ContainsQuote(currentUserMessage, quote))
-        {
-            issues.Add(EvidenceIssue.QuoteNotFound);
-            return false;
-        }
+        // Source validation is intentionally disabled for now.
+        // if (!ContainsQuote(currentUserMessage, quote))
+        // {
+        //     issues.Add(EvidenceIssue.QuoteNotFound);
+        //     return false;
+        // }
 
         return true;
     }
@@ -249,10 +189,8 @@ public sealed class EvidenceGuard : IEvidenceGuard
 }
 
 /// <summary>
-/// Response Guard (v3 tech design §14.2). It validates only what is determinable structure —
-/// non-empty text within the length budget — and never attempts to fully understand free text;
-/// type-to-strategy matching and the one-question rule are enforced structurally upstream
-/// (output schema + Post-Policy).
+/// Response Guard (v3 tech design §14.2). It validates deterministic response structure:
+/// non-empty text and the length budget. It does not attempt to understand free text.
 /// </summary>
 public interface IResponseGuard
 {
@@ -316,7 +254,7 @@ public sealed class ProposalSetGuard : IProposalSetGuard
         string conversationTimeZoneId)
     {
         if (snapshot.CurrentProposalSet is { IsOpen: true })
-            return ProposalSetVerdict.Invalid("An open proposal set already exists.");
+            return ProposalSetVerdict.Invalid("A proposal set is already open.");
 
         if (candidate.Proposals.Count == 0)
             return ProposalSetVerdict.Invalid("The proposal set is empty.");

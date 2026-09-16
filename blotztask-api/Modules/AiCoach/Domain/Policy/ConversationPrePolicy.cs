@@ -25,12 +25,11 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
 
         if (hasOpenSet)
         {
-            // One open Current ProposalSet is a hard invariant (v3 §13.8): no second card. The
-            // model may only discuss the pending one; v1 keeps card edits client-local, so
-            // Update/Supersede stay out of the envelope unless the policy version opts in.
+            // An open card must be resolved through its controls before another is created.
             var strategies = new HashSet<ConversationStrategy>
             {
                 ConversationStrategy.ContinueListening,
+                ConversationStrategy.AskGentleQuestion,
                 ConversationStrategy.DiscussExistingProposal,
             };
             if (policy.AllowsModelProposalSetUpdates)
@@ -52,16 +51,11 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
             {
                 ConversationStrategy.ContinueListening,
                 ConversationStrategy.AskGentleQuestion,
+                ConversationStrategy.AskClarifyingQuestion,
+                ConversationStrategy.AskUserToChooseGoal,
             };
-            // One clarification cycle gets one information-slot question. Once a question is
-            // open, the next turn must use the answer or a safe default rather than ask again.
-            var clarificationAttempts = snapshot.ActivePlanningIntent?.AskedTopics?.Count ?? 0;
-            if (snapshot.OpenQuestion is null
-                && clarificationAttempts < policy.Planning.MaxClarificationAttempts)
-            {
-                strategies.Add(ConversationStrategy.AskClarifyingQuestion);
-                strategies.Add(ConversationStrategy.AskUserToChooseGoal);
-            }
+            // PlanningAuthorityCalculator alone owns clarification eligibility. The envelope
+            // describes implemented capabilities, not product preferences or question cadence.
             if (policy.AllowsProposalCreation)
                 strategies.Add(ConversationStrategy.ShowProposalSet);
             allowed = strategies;

@@ -72,7 +72,7 @@ public class ModelTurnRuntimeTests
             new ConversationPrePolicy(),
             new ConversationPostPolicy(),
             new EvidenceGuard(),
-            new PlanningReadinessCalculator(),
+            new PlanningAuthorityCalculator(),
             new SupportPolicyCalculator(),
             new DeterministicProposalGenerator(),
             new ResponseGuard(),
@@ -168,7 +168,7 @@ public class ModelTurnRuntimeTests
     }
 
     [Fact]
-    public async Task ProposalWithFabricatedEvidence_IsDowngradedToAClarifyingFallback()
+    public async Task ProposalWithoutActionRequest_IsDowngradedToAListeningFallback()
     {
         // Arrange — quote not present in the user message.
         const string fabricated = """
@@ -190,21 +190,22 @@ public class ModelTurnRuntimeTests
 
         // Assert
         result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
-        result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.AskClarifyingQuestion,
-            because: "unverified evidence downgrades the proposal path (v3 §14.1)");
+        result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.ContinueListening,
+            because: "unverified planning material without verified authorization cannot create a card");
         result.Outcome.AcceptedProposals.Should().BeNull(because: "the candidate card is discarded whole");
         result.Outcome.FallbackUsed.Should().BeTrue();
         result.Outcome.AssistantMessage.Should().NotBeEmpty();
     }
 
     [Fact]
-    public async Task FabricatedCurrentClaimWithActiveIntent_UsesVerifiedOnlyDeterministicProposal()
+    public async Task UnmatchedCurrentClaimWithActiveIntent_IsAcceptedWhileSourceValidationIsDisabled()
     {
         const string fabricated = """
         {
           "interpretation": { "intent": "concrete_action",
             "planningItems": [ { "text": "上班", "kind": "action", "evidence": { "quote": "帮我安排上班" } } ],
-            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null } },
+            "constraints": [], "disposition": { "kind": "not_applicable", "evidence": null },
+            "actionRequest": { "kind": "explicit_planning_request", "evidence": { "quote": "请帮我安排" } } },
           "suggestedAction": "show_proposal_set",
           "response": { "type": "proposal_introduction", "text": "排好了！", "question": null, "questionTopic": null },
           "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "上班",
@@ -224,21 +225,60 @@ public class ModelTurnRuntimeTests
             PlanningIntentStatus.ReadyForProposal);
 
         var result = await runtime.ExecuteAsync(
-            Request("我今天有点累", activeIntent), CancellationToken.None);
+            Request("请帮我安排写报告", activeIntent), CancellationToken.None);
 
         result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
-        gateway.Requests.Should().HaveCount(2, because: "policy permits one bounded correction attempt");
+        gateway.Requests.Should().ContainSingle(
+            because: "source matching no longer consumes a bounded correction attempt");
         result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.ShowProposalSet);
-        result.Outcome.ReasonCode.Should().Be(StrategyReasonCode.EvidenceInvalid);
-        result.Outcome.FallbackUsed.Should().BeTrue();
+        result.Outcome.ReasonCode.Should().Be(StrategyReasonCode.None);
+        result.Outcome.FallbackUsed.Should().BeFalse();
         result.Outcome.AcceptedProposals.Should().ContainSingle();
-        result.Outcome.AcceptedProposals![0].Title.Should().Be("写报告",
-            because: "the deterministic fallback only consumes previously verified planning material");
-        result.Outcome.AcceptedProposals.Should().NotContain(proposal => proposal.Title == "上班");
+        result.Outcome.AcceptedProposals![0].Title.Should().Be("上班",
+            because: "the model candidate is accepted while source and quote-to-claim validation are disabled");
         var logs = string.Join("\n", logger.Messages);
-        logs.Should().Contain("AiCoach.DeterministicProposal.Completed");
-        logs.Should().Contain("Source=DeterministicFallback");
+        logs.Should().NotContain("AiCoach.DeterministicProposal.Completed",
+            because: "the accepted model proposal does not require a fallback");
         logs.Should().Contain("帮我安排上班");
+    }
+
+    [Fact]
+    public async Task UnmatchedHistoricalConstraint_IsAcceptedWhileSourceValidationIsDisabled()
+    {
+        // Arrange
+        const string invalidConstraint = """
+        {
+          "interpretation": { "intent": "concrete_action",
+            "planningItems": [ { "text": "跑步", "kind": "action", "evidence": { "quote": "明天早上跑步" } } ],
+            "constraints": [ { "text": "两周内完成论文摘要", "evidence": { "quote": "两周内完成论文摘要" } } ],
+            "disposition": { "kind": "not_applicable", "evidence": null },
+            "actionRequest": { "kind": "direct_instruction", "evidence": { "quote": "帮我安排" } } },
+          "suggestedAction": "show_proposal_set",
+          "response": { "type": "proposal_introduction", "text": "我安排好了。", "question": null, "questionTopic": null },
+          "proposalSet": { "proposals": [ { "clientProposalKey": "p1", "title": "跑步",
+            "description": null, "date": "2026-08-26", "startTime": "07:00", "endTime": "07:30",
+            "labelId": null } ] }
+        }
+        """;
+        var gateway = new ScriptedGateway(invalidConstraint);
+        var runtime = Runtime(gateway);
+
+        // Act
+        var result = await runtime.ExecuteAsync(
+            Request("明天早上跑步，帮我安排"), CancellationToken.None);
+
+        // Assert
+        result.CompletionReason.Should().Be(ModelTurnCompletionReason.Completed);
+        gateway.Requests.Should().ContainSingle(
+            because: "an unmatched historical constraint does not trigger repair while source validation is disabled");
+        result.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.ShowProposalSet,
+            because: "the non-empty planning candidate remains eligible for a proposal");
+        result.Outcome.ReasonCode.Should().Be(StrategyReasonCode.None);
+        result.Outcome.FallbackUsed.Should().BeFalse(
+            because: "source mismatch is no longer an evidence failure");
+        result.Outcome.AcceptedProposals.Should().ContainSingle();
+        result.Outcome.AcceptedProposals![0].Title.Should().Be("跑步",
+            because: "the original model proposal is accepted without deterministic fallback");
     }
 
     [Fact]
@@ -294,7 +334,7 @@ public class ModelTurnRuntimeTests
         logs.Should().Contain("AiCoach.ModelCall.Completed");
         logs.Should().Contain("AiCoach.SchemaValidation.Completed");
         logs.Should().Contain("AiCoach.EvidenceValidation.Completed");
-        logs.Should().Contain("AiCoach.PlanningReadiness.Completed");
+        logs.Should().Contain("AiCoach.PlanningAuthority.Completed");
         logs.Should().Contain("AiCoach.PostPolicy.Completed");
         logs.Should().Contain("AiCoach.ResponseGuard.Completed");
         logs.Should().Contain("AiCoach.ProposalGuard.Completed");

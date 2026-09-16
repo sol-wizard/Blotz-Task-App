@@ -62,70 +62,33 @@ public sealed class SupportPolicyCalculator : ISupportPolicyCalculator
             SupportRequestKind.WantsListening => Decision(
                 [SupportMove.Acknowledge, SupportMove.Reflect],
                 [SupportDecisionReason.ExplicitListeningPreference], preferenceUpdate),
-            SupportRequestKind.WantsExploration => ExplorationDecision(context, preferenceUpdate),
+            SupportRequestKind.WantsExploration => Decision(
+                DefaultMoves(), [SupportDecisionReason.ExplicitExplorationRequest], preferenceUpdate),
             SupportRequestKind.WantsPerspective => Decision(
-                [SupportMove.Acknowledge, SupportMove.Reflect, SupportMove.OfferPerspective],
-                [SupportDecisionReason.ExplicitPerspectiveRequest], preferenceUpdate),
+                DefaultMoves(), [SupportDecisionReason.ExplicitPerspectiveRequest], preferenceUpdate),
             SupportRequestKind.WantsAdvice => Decision(
-                [SupportMove.Acknowledge, SupportMove.Reflect, SupportMove.OfferAdvice],
-                [SupportDecisionReason.ExplicitAdviceRequest], preferenceUpdate),
+                DefaultMoves(), [SupportDecisionReason.ExplicitAdviceRequest], preferenceUpdate),
             SupportRequestKind.RejectsAdvice => Decision(
-                DefaultDecision(context).AllowedMoves.ToList(),
+                DefaultMoves().Where(move => move != SupportMove.OfferAdvice).ToList(),
                 [SupportDecisionReason.AdviceRejected], preferenceUpdate),
             SupportRequestKind.WantsPause => Decision(
                 [SupportMove.Acknowledge, SupportMove.RespectPause],
                 [SupportDecisionReason.PauseRequested], preferenceUpdate),
-            SupportRequestKind.ClearsPreference => DefaultDecision(context, clearPreference: true),
-            _ => DefaultDecision(context),
+            SupportRequestKind.ClearsPreference => DefaultDecision(clearPreference: true),
+            _ => DefaultDecision(),
         };
     }
+
+    // Cadence and positive response preferences guide the model; they do not veto a useful
+    // response. Only explicit restrictions above narrow the available conversational moves.
+    private static IReadOnlyList<SupportMove> DefaultMoves() =>
+        [SupportMove.Acknowledge, SupportMove.Reflect, SupportMove.OfferPerspective,
+            SupportMove.OfferAdvice, SupportMove.GentleQuestion];
 
     private static SupportDecision DefaultDecision(
-        SupportPolicyContext context,
-        bool clearPreference = false)
-    {
-        var moves = new HashSet<SupportMove>
-        {
-            SupportMove.Acknowledge,
-            SupportMove.Reflect,
-        };
-        var reasons = new List<SupportDecisionReason> { SupportDecisionReason.DefaultListening };
-
-        if (context.PreviousAssistantStrategy != ConversationStrategy.AskGentleQuestion
-            || context.Policy.MaxConsecutiveQuestionTurns > 1)
-            moves.Add(SupportMove.GentleQuestion);
-        else
-            reasons.Add(SupportDecisionReason.QuestionCadenceExhausted);
-
-        return new SupportDecision(moves, reasons, ClearPreference: clearPreference);
-    }
-
-    private static SupportDecision ExplorationDecision(
-        SupportPolicyContext context,
-        SupportPreferenceSnapshot? preferenceUpdate)
-    {
-        var moves = new HashSet<SupportMove>
-        {
-            SupportMove.Reflect,
-            SupportMove.OfferPerspective,
-        };
-        var reasons = new List<SupportDecisionReason>
-        {
-            SupportDecisionReason.ExplicitExplorationRequest,
-        };
-        if (context.Policy.AllowExplicitContinuousExploration
-            || context.PreviousAssistantStrategy != ConversationStrategy.AskGentleQuestion
-            || context.Policy.MaxConsecutiveQuestionTurns > 1)
-        {
-            moves.Add(SupportMove.GentleQuestion);
-        }
-        else
-        {
-            reasons.Add(SupportDecisionReason.QuestionCadenceExhausted);
-        }
-
-        return new SupportDecision(moves, reasons, preferenceUpdate);
-    }
+        bool clearPreference = false) =>
+        new(DefaultMoves().ToHashSet(), [SupportDecisionReason.DefaultListening],
+            ClearPreference: clearPreference);
 
     private static SupportPreferenceSnapshot? BuildPreferenceUpdate(
         SupportPolicyContext context,

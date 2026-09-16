@@ -16,7 +16,12 @@ public sealed record StrategyDecision(
 public sealed record RegenerationDirective(
     ConversationStrategy RequiredStrategy,
     IReadOnlyList<string> RequiredFields,
-    IReadOnlySet<Planning.AllowedAssumption> AllowedAssumptions);
+    IReadOnlySet<Planning.AllowedAssumption> AllowedAssumptions,
+    string? ValidationDetail = null);
+
+public enum CandidateFailureKind { Response, Proposal }
+
+public sealed record CandidateValidationFailure(CandidateFailureKind Kind, string Detail);
 
 public enum PolicyFallbackAction
 {
@@ -58,4 +63,5 @@ public enum StrategyReasonCode
     AdviceNotRequested = 13,
     QuestionCadenceExhausted = 14,
     PauseRequested = 15,
+    PlanningQuestionNotAuthorized = 16,
 }

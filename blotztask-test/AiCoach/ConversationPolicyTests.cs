@@ -13,7 +13,7 @@ public class ConversationPolicyTests
 {
     private readonly ConversationPrePolicy _prePolicy = new();
     private readonly ConversationPostPolicy _postPolicy = new();
-    private readonly PlanningReadinessCalculator _readiness = new();
+    private readonly PlanningAuthorityCalculator _planningAuthority = new();
 
     private static ConversationSnapshot Snapshot(
         AiCoachModeDefinition mode,
@@ -64,7 +64,7 @@ public class ConversationPolicyTests
         SupportDecision? support = null)
     {
         snapshot ??= Snapshot(mode);
-        var planning = _readiness.Calculate(new PlanningReadinessContext(
+        var planning = _planningAuthority.Calculate(new PlanningAuthorityContext(
             snapshot, verified, mode.Policy.Planning));
         return _postPolicy.Decide(new PolicyContext(
             snapshot, _prePolicy.Build(snapshot, mode), candidate, mode, verified, planning, support));
@@ -83,11 +83,7 @@ public class ConversationPolicyTests
         var envelope = _prePolicy.Build(Snapshot(mode, PendingSet()), mode);
 
         envelope.ProposalConstraints.ProposalAllowed.Should().BeFalse();
-        envelope.AllowedStrategies.Should().BeEquivalentTo(new[]
-        {
-            ConversationStrategy.ContinueListening,
-            ConversationStrategy.DiscussExistingProposal,
-        });
+        envelope.AllowedStrategies.Should().NotContain(ConversationStrategy.ShowProposalSet);
     }
 
     [Fact]

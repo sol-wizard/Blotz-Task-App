@@ -159,10 +159,10 @@ public class ConfirmDraftCommandHandler(
                 return firstResult;
 
             var set = conversation.CurrentProposalSet;
-            if (set is null || set.Id != command.DraftId)
+            if (set?.Id != command.DraftId)
                 throw new DraftConflictException(
-                    set is null ? "DraftNotFound" : "StaleDraftVersion",
-                    "The draft is no longer current.",
+                    "DraftNotFound",
+                    "The draft does not belong to this conversation.",
                     ConversationSnapshotProjector.ToDto(conversation));
 
             if (set.Status == ProposalSetStatus.Rejected)

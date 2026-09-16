@@ -54,7 +54,6 @@ public sealed record ConversationPolicyDefinition(
     bool AllowsProposalCreation,
     bool AllowsModelProposalSetUpdates,
     bool AllowsPartialProposalConfirmation,
-    bool RequireProposalWhenPlanningReady,
     PlanningPolicyDefinition Planning,
     ProposalGenerationPolicy ProposalGeneration);
 
@@ -76,8 +75,7 @@ public enum ProposalTriggerPolicy
 public sealed record SupportPolicyDefinition(
     string Version,
     int MaxQuestionsPerTurn,
-    int MaxConsecutiveQuestionTurns,
-    bool AllowExplicitContinuousExploration);
+    int PreferredConsecutiveQuestionTurns);
 
 public sealed record ModeTurnObjectives(
     string Default,
@@ -131,13 +129,13 @@ public static class ExecutionModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Execution,
-        RuleVersion: "execution-rules-v6",
-        PromptVersion: "execution-prompts-v9",
+        RuleVersion: "execution-rules-v7",
+        PromptVersion: "execution-prompts-v10",
         ToolsetVersion: "execution-toolset-v3",
         MemoryProfileVersion: "execution-memory-v1",
         ModelContractSchemaVersion: 4,
         Policy: new ConversationPolicyDefinition(
-            Version: "execution-policy-v4",
+            Version: "execution-policy-v5",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
@@ -146,14 +144,13 @@ public static class ExecutionModeDefinition
             // the pending card, it never rewrites it.
             AllowsModelProposalSetUpdates: false,
             AllowsPartialProposalConfirmation: true,
-            RequireProposalWhenPlanningReady: false,
-            Planning: new PlanningPolicyDefinition("execution-planning-v2", 1, true, true, true),
+            Planning: new PlanningPolicyDefinition("execution-planning-v3", 1, true, true, true),
             ProposalGeneration: new ProposalGenerationPolicy(
                 "execution-proposal-generation-v2", 30, 15, 15,
                 new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportPolicy: null,
         TurnObjectives: new ModeTurnObjectives(
-            "Turn the user's concrete actions or safe low-risk goal into an editable draft proposal.",
+            "Respond to the current request; offer an editable draft when it helps requested planning.",
             "Use the user's answer and verified planning context; do not repeat a spent clarification topic.",
             "Generate a conservative draft proposal from the verified planning intent.",
             "Discuss the current draft without creating a second one."),
@@ -183,7 +180,6 @@ public static class ClarifyModeDefinition
             AllowsProposalCreation: true,
             AllowsModelProposalSetUpdates: false,
             AllowsPartialProposalConfirmation: true,
-            RequireProposalWhenPlanningReady: false,
             Planning: new PlanningPolicyDefinition("clarify-planning-v1", 1, false, true, true),
             ProposalGeneration: new ProposalGenerationPolicy(
                 "clarify-proposal-generation-v1", 30, 15, 15,
@@ -200,41 +196,39 @@ public static class ClarifyModeDefinition
 }
 
 /// <summary>
-/// Companion listens by default; only an explicit direct instruction in the CURRENT message
-/// may create a Pending ProposalSet (v3 §13.4), and even then a formal task still requires the
-/// user's confirm.
+/// Companion listens by default. A verified planning request may create an editable Pending
+/// ProposalSet; a formal task still requires the user's separate confirmation.
 /// </summary>
 public static class CompanionModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Companion,
-        RuleVersion: "companion-rules-v3",
-        PromptVersion: "companion-prompts-v4",
+        RuleVersion: "companion-rules-v7",
+        PromptVersion: "companion-prompts-v7",
         ToolsetVersion: "companion-toolset-v1",
         MemoryProfileVersion: "companion-memory-v1",
         ModelContractSchemaVersion: 4,
         Policy: new ConversationPolicyDefinition(
-            Version: "companion-policy-v2",
+            Version: "companion-policy-v7",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
             AllowsProposalCreation: true,
             AllowsModelProposalSetUpdates: false,
             AllowsPartialProposalConfirmation: true,
-            RequireProposalWhenPlanningReady: false,
             Planning: new PlanningPolicyDefinition(
-                "companion-planning-v3", 1, false, false, false,
-                ProposalTriggerPolicy.CurrentTurnDirectInstruction),
+                "companion-planning-v7", int.MaxValue, false, true, false,
+                ProposalTriggerPolicy.ExplicitPlanningRequestOrDelegation),
             ProposalGeneration: new ProposalGenerationPolicy(
                 "execution-proposal-generation-v2", 30, 15, 15,
                 new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportPolicy: new SupportPolicyDefinition(
-            "companion-support-v2", 1, 1, AllowExplicitContinuousExploration: true),
+            "companion-support-v5", 1, 1),
         TurnObjectives: new ModeTurnObjectives(
             "Respond to the user's current expression and respect their requested support style.",
             "Clarify only the concrete action requested by the user; do not turn ordinary support into planning.",
-            "A proposal is permitted only for a verified direct instruction in the current turn.",
-            "Support the user while discussing the current draft; do not create a second one."),
+            "A proposal is permitted for a validated planning request with a current action or active retained intent.",
+            "Support the user while discussing the current open draft; do not create another one."),
         SupportedPhases: SharedPhases.All,
         AllowedReadOnlyCapabilities: new HashSet<string>(),
         PersistencePolicy: ConversationPersistencePolicy.InMemoryOnly);

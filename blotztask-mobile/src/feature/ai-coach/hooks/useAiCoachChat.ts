@@ -128,17 +128,16 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
 
   const confirm = useCallback(
     async (action: ConfirmAction, edited: EditedDraftDto): Promise<ConfirmOutcome> => {
-      const artifact = snapshot?.currentArtifact;
-      if (!snapshot || !artifact) {
+      if (!snapshot?.currentArtifact) {
         return { result: null, errorCode: "NotReady" };
       }
 
       setStatus("sending");
       try {
-        const result = await aiCoachService.confirmDraft(snapshot.conversationId, artifact.id, {
+        const result = await aiCoachService.confirmDraft(snapshot.conversationId, snapshot.currentArtifact.id, {
           commandId: uuid.v4() as string,
           expectedConversationVersion: snapshot.conversationVersion,
-          expectedDraftVersion: artifact.version,
+          expectedDraftVersion: snapshot.currentArtifact.version,
           action,
           editedDraft: edited,
         });
@@ -162,13 +161,12 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
   );
 
   const reject = useCallback(async (): Promise<string | null> => {
-    const artifact = snapshot?.currentArtifact;
-    if (!snapshot || !artifact) return "NotReady";
+    if (!snapshot?.currentArtifact) return "NotReady";
     setStatus("sending");
     try {
       const dto = await aiCoachService.rejectDraft(
         snapshot.conversationId,
-        artifact.id,
+        snapshot.currentArtifact.id,
         uuid.v4() as string,
         snapshot.conversationVersion,
       );

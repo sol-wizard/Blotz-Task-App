@@ -12,7 +12,7 @@ public static class PlanningStateRules
     public static ActivePlanningIntentSnapshot? BuildPlanningIntentUpdate(
         ConversationSnapshot snapshot,
         VerifiedPlanningContext verifiedPlanning,
-        PlanningDecision planningDecision,
+        PlanningAuthority planningAuthority,
         Guid? currentMessageId,
         bool proposalAccepted,
         AiCoachMode mode,
@@ -27,19 +27,8 @@ public static class PlanningStateRules
         if (verifiedPlanning.Evidence.HasInvalidClaims)
             return null;
 
-        // Historical action references are deliberately unavailable in Companion v1. Retaining
-        // ordinary mentions would therefore add prompt noise without enabling a valid future
-        // proposal, and can misclassify a narrated distraction as an intended task.
-        if (mode == AiCoachMode.Companion
-            && verifiedPlanning.ActionRequest?.Kind != ActionRequestKind.DirectInstruction
-            && !planningQuestion)
-        {
-            return null;
-        }
-
         var current = ReusableIntent(snapshot, verifiedPlanning);
-        if (!proposalAccepted && !planningDecision.Allows(AllowedPlanningAction.GenerateProposal)
-            && !planningDecision.Allows(AllowedPlanningAction.AskClarification))
+        if (!proposalAccepted && !planningAuthority.CanAdvancePlanning)
             return null;
         if (current is null && verifiedPlanning.Items.Count == 0 && !planningQuestion)
             return null;
@@ -71,7 +60,7 @@ public static class PlanningStateRules
             constraints,
             PlanningStateRules.NextIntentStatus(
                 current?.Status ?? PlanningIntentStatus.Collecting,
-                planningDecision,
+                planningAuthority,
                 proposalAccepted),
             current?.AskedTopics);
     }
@@ -83,13 +72,18 @@ public static class PlanningStateRules
     {
         if (snapshot.ActivePlanningIntent is not
             { Status: PlanningIntentStatus.Collecting or PlanningIntentStatus.ReadyForProposal } intent
-            || current.Evidence.HasInvalidClaims
             || current.Disposition == UserTurnDisposition.RejectedAction)
             return null;
 
         if (current.ActionRequest?.Kind is Candidates.ActionRequestKind.AdviceRequest
             or Candidates.ActionRequestKind.ActionMention)
             return null;
+
+        // A current explicit planning request owns the turn even if the model also labels it as
+        // an answer. With no new planning items, the active retained intent is its subject.
+        if (current.ActionRequest?.Kind == Candidates.ActionRequestKind.ExplicitPlanningRequest
+            && current.Items.Count == 0)
+            return intent;
 
         if (current.Disposition is UserTurnDisposition.Answered or UserTurnDisposition.CannotProvide
             || current.Disposition == UserTurnDisposition.DelegatedToCoach && current.Items.Count == 0)
@@ -101,13 +95,13 @@ public static class PlanningStateRules
 
     public static PlanningIntentStatus NextIntentStatus(
         PlanningIntentStatus current,
-        Planning.PlanningDecision decision,
+        Planning.PlanningAuthority authority,
         bool proposalAccepted) =>
-        decision.Readiness == Planning.PlanningReadiness.Blocked
+        authority.IsBlocked
             ? PlanningIntentStatus.Abandoned
             : proposalAccepted
             ? PlanningIntentStatus.ProposalPending
-            : decision.Readiness == Planning.PlanningReadiness.ReadyForProposal
+            : authority.CanGenerateProposal
                 ? PlanningIntentStatus.ReadyForProposal
                 : current == PlanningIntentStatus.ProposalPending
                     ? current

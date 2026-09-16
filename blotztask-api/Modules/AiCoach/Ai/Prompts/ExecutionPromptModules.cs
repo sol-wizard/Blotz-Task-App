@@ -58,7 +58,7 @@ public static class ExecutionPromptModules
         - Write the reply text in the language the user is writing in.
         """);
 
-    public static readonly PromptModuleDefinition ModeExecution = new(
+    public static readonly PromptModuleDefinition ModeExecutionV9 = new(
         Id: "mode.execution",
         Version: 9,
         Kind: PromptModuleKind.Mode,
@@ -136,12 +136,32 @@ public static class ExecutionPromptModules
         Use continue_listening or discuss_existing_proposal; do not claim a text reply confirms or dismisses it.
         """);
 
+    public static readonly PromptModuleDefinition ModeExecution = ModeExecutionV9 with
+    {
+        Version = 10,
+        Content = """
+        Mode: EXECUTION. Help with a small next step when the user wants action; answer the current request first.
+        - Interpret intended work, narration, advice, refusal and corrections in context. Preserve negation, conditions and scope in exact current-user quotes. Do not infer consent from "I don't know" or a mentioned activity.
+        - planningItems/constraints text may summarize or normalize what the user expressed; evidence.quote must quote the actual message. Preserve every explicit scheduling constraint. Historical items cannot be reintroduced as current-message evidence.
+        - actionRequest describes the current request; disposition describes its relation to an active question. A corrected date is not rejection of the entire goal. supportRequest records only explicit response preferences; conversation scope requires an explicit ongoing request, otherwise use turn.
+        - Choose a helpful response within the frame. Readiness permits a draft, never requires one. A reply can combine acknowledgement, perspective and advice. Keep supportMove null in this mode.
+        - Ask at most one focused question when it changes the next step. Avoid repeated planning questions; use a safe labelled default or a useful ordinary reply when clarification is spent. Do not turn a failed question into a mandatory card.
+        - For requested planning, propose an editable card when useful. Preserve all requested items within the card limit; do not silently truncate. A broad goal may receive one small exploratory step.
+        - Use the fixed local date/time and timezone. Explicit dates, durations, exclusions and deadlines outrank default suggestions. Calendar availability is not verified. Keep precise times on the card.
+        - Respond naturally and substantively in the user's language. Current requests to pause, listen, decline advice or change topic take priority over mode defaults and historical plans.
+        """,
+    };
+
     public static PromptProfile Profile { get; } = new(
+        "execution-prompts-v10",
+        [CoreAgentBoundary, ModeExecution, PhaseActionPreparing, PhaseActionPending, ProposalCardContract]);
+
+    public static PromptProfile LegacyProfile { get; } = new(
         PromptVersion: "execution-prompts-v9",
         Modules:
         [
             CoreAgentBoundary,
-            ModeExecution,
+            ModeExecutionV9,
             PhaseActionPreparing,
             PhaseActionPending,
             ProposalCardContract,

@@ -147,10 +147,8 @@ public sealed class Conversation
                 break;
 
             case CreateProposalSetMutation m:
-                // Domain invariant (v3 §13.8): at most one open Current ProposalSet; the current
-                // set must reach a terminal state before a new one is created.
                 if (CurrentProposalSet is { IsOpen: true })
-                    throw new InvalidOperationException("An open proposal set already exists for this conversation.");
+                    throw new InvalidOperationException("A proposal set is already open for this conversation.");
                 CurrentProposalSet = new ProposalSet
                 {
                     Id = Guid.NewGuid(),
@@ -231,7 +229,7 @@ public sealed class Conversation
 
     private ProposalSet RequireCurrentSet(Guid proposalSetId)
     {
-        if (CurrentProposalSet is null || CurrentProposalSet.Id != proposalSetId)
+        if (CurrentProposalSet?.Id != proposalSetId)
             throw new InvalidOperationException("Mutation targets a proposal set that is not current.");
         return CurrentProposalSet;
     }

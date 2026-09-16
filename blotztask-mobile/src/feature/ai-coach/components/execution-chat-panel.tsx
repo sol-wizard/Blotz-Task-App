@@ -70,10 +70,7 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
   const canSend = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
-  const showDraft =
-    snapshot?.currentArtifact != null &&
-    (snapshot.currentArtifact.status === "pending" ||
-      snapshot.currentArtifact.status === "processing");
+  const artifact = snapshot?.currentArtifact;
 
   const handleSend = async () => {
     const text = input;
@@ -173,9 +170,9 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
           </View>
         )}
 
-        {showDraft && snapshot?.currentArtifact && (
+        {artifact && (artifact.status === "pending" || artifact.status === "processing") && (
           <TaskDraftCard
-            artifact={snapshot.currentArtifact}
+            artifact={artifact}
             allowedActions={snapshot.allowedActions}
             busy={status === "sending"}
             onConfirm={(action, edited) => void handleConfirm(action, edited)}

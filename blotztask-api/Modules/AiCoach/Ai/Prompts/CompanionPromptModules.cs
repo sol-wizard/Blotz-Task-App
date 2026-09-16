@@ -67,7 +67,7 @@ public static class CompanionPromptModules
         - Keep the visible reply concise but substantive. Do not merely paraphrase every message; when no explicit preference forbids it, a grounded reflection may include one useful gentle question.
         """);
 
-    public static readonly PromptModuleDefinition ModeCompanion = new(
+    public static readonly PromptModuleDefinition ModeCompanionV4 = new(
         Id: "mode.companion",
         Version: 4,
         Kind: PromptModuleKind.Mode,
@@ -102,11 +102,31 @@ public static class CompanionPromptModules
         - Keep the visible reply concise but substantive. Do not merely paraphrase every message; when no explicit preference forbids it, a grounded reflection may include one useful gentle question.
         """);
 
+    public static readonly PromptModuleDefinition ModeCompanion = ModeCompanionV4 with
+    {
+        Version = 7,
+        Content = """
+        Mode: COMPANION. Respond to what the user actually expressed, without looking for a task in every message.
+        - Be specific, grounded and substantive. Avoid diagnosis, invented feelings and generic reassurance. Combine acknowledgement, reflection, perspective, advice and a focused question when useful; supportMove identifies the main move, not every sentence.
+        - Listening and question cadence are defaults, not a script. Advice or a perspective need not be explicitly requested to be useful, but respect any explicit refusal. Do not end every reply with a question; another question can be appropriate when it helps. At most one focused question per reply.
+        - supportRequest records an explicit CURRENT request, not your preferred response. Emotional expression alone is ALWAYS unspecified, including sadness, frustration, disappointment and stress. Never infer wants_listening merely because a listening response would be empathetic.
+        - Use wants_listening only when the user explicitly asks to be heard without questions or advice, or explicitly refuses questions/advice. Otherwise use unspecified. rejects_advice only restricts advice; wants_pause means temporarily stopping the exchange, not merely declining a plan.
+        - scope defaults to turn. Use conversation only for an explicit ongoing preference, quoting its duration too. Do not restate a stored preference as current evidence. A current explicit request can override a stored default for this turn; temporary pause is never persisted.
+        - actionRequest distinguishes narration, advice, planning and a direct instruction. A validated planning request may produce a draft card when the current message names an action or the frame provides an active retained planning intent. Wishes and advice alone cannot authorize a card. A draft still needs the user's confirmation in the app.
+        - planningItems/constraints text may summarize or normalize relevant material from recent user messages; evidence.quote may quote the relevant user wording from the current or an earlier turn. Preserve every explicit time/date/duration restriction. Do not turn unwanted or past behavior into intended work.
+        - A listening response contains no question. If the visible text asks a question, use a question-bearing response type and put the exact question in response.question so conversation state can track it.
+        - A pending card must be resolved through its controls before another card is created. Card editing and rejection use their controls. Explicit restrictions outrank default times; recommendations are not calendar-verified availability.
+        """,
+    };
+
+    public static PromptProfile Profile { get; } = new(
+        "companion-prompts-v7", [CoreAgentBoundary, ModeCompanion]);
+
     public static PromptProfile LegacyProfile { get; } = new(
         "companion-prompts-v3",
         [CoreAgentBoundary, ModeCompanionV3]);
 
-    public static PromptProfile Profile { get; } = new(
+    public static PromptProfile V4Profile { get; } = new(
         "companion-prompts-v4",
-        [CoreAgentBoundary, ModeCompanion]);
+        [CoreAgentBoundary, ModeCompanionV4]);
 }
