@@ -99,19 +99,20 @@ const useTaskMutations = () => {
 
   const toggleTaskMutation = useMutation({
     mutationFn: ({ taskId }: ToggleTaskVariables) => toggleTaskCompletion(taskId),
-    onMutate: async (data) => {
+    onMutate: (data) => {
       if (!data?.selectedDay) return;
+      const dayKey = format(data.selectedDay, "yyyy-MM-dd");
       const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
-        taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(data.selectedDay))),
+        taskKeys.selectedDay(dayKey),
       );
       const toggleInList = (list: TaskDetailDTO[] | undefined) =>
         list?.map((t) => (t.id === data.taskId ? { ...t, isDone: !t.isDone } : t));
-      queryClient.setQueryData(taskKeys.all, toggleInList(prevSelectedDayData));
-      return { prevSelectedDayData };
+      queryClient.setQueryData(taskKeys.selectedDay(dayKey), toggleInList(prevSelectedDayData));
+      return { dayKey, prevSelectedDayData };
     },
     onError: (_err, _taskId, context) => {
       if (!context) return;
-      queryClient.setQueryData(taskKeys.all, context.prevSelectedDayData);
+      queryClient.setQueryData(taskKeys.selectedDay(context.dayKey), context.prevSelectedDayData);
     },
     onSuccess: (_data, variables) => {
       taskFirework.playIfCompleting(variables.wasDone);
@@ -125,6 +126,8 @@ const useTaskMutations = () => {
           hasDeadline: variables.hasDeadline,
         });
       }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
