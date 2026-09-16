@@ -6,6 +6,9 @@ import { ReturnButton } from "@/shared/components/return-button";
 import { useBadgesQuery } from "../hooks/useBadgesQuery";
 import { BadgeCard } from "../components/badge-card";
 import { BadgePreviewDTO } from "../models/badge-preview-dto";
+import { useEffect } from "react";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 const NUM_COLUMNS = 3;
 
@@ -17,6 +20,10 @@ interface BadgeGridItem {
 }
 
 export default function BadgeWallScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.BADGE_WALL);
+  }, []);
+
   const { t } = useTranslation("badge");
   const { badges } = useBadgesQuery();
   const router = useRouter();
