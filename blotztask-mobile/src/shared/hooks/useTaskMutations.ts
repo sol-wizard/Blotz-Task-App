@@ -126,6 +126,8 @@ const useTaskMutations = () => {
           hasDeadline: variables.hasDeadline,
         });
       }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });

@@ -12,6 +12,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 type CompleteRecurringOccurrenceArgs = {
   recurringTaskId: number;
   occurrenceDate: string;
+  selectedDay?: Date;
   wasDone: boolean;
   wasOverdue: boolean;
   hasDeadline: boolean;
@@ -31,7 +32,8 @@ export function useRecurringTaskMutations() {
     mutationFn: ({ recurringTaskId, occurrenceDate }: CompleteRecurringOccurrenceArgs) =>
       saveRecurringOccurrence({ recurringTaskId, occurrenceDate }),
     onMutate: (data) => {
-      const dayKey = format(parseISO(data.occurrenceDate), "yyyy-MM-dd");
+      if (!data?.selectedDay) return;
+      const dayKey = format(data.selectedDay, "yyyy-MM-dd");
       const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
         taskKeys.selectedDay(dayKey),
       );
@@ -84,11 +86,10 @@ export function useRecurringTaskMutations() {
 
 function invalidateRecurringOccurrenceQueries(queryClient: QueryClient, occurrenceDate: string) {
   const date = parseISO(occurrenceDate);
-  const dayKey = format(date, "yyyy-MM-dd");
   const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const monthKey = format(startOfMonth(date), "yyyy-MM");
 
-  queryClient.invalidateQueries({ queryKey: taskKeys.selectedDay(dayKey) });
+  queryClient.invalidateQueries({ queryKey: [...taskKeys.all, "selectedDay"] });
   queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
   queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
 }
