@@ -4,7 +4,9 @@ const { androidWidgetConfig, iosWidgetConfig } = widgetConfig;
 
 export default {
   expo: {
-    name: "BlotzTask",
+    // APP_DISPLAY_NAME lets a test-lane build (e.g. "Blotz V2") show a distinct icon
+    // label while keeping the same bundle ID; see the v2-preview profile in eas.json.
+    name: process.env.APP_DISPLAY_NAME ?? "BlotzTask",
     icon: "./assets/images-png/blotz-icon.png",
     slug: "BlotzTask",
     owner: "blotz",
