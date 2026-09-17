@@ -34,8 +34,8 @@ public sealed class ConversationPrePolicy : IConversationPrePolicy
             };
             if (policy.AllowsModelProposalSetUpdates)
             {
+                strategies.Add(ConversationStrategy.AskClarifyingQuestion);
                 strategies.Add(ConversationStrategy.UpdateProposalSet);
-                strategies.Add(ConversationStrategy.SupersedeProposalSet);
             }
             allowed = strategies;
             proposalAllowed = false;

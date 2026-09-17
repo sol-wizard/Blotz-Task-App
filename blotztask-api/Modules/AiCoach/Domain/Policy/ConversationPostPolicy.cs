@@ -3,6 +3,7 @@ using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
 using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Support;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Policy;
 
@@ -14,6 +15,7 @@ public sealed record PolicyContext(
     VerifiedPlanningContext VerifiedPlanning,
     PlanningAuthority Planning,
     SupportDecision? Support = null,
+    ProposalSetMutationVerdict? ProposalMutation = null,
     CandidateValidationFailure? Failure = null);
 
 public interface IConversationPostPolicy
@@ -50,6 +52,34 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                    && candidate.ResponseCandidate is ListeningResponse
                 ? Accept(strategy, acceptProposal: false)
                 : Downgrade(ConversationStrategy.ContinueListening, StrategyReasonCode.UserRejectedAction);
+        }
+
+        if (candidate.ProposalSetMutationCandidate is not null
+            && envelope.AllowedStrategies.Contains(ConversationStrategy.UpdateProposalSet)
+            && context.ProposalMutation is { Readiness: ProposalSetMutationReadiness.NeedsClarification })
+        {
+            if (strategy == ConversationStrategy.AskClarifyingQuestion
+                && candidate.ResponseCandidate is ClarifyingQuestionResponse)
+            {
+                // Continue through the common envelope/response checks. No mutation is accepted.
+            }
+            else
+            {
+                return new StrategyDecision(
+                    ConversationStrategy.AskClarifyingQuestion,
+                    StrategyDecisionType.RequiresRegeneration,
+                    StrategyReasonCode.ProposalMutationNeedsClarification,
+                    AcceptResponseCandidate: false,
+                    AcceptProposalSetCandidate: false,
+                    new RegenerationDirective(
+                        ConversationStrategy.AskClarifyingQuestion,
+                        ["response", "proposalSetMutation"],
+                        context.Planning.AllowedAssumptions.ToHashSet(),
+                        context.ProposalMutation.Detail),
+                    new PolicyFallbackPlan(
+                        PolicyFallbackAction.SafeResponse,
+                        ConversationStrategy.AskClarifyingQuestion));
+            }
         }
 
         if (strategy == ConversationStrategy.ShowProposalSet
@@ -112,7 +142,9 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                 FallbackFor(context, strategy));
         }
 
-        if (IsPlanningQuestion(strategy) && !context.Planning.CanAskClarifyingQuestion)
+        if (IsPlanningQuestion(strategy)
+            && context.ProposalMutation?.Readiness != ProposalSetMutationReadiness.NeedsClarification
+            && !context.Planning.CanAskClarifyingQuestion)
         {
             var repairStrategy = context.Support?.Allows(SupportMove.GentleQuestion) == true
                                  && envelope.AllowedStrategies.Contains(ConversationStrategy.AskGentleQuestion)
@@ -129,13 +161,16 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
 
         if (context.Failure is { } failure)
         {
-            var repair = failure.Kind == CandidateFailureKind.Proposal
-                ? ProposalFailure(context, StrategyReasonCode.ProposalSetInvalid)
-                : new StrategyDecision(strategy, StrategyDecisionType.RequiresRegeneration,
+            var repair = failure.Kind switch
+            {
+                CandidateFailureKind.Proposal => ProposalFailure(context, StrategyReasonCode.ProposalSetInvalid),
+                CandidateFailureKind.ProposalMutation => MutationFailure(context, failure.Detail),
+                _ => new StrategyDecision(strategy, StrategyDecisionType.RequiresRegeneration,
                     StrategyReasonCode.ResponseInvalid, false, false,
                     new RegenerationDirective(strategy, ["response"],
                         context.Planning.AllowedAssumptions.ToHashSet()),
-                    FallbackFor(context, strategy));
+                    FallbackFor(context, strategy)),
+            };
             return repair with
             {
                 Regeneration = repair.Regeneration is { } directive
@@ -146,8 +181,47 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
         if (strategy == ConversationStrategy.ShowProposalSet)
             return DecideProposal(context);
 
+        if (strategy == ConversationStrategy.UpdateProposalSet)
+            return DecideProposalMutation(context);
+
         return Accept(strategy, acceptProposal: false);
     }
+
+    private static StrategyDecision DecideProposalMutation(PolicyContext context)
+    {
+        if (context.Candidate.ProposalSetMutationCandidate is null)
+            return MutationFailure(context, "proposalSetMutation is required for update_proposal_set.",
+                StrategyReasonCode.ProposalMutationMissing);
+
+        if (context.ProposalMutation is not { IsReady: true })
+            return MutationFailure(
+                context,
+                context.ProposalMutation?.Detail ?? "The proposal mutation was not validated.");
+
+        return Accept(ConversationStrategy.UpdateProposalSet, acceptProposal: false) with
+        {
+            AcceptProposalSetMutationCandidate = true,
+        };
+    }
+
+    private static StrategyDecision MutationFailure(
+        PolicyContext context,
+        string detail,
+        StrategyReasonCode reason = StrategyReasonCode.ProposalMutationInvalid) =>
+        new(
+            ConversationStrategy.UpdateProposalSet,
+            StrategyDecisionType.RequiresRegeneration,
+            reason,
+            AcceptResponseCandidate: false,
+            AcceptProposalSetCandidate: false,
+            new RegenerationDirective(
+                ConversationStrategy.UpdateProposalSet,
+                ["response", "proposalSetMutation"],
+                context.Planning.AllowedAssumptions.ToHashSet(),
+                detail),
+            new PolicyFallbackPlan(
+                PolicyFallbackAction.SafeResponse,
+                ConversationStrategy.DiscussExistingProposal));
 
     private static StrategyDecision DecideProposal(PolicyContext context)
     {
@@ -247,6 +321,7 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
             ConversationStrategy.AskClarifyingQuestion => response is ClarifyingQuestionResponse,
             ConversationStrategy.AskUserToChooseGoal => response is GoalChoiceResponse,
             ConversationStrategy.ShowProposalSet => response is ProposalIntroductionResponse,
+            ConversationStrategy.UpdateProposalSet => response is ProposalUpdateResponse,
             _ => false,
         };
 
@@ -263,7 +338,7 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
         ConversationStrategy strategy,
         SupportDecision support)
     {
-        if (strategy == ConversationStrategy.ShowProposalSet)
+        if (strategy is ConversationStrategy.ShowProposalSet or ConversationStrategy.UpdateProposalSet)
         {
             return true;
         }

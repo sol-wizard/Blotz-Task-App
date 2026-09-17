@@ -80,7 +80,8 @@ public sealed record ValidatedTurnOutcome(
     ClarificationTopic? QuestionTopic = null,
     ClarificationResolution? ClarificationResolution = null,
     SupportPreferenceSnapshot? SupportPreferenceUpdate = null,
-    bool ClearSupportPreference = false);
+    bool ClearSupportPreference = false,
+    ProposalSetMutationVerdict? AcceptedProposalSetMutation = null);
 
 // ---------- Deterministic business result events ----------
 

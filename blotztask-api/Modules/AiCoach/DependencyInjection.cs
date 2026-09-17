@@ -66,6 +66,7 @@ public static class DependencyInjection
         services.AddSingleton<IEvidenceGuard, EvidenceGuard>();
         services.AddSingleton<IResponseGuard, ResponseGuard>();
         services.AddSingleton<IProposalSetGuard, ProposalSetGuard>();
+        services.AddSingleton<IProposalSetMutationHandler, ProposalSetMutationHandler>();
 
         // ---- AI pipeline ----
         services.AddSingleton<IModelPromptAssembler, ModelPromptAssembler>();

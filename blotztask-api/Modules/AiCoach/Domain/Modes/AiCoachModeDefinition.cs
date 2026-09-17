@@ -129,20 +129,18 @@ public static class ExecutionModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Execution,
-        RuleVersion: "execution-rules-v7",
-        PromptVersion: "execution-prompts-v10",
+        RuleVersion: "execution-rules-v8",
+        PromptVersion: "execution-prompts-v11",
         ToolsetVersion: "execution-toolset-v3",
         MemoryProfileVersion: "execution-memory-v1",
-        ModelContractSchemaVersion: 4,
+        ModelContractSchemaVersion: 5,
         Policy: new ConversationPolicyDefinition(
-            Version: "execution-policy-v5",
+            Version: "execution-policy-v6",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
             AllowsProposalCreation: true,
-            // Card edits stay a client-local concern in v1 (validated UX): the model discusses
-            // the pending card, it never rewrites it.
-            AllowsModelProposalSetUpdates: false,
+            AllowsModelProposalSetUpdates: true,
             AllowsPartialProposalConfirmation: true,
             Planning: new PlanningPolicyDefinition("execution-planning-v3", 1, true, true, true),
             ProposalGeneration: new ProposalGenerationPolicy(
@@ -171,7 +169,7 @@ public static class ClarifyModeDefinition
         PromptVersion: "clarify-prompts-v0",
         ToolsetVersion: "clarify-toolset-v0",
         MemoryProfileVersion: "clarify-memory-v0",
-        ModelContractSchemaVersion: 4,
+        ModelContractSchemaVersion: 5,
         Policy: new ConversationPolicyDefinition(
             Version: "clarify-policy-v0",
             MaxQuestionsPerTurn: 1,
@@ -203,18 +201,18 @@ public static class CompanionModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Companion,
-        RuleVersion: "companion-rules-v7",
-        PromptVersion: "companion-prompts-v7",
+        RuleVersion: "companion-rules-v8",
+        PromptVersion: "companion-prompts-v8",
         ToolsetVersion: "companion-toolset-v1",
         MemoryProfileVersion: "companion-memory-v1",
-        ModelContractSchemaVersion: 4,
+        ModelContractSchemaVersion: 5,
         Policy: new ConversationPolicyDefinition(
-            Version: "companion-policy-v7",
+            Version: "companion-policy-v8",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
             AllowsProposalCreation: true,
-            AllowsModelProposalSetUpdates: false,
+            AllowsModelProposalSetUpdates: true,
             AllowsPartialProposalConfirmation: true,
             Planning: new PlanningPolicyDefinition(
                 "companion-planning-v7", int.MaxValue, false, true, false,

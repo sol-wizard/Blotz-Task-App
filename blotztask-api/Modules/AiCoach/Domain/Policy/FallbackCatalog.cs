@@ -29,6 +29,17 @@ public static class FallbackCatalog
         if (reason == StrategyReasonCode.UserRejectedAction)
             return chinese ? "好，先不继续这项安排。" : "Okay, we won't continue planning that.";
 
+        if (reason == StrategyReasonCode.ProposalMutationNeedsClarification)
+            return chinese
+                ? "我还不能唯一确定要操作哪一条或要改成什么。请指出具体条目和修改内容。"
+                : "I cannot uniquely determine which item to change or what its new value should be. Please name the item and change.";
+
+        if (reason is StrategyReasonCode.ProposalMutationMissing
+            or StrategyReasonCode.ProposalMutationInvalid)
+            return chinese
+                ? "这次没有安全地修改卡片，原草案保持不变。请再说明要新增、修改或删除哪些条目。"
+                : "I did not safely change the card, so the original draft is unchanged. Please say which items to add, change, or remove.";
+
         if (reason is StrategyReasonCode.SupportMoveNotAllowed
             or StrategyReasonCode.AdviceNotRequested
             or StrategyReasonCode.QuestionCadenceExhausted)

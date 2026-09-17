@@ -52,6 +52,7 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
   const { snapshot, messages, status, start, send, confirm, reject } = useAiCoachChat(mode);
   const [input, setInput] = useState("");
   const [transcribing, setTranscribing] = useState(false);
+  const [draftDirty, setDraftDirty] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const enabled = mode !== null;
 
@@ -73,6 +74,10 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
   const artifact = snapshot?.currentArtifact;
 
   const handleSend = async () => {
+    if (draftDirty) {
+      Toast.show({ type: "info", text1: t("draft.saveEditsBeforeAi") });
+      return;
+    }
     const text = input;
     setInput("");
     const errorCode = await send(text);
@@ -177,6 +182,7 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
             busy={status === "sending"}
             onConfirm={(action, edited) => void handleConfirm(action, edited)}
             onReject={() => void reject()}
+            onDirtyChange={setDraftDirty}
           />
         )}
 
@@ -233,7 +239,7 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
         </Pressable>
         <Pressable
           className={`w-11 h-11 rounded-full items-center justify-center ${
-            canSend && input.trim().length > 0 ? "bg-highlight" : "bg-gray-200"
+            canSend && input.trim().length > 0 && !draftDirty ? "bg-highlight" : "bg-gray-200"
           }`}
           disabled={!canSend || input.trim().length === 0}
           onPress={() => void handleSend()}

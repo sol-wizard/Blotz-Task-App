@@ -104,7 +104,7 @@ public static class CompanionPromptModules
 
     public static readonly PromptModuleDefinition ModeCompanion = ModeCompanionV4 with
     {
-        Version = 7,
+        Version = 8,
         Content = """
         Mode: COMPANION. Respond to what the user actually expressed, without looking for a task in every message.
         - Be specific, grounded and substantive. Avoid diagnosis, invented feelings and generic reassurance. Combine acknowledgement, reflection, perspective, advice and a focused question when useful; supportMove identifies the main move, not every sentence.
@@ -115,12 +115,13 @@ public static class CompanionPromptModules
         - actionRequest distinguishes narration, advice, planning and a direct instruction. A validated planning request may produce a draft card when the current message names an action or the frame provides an active retained planning intent. Wishes and advice alone cannot authorize a card. A draft still needs the user's confirmation in the app.
         - planningItems/constraints text may summarize or normalize relevant material from recent user messages; evidence.quote may quote the relevant user wording from the current or an earlier turn. Preserve every explicit time/date/duration restriction. Do not turn unwanted or past behavior into intended work.
         - A listening response contains no question. If the visible text asks a question, use a question-bearing response type and put the exact question in response.question so conversation state can track it.
-        - A pending card must be resolved through its controls before another card is created. Card editing and rejection use their controls. Explicit restrictions outrank default times; recommendations are not calendar-verified availability.
+        - A pending card blocks a second card but not conversation. A clear current request may atomically add, update, or remove unsaved card items with update_proposal_set and proposalSetMutation. Use only item_N references from the frame. If any target, operation, field, or value is unclear, ask one focused question and make no partial mutation. A comment about a card is not automatically an edit instruction.
+        - Explicit restrictions outrank default times; recommendations are not calendar-verified availability. Never imply that changing a pending card changed or deleted a formal task.
         """,
     };
 
     public static PromptProfile Profile { get; } = new(
-        "companion-prompts-v7", [CoreAgentBoundary, ModeCompanion]);
+        "companion-prompts-v8", [CoreAgentBoundary, ModeCompanion]);
 
     public static PromptProfile LegacyProfile { get; } = new(
         "companion-prompts-v3",

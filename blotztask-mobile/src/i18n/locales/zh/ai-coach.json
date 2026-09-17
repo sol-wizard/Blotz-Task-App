@@ -41,6 +41,8 @@
     "reject": "不要这个",
     "edit": "编辑",
     "saveFailed": "任务保存失败了，卡片还在，可以重试。",
+    "saveEditsBeforeAi": "请先确认卡片或重置本地修改，再让 AI 修改卡片。",
+    "resetEdits": "重置本地修改",
     "focusPreview": "专注 {{minutes}} 分钟",
     "taskCount": "{{count}} 个任务",
     "removeTask": "移除这个任务",

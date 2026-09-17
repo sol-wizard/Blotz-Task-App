@@ -41,6 +41,8 @@
     "reject": "Not this one",
     "edit": "Edit",
     "saveFailed": "Saving the task failed — the card is still here, you can retry.",
+    "saveEditsBeforeAi": "Confirm the card or reset your local edits before asking AI to change it.",
+    "resetEdits": "Reset local edits",
     "focusPreview": "Focus for {{minutes}} min",
     "taskCount": "{{count}} tasks",
     "removeTask": "Remove this task",

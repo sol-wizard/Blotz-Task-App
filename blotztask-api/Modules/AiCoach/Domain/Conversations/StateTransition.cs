@@ -145,6 +145,12 @@ public abstract record ConversationDomainEvent;
 
 public sealed record ProposalSetCreated(int ProposalCount) : ConversationDomainEvent;
 
+public sealed record ProposalSetUpdated(
+    Guid ProposalSetId,
+    int AddedCount,
+    int UpdatedCount,
+    int RemovedCount) : ConversationDomainEvent;
+
 public sealed record ProposalSetRejected(Guid ProposalSetId) : ConversationDomainEvent;
 
 public sealed record ProposalSetPersisted(Guid ProposalSetId, IReadOnlyList<int> TaskIds) : ConversationDomainEvent;

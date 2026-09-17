@@ -82,6 +82,64 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
 
         var outcome = input.Outcome;
 
+        if (outcome.FinalStrategy == ConversationStrategy.UpdateProposalSet
+            && outcome.AcceptedProposalSetMutation is { IsReady: true } mutation)
+        {
+            var currentSet = current.CurrentProposalSet;
+            if (currentSet is null
+                || mutation.ProposalSetId != currentSet.Id
+                || mutation.BaseProposalSetVersion != currentSet.Version)
+                return StateTransition.Rejected(TransitionRejection.ProposalSetNotCurrent);
+            if (currentSet.Status != ProposalSetStatus.Pending)
+                return StateTransition.Rejected(TransitionRejection.InvalidPhase);
+
+            var mutations = new List<DomainMutation>
+            {
+                new AppendAssistantMessageMutation(outcome.AssistantMessage, outcome.FinalStrategy),
+            };
+            if (current.OpenQuestion is not null)
+            {
+                mutations.Add(new ResolveOpenQuestionMutation(ClarificationResolution.Answered));
+                mutations.Add(new ClearOpenQuestionMutation());
+            }
+
+            if (mutation.DiscardsSet)
+            {
+                mutations.Add(new UpdateProposalSetStatusMutation(currentSet.Id, ProposalSetStatus.Rejected));
+                mutations.Add(new ClearCurrentProposalSetMutation(currentSet.Id));
+                return StateTransition.MoveTo(
+                    ConversationPhase.FollowUp,
+                    GenerationStatus.Idle,
+                    ActionSets.ChatOnly,
+                    addFacts: Facts.Of(ConversationFact.HasRejectedProposal),
+                    removeFacts: Facts.Of(
+                        ConversationFact.HasRunningModelEffect,
+                        ConversationFact.HasPendingProposalSet,
+                        ConversationFact.HasOpenQuestion),
+                    mutations: mutations,
+                    events: [new ProposalSetRejected(currentSet.Id)]);
+            }
+
+            if (mutation.Proposals is not { Count: > 0 } proposals)
+                return StateTransition.Rejected(TransitionRejection.InvalidPhase);
+
+            mutations.Add(new ReplaceProposalsMutation(currentSet.Id, proposals));
+            return StateTransition.MoveTo(
+                ConversationPhase.ActionPending,
+                GenerationStatus.Idle,
+                ActionSets.ForPendingSet(proposals.Count == 1),
+                addFacts: Facts.Of(ConversationFact.HasPendingProposalSet),
+                removeFacts: Facts.Of(
+                    ConversationFact.HasRunningModelEffect,
+                    ConversationFact.HasOpenQuestion),
+                mutations: mutations,
+                events: [new ProposalSetUpdated(
+                    currentSet.Id,
+                    mutation.Summary?.AddedCount ?? 0,
+                    mutation.Summary?.UpdatedCount ?? 0,
+                    mutation.Summary?.RemovedCount ?? 0)]);
+        }
+
         if (outcome.FinalStrategy == ConversationStrategy.ShowProposalSet && outcome.AcceptedProposals is { Count: > 0 })
         {
             if (current.CurrentProposalSet is { IsOpen: true })
@@ -109,6 +167,27 @@ public sealed class ModelTurnCompletedHandler : IConversationTransitionHandler<M
                 removeFacts: Facts.Of(ConversationFact.HasRunningModelEffect, ConversationFact.HasOpenQuestion),
                 mutations: mutations,
                 events: [new ProposalSetCreated(outcome.AcceptedProposals.Count)]);
+        }
+
+        // A card-mutation ambiguity asks one focused question while keeping the current card.
+        // It is not a planning interview and does not consume a planning-intent topic budget.
+        if (current.Phase == ConversationPhase.ActionPending
+            && outcome.FinalStrategy == ConversationStrategy.AskClarifyingQuestion
+            && !string.IsNullOrWhiteSpace(outcome.Question))
+        {
+            var mutations = new List<DomainMutation>
+            {
+                new AppendAssistantMessageMutation(outcome.AssistantMessage, outcome.FinalStrategy),
+                new SetOpenQuestionMutation(outcome.Question!, null, ClarificationTopic.Other),
+            };
+            AddSupportPreferenceMutation(mutations, outcome);
+            return StateTransition.MoveTo(
+                ConversationPhase.ActionPending,
+                GenerationStatus.Idle,
+                ActionSets.ForPendingSet(current.CurrentProposalSet),
+                addFacts: Facts.Of(ConversationFact.HasOpenQuestion, ConversationFact.HasPendingProposalSet),
+                removeFacts: Facts.Of(ConversationFact.HasRunningModelEffect),
+                mutations: mutations);
         }
 
         // A question strategy without a card on screen enters/stays in ActionPreparing and

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
@@ -25,12 +25,14 @@ export function TaskDraftCard({
   busy,
   onConfirm,
   onReject,
+  onDirtyChange,
 }: {
   artifact: ArtifactEnvelopeDto;
   allowedActions: ConversationActionWire[];
   busy: boolean;
   onConfirm: (action: ConfirmAction, edited: EditedDraftDto) => void;
   onReject: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { t } = useTranslation("aiCoach");
   const [items, setItems] = useState<EditedDraftItemDto[]>(toEdited(artifact));
@@ -45,6 +47,17 @@ export function TaskDraftCard({
     setItems(toEdited(artifact));
     setEditingId(null);
   }
+
+  const dirty = JSON.stringify(items) !== JSON.stringify(toEdited(artifact));
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+  useEffect(
+    () => () => {
+      onDirtyChange?.(false);
+    },
+    [onDirtyChange],
+  );
 
   // Spinner only while THIS draft is being confirmed. A chat message in flight (busy) must
   // not collapse the card — that read as "the card keeps disappearing" (bug from PM demo).
@@ -123,6 +136,21 @@ export function TaskDraftCard({
         <Text className="font-baloo text-xs text-info mt-1">
           {t("draft.focusPreview", { minutes: artifact.payload.focusMinutes })}
         </Text>
+      )}
+
+      {dirty && !processing && (
+        <Pressable
+          className="items-center py-2"
+          disabled={busy}
+          onPress={() => {
+            setItems(toEdited(artifact));
+            setEditingId(null);
+          }}
+        >
+          <Text className="font-baloo text-primary text-xs underline">
+            {t("draft.resetEdits")}
+          </Text>
+        </Pressable>
       )}
 
       {processing ? (

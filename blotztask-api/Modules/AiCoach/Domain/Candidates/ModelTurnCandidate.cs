@@ -14,7 +14,8 @@ public sealed record ModelTurnCandidate(
     ConversationStrategy SuggestedAction,
     AssistantResponseCandidate ResponseCandidate,
     ProposalSetCandidate? ProposalSetCandidate,
-    SupportMove? SuggestedSupportMove = null);
+    SupportMove? SuggestedSupportMove = null,
+    ProposalSetMutationCandidate? ProposalSetMutationCandidate = null);
 
 /// <summary>
 /// What the model believes it understood (v3 tech design §10.1). Planning items, constraints,
@@ -136,6 +137,9 @@ public sealed record GoalChoiceResponse(
 
 public sealed record ProposalIntroductionResponse(string Text) : AssistantResponseCandidate(Text);
 
+/// <summary>A response accompanying an already validated pending-card mutation.</summary>
+public sealed record ProposalUpdateResponse(string Text) : AssistantResponseCandidate(Text);
+
 /// <summary>
 /// Candidate proposal payload (v3 tech design §11). Only user-editable content fields — the
 /// server owns every identity/lifecycle field. Times are already parsed; the raw-string
@@ -152,3 +156,75 @@ public sealed record TaskProposalCandidate(
     TimeOnly StartTime,
     TimeOnly EndTime,
     int? LabelId);
+
+/// <summary>
+/// A model candidate for changing the current pending card. The model only sees ephemeral
+/// reference keys from the execution frame; it never receives or returns server proposal IDs.
+/// Ambiguities are explicit so uncertainty cannot silently become a destructive operation.
+/// </summary>
+public sealed record ProposalSetMutationCandidate(
+    string ArtifactReferenceKey,
+    IReadOnlyList<ProposalMutationOperationCandidate> Operations,
+    IReadOnlyList<ProposalMutationAmbiguityCandidate> Ambiguities);
+
+public abstract record ProposalMutationOperationCandidate(
+    string OperationKey,
+    EvidenceReference Evidence);
+
+public sealed record AddProposalItemCandidate(
+    string OperationKey,
+    TaskProposalCandidate Item,
+    EvidenceReference Evidence)
+    : ProposalMutationOperationCandidate(OperationKey, Evidence);
+
+public sealed record UpdateProposalItemCandidate(
+    string OperationKey,
+    string TargetReferenceKey,
+    ProposalItemPatchCandidate Patch,
+    EvidenceReference Evidence)
+    : ProposalMutationOperationCandidate(OperationKey, Evidence);
+
+public sealed record RemoveProposalItemCandidate(
+    string OperationKey,
+    string TargetReferenceKey,
+    EvidenceReference Evidence)
+    : ProposalMutationOperationCandidate(OperationKey, Evidence);
+
+public enum ProposalField
+{
+    Title = 0,
+    Description = 1,
+    Date = 2,
+    StartTime = 3,
+    EndTime = 4,
+    LabelId = 5,
+}
+
+/// <summary>
+/// ChangedFields distinguishes an omitted field from an explicit clear. Null is a valid
+/// replacement only for Description and LabelId.
+/// </summary>
+public sealed record ProposalItemPatchCandidate(
+    IReadOnlySet<ProposalField> ChangedFields,
+    string? Title = null,
+    string? Description = null,
+    DateOnly? Date = null,
+    TimeOnly? StartTime = null,
+    TimeOnly? EndTime = null,
+    int? LabelId = null);
+
+public sealed record ProposalMutationAmbiguityCandidate(
+    ProposalMutationAmbiguityKind Kind,
+    IReadOnlyList<string> CandidateReferenceKeys,
+    ProposalField? Field,
+    EvidenceReference Evidence);
+
+public enum ProposalMutationAmbiguityKind
+{
+    TargetUnclear = 0,
+    OperationUnclear = 1,
+    FieldUnclear = 2,
+    ReplacementValueMissing = 3,
+    MultipleTargetsPossible = 4,
+    ConflictingInstructions = 5,
+}

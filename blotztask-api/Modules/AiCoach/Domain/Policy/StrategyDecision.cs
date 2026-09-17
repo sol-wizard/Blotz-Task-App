@@ -11,7 +11,8 @@ public sealed record StrategyDecision(
     bool AcceptResponseCandidate,
     bool AcceptProposalSetCandidate,
     RegenerationDirective? Regeneration = null,
-    PolicyFallbackPlan? Fallback = null);
+    PolicyFallbackPlan? Fallback = null,
+    bool AcceptProposalSetMutationCandidate = false);
 
 public sealed record RegenerationDirective(
     ConversationStrategy RequiredStrategy,
@@ -19,7 +20,7 @@ public sealed record RegenerationDirective(
     IReadOnlySet<Planning.AllowedAssumption> AllowedAssumptions,
     string? ValidationDetail = null);
 
-public enum CandidateFailureKind { Response, Proposal }
+public enum CandidateFailureKind { Response, Proposal, ProposalMutation }
 
 public sealed record CandidateValidationFailure(CandidateFailureKind Kind, string Detail);
 
@@ -64,4 +65,7 @@ public enum StrategyReasonCode
     QuestionCadenceExhausted = 14,
     PauseRequested = 15,
     PlanningQuestionNotAuthorized = 16,
+    ProposalMutationMissing = 17,
+    ProposalMutationInvalid = 18,
+    ProposalMutationNeedsClarification = 19,
 }

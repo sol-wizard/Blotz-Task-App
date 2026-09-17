@@ -219,8 +219,8 @@ public class CompanionPolicyTests
             because: "the creation API must expose the selected registered mode");
         stored!.Mode.Should().Be(AiCoachMode.Companion,
             because: "mode is pinned on the authoritative in-memory conversation");
-        stored.RuntimeVersions.ModelContractSchemaVersion.Should().Be(4,
-            because: "Companion is pinned to the schema that carries Action and Support requests");
+        stored.RuntimeVersions.ModelContractSchemaVersion.Should().Be(5,
+            because: "Companion is pinned to the schema that carries Action, Support, and pending-card mutation candidates");
         stored.RuntimeVersions.SupportPolicyVersion.Should().Be("companion-support-v5",
             because: "the active conversation must not silently switch support policy");
     }

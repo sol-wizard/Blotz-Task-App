@@ -72,9 +72,42 @@ public sealed class ModelTurnRuntime(
     IDeterministicProposalGenerator proposalGenerator,
     IResponseGuard responseGuard,
     IProposalSetGuard proposalSetGuard,
+    IProposalSetMutationHandler proposalSetMutationHandler,
     IOptions<AiCoachModuleOptions> options,
     ILogger<ModelTurnRuntime> logger) : IModelTurnRuntime
 {
+    // Compatibility constructor for existing deterministic tests and non-DI callers. The
+    // production container injects the registered mutation handler through the primary seam.
+    public ModelTurnRuntime(
+        IModelGateway gateway,
+        IModelContextBuilder contextBuilder,
+        IConversationPrePolicy prePolicy,
+        IConversationPostPolicy postPolicy,
+        IEvidenceGuard evidenceGuard,
+        IPlanningAuthorityCalculator planningAuthorityCalculator,
+        ISupportPolicyCalculator supportPolicyCalculator,
+        IDeterministicProposalGenerator proposalGenerator,
+        IResponseGuard responseGuard,
+        IProposalSetGuard proposalSetGuard,
+        IOptions<AiCoachModuleOptions> options,
+        ILogger<ModelTurnRuntime> logger)
+        : this(
+            gateway,
+            contextBuilder,
+            prePolicy,
+            postPolicy,
+            evidenceGuard,
+            planningAuthorityCalculator,
+            supportPolicyCalculator,
+            proposalGenerator,
+            responseGuard,
+            proposalSetGuard,
+            new ProposalSetMutationHandler(),
+            options,
+            logger)
+    {
+    }
+
     public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken cancellationToken)
     {
         var turnStarted = Stopwatch.GetTimestamp();
@@ -272,8 +305,32 @@ public sealed class ModelTurnRuntime(
                     supportDecision.ClearPreference);
             }
 
+            var proposalMutationVerdict = candidate.ProposalSetMutationCandidate is null
+                ? null
+                : proposalSetMutationHandler.Evaluate(
+                    snapshot.CurrentProposalSet,
+                    candidate.ProposalSetMutationCandidate,
+                    currentUserMessage,
+                    envelope.ProposalConstraints.MaxProposals);
+            if (proposalMutationVerdict is not null)
+            {
+                logger.LogInformation(
+                    "AiCoach.ProposalMutation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Readiness={Readiness} Reason={Reason} AddedCount={AddedCount} UpdatedCount={UpdatedCount} RemovedCount={RemovedCount} ResultingCount={ResultingCount} Detail={Detail}",
+                    snapshot.ConversationId,
+                    request.EffectId,
+                    iterations,
+                    proposalMutationVerdict.Readiness,
+                    proposalMutationVerdict.Reason,
+                    proposalMutationVerdict.Summary?.AddedCount ?? 0,
+                    proposalMutationVerdict.Summary?.UpdatedCount ?? 0,
+                    proposalMutationVerdict.Summary?.RemovedCount ?? 0,
+                    proposalMutationVerdict.Summary?.ResultingItemCount,
+                    proposalMutationVerdict.Detail);
+            }
+
             var policyContext = new PolicyContext(
-                snapshot, envelope, candidate, request.Mode, verifiedPlanning, planningAuthority, supportDecision);
+                snapshot, envelope, candidate, request.Mode, verifiedPlanning, planningAuthority,
+                supportDecision, proposalMutationVerdict);
             var decision = postPolicy.Decide(policyContext);
 
             if (decision.AcceptResponseCandidate)
@@ -305,6 +362,11 @@ public sealed class ModelTurnRuntime(
                         Failure = new CandidateValidationFailure(CandidateFailureKind.Proposal, verdict.Detail!),
                     });
             }
+
+            var acceptedMutation = decision.AcceptProposalSetMutationCandidate
+                && proposalMutationVerdict is { IsReady: true }
+                    ? proposalMutationVerdict
+                    : null;
 
             logger.LogInformation(
                 "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction}",
@@ -343,11 +405,15 @@ public sealed class ModelTurnRuntime(
                     request.EffectId, iterations, proposalRegenerations));
             }
 
+            var assistantMessage = acceptedMutation?.Summary is { } mutationSummary
+                ? ProposalSetMutationResponseProjector.Render(mutationSummary, currentUserMessage)
+                : candidate.ResponseCandidate.Text;
+
             return Complete(new ValidatedTurnOutcome(
                 decision.FinalStrategy,
                 decision.DecisionType,
                 decision.ReasonCode,
-                candidate.ResponseCandidate.Text,
+                assistantMessage,
                 QuestionOf(candidate.ResponseCandidate),
                 acceptedProposals,
                 FallbackUsed: false,
@@ -359,7 +425,8 @@ public sealed class ModelTurnRuntime(
                 QuestionTopic: QuestionTopicOf(candidate.ResponseCandidate),
                 ClarificationResolution: ToResolution(verifiedPlanning.Disposition),
                 SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
-                ClearSupportPreference: supportDecision?.ClearPreference ?? false));
+                ClearSupportPreference: supportDecision?.ClearPreference ?? false,
+                AcceptedProposalSetMutation: acceptedMutation));
         }
 
         return Fail(ModelTurnCompletionReason.IterationLimitExceeded);
@@ -395,9 +462,12 @@ public sealed class ModelTurnRuntime(
             // Failure rejects the complete outcome; no message, card or preference is committed.
             if (outcome.FallbackUsed)
             {
-                AssistantResponseCandidate response = outcome.FinalStrategy == ConversationStrategy.ShowProposalSet
-                    ? new ProposalIntroductionResponse(outcome.AssistantMessage)
-                    : new ListeningResponse(outcome.AssistantMessage);
+                AssistantResponseCandidate response = outcome.FinalStrategy switch
+                {
+                    ConversationStrategy.ShowProposalSet => new ProposalIntroductionResponse(outcome.AssistantMessage),
+                    ConversationStrategy.UpdateProposalSet => new ProposalUpdateResponse(outcome.AssistantMessage),
+                    _ => new ListeningResponse(outcome.AssistantMessage),
+                };
                 var verdict = responseGuard.Validate(response, envelope.ResponseConstraints);
                 if (!verdict.IsValid)
                 {

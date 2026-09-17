@@ -13,12 +13,12 @@ namespace BlotzTask.Modules.AiCoach.Ai.Contracts;
 /// Output Schema Guard. The JSON schema handed to the model as a structured-output response
 /// format and the runtime validation both derive from this single file, so they cannot drift.
 ///
-/// The strategy enum deliberately exposes only the strategies a model turn may candidate
-/// (no update/supersede/close): what is not in the output contract can never be proposed.
+/// The strategy enum exposes pending-card update, but never formal task writes or conversation
+/// lifecycle commands. What is absent from the output contract cannot be proposed.
 /// </summary>
 public static class ModelTurnCandidateContract
 {
-    public const int SchemaVersion = 4;
+    public const int SchemaVersion = 5;
 
     public const string ResponseFormatName = "model_turn_candidate";
 
@@ -32,7 +32,10 @@ public static class ModelTurnCandidateContract
     {
         type = "object",
         additionalProperties = false,
-        required = new[] { "interpretation", "suggestedAction", "response", "proposalSet" },
+        required = new[]
+        {
+            "interpretation", "suggestedAction", "response", "proposalSet", "proposalSetMutation",
+        },
         properties = new
         {
             interpretation = new
@@ -167,6 +170,7 @@ public static class ModelTurnCandidateContract
                 {
                     "continue_listening", "ask_gentle_question", "ask_clarifying_question",
                     "ask_user_to_choose_goal", "show_proposal_set", "discuss_existing_proposal",
+                    "update_proposal_set",
                 },
                 description = "Your chosen conversation strategy for this turn. It must be one the "
                               + "current turn allows (see the turn frame).",
@@ -184,12 +188,13 @@ public static class ModelTurnCandidateContract
                         @enum = new[]
                         {
                             "listening", "gentle_question", "clarifying_question",
-                            "goal_choice", "proposal_introduction",
+                            "goal_choice", "proposal_introduction", "proposal_update",
                         },
                         description = "Must match the strategy: continue_listening/discuss_existing_proposal -> "
                                       + "listening; ask_gentle_question -> gentle_question; ask_clarifying_question -> "
                                       + "clarifying_question; ask_user_to_choose_goal -> goal_choice; "
-                                      + "show_proposal_set -> proposal_introduction.",
+                                      + "show_proposal_set -> proposal_introduction; "
+                                      + "update_proposal_set -> proposal_update.",
                     },
                     text = new
                     {
@@ -287,6 +292,105 @@ public static class ModelTurnCandidateContract
                     },
                 },
             },
+            proposalSetMutation = new
+            {
+                type = new[] { "object", "null" },
+                additionalProperties = false,
+                required = new[] { "artifactReferenceKey", "operations", "ambiguities" },
+                description = "ONLY for changing the current pending card. Use ephemeral item_N references from the turn frame. "
+                              + "If the target, operation, field, or value is unclear, report an ambiguity and ask one focused question; do not guess.",
+                properties = new
+                {
+                    artifactReferenceKey = new { type = "string", @enum = new[] { ProposalReferenceKeys.CurrentArtifact } },
+                    operations = new
+                    {
+                        type = "array",
+                        maxItems = ProposalSetMutationHandler.MaxOperationsPerTurn,
+                        items = new
+                        {
+                            type = "object",
+                            additionalProperties = false,
+                            required = new[]
+                            {
+                                "kind", "operationKey", "targetReferenceKey", "changedFields",
+                                "title", "description", "date", "startTime", "endTime", "labelId", "evidence",
+                            },
+                            properties = new
+                            {
+                                kind = new { type = "string", @enum = new[] { "add", "update", "remove" } },
+                                operationKey = new { type = "string" },
+                                targetReferenceKey = new
+                                {
+                                    type = new[] { "string", "null" },
+                                    description = "item_N for update/remove; null for add.",
+                                },
+                                changedFields = new
+                                {
+                                    type = "array",
+                                    items = new
+                                    {
+                                        type = "string",
+                                        @enum = new[] { "title", "description", "date", "start_time", "end_time", "label_id" },
+                                    },
+                                    description = "Update only. Fields omitted here remain unchanged; null clears only description/label_id.",
+                                },
+                                title = new { type = new[] { "string", "null" } },
+                                description = new { type = new[] { "string", "null" } },
+                                date = new { type = new[] { "string", "null" } },
+                                startTime = new { type = new[] { "string", "null" } },
+                                endTime = new { type = new[] { "string", "null" } },
+                                labelId = new { type = new[] { "integer", "null" } },
+                                evidence = new
+                                {
+                                    type = "object",
+                                    additionalProperties = false,
+                                    required = new[] { "quote" },
+                                    properties = new { quote = new { type = "string" } },
+                                },
+                            },
+                        },
+                    },
+                    ambiguities = new
+                    {
+                        type = "array",
+                        maxItems = 3,
+                        items = new
+                        {
+                            type = "object",
+                            additionalProperties = false,
+                            required = new[] { "kind", "candidateReferenceKeys", "field", "evidence" },
+                            properties = new
+                            {
+                                kind = new
+                                {
+                                    type = "string",
+                                    @enum = new[]
+                                    {
+                                        "target_unclear", "operation_unclear", "field_unclear",
+                                        "replacement_value_missing", "multiple_targets_possible", "conflicting_instructions",
+                                    },
+                                },
+                                candidateReferenceKeys = new { type = "array", items = new { type = "string" } },
+                                field = new
+                                {
+                                    type = new[] { "string", "null" },
+                                    @enum = new object?[]
+                                    {
+                                        "title", "description", "date", "start_time", "end_time", "label_id", null,
+                                    },
+                                },
+                                evidence = new
+                                {
+                                    type = "object",
+                                    additionalProperties = false,
+                                    required = new[] { "quote" },
+                                    properties = new { quote = new { type = "string" } },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         },
     });
 
@@ -331,6 +435,7 @@ public static class ModelTurnCandidateContract
             "clarifying_question" when question is not null => new ClarifyingQuestionResponse(text, question, questionTopic),
             "goal_choice" when question is not null => new GoalChoiceResponse(text, question, questionTopic),
             "proposal_introduction" => new ProposalIntroductionResponse(text),
+            "proposal_update" => new ProposalUpdateResponse(text),
             "gentle_question" or "clarifying_question" or "goal_choice" =>
                 null, // question missing — reported below
             _ => null,
@@ -356,6 +461,15 @@ public static class ModelTurnCandidateContract
                 proposals.Add(proposal!);
             }
             proposalSet = new ProposalSetCandidate(proposals);
+        }
+
+        ProposalSetMutationCandidate? proposalSetMutation = null;
+        if (dto.ProposalSetMutation is not null)
+        {
+            var (mutation, mutationError) = ParseProposalSetMutation(dto.ProposalSetMutation);
+            if (mutationError is not null)
+                return ParseResult.Failed(mutationError);
+            proposalSetMutation = mutation;
         }
 
         var intent = dto.Interpretation.Intent switch
@@ -415,7 +529,8 @@ public static class ModelTurnCandidateContract
             strategy.Value,
             response,
             proposalSet,
-            ParseSupportMove(dto.Response.SupportMove)));
+            ParseSupportMove(dto.Response.SupportMove),
+            proposalSetMutation));
     }
 
     private static object EvidenceKindSchema(string[] kinds, string description) => new
@@ -505,6 +620,135 @@ public static class ModelTurnCandidateContract
                && TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
     }
 
+    private static (ProposalSetMutationCandidate? Mutation, string? Error) ParseProposalSetMutation(
+        ProposalSetMutationJson dto)
+    {
+        var operations = new List<ProposalMutationOperationCandidate>();
+        for (var index = 0; index < (dto.Operations?.Count ?? 0); index++)
+        {
+            var raw = dto.Operations![index];
+            var at = $"proposalSetMutation.operations[{index}]";
+            var evidence = new EvidenceReference(raw.Evidence?.Quote?.Trim() ?? string.Empty);
+            var operationKey = raw.OperationKey?.Trim() ?? string.Empty;
+
+            switch (raw.Kind)
+            {
+                case "add":
+                    if (string.IsNullOrWhiteSpace(raw.Title)
+                        || !DateOnly.TryParseExact(raw.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                            DateTimeStyles.None, out var addDate)
+                        || !TryParseTime(raw.StartTime, out var addStart)
+                        || !TryParseTime(raw.EndTime, out var addEnd))
+                        return (null, $"{at}: add requires title, yyyy-MM-dd date, and HH:mm start/end times.");
+                    operations.Add(new AddProposalItemCandidate(
+                        operationKey,
+                        new TaskProposalCandidate(
+                            operationKey,
+                            raw.Title.Trim(),
+                            string.IsNullOrWhiteSpace(raw.Description) ? null : raw.Description.Trim(),
+                            addDate,
+                            addStart,
+                            addEnd,
+                            raw.LabelId),
+                        evidence));
+                    break;
+
+                case "update":
+                    if (string.IsNullOrWhiteSpace(raw.TargetReferenceKey))
+                        return (null, $"{at}.targetReferenceKey is required for update.");
+                    var fields = (raw.ChangedFields ?? [])
+                        .Select(ParseProposalField)
+                        .Where(field => field.HasValue)
+                        .Select(field => field!.Value)
+                        .ToHashSet();
+                    if (fields.Count != (raw.ChangedFields?.Count ?? 0))
+                        return (null, $"{at}.changedFields contains an unknown field.");
+                    if (!TryParseOptionalDate(raw.Date, fields.Contains(ProposalField.Date), out var updateDate)
+                        || !TryParseOptionalTime(raw.StartTime, fields.Contains(ProposalField.StartTime), out var updateStart)
+                        || !TryParseOptionalTime(raw.EndTime, fields.Contains(ProposalField.EndTime), out var updateEnd))
+                        return (null, $"{at}: changed date/time values must use yyyy-MM-dd and HH:mm.");
+                    operations.Add(new UpdateProposalItemCandidate(
+                        operationKey,
+                        raw.TargetReferenceKey.Trim(),
+                        new ProposalItemPatchCandidate(
+                            fields,
+                            raw.Title,
+                            raw.Description,
+                            updateDate,
+                            updateStart,
+                            updateEnd,
+                            raw.LabelId),
+                        evidence));
+                    break;
+
+                case "remove":
+                    if (string.IsNullOrWhiteSpace(raw.TargetReferenceKey))
+                        return (null, $"{at}.targetReferenceKey is required for remove.");
+                    operations.Add(new RemoveProposalItemCandidate(
+                        operationKey,
+                        raw.TargetReferenceKey.Trim(),
+                        evidence));
+                    break;
+
+                default:
+                    return (null, $"{at}.kind is unknown.");
+            }
+        }
+
+        var ambiguities = (dto.Ambiguities ?? []).Select(raw => new ProposalMutationAmbiguityCandidate(
+            raw.Kind switch
+            {
+                "operation_unclear" => ProposalMutationAmbiguityKind.OperationUnclear,
+                "field_unclear" => ProposalMutationAmbiguityKind.FieldUnclear,
+                "replacement_value_missing" => ProposalMutationAmbiguityKind.ReplacementValueMissing,
+                "multiple_targets_possible" => ProposalMutationAmbiguityKind.MultipleTargetsPossible,
+                "conflicting_instructions" => ProposalMutationAmbiguityKind.ConflictingInstructions,
+                _ => ProposalMutationAmbiguityKind.TargetUnclear,
+            },
+            raw.CandidateReferenceKeys ?? [],
+            ParseProposalField(raw.Field),
+            new EvidenceReference(raw.Evidence?.Quote?.Trim() ?? string.Empty))).ToList();
+
+        return (new ProposalSetMutationCandidate(
+            dto.ArtifactReferenceKey?.Trim() ?? string.Empty,
+            operations,
+            ambiguities), null);
+    }
+
+    private static ProposalField? ParseProposalField(string? value) => value switch
+    {
+        "title" => ProposalField.Title,
+        "description" => ProposalField.Description,
+        "date" => ProposalField.Date,
+        "start_time" => ProposalField.StartTime,
+        "end_time" => ProposalField.EndTime,
+        "label_id" => ProposalField.LabelId,
+        _ => null,
+    };
+
+    private static bool TryParseOptionalDate(string? value, bool required, out DateOnly? date)
+    {
+        date = null;
+        if (!required)
+            return true;
+        if (value is null || !DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var parsed))
+            return false;
+        date = parsed;
+        return true;
+    }
+
+    private static bool TryParseOptionalTime(string? value, bool required, out TimeOnly? time)
+    {
+        time = null;
+        if (!required)
+            return true;
+        if (!TryParseTime(value, out var parsed))
+            return false;
+        time = parsed;
+        return true;
+    }
+
     private static ClarificationTopic ParseClarificationTopic(string? value) => value switch
     {
         "priority" => ClarificationTopic.Priority,
@@ -531,6 +775,7 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("suggestedAction")] public string? SuggestedAction { get; init; }
         [JsonPropertyName("response")] public ResponseJson? Response { get; init; }
         [JsonPropertyName("proposalSet")] public ProposalSetJson? ProposalSet { get; init; }
+        [JsonPropertyName("proposalSetMutation")] public ProposalSetMutationJson? ProposalSetMutation { get; init; }
     }
 
     private sealed class InterpretationJson
@@ -597,5 +842,35 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("startTime")] public string? StartTime { get; init; }
         [JsonPropertyName("endTime")] public string? EndTime { get; init; }
         [JsonPropertyName("labelId")] public int? LabelId { get; init; }
+    }
+
+    private sealed class ProposalSetMutationJson
+    {
+        [JsonPropertyName("artifactReferenceKey")] public string? ArtifactReferenceKey { get; init; }
+        [JsonPropertyName("operations")] public List<ProposalMutationOperationJson>? Operations { get; init; }
+        [JsonPropertyName("ambiguities")] public List<ProposalMutationAmbiguityJson>? Ambiguities { get; init; }
+    }
+
+    private sealed class ProposalMutationOperationJson
+    {
+        [JsonPropertyName("kind")] public string? Kind { get; init; }
+        [JsonPropertyName("operationKey")] public string? OperationKey { get; init; }
+        [JsonPropertyName("targetReferenceKey")] public string? TargetReferenceKey { get; init; }
+        [JsonPropertyName("changedFields")] public List<string>? ChangedFields { get; init; }
+        [JsonPropertyName("title")] public string? Title { get; init; }
+        [JsonPropertyName("description")] public string? Description { get; init; }
+        [JsonPropertyName("date")] public string? Date { get; init; }
+        [JsonPropertyName("startTime")] public string? StartTime { get; init; }
+        [JsonPropertyName("endTime")] public string? EndTime { get; init; }
+        [JsonPropertyName("labelId")] public int? LabelId { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
+    }
+
+    private sealed class ProposalMutationAmbiguityJson
+    {
+        [JsonPropertyName("kind")] public string? Kind { get; init; }
+        [JsonPropertyName("candidateReferenceKeys")] public List<string>? CandidateReferenceKeys { get; init; }
+        [JsonPropertyName("field")] public string? Field { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
     }
 }
