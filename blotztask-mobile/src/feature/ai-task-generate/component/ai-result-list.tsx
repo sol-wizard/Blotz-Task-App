@@ -17,6 +17,8 @@ type Props = {
   onDeleteRecurring: (id: string) => void;
   onDeleteNote: (id: string) => void;
   isGenerating: boolean;
+  /** Size to the cards instead of filling the parent. The parent must cap the height. */
+  fitContent?: boolean;
 };
 
 export function AiResultList({
@@ -27,12 +29,16 @@ export function AiResultList({
   onDeleteRecurring,
   onDeleteNote,
   isGenerating,
+  fitContent = false,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
   const { onRowOpen } = useSwipeableManager();
 
   return (
-    <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
+    <Animated.ScrollView
+      className={fitContent ? "w-full grow-0" : "w-full flex-1"}
+      showsVerticalScrollIndicator={false}
+    >
       <View className="items-center">
         {aiTasks.map((task) => (
           <AiResultRow

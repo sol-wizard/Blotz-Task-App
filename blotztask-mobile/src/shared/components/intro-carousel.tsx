@@ -132,6 +132,8 @@ export function IntroCarousel<T>({
         horizontal
         pagingEnabled
         scrollEnabled={scrollEnabled}
+        // Without this, the first tap on a button only dismisses an open keyboard.
+        keyboardShouldPersistTaps="handled"
         showsHorizontalScrollIndicator={false}
         getItemLayout={(_, index) => ({
           length: SCREEN_WIDTH,

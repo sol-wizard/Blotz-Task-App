@@ -174,12 +174,17 @@ export function useOnboardingVoiceTask() {
     await sendTextMessage(text.trim());
   };
 
+  // A notice is about the last attempt in the old mode, so it does not carry over.
   const switchToText = () => {
     holdToTalk.hideHoldHint();
+    setNotice("none");
     setInputMode("text");
   };
 
-  const switchToVoice = () => setInputMode("voice");
+  const switchToVoice = () => {
+    setNotice("none");
+    setInputMode("voice");
+  };
 
   /** Saves the drafts. Resolves true when the carousel should move on. */
   const confirmDrafts = async (): Promise<boolean> => {

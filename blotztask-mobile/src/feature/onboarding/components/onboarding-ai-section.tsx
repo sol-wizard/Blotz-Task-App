@@ -71,9 +71,10 @@ export function OnboardingAiSection({ voice }: Props) {
                 returnKeyType="send"
                 multiline={false}
                 editable={!voice.isAiGenerating}
-                className={`flex-1 h-14 px-5 rounded-full bg-black/5 text-black font-baloo text-base ${
+                className={`flex-1 h-14 px-5 rounded-full text-black font-baloo text-base ${
                   voice.isAiGenerating ? "opacity-40" : "opacity-100"
                 }`}
+                style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
               />
               <Pressable
                 onPress={handleSubmitText}
@@ -95,7 +96,7 @@ export function OnboardingAiSection({ voice }: Props) {
                 colors={["#A3DC2F", "#2F80ED"]}
                 start={{ x: 0.3, y: 0 }}
                 end={{ x: 0.7, y: 1 }}
-                style={{ flex: 1, borderRadius: 24, overflow: "hidden" }}
+                style={{ maxHeight: "100%", borderRadius: 24, overflow: "hidden" }}
               >
                 <AiResultList
                   aiTasks={voice.tasks}
@@ -106,16 +107,15 @@ export function OnboardingAiSection({ voice }: Props) {
                   onDeleteNote={voice.deleteDraftNote}
                   // Saved drafts stay on screen but can no longer be swiped away.
                   isGenerating={voice.isAiGenerating || voice.isCreated}
+                  fitContent
                 />
               </LinearGradient>
             ) : (
-              !isTextMode && (
-                <Image
-                  source={ASSETS.onboardingVoice}
-                  style={{ flex: 1, width: "100%" }}
-                  contentFit="contain"
-                />
-              )
+              <Image
+                source={ASSETS.onboardingVoice}
+                style={{ flex: 1, width: "100%" }}
+                contentFit="contain"
+              />
             )}
           </View>
 
