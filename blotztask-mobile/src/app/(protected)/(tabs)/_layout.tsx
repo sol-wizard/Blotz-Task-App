@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Tabs, router } from "expo-router";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -5,6 +6,8 @@ import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/bottom-nav-image";
 import { GradientCircle } from "@/shared/components/gradient-circle";
 import { theme } from "@/shared/constants/theme";
+import { VoiceCoachOverlay } from "@/feature/onboarding/components/voice-coach-overlay";
+import { useVoiceCoachStore } from "@/feature/onboarding/hooks/useVoiceCoachStore";
 
 function UnfocusedTabIcon({ children }: { children: React.ReactNode }) {
   return (
@@ -58,6 +61,15 @@ function getTabIcon(routeKey: string, focused: boolean) {
 
 export default function ProtectedTabsLayout() {
   const insets = useSafeAreaInsets();
+  const aiButtonRef = useRef<View>(null);
+  const setButtonFrame = useVoiceCoachStore((state) => state.setButtonFrame);
+
+  // The voice coach puts its spotlight exactly where this button is drawn.
+  const reportAiButtonFrame = () => {
+    aiButtonRef.current?.measureInWindow((x, y, width, height) => {
+      setButtonFrame({ x, y, width, height });
+    });
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -96,6 +108,8 @@ export default function ProtectedTabsLayout() {
           options={{
             tabBarButton: () => (
               <Pressable
+                ref={aiButtonRef}
+                onLayout={reportAiButtonFrame}
                 className="flex-1 items-center justify-center"
                 onPress={() => router.push("/ai-task-sheet")}
               >
@@ -130,6 +144,7 @@ export default function ProtectedTabsLayout() {
           }}
         />
       </Tabs>
+      <VoiceCoachOverlay />
     </View>
   );
 }
