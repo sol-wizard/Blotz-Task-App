@@ -34,11 +34,8 @@ import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
-import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import { mapExtractedRecurringToDTO } from "../utils/map-extracted-recurring-to-dto";
-import { mapRecurringToCreateDTO } from "../utils/map-recurring-to-create-dto";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import { useSaveAiResults } from "../hooks/useSaveAiResults";
 import Toast from "react-native-toast-message";
 import { useDebouncedCallback } from "use-debounce";
 import { analytics } from "@/shared/services/analytics";
@@ -96,9 +93,7 @@ export default function AiTaskSheetScreen() {
   const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
-  const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
-    useTaskMutations();
-  const { createNoteAsync, isNoteCreating } = useNotesMutation();
+  const { saveAll } = useSaveAiResults("ai");
 
   // Resolve mic permission on mount; navigate back if unusable.
   // Get-then-request (as in shared/services/notifications.ts) separates denied from blocked.
@@ -191,36 +186,13 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleAddAll = async () => {
-    if (isAdding || isNoteCreating || isCreatingRecurringTask) return;
-
-    const results = await Promise.allSettled([
-      ...displayTasks.map(async (task) => {
-        // Fire per successful task, not behind the all-succeed gate below, so a partial
-        // failure still records the tasks that did land.
-        const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
-        analytics.trackTaskCreated({
-          taskId,
-          source: "ai",
-          isRecurring: false,
-          hasDeadline: false,
-        });
-      }),
-      ...displayRecurringTasks.map(async (task) => {
-        const { recurringTaskId } = await createRecurringTaskAsync(mapRecurringToCreateDTO(task));
-        analytics.trackTaskCreated({
-          taskId: recurringTaskId,
-          source: "ai",
-          isRecurring: true,
-          hasDeadline: false,
-        });
-      }),
-      ...displayNotes.map((n) => createNoteAsync({ text: n.text, isPersistent: false })),
-    ]);
-
-    const allSucceeded = results.every((r) => r.status === "fulfilled");
+    const allSucceeded = await saveAll({
+      tasks: displayTasks,
+      recurringTasks: displayRecurringTasks,
+      notes: displayNotes,
+    });
 
     if (allSucceeded) {
-      displayNotes.forEach(() => analytics.trackNoteCreated({ source: "ai" }));
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
