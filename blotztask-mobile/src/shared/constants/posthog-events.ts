@@ -28,6 +28,10 @@ export const EVENTS = {
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
   ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
+  ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
+  ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
+  ONBOARDING_VOICE_SKIPPED: "onboarding_voice_skipped",
 } as const;
 
 export const SCREEN_NAMES = {
@@ -64,8 +68,11 @@ export type LoginErrorCode =
   | (typeof WebAuthErrorCodes)[keyof typeof WebAuthErrorCodes]
   | "NoTokensReturned";
 
-/** How a task was created. `manual` = task form, `ai` = AI generation sheet. */
-export type TaskSource = "manual" | "ai";
+/**
+ * How a task was created. `manual` = task form, `ai` = AI generation sheet,
+ * `onboarding_ai` = the try-voice step of onboarding.
+ */
+export type TaskSource = "manual" | "ai" | "onboarding_ai";
 
 export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";
 export type AiTaskInputMode = "voice" | "text";
@@ -130,3 +137,14 @@ export type ShareContentType = "review" | "badge";
 export type OnboardingOutcome = "completed" | "skipped";
 
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
+
+/** How the user left the try-voice step without creating anything. */
+export type OnboardingVoiceSkipVia = "skip_button" | "continue_button";
+
+/** The last thing that went wrong on the try-voice step before the user left it. */
+export type OnboardingVoiceFailure =
+  | "permission_denied"
+  | "no_speech"
+  | "no_task"
+  | "network"
+  | "none";

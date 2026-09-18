@@ -18,6 +18,8 @@ import {
   type ShareContentType,
   type OnboardingOutcome,
   type OnboardingSection,
+  type OnboardingVoiceFailure,
+  type OnboardingVoiceSkipVia,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -122,6 +124,54 @@ export const analytics = {
     posthog.capture(EVENTS.ONBOARDING_COMPLETED, {
       outcome: params.outcome,
       last_section_reached: params.exit_section,
+    });
+  },
+
+  /** Fires on every mic press on the onboarding try-voice step. `attempt` starts at 1. */
+  trackOnboardingVoiceMicPressed(params: { attempt: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_MIC_PRESSED, {
+      attempt: params.attempt,
+    });
+  },
+
+  /**
+   * Fires when the AI returns at least one draft on the try-voice step.
+   * `taskCount` counts every draft shown (tasks, recurring tasks and notes).
+   */
+  trackOnboardingVoiceTaskGenerated(params: {
+    inputMode: AiTaskInputMode;
+    taskCount: number;
+    attempt: number;
+  }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_GENERATED, {
+      input_mode: params.inputMode,
+      task_count: params.taskCount,
+      attempt: params.attempt,
+    });
+  },
+
+  /** Fires after the drafts from the try-voice step are saved. The step's success event. */
+  trackOnboardingVoiceTaskCreated(params: { inputMode: AiTaskInputMode; taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
+      input_mode: params.inputMode,
+      task_count: params.taskCount,
+    });
+  },
+
+  /**
+   * Fires when the user leaves the try-voice step without saving anything.
+   * `lastFailure` says what they hit before giving up; `none` means they never tried or
+   * nothing went wrong.
+   */
+  trackOnboardingVoiceSkipped(params: {
+    via: OnboardingVoiceSkipVia;
+    attempts: number;
+    lastFailure: OnboardingVoiceFailure;
+  }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_SKIPPED, {
+      via: params.via,
+      attempts: params.attempts,
+      last_failure: params.lastFailure,
     });
   },
 
