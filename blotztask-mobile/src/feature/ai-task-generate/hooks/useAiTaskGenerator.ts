@@ -40,6 +40,9 @@ export function useAiTaskGenerator({
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
+  // Closing the sheet stops the connection, which rejects any request still in flight.
+  // That is the user leaving, not a failure, so it must not toast or count as one.
+  const isClosedRef = useRef(false);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -57,6 +60,7 @@ export function useAiTaskGenerator({
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
     } catch (error) {
+      if (isClosedRef.current) return;
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
@@ -85,6 +89,7 @@ export function useAiTaskGenerator({
     try {
       await signalRService.invoke(connection, "SendMessage", text);
     } catch (error) {
+      if (isClosedRef.current) return;
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
@@ -215,6 +220,7 @@ export function useAiTaskGenerator({
   };
 
   useEffect(() => {
+    isClosedRef.current = false;
     let conn: signalR.HubConnection | null = null;
 
     signalRService
@@ -245,6 +251,7 @@ export function useAiTaskGenerator({
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
     return () => {
+      isClosedRef.current = true;
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);
