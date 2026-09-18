@@ -1,7 +1,7 @@
 # Blotz AI 2.0 - AI Action Coach 技术方案 v3
 
 > 状态：Reviewed design draft（当前原型与目标契约分开记录）
-> 最近审查：2026-09-14；两阶段规则精简同步代码，其他目标能力仍按实施范围区分
+> 最近审查：2026-09-18；同步 `38e8b80e`（Planning Authority 改名与版本）和 `64faf4fb`（模型修改待确认卡片，schema 5），见 1.1.3；其他目标能力仍按实施范围区分
 > 创建日期：2026-08-24
 > 方案名称：受 Policy 控制的单 Turn Runtime（Policy-Governed Single-Turn Runtime）
 > 文档用途：定义 AI Action Coach 的单轮模型执行、对话策略控制、ProposalSet 生命周期和正式 Task 提交边界
@@ -71,10 +71,36 @@
 - Runtime 对 Response/Proposal Guard 失败使用同一 Post-Policy 及标准 Directive；所有修正共享总模型调用和再生成预算。Schema 首次失败需完整验证，Payload 修正保留锁定的解释与派生决策。
 - 原协议仍要求完整 schema 4 输出；修正指令只授权修改列出的 Payload 和指定策略，重述 Interpretation 不扩大控制权限。未增加自动重判语义的模型循环。
 - 默认草案只有 Policy 授权后才生成，遇未解析自由文本约束仍停止；最终默认/降级正文再过 Response Guard。失败整体不提交，技术失败不自动向用户重复提问。
-- 新会话版本：Execution rules v7 / policy v5 / planning v3 / prompts v10；Companion rules v4 / policy v3 / planning v4 / support v3 / prompts v5。保留旧 Prompt 正文供版本审计，不表示旧 Policy 可恢复执行。
+- 新会话版本以代码 `AiCoachModeDefinition.cs` 为准，当前值见 1.1.3，不再逐次记录。保留旧 Prompt 正文供版本审计，不表示旧 Policy 可恢复执行。
 - 仍使用内存会话、schema 4；不新增数据库字段、迁移、历史引用或正式写能力。部署需要重新建立会话，不承诺跨部署恢复旧规则；引用语义、复合否定、偏好作用域和真实回应质量尚须模型行为评估。
 
 验证记录：`dotnet build blotztask-api/BlotzTask.csproj --no-restore` 通过。现有 AiCoach 确定性测试（排除 ModelBehaviour）共 106 项，当前 86 通过、20 失败；隔离的修改前 HEAD 为 99 通过、7 失败。新增 13 项失败对应取消字面语义校验、允许连续提问/Ready 澄清/Pending 普通提问、明确回应限制不再使用节奏耗尽原因码，以及版本更新后的旧断言，不能把它们描述为已通过回归验收。测试文件尚未修改，等待用户对必要测试更新的选择；未调用真实模型评估。
+
+### 1.1.3 模型修改待确认卡片与 Planning Authority 同步（2026-09-18）
+
+本节按 `ai-coach-v3-pro` 的两次代码提交更新当前行为，只覆盖这两次提交；1.1、1.1.1、1.1.2 保留为历史基线。
+
+**`64faf4fb`（09-17）模型修改待确认卡片**——此前 25 节第 4 项的待定问题，现已在 Execution 和 Companion 落地：
+
+- 模型契约升到 schema 5：顶层新增必填字段 `proposalSetMutation`（可为 `null`），`suggestedAction` 新增 `update_proposal_set`，`response.type` 新增 `proposal_update`。机制见 11.2。
+- `AllowsModelProposalSetUpdates` 在 Execution、Companion 改为 `true`；Clarify 仍为 `false`。存在 Pending 卡片时的包络相应加入 `AskClarifyingQuestion` 和 `UpdateProposalSet`，并移除 `SupersedeProposalSet`（8.2）。
+- 新增纯函数 `ProposalSetMutationHandler`：所有引用按修改前快照解析，单个操作不合法则整次修改作废；歧义必须显式上报并转为一个聚焦问题，不做部分应用。
+- 模型只看到临时引用键 `current_card` / `item_N`，不接触服务端 Id；已落成正式 Task 的条目不可改。
+- 修改成功后的可见回复由服务端按实际提交结果确定性生成，不采用模型文案。
+- Kernel 新增三条转换（7.5）：替换条目、删空即丢弃卡片、卡片歧义提问（不消耗规划澄清预算）。
+- 该路径在 Handler 内自带「quote 必须出现在当前用户消息」的校验，不受 14.1 来源匹配暂停的影响。
+- 客户端：卡片存在未保存的本地编辑时禁止发送消息，并提供「重置本地修改」，避免本地编辑与模型修改交错。
+- 当前版本（以代码 `AiCoachModeDefinition.cs` 为准，只记最新值）：Execution rules v8 / policy v6 / planning v3 / prompts v11；Companion rules v8 / policy v8 / planning v7 / support v5 / prompts v8；Clarify 仍为 v0 占位；三种模式 `ModelContractSchemaVersion = 5`。
+
+**`38e8b80e`（09-16）相对 1.1.2 的补充**——1.1.2 已记录其行为变化，以下是 1.1.2 未覆盖的命名与版本：
+
+- 类型改名：`PlanningReadinessCalculator` → `PlanningAuthorityCalculator`，`PlanningDecision` → `PlanningAuthority`。原 `PlanningReadiness` 五档与 `AllowedPlanningAction` 四种合并为三个布尔量 `IsBlocked` / `CanGenerateProposal` / `CanAskClarifyingQuestion`；`ReadyForSuggestion` / `OfferSuggestion` 不再存在——给建议属于普通对话，不需要授权。当前形态见 12 节「Planning Authority」；17.2、17.3 中的 `PlanningReadiness` / `PlanningDecision` 属于历史记录和尚未实现的 Clarify 设计，保留原名不改。
+- `ConversationPolicyDefinition.RequireProposalWhenPlanningReady` 删除；`SupportPolicyDefinition.MaxConsecutiveQuestionTurns` 改为 `PreferredConsecutiveQuestionTurns`，`AllowExplicitContinuousExploration` 删除。
+- Post-Policy 的降级目标统一为 `ContinueListening`（唯一例外：已有 Pending 卡时又提出 `ShowProposalSet` → `DiscussExistingProposal`）；`QuestionFallback` 与 `ActionableIntentRequiresProposal` 分支删除；新增原因码 `PlanningQuestionNotAuthorized`。
+- Companion 的 Planning Policy：`ProposalTrigger = ExplicitPlanningRequestOrDelegation`、`AllowCoachDecomposition = true`、`MaxClarificationAttempts = int.MaxValue`。
+- Kernel 的 Confirm Handler 去掉了通用的 `AllowedActions.Contains(action)` 检查，只保留「`start_now` 仅限单任务卡」；`ConfirmDraft` 在 DraftId 与当前卡不符时统一返回 `DraftNotFound`（版本不符仍为 `StaleDraftVersion`）。见 18 节。
+
+验证记录：本次只修改文档，未运行构建、测试或真实模型评估。`64faf4fb` 新增确定性测试 11 项（`ProposalSetMutationHandlerTests` 5、`ProposalSetMutationPolicyTests` 3、`ProposalSetMutationKernelTests` 3），其通过情况以交付说明为准；覆盖缺口见 24.1。
 
 ### 1.2 文档解释规则
 
@@ -93,7 +119,8 @@ v3 采用以下主线：
   -> Pre-Policy 根据系统事实缩小允许空间
   -> 模型生成结构化候选
   -> Evidence Guard 验证当前 Turn 声明
-  -> Planning Readiness 计算允许的规划动作
+  -> Planning Authority 计算本轮的规划权限（原 Planning Readiness，见 1.1.3）
+  -> ProposalSetMutationHandler 原子校验卡片修改候选（仅当候选带 Mutation，见 11.2）
   -> Post-Policy 决定最终对话策略
   -> Guard 验证回复和 ProposalSet
   -> Kernel 提交 Conversation 事实
@@ -107,7 +134,7 @@ v3 采用以下主线：
 模型负责理解、表达和提出候选
 Pre-Policy 负责限制本轮允许的策略和能力
 Evidence Guard 负责把模型声称的当前 Turn 证据转换成已验证规划上下文
-Planning Readiness 负责判断是否可以澄清、建议或生成 Proposal
+Planning Authority 负责授予或收回「生成 Proposal」「提规划澄清问题」两项需要服务端权限的动作；不规定对话流程
 Post-Policy 负责在候选和规划准备状态之间做最终裁决
 State / Phase 负责记录系统事实
 Guard 负责拒绝非法候选和操作
@@ -123,6 +150,7 @@ InterpretationCandidate != 已验证的用户事实
 SuggestedAction        != 最终对话策略
 ResponseCandidate      != 已发送的 Assistant Message
 ProposalSetCandidate   != 已持久化的 ProposalSet
+ProposalSetMutationCandidate != 已修改的卡片
 ToolCall               != 已执行的业务操作
 模型文本中的“已创建”   != Task 创建成功
 ```
@@ -464,7 +492,8 @@ Commit
 -> 执行模型
 -> 可选只读 Tool
 -> Evidence Guard
--> Planning Readiness Calculator
+-> Planning Authority Calculator（原 Planning Readiness Calculator）
+-> 可选 ProposalSetMutationHandler（候选带卡片修改时，11.2）
 -> Post-Policy
 -> Response Guard
 -> ProposalSet Guard
@@ -555,6 +584,9 @@ LateEffectResultReceived
 | `Conversing` / `ActionPreparing` / `FollowUp` | `ModelTurnCompleted`，接受合法 Proposal | `ActionPending` | 原子保存 Message、Pending Set、Intent；清除问题，Generation -> Idle | `ProposalSetCreated` | 对话、编辑、Confirm、Reject |
 | `ActionPending` | `ModelTurnCompleted`，讨论或普通回应 | `ActionPending` | 保留 Current Set，不强制处理卡片，Generation -> Idle | `AssistantMessageCommitted` | 对话、编辑、Confirm、Reject |
 | `ActionPending` | `UpdateProposalCommand`，版本匹配 | `ActionPending` | 更新 Proposal / ProposalSet Version | `ProposalSetUpdated` | 编辑、Confirm、Reject |
+| `ActionPending` | `ModelTurnCompleted`，`UpdateProposalSet` 且 Mutation `ReadyToApply`；ProposalSetId 与 `BaseProposalSetVersion` 和当前 Pending 卡一致（2026-09-17） | `ActionPending` | `ReplaceProposals` 整体替换条目，Set Version 递增；如有 OpenQuestion 标记 `Answered` 并清除；Generation -> Idle | `ProposalSetUpdated(Added, Updated, Removed)` | 对话、编辑、Confirm、Reject（单条目卡才有 `start_now`） |
+| `ActionPending` | 同上，但修改后条目数为 0（`DiscardsSet`） | `FollowUp` | ProposalSet -> `Rejected`，清除 Current ProposalSet，加 `HasRejectedProposal`；不触碰任何正式 Task | `ProposalSetRejected` | 继续对话 |
+| `ActionPending` | `ModelTurnCompleted`，`AskClarifyingQuestion`（卡片修改存在歧义） | `ActionPending` | 卡片不变；设置 OpenQuestion（Topic = `Other`，不绑定 PlanningIntent）；**不消耗规划澄清预算** | `AssistantMessageCommitted` | 对话、编辑、Confirm、Reject、回答问题 |
 | `ActionPending` | `RejectProposalCommand` | `FollowUp` | ProposalSet -> `Rejected`，清除 Current ProposalSet | `ProposalSetRejected` | 继续对话 |
 | `ActionPending` | Confirm 成功结果提交 | 有未处理项保持 `ActionPending`，全部处理才 `FollowUp` | Proposal -> Accepted，记录正式实体；派生 Set 状态 | `TaskCreated` | 处理剩余项或继续对话 |
 | `ActionPending` | Confirm 事务失败 | `ActionPending` | Proposal 保持可编辑，保留错误码 | `TaskCreationFailed` | 重试、编辑、Reject |
@@ -569,6 +601,7 @@ LateEffectResultReceived
 Mode 永远不由 Kernel 修改。
 正式 Task 只由 ConfirmProposalCommand 的确定性事务创建。
 ProposalSet 创建和更新必须经过版本、所有权、Schema 和 Domain Guard。
+模型发起的卡片修改只作用于当前 Pending 卡的未保存条目；提交时 ProposalSetId 或 BaseProposalSetVersion 不符返回 ProposalSetNotCurrent，整轮不提交。
 模型结果转换失败不得提交部分 Assistant Message 或部分 ProposalSet；正式 Confirm 的逐项结果采用 18.2 的独立契约。
 Version 每次成功状态转换单调递增；迟到结果不能回退 Version。
 Effect 身份、有效 Lease 和 BaseVersion 必须同时通过；取消先提交则迟到结果丢弃，结果先提交则取消返回已完成 Snapshot。
@@ -643,18 +676,23 @@ Constraints:
 
 陪伴模式的默认策略仍然是倾听和温和追问，不主动把情绪表达或模糊愿望转成行动候选。但如果用户在当前消息中明确提出具体 Action，例如“请帮我安排明天 8 点到 9 点整理资料”，且其原文证据和 Proposal 领域校验均通过，则可以在陪伴模式中生成一个 Pending ProposalSet。正式 Task 仍然只能由用户 Confirm Command 创建。
 
-存在 Pending ProposalSet：
+存在 Pending ProposalSet（当前实现，2026-09-17）：
 
 ```text
 AllowedStrategies:
   ContinueListening
+  AskGentleQuestion
   DiscussExistingProposal
-  UpdateProposalSet
-  SupersedeProposalSet
+  仅当 Policy.AllowsModelProposalSetUpdates = true（Execution、Companion）：
+    AskClarifyingQuestion     # 只用于卡片修改的歧义提问
+    UpdateProposalSet
 
 Disallowed:
   ShowProposalSet for a second Current ProposalSet
+  SupersedeProposalSet        # 已移出包络；换卡需先 Reject，或让模型删空当前卡
 ```
+
+Pending 卡片限制的是「再建一张卡」，不限制普通对话。
 
 ### 8.3 第一版策略包络保持宽泛
 
@@ -753,14 +791,16 @@ StaticPrefix / DynamicSuffix Token 统计
 
 模型一次返回结构化 `ModelTurnCandidate`：
 
-当前模型响应格式名为 `model_turn_candidate`，工作区 Schema Version 为 `4`（含 actionRequest / supportRequest / supportMove 与偏好作用域）；下方简化类型展示 schema 2 的核心形态，不是当前完整 DTO。历史引用等未来字段仍需另行版本化，不能再次用同名 schema 4 表示不兼容协议。顶层 `interpretation`、`suggestedAction`、`response` 和 `proposalSet` 均为必填字段；不生成卡片时 `proposalSet` 为 `null`。`suggestedAction` 只是模型建议，最终策略仍由 Post-Policy 决定。
+当前模型响应格式名为 `model_turn_candidate`，工作区 Schema Version 为 `5`（schema 4 含 actionRequest / supportRequest / supportMove 与偏好作用域；schema 5 于 2026-09-17 增加 `proposalSetMutation`、策略 `update_proposal_set` 和回复类型 `proposal_update`，见 11.2）；下方简化类型展示核心形态，不是当前完整 DTO。历史引用等未来字段仍需另行版本化，不能再次用同名 schema 5 表示不兼容协议。顶层 `interpretation`、`suggestedAction`、`response`、`proposalSet` 和 `proposalSetMutation` 均为必填字段；不生成卡片时 `proposalSet` 为 `null`，不修改卡片时 `proposalSetMutation` 为 `null`。`suggestedAction` 只是模型建议，最终策略仍由 Post-Policy 决定。
 
 ```csharp
 public sealed record ModelTurnCandidate(
     InterpretationCandidate Interpretation,
     ConversationStrategy SuggestedAction,
     AssistantResponseCandidate ResponseCandidate,
-    ProposalSetCandidate? ProposalSetCandidate);
+    ProposalSetCandidate? ProposalSetCandidate,
+    SupportMove? SuggestedSupportMove = null,
+    ProposalSetMutationCandidate? ProposalSetMutationCandidate = null);   // schema 5
 ```
 
 ### 10.1 Interpretation Candidate
@@ -800,6 +840,10 @@ public sealed record GoalChoiceResponse(
     : AssistantResponseCandidate(Text);
 
 public sealed record ProposalIntroductionResponse(string Text)
+    : AssistantResponseCandidate(Text);
+
+// schema 5：伴随一次已通过校验的卡片修改（update_proposal_set -> proposal_update）
+public sealed record ProposalUpdateResponse(string Text)
     : AssistantResponseCandidate(Text);
 ```
 
@@ -872,6 +916,99 @@ public sealed record ArtifactEnvelope(
 每种 `ArtifactType + SchemaVersion` 必须注册对应的 `ArtifactHandler`，负责 Schema、可编辑字段、生命周期、客户端 `allowedActions` 和版本投影。Handler 不调用模型、不创建正式 Task，也不能直接修改 Conversation Phase；持久化变化仍由 Kernel 提交。
 
 应用启动时必须验证：Artifact 类型和 Schema 版本唯一、Handler 可解析、Payload Contract 与 Handler 匹配、客户端 Projector 存在，且已确认或已接受的 Artifact 状态能够映射到对应的正式实体。
+
+### 11.2 ProposalSetMutation Candidate：模型修改待确认卡片（2026-09-17，schema 5）
+
+此前卡片编辑只是客户端本地行为，模型只能讨论卡片。现在 Execution 和 Companion 中，用户可以用一句话让模型增、改、删**尚未保存**的卡片条目（`AllowsModelProposalSetUpdates = true`；Clarify 仍为 `false`）。被修改的只是 Pending ProposalSet，永远不是正式 Task。
+
+候选结构：
+
+```csharp
+public sealed record ProposalSetMutationCandidate(
+    string ArtifactReferenceKey,                                    // 必须为 "current_card"
+    IReadOnlyList<ProposalMutationOperationCandidate> Operations,   // 每 Turn 最多 20 个
+    IReadOnlyList<ProposalMutationAmbiguityCandidate> Ambiguities); // 最多 3 个
+
+// 三种操作；每个都带 OperationKey 和取自「当前用户消息」的 Evidence.Quote
+AddProposalItemCandidate(OperationKey, TaskProposalCandidate Item, Evidence)
+UpdateProposalItemCandidate(OperationKey, TargetReferenceKey, ProposalItemPatchCandidate Patch, Evidence)
+RemoveProposalItemCandidate(OperationKey, TargetReferenceKey, Evidence)
+
+public sealed record ProposalItemPatchCandidate(
+    IReadOnlySet<ProposalField> ChangedFields,   // Title / Description / Date / StartTime / EndTime / LabelId
+    string? Title, string? Description, DateOnly? Date,
+    TimeOnly? StartTime, TimeOnly? EndTime, int? LabelId);
+```
+
+`ChangedFields` 区分「未提及」与「明确清空」：不在集合内的字段保持原值；`null` 只能清空 `Description` 和 `LabelId`，`Title`、`Date`、`StartTime`、`EndTime` 不可清空。`add` 必须给出标题、`yyyy-MM-dd` 日期和 `HH:mm` 起止时间。
+
+临时引用键：Execution Frame 把当前卡投影为 `ArtifactReferenceKey = "current_card"`，条目按当前顺序编号为 `item_1`、`item_2`……，并带 `IsAlreadySaved`。引用键只在本 Turn 有效；模型不接收也不能返回服务端 ProposalSetId / ProposalId。
+
+歧义必须显式上报。只要目标、操作、字段或新值有一处不清楚，模型返回 `Ambiguities` 并只问一个聚焦问题；不得猜测，也不得先应用清楚的那部分。用户只是评论卡片而非下指令时不产生 Mutation，走普通讨论。
+
+```text
+AmbiguityKind:
+  target_unclear / operation_unclear / field_unclear /
+  replacement_value_missing / multiple_targets_possible / conflicting_instructions
+每条带 CandidateReferenceKeys、Field?、Evidence.Quote
+```
+
+`ProposalSetMutationHandler` 是纯函数的原子校验器：所有引用按**修改前**快照解析，任一操作不合法则整个候选作废。输出 `ProposalSetMutationVerdict`：
+
+| Readiness | 触发 | 后续 |
+| --- | --- | --- |
+| `ReadyToApply` | 全部检查通过 | 携带修改后的完整条目列表、`ProposalSetId`、`BaseProposalSetVersion` 和 Summary 交给 Post-Policy |
+| `NeedsClarification` | `Ambiguities` 非空，且歧义自身的 quote 与引用键合法 | 不改卡，转为澄清提问 |
+| `Invalid` | 见下 | 标准再生成；预算耗尽后安全回复，卡片不变 |
+
+```text
+ProposalSetMutationReason（Invalid）:
+  ArtifactNotMutable        当前没有卡，或卡不是 Pending
+  ArtifactReferenceInvalid  ArtifactReferenceKey 不是 current_card
+  MissingOperations         没有任何操作
+  ItemLimitExceeded         操作数 > 20，或修改后条目数超过卡片上限
+  DuplicateOperationKey     OperationKey 为空或重复
+  EvidenceInvalid           操作或歧义的 quote 不在当前用户消息内（去空白、忽略大小写的子串匹配）
+  TargetReferenceInvalid    item_N 不存在
+  PersistedItemImmutable    目标条目已落成正式 Task
+  TargetConflict            同一条目在一次修改中被操作多次
+  PatchInvalid              ChangedFields 为空，或试图清空不可清空的字段
+  ItemInvalid               修改后的整卡校验失败：标题为空或超长、时长不在 1 分钟到上限之间、
+                            重复条目（同标题 + 日期 + 开始时间）
+```
+
+该路径在 Handler 内自带 quote 来源校验，不受 14.1「来源匹配暂停」影响。新增条目的时区沿用卡内第一条的 `TimeZoneId`（卡为空时退回 `UTC`）。
+
+Post-Policy 仍是唯一策略所有者，只消费 Verdict：
+
+```text
+有 Mutation 候选 + Verdict = NeedsClarification
+  候选已是 AskClarifyingQuestion + ClarifyingQuestionResponse -> 放行，不接受 Mutation
+  否则 -> RequiresRegeneration(AskClarifyingQuestion)，ProposalMutationNeedsClarification
+  此类提问不受 PlanningAuthority.CanAskClarifyingQuestion 限制，也不消耗规划澄清预算
+
+SuggestedAction = UpdateProposalSet
+  缺少 proposalSetMutation     -> RequiresRegeneration，ProposalMutationMissing
+  Verdict 不是 ReadyToApply     -> RequiresRegeneration，ProposalMutationInvalid（Detail 回传模型）
+  Verdict = ReadyToApply        -> Accepted，AcceptProposalSetMutationCandidate = true
+
+预算耗尽的 Fallback（均为 SafeResponse，卡片不变）：
+  歧义分支 -> 保持 AskClarifyingQuestion，固定文案请用户指出条目和修改内容
+  其余     -> DiscussExistingProposal，固定文案说明未修改
+```
+
+修改被接受后，可见回复不采用模型文案，由 `ProposalSetMutationResponseProjector` 按**实际提交的** Summary 确定性生成，保证文案与 Kernel 提交的卡片一致：
+
+```text
+已更新卡片：新增 X 条、修改 Y 条、删除 Z 条；现在共有 N 条待确认任务。
+已移除这张草案卡片；没有创建、修改或删除任何正式任务。      （删空时）
+```
+
+语言按当前用户消息是否含 CJK 字符判断。`ValidatedTurnOutcome.AcceptedProposalSetMutation` 携带 Verdict 进入 Kernel，转换见 7.5；删空全部条目等同 Reject 这张 Pending 卡。
+
+客户端配合：卡片存在未保存的本地编辑（`draftDirty`）时发送按钮置灰，发送会提示「请先确认卡片或重置本地修改，再让 AI 修改卡片」，卡片上出现「重置本地修改」。模型修改后 Set Version 递增，客户端须用最新 Snapshot 的 `expectedDraftVersion` Confirm。这是对 25 节原第 4 项「如何与客户端未提交编辑冲突协调」的首版答案：互斥，而不是合并。
+
+观测：每次评估记录 `AiCoach.ProposalMutation.Completed`，含 Readiness、Reason、Added / Updated / Removed / Resulting 数量和 Detail。
 
 ## 12. Post-Policy
 
@@ -963,7 +1100,20 @@ AskGentleQuestion -> UpdateProposalSet
 
 ## 13. 策略决策矩阵
 
-在 Post-Policy 之前，`PlanningReadinessCalculator` 先把已验证材料归约为统一决策：
+> 当前实现（2026-09-16，`38e8b80e`）：Calculator 已改名为 `PlanningAuthorityCalculator`，输出 `PlanningAuthority`：
+>
+> ```csharp
+> public sealed record PlanningAuthority(
+>     bool IsBlocked,
+>     bool CanGenerateProposal,
+>     bool CanAskClarifyingQuestion,
+>     IReadOnlyList<PlanningAuthorityReason> Reasons,
+>     IReadOnlyList<AllowedAssumption> AllowedAssumptions);   // CanAdvancePlanning = 后两者之一为 true
+> ```
+>
+> 与下方五档 Readiness 的对应关系：`Blocked` → `IsBlocked`；`ReadyForProposal` → `CanGenerateProposal`；`ReadyForClarification` 及「有额度可澄清」→ `CanAskClarifyingQuestion`（当前只看是否存在未回答的 OpenQuestion）；`Insufficient` → 三者皆 `false`；`ReadyForSuggestion` / `OfferSuggestion` 不再存在，给建议属于普通对话，不需要授权。新增原因 `ExplicitPlanningRequestAuthorized`：Policy 允许分解时，明确的规划请求与委托同样可授权生成 Proposal。`IsBlocked` 使 `ActivePlanningIntent` 进入 `Abandoned`，`CanGenerateProposal` 使其进入 `ReadyForProposal`。下方的档位表保留为目标准备度基线和 Clarify 设计参考。
+
+在 Post-Policy 之前，`PlanningReadinessCalculator`（现 `PlanningAuthorityCalculator`）先把已验证材料归约为统一决策：
 
 ```text
 PlanningReadiness:
@@ -1067,6 +1217,21 @@ AllowedPlanningAction:
   FinalStrategy = UpdateProposalSet
 ```
 
+当前实现（2026-09-17，机制见 11.2）的具体条件：
+
+```text
+Mode Policy.AllowsModelProposalSetUpdates = true（Execution、Companion）
+Current ProposalSet 状态为 Pending
+候选为 update_proposal_set + proposal_update + proposalSetMutation
+每个操作都带取自当前用户消息的 quote，且没有任何 ambiguity
+ProposalSetMutationHandler 判定 ReadyToApply
+提交时 ProposalSetId 与 BaseProposalSetVersion 仍和当前卡一致
+
+白名单字段：title / description / date / start_time / end_time / label_id
+```
+
+存在歧义时 FinalStrategy 为 `AskClarifyingQuestion`，卡片保持不变。
+
 ### 13.6 正式 Task
 
 ```text
@@ -1132,23 +1297,25 @@ Planning Readiness 不依赖 ProposalCandidate 是否已经合法，否则会形
 | Execute | `ActionPreparing` + `HasOpenQuestion` | 信息仍缺失、预算已用尽 | `ContinueListening`，必要时建议 | 否 | 继续表达或停止规划 |
 | Execute | `Conversing` / `ActionPreparing`，无 Pending ProposalSet | 已验证 Action，或 Policy 允许保守分解的 Goal / Domain；Proposal 合法 | `ShowProposalSet` | 是 | 编辑、Confirm、Reject |
 | Execute | 任意非 Closed Phase | 多目标且无优先级 | `AskUserToChooseGoal` | 否 | 选择一个目标 |
-| Execute | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet` | 更新当前 Set | 编辑、Confirm、Reject |
-| Execute | `ActionPending` + `HasPendingProposalSet` | 用户拒绝或要求替换 | `SupersedeProposalSet` 或确定性 Reject | 否 | 继续对话、重新提出 |
+| Execute | `ActionPending` + `HasPendingProposalSet` | 用户明确要求增、改、删当前卡条目，Mutation `ReadyToApply`（已实现，11.2） | `UpdateProposalSet` | 原子替换当前 Set 条目；删空则丢弃该卡 | 编辑、Confirm、Reject |
+| Execute | `ActionPending` + `HasPendingProposalSet` | 修改请求的目标、操作、字段或新值不清 | `AskClarifyingQuestion` | 否，卡片不变 | 回答问题、编辑、Confirm、Reject |
+| Execute | `ActionPending` + `HasPendingProposalSet` | 用户拒绝或要求替换 | 确定性 Reject；`SupersedeProposalSet` 已移出当前包络 | 否 | 继续对话、重新提出 |
 | Clarify | `Conversing` / `ActionPreparing` | 无明确行动意愿或目标不清 | `ContinueListening`、`AskGentleQuestion` 或 `AskClarifyingQuestion` | 否 | 继续表达、回答问题 |
 | Clarify | `ActionPreparing` + 多个 GoalCandidate | 用户未选择优先级 | `AskUserToChooseGoal` | 否 | 选择一个目标 |
 | Clarify | `ActionPreparing` + 单一目标 | 用户明确请求规划、明确切换到行动或委托 Coach，且 Proposal 合法 | `ShowProposalSet` | 是 | 编辑、Confirm、Reject |
 | Clarify | `ActionPreparing` + 单一目标 | 用户无法继续澄清，但没有明确规划请求或委托 | `ContinueListening`，回复中提供简短 Suggestion | 否 | 继续表达、接受或修正建议 |
-| Clarify | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet` | 更新当前 Set | 编辑、Confirm、Reject |
+| Clarify | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet`（目标；当前 Clarify 的 `AllowsModelProposalSetUpdates = false`，未开放） | 更新当前 Set | 编辑、Confirm、Reject |
 | Companion | `Conversing`，无明确直接行动指令 | 情绪表达、模糊愿望或模型推断 | `ContinueListening` 或 `AskGentleQuestion` | 否 | 继续陪伴 |
 | Companion | `Conversing`，当前消息有直接行动指令，或明确规划请求且存在已验证 Goal | Action 或授权的 Goal 分解通过 Planning Authority + Proposal 合法 | `ShowProposalSet` | 是，创建 Pending Set | 编辑、Confirm、Reject |
-| Companion | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet` | 更新当前 Set | 编辑、Confirm、Reject |
+| Companion | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal（已实现，规则同 Execute 两行） | `UpdateProposalSet`；有歧义时 `AskClarifyingQuestion` | 更新当前 Set | 编辑、Confirm、Reject |
 | 任意 Mode | `Closed` | 任意开放式消息 | 拒绝 `ConversationClosed` | 否 | 只能查询或创建新 Conversation |
 | 任意 Mode | 任意 Phase + `HasRunningModelEffect` | 第二个开放式消息 | 拒绝 `TurnInProgress` | 否 | 查询状态或显式 Cancel |
 
 Policy 的硬性不变量：
 
 ```text
-PlanningDecision 不允许 GenerateProposal 时，不能接受 ShowProposalSet。
+PlanningDecision 不允许 GenerateProposal（现 `PlanningAuthority.CanGenerateProposal = false`）时，不能接受 ShowProposalSet。
+模型修改卡片只能作用于当前 Pending 卡的未保存条目；任何一处歧义或不合法都使整次修改作废，不做部分应用。
 Companion 不允许用 Goal、情绪、历史 Summary 或仅被提及的 Action 推导 Proposal；必须同时存在已验证的具体 Action 和当前 Turn 的直接行动指令 Evidence。
 没有 ProposalSetCandidate 时只能触发一次有界再生成；预算耗尽后，由 Policy 指定的确定性 Fallback 接管。
 已有 Pending / Processing Current ProposalSet，不能创建第二个 ProposalSet。
@@ -1163,10 +1330,12 @@ Policy 不能修改 Mode，也不能产生正式 Task。
 ```text
 Model Output Schema Guard
 -> Evidence Guard
--> Planning Readiness Calculator
+-> Planning Authority Calculator（原 Planning Readiness Calculator）
+-> Support Policy Calculator（仅 Companion）
+-> ProposalSetMutationHandler（仅当候选带 proposalSetMutation，11.2）
 -> Post-Policy
--> Response Guard
--> ProposalSet Guard
+-> Response Guard          （失败带类型化报告交回同一 Post-Policy）
+-> ProposalSet Guard       （同上）
 -> Deterministic Proposal Fallback（仅当 Policy 明确授权）
 -> Domain Guard
 -> Kernel Invariant Guard
@@ -1254,6 +1423,17 @@ ProposalValidationFailed
 ExplicitActionIntentRequired
 EvidenceInvalid
 ModelResponseInvalid
+ProposalMutationNeedsClarification   （2026-09-17）
+ProposalMutationMissing / ProposalMutationInvalid   （2026-09-17，共用一条文案）
+```
+
+卡片修改的两条固定文案（中英各一，卡片均保持不变）：
+
+```text
+ProposalMutationNeedsClarification
+  我还不能唯一确定要操作哪一条或要改成什么。请指出具体条目和修改内容。
+ProposalMutationMissing / ProposalMutationInvalid
+  这次没有安全地修改卡片，原草案保持不变。请再说明要新增、修改或删除哪些条目。
 ```
 
 Fallback 只承担短回复，不承担复杂陪伴表达。
@@ -2732,7 +2912,7 @@ POST ConfirmProposal
 -> Command Receipt 幂等
 -> Conversation / Proposal Version
 -> Proposal Status
--> Allowed Actions
+-> Allowed Actions（当前原型：Kernel 的 Confirm Handler 自 2026-09-16 起不再做通用的 AllowedActions 检查，只保留「start_now 仅限单任务卡」；见 1.1.3）
 -> 用户编辑字段重新验证
 -> Deterministic Task Creation Service
 -> 同数据库事务提交
@@ -2981,6 +3161,17 @@ ModelIterationLimitExceeded
 TaskPersistenceFailed
 ```
 
+`StrategyReasonCode` 在 2026-09-16 / 09-17 两次提交中新增：
+
+```text
+PlanningQuestionNotAuthorized        = 16   本轮没有提规划类问题的权限
+ProposalMutationMissing              = 17   update_proposal_set 却没带 proposalSetMutation
+ProposalMutationInvalid              = 18   卡片修改候选未通过原子校验
+ProposalMutationNeedsClarification   = 19   卡片修改请求存在歧义
+```
+
+`QuestionCadenceExhausted = 14` 仍在枚举中，但 Post-Policy 不再产生它（1.1.2）。卡片修改不合法或有歧义时整次修改作废、原卡不变：先按标准 Directive 再生成，预算耗尽后使用 15 节的固定文案。
+
 ## 24. 可观测性
 
 当前实现为治理边界记录结构化诊断日志：
@@ -3033,6 +3224,23 @@ Superseded Effect 数量
 ```
 
 ### 24.1 三种模式的确定性验证地图
+
+卡片修改（`64faf4fb`）已有的确定性测试共 11 项：
+
+```text
+ProposalSetMutationHandlerTests（5）
+  增改删混合 -> 一张原子结果卡；目标有歧义 -> 要求澄清且不产生修改；
+  同一条目既改又删 -> 整次拒绝；删空 -> 返回丢弃结果而不是空 Pending 卡；
+  quote 不在当前消息内 -> 拒绝
+ProposalSetMutationPolicyTests（3）
+  Ready 的修改 -> 只接受已校验的 Mutation；有歧义 -> 要求一个澄清问题；
+  schema 5 -> 解析出类型化的 update patch
+ProposalSetMutationKernelTests（3）
+  已校验修改 -> 原子替换卡片并提交确认文案；删空 -> Reject 并清除当前卡；
+  卡片版本过期 -> 拒绝
+```
+
+尚无确定性测试覆盖的分支：重复 `OperationKey`、`item_N` 不存在、已保存条目不可改、Patch 清空规则、条目上限、`ProposalMutationMissing`、再生成预算耗尽后的 Fallback、`ActionPending` 下歧义提问保留卡片的 Kernel 转换。真实模型下「评论卡片」与「指令修改卡片」的区分需行为评估。
 
 对应能力实施时选取以下边界验证；未来引用、Clarify 和 Safety 不作为本次文档修改的测试要求：
 
@@ -3096,7 +3304,7 @@ Companion 创建 ProposalSet 后仍必须等待 User Confirm，不得创建正�
 1. 正式 Task 提交采用整组原子还是逐项可恢复契约（18.2）；当前原型偏向后者，持久化实现尚未完成。
 2. 新的历史引用与更新 Contract 版本、旧会话迁移/停用方式；不能把现有 schema 4 当成完整目标。
 3. Proposal 的无时间草案是否纳入产品范围；当前 DTO 要求时间，未支持时用明确推荐或解释限制。
-4. 是否以及何时开放模型修改/替换卡片，如何与客户端未提交编辑冲突协调。
+4. ~~是否以及何时开放模型修改/替换卡片，如何与客户端未提交编辑冲突协调。~~ 修改已于 2026-09-17 在 Execution、Companion 开放（11.2），与客户端未提交编辑采用互斥而非合并。仍待定：Clarify 是否开放；是否恢复 `SupersedeProposalSet`（整卡替换）；互斥是否满足真实使用。
 5. 首版上线是否包含独立 Safety 流程及本地化内容审核；已有需求明确排除，本审查仅保留扩展接口。
 6. 生产存储、日志与消息保留期、总体 TurnDeadline、Effect Lease / 重试上限和运行版本保留策略。
 7. 是否启用任何 Product Context / Memory Source；启用时单独明确数据范围、Purpose 和版本，不默认开启。
