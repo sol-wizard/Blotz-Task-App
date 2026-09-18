@@ -5,8 +5,25 @@
     "start": "Get Started"
   },
   "ai-voice": {
-    "title": "Just say it, \nWe'll handle the rest.",
-    "subtitle": "Speak your task out loud. AI instantly turns it \ninto a task and adds it to today's schedule."
+    "title": "Hold and say one thing \nyou need to do today",
+    "subtitle": "Let go, and AI turns it into a task.",
+    "holdToTalk": "Hold to talk",
+    "listening": "Listening… release when done",
+    "thinking": "Turning it into a task…",
+    "micReady": "Mic's on. Now hold and speak.",
+    "addAndContinue": "Add & continue",
+    "added": "Added to your tasks",
+    "typeInstead": "Type instead",
+    "useVoice": "Use voice",
+    "inputPlaceholder": "e.g. Call mum at 6pm",
+    "send": "Send",
+    "notice": {
+      "permission_denied": "No mic? Type it instead.",
+      "no_speech": "Didn't catch that. Hold and say it again.",
+      "no_task": "Couldn't find a task in that. Try: “Team meeting tomorrow at 3pm”",
+      "network": "Connection's weak. Try again, or continue and add it later.",
+      "error": "Something went wrong. Try again, or continue."
+    }
   },
   "breakdown": {
     "title": "Big goals, \nbroken down",

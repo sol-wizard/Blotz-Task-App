@@ -139,7 +139,7 @@ export type OnboardingOutcome = "completed" | "skipped";
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
 
 /** How the user left the try-voice step without creating anything. */
-export type OnboardingVoiceSkipVia = "skip_button" | "continue_button";
+export type OnboardingVoiceSkipVia = "skip_button" | "continue_button" | "swipe";
 
 /** The last thing that went wrong on the try-voice step before the user left it. */
 export type OnboardingVoiceFailure =
@@ -147,4 +147,5 @@ export type OnboardingVoiceFailure =
   | "no_speech"
   | "no_task"
   | "network"
+  | "error"
   | "none";

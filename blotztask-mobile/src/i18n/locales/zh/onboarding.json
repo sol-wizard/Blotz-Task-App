@@ -5,8 +5,25 @@
     "start": "开始使用"
   },
   "ai-voice": {
-    "title": "只需开口，剩下的交给我们",
-    "subtitle": "说出您的任务，AI 将立即将其转化为\n待办事项并加入今日日程。"
+    "title": "按住，说一件今天要做的事",
+    "subtitle": "松开后，AI 帮你变成任务。",
+    "holdToTalk": "按住说话",
+    "listening": "在听……松开即可",
+    "thinking": "正在变成任务……",
+    "micReady": "麦克风已开启，现在按住说话。",
+    "addAndContinue": "添加并继续",
+    "added": "已添加到你的任务",
+    "typeInstead": "改用打字",
+    "useVoice": "改用语音",
+    "inputPlaceholder": "例如：晚上六点给妈妈打电话",
+    "send": "发送",
+    "notice": {
+      "permission_denied": "没开麦克风也行，打字告诉我。",
+      "no_speech": "没听清，按住再说一次。",
+      "no_task": "没听出要做的事。试试：「明天下午三点开会」",
+      "network": "网络不太好。再试一次，或者先继续，稍后再加。",
+      "error": "出了点问题。再试一次，或者先继续。"
+    }
   },
   "breakdown": {
     "title": "宏大目标，化整为零",

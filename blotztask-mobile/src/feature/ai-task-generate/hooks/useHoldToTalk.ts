@@ -1,6 +1,11 @@
 import { useRef, useState } from "react";
 import * as Haptics from "expo-haptics";
-import { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { useDebouncedCallback } from "use-debounce";
 
 // Presses shorter than this are treated as accidental taps and discarded;
