@@ -25,10 +25,10 @@
     "subtitle": "Save your thoughts in Notes, Spin the gacha, \nand AI picks one task for you to do today."
   },
   "voice-coach": {
-    "title": "Tap here and say one thing \nyou need to do today",
-    "subtitle": "AI turns it into a task.",
+    "title": "Hi! I'm your AI helper",
+    "subtitle": "Tap me and tell me what's on today.",
     "dismiss": "Not now",
-    "sheetLabel": "Try it now",
-    "sheetHint": "Hold, and say one thing you need to do today"
+    "sheetLabel": "Your first task",
+    "sheetHint": "Hold the button and tell me.\nI'll write it down!"
   }
 }
