@@ -4,7 +4,17 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { useUpdateCheck, UpdateCheckStatus } from "@/shared/hooks/useUpdateCheck";
 import LoadingScreen from "@/shared/components/loading-screen";
 import * as SplashScreen from "expo-splash-screen";
+import * as Sentry from "@sentry/react-native";
 import { useEffect } from "react";
+import { analytics } from "@/shared/services/analytics";
+
+/**
+ * How long the splash may hold before it is reported. Both gates are network-bound: the
+ * auth check can wait on an Auth0 token refresh (10 s per host on Android, 60 s on iOS) and
+ * the version check on our API (30 s axios timeout), and the version request itself waits
+ * for the token first. A user stuck here sees only the splash and reports "stuck loading".
+ */
+const SLOW_STARTUP_MS = 10_000;
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,13 +53,41 @@ export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const updateCheck = useUpdateCheck();
 
-  const isReady = !isAuthLoading && updateCheck.status !== UpdateCheckStatus.Pending;
+  const isUpdateCheckPending = updateCheck.status === UpdateCheckStatus.Pending;
+  const isReady = !isAuthLoading && !isUpdateCheckPending;
 
   useEffect(() => {
     if (isReady) {
       SplashScreen.hideAsync();
     }
   }, [isReady]);
+
+  // Report a slow splash, naming which gate was still open at the threshold. The timer is
+  // anchored to bundle start rather than mount, so re-arming when a gate flips just
+  // re-targets the same absolute moment; the cleanup on `isReady` cancels it for good.
+  useEffect(() => {
+    if (isReady) return;
+    const remaining = SLOW_STARTUP_MS - analytics.msSinceLaunch();
+    const timer = setTimeout(
+      () => {
+        /* eslint-disable camelcase */
+        Sentry.captureMessage("startup_slow", {
+          level: "warning",
+          tags: {
+            waiting_on: isAuthLoading
+              ? isUpdateCheckPending
+                ? "auth_and_version"
+                : "auth"
+              : "version",
+          },
+          extra: { ms_since_launch: analytics.msSinceLaunch() },
+        });
+        /* eslint-enable camelcase */
+      },
+      Math.max(remaining, 0),
+    );
+    return () => clearTimeout(timer);
+  }, [isReady, isAuthLoading, isUpdateCheckPending]);
 
   if (!isReady) {
     return <LoadingScreen />;
@@ -73,7 +111,7 @@ export default function Index() {
   }
 
   if (isAuthenticated) {
-    return <Redirect href="/(protected)" />;
+    return <Redirect href={{ pathname: "/(protected)", params: { entry: "restore" } }} />;
   }
 
   return <Redirect href="/(auth)/signin" />;
