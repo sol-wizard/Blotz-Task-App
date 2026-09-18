@@ -46,6 +46,9 @@ public class QualityCheckRecurringExpectation
     /// <summary>Expected TimeType name: "SingleTime" or "RangeTime".</summary>
     public string? TimeType { get; set; }
 
+    /// <summary>Expected duration between the recurring template start and end.</summary>
+    public int? DurationMinutes { get; set; }
+
     /// <summary>When true, asserts the strict invariant that StartDate equals TemplateStartTime's date.</summary>
     public bool? StartDateMatchesTemplate { get; set; }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.Tasks.Enums;
 
@@ -71,7 +72,7 @@ public class TaskGenerationTools()
     [Description(
         "Add a task that REPEATS on a schedule. Use this ONLY when the user states a clear, concrete repeating cadence — e.g. 'gym every Monday', 'standup every weekday at 9am', 'pay rent on the 1st of each month', 'yoga every other Tuesday'. " +
         "Do NOT use this for a one-off item with a single date/time (use CreateTask), and do NOT use it when the repetition is vague with no concrete frequency, e.g. 'go running regularly' or 'study more often' (use CreateNote instead). " +
-        "Rules: daysOfWeek applies only when frequency is Weekly; dayOfMonth applies only when frequency is Monthly; startDate must equal the date part of templateStartTime.")]
+        "Rules: daysOfWeek applies only when frequency is Weekly; dayOfMonth applies only when frequency is Monthly; the first occurrence date is derived from templateStartTime.")]
     public async Task<string> CreateRecurringTask(
         [Description("Title")] string title,
         [Description("Description or empty")] string description,
@@ -83,8 +84,7 @@ public class TaskGenerationTools()
         [Description("Repeat every N periods. 1 = every day/week/month/year, 2 = every other, and so on. Use 1 unless the user says otherwise.")] int interval,
         [Description("The weekdays the task repeats on, named directly, e.g. [Monday, Wednesday, Friday]. REQUIRED when frequency is Weekly; leave empty otherwise. Just name the days — never compute a number.")] DayOfWeek[] daysOfWeek,
         [Description("Day of month (1-31). REQUIRED when frequency is Monthly; otherwise leave null.")] int? dayOfMonth,
-        [Description("Date of the first occurrence as yyyy-MM-dd. MUST equal the date part of templateStartTime.")] DateOnly startDate,
-        [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after startDate.")] DateOnly? endDate)
+        [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after the date part of templateStartTime.")] DateOnly? endDate)
     {
         ToolCallCount++;
         await AddRecurringTask(new RecurringTaskInput
@@ -129,10 +129,10 @@ public class TaskGenerationTools()
         [Description("Current title of the recurring task to update")] string existingTitle,
         [Description("New title, or null to leave unchanged")] string? title = null,
         [Description("New description, or null to leave unchanged")] string? description = null,
-        [Description("New time type, or null to leave unchanged")] TaskTimeType? timeType = null,
+        [Description("New time type, or null to leave unchanged. When changing a moment into a duration, provide RangeTime together with templateEndTime; when changing a duration into a moment, provide SingleTime.")] TaskTimeType? timeType = null,
         [Description("New label, or null to leave unchanged")] LabelNameEnum? label = null,
         [Description("New first-occurrence start local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged")] DateTime? templateStartTime = null,
-        [Description("New first-occurrence end local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged")] DateTime? templateEndTime = null,
+        [Description("New first-occurrence end local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged. When making the task a duration, provide this together with timeType RangeTime and make it strictly later than templateStartTime.")] DateTime? templateEndTime = null,
         [Description("New frequency, or null to leave unchanged")] RecurrenceFrequency? frequency = null,
         [Description("New repeat interval, or null to leave unchanged")] int? interval = null,
         [Description("Replacement weekdays for a Weekly task, or null to leave unchanged. Name the days directly, e.g. [Tuesday].")] DayOfWeek[]? daysOfWeek = null,
@@ -146,39 +146,34 @@ public class TaskGenerationTools()
             t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Recurring task not found.";
 
-        task.Title = title ?? task.Title;
-        task.Description = description ?? task.Description;
-        task.TimeType = timeType ?? task.TimeType;
-        task.LabelName = label ?? task.LabelName;
-
-        var previousStart = task.TemplateStartTime;
+        var updatedTimeType = timeType ?? task.TimeType;
+        var updatedStartTime = task.TemplateStartTime;
         if (templateStartTime.HasValue)
         {
-            task.TemplateStartTime = templateStartTime.Value;
+            updatedStartTime = templateStartTime.Value;
         }
         else if (startDate.HasValue)
         {
-            task.TemplateStartTime = task.TemplateStartTime.Date == startDate.Value.ToDateTime(TimeOnly.MinValue)
-                ? task.TemplateStartTime
-                : startDate.Value.ToDateTime(TimeOnly.FromDateTime(task.TemplateStartTime));
+            updatedStartTime = startDate.Value.ToDateTime(TimeOnly.FromDateTime(task.TemplateStartTime));
         }
 
+        var updatedEndTime = task.TemplateEndTime;
         if (templateEndTime.HasValue)
         {
-            task.TemplateEndTime = templateEndTime.Value;
+            updatedEndTime = templateEndTime.Value;
         }
-        else if (task.TemplateStartTime != previousStart)
+        else if (updatedStartTime != task.TemplateStartTime)
         {
-            task.TemplateEndTime += task.TemplateStartTime - previousStart;
+            updatedEndTime += updatedStartTime - task.TemplateStartTime;
         }
 
-        if (task.TimeType == TaskTimeType.SingleTime)
+        if (updatedTimeType == TaskTimeType.SingleTime)
         {
-            task.TemplateEndTime = task.TemplateStartTime;
+            updatedEndTime = updatedStartTime;
         }
-        else if (task.TemplateEndTime <= task.TemplateStartTime)
+        else if (updatedEndTime <= updatedStartTime)
         {
-            task.TemplateEndTime = task.TemplateStartTime.AddHours(1);
+            updatedEndTime = updatedStartTime.AddHours(1);
         }
 
         var updatedFrequency = frequency ?? task.Frequency;
@@ -189,9 +184,15 @@ public class TaskGenerationTools()
             interval ?? task.Interval,
             updatedDays,
             dayOfMonth ?? task.DayOfMonth,
-            task.TemplateStartTime,
+            updatedStartTime,
             updatedEndDate);
 
+        task.Title = title ?? task.Title;
+        task.Description = description ?? task.Description;
+        task.TimeType = updatedTimeType;
+        task.LabelName = label ?? task.LabelName;
+        task.TemplateStartTime = updatedStartTime;
+        task.TemplateEndTime = updatedEndTime;
         task.Frequency = pattern.Frequency;
         task.Interval = pattern.Interval;
         task.DaysOfWeek = pattern.DaysOfWeek;
@@ -267,13 +268,18 @@ public class TaskGenerationTools()
             ? dayOfMonth
             : startDate.Day;
 
+        if (endDate < startDate)
+        {
+            throw new ValidationException("EndDate must be later than or equal to StartDate.");
+        }
+
         return new RecurringPattern(
             frequency,
             Math.Max(1, interval),
             frequency == RecurrenceFrequency.Weekly ? weeklyMask : null,
             frequency == RecurrenceFrequency.Monthly ? normalizedDayOfMonth : null,
             startDate,
-            endDate < startDate ? startDate : endDate);
+            endDate);
     }
 
     private sealed record RecurringPattern(
@@ -415,36 +421,36 @@ public class TaskGenerationTools()
 
 public class RecurringTaskInput
 {
-    [Description("Short title for exactly one independently completable action")]
+    [Description("Title for exactly one independently completable recurring action. Do not combine multiple actions into one title.")]
     public required string Title { get; init; }
 
     [Description("Description or empty")]
     public required string Description { get; init; }
 
-    [Description("SingleTime for a moment with no duration; RangeTime for a start and end time")]
+    [Description("SingleTime when the task is a moment with no duration (end equals start); RangeTime when it spans a start and end time.")]
     public required TaskTimeType TimeType { get; init; }
 
     [Description("Work, Life, Learning, or Health")]
     public required LabelNameEnum Label { get; init; }
 
-    [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss")]
+    [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence. If the user gives a day but no time, pick a sensible time of day.")]
     public required DateTime TemplateStartTime { get; init; }
 
-    [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss")]
+    [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss. Equal to TemplateStartTime when TimeType is SingleTime; strictly after TemplateStartTime when RangeTime.")]
     public required DateTime TemplateEndTime { get; init; }
 
-    [Description("Daily, Weekly, Monthly, or Yearly")]
+    [Description("How often it repeats: Daily, Weekly, Monthly, or Yearly.")]
     public required RecurrenceFrequency Frequency { get; init; }
 
-    [Description("Repeat every N periods; use 1 unless the user says otherwise")]
+    [Description("Repeat every N periods. 1 = every day/week/month/year, 2 = every other, and so on. Use 1 unless the user says otherwise.")]
     public int Interval { get; init; } = 1;
 
-    [Description("Required named weekdays for Weekly; empty otherwise")]
+    [Description("The weekdays the task repeats on, named directly, e.g. [Monday, Wednesday, Friday]. REQUIRED when Frequency is Weekly; leave empty otherwise. Just name the days — never compute a number.")]
     public DayOfWeek[] DaysOfWeek { get; init; } = [];
 
-    [Description("Required day 1-31 for Monthly; null otherwise")]
+    [Description("Day of month (1-31). REQUIRED when Frequency is Monthly; otherwise leave null.")]
     public int? DayOfMonth { get; init; }
 
-    [Description("Optional last recurrence date yyyy-MM-dd; null means open-ended")]
+    [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after the date part of TemplateStartTime.")]
     public DateOnly? EndDate { get; init; }
 }

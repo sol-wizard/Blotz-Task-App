@@ -290,6 +290,18 @@ public static class QualityCheckRunner
                 });
             }
 
+            if (expectation.DurationMinutes.HasValue)
+            {
+                var actualDuration = (int)(task.TemplateEndTime - task.TemplateStartTime).TotalMinutes;
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = $"recurring[{i}].durationMinutes",
+                    Expected = expectation.DurationMinutes.Value.ToString(),
+                    Actual = actualDuration.ToString(),
+                    Passed = actualDuration == expectation.DurationMinutes.Value
+                });
+            }
+
             if (expectation.StartDateMatchesTemplate == true)
             {
                 var templateDate = DateOnly.FromDateTime(task.TemplateStartTime.Date);
