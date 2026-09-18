@@ -26,10 +26,23 @@ const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
 
 export function useAiTaskGenerator({
   setIsAiGenerating,
+  onComplete,
+  onError,
 }: {
   setIsAiGenerating: (v: boolean) => void;
+  /** A turn finished. `result` may hold no drafts at all. */
+  onComplete?: (result: AiResultMessageDTO, inputMode: AiTaskInputMode | null) => void;
+  /** A turn failed, with the backend error code, or `NetworkError` / `NotConnected`. */
+  onError?: (errorCode: string) => void;
 }) {
   const { t } = useTranslation("aiTaskGenerate");
+  // The SignalR handlers are bound once on mount, so they read the callbacks through refs.
+  const onCompleteRef = useRef(onComplete);
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onErrorRef.current = onError;
+  });
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [transcript, setTranscript] = useState<string | undefined>();
   const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
@@ -69,11 +82,14 @@ export function useAiTaskGenerator({
         durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
+      onErrorRef.current?.("NetworkError");
     }
   };
 
   const sendTextMessage = async (text: string) => {
-    if (!text.trim() || !connection || connection.state !== signalR.HubConnectionState.Connected) {
+    if (!text.trim()) return;
+    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+      onErrorRef.current?.("NotConnected");
       return;
     }
 
@@ -97,6 +113,7 @@ export function useAiTaskGenerator({
         durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
       Toast.show({ type: "error", text1: t("errors.default") });
+      onErrorRef.current?.("NetworkError");
     }
   };
 
@@ -185,6 +202,7 @@ export function useAiTaskGenerator({
     setStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
     setStreamedRecurringTasks(result.extractedRecurringTasks ?? []);
+    onCompleteRef.current?.(result, inputMode);
   };
 
   const generationErrorHandler = (error: AiGenerationErrorDTO) => {
@@ -212,6 +230,7 @@ export function useAiTaskGenerator({
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
     Toast.show({ type: "error", text1: t(i18nKey) });
+    onErrorRef.current?.(error.errorCode);
   };
 
   useEffect(() => {
