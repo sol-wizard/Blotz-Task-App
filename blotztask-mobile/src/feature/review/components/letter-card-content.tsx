@@ -60,7 +60,7 @@ export function LetterCardContent({
 
     content = (
       <>
-        {theme !== null && (
+        {theme != null && (
           <>
             <LetterTheme theme={theme} />
             <LetterStats tasksCompleted={report.tasksCompleted} />
@@ -72,9 +72,9 @@ export function LetterCardContent({
 
         <LetterBody recipientName={recipientName} body={report.letter ?? ""} />
 
-        {nextStep !== null && <LetterNextStep suggestion={nextStep} />}
+        {nextStep != null && <LetterNextStep suggestion={nextStep} />}
 
-        {(theme !== null || nextStep !== null) && (
+        {(theme != null || nextStep != null) && (
           <View className="mb-6">
             <FormDivider marginVertical={0} />
           </View>

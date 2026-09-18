@@ -10,7 +10,8 @@ export type ReviewReportDTO = {
   periodStartLocal: string;
   periodEndLocalExclusive: string;
   // letter holds the body; theme and oneThingToTryNext are null on letters written before the
-  // backend split them out, and on a period too quiet to name a theme.
+  // backend split them out. theme is also null on a period too quiet to name one, and
+  // oneThingToTryNext when the data doesn't support a specific suggestion.
   letter: string | null;
   theme: string | null;
   oneThingToTryNext: string | null;

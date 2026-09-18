@@ -55,7 +55,7 @@ public static class ReviewPrompts
 
                 First, decide which tasks carry real signal about how the user actually spent or intended their time. Disregard entries that are not genuine activity — placeholder, sample or example content, tests, or text that reads as random rather than a real task. Base everything below only on the tasks that remain.
 
-                If little or no genuine activity remains after that, do NOT invent themes, patterns, or meaning. Put two or three warm, honest sentences acknowledging it was a quiet {periodNoun} in "body" and leave "theme" null. Still write "oneThingToTryNext": for a quiet {periodNoun} it is not advice drawn from the data but one small, kind invitation for next {periodNoun} — something easy to say yes to, like noting one moment a day. Then stop there.
+                If little or no genuine activity remains after that, do NOT invent themes, patterns, or meaning. Put two or three warm, honest sentences acknowledging it was a quiet {periodNoun} in "body" and leave "theme" null. Still write "oneThingToTryNext": for a quiet {periodNoun} it is not advice drawn from the data but one small, kind invitation for next {periodNoun} — something easy to say yes to, like noting one moment a day, picking one small thing to finish each week, or setting aside fifteen minutes for something they enjoy. These are only examples — vary the invitation and do not reuse them word for word. Then stop there.
 
                 Otherwise, write ONE short {reviewKind} review letter in three parts:
 

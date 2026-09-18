@@ -21,7 +21,8 @@ export function LetterStats({ tasksCompleted }: Props) {
 
   const stats: Stat[] = [];
 
-  if (tasksCompleted !== null) {
+  // Hide a zero count — the letter is gentle about unfinished tasks, and a big green "0" reads harsh.
+  if (tasksCompleted !== null && tasksCompleted > 0) {
     stats.push({
       key: "tasksCompleted",
       value: tasksCompleted,
