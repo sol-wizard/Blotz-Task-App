@@ -67,6 +67,7 @@
     "loginNetwork": "无法连接登录服务，请检查网络后重试。",
     "loginInProgress": "上一次登录仍在进行，请稍候或重启应用。",
     "loginFailed": "登录失败，请重试。",
+    "loginStalled": "登录没有响应。请再点一次继续，或重启应用后重试。",
     "sessionExpired": "登录已失效，请重新登录。",
     "loadFailed": "无法加载账号信息。"
   }
