@@ -1,6 +1,6 @@
 # AI Action Coach 架构治理与规则扩展指南
 
-> 状态：Reviewed design baseline（2026-09-08；不表示全部实现）  
+> 状态：Reviewed design baseline（2026-09-14；两阶段规则精简已同步代码，其余目标不表示全部实现）
 > 创建日期：2026-09-03  
 > 适用范围：`blotztask-api/Modules/AiCoach/`、相关客户端 Contract、相关测试和后续 AI Action Coach 功能开发  
 > 文档性质：后续 Agent 和开发者必须遵守的架构总约束与演进方案  
@@ -29,9 +29,22 @@
 
 本文中的硬约束约束实现权限与正确性；产品默认值允许通过版本化设计调整。本文不是要求当前原型一次性建设所有模块的清单。已有明确用户授权优先于本文的流程建议；普通局部变更不因文档措辞增加一轮审批。
 
-本次审查仅修改两份设计文档，当前能力和差距统一记录于 [技术方案 1.1](ai-action-coach-technical-design-v3.md#11-审查基线与实施范围)。Execution 和 Companion 已在工作区注册，采用内存会话；Clarify、持久恢复、历史引用和独立 Safety 等不可描述为已全部实现。原型可以暂缺扩展能力，但不能承诺其尚不具备的保证。
+当前能力和差距统一记录于 [技术方案 1.1](ai-action-coach-technical-design-v3.md#11-审查基线与实施范围)。Execution 和 Companion 已在工作区注册，采用内存会话；Clarify、持久恢复、历史引用和独立 Safety 等不可描述为已全部实现。原型可以暂缺扩展能力，但不能承诺其尚不具备的保证。
 
 技术方案负责产品行为、会话状态和默认参数，本文负责规则归属与变更方法。两者冲突时先明确问题并修订唯一权威规则，不在代码中另设局部优先级。历史提交、示例和 proposed ADR 不应覆盖最新的明确会话契约。
+
+### 1.1 两阶段规则精简变更简报（2026-09-14）
+
+- 用户可见行为：合理改写及非关键词表达可通过来源校验；材料 Ready 不强制出卡；普通回应可以混合观点、建议和必要追问；明确只听、拒绝建议、暂停仍优先。
+- 规则归属：Evidence 只验来源/结构；Planning 唯一计算澄清资格；Support 只对显式回应限制收窄动作；Post 接受合法模型候选并拥有 Guard 失败恢复计划；Runtime 只执行协议和共享预算。
+- 权威输入：Snapshot、带原文引用的解释候选、Mode 配置与类型化 Guard 失败。真实 Quote 不能证明解释正确。
+- 状态/协议：沿用 schema 4 和现有内存状态。Text/Kind 是可修正的模型解释，EvidenceQuote/SourceMessageId 是原文来源；不新增 EF 实体或迁移。
+- 冲突：权限/生命周期和用户明确约束优先；默认语气/节奏不能单独否决合法回应。无效证据的影响范围尚不能可靠识别时，继续保守阻止草案，不静默丢弃可能包含拒绝或时间约束的错误。
+- 恢复：不以技术失败推导用户需要再次提问或出卡；Payload 修正冻结通过来源校验的上下文；失败正文和生成卡片仍通过对应 Guard，整体失败不提交部分结果。
+- 正式副作用：仍只由有效 Confirm Command 执行；没有新增 Tool 权限。
+- 版本：执行 rules v7 / policy v5 / planning v3 / prompts v10；陪伴 rules v4 / policy v3 / planning v4 / support v3 / prompts v5。模型 schema 仍为 4。
+- 验证：对来源校验、接受/拒绝边界、统一修正预算和最终 fallback 校验做针对性验证；真实语言质量另用多轮对话评估，不用固定模型候选证明语义理解。
+- Rule Diff Budget：这是跨层纠偏而非新增单条产品规则，涉及 Evidence、Policy、Runtime、Prompt 和其配置，超出普通预算；各规则仍只有一个所有者，不增加 Kernel 产品分支或通用 Rule Engine。
 
 ## 2. 总体原则
 
@@ -291,7 +304,7 @@ public sealed record ModelTurnCandidate(
 - 修改 Conversation State。
 - 通过重新解释整段自然语言来替代模型。
 
-新增规则约束：来源、角色、引用和结构一致性属于 Evidence Guard；“得到这些输入后应该怎么回应”属于 Policy。不得声称子串匹配能证明否定、委托或同意。当前 Support 中英文关键词匹配是原型限制，不把不断增加关键词当成扩展方向。多语言和改写需要模型行为评估，歧义需要保守回应，不能创建另一套隐藏语义路由。
+新增规则约束：来源、角色、引用和结构一致性属于 Evidence Guard；“得到这些输入后应该怎么回应”属于 Policy。不得声称子串匹配能证明否定、委托或同意。当前实现已移除 Support 中英文关键词匹配，以及解释 Text 必须为 Quote 子串的要求。Text 可概括/规范化，Quote 必须保留真实原文；不可据此把 Text 标成已确认事实。多语言和改写需要模型行为评估，歧义需要保守回应，不能创建另一套隐藏语义路由。
 
 ### 4.7 Planning Readiness Calculator
 
@@ -547,13 +560,13 @@ Domain Handler 可以执行副作用，但只能响应有效用户 Command。
 3. Conversation / Artifact 生命周期约束
 4. 用户当前明确 Command、拒绝和修正
 5. 已验证 Evidence 和持久化用户事实
-6. Mode Policy（默认倾向，不覆盖本轮观点、建议或暂停请求）
-7. 产品策略偏好
-8. 模型 SuggestedAction
+6. 明确版本化的强制产品约束（需要说明拒绝候选的产品理由）
+7. 满足上述约束的模型 SuggestedAction
+8. Mode 默认倾向、语气和节奏偏好（指导模型，不单独否决合法候选）
 9. 确定性默认值和 Fallback
 ```
 
-低优先级规则不得覆盖高优先级规则。例如模型建议 Proposal，产品也允许默认时间，但用户当前明确拒绝行动时，必须拒绝 Proposal。优先级不是“遇到 Pending 就终止理解”：生命周期只限制草案变更，普通对话仍可继续。当前请求在同一作用域覆盖旧事实；“不要这个时间”不能被扩展成拒绝整个目标。
+普通产品默认值不得因为写入配置而自动成为强制规则；硬上限、明确用户限制和表达指导必须区分。低优先级规则不得覆盖高优先级规则。例如模型建议 Proposal，产品也允许默认时间，但用户当前明确拒绝行动时，必须拒绝 Proposal。优先级不是“遇到 Pending 就终止理解”：生命周期只限制草案变更，普通对话仍可继续。当前请求在同一作用域覆盖旧事实；“不要这个时间”不能被扩展成拒绝整个目标。
 
 同一规则可以在多层执行不同责任的防御，例如 Command 检查 Confirm、Kernel 检查状态、数据库保证防重；“唯一归属”指规则定义和决定权唯一，不禁止防御，也不要求所有检查挤进同一个类。
 
@@ -829,6 +842,8 @@ proposalSet
 - Allowed Actions 或 Allowed Assumptions；
 - 是否具有 Proposal 权限。
 
+上述锁定只适用于 Payload 修正。若明确需要修正 Interpretation 本身，必须作为新的完整候选重新经过 Evidence、Readiness 和 Post-Policy，不得继承旧解释的授权结论；当前 Runtime 仅实现 Schema 完整修正与 Payload 锁定修正，不增加自动语义重判循环。
+
 修正请求应尽量只允许输出被修正的 Payload，避免要求模型重述 Interpretation。旧协议必须返回完整候选时，Runtime 可校验额外 Interpretation 但不赋予控制权限。Post-Policy、Guard、PlanningIntentUpdate 和 deterministic fallback 必须消费锁定的 Verified Planning Context 与 Planning Decision。
 
 不得锁定下列上下文：
@@ -907,7 +922,7 @@ Schema 修正、再生成和 Proposal 修正指令属于服务端控制消息，
 
 版本标签必须能解析到实际不可变规则，不能仅写进 Snapshot。当前 Mode Registry 按 Mode 获取定义，尚不足以保证跨部署执行旧会话；扩展时选择保留旧版本、显式迁移或清楚要求新会话。安全撤权可以立即拒绝旧版本，不受固定版本阻止。
 
-当前 schema 3 已用于 ActionRequest / SupportRequest；历史 Reference、作用域更新或新偏好集合需使用新的未占用版本。示例代码不是线上的完整 DTO，不得照抄同一个版本号发布不同协议。
+当前 schema 4 已用于 ActionRequest / SupportRequest 与偏好作用域；历史 Reference、作用域更新或新偏好集合需使用新的未占用版本。示例代码不是线上的完整 DTO，不得照抄同一个版本号发布不同协议。
 
 原型可保留 InMemory、无 Tool、无 Summary；仍必须准确呈现失败与可用功能。生产任务防重必须依赖持久唯一键/Receipt，内存锁不能承诺重启恢复。未来 Safety、Memory、Capability 各自有单独的启用条件；没有启用就不承诺对应能力，不用未来功能阻塞当前会话设计验证。
 

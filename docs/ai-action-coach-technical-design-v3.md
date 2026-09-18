@@ -1,7 +1,7 @@
 # Blotz AI 2.0 - AI Action Coach 技术方案 v3
 
 > 状态：Reviewed design draft（当前原型与目标契约分开记录）
-> 最近审查：2026-09-08；范围为单次会话设计，未同步实现代码
+> 最近审查：2026-09-14；两阶段规则精简同步代码，其他目标能力仍按实施范围区分
 > 创建日期：2026-08-24
 > 方案名称：受 Policy 控制的单 Turn Runtime（Policy-Governed Single-Turn Runtime）
 > 文档用途：定义 AI Action Coach 的单轮模型执行、对话策略控制、ProposalSet 生命周期和正式 Task 提交边界
@@ -25,13 +25,13 @@
 
 本文档中的“一次模型调用”指一次 Model Gateway 请求；“一个 Turn”指一条用户消息及其对应的系统处理和 Assistant 回复；“一次 Conversation”可以包含多个 Turn。
 
-### 1.1 审查基线与实施范围
+### 1.1 历史审查基线与实施范围（2026-09-08）
 
 本次对照 2026-09-08 工作区（包括尚未提交的改动），而非只对照上述提交。重点代码包括 `Domain/Modes/AiCoachModeDefinition.cs`、`Domain/Policy/`、`Domain/Planning/`、`Domain/Support/`、`Domain/Guards/Guards.cs`、`Domain/Kernel/TransitionHandlers.cs`、`Ai/Runtime/`、`Ai/Prompts/`、`Application/Orchestration/ConversationApplication.cs`、`Application/Effects/EffectHandlers.cs` 和移动端 `useAiCoachChat.ts`。
 
 | 能力 | 当前原型观察 | 本文目标 / 差距 |
 | --- | --- | --- |
-| Mode / Contract | Execution、Companion 已在 DI 注册；Clarify 未注册；当前 schema 为 3 | 注册不等于生产就绪；schema 3 尚不包含本文完整历史 Reference 协议 |
+| Mode / Contract | Execution、Companion 已在 DI 注册；Clarify 未注册；当时 schema 为 3 | 注册不等于生产就绪；schema 3 尚不包含本文完整历史 Reference 协议 |
 | 单轮治理 | 已有 Pre / Evidence / Planning / Support / Post / Guard / Kernel、修正预算和确定性生成器 | 保留单轮主线，修正下述语义、状态和降级契约 |
 | 会话保存 | InMemory Store + 会话锁，Effect 在当前请求内执行 | 不保证进程重启恢复；DB 事务、持久 Receipt、Outbox、Worker 恢复属于后续阶段 |
 | 正式任务保存 | Confirm 后逐项调用现有 AddTask Handler；允许记录部分成功 | 任务与内存会话不在一个事务；不能宣称崩溃窗口内不会重复创建 |
@@ -60,10 +60,26 @@
 
 本轮没有实现完整的历史引用、字段级 Constraint Mutation、组合回应偏好、持久恢复或跨进程防重；执行模式的持续 Support Preference 尚未启用，当前回应要求由 Prompt 与 Planning 限制处理。旧 schema 2/3 的测试样本和旧行为断言需同步到新协议；验证结果以交付说明为准，不能把文档记录视为测试全部通过。
 
+### 1.1.2 两阶段规则精简进展（2026-09-14）
+
+本节更新当前行为；1.1 表格与 1.1.1 保留为历史基线。变更简报及 owning layer 见治理指南 1.1。
+
+- Evidence 只验证当前用户引用的来源、非空与结构，不再用 Support 关键词或 Text/Quote 子串关系裁决语义。规范化 Text 与原始 EvidenceQuote 分别保存并投影；通过来源校验不代表模型解释已被用户确认。
+- Pre 只限制能力：不再重复计算澄清预算；Pending 卡片仍允许普通温和提问。Planning 统一计算澄清资格，材料 Ready 时如预算可用仍允许澄清；不能问时 Post 不强制出卡。
+- 普通 Companion 回应默认允许观点、建议及必要追问。正向 SupportRequest 是回应指导，明确只听、拒绝建议、暂停才收窄行为。模型可混合回应，SupportMove 是主要表达标签，不证明整段语义。
+- 连续提问节奏是 Prompt/Frame 的软偏好；单个 Question 字段、响应长度和规划澄清预算仍保留。建议适当性与重复问题依赖多轮行为评估。
+- Runtime 对 Response/Proposal Guard 失败使用同一 Post-Policy 及标准 Directive；所有修正共享总模型调用和再生成预算。Schema 首次失败需完整验证，Payload 修正保留锁定的解释与派生决策。
+- 原协议仍要求完整 schema 4 输出；修正指令只授权修改列出的 Payload 和指定策略，重述 Interpretation 不扩大控制权限。未增加自动重判语义的模型循环。
+- 默认草案只有 Policy 授权后才生成，遇未解析自由文本约束仍停止；最终默认/降级正文再过 Response Guard。失败整体不提交，技术失败不自动向用户重复提问。
+- 新会话版本：Execution rules v7 / policy v5 / planning v3 / prompts v10；Companion rules v4 / policy v3 / planning v4 / support v3 / prompts v5。保留旧 Prompt 正文供版本审计，不表示旧 Policy 可恢复执行。
+- 仍使用内存会话、schema 4；不新增数据库字段、迁移、历史引用或正式写能力。部署需要重新建立会话，不承诺跨部署恢复旧规则；引用语义、复合否定、偏好作用域和真实回应质量尚须模型行为评估。
+
+验证记录：`dotnet build blotztask-api/BlotzTask.csproj --no-restore` 通过。现有 AiCoach 确定性测试（排除 ModelBehaviour）共 106 项，当前 86 通过、20 失败；隔离的修改前 HEAD 为 99 通过、7 失败。新增 13 项失败对应取消字面语义校验、允许连续提问/Ready 澄清/Pending 普通提问、明确回应限制不再使用节奏耗尽原因码，以及版本更新后的旧断言，不能把它们描述为已通过回归验收。测试文件尚未修改，等待用户对必要测试更新的选择；未调用真实模型评估。
+
 ### 1.2 文档解释规则
 
 - 当前能力只以 1.1 和实际代码核对；代码示意不是要求原样复制的完整实现。
-- 目标设计发生冲突时，6.3–6.5 的会话状态语义、9.1–9.3 的表达契约、13.7 的统一裁决顺序优先于历史记录和模式示例。
+- 目标设计发生冲突时，6.3–6.5 的会话状态语义、9.1–9.3 的表达契约、13.7 的统一裁决顺序与 17.4.4 的当前回应默认值优先于历史记录和模式示例。
 - 所有模式复用同一套会话规则。Mode 是默认回应倾向，不是忽略用户当前请求的授权。
 - 不确定的语义以不确定性保留；需要影响当前决策时才澄清，不能靠默认值补造同意、用户事实或约束。
 
@@ -737,7 +753,7 @@ StaticPrefix / DynamicSuffix Token 统计
 
 模型一次返回结构化 `ModelTurnCandidate`：
 
-当前模型响应格式名为 `model_turn_candidate`，工作区 Schema Version 为 `3`（含 actionRequest / supportRequest / supportMove）；下方简化类型展示 schema 2 的核心形态，不是当前完整 DTO。历史引用等未来字段仍需另行版本化，不能再次用同名 schema 3 表示不兼容协议。顶层 `interpretation`、`suggestedAction`、`response` 和 `proposalSet` 均为必填字段；不生成卡片时 `proposalSet` 为 `null`。`suggestedAction` 只是模型建议，最终策略仍由 Post-Policy 决定。
+当前模型响应格式名为 `model_turn_candidate`，工作区 Schema Version 为 `4`（含 actionRequest / supportRequest / supportMove 与偏好作用域）；下方简化类型展示 schema 2 的核心形态，不是当前完整 DTO。历史引用等未来字段仍需另行版本化，不能再次用同名 schema 4 表示不兼容协议。顶层 `interpretation`、`suggestedAction`、`response` 和 `proposalSet` 均为必填字段；不生成卡片时 `proposalSet` 为 `null`。`suggestedAction` 只是模型建议，最终策略仍由 Post-Policy 决定。
 
 ```csharp
 public sealed record ModelTurnCandidate(
@@ -975,7 +991,7 @@ AllowedPlanningAction:
 | 用户明确委托当前规划，且存在有效材料 | Policy 允许分解 | `ReadyForProposal` | 使用安全假设生成 Proposal |
 | 用户无法补充信息，仍有有效规划请求和材料 | Execute Policy 允许安全默认值 | `ReadyForProposal` | 使用安全默认值生成 Proposal |
 | 用户无法补充信息 | Clarify Policy | `ReadyForSuggestion` | 简短综合或建议，不自动生成 Proposal |
-| 只有 Goal / Domain，不能生成 Proposal | Clarify / Companion 基线 | `ReadyForSuggestion` | 建议；若有额度可澄清 |
+| 只有 Goal / Domain，且没有明确规划请求 | Clarify / Companion 基线 | `ReadyForSuggestion` | 建议；若有额度可澄清。Companion 收到明确规划请求时可分解已验证 Goal，生成待确认 Proposal |
 | 用户拒绝行动 | 任意 | `Blocked` | 只继续对话 |
 
 `AllowedAssumption` 目前只有 `CoachDecomposition`、`DefaultDuration` 和 `NextAvailableSlot`。Post-Policy 和确定性生成器只能使用 Planning Decision 明确开放的假设。
@@ -1093,10 +1109,12 @@ Post-Policy 的唯一决策顺序如下；其他模式章节和治理指南均�
 2. 当前请求的拒绝、修正、暂停和作用域，与仍有效的旧事实合并；不确定证据不扩大权限。
 3. Planning / Support 等 Calculator 给出本轮允许行为；Readiness 允许不等于必须执行。
 4. 与 Envelope、当前 Artifact 生命周期和客户端能力求交，保留普通回应或明确失败出口。
-5. 按当前请求优先于 Mode 偏好的顺序选择策略；SuggestedAction 仅为候选。
+5. 候选满足当前请求、明确约束及合法动作集合时默认接受 SuggestedAction；Mode 语气、倾听及节奏偏好不单独否决合法候选。强制产品约束必须单独说明产品理由。
 6. 校验候选类型和所需 Payload；不匹配时返回标准修正或 fallback 计划，不能先因模型选错类型而丢失当前拒绝。
 7. 返回唯一 StrategyDecision 和稳定原因；后置 Guard 拒绝时按其类型化报告重新交给同一 Post-Policy 解析失败，或执行其事先授权的恢复计划。
 ```
+
+澄清预算与 OpenQuestion 的资格判断只由 Planning Readiness 计算，Pre 不重复计算；材料 Ready 仍可允许预算内的一次必要澄清。不能继续澄清不代表必须生成草案，Post 可请求普通回应修正。
 
 Planning Readiness 不依赖 ProposalCandidate 是否已经合法，否则会形成“先能规划才生成，先生成合法才算能规划”的循环。Proposal Guard 在策略选择之后验证内容；失败不能让 Runtime 自行选择另一种产品策略。
 
@@ -1122,7 +1140,7 @@ Planning Readiness 不依赖 ProposalCandidate 是否已经合法，否则会形
 | Clarify | `ActionPreparing` + 单一目标 | 用户无法继续澄清，但没有明确规划请求或委托 | `ContinueListening`，回复中提供简短 Suggestion | 否 | 继续表达、接受或修正建议 |
 | Clarify | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet` | 更新当前 Set | 编辑、Confirm、Reject |
 | Companion | `Conversing`，无明确直接行动指令 | 情绪表达、模糊愿望或模型推断 | `ContinueListening` 或 `AskGentleQuestion` | 否 | 继续陪伴 |
-| Companion | `Conversing`，当前消息有直接行动指令 | Action 和 Proposal Trigger Evidence 均通过验证 + Proposal 合法 | `ShowProposalSet` | 是，创建 Pending Set | 编辑、Confirm、Reject |
+| Companion | `Conversing`，当前消息有直接行动指令，或明确规划请求且存在已验证 Goal | Action 或授权的 Goal 分解通过 Planning Authority + Proposal 合法 | `ShowProposalSet` | 是，创建 Pending Set | 编辑、Confirm、Reject |
 | Companion | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet` | 更新当前 Set | 编辑、Confirm、Reject |
 | 任意 Mode | `Closed` | 任意开放式消息 | 拒绝 `ConversationClosed` | 否 | 只能查询或创建新 Conversation |
 | 任意 Mode | 任意 Phase + `HasRunningModelEffect` | 第二个开放式消息 | 拒绝 `TurnInProgress` | 否 | 查询状态或显式 Cancel |
@@ -1158,6 +1176,8 @@ Model Output Schema Guard
 任一 Mandatory Guard 异常时 fail closed。Observer、日志或 Evaluation 扩展不能改变允许或拒绝结论。
 
 ### 14.1 Evidence Guard
+
+> 临时实现决策（2026-09-15）：来源匹配和 Quote-to-Claim 语义蕴含校验已暂停。当前 Guard 仍要求 Claim Text 与 Evidence Quote 非空，但不会因为 Quote 不存在于当前 User Message 而拒绝候选，也允许引用相关历史用户措辞。下列严格来源规则保留为目标边界和后续恢复参考；若生产观测出现错误归因，再重新启用。
 
 验证：
 
@@ -2270,26 +2290,20 @@ DiscussExistingProposal
 
 `ContinueListening` 可以承载 `Acknowledge`、`Reflect`、`OfferPerspective`、`OfferAdvice` 和 `RespectPause`。`AskGentleQuestion` 只能承载一个 `GentleQuestion`。Post-Policy 是 Support Move 权限的唯一裁决者，负责检查候选是否位于 `SupportDecision.AllowedMoves`；Response Guard 只验证 Response 类型、字段组合、长度、问题数量和禁止的成功声明，不重复选择产品策略。
 
-建议的首版 Support Policy 为：
+当前 Support Policy（2026-09-14 精简版）为：
 
-| 已验证用户信号 | 允许的 Support Move | 约束 |
+| 已验证用户信号 | 允许的 Support Move | 约束性质 |
 | --- | --- | --- |
-| 未说明回应偏好 | `Acknowledge`、`Reflect`，必要时 `GentleQuestion` | 不默认给建议 |
-| “你听我说就好” | `Acknowledge`、`Reflect` | 禁止 Advice 和 Question |
-| “陪我想想为什么” | `Reflect`、`GentleQuestion`、`OfferPerspective` | 每 Turn 最多一个问题 |
-| “你觉得我该怎么办” | `Reflect`、`OfferAdvice` | 建议不等于 Proposal |
-| “先别问了” | `Acknowledge`、`RespectPause` | 禁止 Question |
-| 当前 Turn 的直接行动指令 | 支持性回应加 Proposal Introduction | 必须通过 Proposal Trigger 和 Proposal Guard |
+| 未说明回应偏好 | Acknowledge、Reflect、OfferPerspective、OfferAdvice、GentleQuestion | 模型根据当前上下文选择；倾听是默认倾向 |
+| 明确只听、不需问题或建议 | Acknowledge、Reflect | 显式限制，不自动扩展到永久偏好 |
+| 请求探索、观点或建议 | 所有普通回应 Move | 正向请求指导内容，不把混合回应当作非法 |
+| 拒绝建议 | 普通 Move 中排除 OfferAdvice | 只限制建议，不禁止观点或适当问题 |
+| 请求暂停交流 | Acknowledge、RespectPause | 当前轮停止推进；不持久化暂停 |
+| 当前轮直接行动指令 | 支持回应加 Proposal Introduction | 仍须通过 Proposal Trigger 与 Guard |
 
-问题节奏建议为：
+问题节奏是表达指导：默认避免连续把表达责任交回用户，但有必要时可继续提出聚焦问题，不需要关键词证明用户允许再次提问。`PreferredConsecutiveQuestionTurns = 1` 是软偏好；单轮仍只有一个结构化 Question，规划澄清预算独立由 Planning 计算。两者不能在 Pre、Support 和 Post 重复裁决。
 
-```text
-MaxQuestionsPerTurn = 1
-MaxConsecutiveQuestionTurns = 1
-QuestionRequired = false
-```
-
-模型连续一轮提出问题后，下一轮默认必须先给出实质回应，不能再次用问题把表达责任交回用户。只有用户明确表示希望通过连续提问探索时，Support Policy 才能放宽连续轮次限制，但每 Turn 仍只能有一个问题。问题不是维持会话活跃度的必选项。
+`SupportMove` 描述主要表达方式，普通回复可混合反映、观点、建议和问题。结构化标签不能证明正文没有隐藏建议或多问题，显式限制的实际遵守仍需行为评估。完整的独立“禁止问题但继续聊天”等复合偏好协议尚未实现，不能用关键词把所有“别问”统一判成暂停。
 
 #### 17.4.5 当前 Turn 行动授权
 
@@ -2359,7 +2373,7 @@ public sealed record SupportPreferenceSnapshot(
     long EstablishedAtConversationVersion);
 ```
 
-`CompanionContextSnapshot` 只持久化用户明确要求持续生效、后续 Policy 必须使用的回应偏好；单轮建议请求和暂时暂停按 6.5 处理，不自动保存。下方旧版单值 Snapshot 是演进起点，新增作用域和组合约束时必须版本化。连续提问状态从最近一次已提交的 Assistant Strategy 和当前显式请求确定性派生，不另外保存 `ConsecutiveQuestionTurns` 或 `LastAcceptedMove`。首版允许保存：
+`CompanionContextSnapshot` 只持久化用户明确要求持续生效、后续 Policy 必须使用的回应偏好；单轮建议请求和暂时暂停按 6.5 处理，不自动保存。下方旧版单值 Snapshot 是演进起点，新增作用域和组合约束时必须版本化。连续提问的软提示从最近一次已提交的 Assistant Strategy 派生，不能据此收窄 AllowedMoves，不另外保存 `ConsecutiveQuestionTurns` 或 `LastAcceptedMove`。首版允许保存：
 
 ```text
 用户明确要求倾听、探索、建议或暂停
@@ -2563,10 +2577,10 @@ Safety Policy 与本地化资源 Registry 已完成审核
 Companion 的单元、Policy、Runtime 和安全测试至少覆盖：
 
 ```text
-情绪表达只产生倾听回应，不创建 Proposal
+情绪表达允许有用的普通回应，不因情绪本身创建 Proposal
 “你听我说就好”禁止建议和问题
 普通陪伴问题每 Turn 最多一个
-连续一轮问题后，下一轮默认不能继续追问
+连续一轮问题后仍允许必要追问；避免机械追问由行为评估验证
 “你觉得怎么办”允许建议，但不创建卡片
 提到具体 Action 但没有下达指令时不创建卡片
 当前 Turn 的直接行动指令可以创建 Pending ProposalSet
@@ -2584,7 +2598,7 @@ SafetyDecision 能约束普通倾听、Proposal 和 Tool 路径，最终 Strateg
 
 #### 17.4.13 Companion Rule Change Brief 与变更预算
 
-Companion 实现前采用以下 Rule Change Brief：
+以下为原始扩展简报；回应节奏已按 2026-09-14 更新。其他恢复、Safety 与历史引用条目仍是目标条件：
 
 ```text
 Rule Name: Companion Support Preference
@@ -2604,20 +2618,20 @@ Observability metadata: SupportRequestKind、PreferenceChanged、DecisionReasons
 Tests proving the boundary: 建立、修正、清除、Supersede、恢复、版本冲突、Safety 覆盖
 
 Rule Name: Companion Question Cadence
-User-visible behavior: 每 Turn 最多一个问题，默认不连续两轮追问
-Rule category: 对话策略偏好
-Owning layer: SupportPolicyCalculator；Post-Policy 执行 AllowedMoves
-Authoritative inputs: 最近已提交 Assistant Strategy、当前 VerifiedSupportContext、Support Policy Version
-Decision/output: AllowedMoves + QuestionCadenceExhausted Reason
-Priority: 显式 WantsPause 高于探索请求；安全限制高于所有普通问题
-Conflict behavior: 不允许提问时降级为允许的无问题 Support Move
-Persisted state required? Why?: 否；由已提交 Strategy 确定性派生
-Model Contract change required? Why?: 否；复用 SupportRequestCandidate 和现有问题 Response
-Kernel change required? Why?: 否；复用已提交 Assistant Strategy
+User-visible behavior: 每 Turn 一个聚焦问题，默认避免机械连续追问，允许必要的下一问
+Rule category: 表达指导（软偏好）
+Owning layer: Prompt / Model Context；明确用户限制仍归 Support / Post
+Authoritative inputs: 最近已提交 Assistant Strategy、版本化节奏偏好、当前用户请求
+Decision/output: Frame 中的软提示，不产生 QuestionCadenceExhausted 拒绝
+Priority: 用户明确限制优先于默认节奏
+Conflict behavior: 不因上一轮问过问题而修正合法候选；用户明确禁止的问题仍被拒绝
+Persisted state required? Why?: 否；由已有消息投影
+Model Contract change required? Why?: 否；沿用 schema 4
+Kernel change required? Why?: 否
 Formal side effect involved?: 否
-Fallback / failure behavior: ContinueListening；Reason = QuestionCadenceExhausted
-Observability metadata: PreviousStrategy、ExplicitExploration、AllowedMoves、FinalStrategy
-Tests proving the boundary: 首次提问、连续轮、显式探索、Pause、非法双问题、Fallback
+Fallback / failure behavior: 技术失败不推导需要再次提问
+Observability metadata: PreviousStrategy、SuggestedStrategy、FinalStrategy、模型调用次数
+Tests proving the boundary: 连续问题不被硬拒绝、只听/Pause 仍限制问题；自然问题节奏另做行为评估
 
 Rule Name: Companion Direct Action Request
 User-visible behavior: 提及 Action 或请求建议不会创建卡片；当前直接指令可以创建 Pending Proposal
@@ -2937,7 +2951,7 @@ SummaryUpdate
 | 输出无法解析 | 最多一次 Schema Correction；仍无效则以 `InvalidModelResponse` 失败，不保存部分候选 |
 | Evidence 无效 | 不接受无效声明；涉及拒绝、请求或约束不确定时不复用历史材料生成 Proposal，改为普通回应或必要澄清 |
 | Strategy 不允许 | 拒绝或降级 |
-| Proposal 不合法 | 整组拒绝；最多一次再生成，随后尝试确定性 Proposal，再失败才降级 |
+| Proposal 不合法 | 整组拒绝，类型化失败交回 Post；按统一预算修正及 Policy 恢复计划执行，生成器拒绝未解析约束时回到普通回应 |
 | Read-only Tool 失败 | 不伪造结果，可降级普通回复或失败 |
 | Transaction B 版本冲突 | Result Superseded，不覆盖新状态 |
 | 客户端断线 | HTTP Snapshot 和 Command Status 恢复 |
@@ -3036,7 +3050,7 @@ Clarify 生成的 ProposalSet 仍通过与 Execute 相同的 ProposalSetGuard，
 Companion 的情绪表达、模糊愿望和历史 Summary 不得创建 ProposalSet。
 Companion 中仅提及具体 Action 或请求建议时不创建 ProposalSet；必须验证当前 Turn 的直接行动指令。
 Companion 当前消息包含明确直接行动指令时，可以创建一个 Pending ProposalSet；“安排刚才那个”还必须通过 PlanningItemReferenceKey 合法引用历史 Action。
-Companion 尊重用户明确表达的倾听、建议、提问和暂停偏好；每 Turn 最多一个问题，默认不允许连续两轮提问。
+Companion 尊重用户明确表达的倾听、建议、提问和暂停偏好；每 Turn 一个聚焦问题，连续提问节奏是软偏好，不单独拒绝候选。
 Companion 未经当前请求不得读取 Task、Calendar 或 Notes，模式 Summary 不得被 Execute 或 Clarify 自动读取。
 Companion 创建 ProposalSet 后仍必须等待 User Confirm，不得创建正式 Task。
 独立 Safety 启用后，SafetyDecision 作为最高优先级限制约束三种模式；Tool 读取前就应用限制，并只使用审核过的本地化资源。
@@ -3050,6 +3064,12 @@ Companion 创建 ProposalSet 后仍必须等待 User Confirm，不得创建正�
 
 | 场景 | 期望行为 / 禁止结果 |
 | --- | --- |
+| “明早慢跑半小时”，模型概括为“跑步” | 原文 Quote 真实即可通过来源校验；Text 是模型解释，不宣称被用户确认 |
+| 请求观点、暂停或只听的同义改写与其他语言 | 不靠关键词白名单判定；验证来源并评估模型的含义与作用域解释 |
+| 材料可生成草案，模型提出必要澄清 | 预算可用时接受问题；预算耗尽时修正普通回应，不强制出卡 |
+| Companion 无明确偏好，模型给出有用观点或建议 | 不因默认倾听而重生成；明确拒绝建议时仍尊重限制 |
+| 上轮已问，本轮还需一个必要问题 | 不因节奏规则触发修正；机械重复由行为评估识别 |
+| 默认生成器正文超过响应长度 | 拒绝整个 Turn，不提交卡片、正文或偏好的一部分 |
 | Execute：“我昨天没去跑步，你觉得呢” | 回应观点请求；不得仅因“跑步”或“你觉得呢”生成任务 |
 | “有点烦，但帮我安排明早整理资料” | 回应表达并提供请求的草案；不因情绪忽略行动 |
 | 问第一步后答“不知道” | 有安全材料才建议；没有材料不凭空创建“探索生活”任务 |
@@ -3074,7 +3094,7 @@ Companion 创建 ProposalSet 后仍必须等待 User Confirm，不得创建正�
 后续到达相应实施阶段时再决定：
 
 1. 正式 Task 提交采用整组原子还是逐项可恢复契约（18.2）；当前原型偏向后者，持久化实现尚未完成。
-2. 新的历史引用与更新 Contract 版本、旧会话迁移/停用方式；不能把现有 schema 3 当成完整目标。
+2. 新的历史引用与更新 Contract 版本、旧会话迁移/停用方式；不能把现有 schema 4 当成完整目标。
 3. Proposal 的无时间草案是否纳入产品范围；当前 DTO 要求时间，未支持时用明确推荐或解释限制。
 4. 是否以及何时开放模型修改/替换卡片，如何与客户端未提交编辑冲突协调。
 5. 首版上线是否包含独立 Safety 流程及本地化内容审核；已有需求明确排除，本审查仅保留扩展接口。
