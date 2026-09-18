@@ -13,18 +13,11 @@ import {
   useKeyboardState,
   useReanimatedKeyboardAnimation,
 } from "react-native-keyboard-controller";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { router } from "expo-router";
-import * as Haptics from "expo-haptics";
-import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
@@ -36,15 +29,11 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { mapExtractedRecurringToDTO } from "../utils/map-extracted-recurring-to-dto";
 import { useSaveAiResults } from "../hooks/useSaveAiResults";
+import { useHoldToTalk } from "../hooks/useHoldToTalk";
+import { resolveMicPermission } from "../utils/resolve-mic-permission";
 import Toast from "react-native-toast-message";
-import { useDebouncedCallback } from "use-debounce";
 import { analytics } from "@/shared/services/analytics";
 import { toastConfig } from "@/shared/components/toast-config";
-
-// Presses shorter than this are treated as accidental taps and discarded;
-// anything longer is a real recording and gets uploaded.
-const MIN_HOLD_MS = 300;
-const HOLD_HINT_AUTO_HIDE_MS = 2500;
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
@@ -56,17 +45,7 @@ export default function AiTaskSheetScreen() {
   // Interface opens in voice mode by default; the keyboard toggle switches to text.
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const hasSubmittedAiRequest = useRef(false);
-  const heldLongEnough = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
-  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
-  const hideHoldHintLater = useDebouncedCallback(
-    () => setIsHoldHintVisible(false),
-    HOLD_HINT_AUTO_HIDE_MS,
-  );
-  const micShakeX = useSharedValue(0);
-  const micShakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: micShakeX.value }],
-  }));
 
   const { height: keyboardOffset } = useReanimatedKeyboardAnimation();
   const listKeyboardPad = useAnimatedStyle(() => ({
@@ -94,9 +73,16 @@ export default function AiTaskSheetScreen() {
     submitAudioForTranscription,
   );
   const { saveAll } = useSaveAiResults("ai");
+  const holdToTalk = useHoldToTalk({
+    startListening,
+    stopAndUpload,
+    cancelListening,
+    onSubmitResult: (didSubmit) => {
+      if (didSubmit) hasSubmittedAiRequest.current = true;
+    },
+  });
 
   // Resolve mic permission on mount; navigate back if unusable.
-  // Get-then-request (as in shared/services/notifications.ts) separates denied from blocked.
   useEffect(() => {
     analytics.trackAiTaskSheetOpened();
 
@@ -113,36 +99,9 @@ export default function AiTaskSheetScreen() {
       if (isActive) router.back();
     };
 
-    const resolveMicPermission = async () => {
-      const current = await getRecordingPermissionsAsync();
-
-      if (current.granted) {
-        analytics.trackMicPermissionResolved({ outcome: "already_granted" });
-        return;
-      }
-
-      // No prompt will be shown, so a request here is indistinguishable from a real rejection.
-      if (!current.canAskAgain) {
-        analytics.trackMicPermissionResolved({ outcome: "blocked" });
-        exitOnUnusableMic();
-        return;
-      }
-
-      const requested = await requestRecordingPermissionsAsync();
-      analytics.trackMicPermissionResolved({
-        outcome: requested.granted ? "granted" : "denied",
-      });
-
-      if (!requested.granted) exitOnUnusableMic();
-    };
-
-    void resolveMicPermission().catch((error: unknown) => {
-      // Previously an unhandled rejection. The sheet still stays open; only the silence is fixed.
-      console.warn("[Mic] Permission check failed.", error);
-      analytics.trackMicPermissionResolved({
-        outcome: "error",
-        errorCode: "PermissionCheckFailed",
-      });
+    // An `error` outcome keeps the sheet open, as before.
+    void resolveMicPermission().then((outcome) => {
+      if (outcome === "denied" || outcome === "blocked") exitOnUnusableMic();
     });
 
     return () => {
@@ -201,47 +160,8 @@ export default function AiTaskSheetScreen() {
     // Failed mutations are already handled by the global mutationCache.onError (toast + Sentry).
   };
 
-  const handleMicPressIn = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    heldLongEnough.current = false;
-    hideHoldHintLater.cancel();
-    setIsHoldHintVisible(false);
-    void startListening();
-  };
-
-  // Released before MIN_HOLD_MS: discard, but never silently.
-  const handleMicMisfire = async () => {
-    micShakeX.value = withSequence(
-      ...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 50 })),
-    );
-    setIsHoldHintVisible(true);
-    hideHoldHintLater();
-    await cancelListening(); // iOS mutes haptics while the mic is open
-
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  };
-
-  const handleMicSubmit = async () => {
-    const didSubmit = await stopAndUpload();
-    if (didSubmit) {
-      hasSubmittedAiRequest.current = true;
-    }
-  };
-
-  const handleMicRelease = () => {
-    if (heldLongEnough.current) {
-      void handleMicSubmit();
-    } else {
-      void handleMicMisfire();
-    }
-  };
-
-  const markHeldLongEnough = () => {
-    heldLongEnough.current = true;
-  };
-
   const handleSwitchToText = () => {
-    setIsHoldHintVisible(false);
+    holdToTalk.hideHoldHint();
     setInputMode("text"); // TextInput autoFocus pops the keyboard on mount
   };
 
@@ -299,7 +219,7 @@ export default function AiTaskSheetScreen() {
               <ListeningIndicator
                 isRecording={isRecording}
                 isAiGenerating={isAiGenerating}
-                isHoldHintVisible={isHoldHintVisible}
+                isHoldHintVisible={holdToTalk.isHoldHintVisible}
               />
             )}
 
@@ -335,16 +255,16 @@ export default function AiTaskSheetScreen() {
                   {/* Voice mode: hold-to-talk pill (waveform while recording). Text mode: input. */}
                   <Animated.View
                     className="flex-1 items-center justify-center"
-                    style={micShakeStyle}
+                    style={holdToTalk.micShakeStyle}
                   >
                     {inputMode === "voice" ? (
                       <HoldToTalkPill
                         isRecording={isRecording}
                         disabled={isAiGenerating}
-                        minHoldMs={MIN_HOLD_MS}
-                        onPressIn={handleMicPressIn}
-                        onPressOut={handleMicRelease}
-                        onHeldLongEnough={markHeldLongEnough}
+                        minHoldMs={holdToTalk.minHoldMs}
+                        onPressIn={holdToTalk.onPressIn}
+                        onPressOut={holdToTalk.onPressOut}
+                        onHeldLongEnough={holdToTalk.onHeldLongEnough}
                       />
                     ) : (
                       <TextInput
