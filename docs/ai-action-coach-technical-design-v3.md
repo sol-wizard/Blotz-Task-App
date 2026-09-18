@@ -71,7 +71,7 @@
 - Runtime 对 Response/Proposal Guard 失败使用同一 Post-Policy 及标准 Directive；所有修正共享总模型调用和再生成预算。Schema 首次失败需完整验证，Payload 修正保留锁定的解释与派生决策。
 - 原协议仍要求完整 schema 4 输出；修正指令只授权修改列出的 Payload 和指定策略，重述 Interpretation 不扩大控制权限。未增加自动重判语义的模型循环。
 - 默认草案只有 Policy 授权后才生成，遇未解析自由文本约束仍停止；最终默认/降级正文再过 Response Guard。失败整体不提交，技术失败不自动向用户重复提问。
-- 新会话版本：Execution rules v7 / policy v5 / planning v3 / prompts v10；Companion rules v4 / policy v3 / planning v4 / support v3 / prompts v5。保留旧 Prompt 正文供版本审计，不表示旧 Policy 可恢复执行。
+- 新会话版本以代码 `AiCoachModeDefinition.cs` 为准，当前值见 1.1.3，不再逐次记录。保留旧 Prompt 正文供版本审计，不表示旧 Policy 可恢复执行。
 - 仍使用内存会话、schema 4；不新增数据库字段、迁移、历史引用或正式写能力。部署需要重新建立会话，不承诺跨部署恢复旧规则；引用语义、复合否定、偏好作用域和真实回应质量尚须模型行为评估。
 
 验证记录：`dotnet build blotztask-api/BlotzTask.csproj --no-restore` 通过。现有 AiCoach 确定性测试（排除 ModelBehaviour）共 106 项，当前 86 通过、20 失败；隔离的修改前 HEAD 为 99 通过、7 失败。新增 13 项失败对应取消字面语义校验、允许连续提问/Ready 澄清/Pending 普通提问、明确回应限制不再使用节奏耗尽原因码，以及版本更新后的旧断言，不能把它们描述为已通过回归验收。测试文件尚未修改，等待用户对必要测试更新的选择；未调用真实模型评估。
@@ -90,14 +90,14 @@
 - Kernel 新增三条转换（7.5）：替换条目、删空即丢弃卡片、卡片歧义提问（不消耗规划澄清预算）。
 - 该路径在 Handler 内自带「quote 必须出现在当前用户消息」的校验，不受 14.1 来源匹配暂停的影响。
 - 客户端：卡片存在未保存的本地编辑时禁止发送消息，并提供「重置本地修改」，避免本地编辑与模型修改交错。
-- 新会话版本：Execution rules v8 / policy v6 / prompts v11；Companion rules v8 / policy v8 / prompts v8；三种模式 `ModelContractSchemaVersion = 5`。
+- 当前版本（以代码 `AiCoachModeDefinition.cs` 为准，只记最新值）：Execution rules v8 / policy v6 / planning v3 / prompts v11；Companion rules v8 / policy v8 / planning v7 / support v5 / prompts v8；Clarify 仍为 v0 占位；三种模式 `ModelContractSchemaVersion = 5`。
 
 **`38e8b80e`（09-16）相对 1.1.2 的补充**——1.1.2 已记录其行为变化，以下是 1.1.2 未覆盖的命名与版本：
 
 - 类型改名：`PlanningReadinessCalculator` → `PlanningAuthorityCalculator`，`PlanningDecision` → `PlanningAuthority`。原 `PlanningReadiness` 五档与 `AllowedPlanningAction` 四种合并为三个布尔量 `IsBlocked` / `CanGenerateProposal` / `CanAskClarifyingQuestion`；`ReadyForSuggestion` / `OfferSuggestion` 不再存在——给建议属于普通对话，不需要授权。当前形态见 12 节「Planning Authority」；17.2、17.3 中的 `PlanningReadiness` / `PlanningDecision` 属于历史记录和尚未实现的 Clarify 设计，保留原名不改。
 - `ConversationPolicyDefinition.RequireProposalWhenPlanningReady` 删除；`SupportPolicyDefinition.MaxConsecutiveQuestionTurns` 改为 `PreferredConsecutiveQuestionTurns`，`AllowExplicitContinuousExploration` 删除。
 - Post-Policy 的降级目标统一为 `ContinueListening`（唯一例外：已有 Pending 卡时又提出 `ShowProposalSet` → `DiscussExistingProposal`）；`QuestionFallback` 与 `ActionableIntentRequiresProposal` 分支删除；新增原因码 `PlanningQuestionNotAuthorized`。
-- Companion 在该提交中的实际版本为 rules v7 / policy v7 / planning v7 / support v5 / prompts v7，`ProposalTrigger = ExplicitPlanningRequestOrDelegation`、`AllowCoachDecomposition = true`、`MaxClarificationAttempts = int.MaxValue`。**1.1.2 记录的 Companion「rules v4 / policy v3 / planning v4 / support v3 / prompts v5」与该提交的代码不一致，待 Chen 确认以哪个为准。**
+- Companion 的 Planning Policy：`ProposalTrigger = ExplicitPlanningRequestOrDelegation`、`AllowCoachDecomposition = true`、`MaxClarificationAttempts = int.MaxValue`。
 - Kernel 的 Confirm Handler 去掉了通用的 `AllowedActions.Contains(action)` 检查，只保留「`start_now` 仅限单任务卡」；`ConfirmDraft` 在 DraftId 与当前卡不符时统一返回 `DraftNotFound`（版本不符仍为 `StaleDraftVersion`）。见 18 节。
 
 验证记录：本次只修改文档，未运行构建、测试或真实模型评估。`64faf4fb` 新增确定性测试 11 项（`ProposalSetMutationHandlerTests` 5、`ProposalSetMutationPolicyTests` 3、`ProposalSetMutationKernelTests` 3），其通过情况以交付说明为准；覆盖缺口见 24.1。
