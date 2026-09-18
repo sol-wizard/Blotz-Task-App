@@ -20,13 +20,15 @@ Walk the checklist top to bottom. For each item: run the check; if it fails, app
 | 3 | `xcrun devicectl list devices` | the phone is listed as `available` | **User**: plug the phone in with a **data** cable, unlock it, tap **Trust** on the phone. If it stays `unavailable`, AI runs `xcrun devicectl manage pair --device <CoreDevice id>` which pops the Trust prompt |
 | 4 | `xcrun devicectl device info details --device <CoreDevice id>` → `developerModeStatus` | `enabled` | **User**: Settings → Privacy & Security → Developer Mode → on → phone restarts → confirm "Turn On". (The toggle only appears after step 3) |
 | 5 | same command → note `udid` (`00008…`) and `osVersionNumber` | recorded for the report | — |
-| 6 | `xcrun devicectl device info apps --device <CoreDevice id> \| grep -i com.Blotz.BlotzTask.dev` | the dev build is installed | see **§1 Getting the dev build onto this phone** — the only step that may need Ben |
-| 7 | native change since that build? (`git log` / `git status` touching `modules/`, `app.config.js` plugins, a library with native code, `expo prebuild` output) | no | rebuild per §1; JS/TS/style changes never need this |
-| 8 | Apple signing for the **agent-device runner**: `xcrun devicectl … details` shows the phone; then try `agent-device open …` in §4 | runner builds and installs | Ben's Mac: `export AGENT_DEVICE_IOS_TEAM_ID=Z6GFDAYSP9`. Anyone else: sign into Xcode (Xcode → Settings → Apple Accounts) with **any** Apple ID — a free Personal Team is enough for the runner — and export that team's id instead (find it under the account's "Developer Team" in that settings page). Free signing expires after 7 days; the runner just rebuilds |
-| 9 | backend chosen (§2) and Metro serving the phone (§3) | `iOS Bundled …` line in the Metro log after launch | fix per §3 |
-| 10 | phone is logged in (§4 snapshot shows the Today screen, not "Continue with Phone") | logged in as **blotztest1@gmail.com** | **User** logs in on the phone; never search for the password. If another account is signed in: Settings → Log out first (Auth0 remembers the last account) |
+| 6 | JS deps match the lockfile: `npm ls expo-iap` (or whichever package landed most recently) resolves in `blotztask-mobile/` | no `(empty)` or "not found" | AI: `npm install` in `blotztask-mobile/`. A `node_modules` left behind by a branch switch or `git pull` shows up as a Metro `PluginError: Failed to resolve plugin for module "<pkg>"`, which does not look like a missing dependency |
+| 7 | `xcrun devicectl device info apps --device <CoreDevice id> \| grep -i com.Blotz.BlotzTask.dev` | the dev build is installed | see **§1 Getting the dev build onto this phone** — the only step that may need Ben |
+| 8 | native change since that build? (`git log` / `git status` touching `modules/`, `app.config.js` plugins, a library with native code, `expo prebuild` output) | no | rebuild per §1; JS/TS/style changes never need this |
+| 9 | Apple signing for the **agent-device runner**: `xcrun devicectl … details` shows the phone; then try `agent-device open …` in §4 | runner builds and installs | Ben's Mac: `export AGENT_DEVICE_IOS_TEAM_ID=Z6GFDAYSP9`. Anyone else: sign into Xcode (Xcode → Settings → Apple Accounts) with **any** Apple ID — a free Personal Team is enough for the runner — and export that team's id instead (find it under the account's "Developer Team" in that settings page). Free signing expires after 7 days; the runner just rebuilds |
+| 10 | **local backend only** — DB is current: `dotnet ef migrations list --no-build` in `blotztask-api/` | nothing is marked `(Pending)` | `dotnet ef database update`. AGENTS.md has the **user** run EF commands, so ask first and only run it on their say-so. A DB behind the code 500s with `Invalid column name '<col>'`, which reads exactly like a product bug |
+| 11 | backend chosen (§2) and Metro serving the phone (§3) | `iOS Bundled …` line in the Metro log after launch | fix per §3 |
+| 12 | phone is logged in (§4 snapshot shows the Today screen, not "Continue with Phone") | logged in as **blotztest1@gmail.com** | **User** logs in on the phone; never search for the password. If another account is signed in: Settings → Log out first (Auth0 remembers the last account) |
 
-Android equivalents: `adb devices -l` (USB debugging on, "Allow this computer" tapped), package `com.blotz.blotztask`, `agent-device … --platform android --serial <serial>`. Rows 2, 4 and 8 do not apply.
+Android equivalents: `adb devices -l` (USB debugging on, "Allow this computer" tapped), package `com.blotz.blotztask`, `agent-device … --platform android --serial <serial>`. Rows 2, 4 and 9 do not apply.
 
 ## 1. Getting the dev build onto this phone
 
@@ -37,7 +39,7 @@ Apple only lets a development build run on phones **registered under the Blotz A
 **Teammates — EAS path.** Tell the user to ask Ben for the two things below; do not try to work around Apple signing.
 1. Ben runs `eas device:create` → chooses **Website** → sends the registration link. The teammate opens it **on the phone** and taps through; the UDID registers itself, nobody types it.
 2. Ben runs `eas build --profile development --platform ios` and shares the install link. The teammate installs from it. The profile in `eas.json` already sets the `.dev` bundle id and the staging backend.
-Repeat step 2 only when native code changes (row 7). JS changes come from the teammate's own Metro (§3).
+Repeat step 2 only when native code changes (row 8). JS changes come from the teammate's own Metro (§3).
 
 **Ben's Mac — local build** (Xcode signed into team Z6GFDAYSP9):
 ```bash
@@ -61,6 +63,8 @@ xcrun devicectl device install app --device <CoreDevice id> \
 
 Detect: `lsof -nP -iTCP:5027 -sTCP:LISTEN` → if something is listening, offer local, otherwise recommend staging. The dev build allows plain HTTP to the LAN (`NSAllowsLocalNetworking`), so no ATS change is needed. Mac LAN IP: `ipconfig getifaddr en0`; phone and Mac must be on the same Wi-Fi.
 
+**Local backend + migrations:** a pull or branch switch can bring EF migrations the local DB has not applied — clear row 10 before blaming the app.
+
 **Local backend + login:** users are registered by an Auth0 post-login webhook that only reaches hosted backends. The account the phone signs in with must already exist in the local `AppUsers` table, or every request 401s with "User is not registered in this app" and the app logs itself out. The seeded test account **blotztest1@gmail.com** exists locally and on staging — use it. A missing `PomodoroSettings` row shows as a 404 toast — insert one, don't debug the app.
 
 ## 3. Metro and launch
@@ -80,7 +84,7 @@ The dev client tries whatever is on 8081 first before honouring the URL; a stale
 ## 4. Drive the phone
 
 ```bash
-export AGENT_DEVICE_IOS_TEAM_ID=<team id from row 8>   # first run builds the XCTest runner (~1 min)
+export AGENT_DEVICE_IOS_TEAM_ID=<team id from row 9>   # first run builds the XCTest runner (~1 min)
 agent-device open com.Blotz.BlotzTask.dev --platform ios --udid <UDID>   # always pass --udid: the tool prefers simulators
 agent-device snapshot -i                          # UI tree with @eN refs — read this before every action
 agent-device press @e12 | press <x> <y>           # tap by ref or by points
@@ -107,5 +111,7 @@ For each scenario: device (name, iOS version), build (bundle id, backend used, M
 | 404 "Pomodoro setting … not found" | local DB lacks the row for that user — insert, don't debug |
 | `AxiosError: Network Error` on Loading | bundle came from the wrong Metro (8081) → relaunch per §3 |
 | Runner error "Developer mode is disabled" | Mac `DevToolsSecurity` (row 2), not the phone |
+| Metro `PluginError: Failed to resolve plugin for module "<pkg>"` | stale `node_modules` after a pull or branch switch — `npm install` (row 6) |
+| 500 `Invalid column name '<col>'` after a branch switch | local DB behind on migrations — `dotnet ef database update` (row 10) |
 | `expo-notifications` push-token WARN in Metro | dev builds have no push entitlement; ignore |
 | Chinese/emoji input on Android | agent-device uses a test IME (`--test-ime`); verify keyboard UX manually, never change product validation to suit the tool |
