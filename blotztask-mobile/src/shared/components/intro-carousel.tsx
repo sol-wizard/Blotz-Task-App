@@ -16,11 +16,21 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export type CarouselExitOutcome = "completed" | "skipped";
 
+/** How the user moved to an item: the Continue/Back buttons, or a swipe. */
+export type CarouselNavigation = "button" | "swipe";
+
+export type CarouselPrimaryAction = {
+  label: string;
+  /** Resolve true to move on to the next item, false to stay. */
+  onPress: () => Promise<boolean>;
+  disabled?: boolean;
+};
+
 interface IntroCarouselProps<T> {
   data: readonly T[];
   renderItem: (item: T) => React.ReactNode;
   onFinish: (outcome: CarouselExitOutcome, lastItemReached: T) => void | Promise<void>;
-  onItemViewed?: (item: T) => void;
+  onItemViewed?: (item: T, via: CarouselNavigation) => void;
   continueLabel: string;
   finishLabel: string;
   skipLabel: string;
@@ -28,6 +38,10 @@ interface IntroCarouselProps<T> {
   activeDotClassName?: string;
   /** Disables Skip and Continue/Finish while a step has its own pending action (e.g. a redeem request in flight). */
   disableActions?: boolean;
+  /** Turns swiping off, e.g. while an item has a press-and-hold control in use. Defaults to true. */
+  scrollEnabled?: boolean;
+  /** Replaces the Continue button while the given item is active. Return undefined to keep Continue. */
+  getPrimaryAction?: (item: T) => CarouselPrimaryAction | undefined;
 }
 
 export function IntroCarousel<T>({
@@ -41,23 +55,27 @@ export function IntroCarousel<T>({
   dotContainerClassName = "mb-6",
   activeDotClassName = "w-5 bg-black",
   disableActions = false,
+  scrollEnabled = true,
+  getPrimaryAction,
 }: IntroCarouselProps<T>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const lastViewedIndexRef = useRef(0);
   const isLast = activeIndex === data.length - 1;
+  const primaryAction = getPrimaryAction?.(data[activeIndex]);
+  const isPrimaryDisabled = disableActions || (primaryAction?.disabled ?? false);
 
-  const updateActiveIndex = (index: number) => {
+  const updateActiveIndex = (index: number, via: CarouselNavigation) => {
     setActiveIndex(index);
     if (lastViewedIndexRef.current === index) return;
 
     lastViewedIndexRef.current = index;
-    onItemViewed?.(data[index]);
+    onItemViewed?.(data[index], via);
   };
 
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    updateActiveIndex(index);
+    updateActiveIndex(index, "swipe");
   };
 
   const handleNext = () => {
@@ -67,14 +85,23 @@ export function IntroCarousel<T>({
     }
     const next = activeIndex + 1;
     flatListRef.current?.scrollToIndex({ index: next, animated: true });
-    updateActiveIndex(next);
+    updateActiveIndex(next, "button");
+  };
+
+  const handlePrimaryPress = async () => {
+    if (!primaryAction) {
+      handleNext();
+      return;
+    }
+    const shouldAdvance = await primaryAction.onPress();
+    if (shouldAdvance) handleNext();
   };
 
   const handleBack = () => {
     if (activeIndex === 0) return;
     const prev = activeIndex - 1;
     flatListRef.current?.scrollToIndex({ index: prev, animated: true });
-    updateActiveIndex(prev);
+    updateActiveIndex(prev, "button");
   };
 
   return (
@@ -104,6 +131,7 @@ export function IntroCarousel<T>({
         data={data as T[]}
         horizontal
         pagingEnabled
+        scrollEnabled={scrollEnabled}
         showsHorizontalScrollIndicator={false}
         getItemLayout={(_, index) => ({
           length: SCREEN_WIDTH,
@@ -132,14 +160,14 @@ export function IntroCarousel<T>({
           })}
         </View>
         <Pressable
-          onPress={handleNext}
-          disabled={disableActions}
+          onPress={() => void handlePrimaryPress()}
+          disabled={isPrimaryDisabled}
           className={`w-[46%] h-[48px] rounded-full py-4 ${
-            disableActions ? "bg-gray-200" : "bg-[#8BCC5A]"
+            isPrimaryDisabled ? "bg-gray-200" : "bg-[#8BCC5A]"
           }`}
         >
           <Text className="text-white text-lg font-baloo text-center">
-            {isLast ? finishLabel : continueLabel}
+            {primaryAction?.label ?? (isLast ? finishLabel : continueLabel)}
           </Text>
         </Pressable>
       </View>
