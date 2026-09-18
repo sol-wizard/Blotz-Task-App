@@ -32,6 +32,7 @@ import { ListeningIndicator } from "../component/listening-indicator";
 import { HoldToTalkPill } from "../component/hold-to-talk-pill";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { AI_SHEET_SOURCE, type AiSheetSource } from "../models/ai-sheet-source";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
@@ -54,8 +55,8 @@ export default function AiTaskSheetScreen() {
   const { t } = useTranslation("aiTaskGenerate");
   const { t: tOnboarding } = useTranslation("onboarding");
   // Set when the sheet is opened from the post-onboarding voice coach.
-  const { source } = useLocalSearchParams<{ source?: string }>();
-  const isFromOnboarding = source === "onboarding";
+  const { source } = useLocalSearchParams<{ source?: AiSheetSource }>();
+  const isFromOnboarding = source === AI_SHEET_SOURCE.ONBOARDING;
   const taskSource = isFromOnboarding ? "onboarding_ai" : "ai";
   const micPressCount = useRef(0);
   const { height } = useWindowDimensions();

@@ -1,13 +1,15 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Tabs, router } from "expo-router";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/bottom-nav-image";
-import { GradientCircle } from "@/shared/components/gradient-circle";
+import { AiTabButtonIcon } from "@/shared/components/ai-tab-button-icon";
 import { theme } from "@/shared/constants/theme";
-import { VoiceCoachOverlay } from "@/feature/onboarding/components/voice-coach-overlay";
-import { useVoiceCoachStore } from "@/feature/onboarding/hooks/useVoiceCoachStore";
+import {
+  VoiceCoachOverlay,
+  type ButtonFrame,
+} from "@/feature/onboarding/components/voice-coach-overlay";
 
 function UnfocusedTabIcon({ children }: { children: React.ReactNode }) {
   return (
@@ -62,12 +64,12 @@ function getTabIcon(routeKey: string, focused: boolean) {
 export default function ProtectedTabsLayout() {
   const insets = useSafeAreaInsets();
   const aiButtonRef = useRef<View>(null);
-  const setButtonFrame = useVoiceCoachStore((state) => state.setButtonFrame);
+  const [aiButtonFrame, setAiButtonFrame] = useState<ButtonFrame | null>(null);
 
   // The voice coach puts its spotlight exactly where this button is drawn.
   const reportAiButtonFrame = () => {
     aiButtonRef.current?.measureInWindow((x, y, width, height) => {
-      setButtonFrame({ x, y, width, height });
+      setAiButtonFrame({ x, y, width, height });
     });
   };
 
@@ -113,13 +115,7 @@ export default function ProtectedTabsLayout() {
                 className="flex-1 items-center justify-center"
                 onPress={() => router.push("/ai-task-sheet")}
               >
-                <GradientCircle size={58}>
-                  <ASSETS.whiteBun
-                    width={28}
-                    height={28}
-                    style={{ position: "absolute" } as const}
-                  />
-                </GradientCircle>
+                <AiTabButtonIcon />
               </Pressable>
             ),
           }}
@@ -144,7 +140,7 @@ export default function ProtectedTabsLayout() {
           }}
         />
       </Tabs>
-      <VoiceCoachOverlay />
+      <VoiceCoachOverlay buttonFrame={aiButtonFrame} />
     </View>
   );
 }
