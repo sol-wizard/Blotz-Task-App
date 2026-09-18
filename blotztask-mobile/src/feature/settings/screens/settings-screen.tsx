@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -75,6 +75,17 @@ export default function SettingsScreen() {
       icon: "account-plus-outline",
       route: "/settings/invite",
     },
+    // iOS only: tipping is wired to StoreKit, Android has no products configured.
+    ...(Platform.OS === "ios"
+      ? ([
+          {
+            key: "support-us",
+            label: t("menu.supportUs"),
+            icon: "heart-outline",
+            route: "/settings/support-us",
+          },
+        ] satisfies SettingsMenuItem[])
+      : []),
     {
       key: "about",
       label: t("menu.about"),
