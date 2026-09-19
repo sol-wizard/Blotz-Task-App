@@ -90,14 +90,16 @@ public class PlanningAuthorityTests
     {
         var noAuthority = new PlanningAuthority(
             IsBlocked: false,
-            CanGenerateProposal: false,
-            CanAskClarifyingQuestion: false,
+            Proposal: ProposalDisposition.Forbidden,
+            Clarification: ClarificationDisposition.NotAllowed,
+            ContextReadiness: PlanningContextReadiness.Insufficient,
             [PlanningAuthorityReason.ClarificationCanHelp],
             []);
         var proposalAuthority = new PlanningAuthority(
             IsBlocked: false,
-            CanGenerateProposal: true,
-            CanAskClarifyingQuestion: false,
+            Proposal: ProposalDisposition.Optional,
+            Clarification: ClarificationDisposition.NotAllowed,
+            ContextReadiness: PlanningContextReadiness.Actionable,
             [PlanningAuthorityReason.VerifiedActionAvailable],
             []);
 

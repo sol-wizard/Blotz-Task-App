@@ -24,7 +24,7 @@ public class StartConversationCommand
 }
 
 /// <summary>
-/// Creates a fresh registered-mode conversation. Execution and Companion both use a new
+/// Creates a fresh registered-mode conversation. All modes use a new
 /// in-memory session in this implementation. Runtime versions are pinned at creation from the mode
 /// definition; an active conversation never picks up new versions on deploy.
 /// </summary>

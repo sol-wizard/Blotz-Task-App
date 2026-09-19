@@ -56,7 +56,7 @@ function ModeCard({
  * AI Home (requirements §6, single-page per PM decision 2026-08-22): greeting, Blotz IP, the
  * three mode cards AND the chat live on one page. The input bar is visible from the start but
  * greyed out; tapping a mode activates it and the conversation grows in place below the cards —
- * no view swap, no navigation. Execution and Companion are available; Clarify is coming-soon.
+ * no view swap and no navigation. All three modes share the same server-driven chat panel.
  */
 export default function AiHomeScreen() {
   const { t } = useTranslation("aiCoach");
@@ -82,8 +82,9 @@ export default function AiHomeScreen() {
       <ModeCard
         title={t("home.modes.clarify.title")}
         subtitle={t("home.modes.clarify.subtitle")}
-        disabled
-        comingSoonLabel={t("home.comingSoon")}
+        disabled={false}
+        selected={selectedMode === "Clarify"}
+        onPress={() => setSelectedMode("Clarify")}
       />
       <ModeCard
         title={t("home.modes.companion.title")}

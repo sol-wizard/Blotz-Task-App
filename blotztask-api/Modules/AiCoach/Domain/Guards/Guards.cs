@@ -13,16 +13,27 @@ namespace BlotzTask.Modules.AiCoach.Domain.Guards;
 /// </summary>
 public interface IEvidenceGuard
 {
-    VerifiedPlanningContext Verify(InterpretationCandidate interpretation, string currentUserMessage);
+    VerifiedPlanningContext Verify(
+        InterpretationCandidate interpretation,
+        EvidenceVerificationContext context);
 }
 
 public sealed class EvidenceGuard : IEvidenceGuard
 {
-    public VerifiedPlanningContext Verify(InterpretationCandidate interpretation, string currentUserMessage)
+    public VerifiedPlanningContext Verify(InterpretationCandidate interpretation, string currentUserMessage) =>
+        Verify(interpretation, new EvidenceVerificationContext(
+            currentUserMessage,
+            new Dictionary<string, PlanningReferenceTarget>()));
+
+    public VerifiedPlanningContext Verify(
+        InterpretationCandidate interpretation,
+        EvidenceVerificationContext context)
     {
+        var currentUserMessage = context.CurrentUserMessage;
         var issues = new List<EvidenceIssue>();
         var verifiedItems = new List<VerifiedPlanningItem>();
         var verifiedConstraints = new List<VerifiedConstraint>();
+        var verifiedReferences = new List<VerifiedPlanningReference>();
         var submittedClaims = 0;
         var verifiedDispositionClaims = 0;
         VerifiedActionRequest? verifiedActionRequest = null;
@@ -103,7 +114,7 @@ public sealed class EvidenceGuard : IEvidenceGuard
             if (interpretation.ActionRequest.Kind != ActionRequestKind.None)
                 submittedClaims++;
             verifiedActionRequest = VerifyActionRequest(
-                interpretation.ActionRequest, currentUserMessage, issues, ref verifiedDispositionClaims);
+                interpretation.ActionRequest, context, issues, ref verifiedDispositionClaims);
         }
 
         if (interpretation.SupportRequest is not null)
@@ -112,6 +123,34 @@ public sealed class EvidenceGuard : IEvidenceGuard
                 submittedClaims++;
             verifiedSupportRequest = VerifySupportRequest(
                 interpretation.SupportRequest, currentUserMessage, issues, ref verifiedDispositionClaims);
+        }
+
+        foreach (var reference in interpretation.PlanningReferences ?? [])
+        {
+            submittedClaims++;
+            if (!TryVerifyCurrentMessageQuote(reference.Evidence, currentUserMessage, issues, out var quote)
+                || !context.PlanningReferences.TryGetValue(reference.ReferenceKey, out var target))
+            {
+                if (!context.PlanningReferences.ContainsKey(reference.ReferenceKey))
+                    issues.Add(EvidenceIssue.InvalidPlanningReference);
+                continue;
+            }
+
+            var existing = verifiedReferences.FirstOrDefault(item => item.ItemId == target.ItemId);
+            if (existing is not null && existing.Kind != reference.Kind)
+            {
+                issues.Add(EvidenceIssue.ConflictingPlanningReference);
+                continue;
+            }
+
+            if (existing is null)
+            {
+                verifiedReferences.Add(new VerifiedPlanningReference(
+                    target.ItemId,
+                    reference.Kind,
+                    quote!));
+                verifiedDispositionClaims++;
+            }
         }
 
         return new VerifiedPlanningContext(
@@ -123,23 +162,40 @@ public sealed class EvidenceGuard : IEvidenceGuard
                 verifiedItems.Count + verifiedConstraints.Count + verifiedDispositionClaims,
                 issues),
             verifiedActionRequest,
-            verifiedSupportRequest);
+            verifiedSupportRequest,
+            verifiedReferences);
     }
 
     private static VerifiedActionRequest? VerifyActionRequest(
         ActionRequestCandidate candidate,
-        string currentUserMessage,
+        EvidenceVerificationContext context,
         List<EvidenceIssue> issues,
         ref int verifiedClaims)
     {
         if (candidate.Kind == ActionRequestKind.None)
             return new VerifiedActionRequest(ActionRequestKind.None, null);
 
-        if (!TryVerifyQuote(candidate.Evidence, currentUserMessage, issues, out var quote))
+        var strictReference = candidate.Kind == ActionRequestKind.ReferencedInstruction;
+        var quoteVerified = strictReference
+            ? TryVerifyCurrentMessageQuote(candidate.Evidence, context.CurrentUserMessage, issues, out var quote)
+            : TryVerifyQuote(candidate.Evidence, context.CurrentUserMessage, issues, out quote);
+        if (!quoteVerified)
             return null;
 
+        Guid? referencedItemId = null;
+        if (strictReference)
+        {
+            if (string.IsNullOrWhiteSpace(candidate.ReferencedItemKey)
+                || !context.PlanningReferences.TryGetValue(candidate.ReferencedItemKey, out var target))
+            {
+                issues.Add(EvidenceIssue.InvalidPlanningReference);
+                return null;
+            }
+            referencedItemId = target.ItemId;
+        }
+
         verifiedClaims++;
-        return new VerifiedActionRequest(candidate.Kind, quote);
+        return new VerifiedActionRequest(candidate.Kind, quote, referencedItemId);
     }
 
     private static VerifiedSupportRequest? VerifySupportRequest(
@@ -177,6 +233,28 @@ public sealed class EvidenceGuard : IEvidenceGuard
         //     issues.Add(EvidenceIssue.QuoteNotFound);
         //     return false;
         // }
+
+        return true;
+    }
+
+    private static bool TryVerifyCurrentMessageQuote(
+        EvidenceReference? evidence,
+        string currentUserMessage,
+        List<EvidenceIssue> issues,
+        out string? quote)
+    {
+        quote = evidence?.Quote?.Trim();
+        if (string.IsNullOrWhiteSpace(quote))
+        {
+            issues.Add(EvidenceIssue.MissingQuote);
+            return false;
+        }
+
+        if (!ContainsQuote(currentUserMessage, quote))
+        {
+            issues.Add(EvidenceIssue.QuoteNotFound);
+            return false;
+        }
 
         return true;
     }

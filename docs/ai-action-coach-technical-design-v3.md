@@ -1,7 +1,7 @@
 # Blotz AI 2.0 - AI Action Coach 技术方案 v3
 
 > 状态：Reviewed design draft（当前原型与目标契约分开记录）
-> 最近审查：2026-09-18；同步 `38e8b80e`（Planning Authority 改名与版本）和 `64faf4fb`（模型修改待确认卡片，schema 5），见 1.1.3；其他目标能力仍按实施范围区分
+> 最近审查：2026-09-19；Clarify 内存实现与 schema 6 见 1.1.4；其他目标能力仍按实施范围区分
 > 创建日期：2026-08-24
 > 方案名称：受 Policy 控制的单 Turn Runtime（Policy-Governed Single-Turn Runtime）
 > 文档用途：定义 AI Action Coach 的单轮模型执行、对话策略控制、ProposalSet 生命周期和正式 Task 提交边界
@@ -101,6 +101,20 @@
 - Kernel 的 Confirm Handler 去掉了通用的 `AllowedActions.Contains(action)` 检查，只保留「`start_now` 仅限单任务卡」；`ConfirmDraft` 在 DraftId 与当前卡不符时统一返回 `DraftNotFound`（版本不符仍为 `StaleDraftVersion`）。见 18 节。
 
 验证记录：本次只修改文档，未运行构建、测试或真实模型评估。`64faf4fb` 新增确定性测试 11 项（`ProposalSetMutationHandlerTests` 5、`ProposalSetMutationPolicyTests` 3、`ProposalSetMutationKernelTests` 3），其通过情况以交付说明为准；覆盖缺口见 24.1。
+
+### 1.1.4 Clarify 内存实现（2026-09-19）
+
+本节更新当前行为；1.1–1.1.3 保留为历史基线。Clarify 已按当前原型范围在 API 与移动端注册，和 Execution、Companion 一样只使用进程内会话状态，没有新增数据表、EF 实体或迁移，也不承诺进程重启后的会话恢复。
+
+- 三种模式的模型契约升到 schema 6。活动 PlanningIntent 中的规划材料以本轮临时键投影给模型；模型可将当前用户消息中的选择、拒绝或替换指向这些键。服务端只接受属于当前活动 Intent 和当前 Effect 的键，不向模型暴露服务端 Id。
+- Clarify 的确定性边界保持最小：结构化回复每轮最多一个问题；每个活动 PlanningIntent 最多提出两个规划澄清问题；用户明确请求规划、行动或委托时允许生成 ProposalSet；此外，Goal、当前状态和 Topic 均已知，或两次澄清已经用尽且仍有有效规划材料时，也允许生成待确认的暂定 ProposalSet。引用必须落在当前活动规划上下文。
+- 两次澄清是上限而非提问目标。模型自行判断是否需要问、问什么，以及何时更早总结或给建议；没有固定问题顺序。达到上限后停止追问，并只使用已经验证的规划材料和 Planning Authority 明确开放的安全假设生成暂定方案；没有任何有效规划材料时仍不得凭空造目标。
+- 两条产品规则由类型化接口集中表达：`DraftContextPolicy.TargetScopeAndGrounding` 表示 Goal + CurrentState + Topic 可形成草案；`ClarificationExhaustionBehavior.RequireTentativeProposal` 表示澄清耗尽后的行为。`PlanningContextEvaluator` 把材料归约为 Target、Scope、Grounding 和 `PlanningContextReadiness`；`PlanningAuthority` 输出 `ProposalDisposition`（Forbidden / Optional / Required）与 `ClarificationDisposition`。原因码只用于诊断，Post-Policy 不再依赖 `ClarificationLimitReached` 控制流程。
+- Clarify 复用共享的 Pre-Policy、Evidence Guard、Planning Authority、Post-Policy、确定性 Proposal Generator、ProposalSet Mutation Handler 与 Kernel；Runtime 没有增加 Clarify 专用产品分支。普通建议可以保留规划材料，但建议本身不等于 ProposalSet 授权。存在 Pending 卡片时，用户明确提出增、改、删要求可由模型生成原子修改候选；歧义请求只澄清，不部分应用。
+- 相同主题的重复问题仍计入两次上限，防止通过复用 topic 标签绕过预算。被拒绝或取代的规划材料不进入后续确定性 Proposal 生成；明确选择某项后，仅选择项参与生成。
+- 当前版本（以代码 `AiCoachModeDefinition.cs` 为准）：Clarify rules / prompts / policy 为 v4，planning 为 v3，toolset / memory 为 v1，Proposal generation 复用 Execution v2；三种模式 `ModelContractSchemaVersion = 6`。
+
+验证记录：Clarify 的 17 项定向测试通过，覆盖模式注册与内存策略、两问上限、上下文完整时的 Proposal 授权、澄清上限优先于可选草案并强制转入暂定 Proposal、空材料不得出卡、Pending 卡片自动修改策略、建议材料保留、当前 Intent 引用和 schema 6 解析；API 项目构建通过。完整旧 AiCoach 测试集的结果需以当前交付说明为准；真实模型表达质量仍需后续多轮行为评估。
 
 ### 1.2 文档解释规则
 
@@ -461,7 +475,7 @@ Collecting -> ReadyForProposal -> ProposalPending -> Completed
 
 “先别问”只限制问题，不自动禁止观点、建议或所有后续交流；“别给建议”不自动等于禁止提问；“你觉得怎么办”允许本轮建议，不把会话永久改成 Advice 模式。暂停后用户主动发出新请求可恢复本轮回应，已有持续限制按其作用域保留。当前单一 SupportRequestKind 无法表示组合偏好时，下次 Contract 演进使用正交的回应约束集合，不能靠枚举不断组合。
 
-规划澄清预算以 Intent + 问题目标计数，只在问题成功提交后消耗，失败/重试不重复计数。Execute 默认 1、Clarify 目标默认 3，是交互上限而非必须问满。普通 GentleQuestion 不消耗规划预算，也不能绕过预算继续索要同一规划字段。用户主动改变目标可开新 Intent；仅改写问题不得重置额度。用户主动要求核对冲突信息时允许必要核对，但不能因为额度用尽而猜测授权或冲突约束。
+规划澄清预算以 Intent + 问题目标计数，只在问题成功提交后消耗，失败/重试不重复计数。Execute 默认 1、Clarify 默认 2，是交互上限而非必须问满。普通 GentleQuestion 不消耗规划预算，也不能绕过预算继续索要同一规划字段。用户主动改变目标可开新 Intent；仅改写问题不得重置额度。Clarify 达到两次上限后停止追问；只要仍有有效规划材料，可以使用明确开放的 CoachDecomposition、DefaultDuration 和 NextAvailableSlot 形成待确认暂定方案，但不得猜测或覆盖用户的拒绝、冲突约束和空缺目标。
 
 ## 7. 单 Turn 执行流程
 
@@ -1100,18 +1114,19 @@ AskGentleQuestion -> UpdateProposalSet
 
 ## 13. 策略决策矩阵
 
-> 当前实现（2026-09-16，`38e8b80e`）：Calculator 已改名为 `PlanningAuthorityCalculator`，输出 `PlanningAuthority`：
+> 当前实现（2026-09-19）：`PlanningAuthorityCalculator` 输出类型化 `PlanningAuthority`：
 >
 > ```csharp
 > public sealed record PlanningAuthority(
 >     bool IsBlocked,
->     bool CanGenerateProposal,
->     bool CanAskClarifyingQuestion,
+>     ProposalDisposition Proposal,
+>     ClarificationDisposition Clarification,
+>     PlanningContextReadiness ContextReadiness,
 >     IReadOnlyList<PlanningAuthorityReason> Reasons,
->     IReadOnlyList<AllowedAssumption> AllowedAssumptions);   // CanAdvancePlanning = 后两者之一为 true
+>     IReadOnlyList<AllowedAssumption> AllowedAssumptions);
 > ```
 >
-> 与下方五档 Readiness 的对应关系：`Blocked` → `IsBlocked`；`ReadyForProposal` → `CanGenerateProposal`；`ReadyForClarification` 及「有额度可澄清」→ `CanAskClarifyingQuestion`（当前只看是否存在未回答的 OpenQuestion）；`Insufficient` → 三者皆 `false`；`ReadyForSuggestion` / `OfferSuggestion` 不再存在，给建议属于普通对话，不需要授权。新增原因 `ExplicitPlanningRequestAuthorized`：Policy 允许分解时，明确的规划请求与委托同样可授权生成 Proposal。`IsBlocked` 使 `ActivePlanningIntent` 进入 `Abandoned`，`CanGenerateProposal` 使其进入 `ReadyForProposal`。下方的档位表保留为目标准备度基线和 Clarify 设计参考。
+> `CanGenerateProposal` 与 `CanAskClarifyingQuestion` 保留为从上述枚举推导的便利属性，不再是独立决策源。`Proposal.Required` 表示本轮必须进入 Proposal 修正路径；Post-Policy 不检查形成该结论的具体 `Reasons`。`IsBlocked` 使 `ActivePlanningIntent` 进入 `Abandoned`，非 Forbidden Proposal 使其进入 `ReadyForProposal`。下方档位表保留为历史设计参考。
 
 在 Post-Policy 之前，`PlanningReadinessCalculator`（现 `PlanningAuthorityCalculator`）先把已验证材料归约为统一决策：
 
@@ -1303,8 +1318,10 @@ Planning Readiness 不依赖 ProposalCandidate 是否已经合法，否则会形
 | Clarify | `Conversing` / `ActionPreparing` | 无明确行动意愿或目标不清 | `ContinueListening`、`AskGentleQuestion` 或 `AskClarifyingQuestion` | 否 | 继续表达、回答问题 |
 | Clarify | `ActionPreparing` + 多个 GoalCandidate | 用户未选择优先级 | `AskUserToChooseGoal` | 否 | 选择一个目标 |
 | Clarify | `ActionPreparing` + 单一目标 | 用户明确请求规划、明确切换到行动或委托 Coach，且 Proposal 合法 | `ShowProposalSet` | 是 | 编辑、Confirm、Reject |
-| Clarify | `ActionPreparing` + 单一目标 | 用户无法继续澄清，但没有明确规划请求或委托 | `ContinueListening`，回复中提供简短 Suggestion | 否 | 继续表达、接受或修正建议 |
-| Clarify | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet`（目标；当前 Clarify 的 `AllowsModelProposalSetUpdates = false`，未开放） | 更新当前 Set | 编辑、Confirm、Reject |
+| Clarify | `ActionPreparing` + Goal、当前状态 Constraint 和 Topic/Domain 均已验证 | 上下文已完整且 Proposal 合法 | `ShowProposalSet` | 是，待确认 | 编辑、Confirm、Reject |
+| Clarify | `ActionPreparing` + 已有有效规划材料 | 两次规划澄清均已提交 | `ShowProposalSet`，使用已开放的安全假设形成暂定方案 | 是，待确认 | 编辑、Confirm、Reject |
+| Clarify | `ActionPreparing` | 两次澄清用尽但没有任何有效规划材料 | `ContinueListening`，说明无法安全形成草案 | 否 | 补充新目标或自然停止 |
+| Clarify | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal | `UpdateProposalSet`（当前 `AllowsModelProposalSetUpdates = true`） | 更新当前 Set | 编辑、Confirm、Reject |
 | Companion | `Conversing`，无明确直接行动指令 | 情绪表达、模糊愿望或模型推断 | `ContinueListening` 或 `AskGentleQuestion` | 否 | 继续陪伴 |
 | Companion | `Conversing`，当前消息有直接行动指令，或明确规划请求且存在已验证 Goal | Action 或授权的 Goal 分解通过 Planning Authority + Proposal 合法 | `ShowProposalSet` | 是，创建 Pending Set | 编辑、Confirm、Reject |
 | Companion | `ActionPending` + `HasPendingProposalSet` | 用户修改当前 Proposal（已实现，规则同 Execute 两行） | `UpdateProposalSet`；有歧义时 `AskClarifyingQuestion` | 更新当前 Set | 编辑、Confirm、Reject |
@@ -3274,7 +3291,7 @@ Companion 创建 ProposalSet 后仍必须等待 User Confirm，不得创建正�
 | --- | --- |
 | “明早慢跑半小时”，模型概括为“跑步” | 原文 Quote 真实即可通过来源校验；Text 是模型解释，不宣称被用户确认 |
 | 请求观点、暂停或只听的同义改写与其他语言 | 不靠关键词白名单判定；验证来源并评估模型的含义与作用域解释 |
-| 材料可生成草案，模型提出必要澄清 | 预算可用时接受问题；预算耗尽时修正普通回应，不强制出卡 |
+| Clarify 材料可生成草案，模型提出必要澄清 | 预算可用时接受问题；两次预算耗尽且仍有有效材料时停止追问并形成待确认暂定草案 |
 | Companion 无明确偏好，模型给出有用观点或建议 | 不因默认倾听而重生成；明确拒绝建议时仍尊重限制 |
 | 上轮已问，本轮还需一个必要问题 | 不因节奏规则触发修正；机械重复由行为评估识别 |
 | 默认生成器正文超过响应长度 | 拒绝整个 Turn，不提交卡片、正文或偏好的一部分 |
@@ -3297,7 +3314,7 @@ Companion 创建 ProposalSet 后仍必须等待 User Confirm，不得创建正�
 
 ## 25. 待确认问题
 
-本次审查已给出的设计默认值不再作为反复阻塞实现的问题：每 Turn 最多一个聚焦问题；Execute 规划澄清默认 1、Clarify 目标默认 3；CannotProvide 不自动授权；草案上限当前为 10 但宽泛目标默认只建议一个起点；模型输出提交后整体显示；生成中第二条消息明确冲突且保留输入；Mode 固定但当前请求可以改变回应方式。它们可在行为评估后版本化调整。
+本次审查已给出的设计默认值不再作为反复阻塞实现的问题：每 Turn 最多一个聚焦问题；Execute 规划澄清默认 1、Clarify 默认 2；Goal + 当前状态 + Topic 已知时允许待确认草案；Clarify 两次澄清用尽且仍有有效规划材料时停止追问并生成暂定草案；CannotProvide 本身不单独授权，空材料仍不得出卡；草案上限当前为 10；模型输出提交后整体显示；生成中第二条消息明确冲突且保留输入；Mode 固定但当前请求可以改变回应方式。它们可在行为评估后版本化调整。
 
 后续到达相应实施阶段时再决定：
 

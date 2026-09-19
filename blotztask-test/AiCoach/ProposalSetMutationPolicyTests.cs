@@ -139,7 +139,13 @@ public class ProposalSetMutationPolicyTests
         new VerifiedPlanningContext(
             [], [], UserTurnDisposition.NotApplicable,
             new EvidenceSummary(0, 0, [])),
-        new PlanningAuthority(false, false, false, [], []),
+        new PlanningAuthority(
+            false,
+            ProposalDisposition.Forbidden,
+            ClarificationDisposition.NotAllowed,
+            PlanningContextReadiness.Insufficient,
+            [],
+            []),
         Support: null,
         ProposalMutation: verdict);
 

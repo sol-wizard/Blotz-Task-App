@@ -18,7 +18,7 @@ namespace BlotzTask.Modules.AiCoach.Ai.Contracts;
 /// </summary>
 public static class ModelTurnCandidateContract
 {
-    public const int SchemaVersion = 5;
+    public const int SchemaVersion = 6;
 
     public const string ResponseFormatName = "model_turn_candidate";
 
@@ -44,7 +44,8 @@ public static class ModelTurnCandidateContract
                 additionalProperties = false,
                 required = new[]
                 {
-                    "intent", "planningItems", "constraints", "disposition", "actionRequest", "supportRequest",
+                    "intent", "planningItems", "constraints", "planningReferences", "disposition",
+                    "actionRequest", "supportRequest",
                 },
                 properties = new
                 {
@@ -108,6 +109,33 @@ public static class ModelTurnCandidateContract
                             },
                         },
                     },
+                    planningReferences = new
+                    {
+                        type = "array",
+                        description = "Select, reject, or supersede an active retained planning item using only ephemeral planning_item_N keys from the current turn frame. Use an empty array when the current message does not refer to a retained item.",
+                        items = new
+                        {
+                            type = "object",
+                            additionalProperties = false,
+                            required = new[] { "referenceKey", "kind", "evidence" },
+                            properties = new
+                            {
+                                referenceKey = new { type = "string" },
+                                kind = new
+                                {
+                                    type = "string",
+                                    @enum = new[] { "selected", "rejected", "superseded" },
+                                },
+                                evidence = new
+                                {
+                                    type = "object",
+                                    additionalProperties = false,
+                                    required = new[] { "quote" },
+                                    properties = new { quote = new { type = "string" } },
+                                },
+                            },
+                        },
+                    },
                     disposition = new
                     {
                         type = "object",
@@ -136,7 +164,8 @@ public static class ModelTurnCandidateContract
                             "none", "action_mention", "advice_request", "explicit_planning_request",
                             "direct_instruction", "referenced_instruction",
                         },
-                        "How the CURRENT message relates to action. Interpret the request; the server determines whether a proposal is allowed."),
+                        "How the CURRENT message relates to action. Interpret the request; the server determines whether a proposal is allowed.",
+                        includeReferencedItemKey: true),
                     supportRequest = new
                     {
                         type = "object", additionalProperties = false,
@@ -514,9 +543,22 @@ public static class ModelTurnCandidateContract
                 ? null
                 : new EvidenceReference(dto.Interpretation.Disposition.Evidence.Quote?.Trim() ?? string.Empty));
 
+        var planningReferences = dto.Interpretation.PlanningReferences?
+            .Select(reference => new PlanningReferenceCandidate(
+                reference.ReferenceKey?.Trim() ?? string.Empty,
+                reference.Kind switch
+                {
+                    "rejected" => PlanningReferenceKind.Rejected,
+                    "superseded" => PlanningReferenceKind.Superseded,
+                    _ => PlanningReferenceKind.Selected,
+                },
+                new EvidenceReference(reference.Evidence?.Quote?.Trim() ?? string.Empty)))
+            .ToList() ?? [];
+
         var actionRequest = new ActionRequestCandidate(
             ParseActionRequest(dto.Interpretation.ActionRequest?.Kind),
-            ToEvidence(dto.Interpretation.ActionRequest?.Evidence));
+            ToEvidence(dto.Interpretation.ActionRequest?.Evidence),
+            dto.Interpretation.ActionRequest?.ReferencedItemKey?.Trim());
         var supportRequest = new SupportRequestCandidate(
             ParseSupportRequest(dto.Interpretation.SupportRequest?.Kind),
             ToEvidence(dto.Interpretation.SupportRequest?.Evidence),
@@ -525,7 +567,8 @@ public static class ModelTurnCandidateContract
 
         return ParseResult.Success(new ModelTurnCandidate(
             new InterpretationCandidate(
-                intent, planningItems, constraints, dispositionCandidate, actionRequest, supportRequest),
+                intent, planningItems, constraints, dispositionCandidate, actionRequest, supportRequest,
+                planningReferences),
             strategy.Value,
             response,
             proposalSet,
@@ -533,11 +576,16 @@ public static class ModelTurnCandidateContract
             proposalSetMutation));
     }
 
-    private static object EvidenceKindSchema(string[] kinds, string description) => new
+    private static object EvidenceKindSchema(
+        string[] kinds,
+        string description,
+        bool includeReferencedItemKey = false) => new
     {
         type = "object",
         additionalProperties = false,
-        required = new[] { "kind", "evidence" },
+        required = includeReferencedItemKey
+            ? new[] { "kind", "evidence", "referencedItemKey" }
+            : new[] { "kind", "evidence" },
         properties = new
         {
             kind = new { type = "string", @enum = kinds },
@@ -547,6 +595,11 @@ public static class ModelTurnCandidateContract
                 additionalProperties = false,
                 required = new[] { "quote" },
                 properties = new { quote = new { type = "string" } },
+            },
+            referencedItemKey = new
+            {
+                type = new[] { "string", "null" },
+                description = "Required only for referenced_instruction; use a planning_item_N key from the current turn frame. Null otherwise.",
             },
         },
         description,
@@ -783,6 +836,7 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("intent")] public string? Intent { get; init; }
         [JsonPropertyName("planningItems")] public List<PlanningItemJson>? PlanningItems { get; init; }
         [JsonPropertyName("constraints")] public List<ConstraintJson>? Constraints { get; init; }
+        [JsonPropertyName("planningReferences")] public List<PlanningReferenceJson>? PlanningReferences { get; init; }
         [JsonPropertyName("disposition")] public DispositionJson? Disposition { get; init; }
         [JsonPropertyName("actionRequest")] public EvidenceKindJson? ActionRequest { get; init; }
         [JsonPropertyName("supportRequest")] public EvidenceKindJson? SupportRequest { get; init; }
@@ -798,6 +852,13 @@ public static class ModelTurnCandidateContract
     private sealed class ConstraintJson
     {
         [JsonPropertyName("text")] public string? Text { get; init; }
+        [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
+    }
+
+    private sealed class PlanningReferenceJson
+    {
+        [JsonPropertyName("referenceKey")] public string? ReferenceKey { get; init; }
+        [JsonPropertyName("kind")] public string? Kind { get; init; }
         [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
     }
 
@@ -817,6 +878,7 @@ public static class ModelTurnCandidateContract
         [JsonPropertyName("scope")] public string? Scope { get; init; }
         [JsonPropertyName("kind")] public string? Kind { get; init; }
         [JsonPropertyName("evidence")] public EvidenceJson? Evidence { get; init; }
+        [JsonPropertyName("referencedItemKey")] public string? ReferencedItemKey { get; init; }
     }
 
     private sealed class ResponseJson

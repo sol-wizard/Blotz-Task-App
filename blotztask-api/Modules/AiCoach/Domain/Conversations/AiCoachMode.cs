@@ -1,8 +1,7 @@
 namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
 
 /// <summary>
-/// The three AI Coach working modes. Execution and Companion are currently registered;
-/// Clarify remains a policy-only definition until its own production dependencies are complete.
+/// The three registered AI Coach working modes.
 /// </summary>
 public enum AiCoachMode
 {

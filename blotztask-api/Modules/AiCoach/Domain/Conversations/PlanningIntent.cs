@@ -14,13 +14,24 @@ public sealed record ActivePlanningIntentSnapshot(
     IReadOnlyList<PlanningItemSnapshot> Items,
     IReadOnlyList<PlanningConstraintSnapshot> Constraints,
     PlanningIntentStatus Status,
-    IReadOnlySet<ClarificationTopic>? AskedTopics = null);
+    IReadOnlySet<ClarificationTopic>? AskedTopics = null,
+    int ClarificationAttempts = 0);
 
 public sealed record PlanningItemSnapshot(
     string Text,
     string EvidenceQuote,
     Guid SourceMessageId,
-    PlanningItemKind Kind = PlanningItemKind.Action);
+    PlanningItemKind Kind = PlanningItemKind.Action,
+    Guid ItemId = default,
+    PlanningItemStatus Status = PlanningItemStatus.Active);
+
+public enum PlanningItemStatus
+{
+    Active = 0,
+    Selected = 1,
+    Rejected = 2,
+    Superseded = 3,
+}
 
 public sealed record PlanningConstraintSnapshot(
     string Text,

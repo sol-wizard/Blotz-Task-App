@@ -4,6 +4,7 @@ using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Ai.Prompts;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Modes;
+using BlotzTask.Modules.AiCoach.Domain.Planning;
 using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
@@ -31,7 +32,8 @@ public sealed record ModelContextRequest(
 public sealed record ModelContext(
     string SystemPrompt,
     IReadOnlyList<GatewayMessage> Transcript,
-    PromptManifest Manifest);
+    PromptManifest Manifest,
+    IReadOnlyDictionary<string, PlanningReferenceTarget> PlanningReferences);
 
 public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) : IModelContextBuilder
 {
@@ -40,7 +42,8 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
         var prompt = promptAssembler.Assemble(new PromptAssemblyRequest(
             request.Snapshot.RuntimeVersions.PromptVersion, request.Snapshot.Mode, request.Snapshot.Phase));
 
-        var frame = RenderFrame(request);
+        var planningReferences = BuildPlanningReferences(request.Snapshot);
+        var frame = RenderFrame(request, planningReferences);
 
         var systemPrompt = string.Join(
             "\n\n",
@@ -55,10 +58,12 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
                 : new GatewayAssistantMessage(message.Content, []));
         }
 
-        return new ModelContext(systemPrompt, transcript, prompt.Manifest);
+        return new ModelContext(systemPrompt, transcript, prompt.Manifest, planningReferences);
     }
 
-    private static string RenderFrame(ModelContextRequest request)
+    private static string RenderFrame(
+        ModelContextRequest request,
+        IReadOnlyDictionary<string, PlanningReferenceTarget> planningReferences)
     {
         var snapshot = request.Snapshot;
         var envelope = request.Envelope;
@@ -101,7 +106,13 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
         {
             lines.Add("Active retained planning interpretations (not confirmed user facts): "
                       + JsonSerializer.Serialize(intent.Items.Select(item => new
-                      { item.Text, item.Kind, item.EvidenceQuote, item.SourceMessageId })));
+                      {
+                          ReferenceKey = planningReferences
+                              .FirstOrDefault(entry => entry.Value.ItemId == item.ItemId).Key,
+                          item.Text,
+                          item.Kind,
+                          item.Status,
+                      })));
             if (intent.Constraints.Count > 0)
             {
                 lines.Add("Active retained constraint interpretations: "
@@ -110,6 +121,8 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
             }
             if (intent.AskedTopics is { Count: > 0 })
                 lines.Add("Clarification slots already used: " + string.Join(", ", intent.AskedTopics));
+            lines.Add($"Clarification question budget: {intent.ClarificationAttempts}/{request.Mode.Policy.Planning.MaxClarificationAttempts} used. The limit is a ceiling, not a target.");
+            lines.Add("Planning reference keys are ephemeral for this model effect. Use planningReferences to select, reject, or supersede an active item; never copy historical wording into current-message evidence.");
         }
 
         if (snapshot.OpenQuestion is { } question)
@@ -141,5 +154,23 @@ public sealed class ModelContextBuilder(IModelPromptAssembler promptAssembler) :
         });
 
         return string.Join("\n", lines);
+    }
+
+    private static IReadOnlyDictionary<string, PlanningReferenceTarget> BuildPlanningReferences(
+        ConversationSnapshot snapshot)
+    {
+        if (snapshot.ActivePlanningIntent is not
+            { Status: PlanningIntentStatus.Collecting or PlanningIntentStatus.ReadyForProposal } intent)
+            return new Dictionary<string, PlanningReferenceTarget>();
+
+        return intent.Items
+            .Where(item => item.ItemId != Guid.Empty
+                           && item.Status is PlanningItemStatus.Active or PlanningItemStatus.Selected)
+            .Select((item, index) => new
+            {
+                Key = $"planning_item_{index + 1}",
+                Target = new PlanningReferenceTarget(intent.IntentId, item.ItemId),
+            })
+            .ToDictionary(entry => entry.Key, entry => entry.Target, StringComparer.Ordinal);
     }
 }

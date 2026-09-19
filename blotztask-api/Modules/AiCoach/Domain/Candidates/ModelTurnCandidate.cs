@@ -28,7 +28,8 @@ public sealed record InterpretationCandidate(
     IReadOnlyList<ConstraintCandidate>? Constraints = null,
     UserTurnDispositionCandidate? Disposition = null,
     ActionRequestCandidate? ActionRequest = null,
-    SupportRequestCandidate? SupportRequest = null);
+    SupportRequestCandidate? SupportRequest = null,
+    IReadOnlyList<PlanningReferenceCandidate>? PlanningReferences = null);
 
 /// <summary>A model-proposed item plus a literal quote used by Evidence Guard.</summary>
 public sealed record PlanningItemCandidate(
@@ -44,7 +45,20 @@ public sealed record EvidenceReference(string Quote);
 
 public sealed record ActionRequestCandidate(
     ActionRequestKind Kind,
-    EvidenceReference? Evidence);
+    EvidenceReference? Evidence,
+    string? ReferencedItemKey = null);
+
+public sealed record PlanningReferenceCandidate(
+    string ReferenceKey,
+    PlanningReferenceKind Kind,
+    EvidenceReference Evidence);
+
+public enum PlanningReferenceKind
+{
+    Selected = 0,
+    Rejected = 1,
+    Superseded = 2,
+}
 
 public enum ActionRequestKind
 {

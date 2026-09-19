@@ -63,7 +63,22 @@ public sealed record PlanningPolicyDefinition(
     bool AllowConservativeGoalProposal,
     bool AllowCoachDecomposition,
     bool AllowSafeDefaultsWhenClarificationUnavailable,
-    ProposalTriggerPolicy ProposalTrigger = ProposalTriggerPolicy.ActionAvailable);
+    ProposalTriggerPolicy ProposalTrigger = ProposalTriggerPolicy.ActionAvailable,
+    DraftContextPolicy DraftContext = DraftContextPolicy.ExplicitTriggerOnly,
+    ClarificationExhaustionBehavior ClarificationExhaustion =
+        ClarificationExhaustionBehavior.StopWithoutProposal);
+
+public enum DraftContextPolicy
+{
+    ExplicitTriggerOnly = 0,
+    TargetScopeAndGrounding = 1,
+}
+
+public enum ClarificationExhaustionBehavior
+{
+    StopWithoutProposal = 0,
+    RequireTentativeProposal = 1,
+}
 
 public enum ProposalTriggerPolicy
 {
@@ -133,7 +148,7 @@ public static class ExecutionModeDefinition
         PromptVersion: "execution-prompts-v11",
         ToolsetVersion: "execution-toolset-v3",
         MemoryProfileVersion: "execution-memory-v1",
-        ModelContractSchemaVersion: 5,
+        ModelContractSchemaVersion: 6,
         Policy: new ConversationPolicyDefinition(
             Version: "execution-policy-v6",
             MaxQuestionsPerTurn: 1,
@@ -158,39 +173,42 @@ public static class ExecutionModeDefinition
 }
 
 /// <summary>
-/// NOT registered in v1 — no prompt profile ships for it yet. The definition exists so the pure
-/// Post-Policy mode boundaries (v3 §24.1) are table-tested before the mode ever goes live.
+/// Clarify mode definition. It shares the in-memory conversation lifetime used by Execution.
 /// </summary>
 public static class ClarifyModeDefinition
 {
     public static AiCoachModeDefinition Create() => new(
         Mode: AiCoachMode.Clarify,
-        RuleVersion: "clarify-rules-v0",
-        PromptVersion: "clarify-prompts-v0",
-        ToolsetVersion: "clarify-toolset-v0",
-        MemoryProfileVersion: "clarify-memory-v0",
-        ModelContractSchemaVersion: 5,
+        RuleVersion: "clarification-rules-v4",
+        PromptVersion: "clarify-prompts-v4",
+        ToolsetVersion: "clarification-toolset-v1",
+        MemoryProfileVersion: "clarification-memory-v1",
+        ModelContractSchemaVersion: 6,
         Policy: new ConversationPolicyDefinition(
-            Version: "clarify-policy-v0",
+            Version: "clarification-policy-v4",
             MaxQuestionsPerTurn: 1,
             MaxProposalsPerSet: Proposals.ProposalSet.MaxProposals,
             MaxResponseLength: 1200,
             AllowsProposalCreation: true,
-            AllowsModelProposalSetUpdates: false,
+            AllowsModelProposalSetUpdates: true,
             AllowsPartialProposalConfirmation: true,
-            Planning: new PlanningPolicyDefinition("clarify-planning-v1", 1, false, true, true),
+            Planning: new PlanningPolicyDefinition(
+                "clarification-planning-v3", 2, false, true, false,
+                ProposalTriggerPolicy.ExplicitPlanningRequestOrDelegation,
+                DraftContextPolicy.TargetScopeAndGrounding,
+                ClarificationExhaustionBehavior.RequireTentativeProposal),
             ProposalGeneration: new ProposalGenerationPolicy(
-                "clarify-proposal-generation-v1", 30, 15, 15,
+                "execution-proposal-generation-v2", 30, 15, 15,
                 new TimeOnly(8, 0), new TimeOnly(21, 0), true)),
         SupportPolicy: null,
         TurnObjectives: new ModeTurnObjectives(
-            "Help the user clarify what matters without assuming action authorization.",
-            "Use the user's answer to refine the active planning intent.",
-            "Offer a proposal only when the Clarify trigger is explicitly satisfied.",
+            "Help the user clarify what matters and provide a tentative draft once goal, current state, and topic are known.",
+            "Use the user's answer to refine the active planning intent; follow the planning directive when clarification is exhausted.",
+            "Offer an editable, pending proposal whenever the planning directive permits or requires one.",
             "Discuss the current draft without creating a second one."),
         SupportedPhases: SharedPhases.All,
         AllowedReadOnlyCapabilities: new HashSet<string>(),
-        PersistencePolicy: ConversationPersistencePolicy.SingleActiveServerConversation);
+        PersistencePolicy: ConversationPersistencePolicy.InMemoryOnly);
 }
 
 /// <summary>
@@ -205,7 +223,7 @@ public static class CompanionModeDefinition
         PromptVersion: "companion-prompts-v8",
         ToolsetVersion: "companion-toolset-v1",
         MemoryProfileVersion: "companion-memory-v1",
-        ModelContractSchemaVersion: 5,
+        ModelContractSchemaVersion: 6,
         Policy: new ConversationPolicyDefinition(
             Version: "companion-policy-v8",
             MaxQuestionsPerTurn: 1,

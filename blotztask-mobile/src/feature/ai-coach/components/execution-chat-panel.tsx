@@ -42,7 +42,7 @@ interface ExecutionChatPanelProps {
 }
 
 /**
- * Shared Execution/Companion chat, living directly on AI Home (single-page per PM
+ * Shared AI Coach chat, living directly on AI Home (single-page per PM
  * decision 2026-08-22). The input bar is always on screen — grey until `enabled` — and the
  * transcript grows in place below the header, so picking a mode never feels like a page jump.
  * The draft card and every action button appear only when the server's snapshot allows them.

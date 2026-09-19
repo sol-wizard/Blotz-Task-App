@@ -12,7 +12,7 @@ export type ConversationActionWire =
   | "retry_confirm";
 
 /** Modes currently registered by the backend and exposed by the mobile client. */
-export type AvailableAiCoachMode = "Execution" | "Companion";
+export type AvailableAiCoachMode = "Execution" | "Clarify" | "Companion";
 
 export type ConversationStateWire =
   | "conversing"

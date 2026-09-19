@@ -68,4 +68,5 @@ public enum StrategyReasonCode
     ProposalMutationMissing = 17,
     ProposalMutationInvalid = 18,
     ProposalMutationNeedsClarification = 19,
+    RequiredProposalMissing = 20,
 }

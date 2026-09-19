@@ -244,7 +244,9 @@ public sealed class ModelTurnRuntime(
             var candidate = parsed.Candidate!;
 
             // ---- Evidence Guard -> Post-Policy ----
-            var verifiedPlanning = evidenceGuard.Verify(candidate.Interpretation, currentUserMessage);
+            var verifiedPlanning = evidenceGuard.Verify(
+                candidate.Interpretation,
+                new EvidenceVerificationContext(currentUserMessage, context.PlanningReferences));
             logger.LogInformation(
                 "AiCoach.EvidenceValidation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SubmittedClaims={SubmittedClaims} VerifiedClaims={VerifiedClaims} InvalidClaims={InvalidClaims} VerifiedItemCount={VerifiedItemCount} VerifiedConstraintCount={VerifiedConstraintCount} Disposition={Disposition} IssueCodes={IssueCodes} SubmittedPlanningItems={SubmittedPlanningItems} SubmittedConstraints={SubmittedConstraints} SubmittedDisposition={SubmittedDisposition} VerifiedPlanningItems={VerifiedPlanningItems} VerifiedConstraints={VerifiedConstraints}",
                 snapshot.ConversationId,
@@ -269,13 +271,14 @@ public sealed class ModelTurnRuntime(
                 verifiedPlanning,
                 request.Mode.Policy.Planning));
             logger.LogInformation(
-                "AiCoach.PlanningAuthority.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsBlocked={IsBlocked} CanGenerateProposal={CanGenerateProposal} CanAskClarifyingQuestion={CanAskClarifyingQuestion} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ActiveItemCount={ActiveItemCount} HasOpenQuestion={HasOpenQuestion}",
+                "AiCoach.PlanningAuthority.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsBlocked={IsBlocked} ProposalDisposition={ProposalDisposition} ClarificationDisposition={ClarificationDisposition} ContextReadiness={ContextReadiness} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ActiveItemCount={ActiveItemCount} HasOpenQuestion={HasOpenQuestion}",
                 snapshot.ConversationId,
                 request.EffectId,
                 iterations,
                 planningAuthority.IsBlocked,
-                planningAuthority.CanGenerateProposal,
-                planningAuthority.CanAskClarifyingQuestion,
+                planningAuthority.Proposal,
+                planningAuthority.Clarification,
+                planningAuthority.ContextReadiness,
                 string.Join(",", planningAuthority.Reasons),
                 string.Join(",", planningAuthority.AllowedAssumptions),
                 snapshot.ActivePlanningIntent?.Items.Count ?? 0,

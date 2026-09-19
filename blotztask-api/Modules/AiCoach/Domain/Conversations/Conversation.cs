@@ -198,6 +198,7 @@ public sealed class Conversation
                     AskedTopics = new HashSet<ClarificationTopic>(
                         (ActivePlanningIntent.AskedTopics ?? new HashSet<ClarificationTopic>())
                         .Append(m.Topic)),
+                    ClarificationAttempts = ActivePlanningIntent.ClarificationAttempts + 1,
                     Status = PlanningIntentStatus.Collecting,
                 };
                 break;

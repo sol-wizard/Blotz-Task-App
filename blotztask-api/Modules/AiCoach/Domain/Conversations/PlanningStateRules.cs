@@ -28,19 +28,31 @@ public static class PlanningStateRules
             return null;
 
         var current = ReusableIntent(snapshot, verifiedPlanning);
-        if (!proposalAccepted && !planningAuthority.CanAdvancePlanning)
+        var contributesPlanningMaterial = verifiedPlanning.Items.Count > 0
+                                          || verifiedPlanning.Constraints.Count > 0
+                                          || verifiedPlanning.Disposition is UserTurnDisposition.Answered
+                                              or UserTurnDisposition.CannotProvide
+                                              or UserTurnDisposition.DelegatedToCoach
+                                          || (verifiedPlanning.References?.Count ?? 0) > 0
+                                          || planningQuestion
+                                          || proposalAccepted;
+        if (mode == AiCoachMode.Clarify && !contributesPlanningMaterial)
+            return null;
+        if (mode != AiCoachMode.Clarify && !proposalAccepted && !planningAuthority.CanAdvancePlanning)
             return null;
         if (current is null && verifiedPlanning.Items.Count == 0 && !planningQuestion)
             return null;
 
         var intentId = current?.IntentId ?? Guid.NewGuid();
         var sourceItems = verifiedPlanning.Items;
-        var items = (current?.Items ?? [])
+        var currentItems = ApplyReferences(current?.Items ?? [], verifiedPlanning.References ?? []);
+        var items = currentItems
             .Concat(sourceItems.Select(item => new PlanningItemSnapshot(
                 item.Text,
                 item.EvidenceQuote,
                 currentMessageId.Value,
-                item.Kind)))
+                item.Kind,
+                Guid.NewGuid())))
             .GroupBy(item => item.Text, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.Last())
             .ToList();
@@ -62,7 +74,55 @@ public static class PlanningStateRules
                 current?.Status ?? PlanningIntentStatus.Collecting,
                 planningAuthority,
                 proposalAccepted),
-            current?.AskedTopics);
+            current?.AskedTopics,
+            current?.ClarificationAttempts ?? 0);
+    }
+
+    public static IReadOnlyList<PlanningItemSnapshot> EffectiveItems(
+        ActivePlanningIntentSnapshot intent,
+        IReadOnlyList<VerifiedPlanningReference>? references = null)
+    {
+        var referencedItems = ApplyReferences(intent.Items, references ?? []);
+        var viable = referencedItems
+            .Where(item => item.Status is PlanningItemStatus.Active or PlanningItemStatus.Selected)
+            .ToList();
+        var selected = viable.Where(item => item.Status == PlanningItemStatus.Selected).ToList();
+        return selected.Count > 0 ? selected : viable;
+    }
+
+    private static IReadOnlyList<PlanningItemSnapshot> ApplyReferences(
+        IReadOnlyList<PlanningItemSnapshot> items,
+        IReadOnlyList<VerifiedPlanningReference> references)
+    {
+        if (references.Count == 0)
+            return items;
+
+        var selectedIds = references
+            .Where(reference => reference.Kind == PlanningReferenceKind.Selected)
+            .Select(reference => reference.ItemId)
+            .ToHashSet();
+        var referenceByItem = references.ToDictionary(reference => reference.ItemId);
+
+        return items.Select(item =>
+        {
+            if (referenceByItem.TryGetValue(item.ItemId, out var reference))
+            {
+                return item with
+                {
+                    Status = reference.Kind switch
+                    {
+                        PlanningReferenceKind.Selected => PlanningItemStatus.Selected,
+                        PlanningReferenceKind.Rejected => PlanningItemStatus.Rejected,
+                        PlanningReferenceKind.Superseded => PlanningItemStatus.Superseded,
+                        _ => item.Status,
+                    },
+                };
+            }
+
+            return selectedIds.Count > 0 && item.Status == PlanningItemStatus.Selected
+                ? item with { Status = PlanningItemStatus.Active }
+                : item;
+        }).ToList();
     }
 
     // A reply to the active question may reuse its material. A new explicit request with
@@ -81,8 +141,18 @@ public static class PlanningStateRules
 
         // A current explicit planning request owns the turn even if the model also labels it as
         // an answer. With no new planning items, the active retained intent is its subject.
-        if (current.ActionRequest?.Kind == Candidates.ActionRequestKind.ExplicitPlanningRequest
+        if (current.ActionRequest?.Kind is (Candidates.ActionRequestKind.ExplicitPlanningRequest
+                or Candidates.ActionRequestKind.ReferencedInstruction)
             && current.Items.Count == 0)
+            return intent;
+
+        // A model may express an answer as new typed planning material without also labelling the
+        // turn disposition as Answered. Keep that material on the intent owning the open question
+        // rather than replacing the working context and losing previously established fields.
+        if (snapshot.OpenQuestion?.PlanningIntentId == intent.IntentId
+            && (current.Items.Count > 0
+                || current.Constraints.Count > 0
+                || (current.References?.Count ?? 0) > 0))
             return intent;
 
         if (current.Disposition is UserTurnDisposition.Answered or UserTurnDisposition.CannotProvide

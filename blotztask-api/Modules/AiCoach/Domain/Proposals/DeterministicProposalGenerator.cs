@@ -139,7 +139,9 @@ public sealed class DeterministicProposalGenerator : IDeterministicProposalGener
         var verified = context.VerifiedPlanning.Items
             .Select(item => new PlanningItemSource(item.Text, item.Kind));
         var activeIntent = PlanningStateRules.ReusableIntent(context.Snapshot, context.VerifiedPlanning);
-        var persisted = (activeIntent?.Items ?? [])
+        var persisted = (activeIntent is null
+                ? []
+                : PlanningStateRules.EffectiveItems(activeIntent, context.VerifiedPlanning.References))
             .Select(item => new PlanningItemSource(item.Text, item.Kind));
 
         return persisted.Concat(verified)

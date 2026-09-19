@@ -107,6 +107,14 @@ public sealed class ConversationPostPolicy : IConversationPostPolicy
                 context.Planning.AllowedAssumptions.ToHashSet());
         }
 
+        if (context.Planning.Proposal == ProposalDisposition.Required
+            && strategy != ConversationStrategy.ShowProposalSet
+            && context.Snapshot.CurrentProposalSet is not { IsOpen: true }
+            && envelope.AllowedStrategies.Contains(ConversationStrategy.ShowProposalSet))
+        {
+            return RegenerateProposal(context, StrategyReasonCode.RequiredProposalMissing);
+        }
+
         if (strategy == ConversationStrategy.ShowProposalSet
             && context.Snapshot.CurrentProposalSet is { IsOpen: true })
         {

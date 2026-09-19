@@ -1,6 +1,6 @@
 # AI Action Coach 架构治理与规则扩展指南
 
-> 状态：Reviewed design baseline（2026-09-14；两阶段规则精简已同步代码，其余目标不表示全部实现）
+> 状态：Reviewed design baseline（2026-09-19；Clarify 内存实现见技术方案 1.1.4，其余目标不表示全部实现）
 > 创建日期：2026-09-03  
 > 适用范围：`blotztask-api/Modules/AiCoach/`、相关客户端 Contract、相关测试和后续 AI Action Coach 功能开发  
 > 文档性质：后续 Agent 和开发者必须遵守的架构总约束与演进方案  
@@ -29,7 +29,7 @@
 
 本文中的硬约束约束实现权限与正确性；产品默认值允许通过版本化设计调整。本文不是要求当前原型一次性建设所有模块的清单。已有明确用户授权优先于本文的流程建议；普通局部变更不因文档措辞增加一轮审批。
 
-当前能力和差距统一记录于 [技术方案 1.1](ai-action-coach-technical-design-v3.md#11-审查基线与实施范围)。Execution 和 Companion 已在工作区注册，采用内存会话；Clarify、持久恢复、历史引用和独立 Safety 等不可描述为已全部实现。原型可以暂缺扩展能力，但不能承诺其尚不具备的保证。
+当前能力和差距统一记录于 [技术方案 1.1](ai-action-coach-technical-design-v3.md#11-审查基线与实施范围)。Execution、Clarify 和 Companion 均已在工作区注册并采用内存会话；Clarify 只实现当前活动 PlanningIntent 范围内的临时引用，不等于完整历史恢复。持久恢复、跨会话历史引用和独立 Safety 等仍不可描述为已实现。原型可以暂缺扩展能力，但不能承诺其尚不具备的保证。
 
 技术方案负责产品行为、会话状态和默认参数，本文负责规则归属与变更方法。两者冲突时先明确问题并修订唯一权威规则，不在代码中另设局部优先级。历史提交、示例和 proposed ADR 不应覆盖最新的明确会话契约。
 
@@ -45,6 +45,17 @@
 - 版本：执行 rules v7 / policy v5 / planning v3 / prompts v10；陪伴 rules v4 / policy v3 / planning v4 / support v3 / prompts v5。模型 schema 仍为 4。
 - 验证：对来源校验、接受/拒绝边界、统一修正预算和最终 fallback 校验做针对性验证；真实语言质量另用多轮对话评估，不用固定模型候选证明语义理解。
 - Rule Diff Budget：这是跨层纠偏而非新增单条产品规则，涉及 Evidence、Policy、Runtime、Prompt 和其配置，超出普通预算；各规则仍只有一个所有者，不增加 Kernel 产品分支或通用 Rule Engine。
+
+### 1.2 Clarify 暂定方案产品规则（2026-09-19）
+
+- 用户可见行为：Goal、当前状态和 Topic 均已知时可以形成待确认草案；同一活动 PlanningIntent 连续两次规划澄清后停止追问，有有效规划材料时形成暂定方案，没有材料时不得凭空造目标。
+- 规则归属：Planning Context Evaluator 只负责把已验证材料归约为 Target、Scope、Grounding 和 ContextReadiness；Planning Authority 根据版本化 Policy 生成 `ProposalDisposition`、`ClarificationDisposition` 和允许假设；Post-Policy 只消费这些稳定结论并独占最终 StrategyDecision，不读取 Planning 原因码控制流程；Prompt 只指导结构化表达和任务文案质量；Proposal Generator 独占默认时间补全。
+- 权威输入：ActivePlanningIntent、VerifiedPlanningContext、ClarificationAttempts、OpenQuestion 和版本化 Clarify Planning Policy。
+- 状态/协议：复用 schema 6、ActivePlanningIntent、Constraints 和 ClarificationAttempts；不新增持久化字段、模型字段、Kernel 状态或 Runtime 产品分支。Topic 使用 Domain item，用户陈述的当前状态使用 Constraint，目标使用 Goal item。上下文完整规则由 `DraftContextPolicy.TargetScopeAndGrounding` 表达，两轮耗尽行为由 `ClarificationExhaustionBehavior.RequireTentativeProposal` 表达，不增加场景布尔开关。
+- 优先级：安全、用户拒绝/暂停/修正、Evidence 有效性、Pending Artifact 生命周期高于此规则；该规则高于模型继续追问的建议。Proposal 只形成 Pending Artifact，仍需有效 Confirm Command 才能创建正式 Task。
+- Fallback：上下文不足且澄清预算仍可用时允许一个聚焦问题；两次用尽且有材料时允许 CoachDecomposition、DefaultDuration 和 NextAvailableSlot；空材料时 ContinueListening，不生成 Proposal。
+- 版本：Clarify rules / prompts / policy v4，planning v3；模型 schema 保持 6。
+- Rule Diff Budget：修改 Clarify 版本化 Policy、共享 Planning Authority Calculator、Post-Policy、Clarify Prompt 和定向验证，属于跨层产品规则调整；通过类型化决策收回先前分散的控制语义，不修改 Kernel、持久化模型或正式副作用边界。Runtime 只记录结构化决策，不拥有产品分支。
 
 ## 2. 总体原则
 

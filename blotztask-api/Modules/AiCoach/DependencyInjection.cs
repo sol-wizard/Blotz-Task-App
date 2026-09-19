@@ -39,6 +39,7 @@ public static class DependencyInjection
         {
             var registry = new ModeDefinitionRegistry();
             registry.Register(ExecutionModeDefinition.Create());
+            registry.Register(ClarifyModeDefinition.Create());
             // Product-approved deviation from v3 §17.4.9: Companion is reachable without the
             // proposed Safety layer. Do not describe this registration as safety-complete.
             registry.Register(CompanionModeDefinition.Create());
@@ -53,6 +54,7 @@ public static class DependencyInjection
             registry.Register(CompanionPromptModules.LegacyProfile);
             registry.Register(CompanionPromptModules.V4Profile);
             registry.Register(CompanionPromptModules.Profile);
+            registry.Register(ClarifyPromptModules.Profile);
             return registry;
         });
 
