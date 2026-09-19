@@ -84,6 +84,29 @@ public class TaskGenerationToolsTests
     }
 
     [Fact]
+    public async Task Handle_UpdateRecurringWithEmptyWeekdays_PreservesExistingWeekdays()
+    {
+        // Arrange
+        var tools = new TaskGenerationTools();
+        await tools.CreateRecurringTask(
+            "Gym", "Strength session", TaskTimeType.RangeTime, LabelNameEnum.Health,
+            new DateTime(2026, 8, 10, 7, 0, 0), new DateTime(2026, 8, 10, 8, 0, 0),
+            RecurrenceFrequency.Weekly, 1,
+            [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday], null, null);
+
+        // Act
+        var result = tools.UpdateRecurringTask("Gym", title: "Fitness", daysOfWeek: []);
+
+        // Assert
+        result.Should().Be("Recurring task updated.", because: "the recurring draft exists");
+        var updated = tools.RecurringTasks.Single();
+        updated.Title.Should().Be("Fitness", because: "the requested title change should still apply");
+        updated.DaysOfWeek.Should().Be(
+            (int)(WeeklyDayFlags.Monday | WeeklyDayFlags.Wednesday | WeeklyDayFlags.Friday),
+            because: "an empty array from the model means weekdays were omitted, not cleared");
+    }
+
+    [Fact]
     public async Task Handle_RemoveRecurringTask_PreservesSameTitledOneOffTask()
     {
         // Arrange

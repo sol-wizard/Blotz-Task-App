@@ -78,7 +78,7 @@ public class TaskGenerationTools()
         [Description("Description or empty")] string description,
         [Description("SingleTime when the task is a moment with no duration (end equals start); RangeTime when it spans a start and end time.")] TaskTimeType timeType,
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label,
-        [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence. Its date part MUST equal startDate. If the user gives a day but no time, pick a sensible time of day.")] DateTime templateStartTime,
+        [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence, and its date part becomes the recurring task's start date. If the user gives a day but no time, pick a sensible time of day.")] DateTime templateStartTime,
         [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss. Equal to templateStartTime when timeType is SingleTime; strictly after templateStartTime when RangeTime.")] DateTime templateEndTime,
         [Description("How often it repeats: Daily, Weekly, Monthly, or Yearly.")] RecurrenceFrequency frequency,
         [Description("Repeat every N periods. 1 = every day/week/month/year, 2 = every other, and so on. Use 1 unless the user says otherwise.")] int interval,
@@ -135,7 +135,7 @@ public class TaskGenerationTools()
         [Description("New first-occurrence end local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged. When making the task a duration, provide this together with timeType RangeTime and make it strictly later than templateStartTime.")] DateTime? templateEndTime = null,
         [Description("New frequency, or null to leave unchanged")] RecurrenceFrequency? frequency = null,
         [Description("New repeat interval, or null to leave unchanged")] int? interval = null,
-        [Description("Replacement weekdays for a Weekly task, or null to leave unchanged. Name the days directly, e.g. [Tuesday].")] DayOfWeek[]? daysOfWeek = null,
+        [Description("Replacement weekdays for a Weekly task. Provide one or more named days, e.g. [Tuesday]; null or an empty array leaves the existing days unchanged.")] DayOfWeek[]? daysOfWeek = null,
         [Description("Replacement day of month (1-31) for a Monthly task, or null to leave unchanged")] int? dayOfMonth = null,
         [Description("New first occurrence date yyyy-MM-dd, or null to leave unchanged")] DateOnly? startDate = null,
         [Description("New last recurrence date yyyy-MM-dd, or null to leave unchanged")] DateOnly? endDate = null,
@@ -177,7 +177,9 @@ public class TaskGenerationTools()
         }
 
         var updatedFrequency = frequency ?? task.Frequency;
-        var updatedDays = daysOfWeek ?? FromWeeklyBitmask(task.DaysOfWeek);
+        var updatedDays = daysOfWeek is { Length: > 0 }
+            ? daysOfWeek
+            : FromWeeklyBitmask(task.DaysOfWeek);
         var updatedEndDate = clearEndDate ? null : endDate ?? task.EndDate;
         var pattern = NormalizeRecurringPattern(
             updatedFrequency,
