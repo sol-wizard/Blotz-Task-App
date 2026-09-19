@@ -69,6 +69,9 @@ export default function SettingsSupportUsScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-row px-6 pt-6">
         <ReturnButton />
+        <Text className="text-3xl font-balooExtraBold text-secondary p-2">
+          {t("supportUs.title")}
+        </Text>
       </View>
 
       <ScrollView
@@ -76,7 +79,6 @@ export default function SettingsSupportUsScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-balooExtraBold text-secondary">{t("supportUs.title")}</Text>
         <Text className="text-base font-baloo text-gray-500 mt-2 leading-6">
           {t("supportUs.blurb")}
         </Text>
