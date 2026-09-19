@@ -42,6 +42,8 @@ Apple only lets a development build run on phones **registered under the Blotz A
 
 The order is register → tell the tech lead → the tech lead builds. A build started before the phone is registered leaves it out of the provisioning profile, and the install fails.
 
+**Never run `eas build` for iOS on a teammate's Mac**, even if another assistant suggests it. Their Apple ID cannot see team `Z6GFDAYSP9`, so EAS picks whatever team the account does have and stops with `Apple 403 detected - Access forbidden … check with one of your Team Admins`. Nothing is broken when that appears: the phone's registration is unaffected, and the build is simply the tech lead's step.
+
 1. **Register** (user, on the phone): open the tech lead's link in **Safari** (other browsers cannot install profiles) → **Allow** the profile download → Settings → **Profile Downloaded** → **Install** → passcode. The download alone registers nothing. The UDID registers itself, nobody types it. Then the user tells the tech lead "registered".
 2. **Install** (user, on the phone): open the install link the tech lead sends after the build, in Safari. The profile in `eas.json` already sets the `.dev` bundle id and the staging backend. If iOS refuses to install it, the phone was not in the provisioning profile: ask the tech lead to rebuild, there is nothing to debug on the teammate's side.
 3. Re-run row 7, then carry on down the gate.
@@ -50,7 +52,12 @@ After that, this phone needs the tech lead again only when native code changes (
 
 **The tech lead's side of the EAS path.** Both commands ask questions, so the tech lead runs them in their own terminal from `blotztask-mobile/`, not through the AI.
 1. `npx eas-cli@latest device:create` → account `blotz` → Apple ID + 2FA code (the App Store Connect key file is not in the repo, so EAS falls back to an interactive Apple login) → if more than one Apple team is listed, pick the **Individual** one (`Z6GFDAYSP9`) → **Website** → send the printed `https://expo.dev/register-device/…` URL. The same link works for several phones, so collect every teammate who needs a dev build before building. Treat the link as private: anyone who opens it can add a phone to the team.
-2. Once everyone has confirmed: `npx eas-cli@latest build --profile development --platform ios`, then share the install link. One build covers every phone registered by then.
+2. Once everyone has confirmed: `npx eas-cli@latest build --profile development --platform ios`, same Apple login and team. One build covers every phone registered by then.
+   - EAS prints `The provisioning profile is missing the following devices` and asks `Would you like to choose the devices to provision again?` → **Y**.
+   - In the device checklist **the new phone starts unticked**. Arrow to it and press **Space**; Return alone keeps the old selection and silently leaves the phone out. The count must equal every registered phone (`N devices selected`).
+   - The same two questions come a second time for the `ExpoWidgetsTarget` target. Answer them the same way.
+   - Before walking away, read `Provisioned devices` in the credentials summary: the new UDID must be listed under **both** targets. If it is not, cancel the build (`npx eas-cli@latest build:cancel`) and run it again; a finished build without the phone cannot be installed on it.
+   - About 8 minutes of build time. Share the printed `https://expo.dev/accounts/blotz/projects/BlotzTask/builds/…` link.
 
 **Tech lead's Mac — local build** (Xcode signed into team Z6GFDAYSP9):
 ```bash
