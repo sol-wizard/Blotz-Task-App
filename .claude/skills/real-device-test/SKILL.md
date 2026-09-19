@@ -79,6 +79,8 @@ xcrun devicectl device install app --device <CoreDevice id> \
 | **staging** — recommend for teammates and UI-only changes | nothing needed locally | `EXPO_PUBLIC_URL=https://app-blotz-task-api-stag.azurewebsites.net/ EXPO_PUBLIC_URL_WITH_API=https://app-blotz-task-api-stag.azurewebsites.net/api` |
 | **local** — cross-stack changes | API started with `--urls http://0.0.0.0:5027`, SQL container up | `EXPO_PUBLIC_URL=http://<Mac LAN IP>:5027 EXPO_PUBLIC_URL_WITH_API=http://<Mac LAN IP>:5027/api` |
 
+**Check which URL the bundle will really get before starting Metro.** The tracked `.env` points at `localhost`, and a teammate who has run the local API usually has a `.env.local` that does too. Metro bakes `EXPO_PUBLIC_*` into the bundle, so the staging URL in `eas.json` does nothing for a dev build, and on a first-time setup (2026-09-19) the inline variables above did not win over `.env.local` either. The dependable fix is to put the two staging lines in the git-ignored `blotztask-mobile/.env.local`, then restart Metro with `--clear`. Tell the user this also moves their simulator sessions to staging until they change it back. The symptom of getting it wrong is `AxiosError: Network Error` / `ERR_NETWORK` on requests to `http://localhost:5027/...` right after login.
+
 Detect: `lsof -nP -iTCP:5027 -sTCP:LISTEN` → if something is listening, offer local, otherwise recommend staging. The dev build allows plain HTTP to the LAN (`NSAllowsLocalNetworking`), so no ATS change is needed. Mac LAN IP: `ipconfig getifaddr en0`; phone and Mac must be on the same Wi-Fi.
 
 **Local backend + migrations:** a pull or branch switch can bring EF migrations the local DB has not applied — clear row 10 before blaming the app.
@@ -97,7 +99,7 @@ xcrun devicectl device process launch --device <CoreDevice id> --terminate-exist
 grep "iOS Bundled" /tmp/metro-8082.log     # proves the phone pulled the bundle from *this* Metro
 ```
 
-The dev client tries whatever is on 8081 first before honouring the URL; a stale bundle looks like `AxiosError: Network Error` on a Loading screen. Relaunch with the command above. Re-run the launch command whenever you need a cold start (persistence checks).
+The dev client tries whatever is on 8081 first before honouring the URL; a stale bundle looks like `AxiosError: Network Error` on a Loading screen. Check `lsof -nP -iTCP:8081 -sTCP:LISTEN`, stop a leftover Metro there (ask first if it may belong to a simulator session), then relaunch with the command above. Re-run the launch command whenever you need a cold start (persistence checks).
 
 ## 4. Drive the phone
 
