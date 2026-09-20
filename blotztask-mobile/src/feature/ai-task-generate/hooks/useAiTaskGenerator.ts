@@ -40,6 +40,7 @@ export function useAiTaskGenerator({
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
+  const isDismissedRef = useRef(false);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
@@ -57,6 +58,8 @@ export function useAiTaskGenerator({
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
     } catch (error) {
+      if (isDismissedRef.current) return;
+
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
@@ -85,6 +88,7 @@ export function useAiTaskGenerator({
     try {
       await signalRService.invoke(connection, "SendMessage", text);
     } catch (error) {
+      if (isDismissedRef.current) return;
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
@@ -245,6 +249,7 @@ export function useAiTaskGenerator({
       .catch((error) => console.error("Error connecting to SignalR:", error));
 
     return () => {
+      isDismissedRef.current = true;
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
         conn.off("ReceiveGenerationError", generationErrorHandler);

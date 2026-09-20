@@ -4,6 +4,7 @@ import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onbo
 import { OnboardingInviteSection } from "@/feature/onboarding/components/onboarding-invite-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { REDEEM_REFERRAL_CODE_MUTATION_KEY } from "@/feature/referral/hooks/useRedeemReferralCode";
+import { useVoiceCoachStore } from "@/feature/onboarding/hooks/useVoiceCoachStore";
 import { useWhatsNewSeen } from "@/feature/whats-new/hooks/useWhatsNewSeen";
 import { IntroCarousel, type CarouselExitOutcome } from "@/shared/components/intro-carousel";
 import type { OnboardingSection } from "@/shared/constants/posthog-events";
@@ -24,6 +25,7 @@ const SECTIONS = [
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
   const { markAsSeen } = useWhatsNewSeen();
+  const showVoiceCoach = useVoiceCoachStore((state) => state.show);
   const { t } = useTranslation("onboarding");
   useLanguageInit();
 
@@ -43,6 +45,8 @@ export default function OnboardingScreen() {
     analytics.trackOnboardingCompleted({ outcome, exit_section });
     await setUserOnboarded(true);
     await markAsSeen();
+    // Skipped or completed, the first thing in the app is a nudge to try voice for real.
+    showVoiceCoach();
     router.replace("/(protected)/(tabs)");
   };
 
