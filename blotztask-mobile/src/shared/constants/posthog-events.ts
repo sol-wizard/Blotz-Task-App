@@ -50,8 +50,8 @@ export const SCREEN_NAMES = {
   TASK_DETAILS: "TaskDetails",
 } as const;
 
-/** Which sign-in button was used. `sms` is only rendered outside production. */
-export type LoginConnection = "default" | "sms";
+/** Which sign-in button was used. Only the Auth0 Universal Login button exists today. */
+export type LoginConnection = "default";
 
 /**
  * Why a login attempt did not produce tokens.

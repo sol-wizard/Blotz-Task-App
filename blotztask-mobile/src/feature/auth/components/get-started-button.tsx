@@ -6,7 +6,6 @@ import { useAuth } from "@/shared/hooks/useAuth";
 import { updateUserProfile } from "@/shared/services/user-service";
 import { analytics } from "@/shared/services/analytics";
 import { toLoginErrorCode, toLoginFailureReason } from "@/feature/auth/utils/login-error-code";
-import type { LoginConnection } from "@/shared/constants/posthog-events";
 import { Pressable, Text, View } from "react-native";
 import {
   createAnimatedComponent,
@@ -26,16 +25,15 @@ export default function GetStartedButton() {
   const signingInRef = useRef(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  const signIn = async (connection?: string) => {
+  const signIn = async () => {
     // A second authorize() while one is open throws TRANSACTION_ACTIVE_ALREADY.
     if (signingInRef.current) return;
     signingInRef.current = true;
     setIsSigningIn(true);
 
-    const trackedConnection: LoginConnection = connection === "sms" ? "sms" : "default";
     const startedAt = Date.now();
 
-    analytics.trackLoginStarted({ connection: trackedConnection });
+    analytics.trackLoginStarted({ connection: "default" });
 
     try {
       // ephemeralSession skips the iOS "Wants to Use auth0.com to Sign In" alert, where most
@@ -44,7 +42,6 @@ export default function GetStartedButton() {
         {
           audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
           scope: "openid profile email offline_access",
-          connection,
         },
         { ephemeralSession: true },
       );
@@ -52,7 +49,7 @@ export default function GetStartedButton() {
       if (!result?.accessToken || !result?.refreshToken) {
         console.error("No access token received from Auth0");
         analytics.trackLoginFailed({
-          connection: trackedConnection,
+          connection: "default",
           reason: "no_tokens",
           errorCode: "NoTokensReturned",
           durationMs: Date.now() - startedAt,
@@ -63,7 +60,7 @@ export default function GetStartedButton() {
       // Tracked before the redirect so it lands on the same anonymous distinct_id as
       // `login_started`, keeping the whole funnel on one identity until `$identify`.
       analytics.trackLoginSucceeded({
-        connection: trackedConnection,
+        connection: "default",
         durationMs: Date.now() - startedAt,
       });
 
@@ -82,7 +79,7 @@ export default function GetStartedButton() {
       // what tells them apart.
       const errorCode = toLoginErrorCode(e);
       analytics.trackLoginFailed({
-        connection: trackedConnection,
+        connection: "default",
         reason: toLoginFailureReason(errorCode),
         errorCode,
         durationMs: Date.now() - startedAt,
@@ -93,24 +90,14 @@ export default function GetStartedButton() {
     }
   };
 
-  const showPhone = process.env.EXPO_PUBLIC_APP_ENV !== "production";
-
   return (
     <View style={{ gap: 12, width: "100%" }}>
       <PillButton
         label={t("buttons.continue")}
-        onPress={() => signIn()}
+        onPress={signIn}
         variant="primary"
         disabled={isSigningIn}
       />
-      {showPhone && (
-        <PillButton
-          label={t("buttons.continueWithPhone")}
-          onPress={() => signIn("sms")}
-          variant="secondary"
-          disabled={isSigningIn}
-        />
-      )}
     </View>
   );
 }
