@@ -105,7 +105,7 @@ public class ExecutionModeEvalTests(ITestOutputHelper output) : LiveEvalTestBase
         });
 
     [Fact]
-    public Task E7_DateCorrection_NoSecondCard_NotTreatedAsRejection() =>
+    public Task E7_DateCorrection_UpdatesTheSameCard_NotTreatedAsRejection() =>
         RunLiveCaseAsync(new AiCoachEvalCase("E7", "纠正日期约束", AiCoachMode.Execution,
         [
             new EvalTurn("帮我安排周一整理资料。",
@@ -115,14 +115,15 @@ public class ExecutionModeEvalTests(ITestOutputHelper output) : LiveEvalTestBase
                 MustAddress: [],
                 MustNotDo: [],
                 new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)),
-            // v1 keeps card edits client-local (AllowsModelProposalSetUpdates=false): the plan's
-            // "新方案使用周二" is not reachable; the contract here is no second card, no abandonment.
+            // Since 64faf4fb Execution has AllowsModelProposalSetUpdates=true, so the correction
+            // is applied to the SAME card (the plan's "新方案使用周二"). Still hard: exactly one
+            // card, never a second one, and never read as abandoning the whole plan.
             new EvalTurn("不是周一，改成周二。",
-                Strategies(ConversationStrategy.DiscussExistingProposal, ConversationStrategy.ContinueListening),
+                Strategies(ConversationStrategy.UpdateProposalSet, ConversationStrategy.DiscussExistingProposal),
                 QuestionExpectation.Forbidden,
-                ProposalExpectation.Forbidden,
+                new ProposalExpectation(ProposalPolicy.Allowed, MaxCount: 1),
                 MustAddress: ["用户想把安排改到周二"],
-                MustNotDo: ["把纠正理解为放弃整个安排", "声称已经改好或已保存"],
+                MustNotDo: ["把纠正理解为放弃整个安排", "声称已经改好或已保存", "再生成一张新的卡片"],
                 new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)),
         ]));
 

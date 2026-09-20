@@ -65,6 +65,7 @@ public sealed class AiCoachEvalHarness
         Mode = mode switch
         {
             AiCoachMode.Execution => ExecutionModeDefinition.Create(),
+            AiCoachMode.Clarify => ClarifyModeDefinition.Create(),
             AiCoachMode.Companion => CompanionModeDefinition.Create(),
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "Only registered modes can be evaluated."),
         };
@@ -195,8 +196,11 @@ public sealed class AiCoachEvalHarness
     {
         var prompts = new PromptModuleRegistry();
         prompts.Register(ExecutionPromptModules.Profile);
+        prompts.Register(ExecutionPromptModules.LegacyProfile);
         prompts.Register(CompanionPromptModules.LegacyProfile);
+        prompts.Register(CompanionPromptModules.V4Profile);
         prompts.Register(CompanionPromptModules.Profile);
+        prompts.Register(ClarifyPromptModules.Profile);
 
         return new ModelTurnRuntime(
             gateway,
@@ -204,7 +208,7 @@ public sealed class AiCoachEvalHarness
             new ConversationPrePolicy(),
             new ConversationPostPolicy(),
             new EvidenceGuard(),
-            new PlanningReadinessCalculator(),
+            new PlanningAuthorityCalculator(),
             new SupportPolicyCalculator(),
             new DeterministicProposalGenerator(),
             new ResponseGuard(),
@@ -299,8 +303,9 @@ public static class LiveModelGateway
 
 /// <summary>
 /// Builds raw model output JSON for the scripted layer, in the exact wire shape of
-/// ModelTurnCandidateContract (schema 4), so a scripted candidate goes through the same parser as
-/// a real one.
+/// ModelTurnCandidateContract (schema 6), so a scripted candidate goes through the same parser as
+/// a real one. Schema 6 adds interpretation.planningReferences and actionRequest.referencedItemKey
+/// (Clarify: selecting/rejecting a retained planning item by its ephemeral frame key).
 /// </summary>
 public static class Candidate
 {
@@ -322,7 +327,10 @@ public static class Candidate
         (string Kind, string? Quote)? disposition = null,
         (string Kind, string? Quote)? actionRequest = null,
         (string Kind, string? Quote, string Scope)? supportRequest = null,
-        object[]? proposals = null)
+        object[]? proposals = null,
+        object[]? planningReferences = null,
+        string? referencedItemKey = null,
+        object? proposalSetMutation = null)
     {
         return JsonSerializer.Serialize(new
         {
@@ -331,6 +339,7 @@ public static class Candidate
                 intent,
                 planningItems = planningItems ?? [],
                 constraints = constraints ?? [],
+                planningReferences = planningReferences ?? [],
                 disposition = new
                 {
                     kind = disposition?.Kind ?? "not_applicable",
@@ -340,6 +349,7 @@ public static class Candidate
                 {
                     kind = actionRequest?.Kind ?? "none",
                     evidence = Evidence(actionRequest?.Quote),
+                    referencedItemKey,
                 },
                 supportRequest = new
                 {
@@ -351,6 +361,7 @@ public static class Candidate
             suggestedAction,
             response = new { type = responseType, text, question, questionTopic, supportMove },
             proposalSet = proposals is null ? null : (object)new { proposals },
+            proposalSetMutation,
         }, Json);
     }
 
@@ -362,10 +373,12 @@ public static class Candidate
         object[]? constraints = null,
         (string Kind, string? Quote)? disposition = null,
         (string Kind, string? Quote)? actionRequest = null,
-        (string Kind, string? Quote, string Scope)? supportRequest = null) =>
+        (string Kind, string? Quote, string Scope)? supportRequest = null,
+        object[]? planningReferences = null) =>
         Turn(intent, "continue_listening", "listening", text,
             supportMove: supportMove, planningItems: planningItems, constraints: constraints,
-            disposition: disposition, actionRequest: actionRequest, supportRequest: supportRequest);
+            disposition: disposition, actionRequest: actionRequest, supportRequest: supportRequest,
+            planningReferences: planningReferences);
 
     public static string GentleQuestion(
         string text,
@@ -385,10 +398,12 @@ public static class Candidate
         object[]? planningItems = null,
         object[]? constraints = null,
         (string Kind, string? Quote)? disposition = null,
-        (string Kind, string? Quote)? actionRequest = null) =>
+        (string Kind, string? Quote)? actionRequest = null,
+        object[]? planningReferences = null) =>
         Turn(intent, "ask_clarifying_question", "clarifying_question", text, question, topic,
             planningItems: planningItems, constraints: constraints,
-            disposition: disposition, actionRequest: actionRequest);
+            disposition: disposition, actionRequest: actionRequest,
+            planningReferences: planningReferences);
 
     public static string ProposalSet(
         string text,
@@ -399,17 +414,89 @@ public static class Candidate
         (string Kind, string? Quote)? disposition = null,
         (string Kind, string? Quote)? actionRequest = null,
         (string Kind, string? Quote, string Scope)? supportRequest = null,
-        string? supportMove = null) =>
+        string? supportMove = null,
+        object[]? planningReferences = null,
+        string? referencedItemKey = null) =>
         Turn(intent, "show_proposal_set", "proposal_introduction", text,
             supportMove: supportMove, planningItems: planningItems, constraints: constraints,
             disposition: disposition, actionRequest: actionRequest, supportRequest: supportRequest,
-            proposals: proposals);
+            proposals: proposals, planningReferences: planningReferences,
+            referencedItemKey: referencedItemKey);
+
+    /// <summary>Schema 5+: an atomic edit of the CURRENT pending card, never a second card.</summary>
+    public static string UpdateProposalSet(
+        string text,
+        object[] operations,
+        object[]? ambiguities = null,
+        string intent = "concrete_action",
+        (string Kind, string? Quote)? actionRequest = null,
+        string? referencedItemKey = null) =>
+        Turn(intent, "update_proposal_set", "proposal_update", text,
+            actionRequest: actionRequest,
+            referencedItemKey: referencedItemKey,
+            proposalSetMutation: new
+            {
+                artifactReferenceKey = "current_card",
+                operations,
+                ambiguities = ambiguities ?? [],
+            });
+
+    /// <summary>Schema 5+: the model reports it cannot tell what to edit — one question, no partial apply.</summary>
+    public static string AmbiguousProposalSetUpdate(
+        string text,
+        string question,
+        object[] ambiguities,
+        string topic = "other",
+        string intent = "concrete_action") =>
+        Turn(intent, "ask_clarifying_question", "clarifying_question", text, question, topic,
+            proposalSetMutation: new
+            {
+                artifactReferenceKey = "current_card",
+                operations = Array.Empty<object>(),
+                ambiguities,
+            });
 
     public static object Item(string text, string quote, string kind = "action") =>
         new { text, kind, evidence = new { quote } };
 
     public static object Constraint(string text, string quote) =>
         new { text, evidence = new { quote } };
+
+    /// <summary>Schema 6: points at a retained planning item by its ephemeral frame key.</summary>
+    public static object Reference(string referenceKey, string kind, string quote) =>
+        new { referenceKey, kind, evidence = new { quote } };
+
+    public static object UpdateOperation(
+        string targetReferenceKey,
+        string[] changedFields,
+        string quote,
+        string? title = null,
+        string? description = null,
+        string? date = null,
+        string? startTime = null,
+        string? endTime = null,
+        string operationKey = "op1") =>
+        new
+        {
+            kind = "update",
+            operationKey,
+            targetReferenceKey,
+            changedFields,
+            title,
+            description,
+            date,
+            startTime,
+            endTime,
+            labelId = (int?)null,
+            evidence = new { quote },
+        };
+
+    public static object Ambiguity(
+        string kind,
+        string[] candidateReferenceKeys,
+        string quote,
+        string? field = null) =>
+        new { kind, candidateReferenceKeys, field, evidence = new { quote } };
 
     public static object Proposal(
         string title,
@@ -485,6 +572,110 @@ public static class ScriptedTurns
                 new RecordClarificationAttemptMutation(intentId, ClarificationTopic.ConcreteStep),
             ],
             facts: ConversationFact.HasOpenQuestion);
+    }
+
+    /// <summary>
+    /// Clarify: an active intent whose clarification budget (2, clarification-planning-v3) is
+    /// spent. <paramref name="withMaterial"/> false leaves the intent empty, which is the
+    /// "exhausted with nothing verified" case where the server must NOT invent a goal.
+    /// </summary>
+    public static Guid SeedClarifyExhaustedClarifications(
+        AiCoachEvalHarness harness,
+        string userMessage = "我最近状态很乱，想理一理。",
+        bool withMaterial = true,
+        string goal = "把论文进度理顺",
+        string goalQuote = "想理一理",
+        string? currentState = null,
+        string? topic = null,
+        string lastQuestion = "你希望先理清哪一块？")
+    {
+        var messageId = Guid.NewGuid();
+        var intentId = Guid.NewGuid();
+        var items = new List<PlanningItemSnapshot>();
+        if (withMaterial)
+        {
+            items.Add(new PlanningItemSnapshot(goal, goalQuote, messageId, PlanningItemKind.Goal, Guid.NewGuid()));
+            if (topic is not null)
+                items.Add(new PlanningItemSnapshot(topic, topic, messageId, PlanningItemKind.Domain, Guid.NewGuid()));
+        }
+
+        var intent = new ActivePlanningIntentSnapshot(
+            intentId,
+            messageId,
+            items,
+            withMaterial && currentState is not null
+                ? [new PlanningConstraintSnapshot(currentState, currentState, messageId)]
+                : [],
+            PlanningIntentStatus.Collecting);
+
+        harness.SeedState(
+            ConversationPhase.ActionPreparing,
+            [
+                new AppendUserMessageMutation(messageId, userMessage),
+                new UpsertPlanningIntentMutation(intent),
+                new AppendAssistantMessageMutation(lastQuestion, ConversationStrategy.AskClarifyingQuestion),
+                new SetOpenQuestionMutation(lastQuestion, intentId, ClarificationTopic.Scope),
+                new RecordClarificationAttemptMutation(intentId, ClarificationTopic.ConcreteStep),
+                new RecordClarificationAttemptMutation(intentId, ClarificationTopic.Scope),
+            ],
+            facts: ConversationFact.HasOpenQuestion);
+
+        return intentId;
+    }
+
+    /// <summary>
+    /// Clarify: an active intent with two retained, still-open items and budget left — the state
+    /// a planningReference ("就第一个吧" / "第二个不要") is meant to resolve. The frame projects
+    /// them as planning_item_1 / planning_item_2 in declaration order.
+    /// </summary>
+    public static Guid SeedClarifyTwoOpenItems(
+        AiCoachEvalHarness harness,
+        string userMessage = "我想把论文和实习都安排一下。",
+        string firstItem = "写论文摘要",
+        string secondItem = "投实习简历",
+        string lastQuestion = "这两件事你想先推进哪一件？")
+    {
+        var messageId = Guid.NewGuid();
+        var intentId = Guid.NewGuid();
+        var intent = new ActivePlanningIntentSnapshot(
+            intentId,
+            messageId,
+            [
+                new PlanningItemSnapshot(firstItem, firstItem, messageId, PlanningItemKind.Action, Guid.NewGuid()),
+                new PlanningItemSnapshot(secondItem, secondItem, messageId, PlanningItemKind.Action, Guid.NewGuid()),
+            ],
+            [],
+            PlanningIntentStatus.Collecting);
+
+        harness.SeedState(
+            ConversationPhase.ActionPreparing,
+            [
+                new AppendUserMessageMutation(messageId, userMessage),
+                new UpsertPlanningIntentMutation(intent),
+                new AppendAssistantMessageMutation(lastQuestion, ConversationStrategy.AskClarifyingQuestion),
+                new SetOpenQuestionMutation(lastQuestion, intentId, ClarificationTopic.Priority),
+                new RecordClarificationAttemptMutation(intentId, ClarificationTopic.Priority),
+            ],
+            facts: ConversationFact.HasOpenQuestion);
+
+        return intentId;
+    }
+
+    /// <summary>Clarify: a verified planning request answered with one pending card.</summary>
+    public static Task<EvalTurnResult> ClarifyPendingCard(
+        AiCoachEvalHarness harness,
+        string userMessage = "你直接帮我安排明天下午两点写论文摘要吧。",
+        string title = "写论文摘要",
+        string date = "2026-09-15",
+        string startTime = "14:00",
+        string endTime = "14:30")
+    {
+        var scripted = Candidate.ProposalSet(
+            "先放一个草稿，你可以改。",
+            [Candidate.Proposal(title, date, startTime, endTime)],
+            planningItems: [Candidate.Item(title, title)],
+            actionRequest: ("explicit_planning_request", userMessage));
+        return RunScriptedAsync(harness, userMessage, scripted);
     }
 
     public static async Task<EvalTurnResult> RunScriptedAsync(

@@ -92,20 +92,30 @@ public class CompanionModeEvalTests(ITestOutputHelper output) : LiveEvalTestBase
         ]),
         seed: harness => ScriptedTurns.CompanionGentleQuestion(harness, "最近发生了很多事情。", "最压在你心上的是哪一件？"));
 
+    /// <summary>
+    /// Cadence is a preference, not a veto (SupportDecision, confirmed 2026-09-20): a second
+    /// consecutive question is allowed. What stays hard is one question per turn and no repeat
+    /// of the previous one; whether asking again was the right move is the judge's call.
+    /// </summary>
     [Fact]
-    public Task C7_NoSecondConsecutiveQuestion_ByDefault() =>
-        RunLiveCaseAsync(new AiCoachEvalCase("C7", "连续提问限制", AiCoachMode.Companion,
+    public Task C7_SecondConsecutiveQuestion_NeverRepeatsTheFirst() =>
+        RunLiveCaseAsync(new AiCoachEvalCase("C7", "连续提问（软偏好）", AiCoachMode.Companion,
         [
             new EvalTurn("就是觉得做什么都没劲。",
-                Strategies(ConversationStrategy.ContinueListening),
-                QuestionExpectation.Forbidden,
+                Strategies(ConversationStrategy.ContinueListening, ConversationStrategy.AskGentleQuestion),
+                QuestionExpectation.Allowed,
                 ProposalExpectation.Forbidden,
                 MustAddress: ["用户表达做什么都没劲"],
-                MustNotDo: ["连续提出第二个问题", "推动用户创建任务"],
+                MustNotDo: ["重复上一轮问过的问题", "一次问多个问题", "推动用户创建任务"],
                 new StateExpectation(ConversationPhase.Conversing, HasPendingProposalSet: false)),
         ]),
         seed: harness => ScriptedTurns.CompanionGentleQuestion(harness, "我今天心情不太好。", "是发生了什么事吗？"));
 
+    /// <summary>
+    /// Round 1 blocker, fixed in 4b72d091: Companion's trigger is now
+    /// ExplicitPlanningRequestOrDelegation, so the model labelling this explicit_planning_request
+    /// instead of direct_instruction no longer ends in a canned apology.
+    /// </summary>
     [Fact]
     public Task C8_ExplicitInstructionAfterReluctance_PendingCard() =>
         RunLiveCaseAsync(new AiCoachEvalCase("C8", "当前明确要求安排", AiCoachMode.Companion,

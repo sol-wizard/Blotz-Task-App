@@ -110,8 +110,15 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task A3_FabricatedEvidence_GrantsNoAuthority()
+    public async Task A3_FabricatedEvidence_StillGrantsAuthority_WhileSourceValidationIsPaused_KnownGap()
     {
+        // KNOWN GAP (EVIDENCE_GUARD, deliberate and temporary): since 2026-09-15 the quote-in-
+        // message check in Guards.TryVerifyQuote is commented out ("Source validation is
+        // intentionally disabled for now", v3 tech design §1.1.2/§14.1). A quote the user never
+        // said therefore verifies, so a wholly fabricated direct instruction creates a card from
+        // "我最近有点累". The contract this test used to pin — fabricated evidence grants NO
+        // authority — is the one to restore when source validation is switched back on.
+        // ReferencedInstruction is unaffected: it still goes through TryVerifyCurrentMessageQuote.
         const string user = "我最近有点累";
         var harness = Harness(AiCoachMode.Execution, Candidate.ProposalSet(
             "排好了！",
@@ -121,24 +128,53 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
 
         var result = await harness.RunTurnAsync(user);
 
-        AssertCase("A3", "模型虚构 Evidence", harness, (new EvalTurn(
-            user, Strategies(ConversationStrategy.ContinueListening, ConversationStrategy.AskClarifyingQuestion),
-            QuestionExpectation.Allowed, ProposalExpectation.Forbidden, [], [],
-            new StateExpectation(ConversationPhase.Conversing, HasPendingProposalSet: false)), result));
-
-        result.Outcome!.ReasonCode.Should().Be(StrategyReasonCode.EvidenceInvalid);
-        result.Outcome.PlanningIntentUpdate.Should().BeNull(because: "fabricated claims never become planning state");
-        result.StateAfter.ActivePlanningIntent.Should().BeNull();
+        Record("A3", "模型虚构 Evidence（来源校验暂停中，已知缺口）", harness,
+            [Gap("A3.T1.PROPOSAL_FORBIDDEN", "no proposal from a quote the user never said",
+                $"{result.Outcome!.AcceptedProposals?.Count ?? 0} proposal(s): "
+                + $"{EvalChecks.Describe(result.Outcome.AcceptedProposals ?? [])} — TryVerifyQuote no longer checks the source")]);
+        result.Outcome.FinalStrategy.Should().Be(ConversationStrategy.ShowProposalSet);
+        result.Outcome.ReasonCode.Should().Be(StrategyReasonCode.None,
+            because: "current behaviour: with source validation paused nothing is EvidenceInvalid");
+        result.Outcome.AcceptedProposals.Should().HaveCount(1);
+        result.StateAfter.ActivePlanningIntent.Should().NotBeNull(
+            because: "current behaviour: the fabricated item becomes planning state");
     }
 
     [Fact]
-    public async Task A3b_OneUnverifiableConstraintClaim_DropsAWhollyValidCard_WithoutRegeneration_KnownGap()
+    public async Task A3c_FabricatedReferencedInstruction_IsStillRejected()
     {
-        // KNOWN GAP (EVIDENCE_GUARD + POST_POLICY) — reproduces live failures E1/E6 deterministically.
-        // Item and direct instruction are verified and the card is correct, but ONE constraint
-        // claim is off by a character ("明天下午三点整" vs quote "明天下午三点"). Since 249d2cca the
-        // Post-Policy DOWNGRADES on any invalid claim instead of requesting a regeneration, so the
-        // user gets a canned apology and the regeneration budget is never used.
+        // The half of source validation that is still on: a referenced_instruction must quote the
+        // CURRENT message AND name a planning reference key the server projected this turn.
+        const string user = "我最近有点累";
+        var harness = Harness(AiCoachMode.Execution, Candidate.ProposalSet(
+            "那就照上次说的安排吧。",
+            [Candidate.Proposal("跑步", Tomorrow, "07:00", "07:30")],
+            planningItems: [Candidate.Item("跑步", "帮我安排明天跑步")],
+            actionRequest: ("referenced_instruction", "帮我安排明天跑步"),
+            referencedItemKey: "planning_item_1"));
+
+        var result = await harness.RunTurnAsync(user);
+
+        AssertCase("A3c", "虚构的 referenced_instruction", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.ContinueListening, ConversationStrategy.AskGentleQuestion,
+                ConversationStrategy.AskClarifyingQuestion),
+            QuestionExpectation.Allowed, ProposalExpectation.Forbidden, [], [],
+            new StateExpectation(ConversationPhase.Conversing, HasPendingProposalSet: false)), result));
+
+        result.Outcome!.ReasonCode.Should().Be(StrategyReasonCode.EvidenceInvalid,
+            because: "the quote is not in the current message and the reference key was never projected");
+    }
+
+    [Fact]
+    public async Task A3b_OneOffConstraintQuote_KeepsTheWhollyValidCard()
+    {
+        // This case reproduced live failures E1/E6 deterministically: ONE constraint claim off by
+        // a character ("明天下午三点整" vs quote "明天下午三点") used to make Post-Policy downgrade
+        // and throw away a correct card (249d2cca). It passes again — but only because source
+        // validation is paused (see A3), not because the downgrade-instead-of-regenerate path was
+        // fixed. When the quote check is switched back on, re-run this and E1/E6 first:
+        // ConversationPolicyTests.PostPolicy_InvalidCurrentClaimWithActiveIntent_RejectsModelProposal
+        // still encodes the old downgrade behaviour.
         const string user = "帮我安排明天下午三点整理论文资料，做半小时。";
         var harness = Harness(AiCoachMode.Execution, Candidate.ProposalSet(
             "可以，我先给你放一个可编辑的安排草稿。",
@@ -149,15 +185,14 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
 
         var result = await harness.RunTurnAsync(user);
 
-        Record("A3b", "一条约束 claim 不可验证 → 整张有效卡片被丢弃（已知缺口）", harness,
-            [Gap("A3b.T1.PROPOSAL_REQUIRED", "the verified card, or one regeneration to fix the claim",
-                $"{result.Outcome!.FinalStrategy} ({result.Outcome.DecisionType}/{result.Outcome.ReasonCode}) "
-                + $"regenerations={result.ModelResult.RegenerationCount}: \"{result.AssistantMessage}\"")]);
-        result.Outcome.ReasonCode.Should().Be(StrategyReasonCode.EvidenceInvalid);
-        result.Outcome.DecisionType.Should().Be(StrategyDecisionType.Downgraded,
-            because: "current behaviour: no regeneration is requested (ConversationPolicyTests expects RequiresRegeneration here)");
-        result.Outcome.AcceptedProposals.Should().BeNull(because: "current behaviour: the whole card is discarded");
-        result.ModelResult.RegenerationCount.Should().Be(0);
+        AssertCase("A3b", "一条约束 quote 对不上，仍保留整张有效卡片", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.ShowProposalSet), QuestionExpectation.Forbidden,
+            new ProposalExpectation(ProposalPolicy.Required, ExpectedCount: 1, ExpectedDates: [TomorrowDate],
+                ExpectedStartTime: new TimeOnly(15, 0), ExpectedDurationMinutes: 30), [], [],
+            new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)), result));
+
+        result.Outcome!.DecisionType.Should().Be(StrategyDecisionType.Accepted);
+        result.ModelResult.RegenerationCount.Should().Be(0, because: "a correct card needs no repair");
     }
 
     [Fact]
@@ -187,9 +222,20 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
 
         result.ModelCalls.Should().HaveCount(2, because: "policy demands one bounded regeneration instead of the repeated question");
         result.ModelResult.RegenerationCount.Should().Be(1);
-        result.ModelCalls[1].Request.Messages.OfType<GatewaySystemMessage>()
-            .Should().Contain(m => m.Content.Contains("show_proposal_set"),
-                because: "the regeneration directive names the required strategy");
+        // Since 38e8b80e the repair steers to a non-question reply, no longer to show_proposal_set:
+        // the card here survives only because the scripted second candidate happens to be one.
+        // A4b covers what happens when it is not. Recorded as a soft signal, not a hard contract.
+        var directive = result.ModelCalls[1].Request.Messages.OfType<GatewaySystemMessage>()
+            .FirstOrDefault(m => m.Content.Contains("continue_listening") || m.Content.Contains("show_proposal_set"));
+        Record("A4.directive", "委托后重生成指令的目标策略", harness,
+        [
+            new EvalCheckResult("A4.T1.REPAIR_TARGET", "POLICY_REPAIR", CheckSeverity.Soft,
+                directive?.Content.Contains("show_proposal_set") == true,
+                "the regeneration directive names show_proposal_set for a delegated planning request",
+                directive?.Content.Contains("continue_listening") == true
+                    ? "continue_listening (38e8b80e removed RegenerateProposal(ActionableIntentRequiresProposal))"
+                    : directive?.Content ?? "no directive found"),
+        ]);
         result.StateAfter.ActivePlanningIntent!.Status.Should().Be(PlanningIntentStatus.ProposalPending);
         result.StateAfter.OpenQuestion.Should().BeNull(because: "the consumed question is cleared with the card");
     }
@@ -199,6 +245,14 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
     {
         // Without constraints on the intent, the deterministic generator can build a safe card
         // from the goal after the regeneration budget is spent.
+        //
+        // REGRESSION (open, owner: Chen): 38e8b80e removed the Post-Policy branch that turned an
+        // unauthorized planning question into RegenerateProposal(ActionableIntentRequiresProposal).
+        // A repeated question now takes the RegenerateResponse(ClarificationSlotAlreadyAsked) path
+        // to ContinueListening, so a user who explicitly delegated gets a canned apology and no
+        // card — the behaviour Ben ruled out on 2026-08-24. e03b16f9 re-added a proposal repair,
+        // but only for ProposalDisposition.Required (Clarify exhaustion); Execution delegation is
+        // Optional, so it never fires. Live counterpart: E6. This test stays RED on purpose.
         const string user = "不知道，你帮我列出可能需要做的事情。";
         var repeated = Candidate.ClarifyingQuestion("你想先做哪一件？", "你想先做哪一件？",
             disposition: ("delegated_to_coach", "你帮我列出可能需要做的事情"),
@@ -461,29 +515,59 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task A11_SecondConsecutiveQuestion_IsBlockedByPolicy_NotByPrompt()
+    public async Task A11_SecondConsecutiveQuestion_IsAllowedByPolicy_AndSteeredByThePrompt()
     {
+        // Companion cadence is a PREFERENCE, not a veto: SupportDecision hands the model the full
+        // move set and the frame says "around N consecutive question turn(s), not a hard limit"
+        // (v3 tech design §13, Ben confirmed 2026-09-20). What the server still enforces hard is
+        // one question per turn and no repeat of the previous one — see A11b.
+        // CompanionPolicyTests.Handle_UnspecifiedRequestAfterQuestion_DisallowsAnotherQuestion and
+        // CompanionModeRuntimeTests.Handle_SecondGentleQuestion_... still assert the old hard rule.
         var harness = Harness(AiCoachMode.Companion);
         var first = await ScriptedTurns.CompanionGentleQuestion(harness, "我今天心情不太好。", "是发生了什么事吗？");
         first.Outcome!.FinalStrategy.Should().Be(ConversationStrategy.AskGentleQuestion, because: "a first gentle question is allowed");
 
         const string user = "就是觉得做什么都没劲。";
-        var asksAgain = Candidate.GentleQuestion("这种没劲的感觉通常什么时候最明显？", "这种没劲的感觉通常什么时候最明显？");
-        var listens = Candidate.Listening("听起来不是某一件事，而是整个人都提不起劲。");
-        var result = await ScriptedTurns.RunScriptedAsync(harness, user, asksAgain, listens);
+        const string second = "这种没劲的感觉通常什么时候最明显？";
+        var result = await ScriptedTurns.RunScriptedAsync(harness, user, Candidate.GentleQuestion(second, second));
 
-        AssertCase("A11", "连续两轮提问", harness,
+        AssertCase("A11", "连续两轮提问（cadence 为软偏好）", harness,
             (new EvalTurn("我今天心情不太好。", Strategies(ConversationStrategy.AskGentleQuestion), QuestionExpectation.Required,
                 ProposalExpectation.Forbidden, [], []), first),
-            (new EvalTurn(user, Strategies(ConversationStrategy.ContinueListening), QuestionExpectation.Forbidden,
+            (new EvalTurn(user, Strategies(ConversationStrategy.AskGentleQuestion), QuestionExpectation.Allowed,
                 ProposalExpectation.Forbidden, [], [], new StateExpectation(ConversationPhase.Conversing)), result));
 
         result.PreviousAssistantQuestion.Should().Be("是发生了什么事吗？",
             because: "the Kernel keeps the assistant strategy on the message — the state model, not the prompt, remembers the question");
-        result.ModelCalls.Should().HaveCount(2);
-        result.Outcome!.ReasonCode.Should().Be(StrategyReasonCode.None, because: "the repaired listening reply is accepted as-is");
-        result.ModelCalls[0].Request.SystemPrompt.Should().Contain("Default to a substantive non-question reply",
-            because: "the cadence context reaches the model before it answers");
+        result.ModelCalls.Should().HaveCount(1, because: "a different, non-repeated question needs no repair");
+        result.Outcome!.DecisionType.Should().Be(StrategyDecisionType.Accepted);
+        result.ModelCalls[0].Request.SystemPrompt.Should().Contain("consecutive question turn",
+            because: "the cadence preference still reaches the model before it answers");
+    }
+
+    [Fact]
+    public async Task A11b_RepeatingThePreviousQuestionVerbatim_IsAccepted_KnownGap()
+    {
+        // KNOWN GAP (POST_POLICY + RESPONSE_GUARD): with Companion cadence reduced to a preference
+        // (38e8b80e), nothing on the server stops the model from asking LAST TURN'S QUESTION
+        // WORD FOR WORD. The Kernel does remember it (PreviousAssistantQuestion below), so the
+        // check is cheap to add; today only the prompt discourages it. Execution is not affected:
+        // there a spent clarification topic is tracked on the planning intent.
+        var harness = Harness(AiCoachMode.Companion);
+        const string asked = "是发生了什么事吗？";
+        var first = await ScriptedTurns.CompanionGentleQuestion(harness, "我今天心情不太好。", asked);
+        first.Outcome!.Question.Should().Be(asked);
+
+        const string user = "就是觉得做什么都没劲。";
+        var result = await ScriptedTurns.RunScriptedAsync(harness, user, Candidate.GentleQuestion(asked, asked));
+
+        Record("A11b", "重复上一轮的同一个问题（已知缺口）", harness,
+            [Gap("A11b.T2.QUESTION_REPEAT", $"not a repeat of \"{asked}\"",
+                $"\"{result.Outcome!.Question}\" accepted as-is ({result.Outcome.DecisionType}/{result.Outcome.ReasonCode})")]);
+        result.PreviousAssistantQuestion.Should().Be(asked, because: "the state model does remember it");
+        result.Outcome.Question.Should().Be(asked, because: "current behaviour: the verbatim repeat reaches the user");
+        result.Outcome.DecisionType.Should().Be(StrategyDecisionType.Accepted);
+        result.ModelCalls.Should().HaveCount(1, because: "no repair is attempted");
     }
 
     [Fact]
@@ -532,6 +616,248 @@ public class ArchitectureFeasibilityTests(ITestOutputHelper output)
             user, Strategies(ConversationStrategy.ContinueListening), QuestionExpectation.Forbidden,
             ProposalExpectation.Forbidden, [], [],
             new StateExpectation(ConversationPhase.Conversing, HasPendingProposalSet: false)), result));
+    }
+
+    // ======================================================================
+    // 6.3 Clarify (mode registered 2026-09-19, e03b16f9 — clarification-planning-v3)
+    // ======================================================================
+
+    [Fact]
+    public async Task A13_ClarifyVagueGoal_OneFocusedQuestion_NoCard_BudgetConsumed()
+    {
+        // Clarify only drafts once the context is complete or the budget is spent. A first
+        // question is the normal move, and it must cost exactly one of the two attempts.
+        //
+        // OPEN DEFECT (owner: Chen) — this test is RED on e03b16f9. A plain goal with no explicit
+        // request trips `unrequestedNarration` in PlanningAuthorityCalculator (actionRequest none
+        // + disposition not_applicable + context not yet draftable), which returns
+        // CurrentRequestIsConversational with Clarification = NotAllowed. Post-Policy then
+        // downgrades Clarify's own core move to a canned apology. A13b shows the inversion: with
+        // NO verified material the same question IS allowed. Live counterpart: L1.
+        const string user = "我最近挺乱的，想把事情理一理。";
+        var harness = Harness(AiCoachMode.Clarify, Candidate.ClarifyingQuestion(
+            "我们先从一块开始。", "现在最让你乱的是哪一块？", topic: "scope",
+            planningItems: [Candidate.Item("把事情理一理", "想把事情理一理", "goal")]));
+
+        var result = await harness.RunTurnAsync(user);
+
+        AssertCase("A13", "Clarify 模糊目标 → 一个聚焦问题", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.AskClarifyingQuestion),
+            new QuestionExpectation(QuestionPolicy.Required, ClarificationTopic.Scope),
+            ProposalExpectation.Forbidden, [], [],
+            new StateExpectation(ConversationPhase.ActionPreparing, HasPendingProposalSet: false, HasOpenQuestion: true)), result));
+
+        result.StateAfter.ActivePlanningIntent!.ClarificationAttempts.Should().Be(1,
+            because: "a submitted planning question costs exactly one of the two attempts");
+        harness.Mode.Policy.Planning.MaxClarificationAttempts.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task A13b_ClarifyFirstQuestion_IsUnauthorizedInEveryOpeningShape_KnownGap()
+    {
+        // KNOWN GAP (PLANNING_AUTHORITY), the cause behind A13: `unrequestedNarration` fires for
+        // any opening message that carries no actionRequest and no disposition — with or without
+        // planning material — so Clarify cannot ask its FIRST question at all. Everything after
+        // the first question works (A15 seeds that state and passes), which makes this a
+        // chicken-and-egg: the state Clarify needs can only be reached by seeding it.
+        const string user = "我最近挺乱的。";
+        var withoutMaterial = Harness(AiCoachMode.Clarify, Candidate.ClarifyingQuestion(
+            "我们先从一块开始。", "现在最让你乱的是哪一块？", topic: "scope"));
+        var bare = await withoutMaterial.RunTurnAsync(user);
+
+        var withGoal = Harness(AiCoachMode.Clarify, Candidate.ClarifyingQuestion(
+            "我们先从一块开始。", "现在最让你乱的是哪一块？", topic: "scope",
+            planningItems: [Candidate.Item("把事情理一理", "我最近挺乱的", "goal")]));
+        var goal = await withGoal.RunTurnAsync(user);
+
+        Record("A13b", "Clarify 的第一个问题在任何开场形态下都不被授权（已知缺口）", withoutMaterial,
+            [Gap("A13b.T1.QUESTION_AUTHORITY", "Clarify may ask its first clarifying question",
+                $"no material -> {bare.Outcome!.FinalStrategy} ({bare.Outcome.ReasonCode}); "
+                + $"stated goal -> {goal.Outcome!.FinalStrategy} ({goal.Outcome.ReasonCode})")]);
+        bare.Outcome.FinalStrategy.Should().Be(ConversationStrategy.ContinueListening);
+        bare.Outcome.ReasonCode.Should().Be(StrategyReasonCode.PlanningQuestionNotAuthorized);
+        goal.Outcome.ReasonCode.Should().Be(StrategyReasonCode.PlanningQuestionNotAuthorized);
+        bare.AssistantMessage.Should().NotBeEmpty(because: "the user still gets a reply, not an internal error");
+    }
+
+    [Fact]
+    public async Task A14_ClarifyGoalCurrentStateAndTopic_AuthorizesATentativeCard()
+    {
+        // DraftContextPolicy.TargetScopeAndGrounding: goal + current state + topic is enough for
+        // a PENDING draft even without an explicit planning request (v3 §13 Clarify row 3).
+        const string user = "我想两周内写完论文摘要，现在只写了提纲，就是论文这块。";
+        var harness = Harness(AiCoachMode.Clarify, Candidate.ProposalSet(
+            "先放一个可以改的起点。",
+            [Candidate.Proposal("扩写论文摘要提纲", Tomorrow, "09:00", "09:30")],
+            intent: "goal",
+            planningItems:
+            [
+                Candidate.Item("写完论文摘要", "两周内写完论文摘要", "goal"),
+                Candidate.Item("论文", "就是论文这块", "domain"),
+            ],
+            constraints: [Candidate.Constraint("只写了提纲", "现在只写了提纲")]));
+
+        var result = await harness.RunTurnAsync(user);
+
+        AssertCase("A14", "Clarify 上下文完整 → 暂定卡", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.ShowProposalSet), QuestionExpectation.Forbidden,
+            new ProposalExpectation(ProposalPolicy.Required, MaxCount: 3), [], [],
+            new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)), result));
+
+        harness.Conversation.CurrentProposalSet!.Proposals.Should().OnlyContain(p => p.PersistedTaskId == null,
+            because: "a tentative draft is still only a Pending artifact");
+    }
+
+    [Fact]
+    public async Task A15_ClarifyBudgetSpentWithMaterial_ThirdQuestionBecomesATentativeCard()
+    {
+        // ClarificationExhaustionBehavior.RequireTentativeProposal: after two submitted planning
+        // questions the server stops asking. A third question is repaired into a draft built from
+        // the material already verified (e03b16f9 added RegenerateProposal(RequiredProposalMissing)).
+        const string user = "我也说不好，反正就是乱。";
+        var asksAgain = Candidate.ClarifyingQuestion("那我们再缩小一点。", "你希望先从哪天开始？",
+            topic: "deadline", disposition: ("cannot_provide", "我也说不好"));
+        var card = Candidate.ProposalSet(
+            "那我先给你一个可以改的起点。",
+            [Candidate.Proposal("整理论文进度", Tomorrow, "09:00", "09:30")],
+            intent: "goal",
+            disposition: ("cannot_provide", "我也说不好"));
+        var harness = Harness(AiCoachMode.Clarify, asksAgain, card);
+        ScriptedTurns.SeedClarifyExhaustedClarifications(harness, topic: "论文");
+
+        var result = await harness.RunTurnAsync(user);
+
+        AssertCase("A15", "Clarify 两问用尽 + 有材料 → 暂定卡", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.ShowProposalSet), QuestionExpectation.Forbidden,
+            new ProposalExpectation(ProposalPolicy.Required, MaxCount: 3), [], [],
+            new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true, HasOpenQuestion: false)), result));
+
+        result.ModelResult.ProposalRegenerationCount.Should().Be(1,
+            because: "the required proposal is asked for once, not simply downgraded away");
+    }
+
+    [Fact]
+    public async Task A16_ClarifyBudgetSpentWithoutMaterial_NeverInventsAGoal()
+    {
+        // The other half of the exhaustion rule: no verified planning material means no draft,
+        // however insistent the model is. Nothing may be invented to fill the gap.
+        const string user = "我也说不上来。";
+        var harness = Harness(AiCoachMode.Clarify, Candidate.ProposalSet(
+            "那我先安排你明天整理一下吧。",
+            [Candidate.Proposal("整理一下", Tomorrow, "09:00", "09:30")],
+            intent: "unknown",
+            disposition: ("cannot_provide", "我也说不上来")));
+        ScriptedTurns.SeedClarifyExhaustedClarifications(harness, withMaterial: false);
+
+        var result = await harness.RunTurnAsync(user);
+
+        AssertCase("A16", "Clarify 两问用尽 + 无材料 → 不造目标", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.ContinueListening, ConversationStrategy.AskGentleQuestion),
+            QuestionExpectation.Forbidden, ProposalExpectation.Forbidden, [], [],
+            new StateExpectation(HasPendingProposalSet: false)), result));
+
+        result.StateAfter.CurrentProposalSet.Should().BeNull(because: "nothing verified, nothing drafted");
+    }
+
+    [Fact]
+    public async Task A17_ClarifyPlanningReference_OnlyTheSelectedItemIsPlanned()
+    {
+        // Schema 6 planningReferences: "就先做第一个" selects a retained item by its ephemeral
+        // frame key, and only the selected item may reach the draft (v3 §1.1.4).
+        const string user = "就先做第一个吧，你帮我排。";
+        var harness = Harness(AiCoachMode.Clarify, Candidate.ProposalSet(
+            "好，先排这一件。",
+            [Candidate.Proposal("写论文摘要", Tomorrow, "09:00", "09:30")],
+            disposition: ("answered", "就先做第一个吧"),
+            actionRequest: ("explicit_planning_request", "你帮我排"),
+            planningReferences: [Candidate.Reference("planning_item_1", "selected", "就先做第一个吧")]));
+        ScriptedTurns.SeedClarifyTwoOpenItems(harness);
+
+        var result = await harness.RunTurnAsync(user);
+
+        AssertCase("A17", "Clarify 选中其中一项", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.ShowProposalSet), QuestionExpectation.Forbidden,
+            new ProposalExpectation(ProposalPolicy.Required, ExpectedCount: 1), [], [],
+            new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)), result));
+
+        result.Outcome!.AcceptedProposals![0].Title.Should().Be("写论文摘要");
+        result.StateAfter.ActivePlanningIntent!.Items
+            .Should().Contain(item => item.Text == "写论文摘要" && item.Status == PlanningItemStatus.Selected)
+            .And.Contain(item => item.Text == "投实习简历" && item.Status != PlanningItemStatus.Selected);
+    }
+
+    [Fact]
+    public async Task A17b_UnknownPlanningReferenceKey_FailsClosed()
+    {
+        // A key the server never projected is an invalid claim, not a silently ignored one.
+        const string user = "就先做第一个吧，你帮我排。";
+        var harness = Harness(AiCoachMode.Clarify, Candidate.ProposalSet(
+            "好，先排这一件。",
+            [Candidate.Proposal("写论文摘要", Tomorrow, "09:00", "09:30")],
+            disposition: ("answered", "就先做第一个吧"),
+            actionRequest: ("explicit_planning_request", "你帮我排"),
+            planningReferences: [Candidate.Reference("planning_item_9", "selected", "就先做第一个吧")]));
+        ScriptedTurns.SeedClarifyTwoOpenItems(harness);
+
+        var result = await harness.RunTurnAsync(user);
+
+        Record("A17b", "Clarify 引用了不存在的 key", harness, []);
+        result.Outcome!.ReasonCode.Should().Be(StrategyReasonCode.EvidenceInvalid,
+            because: "an unknown reference key is an invalid claim");
+        result.StateAfter.ActivePlanningIntent!.Items
+            .Should().OnlyContain(item => item.Status == PlanningItemStatus.Active,
+                because: "no item may be marked selected from an unverifiable reference");
+    }
+
+    [Fact]
+    public async Task A18_ClarifyPendingCard_ExplicitEdit_UpdatesInPlace_NoSecondCard()
+    {
+        // Clarify has AllowsModelProposalSetUpdates = true since e03b16f9: an unambiguous edit is
+        // applied to the CURRENT card instead of creating a second one.
+        var harness = Harness(AiCoachMode.Clarify);
+        await ScriptedTurns.ClarifyPendingCard(harness);
+        var setId = harness.Conversation.CurrentProposalSet!.Id;
+
+        const string user = "改成下午四点。";
+        var result = await ScriptedTurns.RunScriptedAsync(harness, user, Candidate.UpdateProposalSet(
+            "已经把时间挪到下午四点，你看这样行不行。",
+            [Candidate.UpdateOperation("item_1", ["start_time", "end_time"], user,
+                startTime: "16:00", endTime: "16:30")]));
+
+        AssertCase("A18", "Clarify 明确修改 Pending 卡片", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.UpdateProposalSet), QuestionExpectation.Forbidden,
+            ProposalExpectation.Allowed, [], [],
+            new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)), result));
+
+        var set = harness.Conversation.CurrentProposalSet!;
+        set.Id.Should().Be(setId, because: "the pending card is edited, never replaced");
+        set.Proposals.Should().ContainSingle();
+        set.Proposals[0].StartTime.Should().Be(new TimeOnly(16, 0));
+        set.Proposals[0].Title.Should().Be("写论文摘要", because: "fields outside changedFields stay untouched");
+        result.Outcome!.AcceptedProposalSetMutation!.Summary!.UpdatedCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A18b_ClarifyPendingCard_AmbiguousEdit_AsksInsteadOfGuessing()
+    {
+        // The other half of §1.1.4: an ambiguous edit is clarified, never partially applied.
+        var harness = Harness(AiCoachMode.Clarify);
+        await ScriptedTurns.ClarifyPendingCard(harness);
+        var before = harness.Conversation.CurrentProposalSet!.Proposals[0];
+
+        const string user = "那个改一下吧。";
+        var result = await ScriptedTurns.RunScriptedAsync(harness, user, Candidate.AmbiguousProposalSetUpdate(
+            "我想确认一下再改。", "你是想改时间还是改内容？",
+            [Candidate.Ambiguity("field_unclear", ["item_1"], "那个改一下吧")]));
+
+        AssertCase("A18b", "Clarify 歧义修改 → 只澄清", harness, (new EvalTurn(
+            user, Strategies(ConversationStrategy.AskClarifyingQuestion, ConversationStrategy.DiscussExistingProposal,
+                ConversationStrategy.ContinueListening),
+            QuestionExpectation.Allowed, ProposalExpectation.Allowed, [], [],
+            new StateExpectation(ConversationPhase.ActionPending, HasPendingProposalSet: true)), result));
+
+        var after = harness.Conversation.CurrentProposalSet!.Proposals[0];
+        after.Should().BeEquivalentTo(before, because: "an ambiguous request never applies part of an edit");
     }
 
     // ======================================================================
