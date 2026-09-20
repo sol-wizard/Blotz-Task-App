@@ -28,6 +28,12 @@ export const EVENTS = {
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
   ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_VOICE_COACH_SHOWN: "onboarding_voice_coach_shown",
+  ONBOARDING_VOICE_COACH_TAPPED: "onboarding_voice_coach_tapped",
+  ONBOARDING_VOICE_COACH_DISMISSED: "onboarding_voice_coach_dismissed",
+  ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
+  ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
+  ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
 } as const;
 
 export const SCREEN_NAMES = {
@@ -64,8 +70,11 @@ export type LoginErrorCode =
   | (typeof WebAuthErrorCodes)[keyof typeof WebAuthErrorCodes]
   | "NoTokensReturned";
 
-/** How a task was created. `manual` = task form, `ai` = AI generation sheet. */
-export type TaskSource = "manual" | "ai";
+/**
+ * How a task was created. `manual` = task form, `ai` = AI generation sheet,
+ * `onboarding_ai` = the AI sheet when opened from the post-onboarding voice coach.
+ */
+export type TaskSource = "manual" | "ai" | "onboarding_ai";
 
 export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";
 export type AiTaskInputMode = "voice" | "text";
