@@ -5,7 +5,8 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import { useTranslation } from "react-i18next";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 
-const IDLE_FG = "#2F80ED";
+const IDLE_BG = "rgba(255,255,255,0.25)"; // frosted over the sheet gradient
+const PRESSED_BG = "rgba(255,255,255,0.5)";
 const ACTIVE_BG = "#9AD513"; // waveform Lottie is white, needs a coloured ground
 
 const shadow = {
@@ -45,43 +46,42 @@ export function HoldToTalkPill({
       className="w-full"
       disabled={disabled}
     >
-      {({ pressed }) => {
-        // `pressed` lands on the touch frame; isRecording lags behind recorder setup.
-        const isActive = isRecording || pressed;
-        const fg = isActive ? "white" : IDLE_FG;
-        return (
-          <Animated.View
-            className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
-            style={[
-              shadow,
-              {
-                backgroundColor: isActive ? ACTIVE_BG : "white",
-                opacity: disabled ? 0.5 : 1,
-                transform: [{ scale: pressed ? 0.97 : 1 }],
-                transitionProperty: ["transform", "backgroundColor"],
-                transitionDuration: 120,
-              },
-            ]}
-          >
-            {isRecording ? (
-              <LottieView
-                source={LOTTIE_ANIMATIONS.voiceWave}
-                loop
-                autoPlay
-                style={{ width: "100%", height: 40 }}
-                resizeMode="contain"
-              />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="microphone" size={24} color={fg} />
-                <Text className="font-balooBold text-base" style={{ color: fg }}>
-                  {t("buttons.holdToTalk")}
-                </Text>
-              </>
-            )}
-          </Animated.View>
-        );
-      }}
+      {({ pressed }) => (
+        <Animated.View
+          className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
+          style={[
+            // The frosted pill sits flat on the gradient; only the green
+            // recording ground is lifted off it.
+            isRecording && shadow,
+            {
+              // `pressed` lands on the touch frame, so it brightens the pill
+              // while isRecording is still catching up with recorder setup.
+              backgroundColor: isRecording ? ACTIVE_BG : pressed ? PRESSED_BG : IDLE_BG,
+              opacity: disabled ? 0.5 : 1,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+              transitionProperty: ["transform", "backgroundColor"],
+              transitionDuration: 120,
+            },
+          ]}
+        >
+          {isRecording ? (
+            <LottieView
+              source={LOTTIE_ANIMATIONS.voiceWave}
+              loop
+              autoPlay
+              style={{ width: "100%", height: 40 }}
+              resizeMode="contain"
+            />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="microphone" size={24} color="white" />
+              <Text className="font-balooBold text-base text-white">
+                {t("buttons.holdToTalk")}
+              </Text>
+            </>
+          )}
+        </Animated.View>
+      )}
     </Pressable>
   );
 }
