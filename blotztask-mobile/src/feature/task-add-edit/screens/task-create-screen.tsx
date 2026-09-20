@@ -5,13 +5,19 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { RecurringTaskCreateDTO } from "@/shared/models/recurring-task-create-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect } from "react";
 import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
 import { TaskTimeType } from "@/shared/models/base-task-dto";
 import { getWeeklyDayFlag } from "@/feature/task-add-edit/util/get-weekly-day-flag";
 
 export default function TaskCreateScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.TASK_CREATE);
+  }, []);
+
   const router = useRouter();
   const { addTask, createRecurringTask, isAdding, isCreatingRecurringTask } = useTaskMutations();
   const { t } = useTranslation("tasks");

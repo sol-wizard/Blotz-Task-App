@@ -16,6 +16,8 @@ import {
   type ShareEvent,
   type ShareSource,
   type ShareContentType,
+  type OnboardingOutcome,
+  type OnboardingSection,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -94,6 +96,72 @@ export const analytics = {
       reason: params.reason,
       error_code: params.errorCode,
       duration_ms: params.durationMs,
+    });
+  },
+
+  /** Fires when the user reaches the onboarding screen. */
+  trackOnboardingStarted() {
+    posthog.capture(EVENTS.ONBOARDING_STARTED);
+  },
+
+  /** Fires when an onboarding section becomes visible. */
+  trackOnboardingStepViewed(params: { step: OnboardingSection }) {
+    posthog.capture(EVENTS.ONBOARDING_STEP_VIEWED, {
+      step: params.step,
+    });
+  },
+
+  /**
+   * Fires after the user's onboarded state is persisted.
+   * `outcome` separates users who reached the final tutorial section from users who skipped.
+   */
+  trackOnboardingCompleted(params: {
+    outcome: OnboardingOutcome;
+    exit_section: OnboardingSection;
+  }) {
+    posthog.capture(EVENTS.ONBOARDING_COMPLETED, {
+      outcome: params.outcome,
+      last_section_reached: params.exit_section,
+    });
+  },
+
+  /** Fires when the voice coach (the spotlight on the AI button) appears after onboarding. */
+  trackOnboardingVoiceCoachShown() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_SHOWN);
+  },
+
+  /** Fires when the user taps the spotlighted AI button and the sheet opens. */
+  trackOnboardingVoiceCoachTapped() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_TAPPED);
+  },
+
+  /** Fires when the user closes the voice coach without opening the AI sheet. */
+  trackOnboardingVoiceCoachDismissed() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_DISMISSED);
+  },
+
+  /** Fires on every mic press in the AI sheet opened from the voice coach. `attempt` starts at 1. */
+  trackOnboardingVoiceMicPressed(params: { attempt: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_MIC_PRESSED, {
+      attempt: params.attempt,
+    });
+  },
+
+  /**
+   * Fires when a turn in the coached sheet ends with at least one draft.
+   * `taskCount` counts every draft shown (tasks, recurring tasks and notes).
+   */
+  trackOnboardingVoiceTaskGenerated(params: { inputMode: AiTaskInputMode; taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_GENERATED, {
+      input_mode: params.inputMode,
+      task_count: params.taskCount,
+    });
+  },
+
+  /** Fires after the drafts from the coached sheet are saved. The coach's success event. */
+  trackOnboardingVoiceTaskCreated(params: { taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
+      task_count: params.taskCount,
     });
   },
 

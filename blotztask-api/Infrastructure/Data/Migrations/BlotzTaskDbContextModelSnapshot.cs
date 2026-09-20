@@ -477,6 +477,9 @@ namespace BlotzTask.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("OneThingToTryNext")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTimeOffset>("PeriodEndUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -487,6 +490,9 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Theme")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1149,13 +1155,11 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.ReferralCode", b =>
                 {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "Owner")
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
                         .WithOne()
                         .HasForeignKey("BlotzTask.Modules.Referrals.Domain.ReferralCode", "OwnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Reviews.Domain.ReviewReport", b =>

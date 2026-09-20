@@ -25,12 +25,29 @@ export const EVENTS = {
   SHARE_SHEET_OPENED: "share_sheet_opened",
   SHARE_COMPLETED: "share_completed",
   SHARE_FAILED: "share_failed",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
+  ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_VOICE_COACH_SHOWN: "onboarding_voice_coach_shown",
+  ONBOARDING_VOICE_COACH_TAPPED: "onboarding_voice_coach_tapped",
+  ONBOARDING_VOICE_COACH_DISMISSED: "onboarding_voice_coach_dismissed",
+  ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
+  ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
+  ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
 } as const;
 
 export const SCREEN_NAMES = {
   SIGN_IN: "SignIn",
   NOTES: "Notes",
   GASHAPON_MACHINE: "GashaponMachine",
+  SETTINGS_REVIEW: "SettingsReview",
+  BADGE_WALL: "BadgeWall",
+  DDL: "Ddl",
+  MONTHLY_CALENDAR: "MonthlyCalendar",
+  NOTE_EDITOR: "NoteEditor",
+  POMODORO_FOCUS: "PomodoroFocus",
+  TASK_CREATE: "TaskCreate",
+  TASK_DETAILS: "TaskDetails",
 } as const;
 
 /** Which sign-in button was used. `sms` is only rendered outside production. */
@@ -53,8 +70,11 @@ export type LoginErrorCode =
   | (typeof WebAuthErrorCodes)[keyof typeof WebAuthErrorCodes]
   | "NoTokensReturned";
 
-/** How a task was created. `manual` = task form, `ai` = AI generation sheet. */
-export type TaskSource = "manual" | "ai";
+/**
+ * How a task was created. `manual` = task form, `ai` = AI generation sheet,
+ * `onboarding_ai` = the AI sheet when opened from the post-onboarding voice coach.
+ */
+export type TaskSource = "manual" | "ai" | "onboarding_ai";
 
 export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";
 export type AiTaskInputMode = "voice" | "text";
@@ -90,6 +110,18 @@ export type AiTaskGenerationTurn = {
   generated_notes: {
     text: string;
   }[];
+  // Recurring drafts were missing from this event, so a "gym every Monday" session read as
+  // zero output in PostHog even when the user saved it.
+  generated_recurring_tasks: {
+    title: string;
+    description: string;
+    frequency: string;
+    interval: number;
+    days_of_week: number | null;
+    template_start_time: string;
+    template_end_time: string;
+    task_label: string;
+  }[];
 };
 
 // sharing records
@@ -102,3 +134,8 @@ export type ShareEvent =
 export type ShareSource = "weekly_review" | "monthly_review" | "badge";
 
 export type ShareContentType = "review" | "badge";
+
+// onboarding
+export type OnboardingOutcome = "completed" | "skipped";
+
+export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";

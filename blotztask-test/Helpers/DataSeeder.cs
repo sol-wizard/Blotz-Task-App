@@ -1,5 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Entities;
+using BlotzTask.Modules.Reviews.Domain;
+using BlotzTask.Modules.Reviews.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
@@ -164,7 +166,7 @@ public class DataSeeder
         return recurringOverride;
     }
 
-    public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null)
+    public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null, DateTimeOffset? completedAt = null)
     {
         var task = new TaskItem
         {
@@ -173,6 +175,8 @@ public class DataSeeder
             StartTime = start,
             EndTime = end,
             TimeType = start == end ? TaskTimeType.SingleTime : TaskTimeType.RangeTime,
+            IsDone = completedAt is not null,
+            CompletedAt = completedAt,
             CreatedAt = createdAt?.DateTime ?? DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -180,6 +184,37 @@ public class DataSeeder
         _context.TaskItems.Add(task);
         await _context.SaveChangesAsync();
         return task;
+    }
+
+    public async Task<ReviewReport> CreateReviewReportAsync(
+        Guid userId,
+        ReviewPeriodType periodType,
+        DateTimeOffset periodStartUtc,
+        DateTimeOffset periodEndUtc,
+        string letter,
+        string? theme = null,
+        string? oneThingToTryNext = null,
+        int? aiInputTaskCount = null)
+    {
+        var report = new ReviewReport
+        {
+            UserId = userId,
+            PeriodType = periodType,
+            PeriodStartUtc = periodStartUtc,
+            PeriodEndUtc = periodEndUtc,
+            AiGeneratedLetter = letter,
+            Theme = theme,
+            OneThingToTryNext = oneThingToTryNext,
+            AiInputJson = "[]",
+            AiInputTaskCount = aiInputTaskCount,
+            AiModel = "test-model",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.ReviewReports.Add(report);
+        await _context.SaveChangesAsync();
+        return report;
     }
 
     public async Task<UserSubscription> CreateUserSubscriptionAsync(Guid userId, int planId, DateTime? createdAt = null)
