@@ -23,5 +23,12 @@
   "notes": {
     "title": "Catch ideas \nbefore they fade",
     "subtitle": "Save your thoughts in Notes, Spin the gacha, \nand AI picks one task for you to do today."
+  },
+  "voice-coach": {
+    "title": "Hi! I'm your AI helper",
+    "subtitle": "Tap me and tell me what's on today.",
+    "dismiss": "Not now",
+    "sheetLabel": "Your first task",
+    "sheetHint": "Hold the button and tell me.\nI'll write it down!"
   }
 }

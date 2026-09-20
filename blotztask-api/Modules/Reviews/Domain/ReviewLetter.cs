@@ -3,7 +3,8 @@ using System.Text.Json.Serialization;
 
 namespace BlotzTask.Modules.Reviews.Domain;
 
-// Theme and OneThingToTryNext are optional: the model omits them for a quiet period.
+// Theme and OneThingToTryNext are optional: the model omits Theme for a quiet period, and
+// OneThingToTryNext when the data doesn't support a specific suggestion.
 public record ReviewLetter(string Body, string? Theme, string? OneThingToTryNext);
 
 public static class ReviewLetterParser
