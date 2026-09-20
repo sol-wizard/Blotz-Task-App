@@ -22,7 +22,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,7 @@ import { ListeningIndicator } from "../component/listening-indicator";
 import { HoldToTalkPill } from "../component/hold-to-talk-pill";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { AI_SHEET_SOURCE, type AiSheetSource } from "../models/ai-sheet-source";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
@@ -52,6 +53,12 @@ const HOLD_HINT_AUTO_HIDE_MS = 2500;
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
+  const { t: tOnboarding } = useTranslation("onboarding");
+  // Set when the sheet is opened from the post-onboarding voice coach.
+  const { source } = useLocalSearchParams<{ source?: AiSheetSource }>();
+  const isFromOnboarding = source === AI_SHEET_SOURCE.ONBOARDING;
+  const taskSource = isFromOnboarding ? "onboarding_ai" : "ai";
+  const micPressCount = useRef(0);
   const { height } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -166,6 +173,21 @@ export default function AiTaskSheetScreen() {
   const hasContent =
     streamedTasks.length > 0 || streamedRecurringTasks.length > 0 || streamedNotes.length > 0;
 
+  // A finished turn appends to `turns`; report the ones that produced something.
+  const lastTurn = turns.at(-1);
+  useEffect(() => {
+    if (!isFromOnboarding || !lastTurn) return;
+    const taskCount =
+      lastTurn.generated_tasks.length +
+      lastTurn.generated_recurring_tasks.length +
+      lastTurn.generated_notes.length;
+    if (taskCount === 0) return;
+    analytics.trackOnboardingVoiceTaskGenerated({
+      inputMode: lastTurn.input_mode,
+      taskCount,
+    });
+  }, [isFromOnboarding, lastTurn]);
+
   // --- Handlers ---
   const handleDismiss = () => {
     // Skip analytics only for passive open-and-close sessions with no submitted AI request.
@@ -200,7 +222,7 @@ export default function AiTaskSheetScreen() {
         const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
         analytics.trackTaskCreated({
           taskId,
-          source: "ai",
+          source: taskSource,
           isRecurring: false,
           hasDeadline: false,
         });
@@ -209,7 +231,7 @@ export default function AiTaskSheetScreen() {
         const { recurringTaskId } = await createRecurringTaskAsync(mapRecurringToCreateDTO(task));
         analytics.trackTaskCreated({
           taskId: recurringTaskId,
-          source: "ai",
+          source: taskSource,
           isRecurring: true,
           hasDeadline: false,
         });
@@ -222,6 +244,11 @@ export default function AiTaskSheetScreen() {
     if (allSucceeded) {
       displayNotes.forEach(() => analytics.trackNoteCreated({ source: "ai" }));
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
+      if (isFromOnboarding) {
+        analytics.trackOnboardingVoiceTaskCreated({
+          taskCount: displayTasks.length + displayRecurringTasks.length + displayNotes.length,
+        });
+      }
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
       requestIdleCallback(() => Toast.show({ type: "success", text1: t("success.taskAdded") }));
@@ -230,6 +257,10 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    if (isFromOnboarding) {
+      micPressCount.current += 1;
+      analytics.trackOnboardingVoiceMicPressed({ attempt: micPressCount.current });
+    }
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     heldLongEnough.current = false;
     hideHoldHintLater.cancel();
@@ -299,7 +330,10 @@ export default function AiTaskSheetScreen() {
             {/* Hint text (no results) */}
             {!hasContent && (
               <View className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}>
-                <VoiceHintText />
+                <VoiceHintText
+                  label={isFromOnboarding ? tOnboarding("voice-coach.sheetLabel") : undefined}
+                  hint={isFromOnboarding ? tOnboarding("voice-coach.sheetHint") : undefined}
+                />
               </View>
             )}
 

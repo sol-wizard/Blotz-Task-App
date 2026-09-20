@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { useAuth0 } from "react-native-auth0";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -22,19 +22,32 @@ export default function GetStartedButton() {
   const router = useRouter();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
+  // The ref is the guard: two taps in one frame would both pass a state check.
+  const signingInRef = useRef(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   const signIn = async (connection?: string) => {
+    // A second authorize() while one is open throws TRANSACTION_ACTIVE_ALREADY.
+    if (signingInRef.current) return;
+    signingInRef.current = true;
+    setIsSigningIn(true);
+
     const trackedConnection: LoginConnection = connection === "sms" ? "sms" : "default";
     const startedAt = Date.now();
 
     analytics.trackLoginStarted({ connection: trackedConnection });
 
     try {
-      const result = await authorize({
-        audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
-        scope: "openid profile email offline_access",
-        connection,
-      });
+      // ephemeralSession skips the iOS "Wants to Use auth0.com to Sign In" alert, where most
+      // cancelled logins happen. The cost is no shared Safari cookies. iOS only.
+      const result = await authorize(
+        {
+          audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
+          scope: "openid profile email offline_access",
+          connection,
+        },
+        { ephemeralSession: true },
+      );
 
       if (!result?.accessToken || !result?.refreshToken) {
         console.error("No access token received from Auth0");
@@ -74,6 +87,9 @@ export default function GetStartedButton() {
         errorCode,
         durationMs: Date.now() - startedAt,
       });
+    } finally {
+      signingInRef.current = false;
+      setIsSigningIn(false);
     }
   };
 
@@ -81,12 +97,18 @@ export default function GetStartedButton() {
 
   return (
     <View style={{ gap: 12, width: "100%" }}>
-      <PillButton label={t("buttons.continue")} onPress={() => signIn()} variant="primary" />
+      <PillButton
+        label={t("buttons.continue")}
+        onPress={() => signIn()}
+        variant="primary"
+        disabled={isSigningIn}
+      />
       {showPhone && (
         <PillButton
           label={t("buttons.continueWithPhone")}
           onPress={() => signIn("sms")}
           variant="secondary"
+          disabled={isSigningIn}
         />
       )}
     </View>
@@ -97,10 +119,12 @@ function PillButton({
   label,
   onPress,
   variant,
+  disabled = false,
 }: {
   label: string;
   onPress: () => void;
   variant: "primary" | "secondary";
+  disabled?: boolean;
 }) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -113,6 +137,7 @@ function PillButton({
   return (
     <AnimatedPressable
       onPress={onPress}
+      disabled={disabled}
       onPressIn={() => {
         scale.value = withTiming(0.97, { duration: 100 });
       }}
@@ -131,6 +156,7 @@ function PillButton({
           borderWidth: isPrimary ? 0 : 1.5,
           borderColor: "#000000",
           boxShadow: isPrimary ? "0 10px 24px rgba(0, 0, 0, 0.18)" : undefined,
+          opacity: disabled ? 0.5 : 1,
         },
       ]}
     >
