@@ -2,6 +2,11 @@
   "input": {
     "placeholder": "Type here..."
   },
+  "permission": {
+    "typeInstead": "You can type instead",
+    "micDisabled": "Microphone access is off",
+    "openSettings": "Open Settings"
+  },
   "buttons": {
     "holdToTalk": "Hold to Talk",
     "goBack": "Go back"
