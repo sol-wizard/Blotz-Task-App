@@ -214,11 +214,16 @@ export default function GetStartedButton() {
     analytics.trackLoginStarted({ connection: attempt.connection });
 
     try {
-      const result = await authorize({
-        audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
-        scope: "openid profile email offline_access",
-        connection,
-      });
+      // ephemeralSession skips the iOS "Wants to Use auth0.com to Sign In" alert, where most
+      // cancelled logins happen. The cost is no shared Safari cookies. iOS only.
+      const result = await authorize(
+        {
+          audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
+          scope: "openid profile email offline_access",
+          connection,
+        },
+        { ephemeralSession: true },
+      );
 
       if (!result?.accessToken || !result?.refreshToken) {
         console.error("No access token received from Auth0");
@@ -347,7 +352,7 @@ function PillButton({
           borderWidth: isPrimary ? 0 : 1.5,
           borderColor: "#000000",
           boxShadow: isPrimary ? "0 10px 24px rgba(0, 0, 0, 0.18)" : undefined,
-          opacity: disabled ? 0.6 : 1,
+          opacity: disabled ? 0.5 : 1,
         },
       ]}
     >

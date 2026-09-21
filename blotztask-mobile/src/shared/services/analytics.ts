@@ -217,6 +217,46 @@ export const analytics = {
     });
   },
 
+  /** Fires when the voice coach (the spotlight on the AI button) appears after onboarding. */
+  trackOnboardingVoiceCoachShown() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_SHOWN);
+  },
+
+  /** Fires when the user taps the spotlighted AI button and the sheet opens. */
+  trackOnboardingVoiceCoachTapped() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_TAPPED);
+  },
+
+  /** Fires when the user closes the voice coach without opening the AI sheet. */
+  trackOnboardingVoiceCoachDismissed() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_DISMISSED);
+  },
+
+  /** Fires on every mic press in the AI sheet opened from the voice coach. `attempt` starts at 1. */
+  trackOnboardingVoiceMicPressed(params: { attempt: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_MIC_PRESSED, {
+      attempt: params.attempt,
+    });
+  },
+
+  /**
+   * Fires when a turn in the coached sheet ends with at least one draft.
+   * `taskCount` counts every draft shown (tasks, recurring tasks and notes).
+   */
+  trackOnboardingVoiceTaskGenerated(params: { inputMode: AiTaskInputMode; taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_GENERATED, {
+      input_mode: params.inputMode,
+      task_count: params.taskCount,
+    });
+  },
+
+  /** Fires after the drafts from the coached sheet are saved. The coach's success event. */
+  trackOnboardingVoiceTaskCreated(params: { taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
+      task_count: params.taskCount,
+    });
+  },
+
   /**
    * We treat a user as "active" if they stay on the app for more than 5 seconds.
    * Fires once per calendar day. Used to calculate Daily Active Users (DAU) and retention.
