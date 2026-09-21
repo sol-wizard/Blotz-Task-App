@@ -5,7 +5,7 @@ import { useUpdateCheck, UpdateCheckStatus } from "@/shared/hooks/useUpdateCheck
 import LoadingScreen from "@/shared/components/loading-screen";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { analytics } from "@/shared/services/analytics";
 
 /**
@@ -55,6 +55,7 @@ export default function Index() {
 
   const isUpdateCheckPending = updateCheck.status === UpdateCheckStatus.Pending;
   const isReady = !isAuthLoading && !isUpdateCheckPending;
+  const hasReportedSlowStartup = useRef(false);
 
   useEffect(() => {
     if (isReady) {
@@ -63,13 +64,21 @@ export default function Index() {
   }, [isReady]);
 
   // Report a slow splash, naming which gate was still open at the threshold. The timer is
-  // anchored to bundle start rather than mount, so re-arming when a gate flips just
-  // re-targets the same absolute moment; the cleanup on `isReady` cancels it for good.
+  // anchored to bundle start rather than mount, so re-arming when a gate flips before the
+  // threshold re-targets the same absolute moment; the cleanup on `isReady` cancels it for
+  // good.
+  //
+  // Once per launch. A gate flipping *after* the threshold re-runs this effect with a
+  // `remaining` that is already negative, which `Math.max` turns into "fire now" — without
+  // the ref that second arm would report the same slow startup again under a narrower
+  // `waiting_on`. Which gate was the long pole belongs in a completion event carrying both
+  // durations, not in a repeat of this warning.
   useEffect(() => {
-    if (isReady) return;
+    if (isReady || hasReportedSlowStartup.current) return;
     const remaining = SLOW_STARTUP_MS - analytics.msSinceLaunch();
     const timer = setTimeout(
       () => {
+        hasReportedSlowStartup.current = true;
         /* eslint-disable camelcase */
         Sentry.captureMessage("startup_slow", {
           level: "warning",

@@ -22,9 +22,14 @@ import {
 const AnimatedPressable = createAnimatedComponent(Pressable);
 
 /**
- * How long the app may sit in the foreground with a login still pending before we call it
- * stalled. A healthy Android return delivers the result within 1–3 s of the app coming
- * back; the token exchange itself is capped at 10 s per host by the SDK.
+ * How long an Android login may sit in the foreground, after the browser has handed
+ * control back, before we call it stalled. A healthy return delivers the result within
+ * 1–3 s of the app coming back; the token exchange itself is capped at 10 s per host by
+ * the SDK.
+ *
+ * This is not a budget for the whole login. The clock starts only once the app has come
+ * back from the background (see `LoginAttempt.leftForeground`), never while the user is
+ * still on the login page.
  */
 const STALL_TIMEOUT_MS = 15_000;
 
@@ -32,6 +37,12 @@ type LoginAttempt = {
   id: number;
   connection: LoginConnection;
   startedAt: number;
+  /**
+   * Set once the app has actually been backgrounded for this attempt — on Android, that is
+   * the Custom Tab holding the login page. Returning to the foreground without it (a system
+   * alert, the app switcher) is not a hand-back and must not start the clock.
+   */
+  leftForeground: boolean;
   /** Set once a `Stalled` failure has been recorded, so the SDK's late result is not double-counted. */
   stalled: boolean;
 };
@@ -130,17 +141,37 @@ export default function GetStartedButton() {
     setIsSigningIn(false);
   };
 
-  // Stall detection. The SDK can neither resolve nor reject when the activity waiting for
-  // the redirect is recreated without its parameters, or when the callback reaches a fresh
-  // SDK instance that has no PKCE verifier for it. From the user's side that is a button
-  // stuck on "Signing in..." forever. The timer arms only on a transition back to the
-  // foreground and disarms whenever the app leaves it, so time spent in the browser or on
-  // a system dialog never counts.
+  // Stall detection, Android only. The SDK can neither resolve nor reject when the activity
+  // waiting for the redirect is recreated without its parameters, or when the callback
+  // reaches a fresh SDK instance that has no PKCE verifier for it. From the user's side
+  // that is a button stuck on "Signing in..." forever.
+  //
+  // The timer measures the hand-back: it arms when the app returns to the foreground after
+  // having been backgrounded for this attempt, and disarms on every other transition. That
+  // reading holds because Android's Custom Tab is a separate activity — the whole login
+  // page is background time, so a return to the foreground means the browser is done and
+  // the result is now the SDK's to deliver.
+  //
+  // iOS is excluded rather than adapted. ASWebAuthenticationSession is presented inside the
+  // app, so AppState carries no information about how far the login has got: arming on the
+  // return from the system consent alert, or from a detour to fetch a verification code,
+  // would report a stall for every user who types slower than STALL_TIMEOUT_MS. Catching a
+  // real iOS hang needs a timeout on `authorize()` itself, not an AppState signal.
   useEffect(() => {
     const onAppStateChange = (state: AppStateStatus) => {
       clearStallTimer();
       const attempt = inFlight.current;
-      if (state !== "active" || !attempt || attempt.stalled) return;
+      if (!attempt || attempt.stalled) return;
+      if (Platform.OS !== "android") return;
+
+      if (state === "background") {
+        attempt.leftForeground = true;
+        return;
+      }
+
+      // Defensive only: Android emits just `active` and `background`, and `background`
+      // returned above. iOS, where `inactive` exists, never reaches here.
+      if (state !== "active" || !attempt.leftForeground) return;
 
       const foregroundAt = Date.now();
       stallTimer.current = setTimeout(() => {
@@ -174,6 +205,7 @@ export default function GetStartedButton() {
       id: ++attemptCounter.current,
       connection: connection === "sms" ? "sms" : "default",
       startedAt: Date.now(),
+      leftForeground: false,
       stalled: false,
     };
     inFlight.current = attempt;
