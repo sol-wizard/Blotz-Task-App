@@ -23,5 +23,12 @@
   "notes": {
     "title": "捕捉转瞬即逝的灵感",
     "subtitle": "将想法存入 Notes，抽个扭蛋，\n由 AI 幫您决定今天要做哪件事。"
+  },
+  "voice-coach": {
+    "title": "嗨，我是你的 AI 小帮手！",
+    "subtitle": "点我一下，说说今天要做什么吧。",
+    "dismiss": "以后再说",
+    "sheetLabel": "你的第一条任务",
+    "sheetHint": "按住按钮告诉我，\n我帮你记下来！"
   }
 }
