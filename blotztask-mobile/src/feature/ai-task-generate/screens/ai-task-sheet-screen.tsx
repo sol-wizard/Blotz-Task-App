@@ -24,14 +24,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { HoldToTalkPill } from "../component/hold-to-talk-pill";
+import { MicPermissionHint } from "../component/mic-permission-hint";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { useMicPermission } from "../hooks/useMicPermission";
 import { AI_SHEET_SOURCE, type AiSheetSource } from "../models/ai-sheet-source";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
@@ -48,7 +49,9 @@ import { toastConfig } from "@/shared/components/toast-config";
 // Presses shorter than this are treated as accidental taps and discarded;
 // anything longer is a real recording and gets uploaded.
 const MIN_HOLD_MS = 300;
-const HOLD_HINT_AUTO_HIDE_MS = 2500;
+// Shared by the two transient captions below the sheet: the hold-longer nudge and the
+// "mic is off" answer to a tap the OS will not prompt for.
+const HINT_AUTO_HIDE_MS = 2500;
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
@@ -63,15 +66,25 @@ export default function AiTaskSheetScreen() {
   const { bottom } = useSafeAreaInsets();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  // Interface opens in voice mode by default; the keyboard toggle switches to text.
-  const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
+  // Text is the safe default: it is the only mode that works without a permission we have not
+  // asked for yet. Voice is chosen below once the mic is known to be granted.
+  const [inputMode, setInputMode] = useState<"voice" | "text">("text");
   const hasSubmittedAiRequest = useRef(false);
   const heldLongEnough = useRef(false);
+  // Both guard the automatic switch into voice mode; see the mic permission effect below.
+  const hasChosenTextMode = useRef(false);
+  const wasMicGranted = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
   const hideHoldHintLater = useDebouncedCallback(
     () => setIsHoldHintVisible(false),
-    HOLD_HINT_AUTO_HIDE_MS,
+    HINT_AUTO_HIDE_MS,
+  );
+  // Swaps the permission caption to the reason for a moment; see handleSwitchToVoice.
+  const [isMicDisabledReasonVisible, setIsMicDisabledReasonVisible] = useState(false);
+  const hideMicDisabledReasonLater = useDebouncedCallback(
+    () => setIsMicDisabledReasonVisible(false),
+    HINT_AUTO_HIDE_MS,
   );
   const micShakeX = useSharedValue(0);
   const micShakeStyle = useAnimatedStyle(() => ({
@@ -103,64 +116,34 @@ export default function AiTaskSheetScreen() {
   const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
+  const {
+    status: micStatus,
+    isMicRefused,
+    needsSettings,
+    requestMic,
+    openSettings,
+  } = useMicPermission();
   const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
     useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
-  // Resolve mic permission on mount; navigate back if unusable.
-  // Get-then-request (as in shared/services/notifications.ts) separates denied from blocked.
   useEffect(() => {
     analytics.trackAiTaskSheetOpened();
-
-    // Dismissing mid-await would otherwise pop a screen the user has already left.
-    let isActive = true;
-
-    const exitOnUnusableMic = () => {
-      console.warn("[Mic] Permission not granted");
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "permission",
-        errorCode: "PermissionDenied",
-      });
-      if (isActive) router.back();
-    };
-
-    const resolveMicPermission = async () => {
-      const current = await getRecordingPermissionsAsync();
-
-      if (current.granted) {
-        analytics.trackMicPermissionResolved({ outcome: "already_granted" });
-        return;
-      }
-
-      // No prompt will be shown, so a request here is indistinguishable from a real rejection.
-      if (!current.canAskAgain) {
-        analytics.trackMicPermissionResolved({ outcome: "blocked" });
-        exitOnUnusableMic();
-        return;
-      }
-
-      const requested = await requestRecordingPermissionsAsync();
-      analytics.trackMicPermissionResolved({
-        outcome: requested.granted ? "granted" : "denied",
-      });
-
-      if (!requested.granted) exitOnUnusableMic();
-    };
-
-    void resolveMicPermission().catch((error: unknown) => {
-      // Previously an unhandled rejection. The sheet still stays open; only the silence is fixed.
-      console.warn("[Mic] Permission check failed.", error);
-      analytics.trackMicPermissionResolved({
-        outcome: "error",
-        errorCode: "PermissionCheckFailed",
-      });
-    });
-
-    return () => {
-      isActive = false;
-    };
   }, []);
+
+  // Voice is offered only once the mic is known to be granted — including the moment the user
+  // returns from Settings having just enabled it. A deliberate keyboard choice, or a message
+  // already part-typed, outranks the switch.
+  useEffect(() => {
+    const isGranted = micStatus === "granted";
+    const justGranted = isGranted && !wasMicGranted.current;
+    wasMicGranted.current = isGranted;
+
+    if (!justGranted || hasChosenTextMode.current || textInput.length > 0) return;
+
+    Keyboard.dismiss();
+    setInputMode("voice");
+  }, [micStatus, textInput]);
 
   // --- Derived data ---
   const displayTasks = streamedTasks.map((task) =>
@@ -300,11 +283,27 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleSwitchToText = () => {
+    hasChosenTextMode.current = true;
     setIsHoldHintVisible(false);
     setInputMode("text"); // TextInput autoFocus pops the keyboard on mount
   };
 
-  const handleSwitchToVoice = () => {
+  // The mic button is where permission gets asked for. The tap only raises the system prompt;
+  // recording still needs a separate hold, and the sheet stays put whichever way the user answers.
+  const handleSwitchToVoice = async () => {
+    const resolved = await requestMic();
+
+    if (resolved !== "granted") {
+      // A rejection at the system prompt has already answered the tap. A blocked mic shows no
+      // prompt at all, so without this the button would look broken.
+      if (resolved === "blocked") {
+        setIsMicDisabledReasonVisible(true);
+        hideMicDisabledReasonLater();
+      }
+      return;
+    }
+
+    hasChosenTextMode.current = false;
     Keyboard.dismiss();
     setInputMode("voice");
   };
@@ -372,6 +371,14 @@ export default function AiTaskSheetScreen() {
             )}
 
             <KeyboardStickyView className="w-full">
+              {isMicRefused && (
+                <MicPermissionHint
+                  showDisabledReason={isMicDisabledReasonVisible}
+                  showSettingsButton={needsSettings}
+                  onOpenSettings={openSettings}
+                />
+              )}
+
               <View
                 className="w-full flex-row items-center px-6 gap-4"
                 style={{ paddingBottom: bottomPadding }}
@@ -379,13 +386,15 @@ export default function AiTaskSheetScreen() {
                 <View className="flex-1 flex-row items-center gap-4">
                   {/* Mode toggle: keyboard icon (voice mode) / mic icon (text mode) */}
                   <Pressable
-                    onPress={inputMode === "voice" ? handleSwitchToText : handleSwitchToVoice}
+                    onPress={
+                      inputMode === "voice" ? handleSwitchToText : () => void handleSwitchToVoice()
+                    }
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.25)",
                       opacity: isAiGenerating || isRecording ? 0.4 : 1,
                     }}
-                    disabled={isAiGenerating || isRecording}
+                    disabled={isAiGenerating || isRecording || micStatus === "checking"}
                   >
                     <MaterialCommunityIcons
                       name={inputMode === "voice" ? "keyboard-outline" : "microphone"}
@@ -399,7 +408,11 @@ export default function AiTaskSheetScreen() {
                     className="flex-1 items-center justify-center"
                     style={micShakeStyle}
                   >
-                    {inputMode === "voice" ? (
+                    {micStatus === "checking" ? (
+                      // Hold the row empty until the grant is known: the text input autofocuses,
+                      // and flashing the keyboard at a user whose mic works would be wrong.
+                      <View className="h-14 w-full" />
+                    ) : inputMode === "voice" ? (
                       <HoldToTalkPill
                         isRecording={isRecording}
                         disabled={isAiGenerating}
