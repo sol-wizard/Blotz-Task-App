@@ -8,15 +8,22 @@ from pathlib import Path
 from typing import Any
 
 from monthly_report_common import (
+    AI_FAILURE_PROBLEMS,
+    FEATURE_EVENTS,
+    FIRST_WEEK_DAYS,
+    HISTORY_MONTHS,
+    NEW_USER_EVENTS,
     build_parser,
     days_in_month,
     ensure_month_dirs,
     first_row,
+    month_date_bounds,
     month_dir,
     number,
     ratio,
     read_json,
     rows,
+    shift_month,
     write_json,
 )
 
@@ -378,6 +385,50 @@ def normalize_event_inventory(month: str, normalized_dir: Path, warnings: list[s
     return {"event_count": len(records), "events": records}
 
 
+def month_bounds(month: str) -> tuple[date, date]:
+    _, start, end = month_date_bounds(month[:7])
+    return date.fromisoformat(start), date.fromisoformat(end)
+
+
+def event_first_seen_dates(event_inventory: dict[str, Any]) -> dict[str, date]:
+    first_seen: dict[str, date] = {}
+    for record in event_inventory.get("events", []):
+        if record.get("event") and record.get("first_seen"):
+            first_seen[record["event"]] = date.fromisoformat(str(record["first_seen"])[:10])
+    return first_seen
+
+
+def coverage_start(first_seen: dict[str, date], events: tuple[str, ...] | list[str]) -> date | None:
+    """First full day on which every event existed; None when any event never fired."""
+    dates = [first_seen.get(event) for event in events]
+    if not dates or any(value is None for value in dates):
+        return None
+    return max(dates) + timedelta(days=1)
+
+
+def month_coverage(first_seen: dict[str, date], events: tuple[str, ...] | list[str], month: str) -> str:
+    """`complete` when the events existed all month, `partial` when they started mid-month, else `none`."""
+    start_day = coverage_start(first_seen, events)
+    month_start, month_end = month_bounds(month)
+    if start_day is None or start_day >= month_end:
+        return "none"
+    if start_day <= month_start:
+        return "complete"
+    return "partial"
+
+
+def change_ratio(current: Any, previous: Any) -> float | None:
+    if current is None or previous in (None, 0):
+        return None
+    return ratio(current - previous, previous)
+
+
+def point_change(current: Any, previous: Any) -> float | None:
+    if current is None or previous is None:
+        return None
+    return round(float(current) - float(previous), 6)
+
+
 def cohort_is_mature(cohort: str, window_days: int, as_of: date) -> bool:
     year_text, month_text, _ = cohort[:10].split("-", 2)
     year = int(year_text)
@@ -391,11 +442,14 @@ def cohort_is_mature(cohort: str, window_days: int, as_of: date) -> bool:
 
 
 def normalize_installation_retention(
-    month: str, normalized_dir: Path, warnings: list[str]
+    month: str,
+    normalized_dir: Path,
+    warnings: list[str],
+    first_seen: dict[str, date],
+    as_of: date,
 ) -> dict[str, Any]:
     raw = raw_query(month, "installation_retention")
     warn_failed(warnings, "installation_retention", raw)
-    as_of = datetime.now(timezone.utc).date()
     records = []
     for row in rows(raw):
         cohort = str(row[0])
@@ -403,6 +457,15 @@ def normalize_installation_retention(
         d1_users = number(row[2])
         d7_users = number(row[3])
         d30_users = number(row[4])
+        next_month_active_users = number(row[5]) if len(row) > 5 else None
+        next_month = shift_month(cohort, 1)
+        # Readable only once the whole next month has passed and `active_user_5s` covered all of it.
+        next_month_mature = as_of >= month_bounds(next_month)[1]
+        next_month_measurable = (
+            next_month_mature
+            and next_month_active_users is not None
+            and month_coverage(first_seen, ("active_user_5s",), next_month) == "complete"
+        )
         records.append(
             {
                 "cohort": cohort,
@@ -416,6 +479,11 @@ def normalize_installation_retention(
                 "d30_users": d30_users,
                 "d30_rate": ratio(d30_users, users) if cohort_is_mature(cohort, 30, as_of) else None,
                 "d30_mature": cohort_is_mature(cohort, 30, as_of),
+                "next_month_active_users": next_month_active_users if next_month_measurable else None,
+                "next_month_active_rate": (
+                    ratio(next_month_active_users, users) if next_month_measurable else None
+                ),
+                "next_month_mature": next_month_mature,
             }
         )
     write_csv(
@@ -432,6 +500,9 @@ def normalize_installation_retention(
             "d30_users",
             "d30_rate",
             "d30_mature",
+            "next_month_active_users",
+            "next_month_active_rate",
+            "next_month_mature",
         ],
         records,
     )
@@ -659,6 +730,553 @@ def normalize_login_funnel(month: str, normalized_dir: Path, warnings: list[str]
     return {**scalars, "by_reason": by_reason, "by_error_code": by_error_code}
 
 
+NEW_USER_DAILY_COLUMNS = [
+    "installs",
+    "login_started_users",
+    "login_succeeded_users",
+    "login_error_users",
+    "login_exit_only_users",
+    "login_no_outcome_users",
+    "task_created_users",
+    "manual_task_users",
+    "ai_users",
+    "ai_generation_users",
+    "ai_accepted_users",
+    "note_users",
+    "task_completed_users",
+    "created_not_completed_users",
+    "no_task_users",
+]
+FIRST_WEEK_BEHAVIORS = [
+    "task_created_users",
+    "manual_task_users",
+    "ai_users",
+    "ai_generation_users",
+    "ai_accepted_users",
+    "note_users",
+    "task_completed_users",
+]
+
+
+def sum_new_user_days(days: list[dict[str, Any]]) -> dict[str, int]:
+    return {column: sum(int(day[column] or 0) for day in days) for column in NEW_USER_DAILY_COLUMNS}
+
+
+def new_user_cohort(totals: dict[str, int], warnings: list[str], label: str) -> dict[str, Any]:
+    """Login steps and first-week behavior for one group of install days."""
+    installs = totals["installs"]
+    started = totals["login_started_users"]
+    succeeded = totals["login_succeeded_users"]
+    steps_monotonic = installs >= started >= succeeded
+    if not steps_monotonic:
+        warnings.append(
+            f"New-user login steps for {label} are not monotonic ({installs} installed, "
+            f"{started} started, {succeeded} succeeded); new-user login ratios are unavailable."
+        )
+
+    # Users who tapped continue but never logged in, split by what happened to them.
+    not_succeeded = started - succeeded
+    outcome_users = {
+        "login_exit_only_users": totals["login_exit_only_users"],
+        "login_error_users": totals["login_error_users"],
+        "login_no_outcome_users": totals["login_no_outcome_users"],
+    }
+    outcomes_partition = sum(outcome_users.values()) == not_succeeded
+    if not outcomes_partition:
+        warnings.append(
+            f"New-user login outcomes for {label} do not add up to the users who never logged in; "
+            "their ratios are unavailable."
+        )
+
+    # First-week groups among users who logged in: completed a task / created but never
+    # completed / neither. Preset tasks can be completed without being created.
+    groups = [
+        ("task_completed", totals["task_completed_users"]),
+        ("created_not_completed", totals["created_not_completed_users"]),
+        ("no_task", totals["no_task_users"]),
+    ]
+    groups_partition = sum(users for _, users in groups) == succeeded
+    if not groups_partition:
+        warnings.append(f"New-user first-week groups for {label} do not add up to logged-in users.")
+
+    return {
+        "installs": installs,
+        "login_started_users": started,
+        "login_succeeded_users": succeeded,
+        "steps_monotonic": steps_monotonic,
+        "login_started_ratio": ratio(started, installs) if steps_monotonic else None,
+        "login_succeeded_ratio": ratio(succeeded, installs) if steps_monotonic else None,
+        "started_to_succeeded_ratio": ratio(succeeded, started) if steps_monotonic else None,
+        "not_succeeded_users": not_succeeded,
+        **outcome_users,
+        **{
+            f"{key[:-len('_users')]}_ratio": ratio(value, started) if outcomes_partition else None
+            for key, value in outcome_users.items()
+        },
+        "first_week": {
+            "logged_in_users": succeeded,
+            **{key: totals[key] for key in FIRST_WEEK_BEHAVIORS},
+            **{f"{key[:-len('_users')]}_ratio": ratio(totals[key], succeeded) for key in FIRST_WEEK_BEHAVIORS},
+            "groups": [
+                {
+                    "group": group,
+                    "users": users,
+                    "ratio": ratio(users, succeeded) if groups_partition else None,
+                }
+                for group, users in groups
+            ],
+        },
+    }
+
+
+def normalize_new_users(
+    month: str,
+    normalized_dir: Path,
+    warnings: list[str],
+    first_seen: dict[str, date],
+    as_of: date,
+) -> dict[str, Any]:
+    raw = raw_query(month, "new_user_first_week_daily")
+    warn_failed(warnings, "new_user_first_week_daily", raw)
+    daily = [
+        {
+            "install_date": str(row[0])[:10],
+            **{column: number(value) for column, value in zip(NEW_USER_DAILY_COLUMNS, row[1:])},
+        }
+        for row in rows(raw)
+    ]
+    write_csv(normalized_dir / "posthog_new_user_daily.csv", ["install_date", *NEW_USER_DAILY_COLUMNS], daily)
+    if query_failed(raw):
+        return {"coverage_start": None, "monthly": [], "target_month": None, "same_period": None}
+
+    # Login and first-week counts only use install days on which every required event existed;
+    # earlier installs still count as installs but not toward login or first-week rates.
+    start_day = coverage_start(first_seen, NEW_USER_EVENTS)
+    months = [shift_month(month, offset) for offset in range(-HISTORY_MONTHS, 1)]
+    monthly: list[dict[str, Any]] = []
+    cohorts: dict[str, dict[str, Any] | None] = {}
+    for item in months:
+        month_start, month_end = month_bounds(item)
+        days = [day for day in daily if month_start <= date.fromisoformat(day["install_date"]) < month_end]
+        covered_days = [
+            day for day in days if start_day is not None and date.fromisoformat(day["install_date"]) >= start_day
+        ]
+        coverage = month_coverage(first_seen, NEW_USER_EVENTS, item)
+        mature = cohort_is_mature(f"{item}-01", FIRST_WEEK_DAYS, as_of)
+        cohort = (
+            new_user_cohort(sum_new_user_days(covered_days), warnings, item)
+            if coverage != "none" and mature
+            else None
+        )
+        cohorts[item] = cohort
+        installs = sum_new_user_days(days)["installs"]
+        monthly.append(
+            {
+                "month": item,
+                "installs": installs,
+                "installs_change_ratio": change_ratio(installs, monthly[-1]["installs"]) if monthly else None,
+                "first_week_coverage": coverage,
+                "first_week_mature": mature,
+                "covered_installs": cohort["installs"] if cohort else None,
+                "login_succeeded_users": cohort["login_succeeded_users"] if cohort else None,
+                "login_succeeded_ratio": cohort["login_succeeded_ratio"] if cohort else None,
+            }
+        )
+
+    target = monthly[-1]
+    previous = monthly[-2]
+    month_start, month_end = month_bounds(month)
+    same_period = None
+    if as_of < month_end:
+        # Month still running: compare the same day range of the previous month instead.
+        through_day = (as_of - timedelta(days=1)).day
+        previous_start, _ = month_bounds(previous["month"])
+        same_period = {
+            "through_day": through_day,
+            "installs": sum(
+                int(day["installs"] or 0)
+                for day in daily
+                if month_start <= date.fromisoformat(day["install_date"]) < month_end
+                and date.fromisoformat(day["install_date"]).day <= through_day
+            ),
+            "previous_installs": sum(
+                int(day["installs"] or 0)
+                for day in daily
+                if previous_start <= date.fromisoformat(day["install_date"]) < month_start
+                and date.fromisoformat(day["install_date"]).day <= through_day
+            ),
+        }
+        same_period["installs_change_ratio"] = change_ratio(
+            same_period["installs"], same_period["previous_installs"]
+        )
+
+    write_csv(
+        normalized_dir / "posthog_new_users_monthly.csv",
+        list(monthly[0].keys()),
+        monthly,
+    )
+    return {
+        "coverage_start": start_day.isoformat() if start_day else None,
+        "window_days": FIRST_WEEK_DAYS,
+        "monthly": monthly,
+        "target_month": {
+            "month": month,
+            "installs": target["installs"],
+            "previous_month_installs": previous["installs"],
+            "installs_change_ratio": target["installs_change_ratio"] if same_period is None else None,
+            "coverage": target["first_week_coverage"],
+            "coverage_start": (
+                start_day.isoformat() if target["first_week_coverage"] == "partial" and start_day else None
+            ),
+            "mature": target["first_week_mature"],
+            "cohort": cohorts[month],
+            # Previous month is only a comparison baseline when its whole month was covered.
+            "previous_month_cohort": (
+                cohorts[previous["month"]] if previous["first_week_coverage"] == "complete" else None
+            ),
+        },
+        "same_period": same_period,
+    }
+
+
+def normalize_user_lifecycle(
+    month: str,
+    normalized_dir: Path,
+    warnings: list[str],
+    first_seen: dict[str, date],
+    activity: dict[str, Any],
+    month_complete: bool,
+) -> dict[str, Any]:
+    raw = raw_query(month, "user_lifecycle_monthly")
+    warn_failed(warnings, "user_lifecycle_monthly", raw)
+    if query_failed(raw):
+        return {"monthly": [], "target_month": None}
+    by_month = {
+        str(row[0])[:7]: {
+            "active_users": int(number(row[1]) or 0),
+            "retained_users": int(number(row[2]) or 0),
+            "new_users": int(number(row[3]) or 0),
+            "resurrected_users": int(number(row[4]) or 0),
+        }
+        for row in rows(raw)
+    }
+    empty = {"active_users": 0, "retained_users": 0, "new_users": 0, "resurrected_users": 0}
+
+    monthly: list[dict[str, Any]] = []
+    for item in [shift_month(month, offset) for offset in range(-HISTORY_MONTHS, 1)]:
+        coverage = month_coverage(first_seen, ("active_user_5s",), item)
+        previous = monthly[-1] if monthly else None
+        if coverage == "none":
+            monthly.append({"month": item, "coverage": coverage})
+            continue
+        values = by_month.get(item, empty)
+        # Retention needs both this month and last month fully covered; a running target month
+        # is never compared with a complete one.
+        comparable = (
+            coverage == "complete"
+            and previous is not None
+            and previous.get("coverage") == "complete"
+            and (item != month or month_complete)
+        )
+        previous_active = previous["active_users"] if comparable else None
+        composition_complete = (
+            values["retained_users"] + values["new_users"] + values["resurrected_users"]
+            == values["active_users"]
+        )
+        if not composition_complete:
+            warnings.append(f"`user_lifecycle_monthly` groups for {item} do not add up to active users.")
+        monthly.append(
+            {
+                "month": item,
+                "coverage": coverage,
+                **values,
+                "previous_active_users": previous_active,
+                "active_users_change_ratio": change_ratio(values["active_users"], previous_active),
+                "retention_rate": ratio(values["retained_users"], previous_active),
+                "churned_users": (
+                    previous_active - values["retained_users"] if previous_active is not None else None
+                ),
+                "composition_complete": composition_complete,
+            }
+        )
+
+    write_csv(
+        normalized_dir / "posthog_user_lifecycle.csv",
+        [
+            "month",
+            "coverage",
+            "active_users",
+            "retained_users",
+            "new_users",
+            "resurrected_users",
+            "previous_active_users",
+            "active_users_change_ratio",
+            "retention_rate",
+            "churned_users",
+            "composition_complete",
+        ],
+        monthly,
+    )
+    target = dict(monthly[-1])
+    target["dau_over_mau"] = ratio(activity.get("dau_average"), activity.get("mau"))
+    return {"monthly": monthly, "target_month": target}
+
+
+def normalize_feature_usage(
+    month: str,
+    normalized_dir: Path,
+    warnings: list[str],
+    first_seen: dict[str, date],
+    month_complete: bool,
+) -> dict[str, Any]:
+    raw = raw_query(month, "feature_usage_monthly")
+    warn_failed(warnings, "feature_usage_monthly", raw)
+    if query_failed(raw):
+        return {"active_users": None, "previous_active_users": None, "features": []}
+    keys = [key for key, _ in FEATURE_EVENTS]
+    by_month = {
+        str(row[0])[:7]: {
+            "active_users": int(number(row[1]) or 0),
+            **{key: int(number(value) or 0) for key, value in zip(keys, row[2:])},
+        }
+        for row in rows(raw)
+    }
+    previous_month = shift_month(month, -1)
+
+    def month_value(item: str, key: str, events: tuple[str, ...]) -> tuple[str, int | None]:
+        coverage = month_coverage(first_seen, events, item)
+        if coverage == "none":
+            return coverage, None
+        return coverage, by_month.get(item, {}).get(key, 0)
+
+    active_coverage, active_users = month_value(month, "active_users", ("active_user_5s",))
+    previous_active_coverage, previous_active_users = month_value(
+        previous_month, "active_users", ("active_user_5s",)
+    )
+    features = []
+    for key, events in FEATURE_EVENTS:
+        coverage, users = month_value(month, key, events)
+        previous_coverage, previous_users = month_value(previous_month, key, events)
+        share = ratio(users, active_users)
+        previous_share = ratio(previous_users, previous_active_users)
+        comparable = month_complete and coverage == "complete" and previous_coverage == "complete"
+        start_day = coverage_start(first_seen, events)
+        features.append(
+            {
+                "feature": key,
+                "events": list(events),
+                "users": users,
+                "share_of_active_users": share,
+                "coverage": coverage,
+                "coverage_start": start_day.isoformat() if coverage == "partial" and start_day else None,
+                "previous_users": previous_users,
+                "previous_share_of_active_users": previous_share,
+                "previous_coverage": previous_coverage,
+                "users_change_ratio": change_ratio(users, previous_users) if comparable else None,
+                "share_change_points": point_change(share, previous_share) if comparable else None,
+            }
+        )
+    write_csv(
+        normalized_dir / "posthog_feature_usage.csv",
+        [
+            "feature",
+            "users",
+            "share_of_active_users",
+            "coverage",
+            "coverage_start",
+            "previous_users",
+            "previous_share_of_active_users",
+            "previous_coverage",
+            "users_change_ratio",
+            "share_change_points",
+        ],
+        [{key: value for key, value in record.items() if key != "events"} for record in features],
+    )
+    return {
+        "active_users": active_users if active_coverage != "none" else None,
+        "previous_active_users": previous_active_users if previous_active_coverage != "none" else None,
+        "features": features,
+    }
+
+
+def normalize_reliability(
+    month: str,
+    normalized_dir: Path,
+    warnings: list[str],
+    first_seen: dict[str, date],
+    month_complete: bool,
+    login_funnel: dict[str, Any],
+) -> dict[str, Any]:
+    previous_month = shift_month(month, -1)
+    raws = {
+        name: raw_query(month, name)
+        for name in [
+            "ai_failures_monthly",
+            "ai_failures_by_problem_monthly",
+            "ai_breakdown_monthly",
+            "login_users_monthly",
+        ]
+    }
+    for name, raw in raws.items():
+        warn_failed(warnings, name, raw)
+
+    def by_month(name: str) -> dict[str, list[Any]]:
+        return {str(row[0])[:7]: row[1:] for row in rows(raws[name])}
+
+    def coverages(events: tuple[str, ...]) -> tuple[str, str, bool]:
+        current = month_coverage(first_seen, events, month)
+        previous = month_coverage(first_seen, events, previous_month)
+        return current, previous, month_complete and current == previous == "complete"
+
+    def value(rows_by_month: dict[str, list[Any]], item: str, index: int, coverage: str) -> Any:
+        if coverage == "none":
+            return None
+        row = rows_by_month.get(item)
+        return number(row[index]) if row else 0
+
+    result: dict[str, Any] = {}
+
+    failure_coverage, previous_failure_coverage, failures_comparable = coverages(("ai_task_generation_failed",))
+    if not query_failed(raws["ai_failures_monthly"]):
+        totals = by_month("ai_failures_monthly")
+        current_users = value(totals, month, 1, failure_coverage)
+        previous_users = value(totals, previous_month, 1, previous_failure_coverage)
+        current_count = value(totals, month, 0, failure_coverage)
+        previous_count = value(totals, previous_month, 0, previous_failure_coverage)
+        result["ai_failures"] = {
+            "coverage": failure_coverage,
+            "previous_coverage": previous_failure_coverage,
+            "failure_count": current_count,
+            "failure_users": current_users,
+            "previous_failure_count": previous_count,
+            "previous_failure_users": previous_users,
+            "failure_count_change_ratio": (
+                change_ratio(current_count, previous_count) if failures_comparable else None
+            ),
+            "failure_users_change_ratio": (
+                change_ratio(current_users, previous_users) if failures_comparable else None
+            ),
+        }
+
+    if not query_failed(raws["ai_failures_by_problem_monthly"]):
+        problem_rows: dict[tuple[str, str], list[Any]] = {
+            (str(row[0])[:7], row[1]): row[2:] for row in rows(raws["ai_failures_by_problem_monthly"])
+        }
+
+        def problem_value(item: str, problem: str, index: int, coverage: str) -> Any:
+            if coverage == "none":
+                return None
+            row = problem_rows.get((item, problem))
+            return number(row[index]) if row else 0
+
+        by_problem = []
+        for problem in [key for key, _ in AI_FAILURE_PROBLEMS] + ["other"]:
+            record = {
+                "problem": problem,
+                "error_codes": dict(AI_FAILURE_PROBLEMS).get(problem, ()),
+                "failure_count": problem_value(month, problem, 0, failure_coverage),
+                "failure_users": problem_value(month, problem, 1, failure_coverage),
+                "previous_failure_count": problem_value(previous_month, problem, 0, previous_failure_coverage),
+                "previous_failure_users": problem_value(previous_month, problem, 1, previous_failure_coverage),
+            }
+            if problem == "other" and not record["failure_count"] and not record["previous_failure_count"]:
+                continue
+            record["error_codes"] = list(record["error_codes"])
+            record["failure_count_change_ratio"] = (
+                change_ratio(record["failure_count"], record["previous_failure_count"])
+                if failures_comparable
+                else None
+            )
+            record["failure_users_change_ratio"] = (
+                change_ratio(record["failure_users"], record["previous_failure_users"])
+                if failures_comparable
+                else None
+            )
+            by_problem.append(record)
+        by_problem.sort(key=lambda record: -(record["failure_count"] or 0))
+        result["ai_failures_by_problem"] = by_problem
+        write_csv(
+            normalized_dir / "posthog_ai_failures_by_problem.csv",
+            [
+                "problem",
+                "failure_count",
+                "failure_users",
+                "previous_failure_count",
+                "previous_failure_users",
+                "failure_count_change_ratio",
+                "failure_users_change_ratio",
+            ],
+            [{key: value for key, value in record.items() if key != "error_codes"} for record in by_problem],
+        )
+
+    if not query_failed(raws["ai_breakdown_monthly"]):
+        breakdown = by_month("ai_breakdown_monthly")
+        current_coverage, previous_coverage, comparable = coverages(("breakdown_task",))
+        current = {
+            "user_count": value(breakdown, month, 1, current_coverage),
+            "success_rate": value(breakdown, month, 2, current_coverage) if breakdown.get(month) else None,
+            "average_duration_ms": value(breakdown, month, 3, current_coverage) if breakdown.get(month) else None,
+        }
+        previous = {
+            "user_count": value(breakdown, previous_month, 1, previous_coverage),
+            "success_rate": (
+                value(breakdown, previous_month, 2, previous_coverage) if breakdown.get(previous_month) else None
+            ),
+            "average_duration_ms": (
+                value(breakdown, previous_month, 3, previous_coverage) if breakdown.get(previous_month) else None
+            ),
+        }
+        result["ai_breakdown"] = {
+            "coverage": current_coverage,
+            "previous_coverage": previous_coverage,
+            **current,
+            **{f"previous_{key}": item for key, item in previous.items()},
+            "user_count_change_ratio": (
+                change_ratio(current["user_count"], previous["user_count"]) if comparable else None
+            ),
+            "success_rate_change_points": (
+                point_change(current["success_rate"], previous["success_rate"]) if comparable else None
+            ),
+            "average_duration_change_ms": (
+                point_change(current["average_duration_ms"], previous["average_duration_ms"])
+                if comparable
+                else None
+            ),
+        }
+
+    if not query_failed(raws["login_users_monthly"]):
+        login = by_month("login_users_monthly")
+        current_coverage, previous_coverage, comparable = coverages(("login_started", "login_succeeded"))
+        started = value(login, month, 0, current_coverage)
+        succeeded = value(login, month, 1, current_coverage)
+        previous_started = value(login, previous_month, 0, previous_coverage)
+        previous_succeeded = value(login, previous_month, 1, previous_coverage)
+        success_ratio = ratio(succeeded, started)
+        previous_success_ratio = ratio(previous_succeeded, previous_started)
+        result["login"] = {
+            "coverage": current_coverage,
+            "coverage_start": (
+                coverage_start(first_seen, ("login_started", "login_succeeded")).isoformat()
+                if current_coverage == "partial"
+                else None
+            ),
+            "previous_coverage": previous_coverage,
+            "started_users": started,
+            "succeeded_users": succeeded,
+            "started_to_succeeded_ratio": success_ratio,
+            "previous_started_users": previous_started,
+            "previous_succeeded_users": previous_succeeded,
+            "previous_started_to_succeeded_ratio": previous_success_ratio,
+            "started_to_succeeded_change_points": (
+                point_change(success_ratio, previous_success_ratio) if comparable else None
+            ),
+            "error_users": login_funnel.get("error_users"),
+            "exit_only_users": login_funnel.get("exit_only_users"),
+            "no_outcome_users": login_funnel.get("no_outcome_users"),
+        }
+    return result
+
+
 def main() -> int:
     parser = build_parser("Normalize Blotz monthly PostHog raw query responses.")
     args = parser.parse_args()
@@ -683,13 +1301,31 @@ def main() -> int:
     notes = normalize_notes(month, normalized_dir, warnings)
     screen_views = normalize_screen_views(month, normalized_dir, warnings)
     event_inventory = normalize_event_inventory(month, normalized_dir, warnings)
-    installation_retention = normalize_installation_retention(month, normalized_dir, warnings)
+    first_seen = event_first_seen_dates(event_inventory)
+    as_of = datetime.now(timezone.utc).date()
+    month_complete = as_of >= month_bounds(month)[1]
+    installation_retention = normalize_installation_retention(
+        month, normalized_dir, warnings, first_seen, as_of
+    )
     ai_manual_combinations = normalize_ai_manual_combinations(month, normalized_dir, warnings)
     audience = normalize_audience(month, normalized_dir, warnings)
     historical_install_proxy = normalize_historical_install_proxy(month, normalized_dir, warnings)
     login_funnel = normalize_login_funnel(month, normalized_dir, warnings)
+    new_users = normalize_new_users(month, normalized_dir, warnings, first_seen, as_of)
+    user_lifecycle = normalize_user_lifecycle(
+        month, normalized_dir, warnings, first_seen, activity, month_complete
+    )
+    feature_usage = normalize_feature_usage(month, normalized_dir, warnings, first_seen, month_complete)
+    reliability = normalize_reliability(
+        month, normalized_dir, warnings, first_seen, month_complete, login_funnel
+    )
 
     summary = {
+        "report_context": {"as_of": as_of.isoformat(), "month_complete": month_complete},
+        "new_users": new_users,
+        "user_lifecycle": user_lifecycle,
+        "feature_usage": feature_usage,
+        "reliability": reliability,
         "activity": activity,
         "manual_tasks": manual_tasks,
         "ai_task_generation": ai_task_generation,

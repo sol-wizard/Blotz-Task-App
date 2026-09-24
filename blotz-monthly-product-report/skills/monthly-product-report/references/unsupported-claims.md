@@ -6,7 +6,11 @@ Do not make these claims from the first-version dataset:
 - AI improved task completion.
 - AI improved revenue, subscription conversion, or trial conversion.
 - App Store source quality drove product activation.
-- New user onboarding conversion increased or decreased. The instrumented login steps (sign-in screen, continue tap, login success) may be reported when the snapshot contains them, but post-login onboarding and activation remain unmeasured.
+- New user onboarding conversion increased or decreased. The instrumented login steps (sign-in screen, continue tap, login success) and the first-week behaviors in `new_users` may be reported when the snapshot contains them, but post-login onboarding screens remain unmeasured.
+- New installs equal App Store downloads.
+- Completing a task or using AI in the first week made new users stay, or caused any retention change.
+- A month-over-month change for a month whose events only covered part of the month, or a trend from a single month-over-month change.
+- A per-task completion rate, from counts of users who created and completed tasks.
 - This is a complete feature-usage ranking.
 - Notes/Gashapon screen views represent all feature discovery.
 - Manual vs AI task creation is a perfect like-for-like comparison.

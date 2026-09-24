@@ -7,12 +7,20 @@ import urllib.error
 import urllib.request
 from typing import Any
 
+from datetime import datetime, timedelta
+
 from monthly_report_common import (
+    AI_FAILURE_PROBLEMS,
+    FEATURE_EVENTS,
+    FIRST_WEEK_DAYS,
+    HISTORY_MONTHS,
+    NEW_USER_EVENTS,
     build_parser,
     ensure_month_dirs,
     load_env_file,
     parse_month,
     require_env,
+    shift_month,
     utc_now_iso,
     write_json,
 )
@@ -35,12 +43,216 @@ EVENTS_QUERIED = [
     "login_started",
     "login_succeeded",
     "login_failed",
+    "task_created",
+    "task_completed",
+    "pomodoro_started",
+    "gashapon_spin",
+    "badge_unlocked",
+    "share_completed",
+    "review_generated",
 ]
+
+
+def sql_list(values: tuple[str, ...] | list[str]) -> str:
+    return ", ".join(f"'{value}'" for value in values)
+
+
+def within_first_week(days_column: str) -> str:
+    return (
+        f"arrayExists(d -> d >= install_date AND d < addDays(install_date, {FIRST_WEEK_DAYS}), "
+        f"{days_column})"
+    )
+
+
+def history_query_definitions(month: str, start: str, end: str) -> dict[str, str]:
+    _, previous_start, _ = parse_month(shift_month(month, -1))
+    _, history_start, _ = parse_month(shift_month(month, -HISTORY_MONTHS))
+    first_week_end = (
+        datetime.fromisoformat(end) + timedelta(days=FIRST_WEEK_DAYS)
+    ).strftime("%Y-%m-%d %H:%M:%S")
+    comparison_window = (
+        f"timestamp >= toDateTime('{previous_start}') AND timestamp < toDateTime('{end}')"
+    )
+
+    feature_events = sorted({event for _, events in FEATURE_EVENTS for event in events})
+    feature_columns = ",\n                ".join(
+        "countIf(" + " OR ".join(f"has(events_used, '{event}')" for event in events) + f") AS {key}_users"
+        for key, events in FEATURE_EVENTS
+    )
+    problem_cases = ", ".join(
+        f"properties.error_code IN ({sql_list(codes)}), '{problem}'"
+        for problem, codes in AI_FAILURE_PROBLEMS
+    )
+    first_week_events = [event for event in NEW_USER_EVENTS if event != "Application Installed"]
+
+    return {
+        # One row per install day: new installs, what happened at login within 7 days of install,
+        # and what users who logged in did in that same week. Daily grain lets normalization drop
+        # install days that fall before the underlying events existed.
+        "new_user_first_week_daily": f"""
+            SELECT
+                install_date,
+                count() AS installs,
+                countIf(started) AS login_started_users,
+                countIf(succeeded) AS login_succeeded_users,
+                countIf(started AND NOT succeeded AND had_error) AS login_error_users,
+                countIf(started AND NOT succeeded AND NOT had_error AND had_exit) AS login_exit_only_users,
+                countIf(started AND NOT succeeded AND NOT had_error AND NOT had_exit) AS login_no_outcome_users,
+                countIf(succeeded AND created) AS task_created_users,
+                countIf(succeeded AND created_manual) AS manual_task_users,
+                countIf(succeeded AND (ai_session OR breakdown)) AS ai_users,
+                countIf(succeeded AND ai_session) AS ai_generation_users,
+                countIf(succeeded AND ai_accepted) AS ai_accepted_users,
+                countIf(succeeded AND note) AS note_users,
+                countIf(succeeded AND completed) AS task_completed_users,
+                countIf(succeeded AND created AND NOT completed) AS created_not_completed_users,
+                countIf(succeeded AND NOT created AND NOT completed) AS no_task_users
+            FROM (
+                SELECT
+                    install_date,
+                    {within_first_week('started_days')} AS started,
+                    {within_first_week('succeeded_days')} AS succeeded,
+                    {within_first_week('error_days')} AS had_error,
+                    {within_first_week('exit_days')} AS had_exit,
+                    {within_first_week('created_days')} AS created,
+                    {within_first_week('manual_days')} AS created_manual,
+                    {within_first_week('ai_session_days')} AS ai_session,
+                    {within_first_week('ai_accepted_days')} AS ai_accepted,
+                    {within_first_week('breakdown_days')} AS breakdown,
+                    {within_first_week('note_days')} AS note,
+                    {within_first_week('completed_days')} AS completed
+                FROM (
+                    SELECT
+                        person_id,
+                        minIf(toDate(timestamp), event = 'Application Installed') AS install_date,
+                        groupUniqArrayIf(toDate(timestamp), event = 'login_started') AS started_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'login_succeeded') AS succeeded_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'login_failed' AND properties.reason IN ('no_tokens', 'auth0_error')) AS error_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'login_failed' AND properties.reason IN ('cancelled', 'browser_dismissed')) AS exit_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'task_created') AS created_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'task_created' AND properties.source = 'manual') AS manual_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'ai_task_generation_session') AS ai_session_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'ai_task_generation_session' AND properties.outcome = 'accepted') AS ai_accepted_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'breakdown_task') AS breakdown_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'note_created') AS note_days,
+                        groupUniqArrayIf(toDate(timestamp), event = 'task_completed') AS completed_days
+                    FROM events
+                    WHERE event = 'Application Installed'
+                        OR (
+                            event IN ({sql_list(first_week_events)})
+                            AND timestamp >= toDateTime('{history_start}')
+                            AND timestamp < toDateTime('{first_week_end}')
+                        )
+                    GROUP BY person_id
+                    HAVING install_date >= toDate('{history_start}') AND install_date < toDate('{end}')
+                )
+            )
+            GROUP BY install_date
+            ORDER BY install_date
+            LIMIT 400
+        """,
+        # Monthly active users split into returning (active last month), new (first active month)
+        # and resurrected (active before, but not last month).
+        "user_lifecycle_monthly": f"""
+            SELECT
+                month,
+                count() AS active_users,
+                countIf(has(active_months, addMonths(month, -1))) AS retained_users,
+                countIf(first_month = month) AS new_users,
+                countIf(first_month < month AND NOT has(active_months, addMonths(month, -1))) AS resurrected_users
+            FROM (
+                SELECT
+                    person_id,
+                    groupUniqArray(toStartOfMonth(timestamp)) AS active_months,
+                    min(toStartOfMonth(timestamp)) AS first_month
+                FROM events
+                WHERE event = 'active_user_5s' AND timestamp < toDateTime('{end}')
+                GROUP BY person_id
+            )
+            ARRAY JOIN active_months AS month
+            WHERE month >= toDate('{history_start}')
+            GROUP BY month
+            ORDER BY month
+            LIMIT 24
+        """,
+        # Share of each month's active users who used each feature, for this and last month.
+        "feature_usage_monthly": f"""
+            SELECT
+                month,
+                count() AS active_users,
+                {feature_columns}
+            FROM (
+                SELECT
+                    person_id,
+                    toStartOfMonth(timestamp) AS month,
+                    groupUniqArray(event) AS events_used
+                FROM events
+                WHERE event IN ('active_user_5s', {sql_list(feature_events)}) AND {comparison_window}
+                GROUP BY person_id, month
+                HAVING has(events_used, 'active_user_5s')
+            )
+            GROUP BY month
+            ORDER BY month
+        """,
+        "ai_failures_monthly": f"""
+            SELECT
+                toStartOfMonth(timestamp) AS month,
+                count() AS failure_count,
+                count(DISTINCT person_id) AS failure_users
+            FROM events
+            WHERE event = 'ai_task_generation_failed' AND {comparison_window}
+            GROUP BY month
+            ORDER BY month
+        """,
+        "ai_failures_by_problem_monthly": f"""
+            SELECT
+                toStartOfMonth(timestamp) AS month,
+                multiIf({problem_cases}, 'other') AS problem,
+                count() AS failure_count,
+                count(DISTINCT person_id) AS failure_users
+            FROM events
+            WHERE event = 'ai_task_generation_failed' AND {comparison_window}
+            GROUP BY month, problem
+            ORDER BY month, failure_count DESC
+            LIMIT 40
+        """,
+        "ai_breakdown_monthly": f"""
+            SELECT
+                toStartOfMonth(timestamp) AS month,
+                count() AS usage_count,
+                count(DISTINCT person_id) AS user_count,
+                avg(if(properties.success = true, 1, 0)) AS success_rate,
+                avg(toFloat(properties.duration_ms)) AS average_duration_ms
+            FROM events
+            WHERE event = 'breakdown_task' AND {comparison_window}
+            GROUP BY month
+            ORDER BY month
+        """,
+        "login_users_monthly": f"""
+            SELECT
+                month,
+                countIf(starts > 0) AS started_users,
+                countIf(successes > 0) AS succeeded_users
+            FROM (
+                SELECT
+                    person_id,
+                    toStartOfMonth(timestamp) AS month,
+                    countIf(event = 'login_started') AS starts,
+                    countIf(event = 'login_succeeded') AS successes
+                FROM events
+                WHERE event IN ('login_started', 'login_succeeded') AND {comparison_window}
+                GROUP BY person_id, month
+            )
+            GROUP BY month
+            ORDER BY month
+        """,
+    }
 
 
 def query_definitions(start: str, end: str) -> dict[str, str]:
     window = f"timestamp >= toDateTime('{start}') AND timestamp < toDateTime('{end}')"
     return {
+        **history_query_definitions(start[:7], start, end),
         "activity_daily": f"""
             SELECT toDate(timestamp) AS day, count(DISTINCT person_id) AS active_users
             FROM events
@@ -224,15 +436,17 @@ def query_definitions(start: str, end: str) -> dict[str, str]:
                 count() AS users,
                 countIf(has(open_days, addDays(install_date, 1))) AS d1_users,
                 countIf(has(open_days, addDays(install_date, 7))) AS d7_users,
-                countIf(has(open_days, addDays(install_date, 30))) AS d30_users
+                countIf(has(open_days, addDays(install_date, 30))) AS d30_users,
+                countIf(has(active_months, addMonths(cohort_month, 1))) AS next_month_active_users
             FROM (
                 SELECT
                     person_id,
                     minIf(toDate(timestamp), event = 'Application Installed') AS install_date,
                     toStartOfMonth(install_date) AS cohort_month,
-                    groupUniqArrayIf(toDate(timestamp), event = 'Application Opened') AS open_days
+                    groupUniqArrayIf(toDate(timestamp), event = 'Application Opened') AS open_days,
+                    groupUniqArrayIf(toStartOfMonth(timestamp), event = 'active_user_5s') AS active_months
                 FROM events
-                WHERE event IN ('Application Installed', 'Application Opened')
+                WHERE event IN ('Application Installed', 'Application Opened', 'active_user_5s')
                 GROUP BY person_id
                 HAVING install_date >= toDate('2025-10-01')
             )

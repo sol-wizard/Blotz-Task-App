@@ -113,6 +113,22 @@ Properties:
 
 Use for total, manual, AI-created, and unknown-source note counts. Calculate AI share only when every returned event has a supported `manual` or `ai` source. Unexpected or missing source values remain part of the total and must produce a data-quality warning.
 
+### Task lifecycle and engagement events
+
+These events reached production between 2026-08-04 and 2026-08-23, so August 2026 is the first month with any coverage and September 2026 the first full month. Check `coverage` in the snapshot before comparing months.
+
+| Event | Meaning | Properties used |
+|---|---|---|
+| `task_created` | A task was created from the task form, the AI sheet, or the onboarding voice coach. Recurring tasks fire once per series; preset tasks seeded by the server never fire it. | `source`: `manual`, `ai`, `onboarding_ai` |
+| `task_completed` | A user marked a task as complete. Fires per occurrence for recurring tasks; never fires on un-completing. | — |
+| `pomodoro_started` | A Pomodoro focus session started. | — |
+| `gashapon_spin` | The user spun the gashapon machine. | — |
+| `badge_unlocked` | A badge was unlocked. | — |
+| `share_completed` | A share (weekly/monthly review or badge) finished successfully. | — |
+| `review_generated` | A weekly or monthly review was generated. | — |
+
+Use them for per-user presence only: whether a user did it at least once in a month or in their first week. New users can complete preset tasks they never created, so "completed a task" does not imply "created a task".
+
 ### `screen_viewed`
 
 Meaning: A manually tracked screen was viewed.

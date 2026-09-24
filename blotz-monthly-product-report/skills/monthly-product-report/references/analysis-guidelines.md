@@ -25,6 +25,7 @@ Apply these rules when turning metrics into PM conclusions.
 
 ## AI Reliability
 
+- In the PM-facing report, group failures by the problem users saw (`reliability.ai_failures_by_problem`: no usable tasks, network, microphone permission, recording) rather than by stage and error code. Keep stage × error code for the appendix.
 - Top failure stages and error codes should drive engineering follow-up.
 - Associate a failure stage with an error code only when `by_stage_and_error_code` contains that exact pair. Separate `by_stage` and `by_error_code` totals do not prove which errors occurred at each stage.
 - Treat failure events and affected users as reliability impact, not a failure rate. A failure rate requires a stable attempt denominator and a reliable way to join each attempt, its intermediate failures, and its final outcome.
@@ -73,10 +74,38 @@ Apply these rules when turning metrics into PM conclusions.
 - MAU and active days per user describe product activity, not acquisition.
 - Manual tasks per active user is a rough core-usage intensity metric.
 - Do not infer retention cohorts without cohort data.
-- When cohort data is present, show only mature D1/D7/D30 windows; label immature windows by omission rather than zero.
+- Of the install-cohort return windows, show only next-day return (`d1_rate`) and still active next month (`next_month_active_rate`), and only when mature; label immature windows by omission rather than zero. Exact-day D7/D30 stay in the snapshot but not in the report: their counts are single digits and one arbitrary day decides them.
 - Treat active-day tiers as frequency segments, not retention cohorts.
 - Treat AI/manual combinations as correlations. More active users have more opportunities to use both workflows; the groups do not establish feature conversion or causal lift.
 - The login funnel counts users who saw the sign-in screen, tapped continue, and succeeded within the same month. Steps are per-person presence, not ordered attempts: present user-level step ratios only when `steps_monotonic` is true, use `started_attempts` as the only denominator for attempt-level rates, treat `cancelled` and `browser_dismissed` as user exits rather than reliability failures, and report `unresolved_attempts` as attempts without a recorded outcome, not as failures. Explain what happened to users who never logged in with the per-user buckets (`exit_only_users`, `error_users`, `no_outcome_users`), which partition `not_succeeded_users`; a user who both hit an error and cancelled is an error user. Prefer per-user counts over per-attempt counts in PM-facing tables because retries inflate attempt counts. The sign-in screen also appears after logout, so the funnel is not a new-user or onboarding conversion.
+
+## New Users
+
+- A new install is a PostHog person's first `Application Installed`: the first time the app was opened, not an App Store download. Reinstalls on a new device can look new.
+- Login and first-week values cover only installs from `new_users.coverage_start`. Say which install dates they cover whenever the target month is `partial`, and never compare a partial month with a complete one.
+- The 7-day login steps (installed → tapped continue → logged in) are one population in order within a fixed window, so they may be shown as a funnel when `steps_monotonic` is true. They are different from the all-user login funnel, which includes returning users who logged out.
+- First-week behaviors overlap and must not be added together. The three first-week groups (`task_completed`, `created_not_completed`, `no_task`) partition users who logged in and may be shown as a composition.
+- First-week behavior describes what new users did, not whether it made them stay. Do not link it to retention without a joined analysis.
+- A month whose installs are far below its first-time active users (for example March 2026: 9 installs, 75 first-time active users) points to an install tracking gap. Flag it and do not use it for month-over-month change.
+
+## Returning Users
+
+- `user_lifecycle` splits each month's active users into returning from last month, first-time active, and back after a gap; the three add up to monthly active users when `composition_complete` is true. "First-time active" means the first month with an `active_user_5s` event, which only exists from 2025-12-27, so it is not identical to new installs.
+- Last-month retention (`retention_rate`) is the share of last month's active users who were active again this month. It uses the whole active base, so it is steadier than cohort windows at current volumes.
+- Daily/monthly active ratio (`dau_over_mau`) is how many days in the month an average active user shows up, relative to the month; describe it as stickiness, not engagement quality.
+- Active-day tiers are this month's usage frequency, not retention.
+
+## Feature Usage
+
+- Feature users are active users who fired the feature event at least once in the month. Features overlap; never add them or present them as a ranking of all features.
+- Show a feature's share of active users only with its coverage; for a `partial` month, state the date it started. Compare with last month only when `users_change_ratio` is present.
+- Absence of a feature event means the feature is not instrumented or was not used, not that the feature does not exist.
+
+## Month-over-month
+
+- Use the change fields the snapshot provides; never compute a change yourself from a `partial` or `none` month.
+- With one previous month, describe direction only (up/down and by how much). Do not call a single month's change a trend.
+- Small bases swing a lot; when either month has fewer than about 20 users, give the counts next to the percentage change.
 
 ## Instrumentation Health
 

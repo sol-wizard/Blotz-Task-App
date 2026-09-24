@@ -35,6 +35,17 @@ EMPTY_APP_STORE = {
 
 
 EMPTY_POSTHOG = {
+    "report_context": {"as_of": None, "month_complete": None},
+    "new_users": {
+        "coverage_start": None,
+        "window_days": None,
+        "monthly": [],
+        "target_month": None,
+        "same_period": None,
+    },
+    "user_lifecycle": {"monthly": [], "target_month": None},
+    "feature_usage": {"active_users": None, "previous_active_users": None, "features": []},
+    "reliability": {},
     "activity": {
         "mau": None,
         "wau_average": None,
@@ -205,6 +216,47 @@ def check(name: str, status: str, details: str) -> dict[str, str]:
     return {"name": name, "status": status, "details": details}
 
 
+def new_user_coverage_check(new_users: dict[str, Any]) -> dict[str, str]:
+    target = new_users.get("target_month") or {}
+    coverage = target.get("coverage")
+    if coverage == "complete" and target.get("mature"):
+        return check("new_user_first_week_coverage", "pass", "New-user login and first-week metrics cover the whole month.")
+    if coverage == "partial" and target.get("mature"):
+        return check(
+            "new_user_first_week_coverage",
+            "warning",
+            f"New-user login and first-week metrics only cover installs from {target.get('coverage_start')}; "
+            "earlier installs count toward installs but not toward login or first-week rates.",
+        )
+    return check(
+        "new_user_first_week_coverage",
+        "warning",
+        "New-user login and first-week metrics are unavailable: required events did not exist yet "
+        "or the 7-day window has not passed for every install.",
+    )
+
+
+def feature_coverage_check(feature_usage: dict[str, Any]) -> dict[str, str]:
+    if not feature_usage.get("features"):
+        return check("feature_usage_coverage", "warning", "Feature usage metrics are missing or unavailable.")
+    partial = [
+        f"{item['feature']} (from {item['coverage_start']})"
+        for item in feature_usage.get("features", [])
+        if item.get("coverage") == "partial"
+    ]
+    missing_previous = [
+        item["feature"] for item in feature_usage.get("features", []) if item.get("previous_coverage") != "complete"
+    ]
+    if not partial and not missing_previous:
+        return check("feature_usage_coverage", "pass", "Every feature event covered this and last month.")
+    details = []
+    if partial:
+        details.append("started mid-month: " + ", ".join(partial))
+    if missing_previous:
+        details.append("no full previous month to compare: " + ", ".join(missing_previous))
+    return check("feature_usage_coverage", "warning", "; ".join(details) + ".")
+
+
 def unique(values: list[Any]) -> list[Any]:
     result: list[Any] = []
     seen: set[str] = set()
@@ -355,6 +407,8 @@ def main() -> int:
                     if posthog["login_funnel"]["started_attempts"] is not None
                     else "Login funnel metrics are missing or unavailable.",
                 ),
+                new_user_coverage_check(posthog["new_users"]),
+                feature_coverage_check(posthog["feature_usage"]),
             ]
         )
     checks.append(

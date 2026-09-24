@@ -32,6 +32,55 @@ def parse_month(value: str) -> tuple[str, str, str]:
     return f"{year:04d}-{month:02d}", start, end
 
 
+def shift_month(month: str, offset: int) -> str:
+    year_text, month_text = month[:7].split("-", 1)
+    index = int(year_text) * 12 + int(month_text) - 1 + offset
+    return f"{index // 12:04d}-{index % 12 + 1:02d}"
+
+
+# Months of history for the new-user and returning-user tables: the target month and six before
+# it, so the oldest displayed month (M-5) still has a previous month to compare against.
+HISTORY_MONTHS = 6
+# New-user login and first-week behavior are counted within this many days of install.
+FIRST_WEEK_DAYS = 7
+
+# Feature usage among active users: (metric key, events that count as using the feature).
+FEATURE_EVENTS: list[tuple[str, tuple[str, ...]]] = [
+    ("task_created", ("task_created",)),
+    ("task_completed", ("task_completed",)),
+    ("any_ai", ("ai_task_generation_session", "breakdown_task")),
+    ("ai_task_generation", ("ai_task_generation_session",)),
+    ("ai_breakdown", ("breakdown_task",)),
+    ("note_created", ("note_created",)),
+    ("pomodoro_started", ("pomodoro_started",)),
+    ("gashapon_spin", ("gashapon_spin",)),
+    ("badge_unlocked", ("badge_unlocked",)),
+    ("share_completed", ("share_completed",)),
+    ("review_generated", ("review_generated",)),
+]
+
+# AI generation failures grouped by the problem the user saw; unlisted codes become `other`.
+AI_FAILURE_PROBLEMS: list[tuple[str, tuple[str, ...]]] = [
+    ("no_tasks_extracted", ("NoTasksExtracted",)),
+    ("network", ("NetworkError",)),
+    ("mic_permission", ("PermissionDenied",)),
+    ("recording", ("AudioSubmitFailed", "RecordingStartFailed", "NotRecording")),
+]
+
+# Events the new-user first-week metrics depend on; coverage starts once all of them exist.
+NEW_USER_EVENTS = (
+    "Application Installed",
+    "login_started",
+    "login_succeeded",
+    "login_failed",
+    "task_created",
+    "task_completed",
+    "ai_task_generation_session",
+    "breakdown_task",
+    "note_created",
+)
+
+
 def days_in_month(month: str) -> int:
     year_text, month_text = month.split("-", 1)
     return calendar.monthrange(int(year_text), int(month_text))[1]
