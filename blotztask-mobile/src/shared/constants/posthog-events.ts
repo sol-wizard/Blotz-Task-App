@@ -1,6 +1,9 @@
 import type { WebAuthErrorCodes } from "react-native-auth0";
 
 export const EVENTS = {
+  SUBTASK_CREATED: "subtask_created",
+  MONTHLY_CALENDAR_VIEWED: "monthly_calendar_viewed",
+  REVIEW_SHARED: "review_shared",
   CREATE_TASK_MANUALLY: "create_task_manually",
   LOGIN_STARTED: "login_started",
   LOGIN_SUCCEEDED: "login_succeeded",
