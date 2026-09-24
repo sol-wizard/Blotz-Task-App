@@ -1,9 +1,10 @@
 name: PR Release Note Check
 
 # Fails a PR until its "Release note" section is filled in (see
-# .github/pull_request_template.md): a Release note heading plus exactly one
-# ticked Status box. This is what keeps the auto-generated release notes
-# accurate — the author declares user impact / beta / hidden / internal.
+# .github/pull_request_template.md): a Release note heading, a real '>' note
+# line (not the untouched template placeholder — writing "none" is fine), and
+# exactly one ticked Status box. This is what keeps the auto-generated release
+# notes accurate — the author declares user impact / beta / hidden / internal.
 #
 # Re-runs when the PR description is edited, so authors can fix it without a
 # new commit. Make it a REQUIRED status check (Settings → Branches) to block
@@ -30,13 +31,36 @@ jobs:
             *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
           esac
 
+          BODY=$(tr -d '\r' <<< "$BODY")
           FAIL=0
+
           if ! grep -qiE '^#+[[:space:]]*Release note' <<< "$BODY"; then
             echo "::error::Missing the '## Release note' section — please use the PR template."
             FAIL=1
           fi
-          if ! grep -qE '^[[:space:]]*-[[:space:]]*\[[xX]\]' <<< "$BODY"; then
+
+          # Everything between the Release note heading and the next heading:
+          # the '>' note line and the Status checklist both live in there.
+          SECTION=$(awk 'f && /^#/ {exit} f {print} tolower($0) ~ /^#+[ \t]*release note/ {f=1}' <<< "$BODY")
+
+          # The note itself is the '>' quoted line(s), with markdown emphasis
+          # stripped so a reworded placeholder still matches. The '>' quote is
+          # required because preview-next-release.yml extracts the same lines.
+          NOTE=$(grep -E '^[[:space:]]*>' <<< "$SECTION" | sed -E 's/^[[:space:]]*>//; s/[_*`~]//g' || true)
+          if grep -qi 'your one-line' <<< "$NOTE"; then
+            echo "::error::The Release note is still the template placeholder — replace it with one user-facing sentence, or \"none\"."
+            FAIL=1
+          elif [ -z "$(tr -d '[:space:]' <<< "$NOTE")" ]; then
+            echo "::error::Write the release note as a '>' quoted line under '## Release note' — one user-facing sentence, or \"none\"."
+            FAIL=1
+          fi
+
+          TICKED=$(grep -cE '^[[:space:]]*-[[:space:]]*\[[xX]\]' <<< "$SECTION" || true)
+          if [ "$TICKED" -eq 0 ]; then
             echo "::error::Tick exactly one Status box (User-facing / Beta / Hidden in production / Internal only)."
+            FAIL=1
+          elif [ "$TICKED" -gt 1 ]; then
+            echo "::error::$TICKED Status boxes are ticked — tick exactly ONE."
             FAIL=1
           fi
 
