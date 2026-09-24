@@ -22,6 +22,8 @@ export const useUserProfile = (options: UseUserProfileOptions = {}) => {
     data: userProfile,
     isLoading: isUserProfileLoading,
     isFetching: isUserProfileFetching,
+    isError: isUserProfileError,
+    refetch: refetchUserProfile,
   } = useQuery({
     queryKey: userKeys.profile(),
     queryFn: () => fetchUserProfile(),
@@ -35,5 +37,7 @@ export const useUserProfile = (options: UseUserProfileOptions = {}) => {
     isUserOnboarded,
     isUserProfileLoading,
     isUserProfileFetching,
+    isUserProfileError,
+    refetchUserProfile,
   };
 };
