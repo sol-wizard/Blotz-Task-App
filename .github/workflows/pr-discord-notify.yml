@@ -1,0 +1,104 @@
+name: PR Discord Notify
+
+# Posts PR activity to the Discord #blotz-pr-review channel, so nobody has to
+# paste PR links, react with emojis, or DM reviewers by hand:
+#   - PR opened / marked ready  -> new-PR message, tags @Blotz-TechLead
+#   - review (re-)requested     -> tags the requested reviewer
+#   - changes requested         -> tags the author
+#   - approved                  -> tags the author
+#   - merged                    -> closing message
+#
+# No AI here — it only forwards GitHub events to a Discord webhook.
+#
+# Setup (once):
+#   - Secret   DISCORD_PR_WEBHOOK_URL   webhook of #blotz-pr-review
+#   - Variable DISCORD_TECHLEAD_ROLE_ID ID of the @Blotz-TechLead role (optional)
+#   - .github/discord-users.json         GitHub login -> Discord user ID, so
+#     people get a real ping. Anyone missing is shown by GitHub name.
+# If the webhook secret is missing, the job skips instead of failing.
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, review_requested, closed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    # Drafts are silent until they're marked ready; merged-only for "closed".
+    if: >-
+      github.event.pull_request.draft == false &&
+      (github.event.action != 'closed' || github.event.pull_request.merged == true)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/discord-users.json
+          sparse-checkout-cone-mode: false
+
+      - name: Post to Discord
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_PR_WEBHOOK_URL }}
+          TECHLEAD_ROLE: ${{ vars.DISCORD_TECHLEAD_ROLE_ID }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          URL: ${{ github.event.pull_request.html_url }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          REQUESTED: ${{ github.event.requested_reviewer.login }}
+          REVIEWER: ${{ github.event.review.user.login }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          SENDER: ${{ github.event.sender.login }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "::warning::DISCORD_PR_WEBHOOK_URL is not set — skipping."
+            exit 0
+          fi
+
+          # Skip automated PRs (release PRs, dependabot, copilot).
+          case "$AUTHOR" in
+            *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
+          esac
+
+          # GitHub login -> Discord mention, falling back to the plain name.
+          MAP=.github/discord-users.json
+          mention() {
+            local id=""
+            [ -f "$MAP" ] && id=$(jq -r --arg u "$1" '.[$u] // empty' "$MAP")
+            if [ -n "$id" ]; then echo "<@$id>"; else echo "**$1**"; fi
+          }
+
+          # Review level comes from the PBI's L1/L2/L3 label, when present.
+          LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[123]$' | head -1 || true)
+          LEVEL_TXT=${LEVEL:+ · level $LEVEL}
+          PR="[#$NUMBER $TITLE](<$URL>)"
+
+          case "$EVENT/$ACTION" in
+            pull_request/opened | pull_request/ready_for_review)
+              TL=${TECHLEAD_ROLE:+<@&$TECHLEAD_ROLE> }
+              MSG="🆕 ${TL}new PR by $(mention "$AUTHOR")$LEVEL_TXT"$'\n'"$PR" ;;
+            pull_request/review_requested)
+              [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
+              MSG="👀 $(mention "$REQUESTED"), $SENDER asked you to review"$'\n'"$PR" ;;
+            pull_request/closed)
+              MSG="🎉 merged by $SENDER"$'\n'"$PR" ;;
+            pull_request_review/submitted)
+              [ "$REVIEWER" = "$AUTHOR" ] && exit 0
+              case "$REVIEW_STATE" in
+                changes_requested)
+                  MSG="🔁 $(mention "$AUTHOR"), $REVIEWER requested changes. Fix them, then click **Re-request review** on GitHub."$'\n'"$PR" ;;
+                approved)
+                  MSG="✅ $(mention "$AUTHOR"), approved by $REVIEWER. Merge once all checks are green."$'\n'"$PR" ;;
+                *) echo "Plain comment review — skipping."; exit 0 ;;
+              esac ;;
+            *) echo "Nothing to post for $EVENT/$ACTION."; exit 0 ;;
+          esac
+
+          jq -n --arg c "$MSG" \
+            '{content: $c, allowed_mentions: {parse: ["users", "roles"]}}' |
+            curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK"
