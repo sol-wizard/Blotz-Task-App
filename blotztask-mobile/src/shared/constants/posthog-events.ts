@@ -5,6 +5,8 @@ export const EVENTS = {
   LOGIN_STARTED: "login_started",
   LOGIN_SUCCEEDED: "login_succeeded",
   LOGIN_FAILED: "login_failed",
+  APP_ENTERED: "app_entered",
+  POST_LOGIN_LOAD_FAILED: "post_login_load_failed",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
   AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
@@ -60,15 +62,29 @@ export type LoginConnection = "default" | "sms";
  * on Android a swiped-away Custom Tab surfaces as `BROWSER_TERMINATED`, and folding it
  * into `auth0_error` would inflate the "Auth0 broke" bucket with users who just left.
  */
-export type LoginFailureReason = "cancelled" | "browser_dismissed" | "no_tokens" | "auth0_error";
+export type LoginFailureReason =
+  | "cancelled"
+  | "browser_dismissed"
+  | "no_tokens"
+  | "auth0_error"
+  | "stalled";
 
 /**
- * Bounded to react-native-auth0's 18 `WebAuthErrorCodes`, plus our own token-shape check.
+ * Bounded to react-native-auth0's 18 `WebAuthErrorCodes`, plus two of our own:
+ * `NoTokensReturned` for a token-shape check, and `Stalled` for a login whose result never
+ * came back after the app returned to the foreground (the SDK neither resolved nor rejected).
  * Raw error messages are never sent — they carry Auth0 descriptions and are unbounded.
  */
 export type LoginErrorCode =
   | (typeof WebAuthErrorCodes)[keyof typeof WebAuthErrorCodes]
-  | "NoTokensReturned";
+  | "NoTokensReturned"
+  | "Stalled";
+
+/** How the user reached `(protected)`: fresh `authorize()` or a session restored on launch. */
+export type AppEntrySource = "login" | "restore";
+
+/** Where the post-login gate sent the user once both gate requests succeeded. */
+export type AppEntryDestination = "home" | "onboarding" | "whats_new";
 
 /**
  * How a task was created. `manual` = task form, `ai` = AI generation sheet,
@@ -89,12 +105,7 @@ export type AiTaskFailureStage =
  * Microphone permission outcome for the AI voice flow. `already_granted` involves no prompt, so
  * it is not a grant decision. `blocked` (`canAskAgain` false) can only be fixed in Settings.
  */
-export type MicPermissionOutcome =
-  | "already_granted"
-  | "granted"
-  | "denied"
-  | "blocked"
-  | "error";
+export type MicPermissionOutcome = "already_granted" | "granted" | "denied" | "blocked" | "error";
 
 export type AiTaskGenerationTurn = {
   turn_index: number;
