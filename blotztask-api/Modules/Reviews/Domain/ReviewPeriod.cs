@@ -71,6 +71,15 @@ public sealed class ReviewPeriod
     public bool HasEnded(DateTimeOffset nowUtc) => nowUtc >= EndUtc;
 
     /// <summary>
+    /// Days active is a monthly stat, and only for months after activity tracking started —
+    /// an earlier month has no rows and would read as a misleading zero.
+    /// </summary>
+    public bool ReportsDaysActive =>
+        PeriodType == ReviewPeriodType.Monthly
+        && ReviewConstants.ActivityTrackingStartDate is { } trackingStart
+        && StartLocalDate >= trackingStart;
+
+    /// <summary>
     /// Plain-English label for the AI prompt (weekly "Jun 8 - Jun 14", monthly "June 2026").
     /// Mobile builds its own localized labels from the period bounds.
     /// </summary>

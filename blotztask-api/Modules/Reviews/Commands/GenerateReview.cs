@@ -173,12 +173,24 @@ public class GenerateReviewCommandHandler(
                      && t.CompletedAt < period.EndUtc,
                 ct);
 
+        // Activity rows hold the user's local date, so the local bounds apply directly.
+        int? daysActive = period.ReportsDaysActive
+            ? await db.UserActivityDays
+                .AsNoTracking()
+                .CountAsync(
+                    a => a.UserId == command.UserId
+                         && a.LocalDate >= period.StartLocalDate
+                         && a.LocalDate < period.EndLocalDateExclusive,
+                    ct)
+            : null;
+
         return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
             TasksCompleted = tasksCompleted,
+            DaysActive = daysActive,
             Letter = report.AiGeneratedLetter,
             Theme = report.Theme,
             OneThingToTryNext = report.OneThingToTryNext,
