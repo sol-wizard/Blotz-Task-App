@@ -108,8 +108,8 @@ jobs:
           # Who has to approve, from the PBI's L1–L4 label. Read the labels fresh:
           # `gh pr create --label` adds them just after creating the PR, so the
           # "opened" event itself often has none yet.
-          LABELS=$(gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json labels \
-            --jq '[.labels[].name] | join(",")' 2>/dev/null) || true
+          FRESH=$(gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json labels \
+            --jq '[.labels[].name] | join(",")' 2>/dev/null) && LABELS=$FRESH
           LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
           case "$LEVEL" in
             L1) ROLE=$DEVELOPER_ROLE ;;
