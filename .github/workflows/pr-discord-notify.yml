@@ -9,12 +9,11 @@ name: PR Discord Notify
 #           L3 -> @Blotz-TechLead
 #           L4 -> @Blotz-TechLead + candidate (1 tech lead + 1 lead or candidate)
 #
-# Everything after that updates that same message (no new posts): a status
-# emoji, plus a "by <name>" line edited into the text. A bot can only react
-# as itself, so the name line is how the channel shows who did it. The
-# message
-# channel stays at one message per PR (needs the bot token). The message
-# always shows ONE status emoji — the current one replaces the previous:
+# Everything after that updates that same message, so the channel stays at
+# one message per PR (needs the bot token):
+#   - ONE status emoji, the current one replacing the previous
+#   - a "who did what" line appended each time, so the message keeps the
+#     PR's history (a bot can only react as itself, so names go in the text)
 #   review (re-)requested -> 👀 "Review requested from <reviewer>"
 #   changes requested     -> 🔁 "Changes requested by <reviewer>"
 #   approved              -> ✅ "Approved by <reviewer>"
@@ -176,12 +175,20 @@ jobs:
             [ "$code" = 204 ] || echo "::warning::Removing $old returned HTTP $code."
           done <<< "$MINE"
 
-          # Rewrite the message with the latest "who did what" line. The text is
-          # rebuilt from the event (the bot can't read it back). Edits never
-          # re-ping, and allowed_mentions is empty to be sure. <t:…:t> shows
-          # each viewer the time in their own timezone.
+          # Append a "who did what" line so the message keeps the PR's history.
+          # The bot can't read message text, but the webhook can read its own
+          # message; if that read fails, fall back to the header + this line.
+          # Edits never re-ping (allowed_mentions is empty to be sure). <t:…:f>
+          # shows each viewer the date and time in their own timezone.
           [ -z "$WEBHOOK" ] && exit 0
-          TEXT="$(header "$ROLE")"$'\n'"$EMOJI $STATUS · <t:$(date +%s):t>"
+          LINE="$EMOJI $STATUS · <t:$(date +%s):f>"
+          CURRENT=$(curl -fsS "$WEBHOOK/messages/$MSG_ID" | jq -r '.content // empty') || CURRENT=""
+          TEXT="${CURRENT:-$(header "$ROLE")}"$'\n'"$LINE"
+          # Discord caps messages at 2000 characters; keep the header and drop
+          # the oldest history lines if a long-running PR ever gets there.
+          while [ "${#TEXT}" -gt 1990 ]; do
+            TEXT=$(awk 'NR<=2 || NR>3' <<< "$TEXT")
+          done
           jq -n --arg c "$TEXT" '{content: $c, allowed_mentions: {parse: []}}' |
             curl -fsS -o /dev/null -X PATCH -H 'Content-Type: application/json' --data @- \
               "$WEBHOOK/messages/$MSG_ID" || echo "::warning::Couldn't update the status line."
