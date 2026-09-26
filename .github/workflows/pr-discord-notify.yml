@@ -9,12 +9,12 @@ name: PR Discord Notify
 #           L3 -> @Blotz-TechLead
 #           L4 -> @Blotz-TechLead + candidate (1 tech lead + 1 lead or candidate)
 #
-# Everything after that updates that same message (no new posts): a status
-# emoji, plus a "by <name>" line edited into the text. A bot can only react
-# as itself, so the name line is how the channel shows who did it. The
-# message
-# channel stays at one message per PR (needs the bot token). The message
-# always shows ONE status emoji — the current one replaces the previous:
+# Everything after that updates that same message, so the channel stays at
+# one message per PR (needs the bot token):
+#   - ONE status emoji, the current one replacing the previous
+#   - a card (embed) with the clickable PR title, Author and Level; each
+#     event appends a "who did what" line to it and recolours its side bar
+#     (a bot can only react as itself, so names go in the card)
 #   review (re-)requested -> 👀 "Review requested from <reviewer>"
 #   changes requested     -> 🔁 "Changes requested by <reviewer>"
 #   approved              -> ✅ "Approved by <reviewer>"
@@ -36,6 +36,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 # One run at a time per PR, in order, so two quick events (e.g. approve then
 # merge) can't race and leave the wrong emoji.
@@ -70,14 +71,13 @@ jobs:
           REVIEWER: ${{ github.event.review.user.login }}
           REVIEW_STATE: ${{ github.event.review.state }}
           SENDER: ${{ github.event.sender.login }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Skip automated PRs (release PRs, dependabot, copilot).
           case "$AUTHOR" in
             *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
           esac
 
-          # Escape ] so a title like "Fix [iOS]" can't break the Markdown link.
-          PR="[#$NUMBER ${TITLE//]/\\]}](<$URL>)"
           NAME="Blotz PR Bot · #$NUMBER"
           API=https://discord.com/api/v10
 
@@ -105,7 +105,11 @@ jobs:
             jq -c --arg n "$NAME" '[.[] | select(.webhook_id != null and .author.username == $n)][0] // empty' /tmp/resp
           }
 
-          # Who has to approve, from the PBI's L1–L4 label.
+          # Who has to approve, from the PBI's L1–L4 label. Read the labels fresh:
+          # `gh pr create --label` adds them just after creating the PR, so the
+          # "opened" event itself often has none yet.
+          FRESH=$(gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json labels \
+            --jq '[.labels[].name] | join(",")' 2>/dev/null) && LABELS=$FRESH
           LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
           case "$LEVEL" in
             L1) ROLE=$DEVELOPER_ROLE ;;
@@ -113,21 +117,31 @@ jobs:
             L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE" ;;
             *)  ROLE=$CANDIDATE_ROLE ;;
           esac
-          # The first two lines of the PR's message (also rebuilt on each edit).
-          header() {
+          # The line above the card: role pings only work in message text.
+          ping_line() {
             local ping="" r
-            for r in $1; do ping+="<@&$r> "; done
-            echo "🆕 ${ping}new PR by **$AUTHOR**${LEVEL:+ · level $LEVEL}"$'\n'"$PR"
+            for r in $ROLE; do ping+="<@&$r> "; done
+            echo "🆕 ${ping}new PR to review"
           }
+          # The card: clickable title, Author/Level, history lines, and a side
+          # bar coloured by status.
+          card() {  # $1 = history text, $2 = colour
+            jq -n --arg t "#$NUMBER $TITLE" --arg u "$URL" --arg a "$AUTHOR" \
+              --arg l "${LEVEL:-not set}" --arg d "$1" --argjson c "$2" \
+              '{title: ($t|.[0:256]), url: $u, color: $c,
+                fields: [{name: "Author", value: $a, inline: true},
+                         {name: "Level", value: $l, inline: true}]}
+               + (if $d == "" then {} else {description: $d} end)'
+          }
+          GREY=10070709; BLURPLE=5793266; YELLOW=16705372; GREEN=5763719; PURPLE=10181046
 
           # ---- New PR: the one channel message -------------------------------
           if [ "$EVENT/$ACTION" = pull_request/opened ] || [ "$EVENT/$ACTION" = pull_request/ready_for_review ]; then
             [ -z "$WEBHOOK" ] && { echo "::warning::DISCORD_PR_WEBHOOK_URL is not set — skipping."; exit 0; }
             # Draft -> ready -> draft -> ready shouldn't post and ping twice.
             if [ -n "$(find_message)" ]; then echo "#$NUMBER is already posted — skipping."; exit 0; fi
-            MSG=$(header "$ROLE")
-            jq -n --arg c "$MSG" --arg n "$NAME" \
-              '{content: $c, username: $n, allowed_mentions: {parse: ["roles"]}}' |
+            jq -n --arg c "$(ping_line)" --arg n "$NAME" --argjson e "$(card "" $GREY)" \
+              '{content: $c, username: $n, embeds: [$e], allowed_mentions: {parse: ["roles"]}}' |
               curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK" ||
               echo "::warning::Discord post failed — the PR is unaffected."
             exit 0
@@ -137,14 +151,14 @@ jobs:
           case "$EVENT/$ACTION" in
             pull_request/review_requested)
               [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
-              EMOJI="👀"; STATUS="Review requested from **$REQUESTED**" ;;
+              EMOJI="👀"; COLOR=$BLURPLE; STATUS="Review requested from **$REQUESTED**" ;;
             pull_request/closed)
-              EMOJI="🎉"; STATUS="Merged by **$SENDER**" ;;
+              EMOJI="🎉"; COLOR=$PURPLE; STATUS="Merged by **$SENDER**" ;;
             pull_request_review/submitted)
               [ "$REVIEWER" = "$AUTHOR" ] && exit 0
               case "$REVIEW_STATE" in
-                changes_requested) EMOJI="🔁"; STATUS="Changes requested by **$REVIEWER**" ;;
-                approved) EMOJI="✅"; STATUS="Approved by **$REVIEWER**" ;;
+                changes_requested) EMOJI="🔁"; COLOR=$YELLOW; STATUS="Changes requested by **$REVIEWER**" ;;
+                approved) EMOJI="✅"; COLOR=$GREEN; STATUS="Approved by **$REVIEWER**" ;;
                 *) echo "Plain comment review — skipping."; exit 0 ;;
               esac ;;
             *) echo "Nothing to do for $EVENT/$ACTION."; exit 0 ;;
@@ -176,12 +190,20 @@ jobs:
             [ "$code" = 204 ] || echo "::warning::Removing $old returned HTTP $code."
           done <<< "$MINE"
 
-          # Rewrite the message with the latest "who did what" line. The text is
-          # rebuilt from the event (the bot can't read it back). Edits never
-          # re-ping, and allowed_mentions is empty to be sure. <t:…:t> shows
-          # each viewer the time in their own timezone.
+          # Append a "who did what" line to the card so it keeps the PR's history,
+          # and recolour its side bar. The bot can't read message text, but the
+          # webhook can read its own message. Posts from before the card format
+          # (plain text) are converted, keeping any history lines they had.
+          # Edits never re-ping (allowed_mentions is empty to be sure).
           [ -z "$WEBHOOK" ] && exit 0
-          TEXT="$(header "$ROLE")"$'\n'"$EMOJI $STATUS · <t:$(date +%s):t>"
-          jq -n --arg c "$TEXT" '{content: $c, allowed_mentions: {parse: []}}' |
+          OLD=$(curl -fsS "$WEBHOOK/messages/$MSG_ID") || OLD='{}'
+          HISTORY=$(jq -r 'if (.embeds // []) | length > 0 then .embeds[0].description // ""
+                           else (.content // "") | split("\n") | .[2:] | join("\n") end' <<< "$OLD")
+          # (Older posts had " · <t:…>" timestamps on each line; drop those.)
+          HISTORY=$(printf '%s\n%s' "$HISTORY" "$EMOJI $STATUS" | sed -e '/^$/d' -e 's/ · <t:[0-9]*:[a-zA-Z]>$//')
+          # Discord caps a card's description at 4096 characters; drop the oldest.
+          while [ "${#HISTORY}" -gt 4000 ]; do HISTORY=$(sed 1d <<< "$HISTORY"); done
+          jq -n --arg c "$(ping_line)" --argjson e "$(card "$HISTORY" "$COLOR")" \
+            '{content: $c, embeds: [$e], allowed_mentions: {parse: []}}' |
             curl -fsS -o /dev/null -X PATCH -H 'Content-Type: application/json' --data @- \
-              "$WEBHOOK/messages/$MSG_ID" || echo "::warning::Couldn't update the status line."
+              "$WEBHOOK/messages/$MSG_ID" || echo "::warning::Couldn't update the card."
