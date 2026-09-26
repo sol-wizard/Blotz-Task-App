@@ -35,6 +35,8 @@ argument-hint: "[PR number, PR URL, or branch; optional, defaults to current bra
     | `L1` | Post straight away — being asked to review is permission. |
     | `L2`, `L3`, `L4`, or no level label | **Don't post yet.** Show the reviewer every draft comment (file, line, text) and let them edit, cut or add. Post only what they approve. A person has to stand behind the AI's review on anything above L1. |
 
+    Every comment's `line` must be **inside the diff** — an added line or a context line shown in one of the diff's hunks. GitHub rejects the whole review (HTTP 422) if even one comment points outside it, and then nothing gets posted. If the line a finding is about isn't in the diff, attach it to the nearest changed line and name the real line in the comment ("`foo()` on line 120 still …"). If a 422 comes back anyway, find the offending comment, move it, and resend.
+
     Either way, send the comments as one review with event `COMMENT`, so the author gets one notification rather than one per comment:
 
     ```
