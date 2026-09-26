@@ -91,7 +91,7 @@ export default function SettingsAccountScreen() {
               >
                 {displayEmail}
               </Text>
-              <View className="w-[22px]" />
+              <View style={{ width: 22, flexShrink: 0 }} />
             </View>
           </View>
           <Text className="text-primary font-balooThin text-sm">
