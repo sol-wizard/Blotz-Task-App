@@ -22,7 +22,7 @@ table below to pick the right one and open it yourself.
 | `writing-tests` | Before writing, adding or modifying any test in `blotztask-test/` |
 | `working-with-ai-agent` | Implementing, modifying or fixing any AI feature |
 | `real-device-test` | Verifying something on a physical phone, or driving the installed app on a USB-connected device |
-| `create-pr` | Opening a pull request, or fixing the description or release note on an existing one |
+| `pr` | The author's side of a pull request: opening one, fixing its description or release note, or fixing review comments and sending it back for re-review |
 | `pr-review` | Reviewing a pull request |
 | `create-blotz-pbi` | Capturing an idea, problem or task as a PBI in the backlog |
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |

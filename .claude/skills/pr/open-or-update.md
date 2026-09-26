@@ -1,9 +1,4 @@
----
-name: create-pr
-description: Use when the user wants to open a pull request — e.g. "create me a PR", "open a PR", "raise a PR" — or wants to fix the description or release note on an existing PR.
----
-
-# Create PR
+# Open or update a PR
 
 Write the PR description from the branch's **actual diff and commits**, fill `.github/pull_request_template.md`, confirm with the dev, then open the PR.
 
@@ -75,6 +70,7 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - Update mode: `gh pr edit --body-file <file>`
 
 9. **Reply with the PR URL only.**
+
 
 ## Notes
 
