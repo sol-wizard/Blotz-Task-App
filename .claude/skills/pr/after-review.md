@@ -3,8 +3,9 @@
 Use when a reviewer requested changes and the dev wants to fix them. The goal is that the reviewer never has to be chased: every comment gets an answer, and the review is re-requested on GitHub, which notifies the reviewer and flips the PR's Discord card back to 👀.
 
 1. **Find what's open.**
-   - Reviewers waiting on a fix, meaning anyone whose **latest** review is "changes requested":
-     `gh pr view --json reviews --jq '[.reviews | group_by(.author.login)[] | last | select(.state == "CHANGES_REQUESTED") | .author.login]'`
+   - Reviewers waiting on a fix, meaning anyone whose **latest** approve / request-changes decision is "changes requested":
+     `gh pr view <n> --json reviews --jq '[.reviews | map(select(.state != "COMMENTED")) | group_by(.author.login)[] | last | select(.state == "CHANGES_REQUESTED") | .author.login]'`
+     `COMMENTED` is filtered out first because GitHub records every thread reply as a new `COMMENTED` review — without the filter, a reviewer who requested changes and then replied once would drop off the list.
      Many reviewers here leave comments with plain **Comment** instead of **Request changes**, so this list is often empty. Then the reviewers to re-request are the authors of the unresolved threads below.
    - Unresolved threads, with each thread's id and first comment's id:
      ```
@@ -26,7 +27,7 @@ Use when a reviewer requested changes and the dev wants to fix them. The goal is
    - Push the fixes.
    - Reply to each thread: `gh api repos/sol-wizard/Blotz-Task-App/pulls/<n>/comments/<comment databaseId>/replies -f body=<reply>`
    - Resolve the threads that were fixed, not the ones you pushed back on (the reviewer decides those): `gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' -F id=<thread id>`
-   - Re-request review from each reviewer found in step 1: `gh pr edit <n> --add-reviewer <login>`. This is the one action the reviewer is notified by, and it flips the PR's Discord card back to 👀 — never skip it.
+   - Re-request review from each reviewer found in step 1: `gh pr edit <n> --add-reviewer <login>`. First drop the PR's own author (GitHub refuses: "Review cannot be requested from pull request author") and bots (`…[bot]`, `github-actions`) — the thread-author fallback can pick up both. This is the one action the reviewer is notified by, and it flips the PR's Discord card back to 👀 — never skip it.
 
 6. **Reply with the PR URL and who was re-requested.**
 
