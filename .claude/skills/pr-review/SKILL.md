@@ -1,13 +1,8 @@
 ---
-description: Use this skill when the user asks to review a GitHub pull request, review a PR, check a PR, or comments on a PR link. Performs a concise AI-assisted senior-level PR review.
-argument-hint: "[PR number (optional, defaults to current branch)]"
----
-
-# ---
-
+name: pr-review
 description: Use this skill when the user asks to review a Blotz GitHub pull request, review a PR, check a PR, or comments on a PR link. Performs a concise AI-assisted senior-level PR review.
 argument-hint: "[PR number, PR URL, or branch; optional, defaults to current branch]"
--------------------------------------------------------------------------------------
+---
 
 # PR Review
 
@@ -32,6 +27,15 @@ argument-hint: "[PR number, PR URL, or branch; optional, defaults to current bra
 10. Stay inside what the PR actually changes. A backend PR gets backend comments. Do not write guidance about the author's future frontend or mobile work, even when the same feature spans both and you can see what is coming — that belongs on that PR, and here it just makes the review long and off-topic. Comment on a downstream consumer only when the diff breaks it today.
 
 11. Post inline comments only. No PR-level summary comment, no recap of the review, no AI-generated disclaimer. Every finding attaches to the line it is about. If a finding has no line to attach to, work out which line it most affects and put it there.
+
+    **Being asked to review is permission to post.** Once the review is done, post the findings straight to the PR as inline comments — don't stop to ask first. Send them as one review with event `COMMENT`, so the author gets one notification rather than one per comment:
+
+    ```
+    gh api repos/sol-wizard/Blotz-Task-App/pulls/<n>/reviews --input review.json
+    # review.json: {"event": "COMMENT", "comments": [{"path": "...", "line": 42, "side": "RIGHT", "body": "..."}]}
+    ```
+
+    Never approve and never request changes — those are the human reviewer's call, and their click is what the PR's review level (`L1`–`L4` label) counts. Then reply with the PR URL and how many comments were posted. If there are no findings, post nothing and say so.
 
 12. Everything goes on the PR. Product and UX judgement calls, and questions about why an approach was chosen, are things the author can answer, so raise them as inline comments like any other finding. Do not route findings to a separate notes file.
 
