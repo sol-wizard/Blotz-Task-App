@@ -2,7 +2,10 @@ name: PR Discord Notify
 
 # Posts PR activity to the Discord #blotz-pr-review channel, so nobody has to
 # paste PR links, react with emojis, or DM reviewers by hand:
-#   - PR opened / marked ready  -> new-PR message, tags @Blotz-TechLead
+#   - PR opened / marked ready  -> new-PR message, tags the reviewer role:
+#                                  L4 -> @Blotz-TechLead, anything else ->
+#                                  @Blotz-TechLead-candidate (candidates
+#                                  take the day-to-day reviews)
 #   - review (re-)requested     -> tags the requested reviewer
 #   - changes requested         -> tags the author
 #   - approved                  -> tags the author
@@ -12,7 +15,8 @@ name: PR Discord Notify
 #
 # Setup (once):
 #   - Secret   DISCORD_PR_WEBHOOK_URL   webhook of #blotz-pr-review
-#   - Variable DISCORD_TECHLEAD_ROLE_ID ID of the @Blotz-TechLead role (optional)
+#   - Variable DISCORD_TECHLEAD_ROLE_ID  ID of @Blotz-TechLead (optional)
+#   - Variable DISCORD_CANDIDATE_ROLE_ID ID of @Blotz-TechLead-candidate (optional)
 #   - .github/discord-users.json         GitHub login -> Discord user ID, so
 #     people get a real ping. Anyone missing is shown by GitHub name.
 # If the webhook secret is missing, the job skips instead of failing.
@@ -43,6 +47,7 @@ jobs:
         env:
           WEBHOOK: ${{ secrets.DISCORD_PR_WEBHOOK_URL }}
           TECHLEAD_ROLE: ${{ vars.DISCORD_TECHLEAD_ROLE_ID }}
+          CANDIDATE_ROLE: ${{ vars.DISCORD_CANDIDATE_ROLE_ID }}
           EVENT: ${{ github.event_name }}
           ACTION: ${{ github.event.action }}
           NUMBER: ${{ github.event.pull_request.number }}
@@ -73,14 +78,15 @@ jobs:
             if [ -n "$id" ]; then echo "<@$id>"; else echo "**$1**"; fi
           }
 
-          # Review level comes from the PBI's L1/L2/L3 label, when present.
-          LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[123]$' | head -1 || true)
+          # Review level comes from the PBI's L1–L4 label, when present.
+          LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
           LEVEL_TXT=${LEVEL:+ · level $LEVEL}
           PR="[#$NUMBER $TITLE](<$URL>)"
 
           case "$EVENT/$ACTION" in
             pull_request/opened | pull_request/ready_for_review)
-              TL=${TECHLEAD_ROLE:+<@&$TECHLEAD_ROLE> }
+              if [ "$LEVEL" = "L4" ]; then ROLE=$TECHLEAD_ROLE; else ROLE=$CANDIDATE_ROLE; fi
+              TL=${ROLE:+<@&$ROLE> }
               MSG="🆕 ${TL}new PR by $(mention "$AUTHOR")$LEVEL_TXT"$'\n'"$PR" ;;
             pull_request/review_requested)
               [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
