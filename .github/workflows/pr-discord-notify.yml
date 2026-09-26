@@ -34,6 +34,12 @@ on:
 permissions:
   contents: read
 
+# One run at a time per PR, in order, so two quick events (e.g. approve then
+# merge) can't race and leave the wrong emoji.
+concurrency:
+  group: discord-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   notify:
     runs-on: ubuntu-latest
@@ -67,11 +73,40 @@ jobs:
             *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
           esac
 
-          PR="[#$NUMBER $TITLE](<$URL>)"
+          # Escape ] so a title like "Fix [iOS]" can't break the Markdown link.
+          PR="[#$NUMBER ${TITLE//]/\\]}](<$URL>)"
+          NAME="Blotz PR Bot · #$NUMBER"
+          API=https://discord.com/api/v10
+
+          # Discord bot API call with retry on 429 (reactions are limited to
+          # roughly one call per 0.25s). Prints the HTTP status.
+          call() {
+            local code
+            for _ in 1 2 3 4 5; do
+              code=$(curl -sS -o /tmp/resp -w '%{http_code}' -H "Authorization: Bot $BOT_TOKEN" \
+                -H 'Content-Type: application/json' \
+                -H 'User-Agent: DiscordBot (https://github.com/sol-wizard/Blotz-Task-App, 1)' "$@") || code=000
+              [ "$code" != 429 ] && break
+              sleep "$(jq -r '.retry_after // 1' /tmp/resp)"
+            done
+            echo "$code"
+          }
+          uri() { jq -rn --arg e "$1" '$e|@uri'; }
+
+          # This PR's message among the channel's last 100 posts. The PR number
+          # is in the sender name: bots without the privileged Message Content
+          # intent can't read message text, but can read names.
+          find_message() {
+            [ -n "$BOT_TOKEN" ] && [ -n "$CHANNEL" ] || return 0
+            [ "$(call "$API/channels/$CHANNEL/messages?limit=100")" = 200 ] || return 0
+            jq -c --arg n "$NAME" '[.[] | select(.webhook_id != null and .author.username == $n)][0] // empty' /tmp/resp
+          }
 
           # ---- New PR: the one channel message -------------------------------
           if [ "$EVENT/$ACTION" = pull_request/opened ] || [ "$EVENT/$ACTION" = pull_request/ready_for_review ]; then
             [ -z "$WEBHOOK" ] && { echo "::warning::DISCORD_PR_WEBHOOK_URL is not set — skipping."; exit 0; }
+            # Draft -> ready -> draft -> ready shouldn't post and ping twice.
+            if [ -n "$(find_message)" ]; then echo "#$NUMBER is already posted — skipping."; exit 0; fi
             LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
             case "$LEVEL" in
               L1) ROLE=$DEVELOPER_ROLE ;;
@@ -82,11 +117,10 @@ jobs:
             PING=""
             for r in $ROLE; do PING+="<@&$r> "; done
             MSG="🆕 ${PING}new PR by **$AUTHOR**${LEVEL:+ · level $LEVEL}"$'\n'"$PR"
-            # The PR number goes in the sender name: bots without the privileged
-            # Message Content intent can't read message text, but can read names.
-            jq -n --arg c "$MSG" --arg n "Blotz PR Bot · #$NUMBER" \
+            jq -n --arg c "$MSG" --arg n "$NAME" \
               '{content: $c, username: $n, allowed_mentions: {parse: ["roles"]}}' |
-              curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK"
+              curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK" ||
+              echo "::warning::Discord post failed — the PR is unaffected."
             exit 0
           fi
 
@@ -100,10 +134,8 @@ jobs:
             pull_request_review/submitted)
               [ "$REVIEWER" = "$AUTHOR" ] && exit 0
               case "$REVIEW_STATE" in
-                changes_requested)
-                  EMOJI="🔁" ;;
-                approved)
-                  EMOJI="✅" ;;
+                changes_requested) EMOJI="🔁" ;;
+                approved) EMOJI="✅" ;;
                 *) echo "Plain comment review — skipping."; exit 0 ;;
               esac ;;
             *) echo "Nothing to do for $EVENT/$ACTION."; exit 0 ;;
@@ -113,25 +145,23 @@ jobs:
             echo "::warning::DISCORD_BOT_TOKEN or DISCORD_PR_CHANNEL_ID not set — no emoji."
             exit 0
           fi
-          api() {
-            curl -fsS -H "Authorization: Bot $BOT_TOKEN" -H 'Content-Type: application/json' \
-              -H 'User-Agent: DiscordBot (https://github.com/sol-wizard/Blotz-Task-App, 1)' "$@"
-          }
-          uri() { jq -rn --arg e "$1" '$e|@uri'; }
-
-          # Find this PR's message among the channel's recent webhook posts,
-          # by the "Blotz PR Bot · #<number>" sender name set above.
-          MSG_ID=$(api "https://discord.com/api/v10/channels/$CHANNEL/messages?limit=100" |
-            jq -r --arg n "Blotz PR Bot · #$NUMBER" '[.[] | select(.webhook_id != null and .author.username == $n)][0].id // empty') || true
-          if [ -n "$MSG_ID" ]; then
-            BASE="https://discord.com/api/v10/channels/$CHANNEL/messages/$MSG_ID/reactions"
-            api -X PUT "$BASE/$(uri "$EMOJI")/@me" -o /dev/null || echo "::warning::Could not add $EMOJI."
-            # Keep a single status: drop the bot's previous status emoji.
-            for old in 👀 🔁 ✅ 🎉; do
-              [ "$old" = "$EMOJI" ] && continue
-              api -X DELETE "$BASE/$(uri "$old")/@me" -o /dev/null 2>&1 || true
-            done
-          else
-            echo "::warning::No Discord message found for #$NUMBER — skipping the emoji."
+          MSG_JSON=$(find_message)
+          if [ -z "$MSG_JSON" ]; then
+            echo "::warning::No Discord message found for #$NUMBER in the last 100 — skipping the emoji."
+            exit 0
           fi
+          BASE="$API/channels/$CHANNEL/messages/$(jq -r .id <<< "$MSG_JSON")/reactions"
+          # The bot's current emoji(s), so we only remove what's actually there.
+          MINE=$(jq -r '(.reactions // [])[] | select(.me) | .emoji.name' <<< "$MSG_JSON")
 
+          # Keep a single status: add the new emoji, then drop the old one(s).
+          if ! grep -qxF "$EMOJI" <<< "$MINE"; then
+            code=$(call -X PUT "$BASE/$(uri "$EMOJI")/@me")
+            [ "$code" = 204 ] || echo "::warning::Adding $EMOJI returned HTTP $code."
+          fi
+          while IFS= read -r old; do
+            [ -z "$old" ] || [ "$old" = "$EMOJI" ] && continue
+            sleep 0.3
+            code=$(call -X DELETE "$BASE/$(uri "$old")/@me")
+            [ "$code" = 204 ] || echo "::warning::Removing $old returned HTTP $code."
+          done <<< "$MINE"
