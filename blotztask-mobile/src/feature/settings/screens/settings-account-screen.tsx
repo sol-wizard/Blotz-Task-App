@@ -91,6 +91,7 @@ export default function SettingsAccountScreen() {
               >
                 {displayEmail}
               </Text>
+              <View className="w-[22px]" />
             </View>
           </View>
           <Text className="text-primary font-balooThin text-sm">
