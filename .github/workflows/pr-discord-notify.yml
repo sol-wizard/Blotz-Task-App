@@ -9,13 +9,16 @@ name: PR Discord Notify
 #           L3 -> @Blotz-TechLead
 #           L4 -> @Blotz-TechLead + candidate (1 tech lead + 1 lead or candidate)
 #
-# Everything after that is an emoji on that same message, so the
+# Everything after that updates that same message (no new posts): a status
+# emoji, plus a "by <name>" line edited into the text. A bot can only react
+# as itself, so the name line is how the channel shows who did it. The
+# message
 # channel stays at one message per PR (needs the bot token). The message
 # always shows ONE status emoji — the current one replaces the previous:
-#   review (re-)requested -> 👀 waiting for review
-#   changes requested     -> 🔁 author needs to fix
-#   approved              -> ✅ ready to merge
-#   merged                -> 🎉 done
+#   review (re-)requested -> 👀 "Review requested from <reviewer>"
+#   changes requested     -> 🔁 "Changes requested by <reviewer>"
+#   approved              -> ✅ "Approved by <reviewer>"
+#   merged                -> 🎉 "Merged by <who>"
 #
 # Setup (once):
 #   - Secret   DISCORD_PR_WEBHOOK_URL    webhook of #blotz-pr-review
@@ -102,21 +105,27 @@ jobs:
             jq -c --arg n "$NAME" '[.[] | select(.webhook_id != null and .author.username == $n)][0] // empty' /tmp/resp
           }
 
+          # Who has to approve, from the PBI's L1–L4 label.
+          LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
+          case "$LEVEL" in
+            L1) ROLE=$DEVELOPER_ROLE ;;
+            L3) ROLE=$TECHLEAD_ROLE ;;
+            L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE" ;;
+            *)  ROLE=$CANDIDATE_ROLE ;;
+          esac
+          # The first two lines of the PR's message (also rebuilt on each edit).
+          header() {
+            local ping="" r
+            for r in $1; do ping+="<@&$r> "; done
+            echo "🆕 ${ping}new PR by **$AUTHOR**${LEVEL:+ · level $LEVEL}"$'\n'"$PR"
+          }
+
           # ---- New PR: the one channel message -------------------------------
           if [ "$EVENT/$ACTION" = pull_request/opened ] || [ "$EVENT/$ACTION" = pull_request/ready_for_review ]; then
             [ -z "$WEBHOOK" ] && { echo "::warning::DISCORD_PR_WEBHOOK_URL is not set — skipping."; exit 0; }
             # Draft -> ready -> draft -> ready shouldn't post and ping twice.
             if [ -n "$(find_message)" ]; then echo "#$NUMBER is already posted — skipping."; exit 0; fi
-            LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
-            case "$LEVEL" in
-              L1) ROLE=$DEVELOPER_ROLE ;;
-              L3) ROLE=$TECHLEAD_ROLE ;;
-              L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE" ;;
-              *)  ROLE=$CANDIDATE_ROLE ;;
-            esac
-            PING=""
-            for r in $ROLE; do PING+="<@&$r> "; done
-            MSG="🆕 ${PING}new PR by **$AUTHOR**${LEVEL:+ · level $LEVEL}"$'\n'"$PR"
+            MSG=$(header "$ROLE")
             jq -n --arg c "$MSG" --arg n "$NAME" \
               '{content: $c, username: $n, allowed_mentions: {parse: ["roles"]}}' |
               curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK" ||
@@ -128,14 +137,14 @@ jobs:
           case "$EVENT/$ACTION" in
             pull_request/review_requested)
               [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
-              EMOJI="👀" ;;
+              EMOJI="👀"; STATUS="Review requested from **$REQUESTED**" ;;
             pull_request/closed)
-              EMOJI="🎉" ;;
+              EMOJI="🎉"; STATUS="Merged by **$SENDER**" ;;
             pull_request_review/submitted)
               [ "$REVIEWER" = "$AUTHOR" ] && exit 0
               case "$REVIEW_STATE" in
-                changes_requested) EMOJI="🔁" ;;
-                approved) EMOJI="✅" ;;
+                changes_requested) EMOJI="🔁"; STATUS="Changes requested by **$REVIEWER**" ;;
+                approved) EMOJI="✅"; STATUS="Approved by **$REVIEWER**" ;;
                 *) echo "Plain comment review — skipping."; exit 0 ;;
               esac ;;
             *) echo "Nothing to do for $EVENT/$ACTION."; exit 0 ;;
@@ -150,7 +159,8 @@ jobs:
             echo "::warning::No Discord message found for #$NUMBER in the last 100 — skipping the emoji."
             exit 0
           fi
-          BASE="$API/channels/$CHANNEL/messages/$(jq -r .id <<< "$MSG_JSON")/reactions"
+          MSG_ID=$(jq -r .id <<< "$MSG_JSON")
+          BASE="$API/channels/$CHANNEL/messages/$MSG_ID/reactions"
           # The bot's current emoji(s), so we only remove what's actually there.
           MINE=$(jq -r '(.reactions // [])[] | select(.me) | .emoji.name' <<< "$MSG_JSON")
 
@@ -165,3 +175,13 @@ jobs:
             code=$(call -X DELETE "$BASE/$(uri "$old")/@me")
             [ "$code" = 204 ] || echo "::warning::Removing $old returned HTTP $code."
           done <<< "$MINE"
+
+          # Rewrite the message with the latest "who did what" line. The text is
+          # rebuilt from the event (the bot can't read it back). Edits never
+          # re-ping, and allowed_mentions is empty to be sure. <t:…:t> shows
+          # each viewer the time in their own timezone.
+          [ -z "$WEBHOOK" ] && exit 0
+          TEXT="$(header "$ROLE")"$'\n'"$EMOJI $STATUS · <t:$(date +%s):t>"
+          jq -n --arg c "$TEXT" '{content: $c, allowed_mentions: {parse: []}}' |
+            curl -fsS -o /dev/null -X PATCH -H 'Content-Type: application/json' --data @- \
+              "$WEBHOOK/messages/$MSG_ID" || echo "::warning::Couldn't update the status line."
