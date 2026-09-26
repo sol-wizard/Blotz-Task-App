@@ -434,6 +434,14 @@ export const analytics = {
     posthog.capture(EVENTS.GASHAPON_SPIN);
   },
 
+  trackSubtaskCreated() {
+    posthog.capture(EVENTS.SUBTASK_CREATED);
+  },
+
+  trackMonthlyCalendarViewed() {
+    posthog.capture(EVENTS.MONTHLY_CALENDAR_VIEWED);
+  },
+
   trackPomodoroStarted(params: { isCountdown: boolean; durationMinutes: number }) {
     posthog.capture(EVENTS.POMODORO_STARTED, {
       is_countdown: params.isCountdown,

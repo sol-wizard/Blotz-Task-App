@@ -67,7 +67,8 @@ export function useReviewShare({ captureTargetRef, source, contentType }: Params
 
       await sharePromise;
 
-      analytics.trackShare(EVENTS.SHARE_COMPLETED, {
+      // expo-sharing resolves when the native share sheet is dismissed, including cancellation.
+      analytics.trackShare(EVENTS.SHARE_SHEET_DISMISSED, {
         source,
         contentType,
       });
