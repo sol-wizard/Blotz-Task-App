@@ -1,28 +1,30 @@
 name: PR Discord Notify
 
-# Posts PR activity to the Discord #blotz-pr-review channel, so nobody has to
-# paste PR links, react with emojis, or DM reviewers by hand:
-#   - PR opened / marked ready  -> new-PR message, tags who must approve:
-#                                  L1 -> @Blotz-Developer (anyone)
-#                                  L2 / no label -> @Blotz-TechLead-candidate
-#                                  L3 -> @Blotz-TechLead
-#                                  L4 -> @Blotz-TechLead + candidate (needs
-#                                        1 tech lead + 1 lead or candidate)
-#   - review (re-)requested     -> tags the requested reviewer
-#   - changes requested         -> tags the author
-#   - approved                  -> tags the author
-#   - merged                    -> closing message
+# One message per PR in Discord #blotz-pr-review, so nobody has to paste PR
+# links, react with emojis or DM reviewers by hand. No AI here.
 #
-# No AI here — it only forwards GitHub events to a Discord webhook.
+# PR opened / marked ready -> posts one message (webhook), pinging who must
+# approve:  L1 -> @Blotz-Developer (anyone)
+#           L2 / no label -> @Blotz-TechLead-candidate
+#           L3 -> @Blotz-TechLead
+#           L4 -> @Blotz-TechLead + candidate (1 tech lead + 1 lead or candidate)
+#
+# Everything after that is an emoji on that same message plus a DM, so the
+# channel stays at one message per PR (needs the bot token):
+#   review (re-)requested -> 👀  + DM the reviewer
+#   changes requested     -> 🔁  + DM the author
+#   approved              -> ✅  (🔁 removed) + DM the author
+#   merged                -> 🎉
 #
 # Setup (once):
-#   - Secret   DISCORD_PR_WEBHOOK_URL   webhook of #blotz-pr-review
-#   - Variable DISCORD_DEVELOPER_ROLE_ID ID of @Blotz-Developer (optional)
-#   - Variable DISCORD_TECHLEAD_ROLE_ID  ID of @Blotz-TechLead (optional)
-#   - Variable DISCORD_CANDIDATE_ROLE_ID ID of @Blotz-TechLead-candidate (optional)
-#   - .github/discord-users.json         GitHub login -> Discord user ID, so
-#     people get a real ping. Anyone missing is shown by GitHub name.
-# If the webhook secret is missing, the job skips instead of failing.
+#   - Secret   DISCORD_PR_WEBHOOK_URL    webhook of #blotz-pr-review
+#   - Secret   DISCORD_BOT_TOKEN         bot in the server with View Channel,
+#                                        Read Message History, Add Reactions
+#   - Variable DISCORD_PR_CHANNEL_ID     ID of #blotz-pr-review
+#   - Variables DISCORD_{DEVELOPER,CANDIDATE,TECHLEAD}_ROLE_ID
+#   - .github/discord-users.json         GitHub login -> Discord user ID; only
+#     people listed here get DMs
+# Anything missing is skipped with a warning; this job never fails a PR.
 
 on:
   pull_request:
@@ -49,6 +51,8 @@ jobs:
       - name: Post to Discord
         env:
           WEBHOOK: ${{ secrets.DISCORD_PR_WEBHOOK_URL }}
+          BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          CHANNEL: ${{ vars.DISCORD_PR_CHANNEL_ID }}
           TECHLEAD_ROLE: ${{ vars.DISCORD_TECHLEAD_ROLE_ID }}
           CANDIDATE_ROLE: ${{ vars.DISCORD_CANDIDATE_ROLE_ID }}
           DEVELOPER_ROLE: ${{ vars.DISCORD_DEVELOPER_ROLE_ID }}
@@ -64,57 +68,85 @@ jobs:
           REVIEW_STATE: ${{ github.event.review.state }}
           SENDER: ${{ github.event.sender.login }}
         run: |
-          if [ -z "$WEBHOOK" ]; then
-            echo "::warning::DISCORD_PR_WEBHOOK_URL is not set — skipping."
-            exit 0
-          fi
-
           # Skip automated PRs (release PRs, dependabot, copilot).
           case "$AUTHOR" in
             *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
           esac
 
-          # GitHub login -> Discord mention, falling back to the plain name.
           MAP=.github/discord-users.json
-          mention() {
-            local id=""
-            [ -f "$MAP" ] && id=$(jq -r --arg u "$1" '.[$u] // empty' "$MAP")
-            if [ -n "$id" ]; then echo "<@$id>"; else echo "**$1**"; fi
-          }
-
-          # Review level comes from the PBI's L1–L4 label, when present.
-          LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
-          LEVEL_TXT=${LEVEL:+ · level $LEVEL}
+          discord_id() { [ -f "$MAP" ] && jq -r --arg u "$1" '.[$u] // empty' "$MAP"; }
           PR="[#$NUMBER $TITLE](<$URL>)"
 
+          # ---- New PR: the one channel message -------------------------------
+          if [ "$EVENT/$ACTION" = pull_request/opened ] || [ "$EVENT/$ACTION" = pull_request/ready_for_review ]; then
+            [ -z "$WEBHOOK" ] && { echo "::warning::DISCORD_PR_WEBHOOK_URL is not set — skipping."; exit 0; }
+            LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
+            case "$LEVEL" in
+              L1) ROLE=$DEVELOPER_ROLE ;;
+              L3) ROLE=$TECHLEAD_ROLE ;;
+              L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE" ;;
+              *)  ROLE=$CANDIDATE_ROLE ;;
+            esac
+            PING=""
+            for r in $ROLE; do PING+="<@&$r> "; done
+            ID=$(discord_id "$AUTHOR")
+            WHO=${ID:+<@$ID>}
+            MSG="🆕 ${PING}new PR by ${WHO:-**$AUTHOR**}${LEVEL:+ · level $LEVEL}"$'\n'"$PR"
+            jq -n --arg c "$MSG" '{content: $c, allowed_mentions: {parse: ["roles"]}}' |
+              curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK"
+            exit 0
+          fi
+
+          # ---- Later events: emoji on that message + DM ----------------------
           case "$EVENT/$ACTION" in
-            pull_request/opened | pull_request/ready_for_review)
-              case "$LEVEL" in
-                L1) ROLE=$DEVELOPER_ROLE ;;
-                L3) ROLE=$TECHLEAD_ROLE ;;
-                L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE" ;;
-                *)  ROLE=$CANDIDATE_ROLE ;;
-              esac
-              TL=""
-              for r in $ROLE; do TL+="<@&$r> "; done
-              MSG="🆕 ${TL}new PR by $(mention "$AUTHOR")$LEVEL_TXT"$'\n'"$PR" ;;
             pull_request/review_requested)
               [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
-              MSG="👀 $(mention "$REQUESTED"), $SENDER asked you to review"$'\n'"$PR" ;;
+              EMOJI="👀"; DM_TO=$REQUESTED
+              DM="👀 $SENDER asked you to review $PR" ;;
             pull_request/closed)
-              MSG="🎉 merged by $SENDER"$'\n'"$PR" ;;
+              EMOJI="🎉"; DM_TO="" ;;
             pull_request_review/submitted)
               [ "$REVIEWER" = "$AUTHOR" ] && exit 0
               case "$REVIEW_STATE" in
                 changes_requested)
-                  MSG="🔁 $(mention "$AUTHOR"), $REVIEWER requested changes. Fix them, then click **Re-request review** on GitHub."$'\n'"$PR" ;;
+                  EMOJI="🔁"; DM_TO=$AUTHOR
+                  DM="🔁 $REVIEWER requested changes on $PR. Fix them, then click **Re-request review** on GitHub." ;;
                 approved)
-                  MSG="✅ $(mention "$AUTHOR"), approved by $REVIEWER. Merge once all checks are green."$'\n'"$PR" ;;
+                  EMOJI="✅"; DM_TO=$AUTHOR
+                  DM="✅ $REVIEWER approved $PR. Merge once all checks are green." ;;
                 *) echo "Plain comment review — skipping."; exit 0 ;;
               esac ;;
-            *) echo "Nothing to post for $EVENT/$ACTION."; exit 0 ;;
+            *) echo "Nothing to do for $EVENT/$ACTION."; exit 0 ;;
           esac
 
-          jq -n --arg c "$MSG" \
-            '{content: $c, allowed_mentions: {parse: ["users", "roles"]}}' |
-            curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK"
+          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL" ]; then
+            echo "::warning::DISCORD_BOT_TOKEN or DISCORD_PR_CHANNEL_ID not set — no emoji or DM."
+            exit 0
+          fi
+          api() {
+            curl -fsS -H "Authorization: Bot $BOT_TOKEN" -H 'Content-Type: application/json' \
+              -H 'User-Agent: DiscordBot (https://github.com/sol-wizard/Blotz-Task-App, 1)' "$@"
+          }
+          uri() { jq -rn --arg e "$1" '$e|@uri'; }
+
+          # Find this PR's message among the channel's recent webhook posts.
+          MSG_ID=$(api "https://discord.com/api/v10/channels/$CHANNEL/messages?limit=100" |
+            jq -r --arg u "$URL>" '[.[] | select(.webhook_id != null and (.content | contains($u)))][0].id // empty') || true
+          if [ -n "$MSG_ID" ]; then
+            BASE="https://discord.com/api/v10/channels/$CHANNEL/messages/$MSG_ID/reactions"
+            api -X PUT "$BASE/$(uri "$EMOJI")/@me" -o /dev/null || echo "::warning::Could not add $EMOJI."
+            [ "$EMOJI" = "✅" ] && { api -X DELETE "$BASE/$(uri "🔁")/@me" -o /dev/null || true; }
+          else
+            echo "::warning::No Discord message found for #$NUMBER — skipping the emoji."
+          fi
+
+          # DM the person who has to act next, if we know their Discord ID.
+          [ -z "$DM_TO" ] && exit 0
+          USER_ID=$(discord_id "$DM_TO")
+          [ -z "$USER_ID" ] && { echo "$DM_TO isn't in $MAP — no DM."; exit 0; }
+          DM_CHANNEL=$(jq -n --arg id "$USER_ID" '{recipient_id: $id}' |
+            api -X POST --data @- https://discord.com/api/v10/users/@me/channels | jq -r .id) || true
+          [ -z "$DM_CHANNEL" ] && { echo "::warning::Could not open a DM with $DM_TO."; exit 0; }
+          jq -n --arg c "$DM" '{content: $c}' |
+            api -X POST --data @- "https://discord.com/api/v10/channels/$DM_CHANNEL/messages" -o /dev/null ||
+            echo "::warning::DM to $DM_TO failed (they may have DMs from server members turned off)."
