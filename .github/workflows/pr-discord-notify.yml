@@ -2,10 +2,10 @@ name: PR Discord Notify
 
 # Posts PR activity to the Discord #blotz-pr-review channel, so nobody has to
 # paste PR links, react with emojis, or DM reviewers by hand:
-#   - PR opened / marked ready  -> new-PR message, tags the reviewer role:
-#                                  L4 -> @Blotz-TechLead, anything else ->
-#                                  @Blotz-TechLead-candidate (candidates
-#                                  take the day-to-day reviews)
+#   - PR opened / marked ready  -> new-PR message, tags who must approve:
+#                                  L1 -> @Blotz-Developer (anyone)
+#                                  L2 / no label -> @Blotz-TechLead-candidate
+#                                  L3 / L4 -> @Blotz-TechLead
 #   - review (re-)requested     -> tags the requested reviewer
 #   - changes requested         -> tags the author
 #   - approved                  -> tags the author
@@ -15,6 +15,7 @@ name: PR Discord Notify
 #
 # Setup (once):
 #   - Secret   DISCORD_PR_WEBHOOK_URL   webhook of #blotz-pr-review
+#   - Variable DISCORD_DEVELOPER_ROLE_ID ID of @Blotz-Developer (optional)
 #   - Variable DISCORD_TECHLEAD_ROLE_ID  ID of @Blotz-TechLead (optional)
 #   - Variable DISCORD_CANDIDATE_ROLE_ID ID of @Blotz-TechLead-candidate (optional)
 #   - .github/discord-users.json         GitHub login -> Discord user ID, so
@@ -48,6 +49,7 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_PR_WEBHOOK_URL }}
           TECHLEAD_ROLE: ${{ vars.DISCORD_TECHLEAD_ROLE_ID }}
           CANDIDATE_ROLE: ${{ vars.DISCORD_CANDIDATE_ROLE_ID }}
+          DEVELOPER_ROLE: ${{ vars.DISCORD_DEVELOPER_ROLE_ID }}
           EVENT: ${{ github.event_name }}
           ACTION: ${{ github.event.action }}
           NUMBER: ${{ github.event.pull_request.number }}
@@ -85,7 +87,11 @@ jobs:
 
           case "$EVENT/$ACTION" in
             pull_request/opened | pull_request/ready_for_review)
-              if [ "$LEVEL" = "L4" ]; then ROLE=$TECHLEAD_ROLE; else ROLE=$CANDIDATE_ROLE; fi
+              case "$LEVEL" in
+                L1) ROLE=$DEVELOPER_ROLE ;;
+                L3 | L4) ROLE=$TECHLEAD_ROLE ;;
+                *)  ROLE=$CANDIDATE_ROLE ;;
+              esac
               TL=${ROLE:+<@&$ROLE> }
               MSG="🆕 ${TL}new PR by $(mention "$AUTHOR")$LEVEL_TXT"$'\n'"$PR" ;;
             pull_request/review_requested)
