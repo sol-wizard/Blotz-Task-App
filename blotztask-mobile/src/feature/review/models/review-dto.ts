@@ -17,6 +17,9 @@ export type ReviewReportDTO = {
   oneThingToTryNext: string | null;
   // Counted live from the tasks, so it has a value even for a period with no letter.
   tasksCompleted: number;
+  // Days in the period the app was opened, not necessarily consecutive. Null on weekly reviews
+  // and on months before activity tracking started — hide the stat rather than show 0.
+  daysActive: number | null;
   isLowActivity: boolean;
   generatedAtUtc: string | null;
 };

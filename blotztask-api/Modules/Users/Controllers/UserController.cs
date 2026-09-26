@@ -14,6 +14,7 @@ public class UserController(
     GetUserProfileQueryHandler getUserProfileQueryHandler,
     UpdateUserProfileCommandHandler updateUserProfileCommandHandler,
     DeleteUserCommandHandler deleteUserCommandHandler,
+    RecordUserActivityCommandHandler recordUserActivityCommandHandler,
     ILogger<UserController> logger,
     IConfiguration configuration) : ControllerBase
 {
@@ -67,6 +68,17 @@ public class UserController(
             Timezone = updateUserProfileDto.Timezone,
         };
         return await updateUserProfileCommandHandler.Handle(command, ct);
+    }
+
+    [HttpPost("activity")]
+    public async Task<IActionResult> RecordActivity([FromBody] RecordUserActivityRequest request, CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        await recordUserActivityCommandHandler.Handle(
+            new RecordUserActivityCommand { UserId = userId, TimeZoneId = request.TimeZoneId }, ct);
+        return NoContent();
     }
 
     [HttpDelete]

@@ -57,12 +57,24 @@ public class GetReviewQueryHandler(
                      && t.CompletedAt < period.EndUtc,
                 ct);
 
+        // Activity rows hold the user's local date, so the local bounds apply directly.
+        int? daysActive = period.ReportsDaysActive
+            ? await db.UserActivityDays
+                .AsNoTracking()
+                .CountAsync(
+                    a => a.UserId == query.UserId
+                         && a.LocalDate >= period.StartLocalDate
+                         && a.LocalDate < period.EndLocalDateExclusive,
+                    ct)
+            : null;
+
         return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
             TasksCompleted = tasksCompleted,
+            DaysActive = daysActive,
             // A report may not exist yet (not generated, or the period hasn't ended).
             // The DTO is still returned with the metrics; letter/generatedAt stay null.
             Letter = report?.AiGeneratedLetter,
