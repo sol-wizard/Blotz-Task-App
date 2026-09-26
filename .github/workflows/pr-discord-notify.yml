@@ -5,7 +5,9 @@ name: PR Discord Notify
 #   - PR opened / marked ready  -> new-PR message, tags who must approve:
 #                                  L1 -> @Blotz-Developer (anyone)
 #                                  L2 / no label -> @Blotz-TechLead-candidate
-#                                  L3 / L4 -> @Blotz-TechLead
+#                                  L3 -> @Blotz-TechLead
+#                                  L4 -> @Blotz-TechLead + candidate (needs
+#                                        1 tech lead + 1 lead or candidate)
 #   - review (re-)requested     -> tags the requested reviewer
 #   - changes requested         -> tags the author
 #   - approved                  -> tags the author
@@ -89,10 +91,12 @@ jobs:
             pull_request/opened | pull_request/ready_for_review)
               case "$LEVEL" in
                 L1) ROLE=$DEVELOPER_ROLE ;;
-                L3 | L4) ROLE=$TECHLEAD_ROLE ;;
+                L3) ROLE=$TECHLEAD_ROLE ;;
+                L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE" ;;
                 *)  ROLE=$CANDIDATE_ROLE ;;
               esac
-              TL=${ROLE:+<@&$ROLE> }
+              TL=""
+              for r in $ROLE; do TL+="<@&$r> "; done
               MSG="🆕 ${TL}new PR by $(mention "$AUTHOR")$LEVEL_TXT"$'\n'"$PR" ;;
             pull_request/review_requested)
               [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
