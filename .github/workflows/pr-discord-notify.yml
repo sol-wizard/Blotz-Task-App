@@ -36,6 +36,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 # One run at a time per PR, in order, so two quick events (e.g. approve then
 # merge) can't race and leave the wrong emoji.
@@ -70,6 +71,7 @@ jobs:
           REVIEWER: ${{ github.event.review.user.login }}
           REVIEW_STATE: ${{ github.event.review.state }}
           SENDER: ${{ github.event.sender.login }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Skip automated PRs (release PRs, dependabot, copilot).
           case "$AUTHOR" in
@@ -103,7 +105,11 @@ jobs:
             jq -c --arg n "$NAME" '[.[] | select(.webhook_id != null and .author.username == $n)][0] // empty' /tmp/resp
           }
 
-          # Who has to approve, from the PBI's L1–L4 label.
+          # Who has to approve, from the PBI's L1–L4 label. Read the labels fresh:
+          # `gh pr create --label` adds them just after creating the PR, so the
+          # "opened" event itself often has none yet.
+          LABELS=$(gh pr view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json labels \
+            --jq '[.labels[].name] | join(",")' 2>/dev/null) || true
           LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
           case "$LEVEL" in
             L1) ROLE=$DEVELOPER_ROLE ;;
