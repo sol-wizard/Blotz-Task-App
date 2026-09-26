@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
 import { EVENTS, type ShareContentType, type ShareSource } from "@/shared/constants/posthog-events";
 import { analytics } from "@/shared/services/analytics";
-import { ReviewPeriodType } from "../models/review-dto";
 
 type Params = {
   captureTargetRef: RefObject<View | null>;
@@ -71,12 +70,6 @@ export function useReviewShare({ captureTargetRef, source, contentType }: Params
         source,
         contentType,
       });
-
-      if (contentType === "review" && (source === "weekly_review" || source === "monthly_review")) {
-        analytics.trackReviewShared({
-          period: source === "monthly_review" ? ReviewPeriodType.Monthly : ReviewPeriodType.Weekly,
-        });
-      }
     } catch {
       analytics.trackShare(EVENTS.SHARE_FAILED, {
         source,
