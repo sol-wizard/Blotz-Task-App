@@ -10,11 +10,12 @@ name: PR Discord Notify
 #           L4 -> @Blotz-TechLead + candidate (1 tech lead + 1 lead or candidate)
 #
 # Everything after that is an emoji on that same message plus a DM, so the
-# channel stays at one message per PR (needs the bot token):
-#   review (re-)requested -> 👀  + DM the reviewer
-#   changes requested     -> 🔁  + DM the author
-#   approved              -> ✅  (🔁 removed) + DM the author
-#   merged                -> 🎉
+# channel stays at one message per PR (needs the bot token). The message
+# always shows ONE status emoji — the current one replaces the previous:
+#   review (re-)requested -> 👀 waiting for review   + DM the reviewer
+#   changes requested     -> 🔁 author needs to fix  + DM the author
+#   approved              -> ✅ ready to merge       + DM the author
+#   merged                -> 🎉 done
 #
 # Setup (once):
 #   - Secret   DISCORD_PR_WEBHOOK_URL    webhook of #blotz-pr-review
@@ -135,7 +136,11 @@ jobs:
           if [ -n "$MSG_ID" ]; then
             BASE="https://discord.com/api/v10/channels/$CHANNEL/messages/$MSG_ID/reactions"
             api -X PUT "$BASE/$(uri "$EMOJI")/@me" -o /dev/null || echo "::warning::Could not add $EMOJI."
-            [ "$EMOJI" = "✅" ] && { api -X DELETE "$BASE/$(uri "🔁")/@me" -o /dev/null || true; }
+            # Keep a single status: drop the bot's previous status emoji.
+            for old in 👀 🔁 ✅ 🎉; do
+              [ "$old" = "$EMOJI" ] && continue
+              api -X DELETE "$BASE/$(uri "$old")/@me" -o /dev/null 2>&1 || true
+            done
           else
             echo "::warning::No Discord message found for #$NUMBER — skipping the emoji."
           fi
