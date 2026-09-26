@@ -78,7 +78,9 @@ export default function SettingsAccountScreen() {
           </Text>
         </Pressable>
 
-        <FormDivider marginVertical={2} />
+        <View className="mr-4">
+          <FormDivider marginVertical={2} />
+        </View>
         <Pressable className="mb-3 mt-2">
           <View className="flex-row items-center pb">
             <Text className="text-lg font-baloo text-secondary">{t("account.email")}</Text>
