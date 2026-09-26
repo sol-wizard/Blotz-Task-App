@@ -82,7 +82,10 @@ jobs:
             PING=""
             for r in $ROLE; do PING+="<@&$r> "; done
             MSG="🆕 ${PING}new PR by **$AUTHOR**${LEVEL:+ · level $LEVEL}"$'\n'"$PR"
-            jq -n --arg c "$MSG" '{content: $c, allowed_mentions: {parse: ["roles"]}}' |
+            # The PR number goes in the sender name: bots without the privileged
+            # Message Content intent can't read message text, but can read names.
+            jq -n --arg c "$MSG" --arg n "Blotz PR Bot · #$NUMBER" \
+              '{content: $c, username: $n, allowed_mentions: {parse: ["roles"]}}' |
               curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK"
             exit 0
           fi
@@ -116,9 +119,10 @@ jobs:
           }
           uri() { jq -rn --arg e "$1" '$e|@uri'; }
 
-          # Find this PR's message among the channel's recent webhook posts.
+          # Find this PR's message among the channel's recent webhook posts,
+          # by the "Blotz PR Bot · #<number>" sender name set above.
           MSG_ID=$(api "https://discord.com/api/v10/channels/$CHANNEL/messages?limit=100" |
-            jq -r --arg u "$URL>" '[.[] | select(.webhook_id != null and (.content | contains($u)))][0].id // empty') || true
+            jq -r --arg n "Blotz PR Bot · #$NUMBER" '[.[] | select(.webhook_id != null and .author.username == $n)][0].id // empty') || true
           if [ -n "$MSG_ID" ]; then
             BASE="https://discord.com/api/v10/channels/$CHANNEL/messages/$MSG_ID/reactions"
             api -X PUT "$BASE/$(uri "$EMOJI")/@me" -o /dev/null || echo "::warning::Could not add $EMOJI."
