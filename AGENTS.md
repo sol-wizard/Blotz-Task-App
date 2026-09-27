@@ -24,7 +24,7 @@ table below to pick the right one and open it yourself.
 | `real-device-test` | Verifying something on a physical phone, or driving the installed app on a USB-connected device |
 | `pr` | The author's side of a pull request: opening one, fixing its description or release note, or fixing review comments and sending it back for re-review |
 | `pr-review` | Reviewing a pull request |
-| `create-blotz-pbi` | Capturing an idea, problem or task as a PBI in the backlog |
+| `pbi` | Creating a PBI, explaining one before coding, implementing it (tests checked first, small pieces, proof at the end), or updating it — moving its card, ticking finished boxes, adding a short note |
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
 | `generate-weekly-focus` | Producing the weekly summary of team work for marketing/product |
 | `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |

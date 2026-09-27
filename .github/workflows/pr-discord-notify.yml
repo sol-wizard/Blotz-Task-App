@@ -121,7 +121,7 @@ jobs:
           ping_line() {
             local ping="" r
             for r in $ROLE; do ping+="<@&$r> "; done
-            echo "🆕 ${ping}new PR to review"
+            echo "🆕 ${ping}· PR from 👤 **$AUTHOR**"
           }
           # The card: clickable title, Author/Level, history lines, and a side
           # bar coloured by status.
@@ -129,8 +129,8 @@ jobs:
             jq -n --arg t "#$NUMBER $TITLE" --arg u "$URL" --arg a "$AUTHOR" \
               --arg l "${LEVEL:-not set}" --arg d "$1" --argjson c "$2" \
               '{title: ($t|.[0:256]), url: $u, color: $c,
-                fields: [{name: "Author", value: $a, inline: true},
-                         {name: "Level", value: $l, inline: true}]}
+                fields: [{name: "👤 Author", value: ("**" + $a + "**"), inline: true},
+                         {name: "🏷️ Level", value: ("**" + $l + "**"), inline: true}]}
                + (if $d == "" then {} else {description: $d} end)'
           }
           GREY=10070709; BLURPLE=5793266; YELLOW=16705372; GREEN=5763719; PURPLE=10181046

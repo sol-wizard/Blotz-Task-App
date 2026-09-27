@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PBI {{N}} explained</title>
+<style>
+:root{--bg:#fafaf8;--card:#fff;--ink:#1c1c1a;--muted:#6b6a64;--line:#e4e2dc;--warn:#b7791f;--soft:#f1f0ec;--accent:#2f5bd3;--zh:#8a6d3b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a19f97;--line:#34332f;--warn:#e0a948;--soft:#262624;--accent:#7f9cf5;--zh:#d6b67a}}
+:root[data-theme="dark"]{--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a19f97;--line:#34332f;--warn:#e0a948;--soft:#262624;--accent:#7f9cf5;--zh:#d6b67a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif}
+.wrap{max-width:min(1440px,94vw);margin:0 auto;padding:28px 16px 60px}
+h1{font-size:1.5rem;margin:0 0 18px}
+h2{font-size:1.15rem;margin:28px 0 8px}
+.tldr{background:var(--card);border:2px solid var(--accent);border-radius:12px;padding:16px 20px}
+.tldr p{margin:6px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.card p{margin:6px 0}
+.q{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:10px;padding:14px 18px;margin:12px 0}
+.qh{font-weight:700;font-size:1.05rem}
+.why{color:var(--muted);margin:4px 0 10px}
+.opt{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0}
+.opt.pick{border:2px solid var(--accent)}
+.tag{background:var(--accent);color:#fff;border-radius:6px;padding:1px 8px;font-size:.8rem;margin-left:6px}
+
+ol,ul{margin:0;padding-left:22px}
+li{margin:6px 0}
+.zh{color:var(--zh);font-size:.9em}
+details{margin-top:28px;background:var(--soft);border-radius:10px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;background:var(--card);padding:1px 5px;border-radius:4px}
+.muted{color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<!-- Keep every section, in this order. Simple English, short sentences. Put Chinese in brackets
+     only after hard words: migration (数据库迁移). One emoji at the start of each heading and point. -->
+<h1>{{EMOJI}} #{{N}} · {{SHORT TITLE IN PLAIN WORDS}}</h1>
+
+<div class="tldr">
+<p>🐛 <b>Problem:</b> {{one sentence: what's wrong for the user}}</p>
+<p>🛠️ <b>To do:</b> {{one sentence: what to change}}</p>
+<p>❓ <b>First:</b> decide the {{count}} questions below with your AI, <b>before</b> you write code.</p>
+<!-- No open questions → replace the ❓ line with: ✅ <b>No open questions</b> — you can start. -->
+</div>
+
+<h2>👀 What the user sees</h2>
+<div class="card">
+<p>😕 <b>Today:</b> {{Xiao Ming does … → sees …}}</p>
+<p>😊 <b>After:</b> {{Xiao Ming does the same → sees …}}</p>
+</div>
+
+<h2>❓ Questions to decide before coding</h2>
+<p class="muted">💬 Talk each one through with your AI and pick an option. Still not sure? 🙋 Ask the tech lead. You can always ask them for help.</p>
+
+<!-- One .q card per question. 2–3 options. Exactly one option gets class "pick" and the 🤖 tag. -->
+<div class="q">
+  <div class="qh">1️⃣ {{question}}</div>
+  <div class="why">{{one line: why it matters}}</div>
+  <div class="opt pick"><b>A · {{option}}</b> <span class="tag">🤖 AI pick</span><br>{{one line: why}}</div>
+  <div class="opt"><b>B · {{option}}</b><br>{{one line: trade-off}}</div>
+</div>
+
+<h2>⚠️ Also check</h2>
+<div class="card">
+<ul>
+<li>{{emoji}} {{something else that could break, and how to spot it}}</li>
+</ul>
+</div>
+
+<h2>✅ How to prove it works</h2>
+<div class="card">
+<ol>
+<li>{{emoji}} {{step you can see or run}} → {{what you should see}}</li>
+</ol>
+<p class="muted">🏷️ Suggested level: <b>{{L1–L4}}</b>. {{one sentence why}}</p>
+</div>
+
+<details>
+<summary>💻 When you start coding: which files change</summary>
+<ul>
+<li><b>App</b><ul><li><code>{{file}}</code>: {{what changes}}</li></ul></li>
+<li><b>Backend</b><ul><li><code>{{file}}</code>: {{what changes}}</li></ul></li>
+</ul>
+</details>
+</div>
+</body>
+</html>

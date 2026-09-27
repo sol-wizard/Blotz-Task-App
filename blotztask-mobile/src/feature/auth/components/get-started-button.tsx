@@ -196,14 +196,14 @@ export default function GetStartedButton() {
     };
   }, []);
 
-  const signIn = async (connection?: string) => {
+  const signIn = async () => {
     // A second `authorize()` while the browser is still coming up hits the SDK's
     // transaction lock and surfaces as TRANSACTION_ACTIVE_ALREADY.
     if (inFlight.current) return;
 
     const attempt: LoginAttempt = {
       id: ++attemptCounter.current,
-      connection: connection === "sms" ? "sms" : "default",
+      connection: "default",
       startedAt: Date.now(),
       leftForeground: false,
       stalled: false,
@@ -220,7 +220,6 @@ export default function GetStartedButton() {
         {
           audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
           scope: "openid profile email offline_access",
-          connection,
         },
         { ephemeralSession: true },
       );
@@ -289,24 +288,14 @@ export default function GetStartedButton() {
     }
   };
 
-  const showPhone = process.env.EXPO_PUBLIC_APP_ENV !== "production";
-
   return (
     <View style={{ gap: 12, width: "100%" }}>
       <PillButton
         label={isSigningIn ? t("buttons.signingIn") : t("buttons.continue")}
-        onPress={() => signIn()}
+        onPress={signIn}
         variant="primary"
         disabled={isSigningIn}
       />
-      {showPhone && (
-        <PillButton
-          label={t("buttons.continueWithPhone")}
-          onPress={() => signIn("sms")}
-          variant="secondary"
-          disabled={isSigningIn}
-        />
-      )}
     </View>
   );
 }
