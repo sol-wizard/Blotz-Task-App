@@ -1,9 +1,4 @@
----
-name: create-pr
-description: Use when the user wants to open a pull request — e.g. "create me a PR", "open a PR", "raise a PR" — or wants to fix the description or release note on an existing PR.
----
-
-# Create PR
+# Open or update a PR
 
 Write the PR description from the branch's **actual diff and commits**, fill `.github/pull_request_template.md`, confirm with the dev, then open the PR.
 
@@ -66,18 +61,24 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
 
    Title: derive from the commits and follow whichever style they already use (`fix(ai): ...` when the commits use that form, a plain sentence otherwise). Do not impose a convention the repo does not have.
 
-7. **Confirm.** Show the dev the full body **and** the Status reasoning. Ask for approval or edits. Loop until approved. Never skip this, even when every check is unambiguous.
+7. **Review level.** Every PR carries one `L1`–`L4` label, copied from its PBI. It decides who Discord pings and who must approve. Ask the dev for the PBI number and read its label from the private repo: `gh issue view <n> -R Blotz-Org/Blotz-Task-App-Private --json labels --jq '[.labels[].name | select(test("^L[1-4]$"))][0]'`. If the PBI has none, or there's no PBI, suggest one with a one-sentence reason and let the dev choose — rules in `.claude/skills/pbi/review-levels.md`. When the PBI had none, write the chosen level back to it too, so the PBI and PR agree: `gh issue edit <n> -R Blotz-Org/Blotz-Task-App-Private --add-label <level>`. In update mode, skip this if the PR already has a level label. The Discord post only reads the level when the PR opens, so if the level changes later, tell the dev to let the new reviewers know themselves.
 
-8. **Submit.** On approval:
+   **Proof goes in the body.** Add one `Verified:` line to the Summary with the proof the `pbi` implement step produced: backend → the test command and its result; UI → the real-device screenshots (attach them); both → both. **Only check that it's there — never run tests yourself**: that would do the dev's work twice. No proof → tell the dev what's missing; an `L1` without proof is opened as `L2`.
+
+8. **Confirm.** Show the dev the full body **and** the Status reasoning. Ask for approval or edits. Loop until approved. Never skip this, even when every check is unambiguous.
+
+9. **Submit.** On approval:
    - Push first if there is no upstream or unpushed commits: `git push -u origin HEAD`.
    - Write the body to a scratchpad file and pass `--body-file`, never `--body` — the body is multi-line markdown with backticks and checkboxes, and shell quoting will corrupt it.
-   - Create mode: `gh pr create --base main --title <title> --body-file <file>`
-   - Update mode: `gh pr edit --body-file <file>`
+   - Create mode: `gh pr create --base main --title <title> --body-file <file> --label <level>`. The label must go on **at creation**: that's the moment the Discord post picks who to ping.
+   - Update mode: `gh pr edit --body-file <file>` (add `--add-label <level>` if the PR had none)
+   - Create mode, when there's a PBI: then update it with the `pbi` skill (`update.md`) — status `In Review`, tick what this PR covers, PR link in the note. Its own confirm step still applies.
 
-9. **Reply with the PR URL only.**
+10. **Reply with the PR URL only.**
+
 
 ## Notes
 
 - Base is `main` and the PR is created ready, not draft. Both are overridable if the dev asks.
 - Do not add PBI links. Issues live in `Blotz-Org/Blotz-Task-App-Private` while this repo is `sol-wizard/Blotz-Task-App` — different orgs, so a bare `#123` does not link and `Fixes #123` can never auto-close.
-- Do not add assignees, reviewers, or labels unless asked.
+- Do not add assignees, reviewers, or labels unless asked — the one exception is the review-level label from step 7.
