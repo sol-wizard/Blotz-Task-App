@@ -54,39 +54,52 @@ export default function SettingsAccountScreen() {
         </View>
       </View>
 
-      <View className="mt-8 w-full bg-white rounded-2xl items-center">
-        <View className="w-11/12">
-          <Pressable
-            className="px-4 ml-3 mb-2"
-            onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
-          >
-            <View className="flex-row items-center justify-between pt-4 pb">
-              <Text className="text-lg font-baloo text-secondary ">{t("account.name")}</Text>
+      <View className="mt-8 w-full bg-white rounded-2xl pl-4">
+        <Pressable
+          className="mb-2"
+          onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
+        >
+          <View className="flex-row items-center pt-4 pb">
+            <Text className="text-lg font-baloo text-secondary">{t("account.name")}</Text>
 
-              <View className="flex-row items-center ">
-                <Text className="text-lg font-baloo text-secondary mr-2">{displayName}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
-              </View>
+            <View className="ml-3 flex-1 flex-row items-center justify-end">
+              <Text
+                className="shrink text-lg font-baloo text-secondary mr-2"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {displayName}
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
             </View>
-            <Text className="text-primary font-balooThin text-sm">
-              {t("account.nameDescription")}
-            </Text>
-          </Pressable>
+          </View>
+          <Text className="text-primary font-balooThin text-sm">
+            {t("account.nameDescription")}
+          </Text>
+        </Pressable>
 
+        <View className="mr-4">
           <FormDivider marginVertical={2} />
-          <Pressable className="px-4 ml-3 mb-3 mt-2">
-            <View className="flex-row items-center justify-between pb">
-              <Text className="text-lg font-baloo text-secondary ">{t("account.email")}</Text>
-
-              <View className="flex-row items-center ">
-                <Text className="text-lg font-baloo text-secondary mr-2">{displayEmail}</Text>
-              </View>
-            </View>
-            <Text className="text-primary font-balooThin text-sm">
-              {t("account.emailDescription")}
-            </Text>
-          </Pressable>
         </View>
+        <Pressable className="mb-3 mt-2">
+          <View className="flex-row items-center pb">
+            <Text className="text-lg font-baloo text-secondary">{t("account.email")}</Text>
+
+            <View className="ml-3 flex-1 flex-row items-center justify-end">
+              <Text
+                className="shrink text-lg font-baloo text-secondary mr-2"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {displayEmail}
+              </Text>
+              <View style={{ width: 22, flexShrink: 0 }} />
+            </View>
+          </View>
+          <Text className="text-primary font-balooThin text-sm">
+            {t("account.emailDescription")}
+          </Text>
+        </Pressable>
       </View>
       <Pressable
         onPress={async () => await logout()}
