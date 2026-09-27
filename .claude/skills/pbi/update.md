@@ -6,7 +6,7 @@ Keep the board true without anyone chasing: move the card, tick what's done, and
 
 - Repo `Blotz-Org/Blotz-Task-App-Private`, project `1` (org `Blotz-Org`). Needs the `project` token scope — if a call fails for scope, tell the dev to run `gh auth refresh -s project` (interactive, only they can do it).
 - Project ID `PVT_kwDOC3ftEM4Auu9M` · Status field ID `PVTSSF_lADOC3ftEM4Auu9MzglR-N0`
-- Status options: `In Progress` = `47fc9ee4` · `In Review` = `56233cab` · `PM Review` = `977f36ec`. Never set `Done` — the PM does that after checking.
+- Status options: `In Progress` = `47fc9ee4` · `In Review` = `56233cab` · `Done` = `98236657`. (There is no PM review step any more — a merged PR means done.)
 
 ## Steps
 
@@ -18,7 +18,7 @@ Keep the board true without anyone chasing: move the card, tick what's done, and
    |---|---|
    | Started work | `In Progress` |
    | PR opened | `In Review` |
-   | PR merged | `PM Review` |
+   | PR merged | `Done` |
 
 3. **Tick finished boxes** in `## Scope / Tasks` and `## Acceptance Criteria` — only the ones the work actually covers (check the diff or PR). Never tick `## Staging Verification` unless the dev says they tested it on a staging build.
 
