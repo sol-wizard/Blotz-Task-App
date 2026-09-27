@@ -45,6 +45,49 @@ public class TaskGenerationToolsTests
     }
 
     [Fact]
+    public async Task Handle_CreateRecurringBatchWithInvalidItem_AddsNothing()
+    {
+        // Arrange
+        var tools = new TaskGenerationTools();
+        var streamed = new List<string>();
+        tools.OnRecurringTaskStreamed = task =>
+        {
+            streamed.Add(task.Title);
+            return Task.CompletedTask;
+        };
+        var start = new DateTime(2026, 8, 9, 7, 0, 0);
+        var inputs = new[]
+        {
+            DailyInput("Stretch", null),
+            DailyInput("Run", new DateOnly(2026, 8, 8)),
+            DailyInput("Read", null)
+        };
+
+        // Act
+        var act = () => tools.CreateRecurringTasks(inputs);
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>(
+            because: "an end date before the start date is invalid");
+        tools.RecurringTasks.Should().BeEmpty(
+            because: "a failed batch must add nothing, so a retry does not duplicate earlier items");
+        streamed.Should().BeEmpty(
+            because: "nothing should reach the client when the batch fails");
+
+        RecurringTaskInput DailyInput(string title, DateOnly? endDate) => new()
+        {
+            Title = title,
+            Description = "",
+            TimeType = TaskTimeType.SingleTime,
+            Label = LabelNameEnum.Health,
+            TemplateStartTime = start,
+            TemplateEndTime = start,
+            Frequency = RecurrenceFrequency.Daily,
+            EndDate = endDate
+        };
+    }
+
+    [Fact]
     public async Task Handle_UpdateRecurringWeekday_ChangesOnlyDaysOfWeek()
     {
         // Arrange

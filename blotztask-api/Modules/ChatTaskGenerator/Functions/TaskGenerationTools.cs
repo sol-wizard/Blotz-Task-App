@@ -87,7 +87,7 @@ public class TaskGenerationTools()
         [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after the date part of templateStartTime.")] DateOnly? endDate)
     {
         ToolCallCount++;
-        await AddRecurringTask(new RecurringTaskInput
+        await AddRecurringTask(BuildRecurringTask(new RecurringTaskInput
         {
             Title = title,
             Description = description,
@@ -100,7 +100,7 @@ public class TaskGenerationTools()
             DaysOfWeek = daysOfWeek,
             DayOfMonth = dayOfMonth,
             EndDate = endDate
-        });
+        }));
         return "Recurring task added.";
     }
 
@@ -113,9 +113,12 @@ public class TaskGenerationTools()
         RecurringTaskInput[] recurringTasks)
     {
         ToolCallCount++;
-        foreach (var recurringTask in recurringTasks)
+        // Validate every item before adding any, so one bad item fails the whole batch
+        // instead of leaving earlier items added (and duplicated if the model retries).
+        var tasks = recurringTasks.Select(BuildRecurringTask).ToList();
+        foreach (var task in tasks)
         {
-            await AddRecurringTask(recurringTask);
+            await AddRecurringTask(task);
         }
 
         return $"{recurringTasks.Length} recurring task(s) added.";
@@ -292,7 +295,7 @@ public class TaskGenerationTools()
         DateOnly StartDate,
         DateOnly? EndDate);
 
-    private async Task AddRecurringTask(RecurringTaskInput input)
+    private static ExtractedRecurringTask BuildRecurringTask(RecurringTaskInput input)
     {
         var pattern = NormalizeRecurringPattern(
             input.Frequency,
@@ -301,7 +304,7 @@ public class TaskGenerationTools()
             input.DayOfMonth,
             input.TemplateStartTime,
             input.EndDate);
-        var task = new ExtractedRecurringTask
+        return new ExtractedRecurringTask
         {
             Id = Guid.NewGuid(),
             Title = input.Title,
@@ -317,6 +320,10 @@ public class TaskGenerationTools()
             StartDate = pattern.StartDate,
             EndDate = pattern.EndDate
         };
+    }
+
+    private async Task AddRecurringTask(ExtractedRecurringTask task)
+    {
         RecurringTasks.Add(task);
         if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
     }
@@ -435,7 +442,7 @@ public class RecurringTaskInput
     [Description("Work, Life, Learning, or Health")]
     public required LabelNameEnum Label { get; init; }
 
-    [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence. If the user gives a day but no time, pick a sensible time of day.")]
+    [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence, and its date part becomes the recurring task's start date. If the user gives a day but no time, pick a sensible time of day.")]
     public required DateTime TemplateStartTime { get; init; }
 
     [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss. Equal to TemplateStartTime when TimeType is SingleTime; strictly after TemplateStartTime when RangeTime.")]
