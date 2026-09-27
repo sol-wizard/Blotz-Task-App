@@ -61,7 +61,9 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
 
    Title: derive from the commits and follow whichever style they already use (`fix(ai): ...` when the commits use that form, a plain sentence otherwise). Do not impose a convention the repo does not have.
 
-7. **Review level.** Every PR carries one `L1`–`L4` label, copied from its PBI. It decides who Discord pings and who must approve. Ask the dev for the PBI number and read its label from the private repo: `gh issue view <n> -R Blotz-Org/Blotz-Task-App-Private --json labels --jq '[.labels[].name | select(test("^L[1-4]$"))][0]'`. If the PBI has none, or there's no PBI, ask the dev which level (`L1` anyone · `L2` candidate · `L3` tech lead · `L4` two approvals incl. a tech lead). In update mode, skip this if the PR already has a level label.
+7. **Review level.** Every PR carries one `L1`–`L4` label, copied from its PBI. It decides who Discord pings and who must approve. Ask the dev for the PBI number and read its label from the private repo: `gh issue view <n> -R Blotz-Org/Blotz-Task-App-Private --json labels --jq '[.labels[].name | select(test("^L[1-4]$"))][0]'`. If the PBI has none, or there's no PBI, suggest one with a one-sentence reason and let the dev choose — rules in `.claude/skills/pbi/review-levels.md`. When the PBI had none, write the chosen level back to it too, so the PBI and PR agree: `gh issue edit <n> -R Blotz-Org/Blotz-Task-App-Private --add-label <level>`. In update mode, skip this if the PR already has a level label. The Discord post only reads the level when the PR opens, so if the level changes later, tell the dev to let the new reviewers know themselves.
+
+   **`L1` needs proof in the body.** Add one `Verified:` line to the Summary saying how the change was proven — the test command and its result, or UI screenshots from `real-device-test` / Playwright (attach them). If there's no such proof, don't open it as `L1`: tell the dev and use `L2`.
 
 8. **Confirm.** Show the dev the full body **and** the Status reasoning. Ask for approval or edits. Loop until approved. Never skip this, even when every check is unambiguous.
 
@@ -70,6 +72,7 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - Write the body to a scratchpad file and pass `--body-file`, never `--body` — the body is multi-line markdown with backticks and checkboxes, and shell quoting will corrupt it.
    - Create mode: `gh pr create --base main --title <title> --body-file <file> --label <level>`. The label must go on **at creation**: that's the moment the Discord post picks who to ping.
    - Update mode: `gh pr edit --body-file <file>` (add `--add-label <level>` if the PR had none)
+   - Create mode, when there's a PBI: then update it with the `pbi` skill (`update.md`) — status `In Review`, tick what this PR covers, PR link in the note. Its own confirm step still applies.
 
 10. **Reply with the PR URL only.**
 
