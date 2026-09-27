@@ -82,16 +82,7 @@ it without rereading the description. Cover:
 Lead the section with: `PBI is not Done until every box below is checked on a staging build.`
 
 ## Before creating — also confirm
-- **Review level:** every PBI gets exactly one of the labels `L1`–`L4`. It sets who must approve the PR and who Discord pings when the PR opens:
-
-  | Label | Approval needed (after the AI review) |
-  |---|---|
-  | `L1` | 1 approval from anyone on the team |
-  | `L2` | 1 tech-lead candidate |
-  | `L3` | 1 tech lead |
-  | `L4` | 2 approvals, at least 1 tech lead |
-
-  Ask the user which level — one question, those four options. There are no fixed rules yet for which kind of work gets which level, so don't present a suggestion as a rule; if you offer one, say why in a sentence. This replaces the old `tech-lead` label; don't add that one any more.
+- **Review level:** every PBI gets exactly one label `L1`–`L4` — rules in `review-levels.md` next to this file. **Suggest** a level with a one- or two-sentence reason from those rules (which question decided it), then ask the user to choose — one question, the four levels as options, your suggestion marked. **The user decides**; never apply a level they haven't picked. This replaces the old `tech-lead` label; don't add that one any more.
 - **Other labels:** pick the right label(s) yourself from the repo's existing labels based on the work (e.g. bug, frontend, backend, auth).
 - **`backlog ready` is a project board Status, NOT a label.** Never pass `backlog ready` in the labels array. It is set on the project's Status field (see Steps 6).
 - **Estimate:** suggest one from `1, 2, 4, 8, 16` (where **4 = 1 day**, so 1≈2h, 2≈half day, 8≈2 days, 16≈4 days) and confirm with the user. Set it on the project's Estimate field.
