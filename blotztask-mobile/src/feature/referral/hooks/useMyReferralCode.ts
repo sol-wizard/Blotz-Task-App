@@ -9,6 +9,7 @@ export const useMyReferralCode = () => {
   const { data, isLoading } = useQuery({
     queryKey: referralKeys.myCode,
     queryFn: () => fetchMyReferralCode(),
+    refetchOnMount: "always",
   });
 
   return {
