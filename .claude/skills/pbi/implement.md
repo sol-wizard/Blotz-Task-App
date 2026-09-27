@@ -20,7 +20,7 @@ Cheap checks only. If one fails: **stop**, tell the dev exactly how to fix it, a
 | Backend | `docker info` | Docker is running — the tests use Testcontainers (a real SQL Server in Docker) |
 | Backend | `cd blotztask-test && dotnet build` | builds |
 | App | `cd blotztask-mobile && npx tsc --noEmit 2>&1 \| grep 'error TS' \| grep -v '^node_modules/'` | runs — note how many lines it prints. That's the baseline: library code in `node_modules` has its own type errors, so ignore those and never "fix" them |
-| App (UI) | `real-device-test` §0 readiness rows 1–4 and 7 | phone connected, trusted, developer mode on, dev build installed |
+| App, when the user will see the change | `real-device-test` §0 readiness rows 1–4 and 7 | phone connected, trusted, developer mode on, dev build installed |
 
 ## 4. Write the code in small pieces
 
@@ -34,7 +34,7 @@ After **each** piece, run the cheap check and fix before moving on:
 
 All pieces done and every check green:
 - **Backend** → run the full related test class once more; keep the command and the pass line.
-- **UI** → `real-device-test` **once**, on the key flow from the explain page. Take screenshots of the before/after states it lists. Real-device runs are the expensive test, so never run them per piece.
+- **Real device — only when it's needed.** Run `real-device-test` **once** only if the change affects what the user **sees or does** in the app (a screen, a button, a flow). Then run the key flow from the explain page and screenshot the before/after states it lists. Skip it when the user can't notice the change — backend only, internal clean-up, logic with no visible effect — the checks above are enough. Either way, say in one line why you ran it or skipped it. It's the most expensive test, so never run it per piece.
 
 ## 6. Review
 
@@ -47,5 +47,5 @@ Open the PR with the `pr` skill. The proof goes in its `Verified:` line:
 | Change | Proof |
 |---|---|
 | Backend | the test command + its result (e.g. `dotnet test --filter SoundDefaultTests` → 4 passed) |
-| UI | the real-device screenshots |
+| UI the user can see | the real-device screenshots |
 | Both | both |
