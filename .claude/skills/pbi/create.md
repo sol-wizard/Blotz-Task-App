@@ -1,9 +1,4 @@
----
-name: create-blotz-pbi
-description: Use when the user wants to capture an idea, problem, or task as a PBI in the Blotz backlog — e.g. "create a PBI for this", "add this to the backlog".
----
-
-# Create Blotz PBI
+# Create a PBI
 
 Turn any context — an idea while building a feature, a bug, a follow-up, an investigation — into a **backlog-ready** PBI. Never create a not-ready PBI.
 
@@ -82,7 +77,7 @@ it without rereading the description. Cover:
 Lead the section with: `PBI is not Done until every box below is checked on a staging build.`
 
 ## Before creating — also confirm
-- **Review level:** every PBI gets exactly one label `L1`–`L4` — rules in `review-levels.md` next to this file. **Suggest** a level with a one- or two-sentence reason from those rules (which question decided it), then ask the user to choose — one question, the four levels as options, your suggestion marked. **The user decides**; never apply a level they haven't picked. This replaces the old `tech-lead` label; don't add that one any more.
+- **Review level:** every PBI gets exactly one label `L1`–`L4` — rules in `review-levels.md` in this folder. **Suggest** a level with a one- or two-sentence reason from those rules (which question decided it), then ask the user to choose — one question, the four levels as options, your suggestion marked. **The user decides**; never apply a level they haven't picked. This replaces the old `tech-lead` label; don't add that one any more.
 - **Other labels:** pick the right label(s) yourself from the repo's existing labels based on the work (e.g. bug, frontend, backend, auth).
 - **`backlog ready` is a project board Status, NOT a label.** Never pass `backlog ready` in the labels array. It is set on the project's Status field (see Steps 6).
 - **Estimate:** suggest one from `1, 2, 4, 8, 16` (where **4 = 1 day**, so 1≈2h, 2≈half day, 8≈2 days, 16≈4 days) and confirm with the user. Set it on the project's Estimate field.
