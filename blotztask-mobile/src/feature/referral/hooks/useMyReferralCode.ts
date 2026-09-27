@@ -13,6 +13,9 @@ export const useMyReferralCode = () => {
 
   return {
     referralCode: data?.code ?? null,
+    redemptionCount: data?.redemptionCount ?? 0,
+    targetCount: data?.targetCount ?? 0,
+    badgeIconUrl: data?.badgeIconUrl ?? null,
     isLoading,
   };
 };
