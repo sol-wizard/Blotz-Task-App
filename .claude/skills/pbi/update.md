@@ -18,7 +18,11 @@ Keep the board true without anyone chasing: move the card, tick what's done, and
    |---|---|
    | Started work | `In Progress` |
    | PR opened | `In Review` |
-   | PR merged | `Done` |
+   | PR merged, and the PBI has no `## Staging Verification` (or all its boxes are ticked) | `Done` |
+   | PR merged, but staging boxes are still unticked | stays `In Review` — the note says "Merged, waiting for the staging check" and lists the unticked boxes |
+   | Dev says it's tested on staging | tick those boxes → `Done` once none are left |
+
+   The PBI's own rule wins: *not Done until every Staging Verification box is checked on a staging build*. Never move a PBI with unticked staging boxes to `Done`.
 
 3. **Tick finished boxes** in `## Scope / Tasks` and `## Acceptance Criteria` — only the ones the work actually covers (check the diff or PR). Never tick `## Staging Verification` unless the dev says they tested it on a staging build.
 
