@@ -9,7 +9,7 @@ Before any code is written, turn the PBI into a short page the dev can read in t
    - Planning notes and past decisions: follow the `private-context` skill.
    - The code it touches — find the real screens, endpoints and entities by searching, don't guess from names.
 
-2. **Write one page** to `.pbi-explain/<n>.html` in the repo root (gitignored — never commit it), then open it with `open .pbi-explain/<n>.html`. Plain HTML, readable on a phone. Four short sections, in this order:
+2. **Write one page** to `.pbi-explain/<n>.html` in the repo root (gitignored — never commit it), then open it — `open` on macOS, `start` on Windows, `xdg-open` on Linux — and always print the file path too, in case opening fails. Plain HTML, readable on a phone. Four short sections, in this order:
 
    | Section | What goes in it |
    |---|---|

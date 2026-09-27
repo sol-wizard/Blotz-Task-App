@@ -35,7 +35,7 @@ Keep the board true without anyone chasing: move the card, tick what's done, and
      `gh api graphql -f query='query{repository(owner:"Blotz-Org",name:"Blotz-Task-App-Private"){issue(number:<n>){projectItems(first:5){nodes{id project{number}}}}}}' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number==1) | .id'`
      (not on the board yet → `gh project item-add 1 --owner Blotz-Org --url <issue url> --format json` and use its `id`), then
      `gh project item-edit --id <item> --project-id PVT_kwDOC3ftEM4Auu9M --field-id PVTSSF_lADOC3ftEM4Auu9MzglR-N0 --single-select-option-id <option id>`
-   - Ticks: edit the body with `gh issue edit <n> -R Blotz-Org/Blotz-Task-App-Private --body-file <file>` — change only the `[ ]` → `[x]` you listed, nothing else.
+   - Ticks: **re-read the body right before writing** (someone may have edited it since step 1), change only the `[ ]` → `[x]` lines you listed in that fresh copy, then `gh issue edit <n> -R Blotz-Org/Blotz-Task-App-Private --body-file <file>`. If a listed line is no longer there, skip it and tell the dev.
    - Note: `gh issue comment <n> -R Blotz-Org/Blotz-Task-App-Private --body-file <file>`
 
 7. **Reply with the PBI URL and the new status.**
