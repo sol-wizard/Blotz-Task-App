@@ -6,7 +6,7 @@
 
 2. **Open PRs:**
    ```
-   gh pr list -R sol-wizard/Blotz-Task-App --state open --json number,title,author,labels,createdAt,isDraft,reviewDecision
+   gh pr list -R sol-wizard/Blotz-Task-App --state open --json number,title,author,labels,createdAt,isDraft,reviewDecision,reviewRequests
    ```
    Keep only PRs that are not drafts, not authored by the person asking, and not by a bot (`…[bot]`, `app/…`). `L3`/`L4` PRs show **only to tech leads**; `L1`, `L2` and unlabelled PRs show to everyone.
 
@@ -14,7 +14,8 @@
 
    `👀 #572 · Feature/1593 referral progress · Armin1019 · L2 · waiting 3 days`
 
-   - 👀 = waiting for review · 🔁 = changes requested (`reviewDecision` is `CHANGES_REQUESTED` — waiting for the author, listed last)
+   - 👀 = waiting for review · 🔁 = waiting for the author, listed last
+   - 🔁 only when `reviewDecision` is `CHANGES_REQUESTED` **and** `reviewRequests` is empty. If someone has been (re-)requested, the author already sent it back — it's 👀 again, even though GitHub keeps the old `CHANGES_REQUESTED` until a new review is submitted.
    - Level = its `L1`–`L4` label, or "no level"
    - Waiting = time since the PR was opened, in hours or days
 
