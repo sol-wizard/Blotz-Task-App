@@ -1,6 +1,6 @@
 ---
 name: real-device-test
-description: Use when the user wants something verified on a physical phone — "真机测试一下", "test this on my iPhone", "check it on a real device", "run it on my phone" — or wants the AI to drive the installed app on a USB-connected iPhone/Android and report what it saw.
+description: Use when the user wants something verified on a physical phone — "真机测试一下", "test this on my iPhone", "check it on a real device", "run it on my phone" — or wants the AI to drive the installed app on a USB-connected iPhone/Android and report what it saw. Also use it when a teammate needs the dev build on their own iPhone for the first time, or the tech lead is asked to register a teammate's phone or make them a development build.
 ---
 
 # Real-device test
@@ -12,6 +12,8 @@ Drive the Blotz dev build on a **physical phone** with `agent-device`, then repo
 ## 0. Readiness gate — run it every time, in this order
 
 Walk the checklist top to bottom. For each item: run the check; if it fails, apply the fix if the AI can, otherwise give the user the exact step and **wait** for them to say it's done. Do not start §4 until every row is ✅. Tell the user which rows passed and which are pending so they always know what is being waited on.
+
+**Before row 1, ask one question:** "Has this phone ever had the Blotz **dev** build installed? The staging/TestFlight app does not count." If the answer is no or not sure, go to §1 and hand over the message for the tech lead **now**, then carry on with rows 1–6 while waiting. The tech lead is the slow step (a day, the first time), and everything else in the gate can be done in the meantime.
 
 | # | Check (AI runs) | Passes when | If it fails |
 |---|---|---|---|
@@ -25,8 +27,9 @@ Walk the checklist top to bottom. For each item: run the check; if it fails, app
 | 8 | native change since that build? (`git log` / `git status` touching `modules/`, `app.config.js` plugins, a library with native code, `expo prebuild` output) | no | rebuild per §1; JS/TS/style changes never need this |
 | 9 | Apple signing for the **agent-device runner**: `xcrun devicectl … details` shows the phone; then try `agent-device open …` in §4 | runner builds and installs | Tech lead's Mac: `export AGENT_DEVICE_IOS_TEAM_ID=Z6GFDAYSP9`. Anyone else: sign into Xcode (Xcode → Settings → Apple Accounts) with **any** Apple ID — a free Personal Team is enough for the runner — and export that team's id instead (find it under the account's "Developer Team" in that settings page). Free signing expires after 7 days; the runner just rebuilds |
 | 10 | **local backend only** — DB is current: `dotnet ef migrations list --no-build` in `blotztask-api/` | nothing is marked `(Pending)` | `dotnet ef database update`. AGENTS.md has the **user** run EF commands, so ask first and only run it on their say-so. A DB behind the code 500s with `Invalid column name '<col>'`, which reads exactly like a product bug |
-| 11 | backend chosen (§2) and Metro serving the phone (§3) | `iOS Bundled …` line in the Metro log after launch | fix per §3 |
-| 12 | phone is logged in (§4 snapshot shows the Today screen, not "Continue with Phone") | logged in as **blotztest1@gmail.com** | **User** logs in on the phone; never search for the password. If another account is signed in: Settings → Log out first (Auth0 remembers the last account) |
+| 11 | backend chosen (§2), and the bundle will not call `localhost`: `grep -h "^EXPO_PUBLIC_URL" .env.local .env` in `blotztask-mobile/` (the first hit wins) | the first hit is the staging URL, or `http://<Mac LAN IP>:5027` for a local backend | put the two staging lines from §2 in `.env.local`, restart Metro with `--clear`. Skipping this gives `ERR_NETWORK` on `http://localhost:5027/...` right after login |
+| 12 | Metro serving the phone (§3) | `iOS Bundled …` line in the Metro log after launch | fix per §3 |
+| 13 | phone is logged in (§4 snapshot shows the Today screen, not "Continue with Phone") | logged in as **blotztest1@gmail.com** | **User** logs in on the phone; never search for the password. If another account is signed in: Settings → Log out first (Auth0 remembers the last account) |
 
 Android equivalents: `adb devices -l` (USB debugging on, "Allow this computer" tapped), package `com.blotz.blotztask`, `agent-device … --platform android --serial <serial>`. Rows 2, 4 and 9 do not apply.
 
@@ -52,7 +55,8 @@ After that, this phone needs the tech lead again only when native code changes (
 
 **The tech lead's side of the EAS path.** Both commands ask questions, so the tech lead runs them in their own terminal from `blotztask-mobile/`, not through the AI.
 1. `npx eas-cli@latest device:create` → account `blotz` → Apple ID + 2FA code (the App Store Connect key file is not in the repo, so EAS falls back to an interactive Apple login) → if more than one Apple team is listed, pick the **Individual** one (`Z6GFDAYSP9`) → **Website** → send the printed `https://expo.dev/register-device/…` URL. The same link works for several phones, so collect every teammate who needs a dev build before building. Treat the link as private: anyone who opens it can add a phone to the team.
-2. Once everyone has confirmed: `npx eas-cli@latest build --profile development --platform ios`, same Apple login and team. One build covers every phone registered by then.
+2. When a teammate says "registered", name their phone: `npx eas-cli@latest device:rename --apple-team-id Z6GFDAYSP9`, pick the newest device, and call it after its owner. Phones register as "Unknown", and the build's checklist in the next step is much easier to get right when each row has a name.
+3. Once everyone has confirmed: `npx eas-cli@latest build --profile development --platform ios`, same Apple login and team. One build covers every phone registered by then.
    - EAS prints `The provisioning profile is missing the following devices` and asks `Would you like to choose the devices to provision again?` → **Y**.
    - In the device checklist **the new phone starts unticked**. Arrow to it and press **Space**; Return alone keeps the old selection and silently leaves the phone out. The count must equal every registered phone (`N devices selected`).
    - The same two questions come a second time for the `ExpoWidgetsTarget` target. Answer them the same way.

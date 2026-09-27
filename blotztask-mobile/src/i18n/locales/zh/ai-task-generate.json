@@ -2,6 +2,11 @@
   "input": {
     "placeholder": "在这里输入..."
   },
+  "permission": {
+    "typeInstead": "可以直接打字",
+    "micDisabled": "麦克风权限未开启",
+    "openSettings": "打开设置"
+  },
   "buttons": {
     "holdToTalk": "长按说话",
     "goBack": "返回"
