@@ -1,10 +1,12 @@
 ---
 name: pr-review
-description: Use this skill when the user asks to review a Blotz GitHub pull request, review a PR, check a PR, or comments on a PR link. Performs a concise AI-assisted senior-level PR review.
+description: Use this skill when the user asks to review a Blotz GitHub pull request, review a PR, check a PR, or comments on a PR link — or asks which PRs are waiting for them ("what PRs are waiting for me?", "review queue"). Performs a concise AI-assisted senior-level PR review.
 argument-hint: "[PR number, PR URL, or branch; optional, defaults to current branch]"
 ---
 
 # PR Review
+
+**"What PRs are waiting for me?"** → read only `queue.md` in this folder and stop there; the review below starts when they pick one ("review #572").
 
 1. Identify the PR target from the command argument. If a PR number, PR URL, or branch is provided, use it. If no argument is provided, default to the PR for the current branch.
 
@@ -35,21 +37,25 @@ argument-hint: "[PR number, PR URL, or branch; optional, defaults to current bra
 
     **When to post depends on the PR's review level** (its `L1`–`L4` label: `gh pr view <PR target> --json labels --jq '[.labels[].name | select(test("^L[1-4]$"))][0]'`):
 
-    | Level | What to do |
-    |---|---|
-    | `L1` | Post straight away — being asked to review is permission. |
-    | `L2`, `L3`, `L4`, or no level label | **Don't post yet.** Show the reviewer every draft comment (file, line, text) and let them edit, cut or add. Post only what they approve. A person has to stand behind the AI's review on anything above L1. |
+    | Level | Comments | Verdict |
+    |---|---|---|
+    | `L1` | Post straight away — being asked to review is permission. | Ask the reviewer (below). |
+    | `L2`, `L3`, `L4`, or no level label | **Don't post yet.** Show the reviewer every draft comment (file, line, text) and let them edit, cut or add. Post only what they approve — a person has to stand behind the AI's review above L1. | Ask the reviewer (below), then post comments + verdict together. |
+
+    **The verdict is always the reviewer's explicit word.** Once they've seen the comments, ask: **Approve, Request changes, or comment only?** If a comment is something the author must fix, suggest *Request changes* (it turns the PR's Discord card to 🔁) — but never pick it for them, and never read one from silence. Submitted from the reviewer's own `gh` account, it counts as their approval for the review level. GitHub won't let anyone approve or request changes on their **own** PR — then only *comment only* is possible.
 
     Every comment's `line` must be **inside the diff** — an added line or a context line shown in one of the diff's hunks. GitHub rejects the whole review (HTTP 422) if even one comment points outside it, and then nothing gets posted. If the line a finding is about isn't in the diff, attach it to the nearest changed line and name the real line in the comment ("`foo()` on line 120 still …"). If a 422 comes back anyway, find the offending comment, move it, and resend.
 
-    Either way, send the comments as one review with event `COMMENT`, so the author gets one notification rather than one per comment:
+    Send everything as **one review**, so the author gets one notification: the comments plus `event` = `APPROVE`, `REQUEST_CHANGES` or `COMMENT` (for *comment only*). `REQUEST_CHANGES` needs a short `body` saying what must change.
 
     ```
     gh api repos/sol-wizard/Blotz-Task-App/pulls/<n>/reviews --input review.json
-    # review.json: {"event": "COMMENT", "comments": [{"path": "...", "line": 42, "side": "RIGHT", "body": "..."}]}
+    # review.json: {"event": "APPROVE", "comments": [{"path": "...", "line": 42, "side": "RIGHT", "body": "..."}]}
     ```
 
-    Never approve and never request changes — those are the human reviewer's call, and their click is what the review level counts. After posting, reply with the PR URL and how many comments went up. If there are no findings, post nothing and say so.
+    `L1` is the one exception: its comments already went up straight away as a `COMMENT` review, so the verdict goes as a second review with no comments. *Comment only* → nothing more to send.
+
+    After submitting, reply with the PR URL, the verdict, and how many comments went up. No findings → still ask for the verdict (usually *Approve*), post no comments.
 
 13. Everything goes on the PR. Product and UX judgement calls, and questions about why an approach was chosen, are things the author can answer, so raise them as inline comments like any other finding. Do not route findings to a separate notes file.
 
