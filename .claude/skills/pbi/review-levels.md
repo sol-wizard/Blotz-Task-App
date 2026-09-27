@@ -22,3 +22,13 @@ Unsure → one level up.
 ## L1 needs proof
 
 An `L1` PR must show how the AI verified it: the test command and its result, or screenshots of the UI before and after. No proof in the PR → it isn't `L1`; treat it as `L2`.
+
+## Tech leads
+
+GitHub logins of the tech leads — `L3`/`L4` need one of them to approve:
+
+- `sol-wizard` (Ben)
+- `nxn-nicole` (Nicole)
+- `Xu-create-ops` (Chen)
+
+Update this list when someone becomes a tech lead or leaves. `L1`/`L2` don't need a check: any approval is fine.
