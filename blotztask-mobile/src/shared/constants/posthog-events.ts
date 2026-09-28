@@ -1,6 +1,8 @@
 import type { WebAuthErrorCodes } from "react-native-auth0";
 
 export const EVENTS = {
+  SUBTASK_CREATED: "subtask_created",
+  MONTHLY_CALENDAR_VIEWED: "monthly_calendar_viewed",
   CREATE_TASK_MANUALLY: "create_task_manually",
   LOGIN_STARTED: "login_started",
   LOGIN_SUCCEEDED: "login_succeeded",
@@ -25,7 +27,7 @@ export const EVENTS = {
   REVIEW_GENERATED: "review_generated",
   SHARE_CLICKED: "share_clicked",
   SHARE_SHEET_OPENED: "share_sheet_opened",
-  SHARE_COMPLETED: "share_completed",
+  SHARE_SHEET_DISMISSED: "share_sheet_dismissed",
   SHARE_FAILED: "share_failed",
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
@@ -139,7 +141,7 @@ export type AiTaskGenerationTurn = {
 export type ShareEvent =
   | typeof EVENTS.SHARE_CLICKED
   | typeof EVENTS.SHARE_SHEET_OPENED
-  | typeof EVENTS.SHARE_COMPLETED
+  | typeof EVENTS.SHARE_SHEET_DISMISSED
   | typeof EVENTS.SHARE_FAILED;
 
 export type ShareSource = "weekly_review" | "monthly_review" | "badge";
