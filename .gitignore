@@ -8,8 +8,7 @@
 package-lock.json
 .agents
 .codex
-# Claude Code - ignore personal settings, but allow CLAUDE.md
-.claude/settings.json
+# Claude Code - ignore personal settings (settings.local.json); settings.json is shared
 .claude/settings.local.json
 # Cursor - ignore local state, but allow rules
 .cursor/notepads
