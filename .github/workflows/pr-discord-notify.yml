@@ -18,7 +18,10 @@ name: PR Discord Notify
 #   review (re-)requested -> 👀 "Review requested from <reviewer>"
 #   changes requested     -> 🔁 "Changes requested by <reviewer>"
 #   approved              -> ✅ "Approved by <reviewer>"
-#   merged                -> 🎉 "Merged by <who>"
+#
+# Merged or closed -> the card is deleted, so the channel only shows PRs that
+# still need something (GitHub and the board keep the history). To clear cards
+# of PRs closed before this existed: Actions -> PR Discord Notify -> Run workflow.
 #
 # Setup (once):
 #   - Secret   DISCORD_PR_WEBHOOK_URL    webhook of #blotz-pr-review
@@ -33,6 +36,7 @@ on:
     types: [opened, ready_for_review, review_requested, closed]
   pull_request_review:
     types: [submitted]
+  workflow_dispatch:  # one-off: delete cards of PRs that are already closed
 
 permissions:
   contents: read
@@ -41,16 +45,18 @@ permissions:
 # One run at a time per PR, in order, so two quick events (e.g. approve then
 # merge) can't race and leave the wrong emoji.
 concurrency:
-  group: discord-pr-${{ github.event.pull_request.number }}
+  group: discord-pr-${{ github.event.pull_request.number || 'cleanup' }}
   cancel-in-progress: false
 
 jobs:
   notify:
     runs-on: ubuntu-latest
-    # Drafts are silent until they're marked ready; merged-only for "closed".
+    # Drafts are silent until they're marked ready. "closed" always runs, so a
+    # PR moved back to draft before closing still loses its card.
     if: >-
-      github.event.pull_request.draft == false &&
-      (github.event.action != 'closed' || github.event.pull_request.merged == true)
+      github.event_name == 'workflow_dispatch' ||
+      github.event.action == 'closed' ||
+      github.event.pull_request.draft == false
     steps:
       - name: Post to Discord
         env:
@@ -70,9 +76,29 @@ jobs:
           REQUESTED: ${{ github.event.requested_reviewer.login }}
           REVIEWER: ${{ github.event.review.user.login }}
           REVIEW_STATE: ${{ github.event.review.state }}
-          SENDER: ${{ github.event.sender.login }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # ---- Manual cleanup: delete cards of closed PRs ---------------------
+          if [ "$EVENT" = workflow_dispatch ]; then
+            if [ -z "$WEBHOOK" ] || [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL" ]; then
+              echo "::warning::Webhook, bot token or channel not set — nothing to clean."; exit 0
+            fi
+            curl -fsS -o /tmp/msgs -H "Authorization: Bot $BOT_TOKEN" \
+              -H 'User-Agent: DiscordBot (https://github.com/sol-wizard/Blotz-Task-App, 1)' \
+              "https://discord.com/api/v10/channels/$CHANNEL/messages?limit=100"
+            WEBHOOK_ID=$(sed -E 's#.*/webhooks/([0-9]+)/.*#\1#' <<< "$WEBHOOK")
+            jq -r --arg w "$WEBHOOK_ID" '.[] | select(.webhook_id == $w and (.author.username | test("#[0-9]+$")))
+              | (.author.username | capture("#(?<n>[0-9]+)$").n) + " " + .id' /tmp/msgs |
+            while read -r n id; do
+              state=$(gh pr view "$n" --repo "$GITHUB_REPOSITORY" --json state --jq .state 2>/dev/null) || continue
+              [ "$state" = OPEN ] && continue
+              curl -fsS -o /dev/null -X DELETE "$WEBHOOK/messages/$id" &&
+                echo "Deleted card for #$n ($state)" || echo "::warning::Couldn't delete card for #$n."
+              sleep 0.5
+            done
+            exit 0
+          fi
+
           # Skip automated PRs (release PRs, dependabot, copilot).
           case "$AUTHOR" in
             *"[bot]" | "Copilot" | "copilot-swe-agent") echo "Skipping bot PR ($AUTHOR)."; exit 0 ;;
@@ -133,7 +159,7 @@ jobs:
                          {name: "🏷️ Level", value: ("**" + $l + "**"), inline: true}]}
                + (if $d == "" then {} else {description: $d} end)'
           }
-          GREY=10070709; BLURPLE=5793266; YELLOW=16705372; GREEN=5763719; PURPLE=10181046
+          GREY=10070709; BLURPLE=5793266; YELLOW=16705372; GREEN=5763719
 
           # ---- New PR: the one channel message -------------------------------
           if [ "$EVENT/$ACTION" = pull_request/opened ] || [ "$EVENT/$ACTION" = pull_request/ready_for_review ]; then
@@ -153,7 +179,13 @@ jobs:
               [ -z "$REQUESTED" ] && { echo "Team review request — skipping."; exit 0; }
               EMOJI="👀"; COLOR=$BLURPLE; STATUS="Review requested from **$REQUESTED**" ;;
             pull_request/closed)
-              EMOJI="🎉"; COLOR=$PURPLE; STATUS="Merged by **$SENDER**" ;;
+              # Merged or closed: delete the card (the webhook can delete its own
+              # messages), so the channel only lists PRs still waiting.
+              MSG_ID=$(find_message | jq -r '.id // empty')
+              if [ -z "$MSG_ID" ] || [ -z "$WEBHOOK" ]; then echo "No card found for #$NUMBER."; exit 0; fi
+              curl -fsS -o /dev/null -X DELETE "$WEBHOOK/messages/$MSG_ID" &&
+                echo "Deleted the card for #$NUMBER." || echo "::warning::Couldn't delete the card."
+              exit 0 ;;
             pull_request_review/submitted)
               [ "$REVIEWER" = "$AUTHOR" ] && exit 0
               case "$REVIEW_STATE" in
