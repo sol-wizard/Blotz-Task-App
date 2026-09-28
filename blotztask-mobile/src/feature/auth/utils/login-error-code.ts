@@ -29,5 +29,6 @@ export function toLoginErrorCode(error: unknown): LoginErrorCode {
 export function toLoginFailureReason(code: LoginErrorCode): LoginFailureReason {
   if (code === WebAuthErrorCodes.USER_CANCELLED) return "cancelled";
   if (code === WebAuthErrorCodes.BROWSER_TERMINATED) return "browser_dismissed";
+  if (code === "Stalled") return "stalled";
   return "auth0_error";
 }

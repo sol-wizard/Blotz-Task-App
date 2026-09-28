@@ -1,14 +1,18 @@
-import { useRouter } from "expo-router";
-import { View, Text, FlatList, Pressable } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useBadgesQuery } from "../hooks/useBadgesQuery";
-import { BadgeCard } from "../components/badge-card";
+import {
+  AnimatedBadgeItem,
+  type BadgeSourceRect,
+} from "@/feature/badge/components/animated-badge-item";
 import { BadgePreviewDTO } from "../models/badge-preview-dto";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
+import { BadgeRevealOverlay } from "../components/badge-reveal-overlay";
 
 const NUM_COLUMNS = 3;
 
@@ -19,6 +23,11 @@ interface BadgeGridItem {
   badge: BadgePreviewDTO | null;
 }
 
+interface BadgeReveal {
+  badge: BadgePreviewDTO;
+  sourceRect: BadgeSourceRect;
+}
+
 export default function BadgeWallScreen() {
   useEffect(() => {
     analytics.trackScreenViewed(SCREEN_NAMES.BADGE_WALL);
@@ -26,7 +35,60 @@ export default function BadgeWallScreen() {
 
   const { t } = useTranslation("badge");
   const { badges } = useBadgesQuery();
-  const router = useRouter();
+  const [reveal, setReveal] = useState<BadgeReveal | null>(null);
+  const [hiddenBadgeId, setHiddenBadgeId] = useState<number | null>(null);
+  const activeBadgeId = useRef<number | null>(null);
+  const isFocused = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      isFocused.current = true;
+      activeBadgeId.current = null;
+
+      return () => {
+        isFocused.current = false;
+        activeBadgeId.current = null;
+        setHiddenBadgeId(null);
+        setReveal(null);
+      };
+    }, []),
+  );
+
+  const startBadgeAnimation = useCallback((badgeId: number) => {
+    if (!isFocused.current || activeBadgeId.current !== null) return false;
+
+    // One synchronous guard for the whole wall, including taps on different items.
+    activeBadgeId.current = badgeId;
+    return true;
+  }, []);
+
+  const showBadgeReveal = useCallback((badge: BadgePreviewDTO, sourceRect: BadgeSourceRect) => {
+    if (!isFocused.current || activeBadgeId.current !== badge.id) return;
+
+    setReveal({
+      badge,
+      sourceRect,
+    });
+  }, []);
+
+  const closeBadgeDetails = useCallback(() => {
+    setHiddenBadgeId(null);
+    setReveal(null);
+    activeBadgeId.current = null;
+  }, []);
+
+  const hideSourceBadge = useCallback((badgeId: number) => {
+    if (activeBadgeId.current === badgeId) {
+      setHiddenBadgeId(badgeId);
+    }
+  }, []);
+
+  const cancelBadgeAnimation = useCallback((badgeId: number) => {
+    if (activeBadgeId.current === badgeId) {
+      activeBadgeId.current = null;
+      setHiddenBadgeId(null);
+    }
+  }, []);
 
   const gridItems: BadgeGridItem[] = badges.map((badge) => ({ key: String(badge.id), badge }));
 
@@ -43,9 +105,7 @@ export default function BadgeWallScreen() {
         <View className="flex-row items-center">
           <ReturnButton className="mr-4" />
 
-          <Text className="text-2xl font-balooBold text-secondary">
-            {t("wall.title")}
-          </Text>
+          <Text className="text-2xl font-balooBold text-secondary">{t("wall.title")}</Text>
         </View>
 
         <Text className="self-end mt-1 text-sm text-gray-500">
@@ -68,21 +128,26 @@ export default function BadgeWallScreen() {
           return (
             <View className="flex-1">
               {badge ? (
-                <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(protected)/badge-details",
-                      params: { badgeId: badge.id },
-                    })
-                  }
-                >
-                  <BadgeCard badge={badge} transparent />
-                </Pressable>
+                <AnimatedBadgeItem
+                  badge={badge}
+                  isHidden={hiddenBadgeId === badge.id}
+                  onRevealStart={startBadgeAnimation}
+                  onRevealReady={showBadgeReveal}
+                  onRevealCancel={cancelBadgeAnimation}
+                />
               ) : null}
             </View>
           );
         }}
       />
+      {reveal ? (
+        <BadgeRevealOverlay
+          badge={reveal.badge}
+          sourceRect={reveal.sourceRect}
+          onRevealAnimationStart={hideSourceBadge}
+          onCloseComplete={closeBadgeDetails}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
