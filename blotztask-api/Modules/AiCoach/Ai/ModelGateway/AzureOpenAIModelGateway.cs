@@ -34,13 +34,13 @@ public sealed class AzureOpenAiModelGateway(
         }
 
         var chatOptions = new ChatCompletionOptions();
-
-        if (request.ResponseFormat is not null)
+        if (request.MaxOutputTokens is { } maxTokens)
         {
-            chatOptions.ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
-                request.ResponseFormat.Name,
-                BinaryData.FromString(request.ResponseFormat.JsonSchema),
-                jsonSchemaIsStrict: true);
+            // Azure deployment aliases do not expose the underlying model family to the SDK.
+            // Send the modern completion budget explicitly instead of SDK-inferred max_tokens.
+#pragma warning disable SCME0001 // SDK extension-data API; confined to the Azure adapter.
+            chatOptions.Patch.Set("$.max_completion_tokens"u8, maxTokens);
+#pragma warning restore SCME0001
         }
 
         foreach (var tool in request.Tools)

@@ -1,98 +1,82 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
-import {
-  ArtifactEnvelopeDto,
-  ConversationActionWire,
-  EditedDraftDto,
-  EditedDraftItemDto,
-  TaskDraftItemDto,
-} from "../models/ai-coach-dto";
+import Toast from "react-native-toast-message";
+import { ArtifactEnvelopeDto, EditedDraftDto, EditedDraftItemDto } from "../models/ai-coach-dto";
 import { ConfirmAction } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 
-/**
- * The Task Draft card (requirements §9/§10): ONE card holding one or more tasks ("user says
- * N things → N tasks", product decision 2026-08-22). Each row can be edited or removed before
- * confirming; rows already saved by an earlier (partially failed) confirm are locked.
- * Action buttons are rendered STRICTLY from the server's allowedActions (§18) — nothing is
- * hard-coded; the server only offers "start now" on a single-task card.
- */
+/** Each card has its own lifecycle. Editor changes are saved before the next chat turn. */
 export function TaskDraftCard({
   artifact,
-  allowedActions,
   busy,
   onConfirm,
   onReject,
-  onDirtyChange,
+  onEdit,
 }: {
   artifact: ArtifactEnvelopeDto;
-  allowedActions: ConversationActionWire[];
   busy: boolean;
-  onConfirm: (action: ConfirmAction, edited: EditedDraftDto) => void;
+  onConfirm: (action: ConfirmAction, edited: EditedDraftDto, allowScheduleConflict?: boolean,
+    acceptedConflictToken?: string | null) => void;
   onReject: () => void;
-  onDirtyChange?: (dirty: boolean) => void;
+  onEdit: (edited: EditedDraftDto) => Promise<string | null>;
 }) {
   const { t } = useTranslation("aiCoach");
-  const [items, setItems] = useState<EditedDraftItemDto[]>(toEdited(artifact));
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  // A new draft (or server-side payload change) resets local edits — the render-time
-  // "adjust state when props change" pattern, not an effect.
-  const draftKey = `${artifact.id}:${artifact.version}`;
-  const [seenDraftKey, setSeenDraftKey] = useState(draftKey);
-  if (seenDraftKey !== draftKey) {
-    setSeenDraftKey(draftKey);
-    setItems(toEdited(artifact));
-    setEditingId(null);
-  }
-
-  const dirty = JSON.stringify(items) !== JSON.stringify(toEdited(artifact));
-  useEffect(() => {
-    onDirtyChange?.(dirty);
-  }, [dirty, onDirtyChange]);
-  useEffect(
-    () => () => {
-      onDirtyChange?.(false);
-    },
-    [onDirtyChange],
+  const items: EditedDraftItemDto[] = artifact.payload.items;
+  const editable = artifact.status === "pending";
+  const disabled = busy || !editable;
+  const can = (action: "start_now" | "add_to_task_list" | "reject_draft") =>
+    artifact.allowedActions.includes(action);
+  const saved = (id: string) =>
+    artifact.payload.items.find((item) => item.itemId === id)?.persistedTaskId != null;
+  const scheduled = items.every(
+    (item) => saved(item.itemId) || (item.date && item.startTime && item.endTime &&
+      (!item.recurrence || (item.recurrence.interval >= 1 &&
+        (item.recurrence.frequency !== "Weekly" || !!item.recurrence.daysOfWeek) &&
+        (!item.recurrence.endDate || item.recurrence.endDate >= item.date)))),
   );
+  const editingItem = items.find((item) => item.itemId === editingId);
+  const schedule = artifact.schedule;
+  const confirmAction = (action: ConfirmAction) => {
+    if (schedule?.status === "conflict" && schedule.scope === (action === "start_now" ? "start_now" : "scheduled")) {
+      Alert.alert(t("draft.scheduleConflictTitle"), t("draft.scheduleConflictConfirm"), [
+        { text: t("draft.cancel"), style: "cancel" },
+        { text: t("draft.saveDespiteConflict"), onPress: () =>
+          onConfirm(action, { items }, true, schedule.conflictToken) },
+      ]);
+      return;
+    }
+    onConfirm(action, { items });
+  };
 
-  // Spinner only while THIS draft is being confirmed. A chat message in flight (busy) must
-  // not collapse the card — that read as "the card keeps disappearing" (bug from PM demo).
-  const processing = artifact.status === "processing";
-  const disabled = busy || processing;
-  const can = (action: ConversationActionWire) => allowedActions.includes(action);
-
-  const savedById = new Map(artifact.payload.items.map((i) => [i.itemId, i.persistedTaskId]));
-  const isSaved = (itemId: string) => savedById.get(itemId) != null;
-  const unsavedCount = items.filter((i) => !isSaved(i.itemId)).length;
-  const multi = artifact.payload.items.length > 1;
-  const editingItem = items.find((i) => i.itemId === editingId) ?? null;
-
-  const removeItem = (itemId: string) => setItems((prev) => prev.filter((i) => i.itemId !== itemId));
+  const saveEdit = async (next: EditedDraftItemDto[]) => {
+    const error = await onEdit({ items: next });
+    if (error) {
+      Toast.show({ type: "error", text1: t("draft.editFailed") });
+      return;
+    }
+    setEditingId(null);
+  };
 
   return (
     <View className="bg-white rounded-2xl p-4 mx-1 my-2 shadow-sm border border-gray-100">
-      {multi && (
-        <Text className="font-baloo text-xs text-primary mb-2">
-          {t("draft.taskCount", { count: items.length })}
-        </Text>
-      )}
-
-      {items.map((item, index) => {
-        const saved = isSaved(item.itemId);
-        return (
-          <View
-            key={item.itemId}
-            className={`${index > 0 ? "border-t border-gray-100 pt-3 mt-3" : ""} ${saved ? "opacity-60" : ""}`}
-          >
-            <View className="flex-row items-start justify-between">
-              <Text className="font-balooBold text-base text-secondary flex-1 pr-2">{item.title}</Text>
-              {saved ? (
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-              ) : (
+      <Text className="font-baloo text-xs text-primary mb-2">
+        {artifact.status === "completed"
+          ? t("draft.alreadySaved")
+          : t("draft.taskCount", { count: items.length })}
+      </Text>
+      {items.map((item, index) => (
+        <View key={item.itemId} className={index > 0 ? "border-t border-gray-100 pt-3 mt-3" : ""}>
+          <View className="flex-row items-start justify-between">
+            <Text className="font-balooBold text-base text-secondary flex-1 pr-2">
+              {item.title}
+            </Text>
+            {saved(item.itemId) ? (
+              <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+            ) : (
+              editable && (
                 <View className="flex-row items-center gap-3">
                   <Pressable
                     hitSlop={8}
@@ -102,131 +86,116 @@ export function TaskDraftCard({
                   >
                     <Ionicons name="pencil" size={18} color="#8C8C8C" />
                   </Pressable>
-                  {multi && items.length > 1 && (
+                  {items.length > 1 && (
                     <Pressable
                       hitSlop={8}
                       disabled={disabled}
-                      onPress={() => removeItem(item.itemId)}
+                      onPress={() =>
+                        void saveEdit(items.filter((entry) => entry.itemId !== item.itemId))
+                      }
                       accessibilityLabel={t("draft.removeTask")}
                     >
                       <Ionicons name="close" size={20} color="#8C8C8C" />
                     </Pressable>
                   )}
                 </View>
-              )}
-            </View>
-
-            <View className="flex-row items-center mt-2">
-              <Ionicons name="calendar-outline" size={14} color="#8C8C8C" />
-              <Text className="font-baloo text-sm text-primary ml-1">{item.date}</Text>
-              <Ionicons name="time-outline" size={14} color="#8C8C8C" style={{ marginLeft: 12 }} />
-              <Text className="font-baloo text-sm text-primary ml-1">
-                {item.startTime} - {item.endTime}
-              </Text>
-            </View>
-
-            {saved && (
-              <Text className="font-baloo text-xs text-info mt-1">{t("draft.alreadySaved")}</Text>
+              )
             )}
           </View>
-        );
-      })}
-
-      {artifact.payload.focusMinutes != null && (
-        <Text className="font-baloo text-xs text-info mt-1">
+          {item.description && (
+            <Text className="font-baloo text-sm text-secondary mt-1">{item.description}</Text>
+          )}
+          <Text className="font-baloo text-sm text-primary mt-2">
+            {item.date ?? t("draft.datePending")} · {item.startTime ?? "—"} – {item.endTime ?? "—"}
+          </Text>
+          {item.recurrence && (
+            <Text className="font-baloo text-sm text-info mt-1">
+              {t("draft.repeats")} {t(`editModal.frequency.${item.recurrence.frequency}`)}
+              {item.recurrence.interval > 1 ? ` × ${item.recurrence.interval}` : ""}
+              {item.recurrence.frequency === "Weekly" && item.recurrence.daysOfWeek != null
+                ? ` · ${[1, 2, 4, 8, 16, 32, 64].map((flag, index) =>
+                    item.recurrence && (item.recurrence.daysOfWeek ?? 0) & flag
+                      ? t(`editModal.weekday.${index}`) : null).filter(Boolean).join("、")}` : ""}
+              {item.recurrence.frequency === "Monthly" && item.recurrence.dayOfMonth != null
+                ? ` · ${t("editModal.dayOfMonth")} ${item.recurrence.dayOfMonth}` : ""}
+              {` · ${t("editModal.endDate")}: ${item.recurrence.endDate ?? t("editModal.noEndDate")}`}
+            </Text>
+          )}
+        </View>
+      ))}
+      {editable && !scheduled && (
+        <Text className="font-baloo text-xs text-info mt-3">{t("draft.scheduleRequired")}</Text>
+      )}
+      {editable && schedule?.status === "conflict" && (
+        <Text className="font-baloo text-xs text-warning mt-3">
+          {t("draft.scheduleConflict", { tasks: schedule.conflicts.map((entry) => entry.taskTitle).join("、") })}
+        </Text>
+      )}
+      {editable && schedule?.status === "unverified" && (
+        <Text className="font-baloo text-xs text-warning mt-3">{t("draft.scheduleUnverified")}</Text>
+      )}
+      {editable && schedule && items.some((item) => item.recurrence != null) && (
+        <Text className="font-baloo text-xs text-info mt-3">{t("draft.schedulePartial")}</Text>
+      )}
+      {artifact.saveError && (
+        <Text className="font-baloo text-xs text-warning mt-2">{t("draft.saveFailed")}</Text>
+      )}
+      {artifact.payload.focusMinutes != null && editable && (
+        <Text className="font-baloo text-xs text-info mt-2">
           {t("draft.focusPreview", { minutes: artifact.payload.focusMinutes })}
         </Text>
       )}
-
-      {dirty && !processing && (
-        <Pressable
-          className="items-center py-2"
-          disabled={busy}
-          onPress={() => {
-            setItems(toEdited(artifact));
-            setEditingId(null);
-          }}
-        >
-          <Text className="font-baloo text-primary text-xs underline">
-            {t("draft.resetEdits")}
-          </Text>
-        </Pressable>
-      )}
-
-      {processing ? (
-        <View className="items-center py-3">
-          <ActivityIndicator />
-        </View>
+      {artifact.status === "processing" ? (
+        <ActivityIndicator />
       ) : (
-        <View className={`mt-3 ${disabled ? "opacity-50" : ""}`}>
-          {can("start_now") && (
-            <Pressable
-              className="bg-highlight rounded-xl py-3 items-center"
-              disabled={disabled}
-              onPress={() => onConfirm("start_now", { items })}
-            >
-              <Text className="font-balooBold text-white text-base">{t("draft.startNow")}</Text>
-            </Pressable>
-          )}
-
-          <View className="flex-row gap-2 mt-2">
+        editable && (
+          <View className={`mt-3 ${disabled ? "opacity-50" : ""}`}>
+            {can("start_now") && (
+              <Pressable
+                className={`bg-highlight rounded-xl py-3 items-center ${!scheduled ? "opacity-40" : ""}`}
+                disabled={disabled || !scheduled}
+                onPress={() => confirmAction("start_now")}
+              >
+                <Text className="font-balooBold text-white text-base">{t("draft.startNow")}</Text>
+              </Pressable>
+            )}
             {can("add_to_task_list") && (
               <Pressable
-                className={`flex-1 rounded-xl py-2 items-center ${
-                  can("start_now") ? "border border-gray-300" : "bg-highlight"
-                }`}
-                disabled={disabled || unsavedCount === 0}
-                onPress={() => onConfirm("add_to_task_list", { items })}
+                className={`border border-gray-300 rounded-xl py-2 items-center mt-2 ${!scheduled ? "opacity-40" : ""}`}
+                disabled={disabled || !scheduled}
+                onPress={() => confirmAction("add_to_task_list")}
               >
-                <Text
-                  className={`font-balooBold text-sm ${can("start_now") ? "text-secondary" : "text-white"}`}
-                >
-                  {multi
-                    ? t("draft.addAllToTaskList", { count: unsavedCount })
+                <Text className="font-balooBold text-secondary text-sm">
+                  {items.length > 1
+                    ? t("draft.addAllToTaskList", {
+                        count: items.filter((item) => !saved(item.itemId)).length,
+                      })
                     : t("draft.addToTaskList")}
                 </Text>
               </Pressable>
             )}
+            {can("reject_draft") && (
+              <Pressable className="items-center py-2 mt-1" disabled={disabled} onPress={onReject}>
+                <Text className="font-baloo text-primary text-xs underline">
+                  {items.length > 1 ? t("draft.rejectAll") : t("draft.reject")}
+                </Text>
+              </Pressable>
+            )}
           </View>
-
-          {can("reject_draft") && (
-            <Pressable className="items-center py-2 mt-1" disabled={disabled} onPress={onReject}>
-              <Text className="font-baloo text-primary text-xs underline">
-                {multi ? t("draft.rejectAll") : t("draft.reject")}
-              </Text>
-            </Pressable>
-          )}
-        </View>
+        )
       )}
-
       {editingItem && (
         <DraftEditModal
+          key={`${artifact.id}:${artifact.version}:${editingItem.itemId}`}
           visible
           initial={editingItem}
+          busy={busy}
           onCancel={() => setEditingId(null)}
-          onSave={(next) => {
-            setItems((prev) => prev.map((i) => (i.itemId === next.itemId ? next : i)));
-            setEditingId(null);
-          }}
+          onSave={(next) =>
+            void saveEdit(items.map((item) => (item.itemId === next.itemId ? next : item)))
+          }
         />
       )}
     </View>
   );
-}
-
-function toEdited(artifact: ArtifactEnvelopeDto): EditedDraftItemDto[] {
-  return artifact.payload.items.map(toEditedItem);
-}
-
-function toEditedItem(p: TaskDraftItemDto): EditedDraftItemDto {
-  return {
-    itemId: p.itemId,
-    title: p.title,
-    description: p.description,
-    date: p.date,
-    startTime: p.startTime,
-    endTime: p.endTime,
-    timeZoneId: p.timeZoneId,
-    labelId: p.labelId,
-  };
 }

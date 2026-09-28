@@ -1,17 +1,11 @@
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Application.Projections;
-using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 
 namespace BlotzTask.Modules.AiCoach.Application.Commands;
 
-public class RejectDraftRequest
-{
-    public required Guid CommandId { get; init; }
-    public required int ExpectedConversationVersion { get; init; }
-}
-
-public class RejectDraftCommand
+public sealed record RejectDraftRequest(Guid CommandId, int ExpectedConversationVersion);
+public sealed class RejectDraftCommand
 {
     public required Guid UserId { get; init; }
     public required Guid ConversationId { get; init; }
@@ -19,55 +13,30 @@ public class RejectDraftCommand
     public required RejectDraftRequest Request { get; init; }
 }
 
-/// <summary>
-/// "不要这个": single short transition — set Rejected, current pointer cleared, phase FollowUp
-/// (v3 §7.5). No task is created and no new card is auto-generated.
-/// </summary>
-public class RejectDraftCommandHandler(
-    IConversationStore store,
-    IConversationApplication application)
+public sealed class RejectDraftCommandHandler(IConversationStore store, AiCoachTraceRecorder? trace = null)
 {
-    private const string CommandType = "reject_draft";
-
     public async Task<ConversationSnapshotDto> Handle(RejectDraftCommand command, CancellationToken ct = default)
     {
-        // Idempotent replay (v3 §18.1).
+        ConversationSnapshotDto snapshot;
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
-            var conversation = await store.FindAsync(command.ConversationId, ct);
-            if (conversation is null || conversation.UserId != command.UserId)
-                throw new ConversationNotFoundException();
-
-            if (conversation.Receipts.TryGetValue(command.Request.CommandId, out var existing)
-                && existing.Result is ConversationSnapshotDto replay)
-                return replay;
-
-            conversation.RecordReceipt(new CommandReceipt(
-                command.Request.CommandId, command.DraftId, CommandType,
-                RequestHash: command.DraftId.ToString(),
-                CommandReceiptStatus.Pending, null));
+            var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
+            var hash = DraftEditing.Hash(new { action = "discard", command.DraftId });
+            if (conversation.Receipts.TryGetValue(command.Request.CommandId, out var receipt))
+            {
+                if (receipt.RequestHash != hash) throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused.");
+                return ConversationSnapshotProjector.ToDto(conversation);
+            }
+            var draft = DraftEditing.Find(conversation, command.DraftId);
+            DraftEditing.CheckEditable(conversation, draft, command.Request.ExpectedConversationVersion);
+            draft.Discard();
+            conversation.RecordDraftEvent("discarded_by_user", draft);
+            snapshot = ConversationSnapshotProjector.ToDto(conversation);
+            conversation.Receipts.Add(command.Request.CommandId, new(command.DraftId, hash, snapshot));
             await store.SaveAsync(conversation, ct);
         }
-
-        var updated = await application.DispatchAsync(
-            command.UserId,
-            command.ConversationId,
-            command.Request.ExpectedConversationVersion,
-            new RejectProposalSetRequested(command.Request.CommandId, command.DraftId),
-            ct);
-
-        var dto = ConversationSnapshotProjector.ToDto(updated);
-
-        using (await store.AcquireLockAsync(command.ConversationId, ct))
-        {
-            var conversation = await store.FindAsync(command.ConversationId, ct);
-            if (conversation is not null)
-            {
-                conversation.CompleteReceipt(command.Request.CommandId, CommandReceiptStatus.Succeeded, dto);
-                await store.SaveAsync(conversation, ct);
-            }
-        }
-
-        return dto;
+        if (trace is not null) await trace.RecordAsync(command.UserId, command.ConversationId, null, "draft_rejected",
+            new { command.DraftId, command.Request.CommandId, snapshot.ConversationVersion });
+        return snapshot;
     }
 }

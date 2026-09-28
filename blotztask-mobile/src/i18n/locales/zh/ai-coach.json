@@ -24,6 +24,7 @@
     "inputPlaceholder": "想做什么？告诉我",
     "companionInputPlaceholder": "想聊什么？告诉我",
     "thinking": "正在想…",
+    "taskContextRead": "已查看应用内任务",
     "connecting": "正在连接…",
     "startError": "没连上，点击重试",
     "sendError": "发送失败，再试一次",
@@ -33,7 +34,27 @@
     "createManually": "手动创建任务",
     "listening": "正在听…",
     "transcribeFailed": "没听清，再试一次",
-    "holdToTalk": "按住说话"
+    "holdToTalk": "按住说话",
+    "generationFailed": "这次回复未能完成。请重试，或开始新的对话。"
+  },
+  "feedback": {
+    "good": "回复有帮助",
+    "bad": "回复没帮助",
+    "copy": "复制回复",
+    "copied": "已复制",
+    "copyFailed": "复制失败，请重试",
+    "saveFailed": "反馈保存失败，请重试",
+    "title": "哪里需要改进？（可选）",
+    "detailPlaceholder": "补充说明（可选）",
+    "skip": "跳过",
+    "save": "保存反馈",
+    "reasons": {
+      "inaccurate": "内容不准确",
+      "irrelevant": "没有解决问题",
+      "unclear": "不够清楚",
+      "tone": "语气不合适",
+      "other": "其他"
+    }
   },
   "draft": {
     "startNow": "现在就开始",
@@ -41,14 +62,25 @@
     "reject": "不要这个",
     "edit": "编辑",
     "saveFailed": "任务保存失败了，卡片还在，可以重试。",
-    "saveEditsBeforeAi": "请先确认卡片或重置本地修改，再让 AI 修改卡片。",
-    "resetEdits": "重置本地修改",
     "focusPreview": "专注 {{minutes}} 分钟",
     "taskCount": "{{count}} 个任务",
     "removeTask": "移除这个任务",
     "alreadySaved": "已保存",
     "addAllToTaskList": "全部加到任务列表（{{count}}）",
-    "rejectAll": "都不要"
+    "rejectAll": "都不要",
+    "datePending": "日期待定",
+    "notSet": "待定",
+    "scheduleRequired": "保存前，请点编辑补齐日期和时间。",
+    "scheduleConflict": "与现有任务冲突：{{tasks}}",
+    "scheduleConflictTitle": "时间有冲突",
+    "scheduleConflictConfirm": "这个时间与已有任务重叠。确定仍要保存吗？",
+    "saveDespiteConflict": "仍要保存",
+    "scheduleChanged": "排期已变化，请查看最新冲突后重试。",
+    "scheduleUnverified": "暂时无法核对任务日历，请稍后重试。",
+    "schedulePartial": "已检查开始日期起七天内的重复安排；更远的日期尚未核对。",
+    "cancel": "取消",
+    "editFailed": "草稿更新失败，请重试。",
+    "repeats": "重复"
   },
   "editModal": {
     "title": "编辑任务",
@@ -58,6 +90,16 @@
     "endTime": "结束时间",
     "save": "保存",
     "cancel": "取消",
-    "endBeforeStart": "结束时间要晚于开始时间"
+    "endBeforeStart": "结束时间要晚于开始时间",
+    "titleRequired": "请输入任务名称。",
+    "startDate": "生效日期",
+    "recurrence": "重复规则",
+    "interval": "每隔几个周期",
+    "dayOfMonth": "每月几号（留空沿用生效日）",
+    "endDate": "结束日期",
+    "noEndDate": "不设结束日期",
+    "invalidRecurrence": "请检查重复间隔、星期和结束日期。",
+    "frequency": { "Daily": "每天", "Weekly": "每周", "Monthly": "每月", "Yearly": "每年" },
+    "weekday": { "0": "一", "1": "二", "2": "三", "3": "四", "4": "五", "5": "六", "6": "日" }
   }
 }

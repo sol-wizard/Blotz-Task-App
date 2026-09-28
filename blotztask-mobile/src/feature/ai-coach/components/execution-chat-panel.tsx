@@ -15,11 +15,19 @@ import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { useVoiceRecorder } from "@/feature/ai-task-generate/hooks/useVoiceRecorder";
 import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
-import { AvailableAiCoachMode, EditedDraftDto } from "../models/ai-coach-dto";
+import { AiCoachRating, AvailableAiCoachMode, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
 import { transcribeAudio } from "../services/ai-coach-service";
 import { TaskDraftCard } from "./task-draft-card";
+import { MessageFeedbackActions } from "./message-feedback-actions";
 
-function MessageBubble({ item }: { item: ChatItem }) {
+function MessageBubble({ item, feedback, feedbackBusy, onRate, onSaveDetail }: {
+  item: ChatItem;
+  feedback: MessageFeedbackDto | undefined;
+  feedbackBusy: boolean;
+  onRate: (rating: AiCoachRating) => Promise<boolean>;
+  onSaveDetail: (reason: string | null, detail: string | null) => Promise<boolean>;
+}) {
+  const { t } = useTranslation("aiCoach");
   const isUser = item.role === "user";
   return (
     <View className={`my-1 max-w-[85%] ${isUser ? "self-end" : "self-start"}`}>
@@ -30,6 +38,13 @@ function MessageBubble({ item }: { item: ChatItem }) {
           {item.text}
         </Text>
       </View>
+      {!isUser && item.taskContextRead && (
+        <Text className="font-baloo text-xs text-primary mt-1 ml-2">
+          {t("chat.taskContextRead")}
+        </Text>
+      )}
+      {!isUser && <MessageFeedbackActions text={item.text} feedback={feedback}
+        busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
     </View>
   );
 }
@@ -49,10 +64,10 @@ interface ExecutionChatPanelProps {
  */
 export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
   const { t } = useTranslation("aiCoach");
-  const { snapshot, messages, status, start, send, confirm, reject } = useAiCoachChat(mode);
+  const { snapshot, messages, status, start, send, confirm, edit, reject,
+    feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail } = useAiCoachChat(mode);
   const [input, setInput] = useState("");
   const [transcribing, setTranscribing] = useState(false);
-  const [draftDirty, setDraftDirty] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const enabled = mode !== null;
 
@@ -71,13 +86,8 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
   const canSend = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
-  const artifact = snapshot?.currentArtifact;
 
   const handleSend = async () => {
-    if (draftDirty) {
-      Toast.show({ type: "info", text1: t("draft.saveEditsBeforeAi") });
-      return;
-    }
     const text = input;
     setInput("");
     const errorCode = await send(text);
@@ -86,14 +96,15 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
     }
   };
 
-  const handleConfirm = async (action: ConfirmAction, edited: EditedDraftDto) => {
-    const outcome = await confirm(action, edited);
+  const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
+    allowScheduleConflict = false, acceptedConflictToken?: string | null) => {
+    const outcome = await confirm(draftId, action, edited, allowScheduleConflict, acceptedConflictToken);
 
     if (outcome.result?.status === "succeeded") {
       const directive = outcome.result.clientDirective;
       const [persisted] = outcome.result.persistedEntities;
       if (directive?.type === "start_focus" && persisted) {
-        // Focus Sprint: server-computed minutes, existing pomodoro screen (requirements §11).
+        // Focus uses the server-confirmed task and duration.
         // Only ever issued for a single-task card, so the one persisted entity is the task.
         router.push({
           pathname: "/pomodoro-focus",
@@ -106,13 +117,15 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
       return;
     }
 
-    // Failed persistence keeps the draft retryable (§19.4); conflicts already resynced the UI.
-    Toast.show({ type: "error", text1: t("draft.saveFailed") });
+    // Failed persistence keeps the draft retryable; conflicts already resynced the UI.
+    Toast.show({ type: "error", text1: t(outcome.errorCode === "ScheduleConflict"
+      ? "draft.scheduleChanged" : outcome.errorCode === "ScheduleUnverified"
+        ? "draft.scheduleUnverified" : "draft.saveFailed") });
   };
 
   const blockedBanner = () => {
-    if (snapshot?.generationStatus !== "blocked") return null;
-    if (snapshot.blockedReason === "quota") {
+    if (snapshot?.generationStatus !== "failed") return null;
+    if (snapshot.generationError === "quota") {
       return (
         <View className="bg-white border border-gray-200 rounded-2xl p-4 my-2">
           <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
@@ -126,9 +139,11 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
       );
     }
     const key =
-      snapshot.blockedReason === "content_filtered"
+      snapshot.generationError === "content_filtered"
         ? "chat.contentFiltered"
-        : "chat.modelUnavailable";
+        : snapshot.generationError === "model_unavailable"
+          ? "chat.modelUnavailable"
+          : "chat.generationFailed";
     return (
       <View className="bg-white border border-gray-200 rounded-2xl p-3 my-2">
         <Text className="font-baloo text-sm text-primary">{t(key)}</Text>
@@ -166,7 +181,10 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
         )}
 
         {messages.map((item) => (
-          <MessageBubble key={item.id} item={item} />
+          <MessageBubble key={item.id} item={item} feedback={feedbackByMessage[item.id]}
+            feedbackBusy={feedbackSaving[item.id] === true}
+            onRate={(rating) => rateMessage(item.id, rating)}
+            onSaveDetail={(reason, detail) => saveFeedbackDetail(item.id, reason, detail)} />
         ))}
 
         {generating && (
@@ -175,16 +193,23 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
           </View>
         )}
 
-        {artifact && (artifact.status === "pending" || artifact.status === "processing") && (
-          <TaskDraftCard
-            artifact={artifact}
-            allowedActions={snapshot.allowedActions}
-            busy={status === "sending"}
-            onConfirm={(action, edited) => void handleConfirm(action, edited)}
-            onReject={() => void reject()}
-            onDirtyChange={setDraftDirty}
-          />
-        )}
+        {snapshot?.artifacts
+          .filter((artifact) => artifact.status !== "rejected")
+          .map((artifact) => (
+            <TaskDraftCard
+              key={artifact.id}
+              artifact={artifact}
+              busy={status === "sending" || snapshot.generationStatus === "running"}
+              onConfirm={(action, edited, allowScheduleConflict, acceptedConflictToken) =>
+                void handleConfirm(artifact.id, action, edited, allowScheduleConflict, acceptedConflictToken)}
+              onEdit={(edited) => edit(artifact.id, edited)}
+              onReject={() =>
+                void reject(artifact.id).then((error) => {
+                  if (error) Toast.show({ type: "error", text1: t("draft.editFailed") });
+                })
+              }
+            />
+          ))}
 
         {blockedBanner()}
       </ScrollView>
@@ -239,7 +264,7 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
         </Pressable>
         <Pressable
           className={`w-11 h-11 rounded-full items-center justify-center ${
-            canSend && input.trim().length > 0 && !draftDirty ? "bg-highlight" : "bg-gray-200"
+            canSend && input.trim().length > 0 ? "bg-highlight" : "bg-gray-200"
           }`}
           disabled={!canSend || input.trim().length === 0}
           onPress={() => void handleSend()}

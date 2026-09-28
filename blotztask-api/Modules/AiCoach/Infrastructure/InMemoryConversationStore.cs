@@ -1,33 +1,24 @@
-using System.Collections.Concurrent;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BlotzTask.Modules.AiCoach.Infrastructure;
 
-/// <summary>
-/// Conversation storage abstraction. Execution and Companion use the in-memory implementation below
-/// (open question §29.1, approved by Ben): no table, no EF migration. Swapping to a database
-/// later means adding a persistent implementation of this interface — the kernel, reducer and
-/// API contract do not change.
-/// </summary>
+/// <summary>Session storage; callers serialize mutations with AcquireLockAsync.</summary>
 public interface IConversationStore
 {
     Task<Conversation?> FindAsync(Guid conversationId, CancellationToken ct);
 
     Task SaveAsync(Conversation conversation, CancellationToken ct);
 
-    /// <summary>
-    /// Serializes work per conversation (tech design §17.1). The kernel holds the lock for each
-    /// state transition ("transaction"), and releases it while effects (model calls) run.
-    /// </summary>
+    /// <summary>Hold only around local state changes, never a model or database call.</summary>
     Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken ct);
 }
 
 public sealed class InMemoryConversationStore(IMemoryCache cache) : IConversationStore
 {
-    // Lock objects are small; entries for expired conversations are reclaimed lazily when the
-    // conversation itself is gone (see AcquireLockAsync). Acceptable for the in-memory v1.
-    private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _locks = new();
+    // Bounded lock stripes avoid leaking a semaphore for every expired session.
+    private readonly SemaphoreSlim[] _locks = Enumerable.Range(0, 128)
+        .Select(_ => new SemaphoreSlim(1, 1)).ToArray();
 
     private static string Key(Guid conversationId) => $"aicoach:conversation:{conversationId}";
 
@@ -49,7 +40,7 @@ public sealed class InMemoryConversationStore(IMemoryCache cache) : IConversatio
 
     public async Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken ct)
     {
-        var semaphore = _locks.GetOrAdd(conversationId, _ => new SemaphoreSlim(1, 1));
+        var semaphore = _locks[(uint)conversationId.GetHashCode() % (uint)_locks.Length];
         await semaphore.WaitAsync(ct);
         return new Releaser(semaphore);
     }

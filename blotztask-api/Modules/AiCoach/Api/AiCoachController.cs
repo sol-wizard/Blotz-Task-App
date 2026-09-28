@@ -8,14 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.AiCoach.Api;
 
-/// <summary>
-/// AI Coach conversation endpoints.
-///
-/// TEMPORARY TRANSPORT (TS-005 substitute): the tech design specifies a SignalR hub with
-/// snapshot push + reconnect semantics, but TS-005 is still 待补充. This controller serves the
-/// SAME §18 response body over plain HTTP, so swapping to SignalR later changes the transport
-/// only — no protocol change. Do not add transport-specific fields here.
-/// </summary>
+/// <summary>Session chat and independent editable task drafts.</summary>
 [ApiController]
 [Route("api/ai-coach")]
 [Authorize]
@@ -24,6 +17,8 @@ public class AiCoachController(
     SendMessageCommandHandler sendMessage,
     ConfirmDraftCommandHandler confirmDraft,
     RejectDraftCommandHandler rejectDraft,
+    EditDraftCommandHandler editDraft,
+    MessageFeedbackHandler messageFeedback,
     TranscribeAudioCommandHandler transcribeAudio,
     IConversationStore store) : ControllerBase
 {
@@ -43,10 +38,41 @@ public class AiCoachController(
     [HttpGet("conversations/{conversationId:guid}")]
     public async Task<ActionResult<ConversationSnapshotDto>> GetSnapshot(Guid conversationId, CancellationToken ct)
     {
+        using var held = await store.AcquireLockAsync(conversationId, ct);
         var conversation = await store.FindAsync(conversationId, ct);
         if (conversation is null || conversation.UserId != GetUserId())
             return NotFound();
         return Ok(ConversationSnapshotProjector.ToDto(conversation));
+    }
+
+    [HttpGet("conversations/{conversationId:guid}/message-feedback")]
+    public async Task<ActionResult<IReadOnlyList<MessageFeedbackDto>>> GetMessageFeedback(
+        Guid conversationId, CancellationToken ct)
+    {
+        try { return Ok(await messageFeedback.ListAsync(GetUserId(), conversationId, ct)); }
+        catch (ConversationNotFoundException) { return NotFound(); }
+    }
+
+    [HttpPut("conversations/{conversationId:guid}/messages/{messageId:guid}/feedback")]
+    public async Task<ActionResult<MessageFeedbackDto>> PutMessageFeedback(Guid conversationId,
+        Guid messageId, [FromBody] MessageFeedbackRequest request, CancellationToken ct)
+    {
+        if (request.Rating is not ("up" or "down"))
+            return BadRequest(new { errorCode = "InvalidRating" });
+        try { return Ok(await messageFeedback.PutAsync(GetUserId(), conversationId, messageId, request, ct)); }
+        catch (ConversationNotFoundException) { return NotFound(); }
+    }
+
+    [HttpDelete("conversations/{conversationId:guid}/messages/{messageId:guid}/feedback")]
+    public async Task<IActionResult> DeleteMessageFeedback(Guid conversationId, Guid messageId,
+        CancellationToken ct)
+    {
+        try
+        {
+            await messageFeedback.DeleteAsync(GetUserId(), conversationId, messageId, ct);
+            return NoContent();
+        }
+        catch (ConversationNotFoundException) { return NotFound(); }
     }
 
     /// <summary>Voice input: transcribe a recording; the client puts the text into the input box.</summary>
@@ -95,7 +121,7 @@ public class AiCoachController(
                 Request = request,
             }, ct);
 
-            // Recoverable dependency failure: draft stays retryable (§22.14 -> 503).
+            // A failed transaction leaves the draft editable and retryable.
             return result.Status == "failed"
                 ? StatusCode(StatusCodes.Status503ServiceUnavailable, result)
                 : Ok(result);
@@ -104,6 +130,14 @@ public class AiCoachController(
         {
             return mapped;
         }
+    }
+
+    [HttpPut("conversations/{conversationId:guid}/drafts/{draftId:guid}")]
+    public async Task<ActionResult<ConversationSnapshotDto>> EditDraft(
+        Guid conversationId, Guid draftId, [FromBody] EditDraftRequest request, CancellationToken ct)
+    {
+        try { return Ok(await editDraft.Handle(GetUserId(), conversationId, draftId, request, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     [HttpPost("conversations/{conversationId:guid}/drafts/{draftId:guid}/reject")]
@@ -127,7 +161,7 @@ public class AiCoachController(
         }
     }
 
-    /// <summary>Stable error mapping per §18/§22.14; conflict responses carry the latest snapshot.</summary>
+    /// <summary>Conflict responses carry the latest snapshot for client reconciliation.</summary>
     private bool TryMapConversationError(Exception exception, out ActionResult result)
     {
         switch (exception)
@@ -141,14 +175,6 @@ public class AiCoachController(
                 {
                     errorCode = "StaleConversationVersion",
                     conversationSnapshot = ConversationSnapshotProjector.ToDto(conflict.Conversation),
-                });
-                return true;
-
-            case ConversationRuleViolationException violation:
-                result = Conflict(new
-                {
-                    errorCode = violation.Rejection.ToWireCode(),
-                    conversationSnapshot = ConversationSnapshotProjector.ToDto(violation.Conversation),
                 });
                 return true;
 

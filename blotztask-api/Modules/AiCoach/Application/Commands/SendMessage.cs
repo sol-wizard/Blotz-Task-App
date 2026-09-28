@@ -27,17 +27,13 @@ public class SendMessageCommand
     public int? ExpectedVersion { get; init; }
 }
 
-public class SendMessageCommandHandler(IConversationApplication application, TimeProvider clock)
+public class SendMessageCommandHandler(ConversationApplication application)
 {
-    public async Task<ConversationSnapshotDto> Handle(SendMessageCommand command, CancellationToken ct = default)
+    public Task<ConversationSnapshotDto> Handle(SendMessageCommand command, CancellationToken ct = default)
     {
-        var conversation = await application.DispatchAsync(
-            command.UserId,
-            command.ConversationId,
-            command.ExpectedVersion,
-            new UserMessageReceived(command.MessageId, command.Content.Trim(), clock.GetUtcNow()),
-            ct);
-
-        return ConversationSnapshotProjector.ToDto(conversation);
+        if (string.IsNullOrWhiteSpace(command.Content))
+            throw new ValidationException("Message must not be empty.");
+        return application.SendAsync(command.UserId, command.ConversationId, command.MessageId,
+            command.Content.Trim(), command.ExpectedVersion, ct);
     }
 }

@@ -9,6 +9,7 @@ using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
@@ -40,6 +41,8 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
     public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
+    public DbSet<AiCoachFeedback> AiCoachFeedback => Set<AiCoachFeedback>();
+    public DbSet<AiCoachTraceEvent> AiCoachTraceEvents => Set<AiCoachTraceEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

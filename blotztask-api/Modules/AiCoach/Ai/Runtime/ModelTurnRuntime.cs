@@ -1,668 +1,252 @@
-using BlotzTask.Modules.AiCoach.Ai.Contracts;
+using System.Text.Json;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
-using BlotzTask.Modules.AiCoach.Domain.Candidates;
+using BlotzTask.Modules.AiCoach.Ai.Tools;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
-using BlotzTask.Modules.AiCoach.Domain.Guards;
-using BlotzTask.Modules.AiCoach.Domain.Modes;
-using BlotzTask.Modules.AiCoach.Domain.Planning;
-using BlotzTask.Modules.AiCoach.Domain.Policy;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
-using BlotzTask.Modules.AiCoach.Domain.Support;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
-using System.Diagnostics;
-using System.Text.Json;
+using static BlotzTask.Modules.AiCoach.Ai.Runtime.ModelContextBuilder;
 
 namespace BlotzTask.Modules.AiCoach.Ai.Runtime;
 
-public sealed record ModelTurnRequest(
-    ConversationSnapshot Snapshot,
-    Guid EffectId,
-    AiCoachModeDefinition Mode,
-    IReadOnlyList<ConversationMessage> RecentMessages,
-    string TimeZoneId,
-    DateTimeOffset UserLocalNow);
+public sealed record ModelTurnRequest(Guid ConversationId, AiCoachMode Mode, IReadOnlyList<GatewayMessage> History,
+    IReadOnlyList<ProposalSet> Drafts, string TimeZoneId, DateTimeOffset LocalNow,
+    string? Summary, int SummarizedMessageCount,
+    Func<DateOnly, DateOnly, CancellationToken, Task<string>>? ReadTasks = null,
+    Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? CheckSchedule = null,
+    Func<string, object, Task>? Trace = null);
 
-public enum ModelTurnCompletionReason
-{
-    Completed = 0,
-    IterationLimitExceeded = 1,
-    ContentFiltered = 2,
-    InvalidModelResponse = 3,
-    TimedOut = 4,
-    Cancelled = 5,
-    ModelUnavailable = 6,
-}
-
-public sealed record ModelTurnRunResult(
-    ModelTurnCompletionReason CompletionReason,
-    ValidatedTurnOutcome? Outcome,
-    int InputTokens,
-    int OutputTokens,
-    int TotalTokens,
-    int ModelCallCount = 0,
-    int SchemaCorrectionCount = 0,
-    int RegenerationCount = 0,
-    int ProposalRegenerationCount = 0);
+public sealed record ModelTurnRunResult(string? Text, string? Error,
+    IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
+    string? Summary, int SummarizedMessageCount,
+    int InputTokens, int OutputTokens, int TotalTokens, int ModelCallCount,
+    bool TaskContextRead = false);
 
 public interface IModelTurnRuntime
 {
-    Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken cancellationToken);
+    Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct);
 }
 
-/// <summary>
-/// The Single-Turn Model Runtime (v3 tech design §5/§7.2): Pre-Policy envelope -> deterministic
-/// Model Context -> bounded model call(s) -> Model Output Schema Guard -> Evidence Guard ->
-/// Post-Policy -> Response Guard -> ProposalSet Guard, folding everything into ONE
-/// <see cref="ValidatedTurnOutcome"/>. It never touches conversation state or the store — the
-/// Application layer turns its result into a Kernel event.
-///
-/// Iteration budget (v3 §21): schema corrections and regenerations share MaxModelIterations —
-/// they never stack on top of it. v1 registers no read-only tools, so the tool loop of §16 does
-/// not run; its budget rules are already honoured by this shared counter.
-/// </summary>
-public sealed class ModelTurnRuntime(
-    IModelGateway gateway,
-    IModelContextBuilder contextBuilder,
-    IConversationPrePolicy prePolicy,
-    IConversationPostPolicy postPolicy,
-    IEvidenceGuard evidenceGuard,
-    IPlanningAuthorityCalculator planningAuthorityCalculator,
-    ISupportPolicyCalculator supportPolicyCalculator,
-    IDeterministicProposalGenerator proposalGenerator,
-    IResponseGuard responseGuard,
-    IProposalSetGuard proposalSetGuard,
-    IProposalSetMutationHandler proposalSetMutationHandler,
-    IOptions<AiCoachModuleOptions> options,
-    ILogger<ModelTurnRuntime> logger) : IModelTurnRuntime
+public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModuleOptions> options,
+    ILogger<ModelTurnRuntime> logger, ModelContextBuilder contextBuilder,
+    IHostEnvironment? environment = null) : IModelTurnRuntime
 {
-    // Compatibility constructor for existing deterministic tests and non-DI callers. The
-    // production container injects the registered mutation handler through the primary seam.
-    public ModelTurnRuntime(
-        IModelGateway gateway,
-        IModelContextBuilder contextBuilder,
-        IConversationPrePolicy prePolicy,
-        IConversationPostPolicy postPolicy,
-        IEvidenceGuard evidenceGuard,
-        IPlanningAuthorityCalculator planningAuthorityCalculator,
-        ISupportPolicyCalculator supportPolicyCalculator,
-        IDeterministicProposalGenerator proposalGenerator,
-        IResponseGuard responseGuard,
-        IProposalSetGuard proposalSetGuard,
-        IOptions<AiCoachModuleOptions> options,
-        ILogger<ModelTurnRuntime> logger)
-        : this(
-            gateway,
-            contextBuilder,
-            prePolicy,
-            postPolicy,
-            evidenceGuard,
-            planningAuthorityCalculator,
-            supportPolicyCalculator,
-            proposalGenerator,
-            responseGuard,
-            proposalSetGuard,
-            new ProposalSetMutationHandler(),
-            options,
-            logger)
-    {
-    }
 
-    public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken cancellationToken)
+    public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
     {
-        var turnStarted = Stopwatch.GetTimestamp();
         var limits = options.Value;
-        var snapshot = request.Snapshot;
-        var envelope = prePolicy.Build(snapshot, request.Mode);
-        var currentUser = request.RecentMessages
-            .LastOrDefault(m => m.Role == ConversationMessageRole.User);
-        var currentUserMessage = currentUser?.Content ?? string.Empty;
-        var previousAssistantStrategy = request.RecentMessages
-            .LastOrDefault(m => m.Role == ConversationMessageRole.Assistant)?.Strategy;
-
         logger.LogInformation(
-            "AiCoach.ModelTurn.Started ConversationId={ConversationId} EffectId={EffectId} ConversationVersion={ConversationVersion} Mode={Mode} Phase={Phase} RuleVersion={RuleVersion} PolicyVersion={PolicyVersion} PromptVersion={PromptVersion} ProtocolVersion={ProtocolVersion} MaxIterations={MaxIterations} UserMessage={UserMessage}",
-            snapshot.ConversationId,
-            request.EffectId,
-            snapshot.Version,
-            snapshot.Mode,
-            snapshot.Phase,
-            snapshot.RuntimeVersions.RuleVersion,
-            snapshot.RuntimeVersions.PolicyVersion,
-            snapshot.RuntimeVersions.PromptVersion,
-            snapshot.RuntimeVersions.ProtocolVersion,
-            limits.MaxModelIterations,
-            currentUserMessage);
-
-        var context = contextBuilder.Build(new ModelContextRequest(
-            snapshot, request.Mode, envelope, request.RecentMessages, request.TimeZoneId, request.UserLocalNow));
-
-        // Corrections/regenerations extend this transcript so the model sees what it got wrong.
-        var transcript = new List<GatewayMessage>(context.Transcript);
-
-        (VerifiedPlanningContext Planning, PlanningAuthority Authority, SupportDecision? Support)? repairContext = null;
-        var iterations = 0;
-        var schemaCorrections = 0;
-        var regenerations = 0;
-        var proposalRegenerations = 0;
-        int inputTokens = 0, outputTokens = 0, totalTokens = 0;
-
-        while (iterations < limits.MaxModelIterations)
+            "AiCoach model turn started for {ConversationId} in {Mode} mode with {HistoryMessageCount} history messages and {DraftCount} drafts",
+            request.ConversationId, request.Mode, request.History.Count, request.Drafts.Count);
+        var workspace = new DraftTools(request.Drafts, request.TimeZoneId);
+        var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule);
+        var turn = new List<GatewayMessage>();
+        var summary = request.Summary;
+        var covered = request.SummarizedMessageCount;
+        var calls = 0;
+        var toolCalls = 0;
+        var input = 0;
+        var output = 0;
+        var total = 0;
+        var taskContextRead = false;
+        try
         {
-            iterations++;
-            var modelCallStarted = Stopwatch.GetTimestamp();
+            var context = await contextBuilder.BuildAsync(request, executor.AvailableTools, Call);
+            var system = context.SystemPrompt;
+            var transcript = context.Transcript;
+            summary = context.Summary;
+            covered = context.SummarizedMessageCount;
 
+            while (calls < limits.MaxModelCallsPerTurn)
+            {
+                if (!contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
+                {
+                    logger.LogWarning("AiCoach context limit reached for {ConversationId} before model call {ModelCallNumber}",
+                        request.ConversationId, calls + 1);
+                    return Result(null, "context_limit");
+                }
+                var lastCall = calls == limits.MaxModelCallsPerTurn - 1 || executor.BudgetExhausted;
+                var completion = await Call(new ModelGatewayRequest(system, transcript,
+                    lastCall ? [] : executor.AvailableTools, MaxOutputTokens: limits.MaxOutputTokens));
+                if (completion.FinishReason == ModelFinishReason.ContentFilter)
+                {
+                    logger.LogWarning("AiCoach response filtered for {ConversationId}", request.ConversationId);
+                    return Result(null, "content_filtered");
+                }
+                if (completion.FinishReason == ModelFinishReason.Length)
+                {
+                    logger.LogWarning("AiCoach output limit reached for {ConversationId}", request.ConversationId);
+                    return Result(null, "output_limit");
+                }
+                if (completion.ToolCalls.Count == 0)
+                {
+                    if (completion.FinishReason != ModelFinishReason.Stop || string.IsNullOrWhiteSpace(completion.AssistantText))
+                    {
+                        logger.LogWarning("AiCoach returned an invalid response for {ConversationId}: finish reason {FinishReason}",
+                            request.ConversationId, completion.FinishReason);
+                        return Result(null, "invalid_response");
+                    }
+                    ct.ThrowIfCancellationRequested();
+                    turn.Add(new GatewayAssistantMessage(completion.AssistantText, []));
+                    return Result(completion.AssistantText, null);
+                }
+                if (lastCall)
+                {
+                    logger.LogWarning("AiCoach tool limit reached for {ConversationId} with {ToolCallCount} pending tool calls",
+                        request.ConversationId, completion.ToolCalls.Count);
+                    return Result(null, "tool_limit");
+                }
+                var assistant = new GatewayAssistantMessage(completion.AssistantText, completion.ToolCalls);
+                transcript.Add(assistant);
+                turn.Add(assistant);
+                ToolExecutionResult? singleExecution = null;
+                foreach (var tool in completion.ToolCalls)
+                {
+                    toolCalls++;
+                    var execution = await executor.ExecuteAsync(tool, ct);
+                    if ((tool.Name == "list_tasks" && execution.Succeeded) || execution.ScheduleChecked)
+                        taskContextRead = true;
+                    singleExecution = execution;
+                    var result = execution.Content;
+                    logger.LogInformation("AiCoach tool outcome {ToolName}: success={Succeeded}, error={ErrorCode}, replayed={Replayed}",
+                        tool.Name, execution.Succeeded, execution.ErrorCode, execution.Replayed);
+                    logger.LogInformation("AiCoach tool {ToolName} executed for {ConversationId} (call {ToolCallCount})",
+                        tool.Name, request.ConversationId, toolCalls);
+                    await Trace("tool_result", new
+                    {
+                        toolCallNumber = toolCalls, toolCallId = tool.Id, tool.Name,
+                        tool.ArgumentsJson, execution.Succeeded, execution.ErrorCode,
+                        execution.Replayed, result,
+                    });
+                    if (environment?.IsDevelopment() == true)
+                        logger.LogInformation(
+                            "AiCoach tool payload for {ConversationId}: ToolCallId={ToolCallId}, Tool={ToolName}, Arguments={ToolArguments}, Result={ToolResult}",
+                            request.ConversationId, tool.Id, tool.Name, tool.ArgumentsJson, result);
+                    var message = new GatewayToolResultMessage(tool.Id, result);
+                    transcript.Add(message);
+                    turn.Add(tool.Name == "list_tasks" && execution.Succeeded
+                        ? new GatewayToolResultMessage(tool.Id,
+                            "Task schedule was read for this turn. Re-read for current task details.")
+                        : message);
+                }
+                if (toolCalls == 1 && completion.ToolCalls.Count == 1
+                    && string.IsNullOrWhiteSpace(completion.AssistantText)
+                    && singleExecution is { Succeeded: true, Replayed: false, SuccessReply: { } reply })
+                {
+                    ct.ThrowIfCancellationRequested();
+                    turn.Add(new GatewayAssistantMessage(reply, []));
+                    logger.LogInformation("AiCoach completed {ConversationId} with a prewritten draft reply after one successful tool call",
+                        request.ConversationId);
+                    return Result(reply, null);
+                }
+                logger.LogInformation(
+                    "AiCoach continuing model loop for {ConversationId} after tool calls: {TurnToolCallCount} calls, lastToolSucceeded={LastToolSucceeded}, hasPrewrittenReply={HasPrewrittenReply}",
+                    request.ConversationId, toolCalls, singleExecution?.Succeeded, singleExecution?.SuccessReply is not null);
+            }
+            return Result(null, "model_call_limit");
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogWarning("AiCoach model turn cancelled or timed out for {ConversationId}", request.ConversationId);
+            return Result(null, ct.IsCancellationRequested ? "cancelled" : "timed_out");
+        }
+        catch (System.ClientModel.ClientResultException ex)
+        {
+            logger.LogWarning(ex, "AiCoach gateway request failed for {ConversationId}", request.ConversationId);
+            return Result(null, ex.Status is 401 or 403 ? "configuration_error" : "model_unavailable");
+        }
+        catch (ModelContextException ex)
+        {
+            return Result(null, ex.Code);
+        }
+        catch (ModelCallBudgetException ex)
+        {
+            logger.LogWarning(ex, "AiCoach turn exhausted its model budget for {ConversationId}", request.ConversationId);
+            return Result(null, "model_call_limit");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "AiCoach model transport failed for {ConversationId}", request.ConversationId);
+            return Result(null, "model_unavailable");
+        }
+
+        async Task<ModelCompletionResult> Call(ModelGatewayRequest modelRequest)
+        {
+            if (calls >= limits.MaxModelCallsPerTurn) throw new ModelCallBudgetException();
+            calls++;
+            await Trace("model_request", new
+            {
+                modelCallNumber = calls, limits.DeploymentId, modelRequest.SystemPrompt,
+                messages = Elements(modelRequest.Messages), modelRequest.Tools,
+                modelRequest.MaxOutputTokens,
+            });
+            if (environment?.IsDevelopment() == true)
+            {
+                var requestPayload = JsonSerializer.Serialize(new
+                {
+                    modelRequest.SystemPrompt,
+                    messages = Elements(modelRequest.Messages),
+                    tools = modelRequest.Tools,
+                    modelRequest.MaxOutputTokens,
+                }, ContextJson);
+                logger.LogInformation("AiCoach model request {ModelCallNumber} for {ConversationId}: {ModelRequest}",
+                    calls, request.ConversationId, requestPayload);
+            }
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(limits.ModelRequestTimeoutSeconds));
             ModelCompletionResult completion;
             try
             {
-                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                timeout.CancelAfter(TimeSpan.FromSeconds(limits.ModelRequestTimeoutSeconds));
-                completion = await gateway.CompleteAsync(
-                    new ModelGatewayRequest(
-                        context.SystemPrompt,
-                        transcript,
-                        Tools: [],
-                        ResponseFormat: new ResponseFormatSpec(
-                            ModelTurnCandidateContract.ResponseFormatName,
-                            ModelTurnCandidateContract.JsonSchema)),
-                    timeout.Token);
+                completion = await gateway.CompleteAsync(modelRequest, timeout.Token);
             }
-            catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+            catch (Exception ex)
             {
-                logger.LogWarning(
-                    ex,
-                    "AiCoach.ModelCall.Failed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Result={Result} ExceptionMessage={ExceptionMessage}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    ModelTurnCompletionReason.Cancelled,
-                    ex.Message);
-                return Fail(ModelTurnCompletionReason.Cancelled);
+                stopwatch.Stop();
+                await Trace("model_error", new { modelCallNumber = calls, errorType = ex.GetType().Name,
+                    ex.Message, elapsedMs = stopwatch.ElapsedMilliseconds });
+                logger.LogWarning(ex,
+                    "AiCoach model call {ModelCallNumber} failed for {ConversationId} after {ElapsedMs}ms",
+                    calls, request.ConversationId, stopwatch.ElapsedMilliseconds);
+                throw;
             }
-            catch (OperationCanceledException ex)
-            {
-                logger.LogWarning(
-                    ex,
-                    "AiCoach.ModelCall.Failed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Result={Result} ExceptionMessage={ExceptionMessage}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    ModelTurnCompletionReason.TimedOut,
-                    ex.Message);
-                return Fail(ModelTurnCompletionReason.TimedOut);
-            }
-
-            inputTokens += completion.InputTokens;
-            outputTokens += completion.OutputTokens;
-            totalTokens += completion.TotalTokens;
-
+            stopwatch.Stop();
+            input += completion.InputTokens;
+            output += completion.OutputTokens;
+            total += completion.TotalTokens;
             logger.LogInformation(
-                "AiCoach.ModelCall.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} FinishReason={FinishReason} ElapsedMs={ElapsedMs} InputTokens={InputTokens} OutputTokens={OutputTokens} TotalTokens={TotalTokens} RawModelOutput={RawModelOutput}",
-                snapshot.ConversationId,
-                request.EffectId,
-                iterations,
-                completion.FinishReason,
-                Stopwatch.GetElapsedTime(modelCallStarted).TotalMilliseconds,
-                completion.InputTokens,
-                completion.OutputTokens,
-                completion.TotalTokens,
-                completion.AssistantText);
-
-            if (completion.FinishReason == ModelFinishReason.ContentFilter)
-                return Fail(ModelTurnCompletionReason.ContentFiltered);
-
-            // ---- Model Output Schema Guard (one correction attempt, v3 §21) ----
-            var parsed = ModelTurnCandidateContract.Parse(completion.AssistantText);
-            logger.LogInformation(
-                "AiCoach.SchemaValidation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Schema={Schema} IsValid={IsValid} CorrectionAttempt={CorrectionAttempt} ErrorDetail={ErrorDetail}",
-                snapshot.ConversationId,
-                request.EffectId,
-                iterations,
-                ModelTurnCandidateContract.ResponseFormatName,
-                parsed.IsSuccess,
-                schemaCorrections + (parsed.IsSuccess ? 0 : 1),
-                parsed.Error);
-            if (!parsed.IsSuccess)
+                "AiCoach model call {ModelCallNumber} completed for {ConversationId}: {FinishReason}, {InputTokens} input tokens, {OutputTokens} output tokens, {ElapsedMs}ms, {ToolCallCount} tool calls",
+                calls, request.ConversationId, completion.FinishReason, completion.InputTokens,
+                completion.OutputTokens, stopwatch.ElapsedMilliseconds, completion.ToolCalls.Count);
+            await Trace("model_response", new
             {
-                schemaCorrections++;
-                if (schemaCorrections > limits.MaxSchemaCorrectionAttempts || iterations >= limits.MaxModelIterations)
-                    return Fail(ModelTurnCompletionReason.InvalidModelResponse);
-
-                logger.LogWarning(
-                    "AiCoach.SchemaCorrection.Requested ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} CorrectionAttempt={CorrectionAttempt} ErrorDetail={ErrorDetail} RawModelOutput={RawModelOutput}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    schemaCorrections,
-                    parsed.Error,
-                    completion.AssistantText);
-                AppendCorrection(transcript, completion.AssistantText,
-                    $"[system] Your output was invalid: {parsed.Error} Respond again following the required format exactly.");
-                continue;
-            }
-
-            var candidate = parsed.Candidate!;
-
-            // ---- Evidence Guard -> Post-Policy ----
-            var verifiedPlanning = evidenceGuard.Verify(
-                candidate.Interpretation,
-                new EvidenceVerificationContext(currentUserMessage, context.PlanningReferences));
-            logger.LogInformation(
-                "AiCoach.EvidenceValidation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SubmittedClaims={SubmittedClaims} VerifiedClaims={VerifiedClaims} InvalidClaims={InvalidClaims} VerifiedItemCount={VerifiedItemCount} VerifiedConstraintCount={VerifiedConstraintCount} Disposition={Disposition} IssueCodes={IssueCodes} SubmittedPlanningItems={SubmittedPlanningItems} SubmittedConstraints={SubmittedConstraints} SubmittedDisposition={SubmittedDisposition} VerifiedPlanningItems={VerifiedPlanningItems} VerifiedConstraints={VerifiedConstraints}",
-                snapshot.ConversationId,
-                request.EffectId,
-                iterations,
-                verifiedPlanning.Evidence.SubmittedClaims,
-                verifiedPlanning.Evidence.VerifiedClaims,
-                verifiedPlanning.Evidence.Issues.Count,
-                verifiedPlanning.Items.Count,
-                verifiedPlanning.Constraints.Count,
-                verifiedPlanning.Disposition,
-                string.Join(",", verifiedPlanning.Evidence.Issues.Distinct()),
-                SerializeForLog(candidate.Interpretation.PlanningItems),
-                SerializeForLog(candidate.Interpretation.Constraints),
-                SerializeForLog(candidate.Interpretation.Disposition),
-                SerializeForLog(verifiedPlanning.Items),
-                SerializeForLog(verifiedPlanning.Constraints));
-            // Payload repairs may not reinterpret the user's request or expand authority.
-            verifiedPlanning = repairContext?.Planning ?? verifiedPlanning;
-            var planningAuthority = repairContext?.Authority ?? planningAuthorityCalculator.Calculate(new PlanningAuthorityContext(
-                snapshot,
-                verifiedPlanning,
-                request.Mode.Policy.Planning));
-            logger.LogInformation(
-                "AiCoach.PlanningAuthority.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsBlocked={IsBlocked} ProposalDisposition={ProposalDisposition} ClarificationDisposition={ClarificationDisposition} ContextReadiness={ContextReadiness} ReasonCodes={ReasonCodes} AllowedAssumptions={AllowedAssumptions} ActiveItemCount={ActiveItemCount} HasOpenQuestion={HasOpenQuestion}",
-                snapshot.ConversationId,
-                request.EffectId,
-                iterations,
-                planningAuthority.IsBlocked,
-                planningAuthority.Proposal,
-                planningAuthority.Clarification,
-                planningAuthority.ContextReadiness,
-                string.Join(",", planningAuthority.Reasons),
-                string.Join(",", planningAuthority.AllowedAssumptions),
-                snapshot.ActivePlanningIntent?.Items.Count ?? 0,
-                snapshot.OpenQuestion is not null);
-
-            var supportDecision = repairContext?.Support ?? (request.Mode.SupportPolicy is null
-                ? null
-                : supportPolicyCalculator.Calculate(new SupportPolicyContext(
-                    snapshot,
-                    verifiedPlanning.SupportRequest,
-                    previousAssistantStrategy,
-                    currentUser?.Id,
-                    request.Mode.SupportPolicy)));
-            if (supportDecision is not null)
-            {
+                modelCallNumber = calls, completion.FinishReason, completion.AssistantText,
+                completion.ToolCalls, completion.InputTokens, completion.OutputTokens,
+                completion.TotalTokens, elapsedMs = stopwatch.ElapsedMilliseconds,
+            });
+            if (environment?.IsDevelopment() == true)
                 logger.LogInformation(
-                    "AiCoach.SupportDecision.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} CurrentRequest={CurrentRequest} StoredPreference={StoredPreference} PreviousAssistantStrategy={PreviousAssistantStrategy} AllowedMoves={AllowedMoves} ReasonCodes={ReasonCodes} HasPreferenceUpdate={HasPreferenceUpdate} ClearPreference={ClearPreference}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    verifiedPlanning.SupportRequest?.Kind,
-                    snapshot.CompanionContext?.ExplicitPreference?.Kind,
-                    previousAssistantStrategy,
-                    string.Join(",", supportDecision.AllowedMoves),
-                    string.Join(",", supportDecision.Reasons),
-                    supportDecision.PreferenceUpdate is not null,
-                    supportDecision.ClearPreference);
-            }
-
-            var proposalMutationVerdict = candidate.ProposalSetMutationCandidate is null
-                ? null
-                : proposalSetMutationHandler.Evaluate(
-                    snapshot.CurrentProposalSet,
-                    candidate.ProposalSetMutationCandidate,
-                    currentUserMessage,
-                    envelope.ProposalConstraints.MaxProposals);
-            if (proposalMutationVerdict is not null)
-            {
-                logger.LogInformation(
-                    "AiCoach.ProposalMutation.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Readiness={Readiness} Reason={Reason} AddedCount={AddedCount} UpdatedCount={UpdatedCount} RemovedCount={RemovedCount} ResultingCount={ResultingCount} Detail={Detail}",
-                    snapshot.ConversationId,
-                    request.EffectId,
-                    iterations,
-                    proposalMutationVerdict.Readiness,
-                    proposalMutationVerdict.Reason,
-                    proposalMutationVerdict.Summary?.AddedCount ?? 0,
-                    proposalMutationVerdict.Summary?.UpdatedCount ?? 0,
-                    proposalMutationVerdict.Summary?.RemovedCount ?? 0,
-                    proposalMutationVerdict.Summary?.ResultingItemCount,
-                    proposalMutationVerdict.Detail);
-            }
-
-            var policyContext = new PolicyContext(
-                snapshot, envelope, candidate, request.Mode, verifiedPlanning, planningAuthority,
-                supportDecision, proposalMutationVerdict);
-            var decision = postPolicy.Decide(policyContext);
-
-            if (decision.AcceptResponseCandidate)
-            {
-                var verdict = responseGuard.Validate(candidate.ResponseCandidate, envelope.ResponseConstraints);
-                logger.LogInformation(
-                    "AiCoach.ResponseGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} IsValid={IsValid} GuardDetail={GuardDetail}",
-                    snapshot.ConversationId, request.EffectId, iterations, verdict.IsValid, verdict.Detail);
-                if (!verdict.IsValid)
-                    decision = postPolicy.Decide(policyContext with
-                    {
-                        Failure = new CandidateValidationFailure(CandidateFailureKind.Response, verdict.Detail!),
-                    });
-            }
-
-            IReadOnlyList<Domain.Proposals.TaskProposal>? acceptedProposals = null;
-            if (decision.AcceptProposalSetCandidate && candidate.ProposalSetCandidate is not null)
-            {
-                var verdict = proposalSetGuard.Validate(
-                    candidate.ProposalSetCandidate, snapshot, envelope.ProposalConstraints, request.TimeZoneId);
-                logger.LogInformation(
-                    "AiCoach.ProposalGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Source={Source} IsValid={IsValid} GuardDetail={GuardDetail}",
-                    snapshot.ConversationId, request.EffectId, iterations, "Model", verdict.IsValid, verdict.Detail);
-                if (verdict.IsValid)
-                    acceptedProposals = verdict.Proposals;
-                else
-                    decision = postPolicy.Decide(policyContext with
-                    {
-                        Failure = new CandidateValidationFailure(CandidateFailureKind.Proposal, verdict.Detail!),
-                    });
-            }
-
-            var acceptedMutation = decision.AcceptProposalSetMutationCandidate
-                && proposalMutationVerdict is { IsReady: true }
-                    ? proposalMutationVerdict
-                    : null;
-
-            logger.LogInformation(
-                "AiCoach.PostPolicy.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} SuggestedStrategy={SuggestedStrategy} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} AcceptResponse={AcceptResponse} AcceptProposal={AcceptProposal} HasRegeneration={HasRegeneration} FallbackAction={FallbackAction}",
-                snapshot.ConversationId, request.EffectId, iterations, candidate.SuggestedAction,
-                decision.FinalStrategy, decision.DecisionType, decision.ReasonCode,
-                decision.AcceptResponseCandidate, decision.AcceptProposalSetCandidate,
-                decision.Regeneration is not null, decision.Fallback?.Action);
-
-            if (decision.DecisionType == StrategyDecisionType.RequiresRegeneration
-                && decision.Regeneration is { } directive
-                && regenerations + proposalRegenerations < limits.MaxRegenerationAttempts
-                && iterations < limits.MaxModelIterations)
-            {
-                // Field names describe the repair protocol; no product reason code selects a path.
-                if (directive.RequiredFields.Contains("proposalSet"))
-                    proposalRegenerations++;
-                else
-                    regenerations++;
-                if (!verifiedPlanning.Evidence.HasInvalidClaims)
-                    repairContext = (verifiedPlanning, planningAuthority, supportDecision);
-                logger.LogInformation(
-                    "AiCoach.Regeneration.Requested ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} RequiredStrategy={RequiredStrategy} RequiredFields={RequiredFields}",
-                    snapshot.ConversationId, request.EffectId, iterations, directive.RequiredStrategy,
-                    string.Join(",", directive.RequiredFields));
-                AppendCorrection(transcript, completion.AssistantText, BuildRegenerationInstruction(directive));
-                continue;
-            }
-
-            if (!decision.AcceptResponseCandidate)
-            {
-                return Complete(FallbackOutcome(
-                    decision.ReasonCode, decision, snapshot, verifiedPlanning, planningAuthority,
-                    supportDecision, request.Mode.Mode, currentUser?.Id, verifiedPlanning.Disposition,
-                    currentUserMessage, request.TimeZoneId, request.UserLocalNow,
-                    request.Mode.Policy.ProposalGeneration, envelope.ProposalConstraints,
-                    request.EffectId, iterations, proposalRegenerations));
-            }
-
-            var assistantMessage = acceptedMutation?.Summary is { } mutationSummary
-                ? ProposalSetMutationResponseProjector.Render(mutationSummary, currentUserMessage)
-                : candidate.ResponseCandidate.Text;
-
-            return Complete(new ValidatedTurnOutcome(
-                decision.FinalStrategy,
-                decision.DecisionType,
-                decision.ReasonCode,
-                assistantMessage,
-                QuestionOf(candidate.ResponseCandidate),
-                acceptedProposals,
-                FallbackUsed: false,
-                PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
-                    snapshot, verifiedPlanning, planningAuthority, currentUser?.Id,
-                    acceptedProposals is not null, request.Mode.Mode,
-                    planningQuestion: decision.FinalStrategy is ConversationStrategy.AskClarifyingQuestion
-                        or ConversationStrategy.AskUserToChooseGoal),
-                QuestionTopic: QuestionTopicOf(candidate.ResponseCandidate),
-                ClarificationResolution: ToResolution(verifiedPlanning.Disposition),
-                SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
-                ClearSupportPreference: supportDecision?.ClearPreference ?? false,
-                AcceptedProposalSetMutation: acceptedMutation));
+                    "AiCoach model response {ModelCallNumber} for {ConversationId}: {AssistantText}; tool calls: {ToolCalls}",
+                    calls, request.ConversationId, completion.AssistantText,
+                    JsonSerializer.Serialize(completion.ToolCalls, ContextJson));
+            return completion;
         }
 
-        return Fail(ModelTurnCompletionReason.IterationLimitExceeded);
-
-        ModelTurnRunResult Fail(ModelTurnCompletionReason reason)
-        {
-            logger.LogWarning(
-                "AiCoach.ModelTurn.Failed ConversationId={ConversationId} EffectId={EffectId} CompletionReason={CompletionReason} Iterations={Iterations} SchemaCorrections={SchemaCorrections} Regenerations={Regenerations} ProposalRegenerations={ProposalRegenerations} ElapsedMs={ElapsedMs} TotalTokens={TotalTokens}",
-                snapshot.ConversationId,
-                request.EffectId,
-                reason,
-                iterations,
-                schemaCorrections,
-                regenerations,
-                proposalRegenerations,
-                Stopwatch.GetElapsedTime(turnStarted).TotalMilliseconds,
-                totalTokens);
-            return new ModelTurnRunResult(
-                reason,
-                null,
-                inputTokens,
-                outputTokens,
-                totalTokens,
-                iterations,
-                schemaCorrections,
-                regenerations,
-                proposalRegenerations);
-        }
-
-        ModelTurnRunResult Complete(ValidatedTurnOutcome outcome)
-        {
-            // Fallback and generated introductions have the same response limits as model text.
-            // Failure rejects the complete outcome; no message, card or preference is committed.
-            if (outcome.FallbackUsed)
-            {
-                AssistantResponseCandidate response = outcome.FinalStrategy switch
-                {
-                    ConversationStrategy.ShowProposalSet => new ProposalIntroductionResponse(outcome.AssistantMessage),
-                    ConversationStrategy.UpdateProposalSet => new ProposalUpdateResponse(outcome.AssistantMessage),
-                    _ => new ListeningResponse(outcome.AssistantMessage),
-                };
-                var verdict = responseGuard.Validate(response, envelope.ResponseConstraints);
-                if (!verdict.IsValid)
-                {
-                    logger.LogWarning("AiCoach.FallbackResponse.Invalid GuardDetail={GuardDetail}", verdict.Detail);
-                    return Fail(ModelTurnCompletionReason.InvalidModelResponse);
-                }
-            }
-
-            logger.LogInformation(
-                "AiCoach.ModelTurn.Completed ConversationId={ConversationId} EffectId={EffectId} FinalStrategy={FinalStrategy} Decision={Decision} ReasonCode={ReasonCode} ProposalCount={ProposalCount} FallbackUsed={FallbackUsed} HasPlanningIntentUpdate={HasPlanningIntentUpdate} ClarificationResolution={ClarificationResolution} Iterations={Iterations} SchemaCorrections={SchemaCorrections} Regenerations={Regenerations} ProposalRegenerations={ProposalRegenerations} ElapsedMs={ElapsedMs} TotalTokens={TotalTokens} AssistantReply={AssistantReply} AcceptedProposals={AcceptedProposals} PlanningIntentUpdate={PlanningIntentUpdate}",
-                snapshot.ConversationId,
-                request.EffectId,
-                outcome.FinalStrategy,
-                outcome.DecisionType,
-                outcome.ReasonCode,
-                outcome.AcceptedProposals?.Count ?? 0,
-                outcome.FallbackUsed,
-                outcome.PlanningIntentUpdate is not null,
-                outcome.ClarificationResolution,
-                iterations,
-                schemaCorrections,
-                regenerations,
-                proposalRegenerations,
-                Stopwatch.GetElapsedTime(turnStarted).TotalMilliseconds,
-                totalTokens,
-                outcome.AssistantMessage,
-                SerializeForLog(outcome.AcceptedProposals),
-                SerializeForLog(outcome.PlanningIntentUpdate));
-            return new ModelTurnRunResult(
-                ModelTurnCompletionReason.Completed,
-                outcome,
-                inputTokens,
-                outputTokens,
-                totalTokens,
-                iterations,
-                schemaCorrections,
-                regenerations,
-                proposalRegenerations);
-        }
-    }
-
-    private static void AppendCorrection(List<GatewayMessage> transcript, string? rawOutput, string note)
-    {
-        transcript.Add(new GatewayAssistantMessage(rawOutput ?? string.Empty, []));
-        transcript.Add(new GatewaySystemMessage(note));
-    }
-
-    private static ClarificationResolution? ToResolution(UserTurnDisposition disposition) => disposition switch
-    {
-        UserTurnDisposition.Answered => ClarificationResolution.Answered,
-        UserTurnDisposition.CannotProvide => ClarificationResolution.UserCannotProvide,
-        UserTurnDisposition.DelegatedToCoach => ClarificationResolution.DelegatedToCoach,
-        UserTurnDisposition.RejectedAction => ClarificationResolution.Superseded,
-        _ => null,
-    };
-
-    private ValidatedTurnOutcome FallbackOutcome(
-        StrategyReasonCode reason,
-        StrategyDecision policyDecision,
-        ConversationSnapshot snapshot,
-        VerifiedPlanningContext verifiedPlanning,
-        PlanningAuthority planningAuthority,
-        SupportDecision? supportDecision,
-        AiCoachMode mode,
-        Guid? currentMessageId,
-        UserTurnDisposition disposition,
-        string currentUserMessage,
-        string timeZoneId,
-        DateTimeOffset localNow,
-        ProposalGenerationPolicy generationPolicy,
-        ProposalConstraints proposalConstraints,
-        Guid effectId,
-        int attempt,
-        int proposalRegenerationAttempt)
-    {
-        var strategy = policyDecision.FinalStrategy;
-        var resolution = ToResolution(disposition);
-        var fallback = policyDecision.Fallback
-            ?? throw new InvalidOperationException("Post-Policy must provide a fallback plan.");
-        var generated = fallback.Action == PolicyFallbackAction.DeterministicProposal
-            ? proposalGenerator.Generate(new ProposalGenerationContext(
-                snapshot,
-                verifiedPlanning,
-                planningAuthority,
-                generationPolicy,
-                localNow,
-                timeZoneId,
-                proposalConstraints.MaxProposals))
-            : null;
-        var generatedVerdict = generated?.Candidate is null
-            ? null
-            : proposalSetGuard.Validate(
-                generated.Candidate,
-                snapshot,
-                proposalConstraints,
-                timeZoneId);
-        if (fallback.Action == PolicyFallbackAction.DeterministicProposal)
+        ModelTurnRunResult Result(string? text, string? error)
         {
             logger.LogInformation(
-                "AiCoach.DeterministicProposal.Completed ConversationId={ConversationId} EffectId={EffectId} PolicyVersion={PolicyVersion} CandidateGenerated={CandidateGenerated} IsValid={IsValid} GeneratedCount={GeneratedCount} AcceptedCount={AcceptedCount} AssistantReply={AssistantReply} ProposalCandidate={ProposalCandidate} AcceptedProposals={AcceptedProposals} GuardDetail={GuardDetail}",
-                snapshot.ConversationId,
-                effectId,
-                generationPolicy.Version,
-                generated?.Candidate is not null,
-                generatedVerdict?.IsValid ?? false,
-                generated?.Candidate?.Proposals.Count ?? 0,
-                generatedVerdict?.Proposals?.Count ?? 0,
-                generated?.AssistantMessage,
-                SerializeForLog(generated?.Candidate),
-                SerializeForLog(generatedVerdict?.Proposals),
-                generatedVerdict?.Detail);
-            logger.LogInformation(
-                "AiCoach.ProposalGuard.Completed ConversationId={ConversationId} EffectId={EffectId} Attempt={Attempt} Source={Source} IsValid={IsValid} SubmittedCount={SubmittedCount} AcceptedCount={AcceptedCount} RegenerationAttempt={RegenerationAttempt} ProposalCandidate={ProposalCandidate} AcceptedProposals={AcceptedProposals} GuardDetail={GuardDetail}",
-                snapshot.ConversationId,
-                effectId,
-                attempt,
-                "DeterministicFallback",
-                generatedVerdict?.IsValid ?? false,
-                generated?.Candidate?.Proposals.Count ?? 0,
-                generatedVerdict?.Proposals?.Count ?? 0,
-                proposalRegenerationAttempt,
-                SerializeForLog(generated?.Candidate),
-                SerializeForLog(generatedVerdict?.Proposals),
-                generatedVerdict?.Detail);
-        }
-        if (generatedVerdict is { IsValid: true })
-        {
-            return new ValidatedTurnOutcome(
-                ConversationStrategy.ShowProposalSet,
-                StrategyDecisionType.Downgraded,
-                reason,
-                generated!.AssistantMessage,
-                Question: null,
-                AcceptedProposals: generatedVerdict.Proposals,
-                FallbackUsed: true,
-                PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
-                    snapshot, verifiedPlanning, planningAuthority, currentMessageId,
-                    proposalAccepted: true, mode: mode),
-                ClarificationResolution: resolution,
-                SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
-                ClearSupportPreference: supportDecision?.ClearPreference ?? false);
+                "AiCoach model turn finished for {ConversationId}: {ErrorCode}, {ModelCallCount} model calls, {ToolCallCount} tool calls, {InputTokens} input tokens, {OutputTokens} output tokens",
+                request.ConversationId, error ?? "success", calls, toolCalls, input, output);
+            if (environment?.IsDevelopment() == true)
+                logger.LogInformation("AiCoach final response for {ConversationId}: {AssistantText}",
+                    request.ConversationId, text);
+            return new(text, error, turn, workspace.Drafts, summary, covered, input, output, total, calls,
+                taskContextRead);
         }
 
-        strategy = fallback.FailureStrategy;
-        var text = FallbackCatalog.For(reason, currentUserMessage, allowQuestion: strategy.AsksQuestion());
-        return new ValidatedTurnOutcome(
-            strategy,
-            StrategyDecisionType.Downgraded,
-            reason,
-            text,
-            Question: strategy.AsksQuestion() ? text : null,
-            AcceptedProposals: null,
-            FallbackUsed: true,
-            PlanningIntentUpdate: PlanningStateRules.BuildPlanningIntentUpdate(
-                snapshot, verifiedPlanning, planningAuthority, currentMessageId,
-                proposalAccepted: false, mode: mode,
-                planningQuestion: strategy is ConversationStrategy.AskClarifyingQuestion
-                    or ConversationStrategy.AskUserToChooseGoal),
-            ClarificationResolution: resolution,
-            SupportPreferenceUpdate: supportDecision?.PreferenceUpdate,
-            ClearSupportPreference: supportDecision?.ClearPreference ?? false);
+        Task Trace(string kind, object payload) => request.Trace?.Invoke(kind, payload) ?? Task.CompletedTask;
     }
-
-    private static string BuildRegenerationInstruction(RegenerationDirective directive)
-    {
-        var fields = string.Join(", ", directive.RequiredFields);
-        var assumptions = directive.AllowedAssumptions.Count == 0
-            ? "none"
-            : string.Join(", ", directive.AllowedAssumptions);
-        return $"Return suggestedAction '{directive.RequiredStrategy.ToWireValue()}'. "
-               + $"Correct these fields: {fields}. Allowed assumptions: {assumptions}. "
-               + "Keep interpretation unchanged; only the listed payload fields and required strategy may change. "
-               + "Return the complete schema required by this protocol; repeated interpretation cannot expand authority. "
-               + $"Validation detail: {directive.ValidationDetail ?? "none"}.";
-    }
-
-    private static string SerializeForLog<T>(T value) => JsonSerializer.Serialize(value);
-
-    private static string? QuestionOf(AssistantResponseCandidate response) => response switch
-    {
-        GentleQuestionResponse r => r.Question,
-        ClarifyingQuestionResponse r => r.Question,
-        GoalChoiceResponse r => r.Question,
-        _ => null,
-    };
-
-    private static ClarificationTopic? QuestionTopicOf(AssistantResponseCandidate response) => response switch
-    {
-        GentleQuestionResponse r => r.Topic,
-        ClarifyingQuestionResponse r => r.Topic,
-        GoalChoiceResponse r => r.Topic,
-        _ => null,
-    };
 
 }
+
+internal sealed class ModelCallBudgetException() : Exception("Model call budget exhausted.");

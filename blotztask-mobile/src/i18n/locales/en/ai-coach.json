@@ -24,6 +24,7 @@
     "inputPlaceholder": "What do you want to do?",
     "companionInputPlaceholder": "What's on your mind?",
     "thinking": "Thinking…",
+    "taskContextRead": "Checked tasks in the app",
     "connecting": "Connecting…",
     "startError": "Couldn't connect — tap to retry",
     "sendError": "Failed to send, try again",
@@ -33,7 +34,27 @@
     "createManually": "Create task manually",
     "listening": "Listening…",
     "transcribeFailed": "Couldn't catch that, try again",
-    "holdToTalk": "Hold to talk"
+    "holdToTalk": "Hold to talk",
+    "generationFailed": "This reply could not be completed. Please try again or start a new conversation."
+  },
+  "feedback": {
+    "good": "Helpful reply",
+    "bad": "Unhelpful reply",
+    "copy": "Copy reply",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy. Try again.",
+    "saveFailed": "Couldn't save feedback. Try again.",
+    "title": "What could be better? (optional)",
+    "detailPlaceholder": "Add details (optional)",
+    "skip": "Skip",
+    "save": "Save feedback",
+    "reasons": {
+      "inaccurate": "Inaccurate",
+      "irrelevant": "Didn't help",
+      "unclear": "Unclear",
+      "tone": "Wrong tone",
+      "other": "Other"
+    }
   },
   "draft": {
     "startNow": "Start now",
@@ -41,14 +62,25 @@
     "reject": "Not this one",
     "edit": "Edit",
     "saveFailed": "Saving the task failed — the card is still here, you can retry.",
-    "saveEditsBeforeAi": "Confirm the card or reset your local edits before asking AI to change it.",
-    "resetEdits": "Reset local edits",
     "focusPreview": "Focus for {{minutes}} min",
     "taskCount": "{{count}} tasks",
     "removeTask": "Remove this task",
     "alreadySaved": "Saved",
     "addAllToTaskList": "Add all to task list ({{count}})",
-    "rejectAll": "None of these"
+    "rejectAll": "None of these",
+    "datePending": "Date not set",
+    "notSet": "Not set",
+    "scheduleRequired": "Set the date and times with the edit button before saving.",
+    "scheduleConflict": "Overlaps existing tasks: {{tasks}}",
+    "scheduleConflictTitle": "Schedule conflict",
+    "scheduleConflictConfirm": "This time overlaps an existing task. Save it anyway?",
+    "saveDespiteConflict": "Save anyway",
+    "scheduleChanged": "The schedule changed. Review the latest conflict and try again.",
+    "scheduleUnverified": "The task calendar could not be checked. Try again later.",
+    "schedulePartial": "Repeats in the first seven days were checked; later dates have not been checked.",
+    "cancel": "Cancel",
+    "editFailed": "Could not update the draft. Please try again.",
+    "repeats": "Repeats"
   },
   "editModal": {
     "title": "Edit task",
@@ -58,6 +90,16 @@
     "endTime": "End time",
     "save": "Save",
     "cancel": "Cancel",
-    "endBeforeStart": "End time must be after start time"
+    "endBeforeStart": "End time must be after start time",
+    "titleRequired": "Enter a task title.",
+    "startDate": "Starts on",
+    "recurrence": "Repeat",
+    "interval": "Every how many days, weeks, months or years?",
+    "dayOfMonth": "Day of month (blank uses start date)",
+    "endDate": "Ends on",
+    "noEndDate": "No end date",
+    "invalidRecurrence": "Check the repeat interval, selected days and end date.",
+    "frequency": { "Daily": "Daily", "Weekly": "Weekly", "Monthly": "Monthly", "Yearly": "Yearly" },
+    "weekday": { "0": "Mon", "1": "Tue", "2": "Wed", "3": "Thu", "4": "Fri", "5": "Sat", "6": "Sun" }
   }
 }

@@ -1,71 +1,60 @@
-/**
- * AI Coach client protocol types — mirror of the backend §18 response body
- * (Modules/AiCoach/Application/Projections/ConversationSnapshotDto.cs).
- * The client renders ONLY what allowedActions contains; no button is hard-coded.
- */
-
 export type ConversationActionWire =
   | "send_message"
   | "start_now"
   | "add_to_task_list"
   | "reject_draft"
-  | "retry_confirm";
-
-/** Modes currently registered by the backend and exposed by the mobile client. */
+  | "edit_draft";
 export type AvailableAiCoachMode = "Execution" | "Clarify" | "Companion";
+export type AiCoachRating = "up" | "down";
+export interface MessageFeedbackDto {
+  assistantMessageId: string;
+  rating: AiCoachRating;
+  reason: string | null;
+  detail: string | null;
+}
 
-export type ConversationStateWire =
-  | "conversing"
-  | "clarifying"
-  | "draft_pending"
-  | "draft_handled"
-  | "closed";
+export interface DraftRecurrenceDto {
+  frequency: "Daily" | "Weekly" | "Monthly" | "Yearly";
+  interval: number;
+  daysOfWeek: number | null;
+  dayOfMonth: number | null;
+  endDate: string | null;
+}
 
-export type GenerationStatusWire = "idle" | "running" | "blocked";
-
-export type BlockedReasonWire =
-  | "quota"
-  | "content_filtered"
-  | "model_unavailable"
-  | "configuration_error"
-  | "other";
-
-/** One task on the draft card. */
 export interface TaskDraftItemDto {
   itemId: string;
   title: string;
   description: string | null;
-  /** yyyy-MM-dd in the conversation time zone */
-  date: string;
-  /** 24-hour HH:mm */
-  startTime: string;
-  endTime: string;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
   timeZoneId: string;
   labelId: number | null;
-  estimatedMinutes: number;
-  /** Set once this item became a real task (also after a partially failed confirm). */
+  estimatedMinutes: number | null;
   persistedTaskId: number | null;
+  recurrence: DraftRecurrenceDto | null;
 }
 
-/** The card: one or more tasks (protocolVersion 2). The client renders one row per item. */
 export interface TaskDraftPayloadDto {
   items: TaskDraftItemDto[];
-  /** Sum of all items' durations. */
-  estimatedMinutes: number;
-  /**
-   * Server-computed min(15, estimated minutes) — never computed on the client.
-   * Only present for a single-task card; a multi-task card has no focus preview.
-   */
+  estimatedMinutes: number | null;
   focusMinutes: number | null;
 }
 
 export interface ArtifactEnvelopeDto {
   id: string;
-  type: string;
-  schemaVersion: number;
   version: number;
-  status: "pending" | "processing" | "accepted" | "rejected" | "superseded" | "expired";
+  status: "pending" | "processing" | "completed" | "rejected";
+  saveError: string | null;
   payload: TaskDraftPayloadDto;
+  allowedActions: ConversationActionWire[];
+  schedule: {
+    status: "clear" | "conflict" | "unverified" | "incomplete" | "partial";
+    checkedAt: string;
+    conflicts: { itemId: string; taskIdentity: string; taskTitle: string; start: string; end: string }[];
+    conflictToken: string | null;
+    scope: "scheduled" | "start_now";
+  } | null;
 }
 
 export interface ConversationSnapshotDto {
@@ -73,16 +62,11 @@ export interface ConversationSnapshotDto {
   conversationId: string;
   conversationVersion: number;
   mode: AvailableAiCoachMode;
-  state: ConversationStateWire;
-  generationStatus: GenerationStatusWire;
-  blockedReason: BlockedReasonWire | null;
-  assistantMessage: string | null;
-  currentArtifact: ArtifactEnvelopeDto | null;
+  generationStatus: "idle" | "running" | "failed";
+  generationError: string | null;
+  messages: { id: string; role: "user" | "assistant"; text: string; taskContextRead: boolean }[];
+  artifacts: ArtifactEnvelopeDto[];
   allowedActions: ConversationActionWire[];
-  /**
-   * TEMPORARY (2026-08-24): running token/cost total of this conversation, shown as a small
-   * debug line while testing. Remove together with the backend's DebugUsage field.
-   */
   debugUsage?: {
     inputTokens: number;
     outputTokens: number;
@@ -95,35 +79,32 @@ export interface EditedDraftItemDto {
   itemId: string;
   title: string;
   description?: string | null;
-  date: string;
-  startTime: string;
-  endTime: string;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
   timeZoneId: string;
   labelId?: number | null;
+  recurrence: DraftRecurrenceDto | null;
 }
-
-/**
- * The card as the user confirms it. Tasks the user removed are simply absent; the client
- * cannot add tasks the model never proposed (that is a new chat turn).
- */
 export interface EditedDraftDto {
   items: EditedDraftItemDto[];
 }
-
-export interface ConfirmDraftRequestDto {
-  commandId: string;
+export interface EditDraftRequestDto {
   expectedConversationVersion: number;
   expectedDraftVersion: number;
-  action: Extract<ConversationActionWire, "start_now" | "add_to_task_list">;
   editedDraft: EditedDraftDto;
 }
-
+export interface ConfirmDraftRequestDto extends EditDraftRequestDto {
+  commandId: string;
+  action: "start_now" | "add_to_task_list";
+  allowScheduleConflict?: boolean;
+  acceptedConflictToken?: string | null;
+}
 export interface ConfirmDraftResultDto {
   commandId: string;
   status: "succeeded" | "failed";
   errorCode: string | null;
-  /** Every task created by this confirmation (and earlier retries of the same card). */
-  persistedEntities: { kind: string; id: string }[];
+  persistedEntities: { kind: string; id: string; seriesId: string | null }[];
   clientDirective: {
     type: string;
     associationId: string;
@@ -132,8 +113,6 @@ export interface ConfirmDraftResultDto {
   } | null;
   conversationSnapshot: ConversationSnapshotDto;
 }
-
-/** 409 responses carry the latest snapshot so the client can resync (§18). */
 export interface ConversationConflictDto {
   errorCode: string;
   conversationSnapshot: ConversationSnapshotDto | null;

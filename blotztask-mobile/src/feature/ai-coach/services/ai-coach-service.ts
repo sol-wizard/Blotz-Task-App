@@ -1,9 +1,12 @@
 import { apiClient } from "@/shared/services/api/client";
 import {
   AvailableAiCoachMode,
+  EditDraftRequestDto,
   ConfirmDraftRequestDto,
   ConfirmDraftResultDto,
   ConversationSnapshotDto,
+  AiCoachRating,
+  MessageFeedbackDto,
 } from "../models/ai-coach-dto";
 
 function deviceTimeZoneId(): string {
@@ -21,6 +24,22 @@ export async function startConversation(
 
 export async function fetchSnapshot(conversationId: string): Promise<ConversationSnapshotDto> {
   return apiClient.get(`/ai-coach/conversations/${conversationId}`);
+}
+
+export async function getMessageFeedback(conversationId: string): Promise<MessageFeedbackDto[]> {
+  return apiClient.get(`/ai-coach/conversations/${conversationId}/message-feedback`);
+}
+
+export async function putMessageFeedback(conversationId: string, messageId: string,
+  rating: AiCoachRating, reason: string | null = null, detail: string | null = null,
+): Promise<MessageFeedbackDto> {
+  return apiClient.put(`/ai-coach/conversations/${conversationId}/messages/${messageId}/feedback`, {
+    rating, reason, detail,
+  });
+}
+
+export async function deleteMessageFeedback(conversationId: string, messageId: string): Promise<void> {
+  return apiClient.delete(`/ai-coach/conversations/${conversationId}/messages/${messageId}/feedback`);
 }
 
 export async function sendMessage(
@@ -72,4 +91,12 @@ export async function rejectDraft(
     commandId,
     expectedConversationVersion,
   });
+}
+
+export async function editDraft(
+  conversationId: string,
+  draftId: string,
+  request: EditDraftRequestDto,
+): Promise<ConversationSnapshotDto> {
+  return apiClient.put(`/ai-coach/conversations/${conversationId}/drafts/${draftId}`, request);
 }
