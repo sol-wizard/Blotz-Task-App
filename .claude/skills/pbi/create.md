@@ -78,6 +78,7 @@ Lead the section with: `PBI is not Done until every box below is checked on a st
 
 ## Before creating — also confirm
 - **Review level:** every PBI gets exactly one label `L1`–`L4` — rules in `review-levels.md` in this folder. **Suggest** a level with a one- or two-sentence reason from those rules (which question decided it), then ask the user to choose — one question, the four levels as options, your suggestion marked. **The user decides**; never apply a level they haven't picked. This replaces the old `tech-lead` label; don't add that one any more.
+- **Priority:** every new PBI gets exactly one label `P1`–`P3`. Priority labels are only used on Backlog Ready PBIs, and a new PBI always starts there. `P1` = do next (user-facing bug, security, store compliance, an open PR, a new member waiting to start) · `P2` = soon (planned work with an owner) · `P3` = someday (nice-to-have, future feature, open-ended research). **Suggest** one with a one-sentence reason, then ask the user — one question, the three options, your suggestion marked. **The user decides.**
 - **Other labels:** pick the right label(s) yourself from the repo's existing labels based on the work (e.g. bug, frontend, backend, auth).
 - **`backlog ready` is a project board Status, NOT a label.** Never pass `backlog ready` in the labels array. It is set on the project's Status field (see Steps 6).
 - **Estimate:** suggest one from `1, 2, 4, 8, 16` (where **4 = 1 day**, so 1≈2h, 2≈half day, 8≈2 days, 16≈4 days) and confirm with the user. Set it on the project's Estimate field.
@@ -103,7 +104,7 @@ Pick the one that fits the task. POC (🔍) takes priority when the work is an i
 ## Steps
 1. Run the readiness gate.
 2. Validate the solution online (see above), then show the user the draft with its sources and wait for explicit confirmation. Unconfirmed direction or unconfirmed solution = don't create; clarify, or offer the POC conversion.
-3. Decide whether staging verification applies (ask if unclear), then confirm the review level (`L1`–`L4`), other labels, and estimate.
+3. Decide whether staging verification applies (ask if unclear), then confirm the review level (`L1`–`L4`), the priority (`P1`–`P3`), other labels, and estimate.
 4. Title = the PBI title.
 5. Body in this order, keeping the user's wording. **Keep it short and concise** — write the minimum a dev needs to pick this up, favour tight bullets over prose, and cut any sentence that doesn't change what someone would do:
    - `## Description` — requirements (what & why)
@@ -113,7 +114,7 @@ Pick the one that fits the task. POC (🔍) takes priority when the work is an i
    - `## Staging Verification` — checkboxes; omit entirely when the PBI doesn't warrant it (see above)
    - `## Notes` — if any apply
    - Keep any "current finding" lines as a `>` blockquote.
-6. Create via `mcp__github__issue_write` (method `create`) in the private repo only, with the chosen labels — including the one `L1`–`L4` level. **Do not include `backlog ready` in the labels** — it is a Status, set in step 7.
+6. Create via `mcp__github__issue_write` (method `create`) in the private repo only, with the chosen labels — including the one `L1`–`L4` level and the one `P1`–`P3` priority. **Do not include `backlog ready` in the labels** — it is a Status, set in step 7.
 7. Set the project fields on project 1 (needs the `read:project`/`project` token scope — if missing, the command fails; tell the user to run `gh auth refresh -s read:project,project` (interactive, only they can do it), then retry):
    - **Add the issue explicitly** with `gh project item-add 1 --owner Blotz-Org --url <issue-url> --format json` and read the returned item `id`. There is an org automation that *sometimes* auto-adds + sets Status, but it is unreliable (has failed to add issues), so always add explicitly rather than depending on it. `item-add` is safe to run even if the issue is already there.
    - **Set Status to `backlog ready`** on the Status single-select field, and **set the Estimate field**, using the item `id` from item-add (`gh project item-edit --id <item> --project-id <proj> --field-id <field> ...`).
