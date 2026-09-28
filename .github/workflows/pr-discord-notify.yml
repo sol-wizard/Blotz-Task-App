@@ -1,6 +1,6 @@
 name: PR Discord Notify
 
-# One message per PR in Discord #blotz-pr-review, so nobody has to paste PR
+# One message per PR in Discord #pr-queue (bot only), so nobody has to paste PR
 # links, react with emojis or DM reviewers by hand. No AI here.
 #
 # PR opened / reopened / marked ready -> posts one message (webhook), pinging who must
@@ -23,14 +23,17 @@ name: PR Discord Notify
 #   approved              -> ✅ "Approved by <reviewer>"
 #
 # Merged or closed -> the card is deleted, so the channel only shows PRs that
-# still need something (GitHub and the board keep the history). To clear cards
-# of PRs closed before this existed: Actions -> PR Discord Notify -> Run workflow.
+# still need something (GitHub and the board keep the history).
+#
+# Sync (Actions -> PR Discord Notify -> Run workflow): deletes cards of closed
+# PRs and posts a card for every open PR that has none, without pinging — for
+# a new channel, or after the bot missed events.
 #
 # Setup (once):
-#   - Secret   DISCORD_PR_WEBHOOK_URL    webhook of #blotz-pr-review
+#   - Secret   DISCORD_PR_WEBHOOK_URL    webhook of #pr-queue
 #   - Secret   DISCORD_BOT_TOKEN         bot in the server with View Channel,
 #                                        Read Message History, Add Reactions
-#   - Variable DISCORD_PR_CHANNEL_ID     ID of #blotz-pr-review
+#   - Variable DISCORD_PR_CHANNEL_ID     ID of #pr-queue
 #   - Variables DISCORD_{DEVELOPER,CANDIDATE,TECHLEAD}_ROLE_ID
 # Anything missing is skipped with a warning; this job never fails a PR.
 
@@ -39,7 +42,7 @@ on:
     types: [opened, reopened, ready_for_review, review_requested, closed]
   pull_request_review:
     types: [submitted]
-  workflow_dispatch:  # one-off: delete cards of PRs that are already closed
+  workflow_dispatch:  # sync: delete closed PRs' cards, post missing ones
 
 permissions:
   contents: read
@@ -82,7 +85,7 @@ jobs:
           REVIEW_STATE: ${{ github.event.review.state }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          # ---- Manual cleanup: delete cards of closed PRs ---------------------
+          # ---- Sync: delete cards of closed PRs, post cards for open ones -----
           if [ "$EVENT" = workflow_dispatch ]; then
             if [ -z "$WEBHOOK" ] || [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL" ]; then
               echo "::warning::Webhook, bot token or channel not set — nothing to clean."; exit 0
@@ -99,6 +102,18 @@ jobs:
               curl -fsS -o /dev/null -X DELETE "$WEBHOOK/messages/$id" &&
                 echo "Deleted card for #$n ($state)" || echo "::warning::Couldn't delete card for #$n."
               sleep 0.5
+            done
+            # Open PRs without a card: rerun this script as their "opened"
+            # event ($0 is this step's script). It skips PRs that have a card,
+            # and QUIET posts without pinging.
+            gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
+              --json number,title,url,author,labels,isDraft \
+              --jq '.[] | select(.isDraft | not) | [.number, .title, .url, .author.login,
+                    ([.labels[].name] | join(","))] | @tsv' |
+            while IFS=$'\t' read -r n t u a l; do
+              EVENT=pull_request ACTION=opened QUIET=1 NUMBER=$n TITLE=$t URL=$u AUTHOR=$a \
+                AVATAR=$(gh api "users/$a" --jq .avatar_url 2>/dev/null) LABELS=$l bash "$0" || true
+              sleep 1
             done
             exit 0
           fi
@@ -186,7 +201,7 @@ jobs:
             # Draft -> ready -> draft -> ready shouldn't post and ping twice.
             if [ -n "$(find_message)" ]; then echo "#$NUMBER is already posted — skipping."; exit 0; fi
             jq -n --arg c "$(ping_line)" --arg n "$NAME" --arg a "$AVATAR" --argjson e "$(card "" $GREY)" \
-              '{content: $c, username: ($n|.[0:80]), embeds: [$e], allowed_mentions: {parse: ["roles"]}}
+              '{content: $c, username: ($n|.[0:80]), embeds: [$e], allowed_mentions: {parse: (if env.QUIET == "1" then [] else ["roles"] end)}}
                + (if $a == "" then {} else {avatar_url: $a} end)' |
               curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$WEBHOOK" ||
               echo "::warning::Discord post failed — the PR is unaffected."
