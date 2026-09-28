@@ -1,15 +1,13 @@
 import React from "react";
 import Avatar2 from "../../../../assets/avatars/avatar2.svg";
-import Avatar3 from "../../../../assets/avatars/avatar3.svg";
+import Avatar4 from "../../../../assets/avatars/avatar4.svg";
 
-export const WHATS_NEW_VERSION = "2026-07";
+export const WHATS_NEW_VERSION = "2026-09";
 
 type ScreenshotCard = {
   type: "screenshot";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  imageZh: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  imageEn: any;
+  imageZh: number;
+  imageEn: number;
   titleKey: string;
   bodyKey: string;
 };
@@ -39,42 +37,29 @@ export const WHATS_NEW_CARDS: WhatsNewCard[] = [
   },
   {
     type: "screenshot",
-    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-badge-detail.png"),
-    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-badge-detail.png"),
-    titleKey: "badge-detail.title",
-    bodyKey: "badge-detail.body",
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-review-letter-zh.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-review-letter-en.png"),
+    titleKey: "review-letter.title",
+    bodyKey: "review-letter.body",
   },
   {
     type: "screenshot",
-    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-persistent-note.png"),
-    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-persistent-note.png"),
-    titleKey: "persistent-note.title",
-    bodyKey: "persistent-note.body",
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-badge-preview-zh.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-badge-preview-en.png"),
+    titleKey: "badge-preview.title",
+    bodyKey: "badge-preview.body",
   },
   {
     type: "screenshot",
-    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-widget.png"),
-    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-widget.png"),
-    titleKey: "widget.title",
-    bodyKey: "widget.body",
-  },
-  {
-    type: "screenshot",
-    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-firework.png"),
-    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-firework.png"),
-    titleKey: "firework.title",
-    bodyKey: "firework.body",
+    imageZh: require("../../../../assets/images-png/whatsnew/whatsnew-invite-friends-zh.png"),
+    imageEn: require("../../../../assets/images-png/whatsnew/whatsnew-invite-friends-en.png"),
+    titleKey: "invite-friends.title",
+    bodyKey: "invite-friends.body",
   },
   {
     type: "avatar",
-    Avatar: Avatar2,
-    titleKey: "time-picker.title",
-    bodyKey: "time-picker.body",
-  },
-  {
-    type: "avatar",
-    Avatar: Avatar3,
-    titleKey: "recurring-subtasks.title",
-    bodyKey: "recurring-subtasks.body",
+    Avatar: Avatar4,
+    titleKey: "toast-icons.title",
+    bodyKey: "toast-icons.body",
   },
 ];
