@@ -9,7 +9,6 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 
 //so we need to update the onboarding documents
 
-//TODO: Review the ADR (.ai/decisions/001-ai-task-generation.md) — verify decisions are still accurate and up to date.
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
@@ -146,10 +145,6 @@ public class AiTaskGenerateChatHub(
 
     private TimeZoneInfo ResolveTimeZone(HttpContext httpContext)
     {
-        // TIMEZONE TODO: Align with timezone-handling.md Rule 2, Rule 5, and Rule 6.
-        // AI "now" context is a current-location feature; prefer request/device timeZoneId,
-        // use stored user timezone only as a fallback when request timezone is missing,
-        // and reject instead of silently falling back to UTC when no valid timezone is available.
         // The client passes an IANA/Windows timezone ID so we can convert server-side UTC
         // timestamps into the user's local time for AI context.
         var timeZoneId = httpContext.Request.Query["timeZone"].ToString();
