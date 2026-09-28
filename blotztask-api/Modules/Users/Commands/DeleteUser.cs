@@ -1,7 +1,9 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Middleware;
 using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BlotzTask.Modules.Users.Commands;
 
@@ -13,6 +15,7 @@ public class DeleteUserCommand
 public class DeleteUserCommandHandler(
     BlotzTaskDbContext db,
     IAuth0ManagementService auth0ManagementService,
+    IMemoryCache cache,
     ILogger<DeleteUserCommandHandler> logger)
 {
     public async Task<string> Handle(DeleteUserCommand command, CancellationToken ct = default)
@@ -37,6 +40,8 @@ public class DeleteUserCommandHandler(
             
         db.AppUsers.Remove(appUser);
         await db.SaveChangesAsync(ct);
+
+        cache.Remove(UserContextMiddleware.CacheKey(auth0UserId));
 
         logger.LogInformation("Deleted user data from database for {UserId}", command.UserId);
         return "User deleted successfully.";

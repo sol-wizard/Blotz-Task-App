@@ -7,6 +7,7 @@ Build the PBI the planned way: check the tests can run, write code in small piec
 - `.pbi-explain/<n>.html` missing → run `explain.md` first and **wait for the dev's "go"**.
 - It exists → reuse its **✅ How to prove it works** section as the test plan. Don't analyse the PBI a second time.
 - Once the dev says go, move the card to **In Progress** with `update.md` (status only, no note), so the board shows it's being worked on.
+- On `main` or a detached HEAD → create the branch first: `git fetch origin && git switch -c <fix|feat|chore>/<n>-<short-name> origin/main`.
 
 ## 2. UI, backend, or both?
 
