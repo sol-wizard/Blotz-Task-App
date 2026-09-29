@@ -113,8 +113,12 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;background:var(--c
 // Clickable options: one choice per question, kept across reloads, copied as one line for the AI.
 (function () {
   var pbi = document.querySelector(".wrap").dataset.pbi;
-  var key = "pbi-explain-" + pbi;
   var questions = Array.prototype.slice.call(document.querySelectorAll(".q[data-q]"));
+  // Saved choices are keyed by the question texts too, so a rebuilt page with
+  // different questions starts empty instead of showing stale answers.
+  var text = questions.map(function (q) { return q.textContent; }).join("|"), h = 5381;
+  for (var i = 0; i < text.length; i++) h = ((h * 33) ^ text.charCodeAt(i)) >>> 0;
+  var key = "pbi-explain-" + pbi + "-" + h.toString(36);
   var bar = document.querySelector(".answers");
   if (!questions.length) { if (bar) bar.remove(); return; }
 
@@ -123,7 +127,12 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;background:var(--c
 
   function line() {
     return "#" + pbi + " · " + questions.map(function (q) {
-      return q.dataset.q + "\uFE0F\u20E3 " + (choices[q.dataset.q] || "?");
+      var n = q.dataset.q, pick = choices[n];
+      var num = /^[1-9]$/.test(n) ? n + "\uFE0F\u20E3" : "Q" + n;  // keycap emoji only exists for 1–9
+      var opt = pick && q.querySelector('.opt[data-opt="' + pick + '"] b');
+      // A few words of the option, so the AI knows what "A" was even in a new session.
+      var label = opt ? opt.textContent.replace(/^\s*[A-Z]\s*·\s*/, "").trim().slice(0, 30) : "";
+      return num + " " + (pick ? pick + (label ? " (" + label + ")" : "") : "?");
     }).join(" · ");
   }
 
