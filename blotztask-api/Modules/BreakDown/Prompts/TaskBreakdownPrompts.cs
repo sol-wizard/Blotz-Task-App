@@ -1,6 +1,5 @@
 namespace BlotzTask.Modules.BreakDown.Prompts;
 
-//TODO: Please reivew the prompt again with concise testing if this break the previous breakdown accuracy
 public static class TaskBreakdownPrompts
 {
     public static string GetBreakdownPrompt(
