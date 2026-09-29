@@ -30,8 +30,9 @@ public class UserContextMiddleware
             }
 
             // Cache Auth0 -> AppUser mapping to avoid a DB lookup on every authenticated request.
-            // This is safe because AppUserId is stable for an Auth0UserId.
-            var cacheKey = $"userctx:auth0:{auth0UserId}";
+            // AppUserId is stable for an Auth0UserId until the account is deleted — DeleteUser evicts
+            // this entry, because social logins get the same Auth0UserId back when they re-register.
+            var cacheKey = CacheKey(auth0UserId);
             if (cache.TryGetValue<Guid>(cacheKey, out var cachedUserId))
             {
                 context.Items["UserId"] = cachedUserId;
@@ -72,4 +73,6 @@ public class UserContextMiddleware
 
         await _next(context);
     }
+
+    public static string CacheKey(string auth0UserId) => $"userctx:auth0:{auth0UserId}";
 }

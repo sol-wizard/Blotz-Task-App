@@ -26,6 +26,8 @@ Keep the board true without anyone chasing: move the card, tick what's done, and
 
 3. **Tick finished boxes** in `## Scope / Tasks` and `## Acceptance Criteria` — only the ones the work actually covers (check the diff or PR). Never tick `## Staging Verification` unless the dev says they tested it on a staging build.
 
+   **A criterion the work changed on purpose** (the dev decided differently in the explain page or while coding) → don't just mention it in the note: rewrite that line to what was agreed, ending `(changed: <why, a few words>)`, and list it in step 5. Otherwise the PBI can never be Done, because its old criterion will never be met.
+
 4. **Draft the note** — one comment on the PBI. It is read by the PM and at sprint review, so write for a person, not a log:
    - **3 lines at most**, plain words, no file names or jargon: what now works, what's left (if anything), and the PR link.
    - Example: `Done: reminders can now repeat weekly. Left: the widget still shows the old time. PR: sol-wizard/Blotz-Task-App#572`
