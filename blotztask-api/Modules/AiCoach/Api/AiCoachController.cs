@@ -183,6 +183,7 @@ public class AiCoachController(
                 {
                     errorCode = draftConflict.ErrorCode,
                     conversationSnapshot = draftConflict.Snapshot,
+                    scheduleAssessment = draftConflict.Assessment,
                 });
                 return true;
 

@@ -88,6 +88,24 @@ public sealed class ProposalSet
         Version++;
     }
 
+    public void CompleteSelection(IReadOnlyCollection<Guid> selectedItemIds)
+    {
+        if (Status != ProposalSetStatus.Processing)
+            throw new InvalidOperationException("No save is running.");
+        var selected = Proposals.Where(item => selectedItemIds.Contains(item.ProposalId)).ToArray();
+        if (selected.Length != selectedItemIds.Count || selected.Any(item => !item.PersistedTaskId.HasValue))
+            throw new InvalidOperationException("Every selected draft item must be saved.");
+        var kept = Proposals.Where(item => item.PersistedTaskId.HasValue ||
+            selectedItemIds.Contains(item.ProposalId)).ToArray();
+        if (kept.Length == 0 || kept.Any(item => !item.PersistedTaskId.HasValue))
+            throw new InvalidOperationException("Selected tasks must be saved before completing the draft.");
+        Proposals = kept;
+        Schedule = null;
+        SaveError = null;
+        Status = ProposalSetStatus.Completed;
+        Version++;
+    }
+
     public void Discard()
     {
         if (Status != ProposalSetStatus.Pending)

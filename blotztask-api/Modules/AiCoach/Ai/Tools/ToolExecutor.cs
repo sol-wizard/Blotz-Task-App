@@ -14,7 +14,7 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<DateOnly, DateOnly, CancellationToken, Task<string>>? readTasks = null,
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null)
 {
-    public const string ContractVersion = "coach-tools-6";
+    public const string ContractVersion = "coach-tools-9";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
         "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Do not use for ordinary sharing or listening.",

@@ -23,6 +23,8 @@ public class ConfirmDraftRequest
     /// <summary>start_now | add_to_task_list</summary>
     public required string Action { get; init; }
     public required EditedDraftDto EditedDraft { get; init; }
+    /// <summary>Unsaved draft items approved for this confirmation. Omitted by older clients means all unsaved items.</summary>
+    public IReadOnlyList<Guid>? SelectedItemIds { get; init; }
     /// <summary>The user explicitly accepted the conflicts shown for this confirmation.</summary>
     public bool AllowScheduleConflict { get; init; }
     public string? AcceptedConflictToken { get; init; }
@@ -96,11 +98,13 @@ public sealed class DraftFieldValidationException(string errorCode, string messa
 }
 
 /// <summary>Idempotency conflicts and already-processed sets — mapped to HTTP 409.</summary>
-public sealed class DraftConflictException(string errorCode, string message, ConversationSnapshotDto? snapshot = null)
+public sealed class DraftConflictException(string errorCode, string message, ConversationSnapshotDto? snapshot = null,
+    ScheduleAssessment? assessment = null)
     : Exception(message)
 {
     public string ErrorCode { get; } = errorCode;
     public ConversationSnapshotDto? Snapshot { get; } = snapshot;
+    public ScheduleAssessment? Assessment { get; } = assessment;
 }
 
 public class ConfirmDraftCommand
@@ -122,11 +126,12 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         var request = command.Request;
         if (request.Action is not ("start_now" or "add_to_task_list"))
             throw new DraftFieldValidationException("InvalidDraftFields", "Unknown confirmation action.");
-        var hash = DraftEditing.Hash(new { command.DraftId, request.Action, request.EditedDraft,
+        var hash = DraftEditing.Hash(new { command.DraftId, request.Action, request.EditedDraft, request.SelectedItemIds,
             request.AllowScheduleConflict, request.AcceptedConflictToken });
         ProposalSet draft;
         IReadOnlyList<ResolvedDraftItem> resolved;
         IReadOnlyList<TaskProposal> items;
+        IReadOnlyList<TaskProposal> selected;
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
@@ -144,14 +149,27 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 return Result(conversation, draft, request.CommandId, false, 0);
             }
             DraftEditing.CheckEditable(conversation, draft, request.ExpectedConversationVersion, request.ExpectedDraftVersion);
+            if (request.SelectedItemIds is not null &&
+                (request.EditedDraft?.Items is null ||
+                 request.EditedDraft.Items.Count != draft.Proposals.Count ||
+                 request.EditedDraft.Items.Select(item => item.ItemId).ToHashSet()
+                     .SetEquals(draft.Proposals.Select(item => item.ProposalId)) == false))
+                throw new DraftFieldValidationException("InvalidDraftSelection",
+                    "A selection confirmation must include every draft item.");
             items = DraftEditing.Apply(request.EditedDraft, draft);
-            if (request.Action == "start_now" && (items.Count != 1 || items[0].Recurrence is not null))
+            var selectedIds = request.SelectedItemIds ?? items.Where(item => !item.PersistedTaskId.HasValue)
+                .Select(item => item.ProposalId).ToArray();
+            if (selectedIds.Count == 0 || selectedIds.Distinct().Count() != selectedIds.Count ||
+                selectedIds.Any(id => !items.Any(item => item.ProposalId == id && !item.PersistedTaskId.HasValue)))
+                throw new DraftFieldValidationException("InvalidDraftSelection", "Select one or more unsaved draft items.");
+            selected = items.Where(item => selectedIds.Contains(item.ProposalId)).ToArray();
+            if (request.Action == "start_now" && (selected.Count != 1 || selected[0].Recurrence is not null))
                 throw new DraftFieldValidationException("InvalidDraftFields", "Start now requires one non-recurring task.");
-            foreach (var item in items.Where(item => !item.PersistedTaskId.HasValue))
+            foreach (var item in selected)
                 _ = Resolve(item, request.Action == "start_now");
         }
 
-        var assessment = scheduleChecker is null ? null : await scheduleChecker.CheckAsync(command.UserId, items,
+        var assessment = scheduleChecker is null ? null : await scheduleChecker.CheckAsync(command.UserId, selected,
             request.Action == "start_now", ct);
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
@@ -170,17 +188,20 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 if (assessment.Status == "unverified" || !request.AllowScheduleConflict
                     || assessment.ConflictToken != request.AcceptedConflictToken)
                 {
-                    draft.Replace(items);
-                    draft.SetSchedule(assessment);
-                    conversation.Touch();
-                    await store.SaveAsync(conversation, ct);
+                    if (request.SelectedItemIds is null)
+                    {
+                        // Older clients read the reviewed conflict token from the draft snapshot.
+                        draft.Replace(items);
+                        draft.SetSchedule(assessment);
+                        conversation.Touch();
+                        await store.SaveAsync(conversation, ct);
+                    }
                     throw new DraftConflictException(assessment.Status == "conflict" ? "ScheduleConflict" : "ScheduleUnverified",
-                        "Review the latest schedule check before confirming.", ConversationSnapshotProjector.ToDto(conversation));
+                        "Review the latest schedule check before confirming.", ConversationSnapshotProjector.ToDto(conversation), assessment);
                 }
             }
             draft.Replace(items);
-            if (assessment is not null) draft.SetSchedule(assessment);
-            resolved = items.Where(item => !item.PersistedTaskId.HasValue)
+            resolved = selected
                 .Select(item => Resolve(item, request.Action == "start_now")).ToArray();
             draft.StartSaving();
             conversation.Touch();
@@ -248,7 +269,8 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, CancellationToken.None);
             draft = DraftEditing.Find(conversation, command.DraftId);
             foreach (var item in saved) draft.RecordSaved(item.ItemId, item.TaskId, item.SeriesId);
-            draft.FinishSaving(error);
+            if (error is null) draft.CompleteSelection(selected.Select(item => item.ProposalId).ToArray());
+            else draft.FinishSaving(error);
             conversation.RecordDraftEvent(error is null ? "saved" : "save_failed", draft);
             var focusMinutes = resolved.Count == 1 ? Math.Min(15, (int)(resolved[0].End - resolved[0].Start).TotalMinutes) : 0;
             finalResult = Result(conversation, draft, request.CommandId, request.Action == "start_now" && error is null, focusMinutes);

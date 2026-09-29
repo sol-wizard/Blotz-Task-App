@@ -6,6 +6,7 @@ import {
   ConfirmDraftResultDto,
   ConversationConflictDto,
   ConversationSnapshotDto,
+  DraftScheduleAssessmentDto,
   EditedDraftDto,
   AiCoachRating,
   MessageFeedbackDto,
@@ -23,6 +24,7 @@ export type ConfirmAction = "start_now" | "add_to_task_list";
 export interface ConfirmOutcome {
   result: ConfirmDraftResultDto | null;
   errorCode: string | null;
+  scheduleAssessment?: DraftScheduleAssessmentDto | null;
 }
 
 export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") {
@@ -156,6 +158,7 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
       draftId: string,
       action: ConfirmAction,
       edited: EditedDraftDto,
+      selectedItemIds: string[],
       allowScheduleConflict = false,
       acceptedConflictToken?: string | null,
     ): Promise<ConfirmOutcome> => {
@@ -170,15 +173,20 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
           expectedDraftVersion: draft.version,
           action,
           editedDraft: edited,
+          selectedItemIds,
           allowScheduleConflict,
           acceptedConflictToken,
         });
         applySnapshot(result.conversationSnapshot);
         return { result, errorCode: result.errorCode };
       } catch (error) {
-        const body = (error as AxiosError<ConfirmDraftResultDto>).response?.data;
+        const body = (error as AxiosError<ConfirmDraftResultDto | ConversationConflictDto>).response?.data;
         const errorCode = await resync(error);
-        return { result: body?.status ? body : null, errorCode };
+        return {
+          result: body && "status" in body ? body : null,
+          errorCode,
+          scheduleAssessment: body && "scheduleAssessment" in body ? body.scheduleAssessment : null,
+        };
       } finally {
         busy.current = false;
         setStatus("ready");

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Toast from "react-native-toast-message";
-import { ArtifactEnvelopeDto, EditedDraftDto, EditedDraftItemDto } from "../models/ai-coach-dto";
+import { ArtifactEnvelopeDto, EditedDraftDto, EditedDraftItemDto, TaskDraftItemDto } from "../models/ai-coach-dto";
 import { ConfirmAction } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 
@@ -17,38 +17,36 @@ export function TaskDraftCard({
 }: {
   artifact: ArtifactEnvelopeDto;
   busy: boolean;
-  onConfirm: (action: ConfirmAction, edited: EditedDraftDto, allowScheduleConflict?: boolean,
+  onConfirm: (action: ConfirmAction, edited: EditedDraftDto, selectedItemIds: string[], allowScheduleConflict?: boolean,
     acceptedConflictToken?: string | null) => void;
   onReject: () => void;
   onEdit: (edited: EditedDraftDto) => Promise<string | null>;
 }) {
   const { t } = useTranslation("aiCoach");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const items: EditedDraftItemDto[] = artifact.payload.items;
+  const items: TaskDraftItemDto[] = artifact.payload.items;
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(
+    items.filter((item) => item.persistedTaskId == null).map((item) => item.itemId),
+  ));
   const editable = artifact.status === "pending";
   const disabled = busy || !editable;
   const can = (action: "start_now" | "add_to_task_list" | "reject_draft") =>
     artifact.allowedActions.includes(action);
   const saved = (id: string) =>
     artifact.payload.items.find((item) => item.itemId === id)?.persistedTaskId != null;
-  const scheduled = items.every(
-    (item) => saved(item.itemId) || (item.date && item.startTime && item.endTime &&
+  const selected = items.filter((item) => !saved(item.itemId) && selectedIds.has(item.itemId));
+  const unsavedCount = items.filter((item) => !saved(item.itemId)).length;
+  const scheduled = selected.length > 0 && selected.every(
+    (item) => item.date && item.startTime && item.endTime &&
       (!item.recurrence || (item.recurrence.interval >= 1 &&
         (item.recurrence.frequency !== "Weekly" || !!item.recurrence.daysOfWeek) &&
-        (!item.recurrence.endDate || item.recurrence.endDate >= item.date)))),
+        (!item.recurrence.endDate || item.recurrence.endDate >= item.date))),
   );
   const editingItem = items.find((item) => item.itemId === editingId);
-  const schedule = artifact.schedule;
   const confirmAction = (action: ConfirmAction) => {
-    if (schedule?.status === "conflict" && schedule.scope === (action === "start_now" ? "start_now" : "scheduled")) {
-      Alert.alert(t("draft.scheduleConflictTitle"), t("draft.scheduleConflictConfirm"), [
-        { text: t("draft.cancel"), style: "cancel" },
-        { text: t("draft.saveDespiteConflict"), onPress: () =>
-          onConfirm(action, { items }, true, schedule.conflictToken) },
-      ]);
-      return;
-    }
-    onConfirm(action, { items });
+    const selectedItemIds = action === "start_now" ? [items[0].itemId]
+      : selected.map((item) => item.itemId);
+    onConfirm(action, { items }, selectedItemIds);
   };
 
   const saveEdit = async (next: EditedDraftItemDto[]) => {
@@ -67,9 +65,37 @@ export function TaskDraftCard({
           ? t("draft.alreadySaved")
           : t("draft.taskCount", { count: items.length })}
       </Text>
+      {editable && can("add_to_task_list") && unsavedCount > 1 && (
+        <Pressable disabled={disabled} onPress={() => setSelectedIds(selected.length === unsavedCount
+          ? new Set() : new Set(items.filter((item) => !saved(item.itemId)).map((item) => item.itemId)))}>
+          <Text className="font-baloo text-xs text-primary mb-2 underline">
+            {selected.length === unsavedCount
+              ? t("draft.clearSelection") : t("draft.selectAll")}
+          </Text>
+        </Pressable>
+      )}
       {items.map((item, index) => (
         <View key={item.itemId} className={index > 0 ? "border-t border-gray-100 pt-3 mt-3" : ""}>
           <View className="flex-row items-start justify-between">
+            {editable && !saved(item.itemId) && can("add_to_task_list") && items.length > 1 && (
+              <Pressable
+                className="mr-2 mt-0.5"
+                hitSlop={8}
+                disabled={disabled}
+                onPress={() => setSelectedIds((previous) => {
+                  const next = new Set(previous);
+                  if (next.has(item.itemId)) next.delete(item.itemId);
+                  else next.add(item.itemId);
+                  return next;
+                })}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: selectedIds.has(item.itemId) }}
+                accessibilityLabel={t("draft.selectTask", { title: item.title })}
+              >
+                <Ionicons name={selectedIds.has(item.itemId) ? "checkbox" : "square-outline"}
+                  size={20} color="#4CAF50" />
+              </Pressable>
+            )}
             <Text className="font-balooBold text-base text-secondary flex-1 pr-2">
               {item.title}
             </Text>
@@ -123,18 +149,19 @@ export function TaskDraftCard({
           )}
         </View>
       ))}
-      {editable && !scheduled && (
+      {editable && selected.length > 0 && !scheduled && (
         <Text className="font-baloo text-xs text-info mt-3">{t("draft.scheduleRequired")}</Text>
       )}
-      {editable && schedule?.status === "conflict" && (
+      {editable && selected.length === unsavedCount &&
+        artifact.schedule?.status === "conflict" && (
         <Text className="font-baloo text-xs text-warning mt-3">
-          {t("draft.scheduleConflict", { tasks: schedule.conflicts.map((entry) => entry.taskTitle).join("、") })}
+          {t("draft.scheduleConflict", { tasks: artifact.schedule.conflicts.map((entry) => entry.taskTitle).join("、") })}
         </Text>
       )}
-      {editable && schedule?.status === "unverified" && (
+      {editable && selected.length === unsavedCount && artifact.schedule?.status === "unverified" && (
         <Text className="font-baloo text-xs text-warning mt-3">{t("draft.scheduleUnverified")}</Text>
       )}
-      {editable && schedule && items.some((item) => item.recurrence != null) && (
+      {editable && artifact.schedule && items.some((item) => item.recurrence != null) && (
         <Text className="font-baloo text-xs text-info mt-3">{t("draft.schedulePartial")}</Text>
       )}
       {artifact.saveError && (
@@ -167,9 +194,7 @@ export function TaskDraftCard({
               >
                 <Text className="font-balooBold text-secondary text-sm">
                   {items.length > 1
-                    ? t("draft.addAllToTaskList", {
-                        count: items.filter((item) => !saved(item.itemId)).length,
-                      })
+                    ? t("draft.addSelectedToTaskList", { count: selected.length })
                     : t("draft.addToTaskList")}
                 </Text>
               </Pressable>

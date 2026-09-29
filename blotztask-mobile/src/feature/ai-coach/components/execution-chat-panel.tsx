@@ -1,6 +1,7 @@
 import { ReactNode, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -97,8 +98,8 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
   };
 
   const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
-    allowScheduleConflict = false, acceptedConflictToken?: string | null) => {
-    const outcome = await confirm(draftId, action, edited, allowScheduleConflict, acceptedConflictToken);
+    selectedItemIds: string[], allowScheduleConflict = false, acceptedConflictToken?: string | null): Promise<void> => {
+    const outcome = await confirm(draftId, action, edited, selectedItemIds, allowScheduleConflict, acceptedConflictToken);
 
     if (outcome.result?.status === "succeeded") {
       const directive = outcome.result.clientDirective;
@@ -114,6 +115,18 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
           },
         });
       }
+      return;
+    }
+
+    if (outcome.errorCode === "ScheduleConflict" && outcome.scheduleAssessment?.conflictToken) {
+      const assessment = outcome.scheduleAssessment;
+      Alert.alert(t("draft.scheduleConflictTitle"),
+        t("draft.scheduleConflictConfirm") + "\n" +
+          t("draft.scheduleConflict", { tasks: [...new Set(assessment.conflicts.map((entry) => entry.taskTitle))].join("、") }), [
+          { text: t("draft.cancel"), style: "cancel" },
+          { text: t("draft.saveDespiteConflict"), onPress: () =>
+            void handleConfirm(draftId, action, edited, selectedItemIds, true, assessment.conflictToken) },
+        ]);
       return;
     }
 
@@ -200,8 +213,8 @@ export function ExecutionChatPanel({ mode, header }: ExecutionChatPanelProps) {
               key={artifact.id}
               artifact={artifact}
               busy={status === "sending" || snapshot.generationStatus === "running"}
-              onConfirm={(action, edited, allowScheduleConflict, acceptedConflictToken) =>
-                void handleConfirm(artifact.id, action, edited, allowScheduleConflict, acceptedConflictToken)}
+              onConfirm={(action, edited, selectedItemIds, allowScheduleConflict, acceptedConflictToken) =>
+                void handleConfirm(artifact.id, action, edited, selectedItemIds, allowScheduleConflict, acceptedConflictToken)}
               onEdit={(edited) => edit(artifact.id, edited)}
               onReject={() =>
                 void reject(artifact.id).then((error) => {

@@ -9,7 +9,7 @@ public sealed class AiCoachModuleOptions
     public int MaxToolArgumentBytes { get; set; } = 64000;
     public int MaxOutputTokens { get; set; } = 4096;
     // Conservative UTF-8 byte estimate bounds token use, including multilingual history.
-    public int ContextTokenBudget { get; set; } = 24000;
+    public int ContextTokenBudget { get; set; } = 32000;
     public int ModelRequestTimeoutSeconds { get; set; } = 60;
     public int ConversationLifetimeHours { get; set; } = 24;
     public int TraceRetentionDays { get; set; } = 30;

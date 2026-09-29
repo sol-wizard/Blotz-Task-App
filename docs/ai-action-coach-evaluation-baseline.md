@@ -1,5 +1,7 @@
 # AI Coach 新评测基线 — 2026-09-27
 
+本页是加入独立 AI 评审前的历史运行记录；当前评测行为以 [评测说明](ai-action-coach-evaluation.md) 为准。
+
 对象：当前工作区的自然对话和草稿工具实现，`coach-prompt-11` / `coach-tools-6`，Azure 部署 `gpt-5.4-mini`。代码包含未提交修改，因此运行 JSONL 同时记录 HEAD 和 AI Coach 源码指纹。执行方法与判定边界见 [评测说明](ai-action-coach-evaluation.md)。
 
 ## 已执行结果

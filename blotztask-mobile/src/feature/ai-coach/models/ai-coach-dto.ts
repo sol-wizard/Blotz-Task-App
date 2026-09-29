@@ -41,6 +41,14 @@ export interface TaskDraftPayloadDto {
   focusMinutes: number | null;
 }
 
+export interface DraftScheduleAssessmentDto {
+  status: "clear" | "conflict" | "unverified" | "incomplete" | "partial";
+  checkedAt: string;
+  conflicts: { itemId: string; taskIdentity: string; taskTitle: string; start: string; end: string }[];
+  conflictToken: string | null;
+  scope: "scheduled" | "start_now";
+}
+
 export interface ArtifactEnvelopeDto {
   id: string;
   version: number;
@@ -48,13 +56,7 @@ export interface ArtifactEnvelopeDto {
   saveError: string | null;
   payload: TaskDraftPayloadDto;
   allowedActions: ConversationActionWire[];
-  schedule: {
-    status: "clear" | "conflict" | "unverified" | "incomplete" | "partial";
-    checkedAt: string;
-    conflicts: { itemId: string; taskIdentity: string; taskTitle: string; start: string; end: string }[];
-    conflictToken: string | null;
-    scope: "scheduled" | "start_now";
-  } | null;
+  schedule: DraftScheduleAssessmentDto | null;
 }
 
 export interface ConversationSnapshotDto {
@@ -97,6 +99,7 @@ export interface EditDraftRequestDto {
 export interface ConfirmDraftRequestDto extends EditDraftRequestDto {
   commandId: string;
   action: "start_now" | "add_to_task_list";
+  selectedItemIds: string[];
   allowScheduleConflict?: boolean;
   acceptedConflictToken?: string | null;
 }
@@ -116,4 +119,5 @@ export interface ConfirmDraftResultDto {
 export interface ConversationConflictDto {
   errorCode: string;
   conversationSnapshot: ConversationSnapshotDto | null;
+  scheduleAssessment?: DraftScheduleAssessmentDto | null;
 }

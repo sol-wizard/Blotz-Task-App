@@ -21,8 +21,10 @@ internal sealed class CoachEvaluationHarness
     private readonly CoachTestSession _session;
     private readonly ConversationApplication _application;
     private readonly RecordingGateway _gateway;
+    private readonly CoachSemanticJudge _judge;
     private readonly AiCoachUsageTracker _usage = new();
     private readonly List<object> _turns = [];
+    private readonly List<JudgeTurnEvidence> _judgeTurns = [];
     private readonly string _deployment;
     private readonly AiCoachModuleOptions _limits;
     public string ReportPath { get; }
@@ -34,8 +36,10 @@ internal sealed class CoachEvaluationHarness
         _deployment = credentials.Deployment;
         _limits = new() { DeploymentId = _deployment };
         var options = Options.Create(_limits);
-        _gateway = new(new AzureOpenAiModelGateway(new AzureOpenAIClient(new Uri(credentials.Endpoint),
-            new AzureKeyCredential(credentials.Key)), options));
+        var provider = new AzureOpenAiModelGateway(new AzureOpenAIClient(new Uri(credentials.Endpoint),
+            new AzureKeyCredential(credentials.Key)), options);
+        _gateway = new(provider);
+        _judge = new(provider);
         var runtime = new ModelTurnRuntime(_gateway, options, NullLogger<ModelTurnRuntime>.Instance,
             new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance));
         _application = new(session.Store, runtime, new CheckAiQuotaService(session.Db, session.Cache),
@@ -53,13 +57,25 @@ internal sealed class CoachEvaluationHarness
     {
         var before = _session.Conversation.Drafts.Select(draft => draft.Copy()).ToArray();
         var callOffset = _gateway.Calls.Count;
+        var messageCount = _session.Conversation.Messages.Count;
         var watch = Stopwatch.StartNew();
         try
         {
             var snapshot = await _application.SendAsync(_session.UserId, _session.Conversation.Id,
                 Guid.NewGuid(), message, _session.Conversation.Version, default);
+            var calls = _gateway.Calls.Skip(callOffset).ToArray();
             _turns.Add(new { message, elapsedMs = watch.ElapsedMilliseconds, before, snapshot,
-                calls = _gateway.Calls.Skip(callOffset).ToArray() });
+                calls });
+            var reply = snapshot.Messages.Skip(messageCount).LastOrDefault(item => item.Role == "assistant");
+            if (reply is not null)
+            {
+                var toolCalls = calls.SelectMany(call => call.Response.ToolCalls).ToArray();
+                var callIds = toolCalls.Select(tool => tool.Id).ToHashSet();
+                _judgeTurns.Add(new(_judgeTurns.Count + 1, message, reply.Text,
+                    before, snapshot.Artifacts, toolCalls,
+                    calls.SelectMany(call => call.ToolResults).Where(tool => callIds.Contains(tool.ToolCallId))
+                        .Select(tool => new { tool.ToolCallId, Result = ParseToolResult(tool.Content) }).ToArray()));
+            }
         }
         catch (Exception error)
         {
@@ -71,9 +87,17 @@ internal sealed class CoachEvaluationHarness
 
     public bool Called(string name) => _gateway.Calls.Any(call => call.Response.ToolCalls.Any(tool => tool.Name == name));
 
+    private static object ParseToolResult(string content)
+    {
+        try { return JsonSerializer.Deserialize<JsonElement>(content); }
+        catch (JsonException) { return content; }
+    }
+
     public async Task RecordAsync(string caseId, int repetition, string[] reviewCriteria, Exception? failure)
     {
         var root = FindRepository();
+        using var judgeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var aiEvaluation = await _judge.EvaluateAsync(caseId, reviewCriteria, _judgeTurns, judgeTimeout.Token);
         var record = new
         {
             schemaVersion = 1, caseId, repetition, recordedAt = DateTimeOffset.UtcNow,
@@ -83,7 +107,7 @@ internal sealed class CoachEvaluationHarness
             deployment = _deployment, limits = _limits, localNow = CoachTestSession.Now,
             mode = _session.Conversation.Mode.ToString(), timeZone = _session.Conversation.TimeZoneId,
             objectiveStatus = failure is null ? "passed" : "failed",
-            failure = failure?.ToString(), semanticStatus = "needs_review", reviewCriteria,
+            failure = failure?.ToString(), semanticStatus = "needs_review", reviewCriteria, aiEvaluation,
             turns = _turns, usage = _usage.Find(_session.Conversation.Id),
             finalDrafts = _session.Conversation.Drafts,
             applicationHistory = _session.Conversation.History.OfType<GatewaySystemMessage>().ToArray(),
@@ -124,7 +148,8 @@ internal sealed class CoachEvaluationHarness
         return Convert.ToHexString(hash.GetHashAndReset());
     }
 
-    private sealed record Exchange(object Request, ModelCompletionResult Response, long ElapsedMs);
+    private sealed record Exchange(object Request, ModelCompletionResult Response, long ElapsedMs,
+        IReadOnlyList<GatewayToolResultMessage> ToolResults);
     private sealed class RecordingGateway(IModelGateway inner) : IModelGateway
     {
         public List<Exchange> Calls { get; } = [];
@@ -136,7 +161,8 @@ internal sealed class CoachEvaluationHarness
                 request.Tools, request.MaxOutputTokens };
             var timer = Stopwatch.StartNew();
             var result = await inner.CompleteAsync(request, cancellationToken);
-            Calls.Add(new(captured, result, timer.ElapsedMilliseconds));
+            Calls.Add(new(captured, result, timer.ElapsedMilliseconds,
+                request.Messages.OfType<GatewayToolResultMessage>().ToArray()));
             return result;
         }
     }

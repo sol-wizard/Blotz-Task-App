@@ -54,7 +54,7 @@ AICOACH_MODEL_TESTS=1 AICOACH_EVAL_RUNS=3 dotnet test blotztask-test/BlotzTask.T
   --filter FullyQualifiedName~CoachScenarioTests
 ```
 
-`AICOACH_EVAL_RUNS` 接受 1–10。未显式启用真实模型或缺少本地 Azure 配置时，模型测试为 skipped，不算通过。凭据读取沿用 `CoachLiveSettings` 的本地 development 配置，不写入报告。
+`AICOACH_EVAL_RUNS` 接受 1–10。未显式启用真实模型或缺少本地 Azure 配置时，模型测试为 skipped，不算通过。凭据读取沿用 `CoachLiveSettings` 的本地 development 配置，不写入报告。每次应用场景运行在教练对话结束后额外调用一次同一 Azure 部署作为独立 AI 评审，产生额外 token 消耗；评审不修改对话或草稿。
 
 ## 结果和复核
 
@@ -62,17 +62,19 @@ AICOACH_MODEL_TESTS=1 AICOACH_EVAL_RUNS=3 dotnet test blotztask-test/BlotzTask.T
 
 `blotztask-test/TestResults/ai-coach-evals/<run-id>/<case>-<repetition>-<unique-id>.jsonl`
 
-xUnit 输出完整路径。文件记录 commit、AI Coach 实现和评测源码 SHA-256 指纹（包含未跟踪源码）、prompt/tool 版本、部署、预算、场景时钟、每轮消息、真实 provider 请求/响应、工具结果、草稿前后快照、App 事件、最终数据库任务、usage 和耗时。凭据不记录；合成对话原文会记录，产物保持 gitignored。来源指纹只覆盖 AI Coach 和评测 C# 文件，不代表整个仓库依赖树。
+xUnit 输出完整路径。文件记录 commit、AI Coach 实现和评测源码 SHA-256 指纹（包含未跟踪源码）、prompt/tool 版本、部署、预算、场景时钟、每轮消息、真实 provider 请求/响应、工具结果、草稿前后快照、App 事件、最终数据库任务、usage 和耗时。`aiEvaluation` 另记评审版本、每轮 0–5 分、是否通过、具体问题与理由、总体判断、原始评审输出和评审 token 用量。总体分数取各轮最低分，总体是否通过由各轮结果合取，避免模型汇总字段不一致。凭据不记录；合成对话原文会记录，产物保持 gitignored。来源指纹只覆盖 AI Coach 和评测 C# 文件，不代表整个仓库依赖树。
 
 客观断言与语义质量分开：
 
 - `objectiveStatus=passed/failed`：卡片数量、字段、ID、真实工具调用、正式任务写入等程序可验证结果。
-- `semanticStatus=needs_review`：所有模型运行都需要按 `reviewCriteria` 人工检查，不自动宣称质量通过。当前没有未经校准的 LLM judge。
+- `aiEvaluation.Status=completed/unavailable`：独立模型根据 `reviewCriteria`、逐轮回复、草稿和实际工具结果给出初步语义评审；输出结构不完整、模型调用失败或无可评轮次时为 `unavailable`，报告仍保留。判断见 `aiEvaluation.Verdict`。
+- `semanticStatus=needs_review`：AI 评审尚未用人工标注样本校准，因此评审的 `OverallPassed` 是辅助判断，不自动作为质量通过或发布结论。人工仍需核查 AI 指出的问题和遗漏。
+- 评审使用当轮真实模型请求中的工具结果；会话历史里的 `list_tasks` 结果为了避免长期保留任务细节而已被脱敏，不能作为日程事实依据。实际运行发现评审仍可能误解相对日期、草稿状态或漏看不存在的草稿，需对照原始回复和草稿快照复核理由。
 - 复核回复是否遵守用户最新限制、准确说明草稿未保存、日期和时间匹配、默认排期标注暂定、冲突和部分检查被正确说明、没有编造目标、没有循环邀约。
 - 客观失败不能被语义评分抵消。无报告、环境失败和 skipped 都不能算通过；一次通过不表示稳定性达标。
 
 ## 范围与后续扩展
 
-本套覆盖后端实际应用流程；不声称覆盖移动端点击交互或 HTTP 中间件。语义判定暂由人工完成。摘要冒烟仍在 `CoachLiveTests`，不自动生成应用场景 JSONL。模型对日程查询故障的表述、摘要后撤回授权、跨夏令时边界和中文以外的语言需要后续专门扩充；不要把这些缺口解读为已验证。
+本套覆盖后端实际应用流程；不声称覆盖移动端点击交互或 HTTP 中间件。AI 评审读取测试中的合成对话，仍需人工校准和复核。摘要冒烟仍在 `CoachLiveTests`，不自动生成应用场景 JSONL。模型对日程查询故障的表述、摘要后撤回授权、跨夏令时边界和中文以外的语言需要后续专门扩充；不要把这些缺口解读为已验证。
 
 日程检查是确认时的建议性检查，不是对整个任务系统的原子时间预订。会话与确认回执仍在内存中；测试不承诺跨进程重启的持久幂等性。
