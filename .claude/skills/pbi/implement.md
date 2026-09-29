@@ -35,7 +35,7 @@ After **each** piece, run the cheap check and fix before moving on:
 
 All pieces done and every check green:
 - **Backend** → run the full related test class once more; keep the command and the pass line.
-- **Real device — only when it's needed.** Run `real-device-test` **once** only if the change affects what the user **sees or does** in the app (a screen, a button, a flow). Then run the key flow from the explain page and screenshot the before/after states it lists. Skip it when the user can't notice the change — backend only, internal clean-up, logic with no visible effect — the checks above are enough. Either way, say in one line why you ran it or skipped it. It's the most expensive test, so never run it per piece.
+- **Real device — only when it's needed.** Run `real-device-test` **once** only if the change affects what the user **sees or does** in the app (a screen, a button, a flow). Then run the key flow from the explain page and screenshot the before/after states it lists as in `screenshots.md`, so `update.md` can put them on the PBI without asking the dev. Skip it when the user can't notice the change — backend only, internal clean-up, logic with no visible effect — the checks above are enough. Either way, say in one line why you ran it or skipped it. It's the most expensive test, so never run it per piece.
 
 ## 6. Review
 

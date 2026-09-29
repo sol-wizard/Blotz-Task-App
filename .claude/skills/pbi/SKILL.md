@@ -14,4 +14,4 @@ Four separate jobs — read **only** the file for the job at hand:
 | Build it: check tests can run, code in small pieces with a cheap check after each, prove it once at the end | `implement.md` |
 | Update an existing PBI: move its card, tick finished boxes, add a short "what was done" note | `update.md` |
 
-If it's unclear which one, ask. Review levels (`L1`–`L4`) are defined in `review-levels.md`.
+If it's unclear which one, ask. Review levels (`L1`–`L4`) are defined in `review-levels.md`; screenshots for a PBI in `screenshots.md`.
