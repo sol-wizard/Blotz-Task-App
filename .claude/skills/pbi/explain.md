@@ -27,4 +27,4 @@ Before any code is written, turn the PBI into a short page the dev can read in t
 
 3. **Keep it short.** A page, not a spec: no section longer than ~6 bullets, plain words, no copied PBI text. If the page gets long, the PBI is probably too big — say so.
 
-4. **Tell the dev** the page is open. They can click an option on each ❓ question and paste the copied line back to you. If they paste it, take those as their answers. If they don't, go through the questions with them one at a time. Don't start coding until the dev says go.
+4. **Tell the dev** the page is open: pick an option on each ❓ question on the page, click **Copy**, and paste the line with `go` (e.g. `go #1578 · 1️⃣ A (keep timer)`). The page is where these questions are decided — don't ask them again in the terminal. `go` without the line → ask them to click Copy and paste it. Don't start coding until the dev says go.
