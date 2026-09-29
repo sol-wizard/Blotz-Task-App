@@ -3,6 +3,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Enums;
+using BlotzTask.Modules.Reviews.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,16 +58,7 @@ public class GetReviewQueryHandler(
                      && t.CompletedAt < period.EndUtc,
                 ct);
 
-        // Activity rows hold the user's local date, so the local bounds apply directly.
-        int? daysActive = period.ReportsDaysActive
-            ? await db.UserActivityDays
-                .AsNoTracking()
-                .CountAsync(
-                    a => a.UserId == query.UserId
-                         && a.LocalDate >= period.StartLocalDate
-                         && a.LocalDate < period.EndLocalDateExclusive,
-                    ct)
-            : null;
+        var daysActive = await ReviewMetrics.CountDaysActiveAsync(db, query.UserId, period, ct);
 
         return new ReviewReportDto
         {
