@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
-//so we need to update the onboarding documents
-
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
