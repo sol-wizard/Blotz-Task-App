@@ -98,7 +98,7 @@ public class SyncUserCommandHandler(
             {
                 UserId = row.Id,
                 Timing = 25,
-                Sound = null,
+                Sound = "streamWhisper",
                 IsCountdown = false
             };
             db.PomodoroSetting.Add(pomodoroSetting);

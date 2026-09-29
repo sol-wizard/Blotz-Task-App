@@ -5,3 +5,10 @@ export interface PomodoroDTO {
   sound: PomodoroSoundscapeType;
   isCountdown: boolean;
 }
+
+// What GET /pomodoro actually returns: Sound is null until the user picks one.
+export interface PomodoroSettingResponse {
+  timing: number;
+  sound: string | null;
+  isCountdown: boolean;
+}

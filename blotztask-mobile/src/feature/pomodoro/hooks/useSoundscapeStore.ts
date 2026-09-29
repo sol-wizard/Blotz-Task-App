@@ -61,7 +61,10 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
       get().pauseSoundscape();
       return;
     }
-    get().playSoundscape(get().currentSoundscapeType!);
+    // Null after "No sound" was picked: nothing to resume.
+    const type = get().currentSoundscapeType;
+    if (!type) return;
+    get().playSoundscape(type);
     set({ isPlaying: true });
   },
 

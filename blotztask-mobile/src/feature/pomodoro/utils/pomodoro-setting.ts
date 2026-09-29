@@ -33,6 +33,12 @@ export const SOUNDSCAPES = {
 
 export type PomodoroSoundscapeType = keyof typeof SOUNDSCAPES;
 
+// Used when the server has no sound saved (new users) or one the app doesn't know.
+export const DEFAULT_SOUNDSCAPE: PomodoroSoundscapeType = "streamWhisper";
+
+export const isSoundscapeType = (value: unknown): value is PomodoroSoundscapeType =>
+  typeof value === "string" && Object.prototype.hasOwnProperty.call(SOUNDSCAPES, value);
+
 export const SOUNDSCAPE_OPTIONS = Object.entries(SOUNDSCAPES).map(([type, value]) => ({
   type: type as PomodoroSoundscapeType,
   imageUrl: value.imageUrl,
