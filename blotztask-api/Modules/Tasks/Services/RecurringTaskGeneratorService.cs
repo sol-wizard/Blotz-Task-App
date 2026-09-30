@@ -45,9 +45,6 @@ public class RecurringTaskGeneratorService
             return GetCurrentDailyOccurrenceDate(template, cutoff);
         }
 
-        // TODO: Weekly/monthly/yearly still walk forward from StartDate. Replace with
-        // frequency-specific backward lookups before long-running recurring deadlines
-        // make /api/deadline/all pay O(occurrences since start) per series.
         var occurrence = FirstOccurrenceOnOrAfter(template, template.StartDate);
         DateOnly? current = null;
 

@@ -6,6 +6,8 @@ Build the PBI the planned way: check the tests can run, write code in small piec
 
 - `.pbi-explain/<n>.html` missing → run `explain.md` first and **wait for the dev's "go"**.
 - It exists → reuse its **✅ How to prove it works** section as the test plan. Don't analyse the PBI a second time.
+- The dev's `go` carries the choices copied from the page (`#1578 · 1️⃣ A (…)`) — build to those. Missing → ask them to paste the line from the page; don't re-ask the questions here.
+- A **new** decision that comes up while coding (not on the page) → ask in the terminal: one question, 2–3 options, your pick and why, then wait.
 - Once the dev says go, move the card to **In Progress** with `update.md` (status only, no note), so the board shows it's being worked on.
 - On `main` or a detached HEAD → create the branch first: `git fetch origin && git switch -c <fix|feat|chore>/<n>-<short-name> origin/main`.
 
@@ -40,10 +42,10 @@ All pieces done and every check green:
 
 ## 6. Review
 
-Run `/code-review` on the diff and **fix the low-level findings yourself** (bugs, edge cases, style). Then give the dev a short summary they must understand — the **what** and the **why**, not every line:
-- **What changed** — in plain words, a few bullets.
-- **Why this approach** — one or two sentences.
-- **Risks** — anything touching security or access, user data, money, or production. None → say so.
+Run `/code-review` on the diff and **fix the low-level findings yourself** (bugs, edge cases, style). Then give the dev the summary they must understand — the **what** and the **why**, not every line — in two places:
+
+- **Terminal — short:** a few lines only. **What changed** (plain words), **why this approach** (one sentence), **risks** (security or access, user data, money, production — or "none").
+- **Explain page — a bit more detail, not too much:** fill the **✅ What was done** section at the bottom of `.pbi-explain/<n>.html` (the template has it commented out — uncomment and fill it): user before/after, why this approach (and any choice that differs from the PBI), files changed one line each, how it was proved, risks. Say the page was updated and print its path.
 
 Ask the dev if anything is unclear before moving on. They need to be able to explain the summary to a reviewer.
 

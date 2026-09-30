@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PBI {{N}} explained</title>
 <style>
-:root{--bg:#fafaf8;--card:#fff;--ink:#1c1c1a;--muted:#6b6a64;--line:#e4e2dc;--warn:#b7791f;--soft:#f1f0ec;--accent:#2f5bd3;--zh:#8a6d3b}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a19f97;--line:#34332f;--warn:#e0a948;--soft:#262624;--accent:#7f9cf5;--zh:#d6b67a}}
-:root[data-theme="dark"]{--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a19f97;--line:#34332f;--warn:#e0a948;--soft:#262624;--accent:#7f9cf5;--zh:#d6b67a}
+:root{--bg:#fafaf8;--card:#fff;--ink:#1c1c1a;--muted:#6b6a64;--line:#e4e2dc;--warn:#b7791f;--soft:#f1f0ec;--accent:#2f5bd3;--zh:#8a6d3b;--chosen:#2f855a;--chosen-bg:#eaf6ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a19f97;--line:#34332f;--warn:#e0a948;--soft:#262624;--accent:#7f9cf5;--zh:#d6b67a;--chosen:#68d391;--chosen-bg:#1d2b22}}
+:root[data-theme="dark"]{--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a19f97;--line:#34332f;--warn:#e0a948;--soft:#262624;--accent:#7f9cf5;--zh:#d6b67a;--chosen:#68d391;--chosen-bg:#1d2b22}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif}
 .wrap{max-width:min(1440px,94vw);margin:0 auto;padding:28px 16px 60px}
@@ -20,9 +20,17 @@ h2{font-size:1.15rem;margin:28px 0 8px}
 .q{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:10px;padding:14px 18px;margin:12px 0}
 .qh{font-weight:700;font-size:1.05rem}
 .why{color:var(--muted);margin:4px 0 10px}
-.opt{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0}
+.opt{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer}
+.opt:hover{background:var(--soft)}
 .opt.pick{border:2px solid var(--accent)}
+.opt.chosen{background:var(--chosen-bg);border-color:var(--chosen)}
+.opt.chosen::after{content:"✅ your choice";display:block;color:var(--chosen);font-weight:600;font-size:.85rem}
 .tag{background:var(--accent);color:#fff;border-radius:6px;padding:1px 8px;font-size:.8rem;margin-left:6px}
+.zhsum{background:var(--soft);border-radius:12px;padding:12px 20px;margin:0 0 14px}
+.zhsum p{margin:4px 0}
+.answers{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:10px 14px;margin:14px 0}
+.answers code{font-size:.95rem}
+.answers button{font:inherit;font-size:.95rem;border:0;border-radius:8px;padding:6px 14px;background:var(--accent);color:#fff;cursor:pointer}
 
 ol,ul{margin:0;padding-left:22px}
 li{margin:6px 0}
@@ -34,10 +42,17 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;background:var(--c
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" data-pbi="{{N}}">
 <!-- Keep every section, in this order. Simple English, short sentences. Put Chinese in brackets
      only after hard words: migration (数据库迁移). One emoji at the start of each heading and point. -->
 <h1>{{EMOJI}} #{{N}} · {{SHORT TITLE IN PLAIN WORDS}}</h1>
+
+<!-- Chinese quick read: read first, so the dev understands the problem before the English. Three short lines. -->
+<div class="zhsum" lang="zh">
+<p>📍 <b>在哪里：</b>{{功能名：怎么进到那里，例如 番茄钟：日历 → 任务右滑 → 专注}}</p>
+<p>🇨🇳 <b>问题：</b>{{一句话：用户现在遇到什么问题}}</p>
+<p>🎯 <b>要解决：</b>{{一句话：这个 PBI 要做到什么}}</p>
+</div>
 
 <div class="tldr">
 <p>🐛 <b>Problem:</b> {{one sentence: what's wrong for the user}}</p>
@@ -55,12 +70,20 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;background:var(--c
 <h2>❓ Questions to decide before coding</h2>
 <p class="muted">💬 Talk each one through with your AI and pick an option. Still not sure? 🙋 Ask the tech lead. You can always ask them for help.</p>
 
-<!-- One .q card per question. 2–3 options. Exactly one option gets class "pick" and the 🤖 tag. -->
-<div class="q">
+<!-- One .q card per question, data-q = its number. 2–3 options, each with data-opt = its letter.
+     Exactly one option gets class "pick" and the 🤖 tag. The script below makes them clickable.
+     No open questions → delete the .q cards and the .answers bar. -->
+<div class="q" data-q="1">
   <div class="qh">1️⃣ {{question}}</div>
   <div class="why">{{one line: why it matters}}</div>
-  <div class="opt pick"><b>A · {{option}}</b> <span class="tag">🤖 AI pick</span><br>{{one line: why}}</div>
-  <div class="opt"><b>B · {{option}}</b><br>{{one line: trade-off}}</div>
+  <div class="opt pick" data-opt="A"><b>A · {{option}}</b> <span class="tag">🤖 AI pick</span><br>{{one line: why}}</div>
+  <div class="opt" data-opt="B"><b>B · {{option}}</b><br>{{one line: trade-off}}</div>
+</div>
+
+<div class="answers">
+  <span>📋 Your choices:</span> <code id="answers-line"></code>
+  <button type="button" id="copy-answers">Copy</button>
+  <span class="muted" id="copy-status">Click an option on each question, then paste the line into your AI.</span>
 </div>
 
 <h2>⚠️ Also check</h2>
@@ -85,6 +108,93 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;background:var(--c
 <li><b>Backend</b><ul><li><code>{{file}}</code>: {{what changes}}</li></ul></li>
 </ul>
 </details>
+
+<!-- ✅ What was done — leave this commented out on the explain page. implement.md step 6
+     uncomments and fills it after the code is done. A bit more detail than the terminal, not too much.
+<h2>✅ What was done</h2>
+<div class="card">
+<p>😊 <b>Now:</b> {{Xiao Ming does … → sees …}}</p>
+<p>🤔 <b>Why this way:</b> {{one or two sentences; any choice that differs from the PBI}}</p>
+<p>🧪 <b>Proved by:</b> {{test command → result; real-device screenshots}}</p>
+<p>⚠️ <b>Risks:</b> {{security, user data, money, production — or "none"}}</p>
+<ul>
+<li><code>{{file}}</code>: {{what changed, one line}}</li>
+</ul>
 </div>
+-->
+</div>
+<script>
+// Clickable options: one choice per question, kept across reloads, copied as one line for the AI.
+(function () {
+  var pbi = document.querySelector(".wrap").dataset.pbi;
+  var questions = Array.prototype.slice.call(document.querySelectorAll(".q[data-q]"));
+  // Saved choices are keyed by the question texts too, so a rebuilt page with
+  // different questions starts empty instead of showing stale answers.
+  var text = questions.map(function (q) { return q.textContent; }).join("|"), h = 5381;
+  for (var i = 0; i < text.length; i++) h = ((h * 33) ^ text.charCodeAt(i)) >>> 0;
+  var key = "pbi-explain-" + pbi + "-" + h.toString(36);
+  var bar = document.querySelector(".answers");
+  if (!questions.length) { if (bar) bar.remove(); return; }
+
+  var choices = {};
+  try { choices = JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { choices = {}; }
+
+  function line() {
+    return "#" + pbi + " · " + questions.map(function (q) {
+      var n = q.dataset.q, pick = choices[n];
+      var num = /^[1-9]$/.test(n) ? n + "\uFE0F\u20E3" : "Q" + n;  // keycap emoji only exists for 1–9
+      var opt = pick && q.querySelector('.opt[data-opt="' + pick + '"] b');
+      // A few words of the option, so the AI knows what "A" was even in a new session.
+      var label = opt ? opt.textContent.replace(/^\s*[A-Z]\s*·\s*/, "").trim() : "";
+      label = Array.from(label).slice(0, 30).join("");  // by character, so an emoji is never cut in half
+      return num + " " + (pick ? pick + (label ? " (" + label + ")" : "") : "?");
+    }).join(" · ");
+  }
+
+  function render() {
+    questions.forEach(function (q) {
+      q.querySelectorAll(".opt[data-opt]").forEach(function (o) {
+        var on = choices[q.dataset.q] === o.dataset.opt;
+        o.classList.toggle("chosen", on);
+        o.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    });
+    document.getElementById("answers-line").textContent = line();
+  }
+
+  questions.forEach(function (q) {
+    q.querySelectorAll(".opt[data-opt]").forEach(function (o) {
+      o.setAttribute("role", "button");
+      o.tabIndex = 0;
+      function choose() {
+        choices[q.dataset.q] = o.dataset.opt;
+        try { localStorage.setItem(key, JSON.stringify(choices)); } catch (e) {}
+        render();
+      }
+      o.addEventListener("click", choose);
+      o.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
+      });
+    });
+  });
+
+  document.getElementById("copy-answers").addEventListener("click", function () {
+    var text = line();
+    var status = document.getElementById("copy-status");
+    function done() { status.textContent = "Copied. Paste it into your AI."; }
+    function fallback() {
+      // file:// pages can block the async clipboard, so fall back to a hidden textarea.
+      var t = document.createElement("textarea");
+      t.value = text; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); done(); } catch (e) { status.textContent = "Copy failed. Select the line and copy it by hand."; }
+      t.remove();
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  });
+
+  render();
+})();
+</script>
 </body>
 </html>

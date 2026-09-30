@@ -15,7 +15,6 @@ public class AiQualityCheckService(
     IConfiguration configuration) : IAiQualityCheckService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-// TODO: Will this be very fragile is there a better way of doing this ?
     private static readonly string QualityCheckCasesPath = Path.Combine(
         AppContext.BaseDirectory, "Modules", "ChatTaskGenerator", "DevTools", "quality-check-cases.json");
 
