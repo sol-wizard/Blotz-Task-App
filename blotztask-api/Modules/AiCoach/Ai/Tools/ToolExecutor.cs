@@ -43,7 +43,12 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             var checkedMutation = mutation with
             {
                 Content = content,
-                SuccessReply = assessment.Status is "clear" or "incomplete" or "partial" ? mutation.SuccessReply : null,
+                SuccessReply = assessment.Status switch
+                {
+                    "clear" => ReadSuccessReply(call.Name, call.ArgumentsJson, allowMultiple: true),
+                    "incomplete" or "partial" => mutation.SuccessReply,
+                    _ => null,
+                },
                 ScheduleChecked = assessment.Status is "clear" or "conflict" or "partial",
             };
             _results[call.Id] = (call, checkedMutation);
@@ -117,14 +122,14 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     private static ToolExecutionResult Failure(string code, string message) =>
         new(JsonSerializer.Serialize(new { success = false, errorCode = code, error = message }), false, code);
 
-    private static string? ReadSuccessReply(string toolName, string argumentsJson)
+    private static string? ReadSuccessReply(string toolName, string argumentsJson, bool allowMultiple = false)
     {
         using var payload = JsonDocument.Parse(argumentsJson);
         var args = payload.RootElement;
         var simpleOperation = toolName switch
         {
-            "create_draft" => args.GetProperty("items").GetArrayLength() == 1,
-            "update_draft" => args.GetProperty("changes").GetArrayLength() == 1,
+            "create_draft" => allowMultiple || args.GetProperty("items").GetArrayLength() == 1,
+            "update_draft" => allowMultiple || args.GetProperty("changes").GetArrayLength() == 1,
             "discard_draft" => true,
             _ => false,
         };
