@@ -5,6 +5,10 @@ Turn any context — an idea while building a feature, a bug, a follow-up, an in
 ## Readiness gate (do this first)
 A PBI is ready only when it has all three:
 1. **Clear requirements** — what & why, unambiguous scope.
+   For anything a user can see or do, that includes **where** it lives: the feature name the team
+   uses (e.g. 番茄钟 / Pomodoro focus) and the path to reach it (Calendar → swipe right on a task →
+   专注). Find the real screen in the code, don't guess from names. Pure backend/infra work: name
+   the module or endpoint instead.
 2. **Suggested solution** — a proposed approach, not just the problem.
 3. **Next step** — the concrete first action to take.
 
@@ -107,7 +111,7 @@ Pick the one that fits the task. POC (🔍) takes priority when the work is an i
 3. Decide whether staging verification applies (ask if unclear), then confirm the review level (`L1`–`L4`), the priority (`P1`–`P3`), other labels, and estimate.
 4. Title = the PBI title.
 5. Body in this order, keeping the user's wording. **Keep it short and concise** — write the minimum a dev needs to pick this up, favour tight bullets over prose, and cut any sentence that doesn't change what someone would do:
-   - `## Description` — requirements (what & why)
+   - `## Description` — first bullet is `**Where:** <feature> — <how to reach it>` (see the readiness gate), then requirements (what & why)
    - `## Suggested Solution` — proposed approach (POC: replace with `## Investigation Goal` — questions to answer + what success looks like)
    - `## Scope / Tasks` — checkboxes (`- [ ]`), `###` subheadings if grouped
    - `## Acceptance Criteria` — checkboxes

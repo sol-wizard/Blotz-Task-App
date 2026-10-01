@@ -42,7 +42,6 @@ public class BreakdownTaskCommandHandler(
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} not found.");
 
-        // TODO: Better handle this query — it undermines the CQRS separation.
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
 
@@ -50,7 +49,6 @@ public class BreakdownTaskCommandHandler(
 
         var collectedSubTasks = new List<GeneratedSubTask>();
 
-        // TODO: Validate AI accuracy vs. the old pattern before relying on this.
         [Description("Add a subtask to the breakdown result")]
         void AddSubTask(
             [Description("A short, descriptive name for the subtask")] string title,
@@ -67,7 +65,6 @@ public class BreakdownTaskCommandHandler(
 
         try
         {
-            // TODO: Investigate whether this prompt needs so much detail.
             await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
             var prompt = TaskBreakdownPrompts.GetBreakdownPrompt(
                 preferredLanguage,
@@ -97,7 +94,6 @@ public class BreakdownTaskCommandHandler(
                 "Breakdown: Collected {Count} subtasks | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
                 collectedSubTasks.Count, inputTokens, outputTokens, totalTokens);
 
-            // TODO: Review whether this should define success.
             var isSuccess = collectedSubTasks.Count > 0;
 
             return new BreakdownResult

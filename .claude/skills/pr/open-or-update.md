@@ -71,6 +71,7 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - Push first if there is no upstream or unpushed commits: `git push -u origin HEAD`.
    - Write the body to a scratchpad file and pass `--body-file`, never `--body` — the body is multi-line markdown with backticks and checkboxes, and shell quoting will corrupt it.
    - Create mode: `gh pr create --base main --title <title> --body-file <file> --label <level>`. The label must go on **at creation**: that's the moment the Discord post picks who to ping.
+   - **Screenshots:** `gh` can't upload images, so never write "screenshots below". Right after creating, give the dev the screenshot file paths and ask them to drag them into the description on GitHub, then check the body has image links (`gh pr view <n> --json body`). Not there yet → say so; for `L1` the proof isn't complete until they are.
    - Update mode: `gh pr edit --body-file <file>` (add `--add-label <level>` if the PR had none)
    - Create mode, when there's a PBI: then update it with the `pbi` skill (`update.md`) — status `In Review`, tick what this PR covers, PR link in the note. Its own confirm step still applies.
 
