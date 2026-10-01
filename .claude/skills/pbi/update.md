@@ -18,11 +18,14 @@ Keep the board true without anyone chasing: move the card, tick what's done, and
    |---|---|
    | Started work | `In Progress` |
    | PR opened | `In Review` |
-   | PR merged, and the PBI has no `## Staging Verification` (or all its boxes are ticked) | `Done` |
+   | PR merged, every `## Acceptance Criteria` box is ticked, and the PBI has no `## Staging Verification` (or all its boxes are ticked) | `Done`, and close the issue as completed |
+   | PR merged, but some Acceptance Criteria boxes are still unticked | stays `In Review`: the note lists the unticked criteria |
    | PR merged, but staging boxes are still unticked | stays `In Review` — the note says "Merged, waiting for the staging check" and lists the unticked boxes |
-   | Dev says it's tested on staging | tick those boxes → `Done` once none are left |
+   | Dev says it's tested on staging | tick those boxes → `Done` and close once none are left |
 
    The PBI's own rule wins: *not Done until every Staging Verification box is checked on a staging build*. Never move a PBI with unticked staging boxes to `Done`.
+
+   **Done and closed go together.** Close the issue (`gh issue close <n> -R Blotz-Org/Blotz-Task-App-Private --reason completed`) only when it moves to `Done`, and move it to `Done` whenever you close it. Never close a PBI while its PR is still open or any Acceptance Criteria or Staging Verification box is unticked. A PBI that is Done on the board but still open (or closed but not Done) means the board is lying.
 
 3. **Tick finished boxes** in `## Scope / Tasks` and `## Acceptance Criteria` — only the ones the work actually covers (check the diff or PR). Never tick `## Staging Verification` unless the dev says they tested it on a staging build.
 

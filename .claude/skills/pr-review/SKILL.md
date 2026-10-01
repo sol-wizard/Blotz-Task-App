@@ -57,6 +57,11 @@ argument-hint: "[PR number, PR URL, or branch; optional, defaults to current bra
 
     After submitting, reply with the PR URL, the verdict, and how many comments went up. No findings → still ask for the verdict (usually *Approve*), post no comments.
 
+    **After an *Approve* on a PR with auto-merge on** (`L1`/`L2` — `gh pr view <n> --json autoMergeRequest,mergeStateStatus,state`): your approval is usually the last human step, so close the loop here and the author doesn't have to.
+    - Behind main (`BEHIND`) → `gh pr update-branch <n>` (auto-merge can't), tell the reviewer.
+    - `gh pr checks <n> --watch`, then check `state`. Merged → update the PBI with the `pbi` skill (`update.md`), event "PR merged". **Don't move the card yourself**: `update.md` decides Done, or keeps it In Review when staging checks or criteria are still unticked. PBI number: from the branch name (`<type>/<n>-…`) or the PR, else ask. Its confirm step applies to the reviewer.
+    - Not merged (checks red, conversations open, another approval needed) → say what's blocking and stop; the author's "merge my PR" covers it later.
+
 13. Everything goes on the PR. Product and UX judgement calls, and questions about why an approach was chosen, are things the author can answer, so raise them as inline comments like any other finding. Do not route findings to a separate notes file.
 
 14. Never comment on the release-note checklist, even when the wrong box is clearly ticked. It is a process detail rather than a code problem, and Ben does not want it raised on the PR.
