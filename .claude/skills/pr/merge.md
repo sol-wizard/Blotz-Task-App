@@ -5,7 +5,7 @@ Merge the dev's PR and close the loop on its PBI, so the board never goes stale.
 ## Steps
 
 1. **Check where it is.** `gh pr view <n> --json state,reviewDecision,mergeStateStatus,autoMergeRequest,labels,title,url`.
-   - **Already merged** (`L1`/`L2` auto-merge did it) → skip to step 4. "Merge my PR" after an auto-merge just means "close the loop on the PBI".
+   - **Already merged** (`L1`/`L2` auto-merge did it) → skip to step 4, unless the reviewer's AI already updated the PBI (check its status and latest note) — then just say so.
    - **Approved but behind main** (`mergeStateStatus` is `BEHIND`) → GitHub requires the branch to be up to date, and auto-merge doesn't update it. Do it here, once, at the end — never earlier, or every new commit on main re-runs the checks for nothing. It's part of the confirm in step 2.
    - **Not approved, checks red, or conversations open** → say why and stop. Never use `--admin` to skip the rules.
 
