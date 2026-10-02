@@ -75,8 +75,9 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - **Screenshots:** `gh` can't upload images, so never write "screenshots below". Right after creating, give the dev the screenshot file paths and ask them to drag them into the description on GitHub, then check the body has image links (`gh pr view <n> --json body`). Not there yet → say so; for `L1` the proof isn't complete until they are.
    - Update mode: `gh pr edit --body-file <file>` (add `--add-label <level>` if the PR had none)
    - Create mode, when there's a PBI: then update it with the `pbi` skill (`update.md`) — status `In Review`, tick what this PR covers, PR link in the note. Its own confirm step still applies.
+   - Create mode, last: run the `to-learn` skill straight away — no need to ask. It saves the dev's to-learn list locally and never blocks the PR.
 
-10. **Reply with the PR URL only.**
+10. **Reply with the PR URL**, plus the to-learn file path from the step above.
 
 
 ## Notes
