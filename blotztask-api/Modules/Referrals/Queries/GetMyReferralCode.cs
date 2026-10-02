@@ -19,20 +19,21 @@ public class GetMyReferralCodeQueryHandler(
     {
         var referralCode = await ensureReferralCode.HandleAsync(query.UserId, ct);
         var redemptionCount = await db.Referrals.CountAsync(
-    referral => referral.ReferrerUserId == query.UserId,
-    ct);
-    var criteria = await db.BadgeCriteria
-    .Include(c => c.Badge)
-    .SingleAsync(
-        c => c.TriggerAction == TriggerAction.InviteRedeemed
-          && c.ConditionKey == EventValueKey.InviteCount,
-        ct);
+            referral => referral.ReferrerUserId == query.UserId,
+            ct);
+        var criteria = await db.BadgeCriteria
+            .Include(c => c.Badge)
+            .Where(c => c.TriggerAction == TriggerAction.InviteRedeemed
+                        && c.ConditionKey == EventValueKey.InviteCount)
+            .OrderBy(c => c.ConditionValue)
+            .FirstOrDefaultAsync(ct);
+
         return new ReferralCodeDto
-{
-    Code = referralCode.Code!,
-    RedemptionCount = redemptionCount,
-    TargetCount = criteria.ConditionValue,
-    BadgeIconUrl = criteria.Badge.IconUrl
-};
+        {
+            Code = referralCode.Code!,
+            RedemptionCount = redemptionCount,
+            TargetCount = criteria?.ConditionValue,
+            BadgeIconUrl = criteria?.Badge.IconUrl
+        };
     }
 }

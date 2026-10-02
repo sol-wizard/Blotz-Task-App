@@ -54,28 +54,30 @@ export default function SettingsInviteScreen() {
             />
           </View>
         )}
-        <View className="mt-6">
-          <View className="flex-row items-center gap-1">
-            {isCompleted && (
-              <MaterialCommunityIcons name="check-circle" size={18} color="#65A30D" />
-            )}
+        {targetCount > 0 && (
+          <View className="mt-6">
+            <View className="flex-row items-center gap-1">
+              {isCompleted && (
+                <MaterialCommunityIcons name="check-circle" size={18} color="#65A30D" />
+              )}
 
-            <Text className="text-sm font-baloo text-secondary">
-              {isCompleted ? t("invite.completedLabel") : t("invite.progressLabel")}
+              <Text className="text-sm font-baloo text-secondary">
+                {isCompleted ? t("invite.completedLabel") : t("invite.progressLabel")}
+              </Text>
+            </View>
+
+            <View className="h-2 rounded-full bg-gray-200 overflow-hidden">
+              <View
+                className="h-full rounded-full bg-lime-500"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </View>
+
+            <Text className="text-sm font-balooBold text-secondary">
+              {redemptionCount} / {targetCount}
             </Text>
           </View>
-
-          <View className="h-2 rounded-full bg-gray-200 overflow-hidden">
-            <View
-              className="h-full rounded-full bg-lime-500"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </View>
-
-          <Text className="text-sm font-balooBold text-secondary">
-            {redemptionCount} / {targetCount}
-          </Text>
-        </View>
+        )}
       </View>
     </SafeAreaView>
   );
