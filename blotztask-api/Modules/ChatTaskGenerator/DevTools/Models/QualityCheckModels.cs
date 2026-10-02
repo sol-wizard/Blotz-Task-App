@@ -10,6 +10,16 @@ public class QualityCheckCase
 
     public int ExpectedRecurringTaskCount { get; set; }
     public List<QualityCheckRecurringExpectation> RecurringExpectations { get; set; } = [];
+    public List<string> SetupInputs { get; set; } = [];
+    public QualityCheckRecurringMutationExpectation? RecurringMutation { get; set; }
+}
+
+public class QualityCheckRecurringMutationExpectation
+{
+    public required string ExistingTitle { get; set; }
+    public required string Operation { get; set; }
+    public List<string> ChangedFields { get; set; } = [];
+    public bool SameTitledOneOffMustRemain { get; set; }
 }
 
 /// <summary>
@@ -35,6 +45,9 @@ public class QualityCheckRecurringExpectation
 
     /// <summary>Expected TimeType name: "SingleTime" or "RangeTime".</summary>
     public string? TimeType { get; set; }
+
+    /// <summary>Expected duration between the recurring template start and end.</summary>
+    public int? DurationMinutes { get; set; }
 
     /// <summary>When true, asserts the strict invariant that StartDate equals TemplateStartTime's date.</summary>
     public bool? StartDateMatchesTemplate { get; set; }
