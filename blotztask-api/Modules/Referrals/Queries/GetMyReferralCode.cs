@@ -27,13 +27,17 @@ public class GetMyReferralCodeQueryHandler(
                         && c.ConditionKey == EventValueKey.InviteCount)
             .OrderBy(c => c.ConditionValue)
             .FirstOrDefaultAsync(ct);
+        var hasEarnedBadge = criteria is not null && await db.UserBadges.AnyAsync(
+            userBadge => userBadge.UserId == query.UserId && userBadge.BadgeId == criteria.BadgeId,
+            ct);
 
         return new ReferralCodeDto
         {
             Code = referralCode.Code!,
             RedemptionCount = redemptionCount,
             TargetCount = criteria?.ConditionValue,
-            BadgeIconUrl = criteria?.Badge.IconUrl
+            BadgeIconUrl = criteria?.Badge.IconUrl,
+            HasEarnedBadge = hasEarnedBadge
         };
     }
 }

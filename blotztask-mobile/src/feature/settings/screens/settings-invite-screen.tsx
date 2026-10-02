@@ -12,13 +12,13 @@ import { Image } from "expo-image";
 
 export default function SettingsInviteScreen() {
   const { t } = useTranslation("settings");
-  const { referralCode, redemptionCount, targetCount, badgeIconUrl, isLoading } =
+  const { referralCode, redemptionCount, targetCount, badgeIconUrl, hasEarnedBadge, isLoading } =
     useMyReferralCode();
 
   if (isLoading) return <LoadingScreen />;
 
   const progress = targetCount > 0 ? Math.min(redemptionCount / targetCount, 1) : 0;
-  const isCompleted = targetCount > 0 && redemptionCount >= targetCount;
+  const isCompleted = hasEarnedBadge;
   const handleCopy = async () => {
     if (!referralCode) return;
     await Clipboard.setStringAsync(referralCode);
@@ -49,7 +49,7 @@ export default function SettingsInviteScreen() {
           <View className="items-center mt-6">
             <Image
               source={{ uri: badgeIconUrl }}
-              style={{ width: 128, height: 128 }}
+              style={{ width: 128, height: 128, opacity: isCompleted ? 1 : 0.4 }}
               contentFit="contain"
             />
           </View>
@@ -66,14 +66,14 @@ export default function SettingsInviteScreen() {
               </Text>
             </View>
 
-            <View className="h-2 rounded-full bg-gray-200 overflow-hidden">
+            <View className="h-2 rounded-full bg-gray-200 overflow-hidden mt-2">
               <View
                 className="h-full rounded-full bg-lime-500"
                 style={{ width: `${progress * 100}%` }}
               />
             </View>
 
-            <Text className="text-sm font-balooBold text-secondary">
+            <Text className="text-sm font-balooBold text-secondary mt-2">
               {redemptionCount} / {targetCount}
             </Text>
           </View>

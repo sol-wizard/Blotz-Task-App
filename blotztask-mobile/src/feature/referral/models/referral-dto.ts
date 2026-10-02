@@ -3,4 +3,5 @@ export interface ReferralCodeDTO {
   redemptionCount: number;
   targetCount: number | null;
   badgeIconUrl: string | null;
+  hasEarnedBadge: boolean;
 }
