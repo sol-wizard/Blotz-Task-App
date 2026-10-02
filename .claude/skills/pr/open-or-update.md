@@ -55,13 +55,15 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
      - Too detailed: "The voice button now starts listening the instant you press it, short voice inputs are no longer lost, and an accidental tap clearly shows you need to hold."
      - Right altitude: "Improved the AI voice input experience — the mic button now responds instantly and short recordings are no longer lost."
    - Strip every `<!-- -->` comment from the template.
-   - Keep the whole body tight. `preview-next-release.yml` truncates each body to **1500 characters** before the model sees it, and the template from `## Release note` down is 555 of those. That leaves roughly **900 characters** for the Summary; go over and the Status block is cut off, and the model falls back to guessing from the title.
+   - Keep the ticked Status line and the `>` Release note line in the template's exact format — `preview-next-release.yml` reads those two lines. Summary length doesn't matter to the pipeline.
 
 6. **Draft the body.** Use `.github/pull_request_template.md` in its committed section order. Concise throughout — favour tight bullets over prose, cut any sentence that would not change what a reviewer does.
 
    Title: derive from the commits and follow whichever style they already use (`fix(ai): ...` when the commits use that form, a plain sentence otherwise). Do not impose a convention the repo does not have.
 
-7. **Review level.** Every PR carries one `L1`–`L4` label, copied from its PBI. It decides who Discord pings and who must approve. Ask the dev for the PBI number and read its label from the private repo: `gh issue view <n> -R Blotz-Org/Blotz-Task-App-Private --json labels --jq '[.labels[].name | select(test("^L[1-4]$"))][0]'`. If the PBI has none, or there's no PBI, ask the dev which level (`L1` anyone · `L2` candidate · `L3` tech lead · `L4` two approvals incl. a tech lead). In update mode, skip this if the PR already has a level label.
+7. **Review level.** Every PR carries one `L1`–`L4` label, copied from its PBI. It decides who Discord pings and who must approve. Ask the dev for the PBI number and read its label from the private repo: `gh issue view <n> -R Blotz-Org/Blotz-Task-App-Private --json labels --jq '[.labels[].name | select(test("^L[1-4]$"))][0]'`. If the PBI has none, or there's no PBI, suggest one with a one-sentence reason and let the dev choose — rules in `.claude/skills/pbi/review-levels.md`. When the PBI had none, write the chosen level back to it too, so the PBI and PR agree: `gh issue edit <n> -R Blotz-Org/Blotz-Task-App-Private --add-label <level>`. In update mode, skip this if the PR already has a level label. The Discord post only reads the level when the PR opens, so if the level changes later, tell the dev to let the new reviewers know themselves.
+
+   **Proof goes in the body.** Add one `Verified:` line to the Summary with the proof the `pbi` implement step produced: backend → the test command and its result; UI → the real-device screenshots (attach them); both → both. **Only check that it's there — never run tests yourself**: that would do the dev's work twice. No proof → tell the dev what's missing; an `L1` without proof is opened as `L2`.
 
 8. **Confirm.** Show the dev the full body **and** the Status reasoning. Ask for approval or edits. Loop until approved. Never skip this, even when every check is unambiguous.
 
@@ -69,7 +71,10 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - Push first if there is no upstream or unpushed commits: `git push -u origin HEAD`.
    - Write the body to a scratchpad file and pass `--body-file`, never `--body` — the body is multi-line markdown with backticks and checkboxes, and shell quoting will corrupt it.
    - Create mode: `gh pr create --base main --title <title> --body-file <file> --label <level>`. The label must go on **at creation**: that's the moment the Discord post picks who to ping.
+   - **Auto-merge for `L1`/`L2`:** right after creating, run `gh pr merge <n> --auto --squash`. GitHub then merges it by itself once it's approved, the checks are green and every conversation is resolved (the branch is deleted automatically). Tell the dev it's on: once approved, GitHub merges it, and the reviewer's AI (`pr-review`) updates the branch if needed and updates the PBI. Still open after approval → the dev says "merge my PR". `L3`/`L4` never get it — they wait for a tech lead, and `merge.md` checks that.
+   - **Screenshots:** `gh` can't upload images, so never write "screenshots below". Right after creating, give the dev the screenshot file paths and ask them to drag them into the description on GitHub, then check the body has image links (`gh pr view <n> --json body`). Not there yet → say so; for `L1` the proof isn't complete until they are.
    - Update mode: `gh pr edit --body-file <file>` (add `--add-label <level>` if the PR had none)
+   - Create mode, when there's a PBI: then update it with the `pbi` skill (`update.md`) — status `In Review`, tick what this PR covers, PR link in the note. Its own confirm step still applies.
 
 10. **Reply with the PR URL only.**
 

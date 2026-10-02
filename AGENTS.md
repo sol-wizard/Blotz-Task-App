@@ -24,7 +24,7 @@ table below to pick the right one and open it yourself.
 | `real-device-test` | Verifying something on a physical phone, or driving the installed app on a USB-connected device |
 | `pr` | The author's side of a pull request: opening one, fixing its description or release note, or fixing review comments and sending it back for re-review |
 | `pr-review` | Reviewing a pull request |
-| `create-blotz-pbi` | Capturing an idea, problem or task as a PBI in the backlog |
+| `pbi` | Creating a PBI, explaining one before coding, implementing it (tests checked first, small pieces, proof at the end), or updating it — moving its card, ticking finished boxes, adding a short note |
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
 | `generate-weekly-focus` | Producing the weekly summary of team work for marketing/product |
 | `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |
@@ -42,6 +42,7 @@ working on navigation, UI, animation, data fetching or an SDK upgrade in `blotzt
 
 ## Code Changes
 
+- Commits and PRs carry no AI mark: no `Co-Authored-By:` trailer for an AI (Claude, Codex, Copilot…) and no "Generated with …" line in PR descriptions. The history shows only team members.
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 - Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
 

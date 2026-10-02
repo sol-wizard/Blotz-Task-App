@@ -8,8 +8,7 @@
 package-lock.json
 .agents
 .codex
-# Claude Code - ignore personal settings, but allow CLAUDE.md
-.claude/settings.json
+# Claude Code - ignore personal settings (settings.local.json); settings.json is shared
 .claude/settings.local.json
 # Cursor - ignore local state, but allow rules
 .cursor/notepads
@@ -20,3 +19,6 @@ infra/main.json
 infra/*.ps1
 # What's New preview artifact (generated per release, not for commit)
 .claude/skills/generate-whatsnew/blotz-whatsnew*.html
+
+# pbi skill: per-dev "explain this PBI" pages — local only
+.pbi-explain/
