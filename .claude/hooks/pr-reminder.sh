@@ -36,6 +36,7 @@ def line($icon; $note): "\($icon) #\(.number) · \(.title) · \(level) · \($not
 [.[] | select(.isDraft | not)] | sort_by(.createdAt)
 | ([.[] | select(.author.login == "__ME__")
      | if sentback then line("🔁"; "changes requested — fix and send it back")
+       elif approved and .mergeStateStatus == "BEHIND" then line("✅"; "approved · behind main — say 'merge my PR' (it updates the branch)")
        elif approved then line("✅"; "approved — say 'merge my PR'")
        else empty end]) as $mine
 | ([.[] | select(.author.login != "__ME__" and (.author.is_bot | not)
@@ -56,6 +57,6 @@ PROG=${PROG//__TLS__/$TLS}
 PROG=${PROG//__TL__/$TL}
 
 gh pr list -R "$REPO" --state open --limit 100 \
-  --json number,title,author,labels,createdAt,isDraft,reviewDecision,reviewRequests,latestReviews \
+  --json number,title,author,labels,createdAt,isDraft,reviewDecision,reviewRequests,latestReviews,mergeStateStatus \
   --jq "$PROG" 2>/dev/null
 exit 0

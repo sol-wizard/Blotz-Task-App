@@ -42,6 +42,7 @@ working on navigation, UI, animation, data fetching or an SDK upgrade in `blotzt
 
 ## Code Changes
 
+- Commits and PRs carry no AI mark: no `Co-Authored-By:` trailer for an AI (Claude, Codex, Copilot…) and no "Generated with …" line in PR descriptions. The history shows only team members.
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 - Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
 

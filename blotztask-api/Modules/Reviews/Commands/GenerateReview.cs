@@ -41,7 +41,7 @@ public class GenerateReviewCommandHandler(
     IRecordAiUsageService recordAiUsageService,
     ILogger<GenerateReviewCommandHandler> logger)
 {
-    // TODO: Reusing the Breakdown deployment for v1, which currently resolves to gpt-5.4-mini —
+    // Reusing the Breakdown deployment for v1, which currently resolves to gpt-5.4-mini —
     // a reasoning model, so ReasoningEffortLevel below is honoured. Revisit if review ever needs
     // its own deployment; it shares capacity with task generation, breakdown and time estimation.
     private readonly string _deploymentId = aiOptions.Value.AiModels.Breakdown.DeploymentId;
@@ -61,7 +61,6 @@ public class GenerateReviewCommandHandler(
         var period = ReviewPeriod.CreateFromAnchor(command.PeriodType, command.AnchorDate, timeZone);
         var threshold = ReviewConstants.LowActivityTaskThreshold(period.PeriodType);
 
-        //TODO: Need to think how we want to handle duplicate reports. If we already have one and still trigger what should we do?
         var existingReport = await db.ReviewReports
             .AsNoTracking()
             .FirstOrDefaultAsync(
