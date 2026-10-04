@@ -22,3 +22,6 @@ infra/*.ps1
 
 # pbi skill: per-dev "explain this PBI" pages — local only
 .pbi-explain/
+
+# process-feedback skill: real Lark IDs, local only (copy config.example.json)
+.claude/skills/process-feedback/config.json

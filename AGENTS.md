@@ -28,6 +28,7 @@ table below to pick the right one and open it yourself.
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
 | `generate-weekly-focus` | Producing the weekly summary of team work for marketing/product |
 | `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |
+| `process-feedback` | Sorting new user feedback into the Lark master table: classify, merge duplicates, comment for the PO (needs `lark-cli` + the bot) |
 
 The `expo-*` skills (`expo-router`, `expo-native-ui`, `expo-animation`, `expo-data-fetching`,
 `expo-upgrade`) are vendored Expo framework reference, not Blotz-specific — consult them when

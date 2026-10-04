@@ -1,0 +1,12 @@
+{
+  "base_token": "<Base app_token, or the wiki node token if the Base sits in the wiki>",
+  "raw_table": "<raw table ID or name>",
+  "master_table": "<master table ID or name>",
+  "summary_task_id": "<GUID of the standing 'Monthly feedback updates' task>",
+  "raw_fields": { "text": "反馈详情", "time": "反馈时间", "screenshot": "图片" },
+  "master_fields": {
+    "title": "反馈内容标题", "type": "反馈类型", "module": "功能模块",
+    "count": "累计反馈", "description": "反馈描述",
+    "latest_time": "最近反馈时间", "screenshot": "截图", "po_decision": "PO决定"
+  }
+}
