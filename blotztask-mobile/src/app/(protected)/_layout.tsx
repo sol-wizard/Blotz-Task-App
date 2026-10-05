@@ -4,6 +4,7 @@ import { FireworkOverlays } from "@/feature/firework-animation/components/firewo
 import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { useRecordAppOpen } from "@/shared/hooks/useRecordAppOpen";
 import { useSyncTodayTasksWidget } from "@/feature/widget/hooks/useSyncTodayTasksWidget";
 import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
@@ -27,6 +28,7 @@ export default function ProtectedLayout() {
 
   useLanguageInit();
   useTrackActiveUser5s();
+  useRecordAppOpen();
   useSyncTodayTasksWidget();
   const { badgeQueue, dismissBadge } = usePushNotificationSetup();
 
