@@ -13,11 +13,12 @@ It never blocks the PR — the PR is already open. If a step fails, say so in on
 
 Three sources. The first is the main one, but don't rely on it alone: a dev who leans on the AI **asks the fewest questions**, so their list would come out the shortest — the opposite of what we want.
 
-1. **The dev's own questions** — every message they typed on this branch, across all Claude Code sessions (one PBI often spans days). Claude Code keeps each session's transcript locally, and every message records the git branch:
+1. **The dev's own questions** — every message they typed in any Claude Code session that touched this branch (one PBI often spans days). Claude Code keeps each session's transcript locally, and every message records the git branch. Match whole sessions, not single messages: the PBI explain step and the dev's `go` line run on `main`, before `implement.md` creates the branch, so a per-message branch filter would drop them:
    ```bash
    B=$(git branch --show-current)
    D=~/.claude/projects/$(pwd | sed 's/[^a-zA-Z0-9]/-/g')
-   jq -r --arg b "$B" 'select(.type=="user" and .gitBranch==$b and (.isMeta|not))
+   S=$(jq -c --arg b "$B" 'select(.gitBranch==$b) | .sessionId' "$D"/*.jsonl | sort -u | jq -sc .)
+   jq -r --argjson s "$S" 'select(.type=="user" and (.sessionId as $id | $s | index($id)) and (.isMeta|not))
      | .message.content | if type=="string" then [.] else map(select(.type=="text") | .text) end
      | .[] | select(length>0 and (startswith("<")|not)) | .[0:500]' "$D"/*.jsonl
    ```
