@@ -9,10 +9,15 @@ export const useMyReferralCode = () => {
   const { data, isLoading } = useQuery({
     queryKey: referralKeys.myCode,
     queryFn: () => fetchMyReferralCode(),
+    refetchOnMount: "always",
   });
 
   return {
     referralCode: data?.code ?? null,
+    redemptionCount: data?.redemptionCount ?? 0,
+    targetCount: data?.targetCount ?? 0,
+    badgeIconUrl: data?.badgeIconUrl ?? null,
+    hasEarnedBadge: data?.hasEarnedBadge ?? false,
     isLoading,
   };
 };

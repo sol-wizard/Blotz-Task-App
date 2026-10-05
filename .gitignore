@@ -22,3 +22,6 @@ infra/*.ps1
 
 # pbi skill: per-dev "explain this PBI" pages — local only
 .pbi-explain/
+
+# to-learn skill: per-dev learning checklists written after each PR — local only
+/to-learn/

@@ -12,6 +12,10 @@ public class ReviewReportDto
 
     public int TasksCompleted { get; set; }
 
+    // Days in the period the app was opened, not necessarily consecutive. Null for weekly
+    // reviews and for months before activity tracking started (see ReviewPeriod.ReportsDaysActive).
+    public int? DaysActive { get; set; }
+
     // Null until the review has been generated. Letter is the body — the name is kept for the
     // clients already in the stores; Theme and OneThingToTryNext are also null before the split.
     public string? Letter { get; set; }
