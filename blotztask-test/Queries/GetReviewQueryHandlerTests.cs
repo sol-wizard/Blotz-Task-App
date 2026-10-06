@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Reviews;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Enums;
@@ -37,6 +38,11 @@ public class GetReviewQueryHandlerTests : IClassFixture<DatabaseFixture>
             AnchorDate = anchor,
             TimeZoneId = SydneyId,
         });
+
+    // Days-active tests anchor on the cutoff rather than a fixed date, so they keep working if it moves.
+    private static DateOnly FirstTrackedMonth =>
+        ReviewConstants.ActivityTrackingStartDate
+        ?? throw new InvalidOperationException("ActivityTrackingStartDate is not set, so days active is hidden for every month.");
 
     [Fact]
     public async Task Handle_TasksInsideAndOutsideThePeriod_CountsOnlyThoseCompletedInside()
@@ -213,5 +219,59 @@ public class GetReviewQueryHandlerTests : IClassFixture<DatabaseFixture>
 
         // Assert
         result.TasksCompleted.Should().Be(2, because: "weekly resolves its own [StartUtc, EndUtc) and runs the same count");
+    }
+
+    [Fact]
+    public async Task Handle_ActivityDaysAroundTheMonth_CountsOnlyThoseInside()
+    {
+        // Arrange — the first and last day of the month count; the day either side does not.
+        var userId = await _seeder.CreateUserAsync();
+        var otherUserId = await _seeder.CreateUserAsync();
+        var monthStart = FirstTrackedMonth;
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+
+        await _seeder.CreateActivityDayAsync(userId, monthStart);
+        await _seeder.CreateActivityDayAsync(userId, monthStart.AddDays(14));
+        await _seeder.CreateActivityDayAsync(userId, monthEnd);
+
+        await _seeder.CreateActivityDayAsync(userId, monthStart.AddDays(-1));
+        await _seeder.CreateActivityDayAsync(userId, monthEnd.AddDays(1));
+        await _seeder.CreateActivityDayAsync(otherUserId, monthStart.AddDays(14));
+
+        // Act
+        var result = await HandleAsync(userId, ReviewPeriodType.Monthly, monthStart);
+
+        // Assert
+        result.DaysActive.Should().Be(3,
+            because: "only the caller's own days in [StartLocalDate, EndLocalDateExclusive) count");
+    }
+
+    [Fact]
+    public async Task Handle_WeeklyPeriod_ReturnsNullDaysActive()
+    {
+        // Arrange — the week holds activity, so a null can only come from the period type.
+        var userId = await _seeder.CreateUserAsync();
+        var dayInTrackedMonth = FirstTrackedMonth.AddDays(7);
+        await _seeder.CreateActivityDayAsync(userId, dayInTrackedMonth);
+
+        // Act
+        var result = await HandleAsync(userId, ReviewPeriodType.Weekly, dayInTrackedMonth);
+
+        // Assert
+        result.DaysActive.Should().BeNull(because: "days active is a monthly stat only");
+    }
+
+    [Fact]
+    public async Task Handle_MonthBeforeActivityTrackingStarted_ReturnsNullNotZero()
+    {
+        // Arrange — no rows can exist before tracking started.
+        var userId = await _seeder.CreateUserAsync();
+
+        // Act
+        var result = await HandleAsync(userId, ReviewPeriodType.Monthly, FirstTrackedMonth.AddMonths(-1));
+
+        // Assert
+        result.DaysActive.Should().BeNull(
+            because: "a month with no tracking would read as a misleading zero, so the stat is hidden instead");
     }
 }

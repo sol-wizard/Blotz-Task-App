@@ -18,7 +18,7 @@ public class DataSeeder
         _context = context;
     }
 
-    public async Task<Guid> CreateUserAsync()
+    public async Task<Guid> CreateUserAsync(string? timezone = null)
     {
         var userId = Guid.NewGuid();
         var user = new AppUser
@@ -30,7 +30,8 @@ public class DataSeeder
             PictureUrl = "https://example.com/pic.png",
             CreationAt = DateTime.UtcNow,
             SignUpAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Timezone = timezone
         };
 
         _context.AppUsers.Add(user);
@@ -184,6 +185,15 @@ public class DataSeeder
         _context.TaskItems.Add(task);
         await _context.SaveChangesAsync();
         return task;
+    }
+
+    public async Task<UserActivityDay> CreateActivityDayAsync(Guid userId, DateOnly localDate)
+    {
+        var activityDay = new UserActivityDay { UserId = userId, LocalDate = localDate };
+
+        _context.UserActivityDays.Add(activityDay);
+        await _context.SaveChangesAsync();
+        return activityDay;
     }
 
     public async Task<ReviewReport> CreateReviewReportAsync(
