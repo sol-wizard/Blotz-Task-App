@@ -5,7 +5,7 @@ description: Use when the user wants something verified on a physical phone — 
 
 # Real-device test
 
-Drive the Blotz dev build on a **physical phone** with `agent-device`, then report evidence (screenshots, UI tree, logs), not opinions. Validated on iPhone 2026-09-10; Android uses the same tool but has not been run in this project yet — say so if you use it.
+Drive the Blotz dev build on a **physical phone**, then report evidence (screenshots, UI tree, logs), not opinions. iPhone: `agent-device`, validated 2026-09-10. Android: adb, validated 2026-10-07 — it has its own gate, build and commands in **§6**.
 
 **Never** silently fall back to the simulator and call it a device pass. If the phone is unreachable, report the blocker.
 
@@ -31,7 +31,7 @@ Walk the checklist top to bottom. For each item: run the check; if it fails, app
 | 12 | Metro serving the phone (§3) | `iOS Bundled …` line in the Metro log after launch | fix per §3 |
 | 13 | phone is logged in (§4 snapshot shows the Today screen, not "Continue with Phone") | logged in as **blotztest1@gmail.com** | **User** logs in on the phone; never search for the password. The dev doesn't know it → tell them to ask the tech lead or the team on **Discord, by DM** — never in a channel, and never write it into a file, commit or PR. If another account is signed in: Settings → Log out first (Auth0 remembers the last account) |
 
-Android equivalents: `adb devices -l` (USB debugging on, "Allow this computer" tapped), package `com.blotz.blotztask`, `agent-device … --platform android --serial <serial>`. Rows 2, 4 and 9 do not apply.
+**Android phone?** The table above and §1, §3, §4 are iPhone-only. Use the §6.1 gate instead, plus rows 6, 8, 10, 11 and 13 from this table.
 
 ## 1. Getting the dev build onto this phone
 
@@ -128,6 +128,66 @@ Runner build fails with `Build input file cannot be found: …mobileprovision` �
 
 For each scenario: device (name, iOS version), build (bundle id, backend used, Metro "Bundled" line), then steps as **pass / fail / not verified**, each with the screenshot path and the log lines that justify it. A tap that "succeeded" is not a pass — the pass is the observable result (count changed, row in DB, still there after a cold start). Say explicitly what could not be exercised on hardware (camera, biometrics, background time, TestFlight-only behaviour).
 
+## 6. Android
+
+Validated 2026-10-07: OnePlus 8T (ColorOS, Android 14), Windows 11 host, staging backend. Android needs **no tech lead**: there is no device registration, and any dev builds and installs the dev build from their own machine. The local backend has not been run against an Android phone yet; say so if you use it.
+
+### 6.1 Gate
+
+| # | Check (AI runs) | Passes when | If it fails |
+|---|---|---|---|
+| A1 | `adb version`, `java -version`, `echo $ANDROID_HOME` | adb prints a version, JDK **17**, the SDK path exists | **User** installs Android Studio (it brings the SDK and adb) and JDK 17 |
+| A2 | `adb devices -l` | the phone is listed as `device` | **User**: Settings → About phone → tap **Build number** 7 times (search "Build number" in Settings if it's buried, e.g. OnePlus: About device → Version) → Developer options → **USB debugging** on → re-plug a **data** cable → tick "Always allow" and tap **Allow** on the phone. `unauthorized` = the prompt was not accepted. On Windows, a phone that shows up in Device Manager only as a media/WPD device means USB debugging is still off |
+| A3 | Developer options → **Stay awake** | on | **User** turns it on. A locked phone gives black screenshots and a UI tree that only shows the lock screen. The screen lock itself stays on |
+| A4 | `adb -s <serial> shell pm list packages \| grep blotz` and `adb -s <serial> shell dumpsys package com.blotz.blotztask \| grep installerPackageName` | not installed, or installed by us (no `installerPackageName=com.android.vending`) | Android has **no `.dev` package**: the dev build and the Play Store app are both `com.blotz.blotztask` with different signatures, so they can't coexist. Ask the user before `adb uninstall com.blotz.blotztask` — it signs them out and clears that app's local data (tasks are on the server) |
+| A5 | the dev build is installed and current: `android/` exists and is newer than `app.config.js` / the last native change (row 8) | yes | build and install per §6.2 |
+| A6 | row 6 (JS deps) and row 11 (backend URL) from §0 | pass | as in §0, but see §6.3 for the Android URLs |
+
+Ask the user to keep their hands off the phone while the AI drives it: coordinates come from the last screenshot, so if the screen changed in between, the tap lands on something else. Re-screenshot before each tap, and decline any system consent dialog a stray tap opens.
+
+### 6.2 Build and install the dev build (≈ 8 min the first time)
+
+```bash
+cd blotztask-mobile
+npx expo prebuild --platform android --clean      # android/ is gitignored and regenerated; tracked files stay unchanged
+cd android && ./gradlew :app:assembleDebug -PreactNativeArchitectures=arm64-v8a   # one ABI is enough for a phone
+adb -s <serial> install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+On Windows run `gradlew.bat` from PowerShell. Watch the phone during `adb install`: OnePlus/OPPO (and Xiaomi, which also needs Developer options → **Install via USB**) show a confirmation dialog. Left unanswered, `adb install` hangs for minutes and then fails with an empty reason; re-run it while the user taps **Install**.
+
+The dev build only changes when native code does (row 8). JS changes come from Metro.
+
+### 6.3 Backend URL
+
+`10.0.2.2` is the emulator's alias for the host and does not exist on a phone, so a `.env.local` set up for the emulator breaks the phone. Use staging (§2), or for a local backend `http://localhost:5027` plus `adb reverse tcp:5027 tcp:5027`, which reaches the host over USB with no LAN IP or shared Wi-Fi — the same setting also works on the emulator. Restart Metro with `--clear` after changing `.env.local`.
+
+### 6.4 Metro and launch
+
+```bash
+adb -s <serial> reverse tcp:<port> tcp:<port>    # lost on re-plug or adb restart: re-run it
+adb -s <serial> shell am start -a android.intent.action.VIEW \
+  -d "blotztask://expo-development-client/?url=http%3A%2F%2Flocalhost%3A<port>" com.blotz.blotztask
+grep "Android Bundled" <metro log>                 # proves the phone pulled from *this* Metro
+```
+
+Pressing `a` in Metro does the same (`Shift+A` to pick a device when the emulator is also connected). The first bundle takes 20–45 s and the app is a blank white screen meanwhile; it is not hung. Fast Refresh works: an edit showed on the phone about 6 s after saving, same app process id, no restart.
+
+### 6.5 Drive the phone
+
+`agent-device` does not start on Windows (`Failed to start daemon … EPERM: operation not permitted, ftruncate`); drive with adb directly. On a Mac `agent-device … --platform android --serial <serial>` is untested. In Git Bash, prefix commands with `MSYS_NO_PATHCONV=1`, or `/sdcard/...` gets rewritten into a Windows path.
+
+```bash
+adb -s <serial> exec-out screencap -p > artifacts/<step>.png
+adb -s <serial> shell uiautomator dump /sdcard/ui.xml && adb -s <serial> shell cat /sdcard/ui.xml   # text + bounds of every node
+adb -s <serial> shell input tap <x> <y>           # physical pixels, as in the bounds above (not screenshot-preview pixels)
+adb -s <serial> shell input swipe <x1> <y1> <x2> <y2> 250
+adb -s <serial> shell input keyevent KEYCODE_BACK # KEYCODE_HOME goes to the first home page; BACK out of the app returns to the last one
+adb -s <serial> logcat -d --pid=$(adb -s <serial> shell pidof com.blotz.blotztask) | grep ReactNativeJS
+```
+
+Home-screen widgets: the user adds the widget once (long-press the home screen → Widgets → BlotzTask). Opening the app re-renders it, so cold-start the app, wait for the Today screen, then BACK to the widget's page and screenshot. `console.log` inside the widget component shows up in logcat under `ReactNativeJS`.
+
 ## Known gotchas — environment, not product bugs
 
 | Symptom | Cause / fix |
@@ -142,4 +202,9 @@ For each scenario: device (name, iOS version), build (bundle id, backend used, M
 | Metro `PluginError: Failed to resolve plugin for module "<pkg>"` | stale `node_modules` after a pull or branch switch — `npm install` (row 6) |
 | 500 `Invalid column name '<col>'` after a branch switch | local DB behind on migrations — `dotnet ef database update` (row 10) |
 | `expo-notifications` push-token WARN in Metro | dev builds have no push entitlement; ignore |
+| Android: red toast `Error getting Expo push token … Default FirebaseApp is not initialized` | a local Android build has no `google-services.json`; ignore |
+| Android: app shows old code after edits, Metro log has `EMFILE: too many open files` | Metro has been up for hours; stop it and start again with `--clear` |
+| Android: `adb install` runs for minutes, then fails with no reason | the phone's USB-install dialog was not answered — §6.2 |
+| Android: everything worked, then Metro is unreachable | the phone was re-plugged and `adb reverse` was dropped — re-run it (§6.4) |
+| Android on Windows: `assembleRelease` fails with `ninja: error: mkdir(…): No such file or directory` | Windows 260-character path limit in the CMake build. Debug builds are fine; a release build needs Windows long-path support turned on (user, admin) or the repo in a shorter path |
 | Chinese/emoji input on Android | agent-device uses a test IME (`--test-ime`); verify keyboard UX manually, never change product validation to suit the tool |

@@ -24,7 +24,7 @@ Cheap checks only. If one fails: **stop**, tell the dev exactly how to fix it, a
 | Backend | `docker info` | Docker is running — the tests use Testcontainers (a real SQL Server in Docker) |
 | Backend | `cd blotztask-test && dotnet build` | builds |
 | App | `cd blotztask-mobile && npx tsc --noEmit 2>&1 \| grep 'error TS' \| grep -v '^node_modules/'` | runs — note how many lines it prints. That's the baseline: library code in `node_modules` has its own type errors, so ignore those and never "fix" them |
-| App, when the user will see the change | `real-device-test` §0 readiness rows 1–4 and 7 | phone connected, trusted, developer mode on, dev build installed. **This needs a Mac + iPhone for now** (Android isn't set up yet). No Mac + iPhone → tell the dev, and plan for the reviewer or a teammate with one to do the phone run. |
+| App, when the user will see the change | `real-device-test` §0 readiness rows 1–4 and 7 (iPhone) or §6.1 rows A1–A5 (Android) | phone connected, trusted, developer mode on, dev build installed. iPhone needs a Mac; an Android phone works from any computer, Windows included. Neither available → tell the dev, and plan for the reviewer or a teammate with one to do the phone run. |
 
 ## 4. Write the code in small pieces
 
