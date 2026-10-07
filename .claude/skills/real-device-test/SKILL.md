@@ -31,7 +31,7 @@ Walk the checklist top to bottom. For each item: run the check; if it fails, app
 | 12 | Metro serving the phone (§3) | `iOS Bundled …` line in the Metro log after launch | fix per §3 |
 | 13 | phone is logged in (§4 snapshot shows the Today screen, not "Continue with Phone") | logged in as **blotztest1@gmail.com** | **User** logs in on the phone; never search for the password. The dev doesn't know it → tell them to ask the tech lead or the team on **Discord, by DM** — never in a channel, and never write it into a file, commit or PR. If another account is signed in: Settings → Log out first (Auth0 remembers the last account) |
 
-**Android phone?** The table above and §1, §3, §4 are iPhone-only. Use the §6.1 gate instead, plus rows 6, 8, 10, 11 and 13 from this table.
+**Android phone?** The table above and §1, §3, §4 are iPhone-only. Use the §6.1 gate instead; its row A6 lists the rows of this table that still apply.
 
 ## 1. Getting the dev build onto this phone
 
@@ -138,10 +138,10 @@ Validated 2026-10-07: OnePlus 8T (ColorOS, Android 14), Windows 11 host, staging
 |---|---|---|---|
 | A1 | `adb version`, `java -version`, `echo $ANDROID_HOME` | adb prints a version, JDK **17**, the SDK path exists | **User** installs Android Studio (it brings the SDK and adb) and JDK 17 |
 | A2 | `adb devices -l` | the phone is listed as `device` | **User**: Settings → About phone → tap **Build number** 7 times (search "Build number" in Settings if it's buried, e.g. OnePlus: About device → Version) → Developer options → **USB debugging** on → re-plug a **data** cable → tick "Always allow" and tap **Allow** on the phone. `unauthorized` = the prompt was not accepted. On Windows, a phone that shows up in Device Manager only as a media/WPD device means USB debugging is still off |
-| A3 | Developer options → **Stay awake** | on | **User** turns it on. A locked phone gives black screenshots and a UI tree that only shows the lock screen. The screen lock itself stays on |
+| A3 | `adb -s <serial> shell settings get global stay_on_while_plugged_in` and `adb -s <serial> shell dumpsys window \| grep isKeyguardShowing` | non-zero, and `false` | **User** turns on Developer options → **Stay awake** and unlocks the phone. A locked phone gives black screenshots and a UI tree that only shows the lock screen. The screen lock itself stays on |
 | A4 | `adb -s <serial> shell pm list packages \| grep blotz` and `adb -s <serial> shell dumpsys package com.blotz.blotztask \| grep installerPackageName` | not installed, or installed by us (no `installerPackageName=com.android.vending`) | Android has **no `.dev` package**: the dev build and the Play Store app are both `com.blotz.blotztask` with different signatures, so they can't coexist. Ask the user before `adb uninstall com.blotz.blotztask` — it signs them out and clears that app's local data (tasks are on the server) |
-| A5 | the dev build is installed and current: `android/` exists and is newer than `app.config.js` / the last native change (row 8) | yes | build and install per §6.2 |
-| A6 | row 6 (JS deps) and row 11 (backend URL) from §0 | pass | as in §0, but see §6.3 for the Android URLs |
+| A5 | `adb -s <serial> shell dumpsys package com.blotz.blotztask \| grep lastUpdateTime` vs `git log -1 --format=%ci -- blotztask-mobile/app.config.js blotztask-mobile/app-widget.config.cjs blotztask-mobile/plugins blotztask-mobile/package.json`, and `git status` on those paths | the install is newer than the last native change, and none of them is modified | build and install per §6.2 |
+| A6 | rows 6, 8, 10 (local backend only), 11 and 13 from §0 | pass | as in §0, with the Android URLs from §6.3. Row 13 on Android: the §6.5 UI dump shows the Today screen, and Settings → Account shows blotztest1@gmail.com |
 
 Ask the user to keep their hands off the phone while the AI drives it: coordinates come from the last screenshot, so if the screen changed in between, the tap lands on something else. Re-screenshot before each tap, and decline any system consent dialog a stray tap opens.
 
@@ -164,18 +164,25 @@ The dev build only changes when native code does (row 8). JS changes come from M
 
 ### 6.4 Metro and launch
 
+Port **8082**, as in §3, so it never collides with the dev's own Metro on 8081. No `CI=1`. Start it from `blotztask-mobile/` in the background, then:
+
 ```bash
-adb -s <serial> reverse tcp:<port> tcp:<port>    # lost on re-plug or adb restart: re-run it
+npx expo start --dev-client --port 8082 > <scratch>/metro-8082.log 2>&1   # background
+adb -s <serial> reverse tcp:8082 tcp:8082        # lost on re-plug or adb restart: re-run it
 adb -s <serial> shell am start -a android.intent.action.VIEW \
-  -d "blotztask://expo-development-client/?url=http%3A%2F%2Flocalhost%3A<port>" com.blotz.blotztask
-grep "Android Bundled" <metro log>                 # proves the phone pulled from *this* Metro
+  -d "blotztask://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8082" com.blotz.blotztask
+grep "Android Bundled" <scratch>/metro-8082.log   # proves the phone pulled from *this* Metro
 ```
 
-Pressing `a` in Metro does the same (`Shift+A` to pick a device when the emulator is also connected). The first bundle takes 20–45 s and the app is a blank white screen meanwhile; it is not hung. Fast Refresh works: an edit showed on the phone about 6 s after saving, same app process id, no restart.
+If the app is already open, `am start` prints `Warning: Activity not started, its current task has been brought to the front` and still reloads from the URL — check the "Android Bundled" line. That is not a cold start; for one, run `adb -s <serial> shell am force-stop com.blotz.blotztask` first.
+
+A dev running Metro in their own terminal can press `a` instead (`Shift+A` to pick a device when the emulator is also connected); a background Metro has no keyboard. The first bundle takes 15–45 s and the app is a blank white screen meanwhile; it is not hung. Fast Refresh works: an edit showed on the phone 3–6 s after saving, same app process id, no restart (checked twice, 2026-10-07 and 2026-10-08).
 
 ### 6.5 Drive the phone
 
-`agent-device` does not start on Windows (`Failed to start daemon … EPERM: operation not permitted, ftruncate`); drive with adb directly. On a Mac `agent-device … --platform android --serial <serial>` is untested. In Git Bash, prefix commands with `MSYS_NO_PATHCONV=1`, or `/sdcard/...` gets rewritten into a Windows path.
+`agent-device` does not start on Windows (`Failed to start daemon … EPERM: operation not permitted, ftruncate`); drive with adb directly. On a Mac `agent-device … --platform android --serial <serial>` is untested.
+
+**Git Bash: every `adb` command with a `/sdcard/...` path needs `MSYS_NO_PATHCONV=1` in front.** Without it Git Bash rewrites the path; `uiautomator dump` still prints "dumped to: /Files/Git/sdcard/ui.xml" and exits 0 but writes nothing, and the next `cat /sdcard/ui.xml` returns an **old** dump — you read a screen that is no longer there.
 
 ```bash
 adb -s <serial> exec-out screencap -p > artifacts/<step>.png
@@ -187,6 +194,10 @@ adb -s <serial> logcat -d --pid=$(adb -s <serial> shell pidof com.blotz.blotztas
 ```
 
 Home-screen widgets: the user adds the widget once (long-press the home screen → Widgets → BlotzTask). Opening the app re-renders it, so cold-start the app, wait for the Today screen, then BACK to the widget's page and screenshot. `console.log` inside the widget component shows up in logcat under `ReactNativeJS`.
+
+### 6.6 Clean up
+
+Stop your own Metro. On Windows, stopping the background task can leave its `node.exe` still listening: find it with `netstat -ano | grep :8082`, check its command line is `expo start … --port 8082`, then `Stop-Process -Id <pid>`. Then `adb -s <serial> reverse --remove tcp:8082`. Killing that process can make the adb daemon restart, which drops **every** `adb reverse` rule, including ones the dev set up for their own Metro — tell them to re-run theirs.
 
 ## Known gotchas — environment, not product bugs
 
@@ -202,8 +213,8 @@ Home-screen widgets: the user adds the widget once (long-press the home screen �
 | Metro `PluginError: Failed to resolve plugin for module "<pkg>"` | stale `node_modules` after a pull or branch switch — `npm install` (row 6) |
 | 500 `Invalid column name '<col>'` after a branch switch | local DB behind on migrations — `dotnet ef database update` (row 10) |
 | `expo-notifications` push-token WARN in Metro | dev builds have no push entitlement; ignore |
-| Android: red toast `Error getting Expo push token … Default FirebaseApp is not initialized` | a local Android build has no `google-services.json`; ignore |
-| Android: app shows old code after edits, Metro log has `EMFILE: too many open files` | Metro has been up for hours; stop it and start again with `--clear` |
+| Android: red toast `Error getting Expo push token … Default FirebaseApp is not initialized` | a local Android build has no `google-services.json`; ignore it, but tap its X first — it covers the bottom tab bar and swallows taps there |
+| Android on Windows: Metro log has `EMFILE: too many open files` | seen both on a Metro that had run for hours and on a 2-minute-old one sharing the project with a second Metro. Harmless while edits still reach the phone; if the phone keeps showing old code, stop Metro and start again with `--clear` |
 | Android: `adb install` runs for minutes, then fails with no reason | the phone's USB-install dialog was not answered — §6.2 |
 | Android: everything worked, then Metro is unreachable | the phone was re-plugged and `adb reverse` was dropped — re-run it (§6.4) |
 | Android on Windows: `assembleRelease` fails with `ninja: error: mkdir(…): No such file or directory` | Windows 260-character path limit in the CMake build. Debug builds are fine; a release build needs Windows long-path support turned on (user, admin) or the repo in a shorter path |
