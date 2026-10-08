@@ -1,0 +1,428 @@
+<title>Blotz 开发周报</title>
+<style>
+  /* Layout: one Lark-doc column. Status sections (H2) each hold one table; one row per feature, rows in the
+   fixed feature order below, so a feature sits in the same place in every section. Colour = feature, never status. */
+  :root {
+    --bg: #ffffff;
+    --fg: #1f2329;
+    --muted: #646a73;
+    --line: #dee0e3;
+    --head: #f5f6f7;
+    --link: #245bdb;
+    --callout-bg: #f0f4ff;
+    --callout-line: #bacefd;
+    --tag-s: 78%;
+    --tag-bg-l: 91%;
+    --tag-fg-l: 30%;
+    --font:
+      -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1a1a;
+      --fg: #23355a;
+      --muted: #a0a4ab;
+      --line: #3a3c40;
+      --head: #232427;
+      --link: #6e9bff;
+      --callout-bg: #1d2740;
+      --callout-line: #34477a;
+      --tag-s: 40%;
+      --tag-bg-l: 24%;
+      --tag-fg-l: 80%;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1a1a;
+    --fg: #e3e4e6;
+    --muted: #a0a4ab;
+    --line: #3a3c40;
+    --head: #232427;
+    --link: #6e9bff;
+    --callout-bg: #1d2740;
+    --callout-line: #34477a;
+    --tag-s: 40%;
+    --tag-bg-l: 24%;
+    --tag-fg-l: 80%;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .doc {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 64px;
+  }
+  h1 {
+    font-size: 1.9rem;
+    line-height: 1.3;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin: 36px 0 2px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    text-wrap: balance;
+  }
+  h2 .n {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 10px;
+  }
+  a {
+    color: var(--link);
+    text-decoration: none;
+  }
+  a:hover,
+  a:focus-visible {
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .callout {
+    display: flex;
+    gap: 12px;
+    background: var(--callout-bg);
+    border: 1px solid var(--callout-line);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .callout .emoji {
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .callout .body {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .callout p {
+    margin: 0;
+  }
+  .callout .hint {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 600px;
+  }
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+  th {
+    background: var(--head);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  td + td,
+  th + th {
+    border-left: 1px solid var(--line);
+  }
+  col.c-f {
+    width: 112px;
+  }
+  col.c-n {
+    width: 32%;
+  }
+  td.note {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  td.empty {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .links {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+
+  /* Feature tags. ROW ORDER = the order of this list. Each feature keeps its hue forever.
+   A new feature gets a new class here, with a hue at least 20° away from the features next to it in the order. */
+  .ft {
+    --h: 0;
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+    padding: 1px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    background: hsl(var(--h) var(--tag-s) var(--tag-bg-l));
+    color: hsl(var(--h) 55% var(--tag-fg-l));
+  }
+  .f-login {
+    --h: 210;
+  } /* 登录与账号 */
+  .f-tip {
+    --h: 42;
+  } /* 打赏 */
+  .f-ai {
+    --h: 252;
+  } /* AI */
+  .f-badge {
+    --h: 63;
+  } /* 勋章 */
+  .f-invite {
+    --h: 105;
+  } /* 邀请 */
+  .f-onb {
+    --h: 147;
+  } /* 新手引导 */
+  .f-widget {
+    --h: 0;
+  } /* 小组件 */
+  .f-cal {
+    --h: 231;
+  } /* 日历 */
+  .f-note {
+    --h: 84;
+  } /* 笔记 */
+  .f-pomo {
+    --h: 21;
+  } /* 番茄钟 */
+  .f-review {
+    --h: 126;
+  } /* 回顾 */
+  .f-remind {
+    --h: 336;
+  } /* 提醒 */
+  .f-fb {
+    --h: 273;
+  } /* 反馈 */
+  .f-data {
+    --h: 168;
+  } /* 数据统计 */
+  .f-perf {
+    --h: 315;
+  } /* 性能 */
+  .f-web {
+    --h: 189;
+  } /* 官网 */
+  .f-other {
+    background: var(--head);
+    color: var(--muted);
+  } /* 其他: always last */
+
+  .mt {
+    display: inline-block;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 0 6px;
+    margin-left: 4px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .wait {
+    color: var(--fg);
+  }
+
+  .foot {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .foot p {
+    margin: 4px 0;
+  }
+</style>
+
+<!-- Fill-in contract (details in SKILL.md):
+     - Replace every {{…}}. Keep the five sections, their order, headings, sub lines, the hint line and the footer exactly.
+     - One <tr> per feature per section, in the feature order of the CSS list above. Never two rows for one feature in a section.
+     - Row shape:
+         <tr><td><span class="ft f-KEY">功能名</span></td>
+           <td>内容。<span class="mt">📝 会议提到</span></td>     ← the 📝 tag only if the meeting notes mention it
+           <td class="note">备注。<span class="wait">等拍板：…</span>
+             <span class="links"><a href="PR or PBI URL">#123</a> · PBI <a href="…">#1234</a></span></td></tr>
+     - A section with nothing in it keeps its heading and table, with one row: <tr><td colspan="3" class="empty">本周没有</td></tr>
+       and its count reads "0 个功能".
+     - No names anywhere. -->
+<main class="doc">
+  <h1>Blotz 开发周报 · {{开始日期}} 至 {{结束日期}}</h1>
+  <p class="meta">按状态分组，同一功能同一颜色 · 数据截至 {{截至日期}}</p>
+
+  <div class="callout">
+    <span class="emoji" aria-hidden="true">📌</span>
+    <div class="body">
+      <p>
+        {{两三句总结：下一版本里最主要的变化；开发中的重点；还没人认领的功能。}}
+      </p>
+      <p class="hint">
+        颜色代表功能，同一功能在每个状态里颜色都一样。<span class="mt"
+          >📝 会议提到</span
+        >
+        表示 {{会议日期}} 会议纪要里提到过，纪要仅供参考。
+      </p>
+    </div>
+  </div>
+
+  <h2>🚀 下一版本 <span class="n">{{N}} 个功能</span></h2>
+  <p class="sub">
+    已合并，会随下一个版本上线（{{版本号}} 提交商店之后合并的改动）
+  </p>
+  <div class="wrap">
+    <table>
+      <colgroup>
+        <col class="c-f" />
+        <col />
+        <col class="c-n" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>内容</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{行}}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>🔍 开发评审/测试中 <span class="n">{{N}} 个功能</span></h2>
+  <p class="sub">代码已写完，在评审或测试，还没进下一版本</p>
+  <div class="wrap">
+    <table>
+      <colgroup>
+        <col class="c-f" />
+        <col />
+        <col class="c-n" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>内容</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{行}}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>🔨 开发中 <span class="n">{{N}} 个功能</span></h2>
+  <p class="sub">已经在写，还没有可评审的代码</p>
+  <div class="wrap">
+    <table>
+      <colgroup>
+        <col class="c-f" />
+        <col />
+        <col class="c-n" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>内容</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{行}}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>📋 待开发 <span class="n">{{N}} 个功能</span></h2>
+  <p class="sub">已建 PBI、有负责人，还没开始</p>
+  <div class="wrap">
+    <table>
+      <colgroup>
+        <col class="c-f" />
+        <col />
+        <col class="c-n" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>内容</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{行}}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>🙋 待认领 <span class="n">{{N}} 个功能</span></h2>
+  <p class="sub">还没有负责人，或者还没建 PBI</p>
+  <div class="wrap">
+    <table>
+      <colgroup>
+        <col class="c-f" />
+        <col />
+        <col class="c-n" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>内容</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{行}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    <p>没有列出：新人学习任务、CI 和发布工具、开发流程和 AI skill 的改动。</p>
+    <p>
+      数据来源：GitHub 上的 PR、PBI
+      和看板。状态按实际合并和评审情况判断，不只看看板列。
+    </p>
+  </div>
+</main>
