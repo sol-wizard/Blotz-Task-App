@@ -9,7 +9,7 @@
 #      so it always deploys pushed commits, never your dirty working tree
 #   2. allows only the AI Coach migration that creates two new tables
 #   3. dotnet publish (Release), same command CI uses
-#   4. with --apply-migrations, applies only that migration to shared staging SQL
+#   4. with --apply-migrations, runs SQL for only that migration on shared staging SQL
 #   5. pushes the zip to the app's Kudu publish endpoint and restarts it
 #   6. waits for /health to say Healthy (F1 cold start can take a minute or two)
 #
@@ -45,8 +45,10 @@ KEY_VAULT="kv-blotz-task-stag"
 REPO="${BLOTZ_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CACHE="$HOME/.cache/blotz-v2-deploy"
 WT="$CACHE/src"; OUT="$CACHE/publish"; ZIP="$CACHE/api.zip"
+SQL="$CACHE/ai-coach-migration.sql"
 MIGRATIONS_DIR="blotztask-api/Infrastructure/Data/Migrations"
 AI_MIGRATION="20260928030534_AddAiCoachFeedbackAndTraceEvents"
+PREVIOUS_MIGRATION="20260712043011_AllowRecurringOverridePerTemplateOccurrence"
 
 echo "== 0/6 Azure subscription"
 SUB=$(az account list --only-show-errors -o tsv --query "[?name=='$SUB_NAME'].id | [0]")
@@ -125,18 +127,24 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
   }
   PENDING_OTHER=$(jq -r --arg id "$AI_MIGRATION" \
     '.[] | select(.id != $id and .applied == false) | .id' <<< "$MIGRATION_STATE")
-  [ -z "$PENDING_OTHER" ] || {
-    echo "!! older branch migrations are not applied; refusing to change staging SQL:" >&2
-    printf '%s\n' "$PENDING_OTHER" >&2
-    exit 1
-  }
+  if [ -n "$PENDING_OTHER" ]; then
+    echo "   other migrations left pending in staging (will not be applied):"
+    printf '%s\n' "$PENDING_OTHER" | sed 's/^/     /'
+  fi
   AI_APPLIED=$(jq -r --arg id "$AI_MIGRATION" \
     '.[] | select(.id == $id) | .applied' <<< "$MIGRATION_STATE")
   if [ "$AI_APPLIED" = true ]; then
     echo "   $AI_MIGRATION is already applied"
   else
+    rm -f "$SQL"
     ConnectionStrings__DefaultConnection="$DB_CONN" ASPNETCORE_ENVIRONMENT=Staging \
-      dotnet ef database update "$AI_MIGRATION" --configuration Release --no-build
+      dotnet ef migrations script "$PREVIOUS_MIGRATION" "$AI_MIGRATION" \
+        --idempotent --configuration Release --no-build -o "$SQL"
+    [ -s "$SQL" ] || { echo "!! EF produced no AI Coach migration SQL." >&2; exit 1; }
+    echo "   AI Coach migration SQL: $SQL"
+    BLOTZ_SQL_CONNECTION_STRING="$DB_CONN" dotnet run \
+      --project "$WT/scripts/v2-sql-runner/V2SqlRunner.csproj" \
+      --configuration Release -- "$SQL" "$AI_MIGRATION"
     echo "   applied: $AI_MIGRATION"
   fi
 )
