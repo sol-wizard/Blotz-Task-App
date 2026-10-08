@@ -20,8 +20,9 @@ the repo, a commit or a PR (it's user data; keep it in a temp folder and delete 
 3. `config.json` exists next to this file. If not: copy `config.example.json` and ask the user for the IDs.
 4. If `base_token` is a wiki node, resolve it: `lark-cli wiki +node-get --node-token <token> --as bot`
    and use `obj_token` as the base token.
-5. `lark-cli base +field-list` on both tables: every field named in the config exists. Note the option
-   lists of 反馈类型 and 功能模块 — classification may only use those options.
+5. `lark-cli base +field-list` on both tables: every field named in the config exists (including
+   `po_decision` and `source`). Note the option lists of 反馈类型 and 功能模块 from the master table
+   itself — classification may only use those options.
 
 All commands below use `--as bot` and the base token from step 4.
 
@@ -35,6 +36,8 @@ All commands below use `--as bot` and the base token from step 4.
 4. Read the raw rows with `+record-list`. Keep those with time **at or after** the start point, sorted
    oldest first. Drop any raw row already in a master description (same time + same text) — that
    makes a re-run after a crash safe, even when two reports share the same second.
+   反馈时间 is a date with no time, so "at or after" re-reads the whole start day; this same check
+   stops those rows from being counted twice.
 5. Nothing left → skip to ④ and post "本月没有新反馈。"
 
 ## ② Decide, one raw row at a time (oldest first)
@@ -54,11 +57,11 @@ Dot point format, one line per report: `• <反馈时间> — <raw text>`
 
 - **Merge:** first upload its screenshots to the master row
   (`+record-upload-attachment --field-id <screenshot>` — it adds, never replaces). Then **one**
-  `+record-batch-update` on that row: description + the new dot point, count + 1,
-  latest_time = this report's time.
+  `+record-batch-update` on that row: description + the new dot point, count + 1 (an empty count
+  counts as 1, so it becomes 2), latest_time = this report's time.
 - **New:** `+record-batch-create` with a short title in the feedback's language, type, module,
-  description = its dot point, count = 1, latest_time = its time. Then upload its screenshots to the
-  new record.
+  description = its dot point, count = 1, latest_time = its time, source = `new_row_source`. Then
+  upload its screenshots to the new record.
 
 Update your in-memory copy of the master row after each write, so the next raw row sees it.
 

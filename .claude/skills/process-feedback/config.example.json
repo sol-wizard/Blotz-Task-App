@@ -7,6 +7,8 @@
   "master_fields": {
     "title": "反馈内容标题", "type": "反馈类型", "module": "功能模块",
     "count": "累计反馈", "description": "反馈描述",
-    "latest_time": "最近反馈时间", "screenshot": "截图", "po_decision": "PO决定"
-  }
+    "latest_time": "反馈时间", "screenshot": "附件", "po_decision": "优先级",
+    "source": "反馈来源"
+  },
+  "new_row_source": "App内"
 }
