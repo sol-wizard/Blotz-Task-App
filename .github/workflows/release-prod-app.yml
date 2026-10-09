@@ -11,11 +11,11 @@ name: Prod - Submit app to the stores
 # upload lands as a draft (`releaseStatus: "draft"`) that only goes out when
 # someone starts the rollout in the console.
 #
-# It deploys no backend on purpose. Store review sits in the middle of a
-# production release, so by the time it passes, main has usually moved on.
-# Button 2 (Prod - Ship backend) deploys the API from the `submitted/<version>`
-# tag once the release is live in the stores, which is what keeps the API and the
-# binary users installed on one commit.
+# Then it deploys the production API from the same commit, before the build is
+# sent for review. The deploy waits for approval on the `prod` environment.
+#
+# Button 2 (Prod - Go live) raises the minimum supported version and records the
+# release, once the new version is live in both stores.
 
 on:
   workflow_dispatch:
@@ -166,8 +166,8 @@ jobs:
           ref: main
 
       # This tag is the whole point of button 1. It pins the commit that became the
-      # binaries now waiting in the store consoles, so that button 2 can deploy the
-      # API from it days later instead of from whatever main has become by then.
+      # binaries now waiting in the store consoles, so that button 2 can record the
+      # release against it days later instead of whatever main has become by then.
       #
       # Forced because a rejected review is resubmitted under the same version, and
       # the tag should follow the code that was actually submitted last.
@@ -178,7 +178,7 @@ jobs:
           git tag -f "$TAG" "$GITHUB_SHA"
           git push --force origin "refs/tags/$TAG"
           echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Next: submit for review in App Store Connect, then once the release is live in both stores run **Prod - Ship backend** on this tag." >> "$GITHUB_STEP_SUMMARY"
+          echo "Next: approve the API deploy below. Once it is healthy, log in once with the prod build on TestFlight and check the task list loads, then submit for review. Once the release is live in **both** stores, run **Prod - Go live** on this tag." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/download-artifact@v4
         with:
@@ -201,3 +201,31 @@ jobs:
             Tagged as `submitted/${{ needs.version.outputs.new_version }}`.
 
             Merge to keep `eas.json` on `main` in step with what is in the stores.
+
+  deploy-api:
+    name: Deploy the API from the submitted commit
+    needs: tag-and-record
+    uses: ./.github/workflows/deploy-prod-api.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+
+  verify-api:
+    name: Health check
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the production API is healthy
+        working-directory: .
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-prod.azurewebsites.net/health)
+          echo "/health returned: $BODY"
+          if [ "$BODY" != "Healthy" ]; then
+            echo "::error::production API is not healthy"
+            exit 1
+          fi
+          echo "### Production API deployed and healthy" >> "$GITHUB_STEP_SUMMARY"
+          echo "Log in once with the prod build on TestFlight, then submit for review." >> "$GITHUB_STEP_SUMMARY"

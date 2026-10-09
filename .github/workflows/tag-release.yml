@@ -1,8 +1,8 @@
 name: Tag Release
 
 # Records a SHIPPED release (iOS + Android, which ship together) in GitHub.
-# Normally called by release-prod-backend.yml (button 2), once the production API
-# has been deployed from the release tag and answered its health check.
+# Normally called by release-prod-backend.yml (button 2), once the release is
+# live in both stores and the update prompt serves the new version.
 # workflow_dispatch stays for recording a release by hand.
 #
 # It creates a `release/<date>` tag + a published GitHub Release whose notes are
