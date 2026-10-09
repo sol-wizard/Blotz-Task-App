@@ -76,7 +76,7 @@
       "channel": "v2-preview",
       "ios": {
         "env": {
-          "APP_VERSION": "1.3.2"
+          "APP_VERSION": "2.0.0"
         }
       },
       "env": {
