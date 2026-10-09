@@ -27,7 +27,7 @@ table below to pick the right one and open it yourself.
 | `to-learn` | Right after a PR is opened (run by `pr` automatically): a local checklist of what the dev should study from this branch, with docs |
 | `pbi` | Creating a PBI, explaining one before coding, implementing it (tests checked first, small pieces, proof at the end), or updating it — moving its card, ticking finished boxes, adding a short note |
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
-| `generate-weekly-focus` | Producing the weekly summary of team work for marketing/product |
+| `generate-weekly-focus` | Producing the weekly dev progress report (开发周报) for the PM and marketing, before the Saturday product meeting |
 | `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |
 
 The `expo-*` skills (`expo-router`, `expo-native-ui`, `expo-animation`, `expo-data-fetching`,
