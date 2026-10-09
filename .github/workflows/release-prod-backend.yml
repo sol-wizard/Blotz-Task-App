@@ -1,17 +1,13 @@
-name: Prod - Ship backend
+name: Prod - Go live
 
 # Button 2 of the two-button production release.
 #
-# Run this AFTER you have pressed release in App Store Connect / started the
-# rollout in Play Console AND confirmed the new version is actually live. It
-# deploys the production API, points the in-app update prompt at the new version,
-# and records the release in GitHub.
+# Run this on the `submitted/<version>` tag AFTER you have pressed release in App
+# Store Connect AND started the rollout in Play Console, and confirmed the new
+# version is actually live in BOTH stores. It points the in-app update prompt at
+# the new version and records the release in GitHub.
 #
-# Deploying after the stores publish leaves a short window - the length of this
-# run - where a freshly updated app talks to the old API. The rule that keeps
-# that harmless: if an app change needs a new endpoint, ship the endpoint ahead
-# of the release with a plain "Prod - Build and deploy WebApi" run, the way the
-# badges equip endpoint went out before the app that used it.
+# It deploys nothing: button 1 already deployed the API from this tag.
 
 on:
   workflow_dispatch:
@@ -49,7 +45,7 @@ jobs:
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME#submitted/}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "### Shipping the backend for \`$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Going live with \`$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
           echo "From \`${{ github.ref_name }}\` (\`${{ github.sha }}\`), not from main." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/checkout@v4
@@ -89,37 +85,9 @@ jobs:
             echo "$PLATFORM build number: ${BUILD:-not found}"
           done
 
-  deploy-api:
-    name: Deploy the API from the tag
-    needs: meta
-    uses: ./.github/workflows/deploy-prod-api.yml
-    secrets: inherit
-    permissions:
-      id-token: write
-      contents: read
-
-  verify:
-    name: Health check
-    needs: deploy-api
-    runs-on: ubuntu-latest
-    steps:
-      # Retries ride out the App Service warm-up after the deploy - a cold .NET
-      # start can take a couple of minutes. /health also covers the database,
-      # which matters because the deploy runs EF migrations right before it.
-      - name: Check the production API is healthy
-        run: |
-          set -euo pipefail
-          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
-            https://app-blotz-task-api-prod.azurewebsites.net/health)
-          echo "/health returned: $BODY"
-          if [ "$BODY" != "Healthy" ]; then
-            echo "::error::production API is not healthy"
-            exit 1
-          fi
-
   update-prompt:
     name: Point the update prompt at the new version
-    needs: [meta, verify]
+    needs: meta
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -189,8 +157,8 @@ jobs:
 
   tag-release:
     name: Record the release
-    # Last, so a release is only written down once the API is healthy and the
-    # update prompt is actually serving the new version.
+    # Last, so a release is only written down once the update prompt is actually
+    # serving the new version.
     #
     # TODO: fold tag-release.yml into this job once the two-button flow has
     # survived a few real releases. It is ~30 lines whose whole job is one
