@@ -1,0 +1,62 @@
+<title>开发进度 {{开始日期}}–{{结束日期}}</title>
+<callout emoji="📌" background-color="light-blue">
+<p><b>本期要点</b></p>
+<p>{{两三句总结：上次问到的事有什么结果；下一版本里最主要的变化；还没人认领的功能。}}</p>
+<p><span text-color="gray">颜色代表功能，同一功能在每张表里颜色都一样。📝 表示 {{会议日期}} 产品会议提到过，纪要仅供参考。数据截至 {{截至日期}}。</span></p>
+</callout>
+<h2>📌 上次会上问到的</h2>
+<table>
+<colgroup><col width="120"/><col width="300"/><col width="400"/></colgroup>
+<thead><tr><th background-color="light-gray"><p>功能</p></th><th background-color="light-gray"><p>上次问到的</p></th><th background-color="light-gray"><p>现在怎么样</p></th></tr></thead>
+<tbody>
+<tr><td><p><span background-color="{{颜色}}"><b>{{功能}}</b></span></p></td><td><p>{{会上的问题或话题}}</p></td><td><p>{{现在的情况，一两句}}</p><p><a href="{{链接}}">{{#编号}}</a></p></td></tr>
+</tbody>
+</table>
+<h2>🚀 下一版本（{{N}} 个功能）</h2>
+<p><span text-color="gray">已合并，会随下一个版本上线（{{版本号}} 提交商店之后合并的改动）</span></p>
+<table>
+<colgroup><col width="120"/><col width="400"/><col width="300"/></colgroup>
+<thead><tr><th background-color="light-gray"><p>功能</p></th><th background-color="light-gray"><p>内容</p></th><th background-color="light-gray"><p>备注</p></th></tr></thead>
+<tbody>
+<tr><td><p><span background-color="{{颜色}}"><b>{{功能}}</b></span></p></td><td><p>{{内容}} <span text-color="gray">📝 会议提到</span></p></td><td><p>{{备注}}</p><p><a href="{{链接}}">{{#编号}}</a></p></td></tr>
+</tbody>
+</table>
+<h2>🔍 开发评审/测试中（{{N}} 个功能）</h2>
+<p><span text-color="gray">代码已写完，在评审或测试，还没进下一版本</span></p>
+<table>
+<colgroup><col width="120"/><col width="400"/><col width="300"/></colgroup>
+<thead><tr><th background-color="light-gray"><p>功能</p></th><th background-color="light-gray"><p>内容</p></th><th background-color="light-gray"><p>备注</p></th></tr></thead>
+<tbody>
+<tr><td><p><span background-color="{{颜色}}"><b>{{功能}}</b></span></p></td><td><p>{{内容}}</p></td><td><p>{{备注}}</p><p><a href="{{链接}}">{{#编号}}</a></p></td></tr>
+</tbody>
+</table>
+<h2>🔨 开发中（{{N}} 个功能）</h2>
+<p><span text-color="gray">已经在写，还没有可评审的代码</span></p>
+<table>
+<colgroup><col width="120"/><col width="400"/><col width="300"/></colgroup>
+<thead><tr><th background-color="light-gray"><p>功能</p></th><th background-color="light-gray"><p>内容</p></th><th background-color="light-gray"><p>备注</p></th></tr></thead>
+<tbody>
+<tr><td><p><span background-color="{{颜色}}"><b>{{功能}}</b></span></p></td><td><p>{{内容}}</p></td><td><p>{{备注}}</p><p><a href="{{链接}}">{{#编号}}</a></p></td></tr>
+</tbody>
+</table>
+<h2>📋 待开发（{{N}} 个功能）</h2>
+<p><span text-color="gray">已建 PBI、有负责人，还没开始</span></p>
+<table>
+<colgroup><col width="120"/><col width="400"/><col width="300"/></colgroup>
+<thead><tr><th background-color="light-gray"><p>功能</p></th><th background-color="light-gray"><p>内容</p></th><th background-color="light-gray"><p>备注</p></th></tr></thead>
+<tbody>
+<tr><td><p><span background-color="{{颜色}}"><b>{{功能}}</b></span></p></td><td><p>{{内容}}</p></td><td><p>{{备注}}</p><p><a href="{{链接}}">{{#编号}}</a></p></td></tr>
+</tbody>
+</table>
+<h2>🙋 待认领（{{N}} 个功能）</h2>
+<p><span text-color="gray">还没有负责人，或者还没建 PBI</span></p>
+<table>
+<colgroup><col width="120"/><col width="400"/><col width="300"/></colgroup>
+<thead><tr><th background-color="light-gray"><p>功能</p></th><th background-color="light-gray"><p>内容</p></th><th background-color="light-gray"><p>备注</p></th></tr></thead>
+<tbody>
+<tr><td colspan="3"><p><span text-color="gray">本周没有</span></p></td></tr>
+</tbody>
+</table>
+<hr/>
+<p><span text-color="gray">没有列出：新人学习任务、CI 和发布工具、开发流程和 AI skill 的改动、纯样式和文案的小修。</span></p>
+<p><span text-color="gray">数据来源：GitHub 上的 PR、PBI 和看板，以及飞书里的产品会议纪要。状态按实际合并和评审情况判断，不只看看板列。</span></p>
