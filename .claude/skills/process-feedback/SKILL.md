@@ -127,9 +127,10 @@ Every run adds a new row, even twice in one month: 日期 shows when each run ha
    creating a new one (first run only). Otherwise create a row.
 3. Update every **other** 用户反馈 row with 最新一期 ✅ to ❌.
 
-要点, in Chinese, short:
+要点, in Chinese, short. Count raw reports, so the three numbers add up to the total read; a report
+merged into a row created earlier in this same run counts as 和本次其他反馈重复, not 已有问题:
 
-    新问题 6 条，合并到已有问题 8 条。
+    本次收到 15 条反馈：新问题 6 个；合并到已有问题 8 条；和本次其他反馈重复 1 条。
     ⚠️ 请确认：「登录时闪退」合并到了「登录页卡住」，不确定是否同一问题；「…」没有合适的功能模块，暂归为「其他」。
 
 Then delete the temp folder.
