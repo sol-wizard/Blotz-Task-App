@@ -1,9 +1,8 @@
 name: Tag Release
 
 # Records a SHIPPED release (iOS + Android, which ship together) in GitHub.
-# Normally called by release-prod-backend.yml (button 2), once the release is
-# live in both stores and the update prompt serves the new version.
-# workflow_dispatch stays for recording a release by hand.
+# Run it by hand on the `submitted/<version>` tag once the release is live in
+# both stores.
 #
 # It creates a `release/<date>` tag + a published GitHub Release whose notes are
 # auto-generated from every PR merged since the previous release. This published
@@ -11,40 +10,23 @@ name: Tag Release
 # It builds and submits nothing, and needs no Expo/App Store credentials.
 
 on:
-  workflow_call:
-    inputs:
-      ios_version:
-        type: string
-        required: false
-      ios_build:
-        type: string
-        required: false
-      android_version:
-        type: string
-        required: false
-      android_build:
-        type: string
-        required: false
-      commit:
-        type: string
-        required: false
   workflow_dispatch:
     inputs:
       ios_version:
-        description: "iOS version shipped (blank = read from eas.json production.ios)"
+        description: "iOS version shipped (blank = the version in a submitted/<version> tag)"
         required: false
       ios_build:
         description: "iOS build number from App Store Connect (e.g. 139)"
         required: false
       android_version:
-        description: "Android version shipped (blank = read from eas.json production.android)"
+        description: "Android version shipped (blank = the version in a submitted/<version> tag)"
         required: false
       android_build:
         description: "Android version code / build from Play Console"
         required: false
       commit:
-        description: "What was built - a commit SHA, branch, or tag such as submitted/1.3.1 (blank = latest main)"
-        required: false
+        description: "What was built - normally the submitted/<version> tag, e.g. submitted/1.4.1"
+        required: true
 
 permissions:
   contents: write
@@ -57,18 +39,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ inputs.commit || 'main' }}
+          ref: ${{ inputs.commit }}
 
       - name: Resolve versions and tag
         id: meta
         run: |
+          set -euo pipefail
+          COMMIT="${{ inputs.commit }}"
+          TAG_V=""
+          case "$COMMIT" in submitted/*) TAG_V="${COMMIT#submitted/}" ;; esac
           IOS_V="${{ inputs.ios_version }}"
-          if [ -z "$IOS_V" ]; then
-            IOS_V=$(jq -r '.build.production.ios.env.APP_VERSION' blotztask-mobile/eas.json)
-          fi
+          IOS_V="${IOS_V:-$TAG_V}"
           AND_V="${{ inputs.android_version }}"
-          if [ -z "$AND_V" ]; then
-            AND_V=$(jq -r '.build.production.android.env.APP_VERSION' blotztask-mobile/eas.json)
+          AND_V="${AND_V:-$TAG_V}"
+          if [ -z "$IOS_V" ] || [ -z "$AND_V" ]; then
+            echo "::error::Give both versions, or run on a submitted/<version> tag."
+            exit 1
           fi
           {
             echo "ios_v=$IOS_V"

@@ -1,6 +1,6 @@
 name: Prod - Submit app to the stores
 
-# Button 1 of the two-button production release.
+# Production release.
 #
 # Builds the production iOS + Android apps from main and uploads them - the iOS
 # build to App Store Connect, the Android bundle to the Play production track -
@@ -14,8 +14,9 @@ name: Prod - Submit app to the stores
 # Then it deploys the production API from the same commit, before the build is
 # sent for review. The deploy waits for approval on the `prod` environment.
 #
-# Button 2 (Prod - Go live) raises the minimum supported version and records the
-# release, once the new version is live in both stores.
+# After that, by hand: raise each platform's minimum supported version in Azure
+# once that store is live, and run Tag Release on the `submitted/<version>` tag
+# once both are.
 
 on:
   workflow_dispatch:
@@ -166,7 +167,7 @@ jobs:
           ref: main
 
       # This tag is the whole point of button 1. It pins the commit that became the
-      # binaries now waiting in the store consoles, so that button 2 can record the
+      # binaries now waiting in the store consoles, so that Tag Release can record the
       # release against it days later instead of whatever main has become by then.
       #
       # Forced because a rejected review is resubmitted under the same version, and
@@ -178,7 +179,7 @@ jobs:
           git tag -f "$TAG" "$GITHUB_SHA"
           git push --force origin "refs/tags/$TAG"
           echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Next: approve the API deploy below. Once it is healthy, log in once with the prod build on TestFlight and check the task list loads, then submit for review. Once the release is live in **both** stores, run **Prod - Go live** on this tag." >> "$GITHUB_STEP_SUMMARY"
+          echo "Next: approve the API deploy below. Once it is healthy, log in once with the prod build on TestFlight and check the task list loads, then submit for review. Raise each platform's minimum supported version in Azure once that store is live. Once both are live, run **Tag Release** with commit \`$TAG\`." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/download-artifact@v4
         with:
