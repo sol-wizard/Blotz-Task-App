@@ -23,32 +23,53 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
         if (command.BadgeIds.Count == 0)
             return [];
 
+        var repeatableBadgeIds = await db.Badges
+            .Where(b => command.BadgeIds.Contains(b.Id) && b.IsRepeatable)
+            .Select(b => b.Id)
+            .ToListAsync(ct);
+
         var alreadyEarned = await db.UserBadges
             .Where(ub => ub.UserId == command.UserId && command.BadgeIds.Contains(ub.BadgeId))
             .Select(ub => ub.BadgeId)
+            .Distinct()
             .ToListAsync(ct);
 
-        var toAward = command.BadgeIds.Except(alreadyEarned).ToList();
+        // A repeatable badge is awarded again on every match; any other badge only once.
+        var toAward = command.BadgeIds
+            .Where(badgeId => repeatableBadgeIds.Contains(badgeId) || !alreadyEarned.Contains(badgeId))
+            .ToList();
 
         if (toAward.Count == 0)
             return [];
 
         var earnedAt = DateTimeOffset.UtcNow;
 
-        var currentBadgeCount = await db.UserBadges
-            .CountAsync(ub => ub.UserId == command.UserId, ct);
+        // Count badges, not rows: repeat copies of one badge share its single place on the wall.
+        var nextSlot = await db.UserBadges
+            .Where(ub => ub.UserId == command.UserId)
+            .Select(ub => ub.BadgeId)
+            .Distinct()
+            .CountAsync(ct);
 
-        db.UserBadges.AddRange(toAward.Select((badgeId, index) =>
+        foreach (var badgeId in toAward)
         {
-            var order = currentBadgeCount + index;
-            return new UserBadge
+            int? displayOrder = null;
+
+            // A repeat copy never takes a display slot: the first copy already holds the badge's place.
+            if (!alreadyEarned.Contains(badgeId))
+            {
+                displayOrder = nextSlot <= 2 ? nextSlot : null;
+                nextSlot++;
+            }
+
+            db.UserBadges.Add(new UserBadge
             {
                 UserId = command.UserId,
                 BadgeId = badgeId,
                 EarnedAtUtc = earnedAt,
-                DisplayOrder = order <= 2 ? order : null
-            };
-        }));
+                DisplayOrder = displayOrder
+            });
+        }
 
         await db.SaveChangesAsync(ct);
 
