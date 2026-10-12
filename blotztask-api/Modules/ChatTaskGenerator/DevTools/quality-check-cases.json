@@ -224,6 +224,96 @@
     "recurringExpectations": []
   },
   {
+    "id": "rec-update-weekday-only",
+    "setupInputs": ["Create a recurring task called Gym every Monday at 7am until December 31 2027"],
+    "input": "Change Gym to Tuesdays",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["Gym"],
+        "frequency": "Weekly",
+        "daysOfWeek": 2,
+        "startTimeHour": 7,
+        "startDateMatchesTemplate": true
+      }
+    ],
+    "recurringMutation": {
+      "existingTitle": "Gym",
+      "operation": "Update",
+      "changedFields": ["DaysOfWeek"]
+    }
+  },
+  {
+    "id": "rec-remove-preserves-same-title-oneoff",
+    "setupInputs": [
+      "Create a one-off task called Weekly standup tomorrow at 3pm",
+      "Create a recurring task called Weekly standup every Monday at 9am"
+    ],
+    "input": "Stop the weekly standup",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["Weekly standup", "standup"]
+      }
+    ],
+    "recurringExpectations": [],
+    "recurringMutation": {
+      "existingTitle": "Weekly standup",
+      "operation": "Remove",
+      "sameTitledOneOffMustRemain": true
+    }
+  },
+  {
+    "id": "rec-clear-end-date",
+    "setupInputs": ["Create a recurring task called Gym every Tuesday at 7am until December 31 2027"],
+    "input": "Make Gym go on forever",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["Gym"],
+        "frequency": "Weekly",
+        "daysOfWeek": 2,
+        "startTimeHour": 7,
+        "startDateMatchesTemplate": true
+      }
+    ],
+    "recurringMutation": {
+      "existingTitle": "Gym",
+      "operation": "Update",
+      "changedFields": ["EndDate"]
+    }
+  },
+  {
+    "id": "rec-update-single-time-to-duration",
+    "setupInputs": ["Create a recurring task called Gym every Tuesday at 7am"],
+    "input": "Make Gym last one hour",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 0,
+    "expectedRecurringTaskCount": 1,
+    "recurringExpectations": [
+      {
+        "titleContains": ["Gym"],
+        "frequency": "Weekly",
+        "daysOfWeek": 2,
+        "startTimeHour": 7,
+        "timeType": "RangeTime",
+        "durationMinutes": 60,
+        "startDateMatchesTemplate": true
+      }
+    ],
+    "recurringMutation": {
+      "existingTitle": "Gym",
+      "operation": "Update",
+      "changedFields": ["TimeType", "TemplateEndTime"]
+    }
+  },
+  {
     "id": "tonight-lands-in-the-evening",
     "input": "Feed the cat tonight",
     "expectedTaskCount": 1,

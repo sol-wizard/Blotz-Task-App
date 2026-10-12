@@ -1,0 +1,46 @@
+name: Staging - Distribute iOS build to TestFlight
+
+# Runs when App Store Connect reports a finished upload for the staging app
+# (blotz-task-stag, connected under Project settings > Connections on EAS).
+# release-staging.yml still uploads with --auto-submit; this adds the build to
+# the external group behind the public TestFlight link and submits it for Beta
+# App Review.
+#
+# It uses asc_build_id because the build_id variant needs a paid EAS plan.
+#
+# The job is done once the build is submitted, not once Apple approves it, so a
+# green run does not mean external testers can install the build yet. If Apple
+# rejects it, the account holder is emailed.
+#
+# To re-send a build by hand, pass its App Store Connect build ID:
+#   eas workflow:run .eas/workflows/testflight-staging.yml -F asc_build_id=<id>
+
+on:
+  app_store_connect:
+    build_upload:
+      states:
+        - complete
+      # Only the staging app, in case the connection is ever pointed at the
+      # live app.
+      if: ${{ app_store_connect.app.id == '6761295231' }}
+  workflow_dispatch:
+    inputs:
+      asc_build_id:
+        type: string
+        # Not required: runs triggered by App Store Connect carry no inputs.
+        required: false
+        description: 'App Store Connect build ID, for re-sending a build by hand'
+
+jobs:
+  testflight:
+    name: Send to User-testing
+    type: testflight
+    params:
+      # inputs first: a manual run has no app_store_connect context.
+      asc_build_id: ${{ inputs.asc_build_id || app_store_connect.build_upload.build.id }}
+      # No internal_groups: Committee_Testing has automatic distribution on and
+      # receives every uploaded build by itself. Expo's docs say to list only
+      # groups without it.
+      # submit_beta_review defaults to true once external_groups is set.
+      external_groups: ['User-testing']
+      changelog: 'Blotz staging - please try the latest features and send feedback via TestFlight.'

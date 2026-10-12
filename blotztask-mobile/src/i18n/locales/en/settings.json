@@ -126,7 +126,9 @@
     "title": "Invite Friends",
     "myCodeLabel": "Your invite code",
     "myCodeHint": "Share this code with friends so they can join Blotz.",
-    "copied": "Copied to clipboard"
+    "copied": "Copied to clipboard",
+    "progressLabel": "Invite progress",
+    "completedLabel": "Badge unlocked!"
   },
   "supportUs": {
     "title": "Support Blotz",

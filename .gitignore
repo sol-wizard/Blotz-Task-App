@@ -25,3 +25,5 @@ infra/*.ps1
 
 # process-feedback skill: real Lark IDs, local only (copy config.example.json)
 .claude/skills/process-feedback/config.json
+# to-learn skill: per-dev learning checklists written after each PR — local only
+/to-learn/
