@@ -36,9 +36,15 @@ name: PR Discord Notify
 #   - Variable DISCORD_PR_CHANNEL_ID     ID of #pr-queue
 #   - Variables DISCORD_{DEVELOPER,CANDIDATE,TECHLEAD}_ROLE_ID
 # Anything missing is skipped with a warning; this job never fails a PR.
+#
+# Why pull_request_target and not pull_request: GitHub runs no pull_request
+# workflow on a PR that conflicts with main, so that PR got no card and nobody
+# was told. pull_request_target runs either way. It also runs with the secrets,
+# so this job must never check out or run the PR's code — it only reads the
+# event's fields — and PRs from forks are skipped, as they always were.
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, ready_for_review, review_requested, closed]
   pull_request_review:
     types: [submitted]
@@ -61,8 +67,8 @@ jobs:
     # PR moved back to draft before closing still loses its card.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event.action == 'closed' ||
-      github.event.pull_request.draft == false
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.action == 'closed' || github.event.pull_request.draft == false))
     steps:
       - name: Post to Discord
         env:
@@ -85,6 +91,10 @@ jobs:
           REVIEW_STATE: ${{ github.event.review.state }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Same payload as pull_request; the rest of this script, and the sync's
+          # rerun below, call it that.
+          [ "$EVENT" = pull_request_target ] && EVENT=pull_request
+
           # ---- Sync: delete cards of closed PRs, post cards for open ones -----
           if [ "$EVENT" = workflow_dispatch ]; then
             if [ -z "$WEBHOOK" ] || [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL" ]; then
@@ -105,10 +115,11 @@ jobs:
             done
             # Open PRs without a card: rerun this script as their "opened"
             # event ($0 is this step's script). It skips PRs that have a card,
-            # and QUIET posts without pinging.
+            # and QUIET posts without pinging. Bot PRs are left out here: gh
+            # names them "app/…", which the "[bot]" check further down misses.
             gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
               --json number,title,url,author,labels,isDraft \
-              --jq '.[] | select(.isDraft | not) | [.number, .title, .url, .author.login,
+              --jq '.[] | select((.isDraft or .author.is_bot) | not) | [.number, .title, .url, .author.login,
                     ([.labels[].name] | join(","))] | @tsv' |
             while IFS=$'\t' read -r n t u a l; do
               EVENT=pull_request ACTION=opened QUIET=1 NUMBER=$n TITLE=$t URL=$u AUTHOR=$a \
