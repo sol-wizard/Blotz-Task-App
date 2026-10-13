@@ -13,8 +13,9 @@
     "subtitle": "告诉 AI 您的目标。它会将其拆解为清晰的小步骤，让您的计划真正落实。"
   },
   "invite": {
-    "title": "有邀请码吗？",
-    "subtitle": "输入朋友的邀请码，一起开启 Blotz 之旅。",
+    "title": "有朋友邀请你来吗？",
+    "subtitle": "输入朋友的邀请码，一起开启 Blotz 之旅吧！",
+    "noCodeHint": "没有邀请码？直接点「继续」就好。",
     "codePlaceholder": "输入邀请码",
     "redeemButton": "兑换",
     "redeeming": "兑换中...",
