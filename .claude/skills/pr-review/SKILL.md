@@ -18,6 +18,8 @@ argument-hint: "[PR number, PR URL, or branch; optional, defaults to current bra
 
 5. For Blotz-specific review, pay extra attention when the PR touches: auth/user scoping, mobile-backend DTO contract changes, date/timezone handling, recurring tasks, AI generation, AI quota usage, review reports, notifications, and EF/database changes.
 
+   **Backward compatibility is a major finding.** The production API ships before the new app is reviewed, so the previous app talks to it straight away. Flag any change the live app would notice: an endpoint, DTO field, request param, enum value or column removed, renamed or retyped, or a new required param. Check against the mobile code at the latest `submitted/*` tag, not `main`. Fix: keep the old one next to the new one, remove it in a later release (backend-changes skill).
+
 6. **Decide whether re-testing is worth it — don't re-test by default.** Read the PR's `Verified:` line first.
    - Clear proof, and a simple change (`L1`/`L2`) → trust it; don't re-run anything.
    - Risky change (`L3`/`L4`), or the proof is thin, missing, or doesn't cover what the diff changes → re-run **only** the relevant tests: backend `cd blotztask-test && dotnet test --filter <class>`. A real-device run is expensive — ask the reviewer before starting one.
