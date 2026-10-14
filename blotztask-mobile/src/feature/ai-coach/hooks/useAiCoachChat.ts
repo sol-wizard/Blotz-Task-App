@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AxiosError } from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import uuid from "react-native-uuid";
+import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import {
   AvailableAiCoachMode,
   ConfirmDraftResultDto,
@@ -28,6 +30,7 @@ export interface ConfirmOutcome {
 }
 
 export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") {
+  const queryClient = useQueryClient();
   const [snapshot, setSnapshot] = useState<ConversationSnapshotDto | null>(null);
   const [status, setStatus] = useState<ChatStatus>(mode ? "connecting" : "idle");
   const [pendingMessage, setPendingMessage] = useState<ChatItem | null>(null);
@@ -178,6 +181,11 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
           acceptedConflictToken,
         });
         applySnapshot(result.conversationSnapshot);
+        if (result.status === "succeeded") {
+          // Confirmed drafts create tasks server-side; refresh task list, calendars, and DDL.
+          void queryClient.invalidateQueries({ queryKey: taskKeys.all });
+          void queryClient.invalidateQueries({ queryKey: ddlKeys.all });
+        }
         return { result, errorCode: result.errorCode };
       } catch (error) {
         const body = (error as AxiosError<ConfirmDraftResultDto | ConversationConflictDto>).response?.data;
@@ -192,7 +200,7 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
         setStatus("ready");
       }
     },
-    [snapshot, applySnapshot, resync],
+    [snapshot, applySnapshot, resync, queryClient],
   );
 
   const edit = useCallback(
