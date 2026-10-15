@@ -15,6 +15,10 @@
       "companion": {
         "title": "我想聊聊",
         "subtitle": "想到什么，都可以和我聊聊"
+      },
+      "unified": {
+        "title": "新版（测试）",
+        "subtitle": "直接给答案，自动整理待办"
       }
     },
     "pickModeFirst": "先选择上面的一个模式开始"

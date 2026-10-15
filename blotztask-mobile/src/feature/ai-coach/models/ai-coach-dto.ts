@@ -4,7 +4,7 @@ export type ConversationActionWire =
   | "add_to_task_list"
   | "reject_draft"
   | "edit_draft";
-export type AvailableAiCoachMode = "Execution" | "Clarify" | "Companion";
+export type AvailableAiCoachMode = "Execution" | "Clarify" | "Companion" | "Unified";
 export type AiCoachRating = "up" | "down";
 export interface MessageFeedbackDto {
   assistantMessageId: string;

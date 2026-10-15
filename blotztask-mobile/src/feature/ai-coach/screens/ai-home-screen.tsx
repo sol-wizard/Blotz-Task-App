@@ -93,6 +93,13 @@ export default function AiHomeScreen() {
         selected={selectedMode === "Companion"}
         onPress={() => setSelectedMode("Companion")}
       />
+      <ModeCard
+        title={t("home.modes.unified.title")}
+        subtitle={t("home.modes.unified.subtitle")}
+        disabled={false}
+        selected={selectedMode === "Unified"}
+        onPress={() => setSelectedMode("Unified")}
+      />
     </View>
   );
 

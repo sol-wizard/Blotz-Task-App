@@ -15,6 +15,10 @@
       "companion": {
         "title": "I just want to talk",
         "subtitle": "Whatever's on your mind, tell me"
+      },
+      "unified": {
+        "title": "New version (testing)",
+        "subtitle": "Direct answers, to-dos captured for you"
       }
     },
     "pickModeFirst": "Pick a mode above to start"

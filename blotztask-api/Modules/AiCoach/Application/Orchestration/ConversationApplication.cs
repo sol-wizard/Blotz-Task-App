@@ -60,7 +60,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "user_message", new
         {
             messageId, content, conversationVersion = baseVersion,
-            mode = request.Mode.ToString(), promptVersion = CoachPrompt.PromptVersion,
+            mode = request.Mode.ToString(), promptVersion = CoachPrompt.VersionFor(request.Mode),
             toolContractVersion = ToolExecutor.ContractVersion,
         });
         ModelTurnRunResult? result = null;
@@ -92,7 +92,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             usageTracker.Add(conversationId, result.InputTokens, result.OutputTokens, result.TotalTokens, result.ModelCallCount);
             logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input, {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
                 conversationId, result.InputTokens, result.OutputTokens, result.ModelCallCount, error,
-                CoachPrompt.PromptVersion, ToolExecutor.ContractVersion);
+                CoachPrompt.VersionFor(request.Mode), ToolExecutor.ContractVersion);
             try
             {
                 using var accountingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
