@@ -342,5 +342,31 @@
         "label": "Life"
       }
     ]
+  },
+  {
+    "id": "zh-followup-time-adds-task-not-note",
+    "setupInputs": ["明天下午三点去打球"],
+    "input": "七点点名",
+    "expectedTaskCount": 2,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["球", "ball"],
+        "startDateOffset": 1,
+        "startTimeHour": 15
+      },
+      {
+        "titleContains": ["点名", "roll call"],
+        "startTimeHour": 19,
+        "startTimeMinute": 0
+      }
+    ]
+  },
+  {
+    "id": "zh-followup-name-fix-updates-note",
+    "setupInputs": ["测试A44的新功能"],
+    "input": "測試A14的新功能",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1
   }
 ]
