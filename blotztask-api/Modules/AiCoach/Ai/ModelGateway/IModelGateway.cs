@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 
 /// <summary>Provider adapter for natural replies and tool calls.</summary>
@@ -19,6 +21,12 @@ public sealed record GatewayToolDefinition(
     string Description,
     string ParametersJsonSchema);
 
+// Discriminators let persisted conversation history restore each message type.
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(GatewayUserMessage), "user")]
+[JsonDerivedType(typeof(GatewaySystemMessage), "system")]
+[JsonDerivedType(typeof(GatewayAssistantMessage), "assistant")]
+[JsonDerivedType(typeof(GatewayToolResultMessage), "tool")]
 public abstract record GatewayMessage;
 
 public sealed record GatewayUserMessage(string Content) : GatewayMessage;

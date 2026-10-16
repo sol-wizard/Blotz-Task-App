@@ -32,7 +32,7 @@ public sealed class RejectDraftCommandHandler(IConversationStore store, AiCoachT
             draft.Discard();
             conversation.RecordDraftEvent("discarded_by_user", draft);
             snapshot = ConversationSnapshotProjector.ToDto(conversation);
-            conversation.Receipts.Add(command.Request.CommandId, new(command.DraftId, hash, snapshot));
+            conversation.Receipts.Add(command.Request.CommandId, new(command.DraftId, hash, null));
             await store.SaveAsync(conversation, ct);
         }
         if (trace is not null) await trace.RecordAsync(command.UserId, command.ConversationId, null, "draft_rejected",

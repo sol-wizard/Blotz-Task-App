@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
+using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
@@ -12,16 +14,22 @@ public sealed class Conversation
     public required string TimeZoneId { get; init; }
     public required DateTimeOffset CreatedAt { get; init; }
     public required DateTimeOffset ExpiresAt { get; init; }
-    public int Version { get; private set; } = 1;
-    public Guid? RunningTurnId { get; private set; }
-    public string? GenerationError { get; private set; }
+    // JsonInclude/Populate let the persisted store restore private state without public setters.
+    [JsonInclude] public int Version { get; private set; } = 1;
+    [JsonInclude] public Guid? RunningTurnId { get; private set; }
+    [JsonInclude] public string? GenerationError { get; private set; }
+    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public List<ConversationMessage> Messages { get; } = [];
+    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public List<GatewayMessage> History { get; } = [];
+    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public List<ProposalSet> Drafts { get; } = [];
+    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public Dictionary<Guid, CommandReceipt> Receipts { get; } = [];
+    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public HashSet<Guid> CompletedMessages { get; } = [];
-    public string? Summary { get; private set; }
-    public int SummarizedMessageCount { get; private set; }
+    [JsonInclude] public string? Summary { get; private set; }
+    [JsonInclude] public int SummarizedMessageCount { get; private set; }
 
     public void Touch() => Version++;
 
@@ -89,6 +97,7 @@ public sealed class Conversation
 public enum ConversationMessageRole { User, Assistant }
 public sealed record ConversationMessage(Guid Id, ConversationMessageRole Role, string Content,
     bool TaskContextRead = false, Guid? TurnId = null);
-public sealed record CommandReceipt(Guid DraftId, string RequestHash, object? Result);
+/// <summary>Result is null while a confirmation runs and for discards, whose replay returns the current snapshot.</summary>
+public sealed record CommandReceipt(Guid DraftId, string RequestHash, ConfirmDraftResultDto? Result);
 
 public enum TurnCommitStatus { Committed, Failed, Stale, NoLongerActive }

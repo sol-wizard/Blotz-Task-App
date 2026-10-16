@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using BlotzTask.Modules.Tasks.Enums;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Proposals;
@@ -28,11 +29,11 @@ public sealed record TaskProposal(
 public sealed class ProposalSet
 {
     public required Guid Id { get; init; }
-    public int Version { get; private set; } = 1;
-    public ProposalSetStatus Status { get; private set; } = ProposalSetStatus.Pending;
-    public IReadOnlyList<TaskProposal> Proposals { get; private set; } = [];
-    public string? SaveError { get; private set; }
-    public ScheduleAssessment? Schedule { get; private set; }
+    [JsonInclude] public int Version { get; private set; } = 1;
+    [JsonInclude] public ProposalSetStatus Status { get; private set; } = ProposalSetStatus.Pending;
+    [JsonInclude] public IReadOnlyList<TaskProposal> Proposals { get; private set; } = [];
+    [JsonInclude] public string? SaveError { get; private set; }
+    [JsonInclude] public ScheduleAssessment? Schedule { get; private set; }
 
     public ProposalSet Copy() => new()
     {
