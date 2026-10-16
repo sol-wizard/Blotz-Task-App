@@ -16,6 +16,7 @@ public sealed class Conversation
     // JsonInclude/Populate let the persisted store restore private state without public setters.
     [JsonInclude] public int Version { get; private set; } = 1;
     [JsonInclude] public Guid? RunningTurnId { get; private set; }
+    [JsonInclude] public DateTimeOffset? RunningTurnStartedAt { get; private set; }
     [JsonInclude] public string? GenerationError { get; private set; }
     [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public List<ConversationMessage> Messages { get; } = [];
@@ -32,12 +33,13 @@ public sealed class Conversation
 
     public void Touch() => Version++;
 
-    public void BeginTurn(Guid messageId, string content)
+    public void BeginTurn(Guid messageId, string content, DateTimeOffset startedAt)
     {
         if (RunningTurnId.HasValue) throw new InvalidOperationException("A turn is already running.");
         if (Drafts.Any(draft => draft.Status == ProposalSetStatus.Processing))
             throw new InvalidOperationException("A draft is being saved.");
         RunningTurnId = messageId;
+        RunningTurnStartedAt = startedAt;
         GenerationError = null;
         if (Messages.All(message => message.Id != messageId))
         {
@@ -68,9 +70,38 @@ public sealed class Conversation
     private void FinishTurn(Guid messageId, string? error)
     {
         RunningTurnId = null;
+        RunningTurnStartedAt = null;
         GenerationError = error;
         if (error is null) CompletedMessages.Add(messageId);
         Touch();
+    }
+
+    /// <summary>
+    /// Release a turn or draft save whose process stopped before finishing. A late result then no longer
+    /// commits: <see cref="CompleteTurn"/> reports NoLongerActive.
+    /// </summary>
+    public bool ReleaseInterruptedWork(DateTimeOffset now, TimeSpan turnLimit, TimeSpan saveLimit)
+    {
+        var released = false;
+        if (RunningTurnId.HasValue && RunningTurnStartedAt <= now - turnLimit)
+        {
+            RunningTurnId = null;
+            RunningTurnStartedAt = null;
+            GenerationError = "interrupted";
+            released = true;
+        }
+        foreach (var draft in Drafts.Where(draft => draft.Status == ProposalSetStatus.Processing
+                     && draft.SavingStartedAt <= now - saveLimit))
+        {
+            draft.ReleaseInterruptedSave();
+            // An unfinished receipt would answer every retry with DraftConfirmationInProgress.
+            foreach (var commandId in Receipts.Where(receipt => receipt.Value.DraftId == draft.Id
+                         && receipt.Value.Result is null).Select(receipt => receipt.Key).ToArray())
+                Receipts.Remove(commandId);
+            released = true;
+        }
+        if (released) Touch();
+        return released;
     }
 
     private void AcceptReply(Guid turnId, string text, IReadOnlyList<GatewayMessage> turnHistory,

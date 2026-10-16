@@ -34,11 +34,13 @@ public sealed class ProposalSet
     [JsonInclude] public IReadOnlyList<TaskProposal> Proposals { get; private set; } = [];
     [JsonInclude] public string? SaveError { get; private set; }
     [JsonInclude] public ScheduleAssessment? Schedule { get; private set; }
+    [JsonInclude] public DateTimeOffset? SavingStartedAt { get; private set; }
 
     public ProposalSet Copy() => new()
     {
         Id = Id, Version = Version, Status = Status,
         Proposals = Proposals.ToArray(), SaveError = SaveError, Schedule = Schedule,
+        SavingStartedAt = SavingStartedAt,
     };
 
     public void Replace(IReadOnlyList<TaskProposal> proposals)
@@ -56,11 +58,12 @@ public sealed class ProposalSet
         Version++;
     }
 
-    public void StartSaving()
+    public void StartSaving(DateTimeOffset startedAt)
     {
         if (Status != ProposalSetStatus.Pending)
             throw new InvalidOperationException("Only pending drafts can be saved.");
         Status = ProposalSetStatus.Processing;
+        SavingStartedAt = startedAt;
         SaveError = null;
         Version++;
     }
@@ -84,8 +87,23 @@ public sealed class ProposalSet
         if (Status != ProposalSetStatus.Processing)
             throw new InvalidOperationException("No save is running.");
         SaveError = error;
+        SavingStartedAt = null;
         Status = Proposals.All(item => item.PersistedTaskId.HasValue)
             ? ProposalSetStatus.Completed : ProposalSetStatus.Pending;
+        Version++;
+    }
+
+    /// <summary>
+    /// Return a save abandoned by a stopped process to pending. Tasks committed just before the stop are not
+    /// recorded, so a retry can duplicate them.
+    /// </summary>
+    public void ReleaseInterruptedSave()
+    {
+        if (Status != ProposalSetStatus.Processing)
+            throw new InvalidOperationException("No save is running.");
+        Status = ProposalSetStatus.Pending;
+        SaveError = "TaskPersistenceInterrupted";
+        SavingStartedAt = null;
         Version++;
     }
 
@@ -103,6 +121,7 @@ public sealed class ProposalSet
         Proposals = kept;
         Schedule = null;
         SaveError = null;
+        SavingStartedAt = null;
         Status = ProposalSetStatus.Completed;
         Version++;
     }

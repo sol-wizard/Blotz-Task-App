@@ -21,6 +21,8 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
     // Element limits are what the user sees; character limits match the column lengths.
     private const int TitleLength = 30, TitleColumnLength = 60;
     private const int PreviewLength = 100, PreviewColumnLength = 120;
+    // A task save is a few inserts; five minutes means its process stopped.
+    private static readonly TimeSpan InterruptedSaveAfter = TimeSpan.FromMinutes(5);
     private readonly ConversationLocks _locks = new();
     // Revision each loaded instance was read at; kept outside the domain model.
     private readonly ConditionalWeakTable<Conversation, LoadedRevision> _revisions = new();
@@ -113,6 +115,12 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
         }
         var conversation = ConversationSerializer.Deserialize(record.Payload);
         _revisions.AddOrUpdate(conversation, new(record.Revision));
+        // Past every model budget, a running turn belongs to a stopped process. The release is saved with
+        // the next write; until then each load repeats it identically.
+        var turnLimit = TimeSpan.FromSeconds(options.Value.ModelRequestTimeoutSeconds * options.Value.MaxModelCallsPerTurn)
+            + TimeSpan.FromMinutes(2);
+        if (conversation.ReleaseInterruptedWork(clock.GetUtcNow(), turnLimit, InterruptedSaveAfter))
+            logger.LogWarning("AiCoach conversation {ConversationId} released interrupted work", record.Id);
         return conversation;
     }
 

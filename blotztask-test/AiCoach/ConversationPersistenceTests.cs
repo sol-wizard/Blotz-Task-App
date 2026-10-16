@@ -38,14 +38,14 @@ public sealed class ConversationPersistenceTests
             TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow,
         };
         var turnId = Guid.NewGuid();
-        conversation.BeginTurn(turnId, "Plan my week");
+        conversation.BeginTurn(turnId, "Plan my week", DateTimeOffset.UtcNow);
         var callId = Guid.NewGuid().ToString();
         var saved = new ProposalSet { Id = Guid.NewGuid() };
         var savedItem = new TaskProposal(Guid.NewGuid(), "Swim", null, new(2026, 10, 2), new(7, 0), new(8, 0),
             "Australia/Perth", 3, Recurrence: new(RecurrenceFrequency.Weekly, 1, 1, null, new(2026, 12, 31)));
         saved.Replace([savedItem]);
         saved.SetSchedule(new("partial", DateTimeOffset.UtcNow, [], null));
-        saved.StartSaving();
+        saved.StartSaving(DateTimeOffset.UtcNow);
         saved.RecordSaved(savedItem.ProposalId, 41, 7);
         saved.FinishSaving(null);
         var pending = new ProposalSet { Id = Guid.NewGuid() };

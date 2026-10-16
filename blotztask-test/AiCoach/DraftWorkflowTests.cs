@@ -74,7 +74,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
     {
         // Arrange
         var draft = Draft();
-        draft.StartSaving();
+        draft.StartSaving(DateTimeOffset.UtcNow);
         draft.RecordSaved(draft.Proposals[0].ProposalId, 123);
         draft.FinishSaving(null);
         var tools = new DraftTools([draft], "Australia/Perth");
@@ -214,7 +214,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var conversation = await Session(new InMemoryConversationStore(cache));
         var messageId = Guid.NewGuid();
-        conversation.BeginTurn(messageId, "Create a draft");
+        conversation.BeginTurn(messageId, "Create a draft", DateTimeOffset.UtcNow);
         var expected = conversation.Version;
         var original = conversation.Drafts[0].Id;
         conversation.Touch();
@@ -235,12 +235,12 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var conversation = await Session(new InMemoryConversationStore(cache));
         var first = Guid.NewGuid();
-        conversation.BeginTurn(first, "Help me");
+        conversation.BeginTurn(first, "Help me", DateTimeOffset.UtcNow);
         var version = conversation.Version;
         // Act
         var cancelled = conversation.CompleteTurn(first, version, "Uncommitted", "cancelled", [], [Draft()], null, 0);
         var next = Guid.NewGuid();
-        conversation.BeginTurn(next, "Try another way");
+        conversation.BeginTurn(next, "Try another way", DateTimeOffset.UtcNow);
         var late = conversation.CompleteTurn(first, version, "Late reply", null, [], [], null, 0);
         // Assert
         cancelled.Should().Be(TurnCommitStatus.Failed, because: "a cancelled request must not commit a successful reply");
@@ -256,7 +256,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var conversation = await Session(new InMemoryConversationStore(cache));
         var id = Guid.NewGuid();
-        conversation.BeginTurn(id, "Hello");
+        conversation.BeginTurn(id, "Hello", DateTimeOffset.UtcNow);
         var version = conversation.Version;
         // Act
         conversation.CompleteTurn(id, version, "Hello", null, [new GatewayAssistantMessage("Hello", [])], conversation.Drafts.ToArray(), null, 0);
@@ -309,11 +309,11 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var conversation = await Session(new InMemoryConversationStore(cache));
         var draft = conversation.Drafts[0];
-        draft.StartSaving();
+        draft.StartSaving(DateTimeOffset.UtcNow);
         // Act
         var available = OperationPolicy.CanStartOperation(conversation);
         var actions = OperationPolicy.DraftActions(draft, available);
-        var begin = () => conversation.BeginTurn(Guid.NewGuid(), "Change the card");
+        var begin = () => conversation.BeginTurn(Guid.NewGuid(), "Change the card", DateTimeOffset.UtcNow);
         // Assert
         available.Should().BeFalse(because: "a model workspace must not overlap a task save");
         actions.Should().BeEmpty(because: "UI and application use the same operational policy");

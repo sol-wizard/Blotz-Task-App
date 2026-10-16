@@ -42,7 +42,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 throw new ConversationVersionConflictException(conversation);
             if (existing is not null && conversation.Messages.LastOrDefault()?.Id != messageId)
                 throw Conflict("MessageSuperseded", conversation);
-            conversation.BeginTurn(messageId, content);
+            conversation.BeginTurn(messageId, content, clock.GetUtcNow());
             baseVersion = conversation.Version;
             var timeZoneId = conversation.TimeZoneId;
             request = new(conversation.Id, conversation.Mode, conversation.History.ToArray(),

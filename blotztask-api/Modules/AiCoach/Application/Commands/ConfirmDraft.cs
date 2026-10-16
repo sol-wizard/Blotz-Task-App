@@ -203,7 +203,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             draft.Replace(items);
             resolved = selected
                 .Select(item => Resolve(item, request.Action == "start_now")).ToArray();
-            draft.StartSaving();
+            draft.StartSaving(clock.GetUtcNow());
             conversation.Touch();
             conversation.Receipts.Add(request.CommandId, new(command.DraftId, hash, null));
             await store.SaveAsync(conversation, ct);

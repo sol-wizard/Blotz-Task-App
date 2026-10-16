@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
@@ -41,8 +42,8 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         var created = await CreateAsync(store);
         var first = (await store.FindAsync(created.Id, default))!;
         var second = (await otherInstance.FindAsync(created.Id, default))!;
-        first.BeginTurn(Guid.NewGuid(), "First writer");
-        second.BeginTurn(Guid.NewGuid(), "Second writer");
+        first.BeginTurn(Guid.NewGuid(), "First writer", DateTimeOffset.UtcNow);
+        second.BeginTurn(Guid.NewGuid(), "Second writer", DateTimeOffset.UtcNow);
         await store.SaveAsync(first, default);
         // Act
         var save = () => otherInstance.SaveAsync(second, default);
@@ -77,7 +78,7 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         var conversation = await CreateAsync(store);
         var longMessage = new string('长', 40) + "\n second line";
         var turnId = Guid.NewGuid();
-        conversation.BeginTurn(turnId, longMessage);
+        conversation.BeginTurn(turnId, longMessage, DateTimeOffset.UtcNow);
         conversation.CompleteTurn(turnId, conversation.Version, "Sure 👍", null, [], [], null, 0);
         // Act
         await store.SaveAsync(conversation, default);
@@ -91,6 +92,52 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         var restored = await Store().FindAsync(conversation.Id, default);
         restored.Should().BeEquivalentTo(conversation, options => options.PreferringRuntimeMemberTypes(),
             because: "another process must read back the same conversation");
+    }
+
+    [Theory]
+    [InlineData(13, false)]
+    [InlineData(15, true)]
+    public async Task Handle_TurnRunningPastModelBudget_IsReleasedOnLoad(int minutesAgo, bool released)
+    {
+        // Arrange
+        var store = Store();
+        var conversation = await CreateAsync(store);
+        conversation.BeginTurn(Guid.NewGuid(), "Plan my day", DateTimeOffset.UtcNow.AddMinutes(-minutesAgo));
+        await store.SaveAsync(conversation, default);
+        // Act
+        var loaded = await Store().FindAsync(conversation.Id, default);
+        // Assert
+        loaded!.RunningTurnId.HasValue.Should().Be(!released,
+            because: "a turn is abandoned only after 60 s x 12 model calls + 2 minutes");
+        loaded.GenerationError.Should().Be(released ? "interrupted" : null,
+            because: "the client shows why the reply never arrived");
+    }
+
+    [Theory]
+    [InlineData(4, false)]
+    [InlineData(6, true)]
+    public async Task Handle_SaveRunningPastFiveMinutes_ReturnsDraftToPending(int minutesAgo, bool released)
+    {
+        // Arrange
+        var store = Store();
+        var conversation = await CreateAsync(store);
+        var turnId = Guid.NewGuid();
+        conversation.BeginTurn(turnId, "Add a swim", DateTimeOffset.UtcNow);
+        var draft = new ProposalSet { Id = Guid.NewGuid() };
+        draft.Replace([new(Guid.NewGuid(), "Swim", null, null, null, null, "Australia/Perth", null)]);
+        conversation.CompleteTurn(turnId, conversation.Version, "Draft ready.", null, [], [draft], null, 0);
+        conversation.Drafts[0].StartSaving(DateTimeOffset.UtcNow.AddMinutes(-minutesAgo));
+        conversation.Receipts.Add(Guid.NewGuid(), new(draft.Id, "confirm-hash", null));
+        await store.SaveAsync(conversation, default);
+        // Act
+        var loaded = await Store().FindAsync(conversation.Id, default);
+        // Assert
+        loaded!.Drafts[0].Status.Should().Be(released ? ProposalSetStatus.Pending : ProposalSetStatus.Processing,
+            because: "a save is abandoned only after five minutes");
+        loaded.Drafts[0].SaveError.Should().Be(released ? "TaskPersistenceInterrupted" : null,
+            because: "the draft card tells the user the save did not finish");
+        loaded.Receipts.Should().HaveCount(released ? 0 : 1,
+            because: "a leftover unfinished receipt would block every retry as already in progress");
     }
 
     private SqlConversationStore Store()
