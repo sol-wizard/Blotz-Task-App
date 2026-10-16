@@ -22,6 +22,58 @@ namespace BlotzTask.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("HasPendingDraft")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("LastActivityAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("LastMessagePreview")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("MessageCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastActivityAt");
+
+                    b.HasIndex("UserId", "LastActivityAt");
+
+                    b.ToTable("AiCoachConversation", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachFeedback", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1060,6 +1112,15 @@ namespace BlotzTask.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserPushTokens", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachFeedback", b =>
