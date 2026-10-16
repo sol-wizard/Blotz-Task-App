@@ -5,7 +5,9 @@ import {
   cornerRadius,
   font,
   foregroundStyle,
+  fixedSize,
   frame,
+  layoutPriority,
   lineLimit,
   padding,
   resizable,
@@ -28,7 +30,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
       alignment="bottomTrailing"
       modifiers={[
         containerBackground("#F5F9FA", "widget"),
-        frame({ maxWidth: 360, maxHeight: 360 }),
+        frame({ maxWidth: 1000, maxHeight: 1000 }),
         widgetURL(props.appLink),
       ]}
     >
@@ -44,7 +46,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
         spacing={12}
         modifiers={[
           frame({ maxWidth: 360, maxHeight: 360, alignment: "topLeading" }),
-          padding({ top: 15, bottom: 15, leading: 16, trailing: 12 }),
+          padding({ top: 16, bottom: 14, leading: 16, trailing: 14 }),
         ]}
       >
         <HStack alignment="center" spacing={8} modifiers={[frame({ maxWidth: 360 })]}>
@@ -53,6 +55,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
               font({ size: 16, family: "Baloo2-Bold" }),
               foregroundStyle("#2F8F46"),
               lineLimit(1),
+              layoutPriority(1),
             ]}
           >
             {isSmallWidget ? props.title : props.dateTitle || props.title}
@@ -69,6 +72,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
               frame({ minWidth: 28 }),
               background("#EEF7DC"),
               cornerRadius(8),
+              fixedSize(),
             ]}
           >
             {String(props.tasks.length)}
@@ -78,7 +82,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
         {visibleTasks.length > 0 ? (
           <VStack
             alignment="leading"
-            spacing={10}
+            spacing={isSmallWidget ? 10 : 6}
             modifiers={[frame({ maxWidth: 360, alignment: "leading" })]}
           >
             {visibleTasks.map((task, index) => (
@@ -96,19 +100,18 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
                 >
                   <Image systemName="circle" size={20} color="#C8CDD2" />
 
-                  <Text
-                    modifiers={[
-                      font({ family: "Baloo2-Regular", size: 14 }),
-                      foregroundStyle("#202124"),
-                    ]}
-                  >
-                    {task.title}
-                  </Text>
+                  <VStack alignment="leading" spacing={0}>
+                    <Text
+                      modifiers={[
+                        font({ family: "Baloo2-Regular", size: 14 }),
+                        foregroundStyle("#202124"),
+                        lineLimit(1),
+                      ]}
+                    >
+                      {task.title}
+                    </Text>
 
-                  {!isSmallWidget ? (
-                    <>
-                      <Spacer minLength={0} />
-
+                    {!isSmallWidget ? (
                       <Text
                         modifiers={[
                           font({ family: "Baloo2-Medium", size: 11 }),
@@ -118,8 +121,8 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
                       >
                         {task.time}
                       </Text>
-                    </>
-                  ) : null}
+                    ) : null}
+                  </VStack>
                 </HStack>
               </Link>
             ))}

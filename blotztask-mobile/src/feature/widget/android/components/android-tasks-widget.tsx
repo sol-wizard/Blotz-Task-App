@@ -109,8 +109,8 @@ export function TodayTasksWidget({ snapshot, isSmallWidget }: TodayTasksWidgetPr
               flexDirection: "column",
               alignItems: "flex-start",
               justifyContent: "flex-start",
-              marginTop: isSmallWidget ? 14 : 16,
-              flexGap: isSmallWidget ? 13 : 15,
+              marginTop: isSmallWidget ? 14 : 12,
+              flexGap: isSmallWidget ? 13 : 8,
             }}
           >
             {visibleTasks.map((task, index) => (
