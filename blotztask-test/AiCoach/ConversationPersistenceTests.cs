@@ -35,7 +35,7 @@ public sealed class ConversationPersistenceTests
         var conversation = new Conversation
         {
             Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Mode = AiCoachMode.Clarify,
-            TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow, ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
+            TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow,
         };
         var turnId = Guid.NewGuid();
         conversation.BeginTurn(turnId, "Plan my week");

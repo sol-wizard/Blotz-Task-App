@@ -43,6 +43,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<AiCoachFeedback> AiCoachFeedback => Set<AiCoachFeedback>();
     public DbSet<AiCoachTraceEvent> AiCoachTraceEvents => Set<AiCoachTraceEvent>();
+    public DbSet<AiCoachConversationRecord> AiCoachConversations => Set<AiCoachConversationRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

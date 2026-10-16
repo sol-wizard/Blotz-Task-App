@@ -1,0 +1,24 @@
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.Users.Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace BlotzTask.Infrastructure.Data.Configurations;
+
+public sealed class AiCoachConversationConfiguration : IEntityTypeConfiguration<AiCoachConversationRecord>
+{
+    public void Configure(EntityTypeBuilder<AiCoachConversationRecord> builder)
+    {
+        builder.ToTable("AiCoachConversation");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.HasIndex(x => new { x.UserId, x.LastActivityAt });
+        builder.HasIndex(x => x.LastActivityAt);
+        builder.Property(x => x.Mode).HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(x => x.Title).HasMaxLength(60);
+        builder.Property(x => x.LastMessagePreview).HasMaxLength(120);
+        builder.Property(x => x.Payload).HasColumnType("nvarchar(max)").IsRequired();
+        builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

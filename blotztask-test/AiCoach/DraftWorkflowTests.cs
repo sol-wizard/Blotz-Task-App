@@ -327,7 +327,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         var conversation = new Conversation
         {
             Id = Guid.NewGuid(), UserId = userId, Mode = AiCoachMode.Execution,
-            TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow, ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
+            TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow,
         };
         conversation.Drafts.Add(Draft());
         await store.SaveAsync(conversation, default);

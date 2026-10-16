@@ -23,7 +23,8 @@ public static class DependencyInjection
             })
             .Validate(options => options.MaxModelCallsPerTurn >= 2 && options.MaxToolCallsPerTurn > 0 && options.MaxToolArgumentBytes > 0
                 && options.ContextTokenBudget >= 8000 && options.MaxOutputTokens > 0
-                && options.ModelRequestTimeoutSeconds > 0 && options.ConversationLifetimeHours > 0
+                && options.ModelRequestTimeoutSeconds > 0 && options.ConversationRetentionDays > 0
+                && options.MaxConversationsPerUser > 0
                 && options.TraceRetentionDays > 0,
                 "AiCoach resource limits must be positive and context budget at least 8000.")
             .ValidateOnStart();
@@ -32,7 +33,7 @@ public static class DependencyInjection
         services.AddSingleton<IModelGateway, AzureOpenAiModelGateway>();
         services.AddSingleton<ModelContextBuilder>();
         services.AddSingleton<IModelTurnRuntime, ModelTurnRuntime>();
-        services.AddSingleton<IConversationStore, InMemoryConversationStore>();
+        services.AddSingleton<IConversationStore, SqlConversationStore>();
         services.AddSingleton<AiCoachUsageTracker>(provider =>
         {
             var tracker = new AiCoachUsageTracker();

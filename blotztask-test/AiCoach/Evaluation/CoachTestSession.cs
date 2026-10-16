@@ -48,7 +48,7 @@ internal sealed class CoachTestSession : IAsyncDisposable
             session.Conversation = new()
             {
                 Id = Guid.NewGuid(), UserId = user, Mode = mode, TimeZoneId = "Australia/Perth",
-                CreatedAt = Now, ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
+                CreatedAt = Now,
             };
             await session.Store.SaveAsync(session.Conversation, default);
             return session;

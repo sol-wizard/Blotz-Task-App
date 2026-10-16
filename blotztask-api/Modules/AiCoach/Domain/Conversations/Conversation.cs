@@ -13,7 +13,6 @@ public sealed class Conversation
     public required AiCoachMode Mode { get; init; }
     public required string TimeZoneId { get; init; }
     public required DateTimeOffset CreatedAt { get; init; }
-    public required DateTimeOffset ExpiresAt { get; init; }
     // JsonInclude/Populate let the persisted store restore private state without public setters.
     [JsonInclude] public int Version { get; private set; } = 1;
     [JsonInclude] public Guid? RunningTurnId { get; private set; }

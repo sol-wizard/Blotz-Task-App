@@ -8,17 +8,23 @@ public interface IConversationStore
 {
     Task<Conversation?> FindAsync(Guid conversationId, CancellationToken ct);
 
+    Task CreateAsync(Conversation conversation, CancellationToken ct);
+
+    /// <summary>
+    /// Persist changes to a conversation that was created or loaded through this store. Never recreates a
+    /// deleted conversation: throws ConversationNotFoundException, or ConversationVersionConflictException
+    /// when another writer changed it first.
+    /// </summary>
     Task SaveAsync(Conversation conversation, CancellationToken ct);
 
     /// <summary>Hold only around local state changes, never a model or database call.</summary>
     Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken ct);
 }
 
+/// <summary>Process-local storage for unit tests and the evaluation harness.</summary>
 public sealed class InMemoryConversationStore(IMemoryCache cache) : IConversationStore
 {
-    // Bounded lock stripes avoid leaking a semaphore for every expired session.
-    private readonly SemaphoreSlim[] _locks = Enumerable.Range(0, 128)
-        .Select(_ => new SemaphoreSlim(1, 1)).ToArray();
+    private readonly ConversationLocks _locks = new();
 
     private static string Key(Guid conversationId) => $"aicoach:conversation:{conversationId}";
 
@@ -27,18 +33,26 @@ public sealed class InMemoryConversationStore(IMemoryCache cache) : IConversatio
             ? conversation
             : null);
 
+    public Task CreateAsync(Conversation conversation, CancellationToken ct) => SaveAsync(conversation, ct);
+
     public Task SaveAsync(Conversation conversation, CancellationToken ct)
     {
-        // ExpiresAt semantics: the entry disappears at the conversation's absolute expiry —
-        // In-memory conversations are per-session and never survive long-term.
-        cache.Set(Key(conversation.Id), conversation, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpiration = conversation.ExpiresAt,
-        });
+        cache.Set(Key(conversation.Id), conversation);
         return Task.CompletedTask;
     }
 
-    public async Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken ct)
+    public Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken ct) =>
+        _locks.AcquireAsync(conversationId, ct);
+}
+
+/// <summary>Per-conversation mutual exclusion within this process.</summary>
+internal sealed class ConversationLocks
+{
+    // Bounded lock stripes avoid leaking a semaphore for every expired session.
+    private readonly SemaphoreSlim[] _locks = Enumerable.Range(0, 128)
+        .Select(_ => new SemaphoreSlim(1, 1)).ToArray();
+
+    public async Task<IDisposable> AcquireAsync(Guid conversationId, CancellationToken ct)
     {
         var semaphore = _locks[(uint)conversationId.GetHashCode() % (uint)_locks.Length];
         await semaphore.WaitAsync(ct);
