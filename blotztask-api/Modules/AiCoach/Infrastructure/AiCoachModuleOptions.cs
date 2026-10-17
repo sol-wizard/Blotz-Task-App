@@ -11,6 +11,7 @@ public sealed class AiCoachModuleOptions
     // Conservative UTF-8 byte estimate bounds token use, including multilingual history.
     public int ContextTokenBudget { get; set; } = 32000;
     public int ModelRequestTimeoutSeconds { get; set; } = 60;
+    public double ClosingSummaryTimeoutSeconds { get; set; } = 5;
     public int TopicIdleHours { get; set; } = 8;
     public int MessageRetentionDays { get; set; } = 180;
     public int TraceRetentionDays { get; set; } = 30;

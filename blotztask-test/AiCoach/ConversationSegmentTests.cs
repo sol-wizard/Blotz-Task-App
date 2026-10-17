@@ -208,8 +208,8 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         await session.AddTurnAsync();
         session.Open.End(session.Clock.Now);
         await session.Store.SaveAsync(session.Open, default);
-        await session.Store.SaveClosingSummaryAsync(session.Open.Id, "First topic only", default);
-        await session.Store.SaveClosingSummaryAsync(session.Open.Id, "Must not overwrite", default);
+        await session.Store.SaveClosingSummaryAsync(session.Open, "First topic only", default);
+        await session.Store.SaveClosingSummaryAsync(session.Open, "Must not overwrite", default);
         session.Clock.Now = session.Clock.Now.AddHours(1);
         var next = await session.Segments.OpenAsync(session.UserId, "Australia/Perth", default);
         // Act
@@ -220,7 +220,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         await session.Store.SaveAsync(next, default);
         var latest = await session.Store.FindPreviousSummaryAsync(session.UserId, session.Clock.Now.AddMinutes(1), default);
         await session.Db.AiCoachConversations.Where(x => x.Id == session.Open.Id).ExecuteDeleteAsync();
-        await session.Store.SaveClosingSummaryAsync(session.Open.Id, "Late summary", default);
+        await session.Store.SaveClosingSummaryAsync(session.Open, "Late summary", default);
         // Assert
         previous.Should().Be("First topic only", because: "a stored closing summary is written only once");
         latest.Should().BeNull(because: "a failed latest summary must not fall back to an older topic");

@@ -11,7 +11,8 @@ public interface IConversationStore
     Task<Conversation?> FindAsync(Guid conversationId, CancellationToken ct);
     Task<Conversation?> FindOpenAsync(Guid userId, CancellationToken ct);
     Task<string?> FindPreviousSummaryAsync(Guid userId, DateTimeOffset before, CancellationToken ct);
-    Task SaveClosingSummaryAsync(Guid conversationId, string summary, CancellationToken ct);
+    /// <summary>Write only if the ended source's loaded database revision is still current.</summary>
+    Task SaveClosingSummaryAsync(Conversation source, string summary, CancellationToken ct);
 
     Task CreateAsync(Conversation conversation, CancellationToken ct);
 
@@ -50,9 +51,10 @@ public sealed class InMemoryConversationStore(IMemoryCache cache) : IConversatio
             .OrderByDescending(conversation => conversation.EndedAt).ThenByDescending(conversation => conversation.Id)
             .FirstOrDefault()?.ClosingSummary);
 
-    public Task SaveClosingSummaryAsync(Guid conversationId, string summary, CancellationToken ct)
+    public Task SaveClosingSummaryAsync(Conversation source, string summary, CancellationToken ct)
     {
-        if (_conversations.TryGetValue(conversationId, out var conversation) && conversation.EndedAt.HasValue)
+        if (_conversations.TryGetValue(source.Id, out var conversation) && conversation.EndedAt.HasValue
+            && conversation.Version == source.Version)
             conversation.ClosingSummary ??= summary;
         return Task.CompletedTask;
     }

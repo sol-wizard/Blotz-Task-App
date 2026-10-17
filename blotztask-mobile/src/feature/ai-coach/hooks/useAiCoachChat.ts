@@ -65,37 +65,49 @@ export function useAiCoachChat() {
     setSnapshot(next);
   }, []);
 
+  const applyOpenSnapshot = useCallback(async (next: ConversationSnapshotDto, isCurrent: () => boolean) => {
+    if (!isCurrent()) return;
+    await queryClient.cancelQueries({ queryKey: chatMessagesKey, exact: true });
+    if (!isCurrent()) return;
+    // An old cursor chain cannot bridge remote inserts or identify a remote clear. Restart from page one.
+    queryClient.setQueryData<InfiniteData<ChatTimelinePageDto, string | null>>(chatMessagesKey,
+      { pages: [], pageParams: [] });
+    applySnapshot(next);
+    refreshHistory();
+  }, [applySnapshot, queryClient, refreshHistory]);
+
   const start = useCallback(async () => {
     if (busy.current) return;
     const epoch = ++lifecycle.current;
     setStatus("connecting");
     try {
       const next = await aiCoachService.openChat();
-      if (epoch === lifecycle.current) { applySnapshot(next); setStatus("ready"); }
+      await applyOpenSnapshot(next, () => epoch === lifecycle.current);
+      if (epoch === lifecycle.current) setStatus("ready");
     } catch {
       if (epoch === lifecycle.current) setStatus("startFailed");
     }
-  }, [applySnapshot]);
+  }, [applyOpenSnapshot]);
 
   useFocusEffect(useCallback(() => {
     if (busy.current) return;
     const epoch = ++lifecycle.current;
     let cancelled = false;
-    void aiCoachService.openChat().then(
-      (next) => {
-        if (!cancelled && epoch === lifecycle.current) {
-          applySnapshot(next);
-          setStatus("ready");
-        }
-      },
-      () => {
-        if (!cancelled && epoch === lifecycle.current) setStatus("startFailed");
-      },
-    );
+    setStatus("connecting");
+    const isCurrent = () => !cancelled && epoch === lifecycle.current;
+    void (async () => {
+      try {
+        const next = await aiCoachService.openChat();
+        await applyOpenSnapshot(next, isCurrent);
+        if (isCurrent()) setStatus("ready");
+      } catch {
+        if (isCurrent()) setStatus("startFailed");
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [applySnapshot]));
+  }, [applyOpenSnapshot]));
 
   const resync = useCallback(
     async (error: unknown): Promise<string> => {
@@ -105,15 +117,14 @@ export function useAiCoachChat() {
         // The open topic may have changed server-side (idle rollover after a timed-out send, 404, ended).
         try {
           const next = await aiCoachService.openChat();
-          if (next.conversationId !== snapshotRef.current?.conversationId) refreshHistory();
-          applySnapshot(next);
+          await applyOpenSnapshot(next, () => true);
         } catch {
           /* Keep visible data when the network is offline. */
         }
       }
       return body?.errorCode ?? "RequestFailed";
     },
-    [applySnapshot, refreshHistory],
+    [applySnapshot, applyOpenSnapshot],
   );
 
   // Reconcile a request that continued on the server after an HTTP timeout.
@@ -145,7 +156,10 @@ export function useAiCoachChat() {
         .catch(async (error: unknown) => {
           const code = (error as AxiosError<ConversationConflictDto>).response?.data?.errorCode;
           if (!cancelled && (code === "ConversationEnded" || (error as AxiosError).response?.status === 404)) {
-            try { const next = await aiCoachService.openChat(); if (!cancelled) { applySnapshot(next); refreshHistory(); } } catch { /* Retry on the next poll. */ }
+            try {
+              const next = await aiCoachService.openChat();
+              await applyOpenSnapshot(next, () => !cancelled && snapshotRef.current?.conversationId === id);
+            } catch { /* Retry on the next poll. */ }
           }
         });
     }, 2000);
@@ -153,7 +167,7 @@ export function useAiCoachChat() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [serverBusy, conversationId, applySnapshot, refreshHistory]);
+  }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot]);
 
   const send = useCallback(
     async (text: string): Promise<string | null> => {

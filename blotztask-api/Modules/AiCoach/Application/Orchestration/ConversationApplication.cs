@@ -30,12 +30,19 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
     AiCoachTraceRecorder? trace = null)
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
-        Guid messageId, string content, int? expectedVersion, CancellationToken ct)
+        Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null)
     {
-        (conversationId, expectedVersion) = await segments.PrepareSendAsync(userId, conversationId,
-            messageId, expectedVersion, ct);
+        if (timeZoneId is not null)
+        {
+            try { _ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); }
+            catch (Exception zoneError) when (zoneError is TimeZoneNotFoundException or InvalidTimeZoneException or ArgumentException)
+            { throw new System.ComponentModel.DataAnnotations.ValidationException("A valid IANA time zone is required."); }
+        }
+        var prepared = await segments.PrepareSendAsync(userId, conversationId, messageId, expectedVersion, ct, timeZoneId);
+        (conversationId, expectedVersion) = (prepared.ConversationId, prepared.ExpectedVersion);
         ModelTurnRequest request;
         int baseVersion;
+        DateTimeOffset segmentCreatedAt;
         using (await store.AcquireLockAsync(conversationId, ct))
         {
             var conversation = await LoadOwnedAsync(store, userId, conversationId, ct);
@@ -50,18 +57,21 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 throw new ConversationVersionConflictException(conversation);
             if (existing is not null && conversation.Messages.LastOrDefault()?.Id != messageId)
                 throw Conflict("MessageSuperseded", conversation);
+            if (timeZoneId is not null) conversation.ChangeTimeZone(timeZoneId, clock.GetUtcNow());
             conversation.BeginTurn(messageId, content, clock.GetUtcNow());
             baseVersion = conversation.Version;
-            var timeZoneId = conversation.TimeZoneId;
+            segmentCreatedAt = conversation.CreatedAt;
+            var effectiveTimeZoneId = conversation.TimeZoneId;
             request = new(conversation.Id, conversation.Mode, conversation.History.ToArray(),
                 conversation.Drafts.Select(draft => draft.Copy()).ToArray(), conversation.TimeZoneId,
                 TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(conversation.TimeZoneId)),
                 conversation.Summary, conversation.SummarizedMessageCount,
-                (startDate, endDate, token) => taskContextReader.ReadAsync(userId, timeZoneId, startDate, endDate, token),
+                (startDate, endDate, token) => taskContextReader.ReadAsync(userId, effectiveTimeZoneId, startDate, endDate, token),
                 (items, token) => scheduleChecker.CheckAsync(userId, items, false, token),
                 trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
                 await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
-                conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt);
+                conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
+                conversation.InitialTimeZoneId ?? conversation.TimeZoneId);
             await store.SaveAsync(conversation, ct);
         }
 
@@ -77,6 +87,15 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         string? error = null;
         try
         {
+            // The new user message and running status are durable before optional summary work starts.
+            if (prepared.Ended is not null)
+            {
+                await segments.TrySummarizeAsync(prepared.Ended, ct);
+                request = request with
+                {
+                    PreviousClosingSummary = await store.FindPreviousSummaryAsync(userId, segmentCreatedAt, ct),
+                };
+            }
             await checkQuota.CheckQuotaAsync(userId, ct);
             result = await runtime.ExecuteAsync(request, ct);
             error = result.Error;

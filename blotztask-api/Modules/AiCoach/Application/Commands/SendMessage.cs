@@ -16,6 +16,8 @@ public class SendMessageRequest
 
     /// <summary>Optimistic concurrency: the conversationVersion the client last saw.</summary>
     public int? ExpectedVersion { get; init; }
+    /// <summary>Current device IANA zone; older clients may omit it.</summary>
+    public string? TimeZoneId { get; init; }
 }
 
 public class SendMessageCommand
@@ -25,6 +27,7 @@ public class SendMessageCommand
     public required Guid MessageId { get; init; }
     public required string Content { get; init; }
     public int? ExpectedVersion { get; init; }
+    public string? TimeZoneId { get; init; }
 }
 
 public class SendMessageCommandHandler(ConversationApplication application)
@@ -34,6 +37,6 @@ public class SendMessageCommandHandler(ConversationApplication application)
         if (string.IsNullOrWhiteSpace(command.Content))
             throw new ValidationException("Message must not be empty.");
         return application.SendAsync(command.UserId, command.ConversationId, command.MessageId,
-            command.Content.Trim(), command.ExpectedVersion, ct);
+            command.Content.Trim(), command.ExpectedVersion, ct, command.TimeZoneId);
     }
 }

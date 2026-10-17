@@ -48,6 +48,8 @@ An active conversation is never split at midnight, so one segment can span two l
 
 Date separators in the chat follow the local day of each message and are independent of segments.
 
+New clients include their current IANA `timeZoneId` with every send; older clients may omit it and keep the segment zone. Before accepting a new turn, a changed device zone records an application event with old/new zones and local reference times, then becomes the zone for current model time, task reads and new drafts. Travel alone does not end the topic. Existing drafts keep their own zones. Idle rollover uses the incoming zone, and an empty manually reused topic adopts it. Payload-only `InitialTimeZoneId` preserves the first actual message's zone for summary date grounding; older payloads use their existing zone as the fallback.
+
 ## Model context
 
 Each turn sends:
@@ -64,7 +66,7 @@ Closing summary:
 - Stored on the ended segment as `ClosingSummary`. Only the most recent ended segment's summary is read; summaries are not chained, so drift does not accumulate across days.
 - If generation fails, the segment still ends and the next one starts without it. The failure is logged and does not block the user's message.
 
-Date grounding uses the first actual message time, not the empty segment's creation time: opening an empty chat days before speaking must not change the meaning of "tomorrow". Rolling-summary input also carries this reference time and preserves absolute dates through date-change events. Closing-summary calls have the configured model-request timeout and use the existing quota and token accounting services.
+Date grounding uses the first actual message time, not the empty segment's creation time: opening an empty chat days before speaking must not change the meaning of "tomorrow". Rolling-summary input also carries this reference time and preserves absolute dates through date-change events. Closing-summary work has its own `ClosingSummaryTimeoutSeconds` budget (default 5 seconds, validated as positive and at most 5), bounded further by request cancellation and the model-request timeout. It uses the existing quota and token accounting services. Auto-rollover saves the new message and running state before attempting this optional work; manual topic changes create the next topic first. Timeout/failure leaves the summary null and does not prevent ordinary reply processing. A whole reply may still exceed the mobile 30-second timeout, so polling reconciliation remains necessary.
 
 Expired drafts are not passed into the new segment. The closing summary mentions them so the user can ask for them again.
 
@@ -119,7 +121,7 @@ Indexes: `(UserId, CreatedAt DESC, Id DESC)` for scrolling back; `(CreatedAt)` f
 - `AcquireLockAsync` keeps the in-process striped semaphores; the revision check protects correctness with several instances.
 - `SaveAsync` inserts new messages and updates changed draft snapshots in the same transaction as the segment row. Reads use a repeatable-read transaction so the payload revision and visible messages come from the same committed state.
 - `FindOpenAsync(userId)` reads the one open segment. Ending uses `Conversation.End` plus the existing revision-conditioned `SaveAsync`, including expiry snapshots in the same transaction, instead of a separate store mutation path. A save against an already ended row is rejected.
-- `SaveClosingSummaryAsync` updates only an existing ended segment with a null summary. It never recreates cleared data or overwrites a summary. `FindPreviousSummaryAsync` reads only the most recent ended segment before the current segment started, even when that summary is null.
+- `SaveClosingSummaryAsync` updates only an existing ended segment with a null summary and the same database revision as the loaded source used for generation. A retention pass invalidates that source; late results are discarded instead of restoring expired content. It never recreates cleared data or overwrites a summary. `FindPreviousSummaryAsync` reads only the most recent ended segment before the current segment started, even when that summary is null.
 - User-level in-process locks coordinate opening and boundaries separately from segment locks, avoiding nested acquisition of the same semaphore stripe. The filtered SQL index and revision condition remain the cross-instance safeguards.
 - `InMemoryConversationStore` stays for unit tests and the evaluation harness.
 
@@ -143,7 +145,7 @@ Ending is idempotent and runs under the segment lock:
 1. Wait out or refuse (409) a running turn or draft save.
 2. Mark pending drafts expired, in `Drafts` and in their messages' `DraftSnapshot`.
 3. Set `EndedAt`.
-4. Generate `ClosingSummary` after the segment is ended, outside the lock; failure leaves it null.
+4. Create the next topic; for automatic rollover, persist the new user message and running state before attempting `ClosingSummary`. Generate outside state locks with the separate short budget; cancellation/failure leaves it null. After accepted input, cancellation still completes turn-state cleanup.
 
 ### Opening the chat
 
@@ -235,6 +237,23 @@ dotnet ef database update
 ```
 
 No EF migration has been generated or applied by the agent. Integration checks use an isolated SQL Server Testcontainer and `EnsureCreatedAsync`, so they validate the EF model and store behavior, not the eventual migration. Subsequent lifecycle, endpoints, retention and mobile work is now implemented. The tests validate the EF model/store behavior, not the developer-generated migration against the application database. Rollout and device testing have not been performed by the agent.
+
+### Review fixes — 17 Oct 2026
+
+- Device-zone sends preserve historical draft zones and the initial message zone, and use the incoming zone for idle rollover. The optional request field keeps older clients compatible.
+- New messages/running state are persisted before optional closing-summary work. Manual topic changes create the next topic first. Summary cancellation and its independent 5-second default budget leave ordinary turn cleanup intact.
+- Summary writes require the source database revision; retention invalidates delayed results without reintroducing expired content. Existing once-only and deletion protections remain.
+- SQL regression: 62 passed, none skipped, including 7 new checks. Real SQL row locks exercise summary budget expiry, accepted-message visibility and request-cancellation cleanup without mocked services.
+- Real deployment: 3 passed, none skipped. Both previous closing-summary continuity cases pass with the new default budget; a new zone-change case creates a Sydney draft for October 17 while Perth is still on October 16 and preserves the earlier Perth draft.
+- AI Coach ESLint passes. No database schema changes or EF commands are needed. Device QA and the unrelated full-project TypeScript errors remain as previously documented.
+
+### Second-review fixes — 17 Oct 2026
+
+- Draft tool contract v8 includes each item's time zone in model context/results. Updating an existing item preserves its zone; added/new items use the current session zone. Tool descriptions and field descriptions agree on those semantics.
+- Every successful chat reopen (focus, explicit retry or open-based reconciliation) cancels pending history requests, discards the old cursor chain and reloads from page one, even with the shared `staleTime: Infinity` default. Lifecycle checks before and after cancellation reject obsolete opens. Entry/retry resets scroll intent to the latest messages. Ordinary topic changes retain server history; remote clear is reflected by the authoritative empty history response.
+- SQL regression: 63 passed, none skipped. A new persisted draft-tool case covers a title edit in Perth alongside an added Sydney item and verifies per-item zone projection. One additional real-deployment check passes: editing only the old draft title after travel retains its date, local time and Perth zone, without formal task writes.
+- Executed the actual production `applyOpenSnapshot` callback with the installed TanStack Query library: active resume, initially disabled mount, all 80 messages without a 31–50 gap, remote clear, history retained across topics and obsolete lifecycle rejection all pass. This is a focused query/cache check; native UI interactions remain manual.
+- AI Coach ESLint and the final iOS JavaScript/Hermes bundle export pass. Full-project TypeScript still reports 187 errors in the calendar dependency and existing widget hook, with no AI Coach diagnostics.
 
 ### Validation — 16 Oct 2026
 

@@ -46,7 +46,11 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
                 current = await ConversationApplication.LoadOwnedAsync(store, userId, current.Id, ct);
                 ConversationApplication.RequireOpen(current);
                 ConversationApplication.RequireIdle(current);
-                if (current.Messages.Count == 0) return current;
+                if (current.Messages.Count == 0)
+                {
+                    if (current.ChangeTimeZone(timeZoneId, clock.GetUtcNow())) await store.SaveAsync(current, ct);
+                    return current;
+                }
                 if (current.End(clock.GetUtcNow()))
                 {
                     await store.SaveAsync(current, ct);
@@ -54,12 +58,13 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
                 }
             }
         }
-        if (ended is not null) await TrySummarizeAsync(ended);
-        return await OpenAsync(userId, timeZoneId, ct);
+        var next = await OpenAsync(userId, timeZoneId, ct);
+        if (ended is not null) await TrySummarizeAsync(ended, ct);
+        return next;
     }
 
-    public async Task<(Guid ConversationId, int? ExpectedVersion)> PrepareSendAsync(Guid userId,
-        Guid conversationId, Guid messageId, int? expectedVersion, CancellationToken ct)
+    public async Task<(Guid ConversationId, int? ExpectedVersion, Conversation? Ended)> PrepareSendAsync(Guid userId,
+        Guid conversationId, Guid messageId, int? expectedVersion, CancellationToken ct, string? timeZoneId = null)
     {
         Conversation ended;
         using (await store.AcquireUserLockAsync(userId, ct))
@@ -68,29 +73,29 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
             var current = await ConversationApplication.LoadOwnedAsync(store, userId, conversationId, ct);
             ConversationApplication.RequireOpen(current);
             // Retries belong to the original turn and must not create a topic boundary.
-            if (current.Messages.Any(message => message.Id == messageId)) return (conversationId, expectedVersion);
+            if (current.Messages.Any(message => message.Id == messageId)) return (conversationId, expectedVersion, null);
             ConversationApplication.RequireIdle(current);
             if (expectedVersion.HasValue && current.Version != expectedVersion)
                 throw new ConversationVersionConflictException(current);
             if (!current.IsIdleBeyond(clock.GetUtcNow(), TimeSpan.FromHours(options.Value.TopicIdleHours)))
-                return (conversationId, expectedVersion);
+                return (conversationId, expectedVersion, null);
             current.End(clock.GetUtcNow());
             await store.SaveAsync(current, ct);
             ended = current;
         }
-        await TrySummarizeAsync(ended);
-        var next = await OpenAsync(userId, ended.TimeZoneId, ct);
-        return (next.Id, next.Version);
+        var next = await OpenAsync(userId, timeZoneId ?? ended.TimeZoneId, ct);
+        return (next.Id, next.Version, ended);
     }
 
-    private async Task TrySummarizeAsync(Conversation ended)
+    public async Task TrySummarizeAsync(Conversation ended, CancellationToken ct)
     {
-        // The summary is written once and never retried, so a client cancel must not abandon it;
-        // the generator applies its own model-request timeout.
+        // Optional context gets a small independent budget; never hold state locks during this call.
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(options.Value.ClosingSummaryTimeoutSeconds));
         try
         {
-            var summary = await summaries.GenerateAsync(ended, CancellationToken.None);
-            await store.SaveClosingSummaryAsync(ended.Id, summary, CancellationToken.None);
+            var summary = await summaries.GenerateAsync(ended, timeout.Token);
+            await store.SaveClosingSummaryAsync(ended, summary, timeout.Token);
         }
         catch (Exception error)
         {

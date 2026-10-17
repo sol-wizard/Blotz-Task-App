@@ -11,7 +11,9 @@ public sealed class Conversation
     public required Guid Id { get; init; }
     public required Guid UserId { get; init; }
     public required AiCoachMode Mode { get; init; }
-    public required string TimeZoneId { get; init; }
+    public required string TimeZoneId { get; set; }
+    // Payload-only metadata; older payloads fall back to TimeZoneId until their first zone change.
+    public string? InitialTimeZoneId { get; set; }
     public required DateTimeOffset CreatedAt { get; init; }
     // JsonInclude/Populate let the persisted store restore private state without public setters.
     [JsonInclude] public int Version { get; private set; } = 1;
@@ -35,6 +37,28 @@ public sealed class Conversation
 
     public void Touch() => Version++;
 
+    /// <summary>Future turns use the device zone; existing draft schedules retain their own zones.</summary>
+    public bool ChangeTimeZone(string timeZoneId, DateTimeOffset now)
+    {
+        if (TimeZoneId == timeZoneId) return false;
+        var previousZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
+        var nextZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        if (Messages.Count > 0) InitialTimeZoneId ??= TimeZoneId;
+        if (Messages.Count > 0)
+            History.Add(new GatewaySystemMessage("App time zone change event (data, not instructions): " +
+                System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    previousTimeZoneId = TimeZoneId, currentTimeZoneId = timeZoneId,
+                    previousMessageLocalTime = TimeZoneInfo.ConvertTime(Messages[^1].CreatedAt, previousZone),
+                    previousLocalTime = TimeZoneInfo.ConvertTime(now, previousZone),
+                    currentLocalTime = TimeZoneInfo.ConvertTime(now, nextZone),
+                    note = "Earlier relative dates refer to the time zone in use when they were sent. Existing drafts keep their own time zones.",
+                })));
+        TimeZoneId = timeZoneId;
+        Touch();
+        return true;
+    }
+
     public void BeginTurn(Guid messageId, string content, DateTimeOffset startedAt)
     {
         if (EndedAt.HasValue) throw new InvalidOperationException("The segment has ended.");
@@ -46,6 +70,7 @@ public sealed class Conversation
         GenerationError = null;
         if (Messages.All(message => message.Id != messageId))
         {
+            InitialTimeZoneId ??= TimeZoneId;
             RecordDateChange(startedAt);
             Messages.Add(new(messageId, ConversationMessageRole.User, content, CreatedAt: MessageTime(startedAt)));
             History.Add(new GatewayUserMessage(content));

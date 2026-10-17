@@ -92,15 +92,20 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
             .Select(record => record.ClosingSummary).FirstOrDefaultAsync(ct);
     }
 
-    public async Task SaveClosingSummaryAsync(Guid conversationId, string summary, CancellationToken ct)
+    public async Task SaveClosingSummaryAsync(Conversation source, string summary, CancellationToken ct)
     {
+        if (!_revisions.TryGetValue(source, out var loaded))
+            throw new InvalidOperationException("Summarize a conversation only after loading or saving it through this store.");
         using var scope = scopes.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BlotzTaskDbContext>();
-        // Update-only, once: clearing history cannot be undone by a late summary result.
-        await db.AiCoachConversations.Where(record => record.Id == conversationId
-                && record.EndedAt != null && record.ClosingSummary == null)
+        // A retention pass invalidates summaries generated from the pre-pruning source, too.
+        var updated = await db.AiCoachConversations.Where(record => record.Id == source.Id
+                && record.Revision == loaded.Revision && record.EndedAt != null && record.ClosingSummary == null)
             .ExecuteUpdateAsync(setters => setters.SetProperty(record => record.ClosingSummary, summary)
                 .SetProperty(record => record.Revision, record => record.Revision + 1), ct);
+        if (updated == 0)
+            logger.LogInformation("AiCoach discarded obsolete closing summary for {ConversationId} at revision {Revision}",
+                source.Id, loaded.Revision);
     }
 
     public async Task SaveAsync(Conversation conversation, CancellationToken ct)

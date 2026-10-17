@@ -66,6 +66,7 @@ export async function sendMessage(
     messageId,
     content,
     expectedVersion,
+    timeZoneId: deviceTimeZoneId(),
   });
 }
 

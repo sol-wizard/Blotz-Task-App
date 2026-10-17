@@ -128,6 +128,7 @@ public class AiCoachController(
                 MessageId = request.MessageId ?? Guid.NewGuid(),
                 Content = request.Content,
                 ExpectedVersion = request.ExpectedVersion,
+                TimeZoneId = request.TimeZoneId,
             }, ct);
             return Ok(dto);
         }

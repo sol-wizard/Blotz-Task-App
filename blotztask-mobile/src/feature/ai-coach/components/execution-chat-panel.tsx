@@ -67,6 +67,11 @@ export function ExecutionChatPanel() {
   }, []);
   const scrollRef = useRef<FlatList<ChatItem>>(null);
   const nearLatest = useRef(true);
+  useEffect(() => {
+    if (status !== "connecting") return;
+    nearLatest.current = true;
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [status]);
 
   // Hold-to-talk: the transcript lands in the input box for review — never auto-sent.
   const { isRecording, startListening, stopAndUpload } = useVoiceRecorder(async (uri) => {
