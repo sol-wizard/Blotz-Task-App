@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
@@ -77,7 +77,8 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
       </View>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardAvoidingView className="flex-1 justify-end bg-black/40"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View className="bg-white rounded-t-3xl p-5 pb-8">
             <Text className="font-balooBold text-lg text-secondary mb-3">{t("feedback.title")}</Text>
             <View className="flex-row flex-wrap gap-2 mb-3">
@@ -103,7 +104,7 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
