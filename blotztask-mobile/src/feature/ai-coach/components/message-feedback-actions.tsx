@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
@@ -7,10 +7,11 @@ import { AiCoachRating, MessageFeedbackDto } from "../models/ai-coach-dto";
 
 const reasons = ["inaccurate", "irrelevant", "unclear", "tone", "other"] as const;
 
-export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDetail }: {
+export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDetail, rateable = true }: {
   text: string;
   feedback: MessageFeedbackDto | undefined;
   busy: boolean;
+  rateable?: boolean;
   onRate: (rating: AiCoachRating) => Promise<boolean>;
   onSaveDetail: (reason: string | null, detail: string | null) => Promise<boolean>;
 }) {
@@ -49,7 +50,7 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
   return (
     <>
       <View className="flex-row items-center gap-1 mt-1 ml-1">
-        <Pressable className="w-10 h-10 items-center justify-center" disabled={busy}
+        {rateable && <><Pressable className="w-10 h-10 items-center justify-center" disabled={busy}
           accessibilityRole="button" accessibilityLabel={t("feedback.good")}
           accessibilityState={{ selected: feedback?.rating === "up" }}
           onPress={() => void rate("up")}>
@@ -69,6 +70,7 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
           <Ionicons name={feedback?.rating === "down" ? "thumbs-down" : "thumbs-down-outline"}
             size={18} color={feedback?.rating === "down" ? "#F56767" : "#8C8C8C"} />
         </Pressable>
+        </>}
         <Pressable className="w-10 h-10 items-center justify-center"
           accessibilityRole="button" accessibilityLabel={t("feedback.copy")}
           onPress={() => void copy()}>
@@ -76,8 +78,9 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
         </Pressable>
       </View>
 
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 justify-end bg-black/40">
+      <Modal visible={open && rateable} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <KeyboardAvoidingView className="flex-1 justify-end bg-black/40"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View className="bg-white rounded-t-3xl p-5 pb-8">
             <Text className="font-balooBold text-lg text-secondary mb-3">{t("feedback.title")}</Text>
             <View className="flex-row flex-wrap gap-2 mb-3">
@@ -103,7 +106,7 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );

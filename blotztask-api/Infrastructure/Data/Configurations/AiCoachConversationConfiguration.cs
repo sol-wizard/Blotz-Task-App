@@ -14,9 +14,9 @@ public sealed class AiCoachConversationConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.HasIndex(x => new { x.UserId, x.LastActivityAt });
         builder.HasIndex(x => x.LastActivityAt);
+        builder.HasIndex(x => x.UserId).IsUnique().HasFilter("[EndedAt] IS NULL");
         builder.Property(x => x.Mode).HasConversion<string>().HasMaxLength(20).IsRequired();
-        builder.Property(x => x.Title).HasMaxLength(60);
-        builder.Property(x => x.LastMessagePreview).HasMaxLength(120);
+        builder.Property(x => x.ClosingSummary).HasColumnType("nvarchar(max)");
         builder.Property(x => x.Payload).HasColumnType("nvarchar(max)").IsRequired();
         builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);

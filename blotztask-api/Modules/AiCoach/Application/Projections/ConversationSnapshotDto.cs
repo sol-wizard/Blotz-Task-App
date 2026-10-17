@@ -10,7 +10,8 @@ public sealed record ConversationSnapshotDto(
     string GenerationStatus, string? GenerationError,
     IReadOnlyList<ChatMessageDto> Messages, IReadOnlyList<ArtifactEnvelopeDto> Artifacts,
     IReadOnlyList<string> AllowedActions, DebugUsageDto? DebugUsage);
-public sealed record ChatMessageDto(Guid Id, string Role, string Text, bool TaskContextRead);
+public sealed record ChatMessageDto(Guid Id, string Role, string Text, bool TaskContextRead,
+    DateTimeOffset CreatedAt, bool TopicStart, IReadOnlyList<ArtifactEnvelopeDto> DraftSnapshot);
 public sealed record DebugUsageDto(long InputTokens, long OutputTokens, long TotalTokens, decimal? EstUsd);
 public sealed record ArtifactEnvelopeDto(Guid Id, int Version, string Status, string? SaveError,
     TaskDraftPayloadDto Payload, IReadOnlyList<string> AllowedActions, ScheduleAssessment? Schedule);
@@ -32,16 +33,17 @@ public static class ConversationSnapshotProjector
         return new(5, conversation.Id, conversation.Version, conversation.Mode.ToString(),
             conversation.RunningTurnId.HasValue ? "running" : conversation.GenerationError is null ? "idle" : "failed",
             conversation.GenerationError,
-            conversation.Messages.Select(message => new ChatMessageDto(message.Id,
+            conversation.Messages.TakeLast(30).Select(message => new ChatMessageDto(message.Id,
                 message.Role == ConversationMessageRole.User ? "user" : "assistant", message.Content,
-                message.TaskContextRead)).ToArray(),
+                message.TaskContextRead, message.CreatedAt, message.Id == conversation.Messages.FirstOrDefault()?.Id,
+                (message.DraftSnapshot ?? []).Select(draft => ToDto(draft, true)).ToArray())).ToArray(),
             conversation.Drafts.Select(draft => ToDto(draft, busy)).ToArray(),
             busy ? [] : ["send_message"],
             usage is null ? null : new(usage.InputTokens, usage.OutputTokens, usage.TotalTokens,
                 usage.EstimateUsd(UsageOptions?.InputTokenUsdPerMillion ?? 0, UsageOptions?.OutputTokenUsdPerMillion ?? 0)));
     }
 
-    private static ArtifactEnvelopeDto ToDto(ProposalSet draft, bool busy)
+    public static ArtifactEnvelopeDto ToDto(ProposalSet draft, bool busy)
     {
         var items = draft.Proposals.Select(item => new TaskDraftItemDto(item.ProposalId, item.Title,
             item.Description, item.Date?.ToString("yyyy-MM-dd"), item.StartTime?.ToString("HH:mm"),

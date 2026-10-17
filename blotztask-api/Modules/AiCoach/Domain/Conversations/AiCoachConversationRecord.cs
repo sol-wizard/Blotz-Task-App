@@ -1,15 +1,14 @@
 namespace BlotzTask.Modules.AiCoach.Domain.Conversations;
 
-/// <summary>Stored conversation: the serialized aggregate plus columns for listing and cleanup.</summary>
+/// <summary>Stored segment working state; visible messages live in AiCoachMessage.</summary>
 public sealed class AiCoachConversationRecord
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public AiCoachMode Mode { get; set; }
-    public string? Title { get; set; }
-    public string? LastMessagePreview { get; set; }
     public int MessageCount { get; set; }
-    public bool HasPendingDraft { get; set; }
+    public DateTimeOffset? EndedAt { get; set; }
+    public string? ClosingSummary { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset LastActivityAt { get; set; }
     /// <summary>Optimistic concurrency token, incremented by every save.</summary>

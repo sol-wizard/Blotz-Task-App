@@ -56,7 +56,7 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
     }
 
     [Fact]
-    public async Task Handle_InactiveBeyondRetention_IsNotReturned()
+    public async Task Handle_LongInactiveSegment_RemainsAvailableForIdleRollover()
     {
         // Arrange
         var store = Store();
@@ -67,11 +67,11 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         // Act
         var found = await store.FindAsync(conversation.Id, default);
         // Assert
-        found.Should().BeNull(because: "a conversation past its 30-day retention is no longer available");
+        found.Should().NotBeNull(because: "idle segments must remain loadable for rollover; retention applies to individual messages");
     }
 
     [Fact]
-    public async Task Handle_Save_UpdatesListColumnsAndRestoresAggregate()
+    public async Task Handle_Save_WritesMessagesAndRestoresAggregate()
     {
         // Arrange
         var store = Store();
@@ -85,8 +85,12 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         // Assert
         await using var db = new BlotzTaskDbContext(fixture.Options);
         var record = await db.AiCoachConversations.AsNoTracking().SingleAsync(x => x.Id == conversation.Id);
-        record.Title.Should().Be(new string('长', 30) + "…", because: "the title is the first user message cut to 30 characters");
-        record.LastMessagePreview.Should().Be("Sure 👍", because: "the preview is the latest message");
+        var messages = await db.AiCoachMessages.Where(x => x.ConversationId == conversation.Id)
+            .OrderBy(x => x.CreatedAt).ToListAsync();
+        messages.Select(x => x.Content).Should().Equal([longMessage, "Sure 👍"],
+            because: "the visible timeline is stored independently of model working state");
+        record.Payload.Should().NotContain("\"messages\":", because: "payload v2 must not duplicate visible messages");
+        record.SchemaVersion.Should().Be(2, because: "the split storage format is version 2");
         record.MessageCount.Should().Be(2, because: "both the user and assistant messages count");
         record.Revision.Should().Be(2, because: "each save advances the concurrency token");
         var restored = await Store().FindAsync(conversation.Id, default);
@@ -138,6 +142,100 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
             because: "the draft card tells the user the save did not finish");
         loaded.Receipts.Should().HaveCount(released ? 0 : 1,
             because: "a leftover unfinished receipt would block every retry as already in progress");
+    }
+
+    [Fact]
+    public async Task Handle_MessageInsertFails_RollsBackSegmentRevision()
+    {
+        // Arrange
+        var store = Store();
+        var first = await CreateAsync(store);
+        var messageId = Guid.NewGuid();
+        first.BeginTurn(messageId, "Existing message", DateTimeOffset.UtcNow);
+        await store.SaveAsync(first, default);
+        var second = await CreateAsync(store);
+        second.BeginTurn(messageId, "Duplicate primary key", DateTimeOffset.UtcNow);
+        // Act
+        var save = () => store.SaveAsync(second, default);
+        // Assert
+        await save.Should().ThrowAsync<DbUpdateException>(because: "message IDs are globally unique");
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var record = await db.AiCoachConversations.SingleAsync(x => x.Id == second.Id);
+        record.Revision.Should().Be(1, because: "message failure must roll back the working-state update too");
+        record.MessageCount.Should().Be(0, because: "a failed transaction cannot claim a visible message was saved");
+        (await db.AiCoachMessages.AnyAsync(x => x.ConversationId == second.Id)).Should().BeFalse(
+            because: "segment state and messages commit together");
+    }
+
+    [Fact]
+    public async Task Handle_DraftChangesAfterAnotherTurn_UpdatesOriginalMessageCard()
+    {
+        // Arrange
+        var store = Store();
+        var conversation = await CreateAsync(store);
+        var draft = new ProposalSet { Id = Guid.NewGuid() };
+        draft.Replace([new(Guid.NewGuid(), "Swim", null, null, null, null, "Australia/Perth", null)]);
+        var first = Guid.NewGuid();
+        conversation.BeginTurn(first, "Draft a swim", DateTimeOffset.UtcNow);
+        conversation.CompleteTurn(first, conversation.Version, "Draft ready", null, [], [draft], null, 0);
+        await store.SaveAsync(conversation, default);
+        var originalMessageId = conversation.Messages.Last().Id;
+        var next = Guid.NewGuid();
+        conversation.BeginTurn(next, "Thanks", DateTimeOffset.UtcNow);
+        conversation.CompleteTurn(next, conversation.Version, "Welcome", null, [], conversation.Drafts.ToArray(), null, 0);
+        conversation.Drafts[0].Discard();
+        conversation.RecordDraftEvent("discarded_by_user", conversation.Drafts[0]);
+        // Act
+        await store.SaveAsync(conversation, default);
+        var restored = (await Store().FindAsync(conversation.Id, default))!;
+        // Assert
+        restored.Messages.Single(x => x.Id == originalMessageId).DraftSnapshot!.Single().Status.Should()
+            .Be(ProposalSetStatus.Rejected, because: "the original card reflects its latest status after later turns");
+        restored.Messages.Last().DraftSnapshot.Should().BeNull(because: "later replies do not duplicate existing cards");
+        restored.Messages.Should().HaveCount(4, because: "updating a snapshot must neither duplicate nor remove messages");
+    }
+
+    [Fact]
+    public async Task Handle_OpenSegmentAlreadyExists_RejectsAnotherAndCascadesMessagesOnDelete()
+    {
+        // Arrange
+        var store = Store();
+        var first = await CreateAsync(store);
+        first.BeginTurn(Guid.NewGuid(), "Keep this message", DateTimeOffset.UtcNow);
+        await store.SaveAsync(first, default);
+        var second = new Conversation
+        {
+            Id = Guid.NewGuid(), UserId = first.UserId, Mode = AiCoachMode.Unified,
+            TimeZoneId = first.TimeZoneId, CreatedAt = DateTimeOffset.UtcNow,
+        };
+        // Act
+        var create = () => store.CreateAsync(second, default);
+        // Assert
+        await create.Should().ThrowAsync<DbUpdateException>(because: "the filtered index permits only one open segment per user");
+        first.EndedAt = DateTimeOffset.UtcNow;
+        await store.SaveAsync(first, default);
+        await store.CreateAsync(second, default);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        (await db.AiCoachConversations.CountAsync(x => x.UserId == first.UserId)).Should().Be(2,
+            because: "ended segments can coexist with one open segment");
+        await db.AiCoachConversations.Where(x => x.Id == first.Id).ExecuteDeleteAsync();
+        (await db.AiCoachMessages.AnyAsync(x => x.ConversationId == first.Id)).Should().BeFalse(
+            because: "deleting a segment cascades to its visible messages");
+    }
+
+    [Fact]
+    public async Task Handle_UnsupportedPayloadVersion_IsNotReturned()
+    {
+        // Arrange
+        var store = Store();
+        var conversation = await CreateAsync(store);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        await db.AiCoachConversations.Where(x => x.Id == conversation.Id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.SchemaVersion, 1));
+        // Act
+        var found = await store.FindAsync(conversation.Id, default);
+        // Assert
+        found.Should().BeNull(because: "pre-release version 1 payloads must not be interpreted as version 2");
     }
 
     private SqlConversationStore Store()

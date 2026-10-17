@@ -14,7 +14,8 @@ public sealed record ModelTurnRequest(Guid ConversationId, AiCoachMode Mode, IRe
     string? Summary, int SummarizedMessageCount,
     Func<DateOnly, DateOnly, CancellationToken, Task<string>>? ReadTasks = null,
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? CheckSchedule = null,
-    Func<string, object, Task>? Trace = null);
+    Func<string, object, Task>? Trace = null, string? PreviousClosingSummary = null,
+    DateTimeOffset? SegmentStartedAt = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,

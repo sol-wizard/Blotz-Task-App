@@ -11,6 +11,18 @@ namespace BlotzTask.Tests.AiCoach.Evaluation;
 public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelper output) : IClassFixture<DatabaseFixture>
 {
     [CoachLiveTheory]
+    [InlineData("listen", AiCoachMode.Unified)]
+    [InlineData("advice", AiCoachMode.Unified)]
+    [InlineData("accept", AiCoachMode.Unified)]
+    [InlineData("invitation", AiCoachMode.Unified)]
+    [InlineData("content", AiCoachMode.Unified)]
+    [InlineData("defaults", AiCoachMode.Unified)]
+    [InlineData("conflict", AiCoachMode.Unified)]
+    [InlineData("edit-save", AiCoachMode.Unified)]
+    [InlineData("unscheduled", AiCoachMode.Unified)]
+    [InlineData("recurring", AiCoachMode.Unified)]
+    [InlineData("calendar", AiCoachMode.Unified)]
+    [InlineData("two-drafts", AiCoachMode.Unified)]
     [InlineData("listen", AiCoachMode.Execution)]
     [InlineData("listen", AiCoachMode.Clarify)]
     [InlineData("listen", AiCoachMode.Companion)]
@@ -80,7 +92,11 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
             case "invitation":
                 await harness.SendAsync("给我一个明天可以试试的十分钟散步建议，现在先不创建任务。");
                 await harness.SendAsync("明天散步十分钟这个行动我愿意试试。");
-                session.Conversation.Drafts.Should().BeEmpty(because: "accepting an action suggestion is distinct from accepting draft creation");
+                if (session.Conversation.Mode == AiCoachMode.Unified)
+                    OneItem(session).PersistedTaskId.Should().BeNull(
+                        because: "Unified drafts a concrete action the user adopts, while task persistence still requires confirmation");
+                else
+                    session.Conversation.Drafts.Should().BeEmpty(because: "accepting an action suggestion is distinct from accepting draft creation in this mode");
                 await harness.SendAsync("好的，请生成这个散步任务的草稿。");
                 OneItem(session).PersistedTaskId.Should().BeNull(because: "accepting a draft invitation never saves a formal task");
                 break;

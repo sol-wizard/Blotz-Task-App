@@ -27,18 +27,17 @@ namespace BlotzTask.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ClosingSummary")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<bool>("HasPendingDraft")
-                        .HasColumnType("bit");
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("LastActivityAt")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("LastMessagePreview")
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
 
                     b.Property<int>("MessageCount")
                         .HasColumnType("int");
@@ -58,16 +57,16 @@ namespace BlotzTask.Migrations
                     b.Property<int>("SchemaVersion")
                         .HasColumnType("int");
 
-                    b.Property<string>("Title")
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LastActivityAt");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[EndedAt] IS NULL");
 
                     b.HasIndex("UserId", "LastActivityAt");
 
@@ -114,6 +113,50 @@ namespace BlotzTask.Migrations
                     b.HasIndex("UserId", "ConversationId");
 
                     b.ToTable("AiCoachFeedback", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DraftSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("TaskContextRead")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("TurnId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId", "CreatedAt", "Id")
+                        .IsDescending(false, true, true);
+
+                    b.ToTable("AiCoachMessage", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachTraceEvent", b =>
@@ -1128,6 +1171,15 @@ namespace BlotzTask.Migrations
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachMessage", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

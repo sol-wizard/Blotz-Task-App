@@ -24,7 +24,7 @@
     "pickModeFirst": "Pick a mode above to start"
   },
   "chat": {
-    "title": "Execution mode",
+    "title": "AI Coach",
     "inputPlaceholder": "What do you want to do?",
     "companionInputPlaceholder": "What's on your mind?",
     "thinking": "Thinking…",
@@ -39,7 +39,18 @@
     "listening": "Listening…",
     "transcribeFailed": "Couldn't catch that, try again",
     "holdToTalk": "Hold to talk",
-    "generationFailed": "This reply could not be completed. Please try again or start a new conversation."
+    "generationFailed": "This reply could not be completed. Please try again or start a new conversation.",
+    "menu": "Chat options",
+    "newTopic": "New topic",
+    "clearHistory": "Clear chat history",
+    "clearTitle": "Clear chat history?",
+    "clearDescription": "Your messages, drafts and diagnostic traces will be permanently deleted. Thumbs up/down ratings and any reasons or details you submitted are kept for quality review.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "topicStart": "New topic",
+    "historyError": "Could not load history — tap to retry",
+    "busy": "Wait for the current reply or save to finish.",
+    "actionFailed": "Could not update your chat. Please try again."
   },
   "feedback": {
     "good": "Helpful reply",
@@ -88,7 +99,10 @@
     "schedulePartial": "Repeats in the first seven days were checked; later dates have not been checked.",
     "cancel": "Cancel",
     "editFailed": "Could not update the draft. Please try again.",
-    "repeats": "Repeats"
+    "repeats": "Repeats",
+    "discarded": "Discarded",
+    "expired": "Expired",
+    "timePassed": "This time has passed — edit it before saving."
   },
   "editModal": {
     "title": "Edit task",
@@ -107,7 +121,20 @@
     "endDate": "Ends on",
     "noEndDate": "No end date",
     "invalidRecurrence": "Check the repeat interval, selected days and end date.",
-    "frequency": { "Daily": "Daily", "Weekly": "Weekly", "Monthly": "Monthly", "Yearly": "Yearly" },
-    "weekday": { "0": "Mon", "1": "Tue", "2": "Wed", "3": "Thu", "4": "Fri", "5": "Sat", "6": "Sun" }
+    "frequency": {
+      "Daily": "Daily",
+      "Weekly": "Weekly",
+      "Monthly": "Monthly",
+      "Yearly": "Yearly"
+    },
+    "weekday": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    }
   }
 }

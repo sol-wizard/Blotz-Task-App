@@ -12,15 +12,16 @@ namespace BlotzTask.Tests.AiCoach;
 public sealed class ConversationPersistenceTests
 {
     [Fact]
-    public void Handle_SerializeRoundTrip_RestoresWholeAggregate()
+    public void Handle_SerializeRoundTrip_RestoresWorkingStateWithoutMessages()
     {
         // Arrange
         var conversation = Populated();
         // Act
         var restored = ConversationSerializer.Deserialize(ConversationSerializer.Serialize(conversation));
         // Assert
-        restored.Should().BeEquivalentTo(conversation, options => options.PreferringRuntimeMemberTypes(),
+        restored.Should().BeEquivalentTo(conversation, options => options.PreferringRuntimeMemberTypes().Excluding(value => value.Messages),
             because: "a restarted process must continue from exactly the stored conversation");
+        restored.Messages.Should().BeEmpty(because: "visible messages are restored from rows rather than payload v2");
         restored.History.Select(message => message.GetType()).Should().Equal(
             conversation.History.Select(message => message.GetType()),
             because: "each history message must be restored as its own gateway type for the model call");
@@ -28,6 +29,28 @@ public sealed class ConversationPersistenceTests
         restored.Drafts[0].Status.Should().Be(ProposalSetStatus.Completed, because: "a saved draft must not become editable again");
         restored.Receipts.Values.Should().ContainSingle(receipt => receipt.Result != null,
             because: "a confirmation replay must return its original result instead of saving again");
+    }
+
+    [Fact]
+    public void Handle_SummarizedHistory_TrimsCoveredContextAndPreservesTimeline()
+    {
+        // Arrange
+        var conversation = Populated();
+        var timeline = conversation.Messages.ToArray();
+        var covered = conversation.History.Count;
+        var turn = Guid.NewGuid();
+        conversation.BeginTurn(turn, "What is next?", DateTimeOffset.UtcNow);
+        // Act
+        conversation.CompleteTurn(turn, conversation.Version, "Continue reading", null,
+            [new GatewayAssistantMessage("Continue reading", [])], conversation.Drafts.ToArray(), "Earlier plans", covered);
+        var restored = ConversationSerializer.Deserialize(ConversationSerializer.Serialize(conversation));
+        // Assert
+        restored.History.Should().HaveCount(2, because: "summary-covered model history is removed from payload v2");
+        restored.SummarizedMessageCount.Should().Be(0, because: "the next summary cursor is relative to the trimmed history");
+        restored.Summary.Should().Be("Earlier plans", because: "the summary replaces the removed model history");
+        conversation.Messages.Take(timeline.Length).Select(message => message.Id).Should().Equal(timeline.Select(message => message.Id),
+            because: "context compression must preserve every visible message identity");
+        conversation.Messages.Should().HaveCount(timeline.Length + 2, because: "the full visible timeline survives model compression");
     }
 
     private static Conversation Populated()

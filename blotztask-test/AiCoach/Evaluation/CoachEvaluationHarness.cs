@@ -44,7 +44,11 @@ internal sealed class CoachEvaluationHarness
             new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance));
         _application = new(session.Store, runtime, new CheckAiQuotaService(session.Db, session.Cache),
             new RecordAiUsageService(session.Db), _usage, session.Reader, session.Checker,
-            session.Clock, NullLogger<ConversationApplication>.Instance);
+            session.Clock, NullLogger<ConversationApplication>.Instance,
+            new ConversationSegments(session.Store,
+                new ClosingSummaryGenerator(_gateway, new CheckAiQuotaService(session.Db, session.Cache),
+                    new RecordAiUsageService(session.Db), _usage, options, NullLogger<ClosingSummaryGenerator>.Instance),
+                session.Clock, options, NullLogger<ConversationSegments>.Instance));
         var root = FindRepository();
         var directory = Path.Combine(root, "blotztask-test", "TestResults", "ai-coach-evals", RunId);
         Directory.CreateDirectory(directory);
@@ -57,7 +61,7 @@ internal sealed class CoachEvaluationHarness
     {
         var before = _session.Conversation.Drafts.Select(draft => draft.Copy()).ToArray();
         var callOffset = _gateway.Calls.Count;
-        var messageCount = _session.Conversation.Messages.Count;
+        var previousMessageIds = _session.Conversation.Messages.Select(message => message.Id).ToHashSet();
         var watch = Stopwatch.StartNew();
         try
         {
@@ -66,7 +70,7 @@ internal sealed class CoachEvaluationHarness
             var calls = _gateway.Calls.Skip(callOffset).ToArray();
             _turns.Add(new { message, elapsedMs = watch.ElapsedMilliseconds, before, snapshot,
                 calls });
-            var reply = snapshot.Messages.Skip(messageCount).LastOrDefault(item => item.Role == "assistant");
+            var reply = snapshot.Messages.LastOrDefault(item => item.Role == "assistant" && !previousMessageIds.Contains(item.Id));
             if (reply is not null)
             {
                 var toolCalls = calls.SelectMany(call => call.Response.ToolCalls).ToArray();

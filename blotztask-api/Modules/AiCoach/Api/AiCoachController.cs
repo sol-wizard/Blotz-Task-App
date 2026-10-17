@@ -20,8 +20,36 @@ public class AiCoachController(
     EditDraftCommandHandler editDraft,
     MessageFeedbackHandler messageFeedback,
     TranscribeAudioCommandHandler transcribeAudio,
-    IConversationStore store) : ControllerBase
+    IConversationStore store, ChatApplication chat) : ControllerBase
 {
+    [HttpGet("chat")]
+    public async Task<ActionResult<ConversationSnapshotDto>> OpenChat([FromQuery] string timeZoneId, CancellationToken ct)
+    {
+        try { return Ok(await chat.OpenAsync(GetUserId(), timeZoneId, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    [HttpGet("chat/messages")]
+    public async Task<ActionResult<ChatTimelinePage>> GetMessages([FromQuery] string? before = null,
+        [FromQuery] int limit = 30, CancellationToken ct = default)
+    {
+        try { return Ok(await chat.MessagesAsync(GetUserId(), before, limit, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    [HttpPost("chat/topics")]
+    public async Task<ActionResult<ConversationSnapshotDto>> NewTopic([FromBody] ChatTopicRequest request, CancellationToken ct)
+    {
+        try { return Ok(await chat.NewTopicAsync(GetUserId(), request.TimeZoneId, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    [HttpDelete("chat")]
+    public async Task<IActionResult> ClearChat(CancellationToken ct)
+    {
+        try { await chat.ClearAsync(GetUserId(), ct); return NoContent(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
     [HttpPost("conversations")]
     public async Task<ActionResult<ConversationSnapshotDto>> StartConversation(
         [FromBody] StartConversationRequest request, CancellationToken ct)
@@ -42,6 +70,8 @@ public class AiCoachController(
         var conversation = await store.FindAsync(conversationId, ct);
         if (conversation is null || conversation.UserId != GetUserId())
             return NotFound();
+        if (conversation.EndedAt.HasValue)
+            return Conflict(new { errorCode = "ConversationEnded", conversationSnapshot = ConversationSnapshotProjector.ToDto(conversation) });
         return Ok(ConversationSnapshotProjector.ToDto(conversation));
     }
 
@@ -50,7 +80,7 @@ public class AiCoachController(
         Guid conversationId, CancellationToken ct)
     {
         try { return Ok(await messageFeedback.ListAsync(GetUserId(), conversationId, ct)); }
-        catch (ConversationNotFoundException) { return NotFound(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     [HttpPut("conversations/{conversationId:guid}/messages/{messageId:guid}/feedback")]
@@ -60,7 +90,7 @@ public class AiCoachController(
         if (request.Rating is not ("up" or "down"))
             return BadRequest(new { errorCode = "InvalidRating" });
         try { return Ok(await messageFeedback.PutAsync(GetUserId(), conversationId, messageId, request, ct)); }
-        catch (ConversationNotFoundException) { return NotFound(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     [HttpDelete("conversations/{conversationId:guid}/messages/{messageId:guid}/feedback")]
@@ -72,7 +102,7 @@ public class AiCoachController(
             await messageFeedback.DeleteAsync(GetUserId(), conversationId, messageId, ct);
             return NoContent();
         }
-        catch (ConversationNotFoundException) { return NotFound(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     /// <summary>Voice input: transcribe a recording; the client puts the text into the input box.</summary>
@@ -166,8 +196,20 @@ public class AiCoachController(
     {
         switch (exception)
         {
+            case ConversationEndedException ended:
+                result = Conflict(new
+                {
+                    errorCode = "ConversationEnded",
+                    conversationSnapshot = ConversationSnapshotProjector.ToDto(ended.Conversation),
+                });
+                return true;
+
             case ConversationNotFoundException:
                 result = NotFound();
+                return true;
+
+            case System.ComponentModel.DataAnnotations.ValidationException validation:
+                result = BadRequest(new { errorCode = "InvalidChatRequest", message = validation.Message });
                 return true;
 
             case ConversationVersionConflictException conflict:

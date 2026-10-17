@@ -18,7 +18,9 @@ public sealed class Conversation
     [JsonInclude] public Guid? RunningTurnId { get; private set; }
     [JsonInclude] public DateTimeOffset? RunningTurnStartedAt { get; private set; }
     [JsonInclude] public string? GenerationError { get; private set; }
-    [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
+    public DateTimeOffset? EndedAt { get; set; }
+    public string? ClosingSummary { get; set; }
+    [JsonIgnore]
     public List<ConversationMessage> Messages { get; } = [];
     [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
     public List<GatewayMessage> History { get; } = [];
@@ -35,6 +37,7 @@ public sealed class Conversation
 
     public void BeginTurn(Guid messageId, string content, DateTimeOffset startedAt)
     {
+        if (EndedAt.HasValue) throw new InvalidOperationException("The segment has ended.");
         if (RunningTurnId.HasValue) throw new InvalidOperationException("A turn is already running.");
         if (Drafts.Any(draft => draft.Status == ProposalSetStatus.Processing))
             throw new InvalidOperationException("A draft is being saved.");
@@ -43,7 +46,8 @@ public sealed class Conversation
         GenerationError = null;
         if (Messages.All(message => message.Id != messageId))
         {
-            Messages.Add(new(messageId, ConversationMessageRole.User, content));
+            RecordDateChange(startedAt);
+            Messages.Add(new(messageId, ConversationMessageRole.User, content, CreatedAt: MessageTime(startedAt)));
             History.Add(new GatewayUserMessage(content));
         }
         Touch();
@@ -52,8 +56,9 @@ public sealed class Conversation
     /// <summary>Apply a whole turn once; stale or cancelled results never commit draft changes.</summary>
     public TurnCommitStatus CompleteTurn(Guid messageId, int expectedVersion, string? text, string? error,
         IReadOnlyList<GatewayMessage> turnHistory, IReadOnlyList<ProposalSet> drafts,
-        string? summary, int summarizedCount, bool taskContextRead = false)
+        string? summary, int summarizedCount, bool taskContextRead = false, DateTimeOffset? completedAt = null)
     {
+        if (EndedAt.HasValue) return TurnCommitStatus.NoLongerActive;
         if (RunningTurnId != messageId) return TurnCommitStatus.NoLongerActive;
         if (Version != expectedVersion)
         {
@@ -62,7 +67,8 @@ public sealed class Conversation
         }
         error ??= string.IsNullOrWhiteSpace(text) ? "invalid_response" : null;
         if (error is null)
-            AcceptReply(messageId, text!, turnHistory, drafts, summary, summarizedCount, taskContextRead);
+            AcceptReply(messageId, text!, turnHistory, drafts, summary, summarizedCount, taskContextRead,
+                completedAt ?? DateTimeOffset.UtcNow);
         FinishTurn(messageId, error);
         return error is null ? TurnCommitStatus.Committed : TurnCommitStatus.Failed;
     }
@@ -82,6 +88,7 @@ public sealed class Conversation
     /// </summary>
     public bool ReleaseInterruptedWork(DateTimeOffset now, TimeSpan turnLimit, TimeSpan saveLimit)
     {
+        if (EndedAt.HasValue) return false;
         var released = false;
         if (RunningTurnId.HasValue && RunningTurnStartedAt <= now - turnLimit)
         {
@@ -105,28 +112,106 @@ public sealed class Conversation
     }
 
     private void AcceptReply(Guid turnId, string text, IReadOnlyList<GatewayMessage> turnHistory,
-        IReadOnlyList<ProposalSet> drafts, string? summary, int summarizedCount, bool taskContextRead)
+        IReadOnlyList<ProposalSet> drafts, string? summary, int summarizedCount, bool taskContextRead,
+        DateTimeOffset completedAt)
     {
-        Messages.Add(new(Guid.NewGuid(), ConversationMessageRole.Assistant, text, taskContextRead, turnId));
+        if (summarizedCount < 0 || summarizedCount > History.Count)
+            throw new InvalidOperationException("Invalid summarized history cursor.");
+        var previousDraftIds = Messages.SelectMany(message => message.DraftSnapshot ?? []).Select(draft => draft.Id).ToHashSet();
+        foreach (var draft in drafts) UpdateDraftSnapshots(draft);
+        var newDrafts = drafts.Where(draft => !previousDraftIds.Contains(draft.Id)).Select(draft => draft.Copy()).ToArray();
+        Messages.Add(new(Guid.NewGuid(), ConversationMessageRole.Assistant, text, taskContextRead, turnId,
+            MessageTime(completedAt), newDrafts.Length == 0 ? null : newDrafts));
         History.AddRange(turnHistory);
         Drafts.Clear();
         Drafts.AddRange(drafts.Select(draft => draft.Copy()));
         Summary = summary;
-        SummarizedMessageCount = summarizedCount;
+        History.RemoveRange(0, summarizedCount);
+        SummarizedMessageCount = 0;
     }
 
     public void RecordDraftEvent(string action, ProposalSet draft)
     {
+        UpdateDraftSnapshots(draft);
         // Application facts are supplied as data, not as a new user instruction.
         History.Add(new GatewaySystemMessage("App draft event (data): " +
             System.Text.Json.JsonSerializer.Serialize(new { action, draft.Id, draft.Status, draft.Proposals })));
         Touch();
     }
+
+    /// <summary>Returns false for an empty or already ended segment; active work must finish first.</summary>
+    public bool End(DateTimeOffset now)
+    {
+        if (EndedAt.HasValue) return false;
+        if (RunningTurnId.HasValue || Drafts.Any(draft => draft.Status == ProposalSetStatus.Processing))
+            throw new InvalidOperationException("The segment is busy.");
+        if (Messages.Count == 0) return false;
+        foreach (var draft in Drafts.Where(draft => draft.Status == ProposalSetStatus.Pending))
+        {
+            draft.Expire();
+            RecordDraftEvent("expired_on_topic_end", draft);
+        }
+        EndedAt = now;
+        Touch();
+        return true;
+    }
+
+    public bool IsIdleBeyond(DateTimeOffset now, TimeSpan idleLimit) =>
+        Messages.LastOrDefault() is { } last && now - last.CreatedAt > idleLimit;
+
+    /// <summary>Remove retained-data copies as well as visible rows; callers rebuild bounded recent context.</summary>
+    public void PruneMessagesBefore(DateTimeOffset cutoff)
+    {
+        var removedDrafts = Messages.Where(message => message.CreatedAt <= cutoff)
+            .SelectMany(message => message.DraftSnapshot ?? []).Select(draft => draft.Id).ToHashSet();
+        Messages.RemoveAll(message => message.CreatedAt <= cutoff);
+        Drafts.RemoveAll(draft => removedDrafts.Contains(draft.Id));
+        CompletedMessages.IntersectWith(Messages.Where(message => message.Role == ConversationMessageRole.User).Select(message => message.Id));
+        History.Clear();
+        Summary = null;
+        ClosingSummary = null;
+        SummarizedMessageCount = 0;
+        Touch();
+    }
+
+    private void RecordDateChange(DateTimeOffset now)
+    {
+        if (Messages.LastOrDefault() is not { } previous) return;
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
+        var previousDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(previous.CreatedAt, zone).DateTime);
+        var currentDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+        if (previousDate == currentDate) return;
+        History.Add(new GatewaySystemMessage("App date change event (data, not instructions): " +
+            System.Text.Json.JsonSerializer.Serialize(new
+            {
+                previousDate, currentDate, TimeZoneId,
+                note = "The local date has changed. Earlier relative dates such as today and tomorrow refer to when those messages were sent.",
+            })));
+    }
+
+    /// <summary>Keep the card on its originating message after later turns replace live drafts.</summary>
+    public void UpdateDraftSnapshots(ProposalSet draft)
+    {
+        for (var index = 0; index < Messages.Count; index++)
+        {
+            var message = Messages[index];
+            if (message.DraftSnapshot?.Any(snapshot => snapshot.Id == draft.Id) != true) continue;
+            Messages[index] = message with
+            {
+                DraftSnapshot = message.DraftSnapshot.Select(snapshot => snapshot.Id == draft.Id ? draft.Copy() : snapshot).ToArray(),
+            };
+        }
+    }
+
+    // Preserve causal order when two events share the clock's resolution, including fixed test clocks.
+    private DateTimeOffset MessageTime(DateTimeOffset now) =>
+        Messages.LastOrDefault() is { } last && last.CreatedAt >= now ? last.CreatedAt.AddTicks(1) : now;
 }
 
 public enum ConversationMessageRole { User, Assistant }
 public sealed record ConversationMessage(Guid Id, ConversationMessageRole Role, string Content,
-    bool TaskContextRead = false, Guid? TurnId = null);
+    bool TaskContextRead = false, Guid? TurnId = null, DateTimeOffset CreatedAt = default,
+    IReadOnlyList<ProposalSet>? DraftSnapshot = null);
 /// <summary>Result is null while a confirmation runs and for discards, whose replay returns the current snapshot.</summary>
 public sealed record CommandReceipt(Guid DraftId, string RequestHash, ConfirmDraftResultDto? Result);
 

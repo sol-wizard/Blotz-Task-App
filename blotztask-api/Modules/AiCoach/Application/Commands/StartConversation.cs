@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.AiCoach.Application.Projections;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Infrastructure;
+using BlotzTask.Modules.AiCoach.Application.Orchestration;
 
 namespace BlotzTask.Modules.AiCoach.Application.Commands;
 
@@ -21,10 +22,9 @@ public class StartConversationCommand
     public AiCoachMode Mode { get; init; } = AiCoachMode.Execution;
 }
 
-/// <summary>Creates a session using the selected conversational preference.</summary>
+/// <summary>Compatibility entry point: reuse the user's open topic, or create a Unified topic.</summary>
 public class StartConversationCommandHandler(
-    IConversationStore store,
-    TimeProvider clock, AiCoachTraceRecorder? trace = null)
+    ConversationSegments segments, AiCoachTraceRecorder? trace = null)
 {
     public async Task<ConversationSnapshotDto> Handle(StartConversationCommand command, CancellationToken ct = default)
     {
@@ -40,20 +40,9 @@ public class StartConversationCommandHandler(
         if (!Enum.IsDefined(command.Mode))
             throw new ValidationException($"AI coach mode '{command.Mode}' is not available.");
 
-        var now = clock.GetUtcNow();
-
-        var conversation = new Conversation
-        {
-            Id = Guid.NewGuid(),
-            UserId = command.UserId,
-            Mode = command.Mode,
-            TimeZoneId = command.TimeZoneId,
-            CreatedAt = now,
-        };
-
-        await store.CreateAsync(conversation, ct);
+        var conversation = await segments.OpenAsync(command.UserId, command.TimeZoneId, ct);
         if (trace is not null)
-            await trace.RecordAsync(command.UserId, conversation.Id, null, "conversation_started", new
+            await trace.RecordAsync(command.UserId, conversation.Id, null, "conversation_opened", new
             {
                 mode = conversation.Mode.ToString(), conversation.TimeZoneId,
                 conversation.CreatedAt,

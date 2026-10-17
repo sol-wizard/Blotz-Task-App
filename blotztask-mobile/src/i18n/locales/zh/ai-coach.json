@@ -24,7 +24,7 @@
     "pickModeFirst": "先选择上面的一个模式开始"
   },
   "chat": {
-    "title": "执行模式",
+    "title": "AI 教练",
     "inputPlaceholder": "想做什么？告诉我",
     "companionInputPlaceholder": "想聊什么？告诉我",
     "thinking": "正在想…",
@@ -39,7 +39,18 @@
     "listening": "正在听…",
     "transcribeFailed": "没听清，再试一次",
     "holdToTalk": "按住说话",
-    "generationFailed": "这次回复未能完成。请重试，或开始新的对话。"
+    "generationFailed": "这次回复未能完成。请重试，或开始新的对话。",
+    "menu": "聊天选项",
+    "newTopic": "新话题",
+    "clearHistory": "清空聊天记录",
+    "clearTitle": "清空聊天记录？",
+    "clearDescription": "你的消息、草稿和诊断记录将被永久删除。点赞／点踩及你提交的原因和补充说明会保留，用于质量改进。",
+    "today": "今天",
+    "yesterday": "昨天",
+    "topicStart": "新话题",
+    "historyError": "历史记录加载失败，点击重试",
+    "busy": "请等待当前回复或保存完成。",
+    "actionFailed": "聊天更新失败，请重试。"
   },
   "feedback": {
     "good": "回复有帮助",
@@ -88,7 +99,10 @@
     "schedulePartial": "已检查开始日期起七天内的重复安排；更远的日期尚未核对。",
     "cancel": "取消",
     "editFailed": "草稿更新失败，请重试。",
-    "repeats": "重复"
+    "repeats": "重复",
+    "discarded": "已丢弃",
+    "expired": "已过期",
+    "timePassed": "这个时间已经过去，请先编辑再保存。"
   },
   "editModal": {
     "title": "编辑任务",
@@ -107,7 +121,20 @@
     "endDate": "结束日期",
     "noEndDate": "不设结束日期",
     "invalidRecurrence": "请检查重复间隔、星期和结束日期。",
-    "frequency": { "Daily": "每天", "Weekly": "每周", "Monthly": "每月", "Yearly": "每年" },
-    "weekday": { "0": "一", "1": "二", "2": "三", "3": "四", "4": "五", "5": "六", "6": "日" }
+    "frequency": {
+      "Daily": "每天",
+      "Weekly": "每周",
+      "Monthly": "每月",
+      "Yearly": "每年"
+    },
+    "weekday": {
+      "0": "一",
+      "1": "二",
+      "2": "三",
+      "3": "四",
+      "4": "五",
+      "5": "六",
+      "6": "日"
+    }
   }
 }

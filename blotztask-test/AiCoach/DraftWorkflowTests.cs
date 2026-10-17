@@ -358,7 +358,11 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
     private static ConfirmDraftCommandHandler Confirm(IConversationStore store, BlotzTaskDbContext db) => new(store,
         new AddTaskCommandHandler(db, NullLogger<AddTaskCommandHandler>.Instance),
         new CreateRecurringTaskCommandHandler(db, NullLogger<CreateRecurringTaskCommandHandler>.Instance),
-        db, TimeProvider.System, NullLogger<ConfirmDraftCommandHandler>.Instance);
+        db, new ConfirmationClock(), NullLogger<ConfirmDraftCommandHandler>.Instance);
+    private sealed class ConfirmationClock : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => new(2026, 10, 1, 8, 0, 0, TimeSpan.FromHours(8));
+    }
     private static JsonElement Call(DraftTools tools, string name, object args) =>
         JsonSerializer.Deserialize<JsonElement>(tools.Execute(new(Guid.NewGuid().ToString(), name, JsonSerializer.Serialize(args))));
 }

@@ -11,9 +11,8 @@ public sealed class AiCoachModuleOptions
     // Conservative UTF-8 byte estimate bounds token use, including multilingual history.
     public int ContextTokenBudget { get; set; } = 32000;
     public int ModelRequestTimeoutSeconds { get; set; } = 60;
-    // Sliding: a conversation is deleted after this many days without activity.
-    public int ConversationRetentionDays { get; set; } = 30;
-    public int MaxConversationsPerUser { get; set; } = 50;
+    public int TopicIdleHours { get; set; } = 8;
+    public int MessageRetentionDays { get; set; } = 180;
     public int TraceRetentionDays { get; set; } = 30;
     public decimal InputTokenUsdPerMillion { get; set; }
     public decimal OutputTokenUsdPerMillion { get; set; }

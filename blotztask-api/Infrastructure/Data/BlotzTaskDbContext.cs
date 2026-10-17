@@ -44,6 +44,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiCoachFeedback> AiCoachFeedback => Set<AiCoachFeedback>();
     public DbSet<AiCoachTraceEvent> AiCoachTraceEvents => Set<AiCoachTraceEvent>();
     public DbSet<AiCoachConversationRecord> AiCoachConversations => Set<AiCoachConversationRecord>();
+    public DbSet<AiCoachMessage> AiCoachMessages => Set<AiCoachMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

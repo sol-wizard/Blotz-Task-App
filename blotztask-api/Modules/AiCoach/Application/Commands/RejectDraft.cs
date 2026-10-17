@@ -21,6 +21,7 @@ public sealed class RejectDraftCommandHandler(IConversationStore store, AiCoachT
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
+            ConversationApplication.RequireOpen(conversation);
             var hash = DraftEditing.Hash(new { action = "discard", command.DraftId });
             if (conversation.Receipts.TryGetValue(command.Request.CommandId, out var receipt))
             {

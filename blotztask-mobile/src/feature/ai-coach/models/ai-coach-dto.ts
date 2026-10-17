@@ -52,7 +52,7 @@ export interface DraftScheduleAssessmentDto {
 export interface ArtifactEnvelopeDto {
   id: string;
   version: number;
-  status: "pending" | "processing" | "completed" | "rejected";
+  status: "pending" | "processing" | "completed" | "rejected" | "expired";
   saveError: string | null;
   payload: TaskDraftPayloadDto;
   allowedActions: ConversationActionWire[];
@@ -66,7 +66,8 @@ export interface ConversationSnapshotDto {
   mode: AvailableAiCoachMode;
   generationStatus: "idle" | "running" | "failed";
   generationError: string | null;
-  messages: { id: string; role: "user" | "assistant"; text: string; taskContextRead: boolean }[];
+  messages: { id: string; role: "user" | "assistant"; text: string; taskContextRead: boolean;
+    createdAt: string; topicStart: boolean; draftSnapshot: ArtifactEnvelopeDto[] }[];
   artifacts: ArtifactEnvelopeDto[];
   allowedActions: ConversationActionWire[];
   debugUsage?: {
@@ -75,6 +76,20 @@ export interface ConversationSnapshotDto {
     totalTokens: number;
     estUsd: number | null;
   } | null;
+}
+
+export interface ChatTimelineItemDto {
+  messageId: string;
+  conversationId: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+  topicStart: boolean;
+  draftSnapshot: ArtifactEnvelopeDto[];
+}
+export interface ChatTimelinePageDto {
+  items: ChatTimelineItemDto[];
+  nextCursor: string | null;
 }
 
 export interface EditedDraftItemDto {

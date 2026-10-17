@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
@@ -6,6 +6,7 @@ import Toast from "react-native-toast-message";
 import { ArtifactEnvelopeDto, EditedDraftDto, EditedDraftItemDto, TaskDraftItemDto } from "../models/ai-coach-dto";
 import { ConfirmAction } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
+import { fromZonedTime } from "date-fns-tz";
 
 /** Each card has its own lifecycle. Editor changes are saved before the next chat turn. */
 export function TaskDraftCard({
@@ -14,9 +15,11 @@ export function TaskDraftCard({
   onConfirm,
   onReject,
   onEdit,
+  readOnly = false,
 }: {
   artifact: ArtifactEnvelopeDto;
   busy: boolean;
+  readOnly?: boolean;
   onConfirm: (action: ConfirmAction, edited: EditedDraftDto, selectedItemIds: string[], allowScheduleConflict?: boolean,
     acceptedConflictToken?: string | null) => void;
   onReject: () => void;
@@ -28,8 +31,14 @@ export function TaskDraftCard({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(
     items.filter((item) => item.persistedTaskId == null).map((item) => item.itemId),
   ));
-  const editable = artifact.status === "pending";
-  const disabled = busy || !editable;
+  const editable = artifact.status === "pending" && !readOnly;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!editable) return;
+    const timer = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, [editable]);
+  const disabled = busy || !editable || !artifact.allowedActions.includes("edit_draft");
   const can = (action: "start_now" | "add_to_task_list" | "reject_draft") =>
     artifact.allowedActions.includes(action);
   const saved = (id: string) =>
@@ -43,6 +52,8 @@ export function TaskDraftCard({
         (!item.recurrence.endDate || item.recurrence.endDate >= item.date))),
   );
   const editingItem = items.find((item) => item.itemId === editingId);
+  const hasPastTime = selected.some(item => item.date && item.startTime &&
+    fromZonedTime(`${item.date}T${item.startTime}:00`, item.timeZoneId).getTime() < now);
   const confirmAction = (action: ConfirmAction) => {
     const selectedItemIds = action === "start_now" ? [items[0].itemId]
       : selected.map((item) => item.itemId);
@@ -63,6 +74,8 @@ export function TaskDraftCard({
       <Text className="font-baloo text-xs text-primary mb-2">
         {artifact.status === "completed"
           ? t("draft.alreadySaved")
+          : artifact.status === "rejected" ? t("draft.discarded")
+          : artifact.status === "expired" ? t("draft.expired")
           : t("draft.taskCount", { count: items.length })}
       </Text>
       {editable && can("add_to_task_list") && unsavedCount > 1 && (
@@ -152,6 +165,7 @@ export function TaskDraftCard({
       {editable && selected.length > 0 && !scheduled && (
         <Text className="font-baloo text-xs text-info mt-3">{t("draft.scheduleRequired")}</Text>
       )}
+      {editable && hasPastTime && <Text className="font-baloo text-xs text-warning mt-3">{t("draft.timePassed")}</Text>}
       {editable && selected.length === unsavedCount &&
         artifact.schedule?.status === "conflict" && (
         <Text className="font-baloo text-xs text-warning mt-3">
@@ -188,8 +202,8 @@ export function TaskDraftCard({
             )}
             {can("add_to_task_list") && (
               <Pressable
-                className={`border border-gray-300 rounded-xl py-2 items-center mt-2 ${!scheduled ? "opacity-40" : ""}`}
-                disabled={disabled || !scheduled}
+                className={`border border-gray-300 rounded-xl py-2 items-center mt-2 ${!scheduled || hasPastTime ? "opacity-40" : ""}`}
+                disabled={disabled || !scheduled || hasPastTime}
                 onPress={() => confirmAction("add_to_task_list")}
               >
                 <Text className="font-balooBold text-secondary text-sm">
@@ -209,12 +223,12 @@ export function TaskDraftCard({
           </View>
         )
       )}
-      {editingItem && (
+      {editingItem && editable && (
         <DraftEditModal
           key={`${artifact.id}:${artifact.version}:${editingItem.itemId}`}
           visible
           initial={editingItem}
-          busy={busy}
+          busy={disabled}
           onCancel={() => setEditingId(null)}
           onSave={(next) =>
             void saveEdit(items.map((item) => (item.itemId === next.itemId ? next : item)))

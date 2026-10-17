@@ -13,6 +13,10 @@ using BlotzTask.Modules.AiCoach.Application.Queries;
 namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
 
 public sealed class ConversationNotFoundException() : Exception("Conversation not found.");
+public sealed class ConversationEndedException(Conversation conversation) : Exception("The topic has ended.")
+{
+    public Conversation Conversation { get; } = conversation;
+}
 public sealed class ConversationVersionConflictException(Conversation conversation)
     : Exception("Conversation version conflict.")
 {
@@ -22,16 +26,20 @@ public sealed class ConversationVersionConflictException(Conversation conversati
 public sealed class ConversationApplication(IConversationStore store, IModelTurnRuntime runtime,
     ICheckAiQuotaService checkQuota, IRecordAiUsageService recordUsage,
     AiCoachUsageTracker usageTracker, TaskContextReader taskContextReader, DraftScheduleChecker scheduleChecker,
-    TimeProvider clock, ILogger<ConversationApplication> logger, AiCoachTraceRecorder? trace = null)
+    TimeProvider clock, ILogger<ConversationApplication> logger, ConversationSegments segments,
+    AiCoachTraceRecorder? trace = null)
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct)
     {
+        (conversationId, expectedVersion) = await segments.PrepareSendAsync(userId, conversationId,
+            messageId, expectedVersion, ct);
         ModelTurnRequest request;
         int baseVersion;
         using (await store.AcquireLockAsync(conversationId, ct))
         {
             var conversation = await LoadOwnedAsync(store, userId, conversationId, ct);
+            RequireOpen(conversation);
             var existing = conversation.Messages.FirstOrDefault(message => message.Id == messageId);
             if (existing is not null && (existing.Role != ConversationMessageRole.User || existing.Content != content))
                 throw Conflict("MessageIdReused", conversation);
@@ -51,7 +59,9 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 conversation.Summary, conversation.SummarizedMessageCount,
                 (startDate, endDate, token) => taskContextReader.ReadAsync(userId, timeZoneId, startDate, endDate, token),
                 (items, token) => scheduleChecker.CheckAsync(userId, items, false, token),
-                trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload));
+                trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
+                await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
+                conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt);
             await store.SaveAsync(conversation, ct);
         }
 
@@ -113,10 +123,11 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         using (await store.AcquireLockAsync(conversationId, CancellationToken.None))
         {
             var conversation = await LoadOwnedAsync(store, userId, conversationId, CancellationToken.None);
+            RequireOpen(conversation);
             if (ct.IsCancellationRequested) error = "cancelled";
             commit = conversation.CompleteTurn(messageId, baseVersion, result?.Text, error,
                 result?.TurnHistory ?? [], result?.Drafts ?? [], result?.Summary, result?.SummarizedMessageCount ?? 0,
-                result?.TaskContextRead ?? false);
+                result?.TaskContextRead ?? false, clock.GetUtcNow());
             logger.LogInformation("AiCoach turn commit for {ConversationId}: {CommitStatus}", conversationId, commit);
             await store.SaveAsync(conversation, CancellationToken.None);
             logger.LogInformation("AiCoach conversation state saved for {ConversationId} with result {TurnResult} at version {ConversationVersion}",
@@ -149,8 +160,14 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
 
     public static void RequireIdle(Conversation conversation)
     {
+        RequireOpen(conversation);
         if (!OperationPolicy.CanStartOperation(conversation))
             throw Conflict("ConversationBusy", conversation);
+    }
+
+    public static void RequireOpen(Conversation conversation)
+    {
+        if (conversation.EndedAt.HasValue) throw new ConversationEndedException(conversation);
     }
 
     private static Commands.DraftConflictException Conflict(string code, Conversation conversation) =>

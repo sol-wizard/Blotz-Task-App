@@ -7,10 +7,24 @@ import {
   ConversationSnapshotDto,
   AiCoachRating,
   MessageFeedbackDto,
+  ChatTimelinePageDto,
 } from "../models/ai-coach-dto";
 
 function deviceTimeZoneId(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+export async function openChat(): Promise<ConversationSnapshotDto> {
+  return apiClient.get("/ai-coach/chat", { params: { timeZoneId: deviceTimeZoneId() } });
+}
+export async function fetchMessages(before: string | null, signal?: AbortSignal): Promise<ChatTimelinePageDto> {
+  return apiClient.get("/ai-coach/chat/messages", { params: { before: before ?? undefined, limit: 30 }, signal });
+}
+export async function newTopic(): Promise<ConversationSnapshotDto> {
+  return apiClient.post("/ai-coach/chat/topics", { timeZoneId: deviceTimeZoneId() });
+}
+export async function clearChat(): Promise<void> {
+  return apiClient.delete("/ai-coach/chat");
 }
 
 export async function startConversation(

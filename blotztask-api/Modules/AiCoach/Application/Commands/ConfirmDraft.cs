@@ -135,6 +135,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
+            ConversationApplication.RequireOpen(conversation);
             if (conversation.Receipts.TryGetValue(request.CommandId, out var receipt))
             {
                 if (receipt.RequestHash != hash) throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused with different data.");
@@ -174,6 +175,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
+            ConversationApplication.RequireOpen(conversation);
             if (conversation.Receipts.TryGetValue(request.CommandId, out var receipt))
             {
                 if (receipt.RequestHash != hash) throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused with different data.");
@@ -299,6 +301,8 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             startUtc = clock.GetUtcNow();
             endUtc = startUtc + duration;
         }
+        else if (startUtc < clock.GetUtcNow())
+            throw new DraftFieldValidationException("ScheduleInPast", "This time has passed. Edit the draft before saving.");
         return new(item, startUtc, endUtc);
     }
 

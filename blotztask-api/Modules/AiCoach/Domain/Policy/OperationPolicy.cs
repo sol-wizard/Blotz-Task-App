@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.AiCoach.Domain.Policy;
 public static class OperationPolicy
 {
     public static bool CanStartOperation(Conversation conversation) =>
-        !conversation.RunningTurnId.HasValue && !conversation.Drafts.Any(IsSaving);
+        !conversation.EndedAt.HasValue && !conversation.RunningTurnId.HasValue && !conversation.Drafts.Any(IsSaving);
     public static bool IsSaving(ProposalSet draft) => draft.Status == ProposalSetStatus.Processing;
     public static bool CanEdit(ProposalSet draft) => draft.Status == ProposalSetStatus.Pending;
     public static bool CanEditItem(TaskProposal item) => !item.PersistedTaskId.HasValue;

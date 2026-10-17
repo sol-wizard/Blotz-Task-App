@@ -3,7 +3,7 @@ using BlotzTask.Modules.Tasks.Enums;
 
 namespace BlotzTask.Modules.AiCoach.Domain.Proposals;
 
-public enum ProposalSetStatus { Pending, Processing, Completed, Rejected }
+public enum ProposalSetStatus { Pending, Processing, Completed, Rejected, Expired }
 
 public sealed record RecurrenceProposal(RecurrenceFrequency Frequency, int Interval,
     int? DaysOfWeek, int? DayOfMonth, DateOnly? EndDate);
@@ -131,6 +131,14 @@ public sealed class ProposalSet
         if (Status != ProposalSetStatus.Pending)
             throw new InvalidOperationException("Only pending drafts can be discarded.");
         Status = ProposalSetStatus.Rejected;
+        Version++;
+    }
+
+    public void Expire()
+    {
+        if (Status != ProposalSetStatus.Pending)
+            throw new InvalidOperationException("Only pending drafts can expire.");
+        Status = ProposalSetStatus.Expired;
         Version++;
     }
 }

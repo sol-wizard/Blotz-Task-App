@@ -1,10 +1,8 @@
-using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Data;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
-using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -18,12 +16,10 @@ namespace BlotzTask.Modules.AiCoach.Infrastructure;
 public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvider clock,
     IOptions<AiCoachModuleOptions> options, ILogger<SqlConversationStore> logger) : IConversationStore
 {
-    // Element limits are what the user sees; character limits match the column lengths.
-    private const int TitleLength = 30, TitleColumnLength = 60;
-    private const int PreviewLength = 100, PreviewColumnLength = 120;
     // A task save is a few inserts; five minutes means its process stopped.
     private static readonly TimeSpan InterruptedSaveAfter = TimeSpan.FromMinutes(5);
     private readonly ConversationLocks _locks = new();
+    private readonly ConversationLocks _userLocks = new();
     // Revision each loaded instance was read at; kept outside the domain model.
     private readonly ConditionalWeakTable<Conversation, LoadedRevision> _revisions = new();
 
@@ -31,9 +27,15 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
     {
         using var scope = scopes.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BlotzTaskDbContext>();
+        // A reader must not combine an old revision with messages from a newer committed turn.
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, ct);
         var record = await db.AiCoachConversations.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == conversationId, ct);
-        return record is null ? null : Restore(record);
+        if (record is null) return null;
+        var messages = await db.AiCoachMessages.AsNoTracking().Where(x => x.ConversationId == conversationId)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(ct);
+        await transaction.CommitAsync(ct);
+        return Restore(record, messages);
     }
 
     public async Task CreateAsync(Conversation conversation, CancellationToken ct)
@@ -46,18 +48,59 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
             Id = conversation.Id,
             UserId = conversation.UserId,
             Mode = conversation.Mode,
-            Title = Title(conversation),
-            LastMessagePreview = Preview(conversation),
             MessageCount = conversation.Messages.Count,
-            HasPendingDraft = HasPendingDraft(conversation),
+            EndedAt = conversation.EndedAt,
+            ClosingSummary = conversation.ClosingSummary,
             CreatedAt = conversation.CreatedAt,
             LastActivityAt = now,
             Revision = 1,
             SchemaVersion = ConversationSerializer.SchemaVersion,
             Payload = ConversationSerializer.Serialize(conversation),
         });
+        foreach (var message in conversation.Messages)
+            db.AiCoachMessages.Add(ToRecord(conversation, message));
         await db.SaveChangesAsync(ct);
-        _revisions.AddOrUpdate(conversation, new(1));
+        _revisions.AddOrUpdate(conversation, new(1, conversation.Messages));
+    }
+
+    public async Task<Conversation?> FindOpenAsync(Guid userId, CancellationToken ct)
+    {
+        using var scope = scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BlotzTaskDbContext>();
+        var id = await db.AiCoachConversations.AsNoTracking()
+            .Where(record => record.UserId == userId && record.EndedAt == null)
+            .Select(record => (Guid?)record.Id).SingleOrDefaultAsync(ct);
+        if (!id.HasValue) return null;
+        var conversation = await FindAsync(id.Value, ct);
+        if (conversation is not null) return conversation;
+        // An unreadable payload version would otherwise keep the filtered unique index occupied and block
+        // every new open segment. Its messages stay in the timeline.
+        await db.AiCoachConversations.Where(record => record.Id == id.Value && record.EndedAt == null
+                && record.SchemaVersion != ConversationSerializer.SchemaVersion)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(record => record.EndedAt, clock.GetUtcNow())
+                .SetProperty(record => record.Revision, record => record.Revision + 1), ct);
+        return null;
+    }
+
+    public async Task<string?> FindPreviousSummaryAsync(Guid userId, DateTimeOffset before, CancellationToken ct)
+    {
+        using var scope = scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BlotzTaskDbContext>();
+        return await db.AiCoachConversations.AsNoTracking()
+            .Where(record => record.UserId == userId && record.EndedAt != null && record.EndedAt <= before)
+            .OrderByDescending(record => record.EndedAt).ThenByDescending(record => record.Id)
+            .Select(record => record.ClosingSummary).FirstOrDefaultAsync(ct);
+    }
+
+    public async Task SaveClosingSummaryAsync(Guid conversationId, string summary, CancellationToken ct)
+    {
+        using var scope = scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BlotzTaskDbContext>();
+        // Update-only, once: clearing history cannot be undone by a late summary result.
+        await db.AiCoachConversations.Where(record => record.Id == conversationId
+                && record.EndedAt != null && record.ClosingSummary == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(record => record.ClosingSummary, summary)
+                .SetProperty(record => record.Revision, record => record.Revision + 1), ct);
     }
 
     public async Task SaveAsync(Conversation conversation, CancellationToken ct)
@@ -66,47 +109,57 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
             throw new InvalidOperationException("Save a conversation only after creating or loading it from this store.");
         using var scope = scopes.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BlotzTaskDbContext>();
-        var title = Title(conversation);
-        var preview = Preview(conversation);
         var messageCount = conversation.Messages.Count;
-        var hasPendingDraft = HasPendingDraft(conversation);
+        foreach (var draft in conversation.Drafts) conversation.UpdateDraftSnapshots(draft);
         var payload = ConversationSerializer.Serialize(conversation);
         var now = clock.GetUtcNow();
         var expected = loaded.Revision;
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         // Update-only: a deleted conversation is never recreated by a late save or client retry.
         var updated = await db.AiCoachConversations
-            .Where(x => x.Id == conversation.Id && x.Revision == expected)
+            .Where(x => x.Id == conversation.Id && x.Revision == expected && x.EndedAt == null)
             .ExecuteUpdateAsync(setters => setters
-                .SetProperty(x => x.Title, title)
-                .SetProperty(x => x.LastMessagePreview, preview)
                 .SetProperty(x => x.MessageCount, messageCount)
-                .SetProperty(x => x.HasPendingDraft, hasPendingDraft)
+                .SetProperty(x => x.EndedAt, conversation.EndedAt)
+                .SetProperty(x => x.ClosingSummary, conversation.ClosingSummary)
                 .SetProperty(x => x.LastActivityAt, now)
                 .SetProperty(x => x.Revision, expected + 1)
                 .SetProperty(x => x.SchemaVersion, ConversationSerializer.SchemaVersion)
                 .SetProperty(x => x.Payload, payload), ct);
         if (updated == 1)
         {
-            loaded.Revision = expected + 1;
+            foreach (var message in conversation.Messages)
+            {
+                var snapshot = ConversationSerializer.SerializeDrafts(message.DraftSnapshot);
+                if (!loaded.Snapshots.TryGetValue(message.Id, out var previous))
+                    db.AiCoachMessages.Add(ToRecord(conversation, message));
+                else if (snapshot != previous)
+                    await db.AiCoachMessages.Where(x => x.Id == message.Id && x.ConversationId == conversation.Id)
+                        .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.DraftSnapshot, snapshot), ct);
+            }
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+            _revisions.AddOrUpdate(conversation, new(expected + 1, conversation.Messages));
             return;
         }
 
-        var current = await db.AiCoachConversations.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == conversation.Id, ct);
-        var latest = current is null ? null : Restore(current);
+        await transaction.RollbackAsync(ct);
+        var latest = await FindAsync(conversation.Id, ct);
         if (latest is null) throw new ConversationNotFoundException();
+        ConversationApplication.RequireOpen(latest);
         logger.LogWarning("AiCoach conversation {ConversationId} changed by another writer at revision {Revision}",
-            conversation.Id, current!.Revision);
+            conversation.Id, expected);
         throw new ConversationVersionConflictException(latest);
     }
 
     public Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken ct) =>
         _locks.AcquireAsync(conversationId, ct);
 
-    private Conversation? Restore(AiCoachConversationRecord record)
+    public Task<IDisposable> AcquireUserLockAsync(Guid userId, CancellationToken ct) =>
+        _userLocks.AcquireAsync(userId, ct);
+
+    private Conversation? Restore(AiCoachConversationRecord record, IReadOnlyList<AiCoachMessage> messages)
     {
-        if (record.LastActivityAt <= clock.GetUtcNow().AddDays(-options.Value.ConversationRetentionDays))
-            return null;
         if (record.SchemaVersion != ConversationSerializer.SchemaVersion)
         {
             logger.LogWarning("AiCoach conversation {ConversationId} has unsupported schema version {SchemaVersion}",
@@ -114,50 +167,36 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
             return null;
         }
         var conversation = ConversationSerializer.Deserialize(record.Payload);
-        _revisions.AddOrUpdate(conversation, new(record.Revision));
+        conversation.EndedAt = record.EndedAt;
+        conversation.ClosingSummary = record.ClosingSummary;
+        conversation.Messages.AddRange(messages.Select(message => new ConversationMessage(message.Id, message.Role,
+            message.Content, message.TaskContextRead, message.TurnId, message.CreatedAt,
+            ConversationSerializer.DeserializeDrafts(message.DraftSnapshot))));
+        _revisions.AddOrUpdate(conversation, new(record.Revision, conversation.Messages));
         // Past every model budget, a running turn belongs to a stopped process. The release is saved with
         // the next write; until then each load repeats it identically.
         var turnLimit = TimeSpan.FromSeconds(options.Value.ModelRequestTimeoutSeconds * options.Value.MaxModelCallsPerTurn)
             + TimeSpan.FromMinutes(2);
         if (conversation.ReleaseInterruptedWork(clock.GetUtcNow(), turnLimit, InterruptedSaveAfter))
+        {
+            foreach (var draft in conversation.Drafts) conversation.UpdateDraftSnapshots(draft);
             logger.LogWarning("AiCoach conversation {ConversationId} released interrupted work", record.Id);
+        }
         return conversation;
     }
 
-    private static string? Title(Conversation conversation) =>
-        Truncate(conversation.Messages.FirstOrDefault(message => message.Role == ConversationMessageRole.User)?.Content,
-            TitleLength, TitleColumnLength);
-
-    private static string? Preview(Conversation conversation) =>
-        Truncate(conversation.Messages.LastOrDefault()?.Content, PreviewLength, PreviewColumnLength);
-
-    private static bool HasPendingDraft(Conversation conversation) =>
-        conversation.Drafts.Any(draft => draft.Status == ProposalSetStatus.Pending);
-
-    /// <summary>
-    /// Single-line text cut by text element, so emoji and combined characters stay intact, and kept within
-    /// the column's UTF-16 length.
-    /// </summary>
-    private static string? Truncate(string? text, int maxElements, int maxChars)
+    private static AiCoachMessage ToRecord(Conversation conversation, ConversationMessage message) => new()
     {
-        if (string.IsNullOrWhiteSpace(text)) return null;
-        var line = string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-        var builder = new StringBuilder();
-        var elements = StringInfo.GetTextElementEnumerator(line);
-        var count = 0;
-        while (elements.MoveNext())
-        {
-            var element = elements.GetTextElement();
-            if (count == maxElements || builder.Length + element.Length > maxChars - 1)
-                return builder.Append('…').ToString();
-            builder.Append(element);
-            count++;
-        }
-        return line;
-    }
+        Id = message.Id, ConversationId = conversation.Id, UserId = conversation.UserId,
+        Role = message.Role, Content = message.Content, TaskContextRead = message.TaskContextRead,
+        TurnId = message.TurnId, CreatedAt = message.CreatedAt,
+        DraftSnapshot = ConversationSerializer.SerializeDrafts(message.DraftSnapshot),
+    };
 
-    private sealed class LoadedRevision(int revision)
+    private sealed class LoadedRevision(int revision, IEnumerable<ConversationMessage> messages)
     {
-        public int Revision { get; set; } = revision;
+        public int Revision { get; } = revision;
+        public Dictionary<Guid, string?> Snapshots { get; } = messages.ToDictionary(message => message.Id,
+            message => ConversationSerializer.SerializeDrafts(message.DraftSnapshot));
     }
 }
