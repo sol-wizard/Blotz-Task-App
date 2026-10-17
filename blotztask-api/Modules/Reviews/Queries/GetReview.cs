@@ -3,6 +3,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Enums;
+using BlotzTask.Modules.Reviews.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,12 +58,15 @@ public class GetReviewQueryHandler(
                      && t.CompletedAt < period.EndUtc,
                 ct);
 
+        var daysActive = await ReviewMetrics.CountDaysActiveAsync(db, query.UserId, period, ct);
+
         return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
             TasksCompleted = tasksCompleted,
+            DaysActive = daysActive,
             // A report may not exist yet (not generated, or the period hasn't ended).
             // The DTO is still returned with the metrics; letter/generatedAt stay null.
             Letter = report?.AiGeneratedLetter,
