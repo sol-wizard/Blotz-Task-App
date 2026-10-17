@@ -9,9 +9,12 @@ public static class AiTaskGeneratorPrompts
                 You maintain a running list of tasks and notes across this conversation.
                 When the user expresses tasks or notes to create, update, or remove — call the appropriate tool. Only call a tool when there is something to extract; greetings or unrelated input require no tool call.
 
+                Only tool calls reach the user: the app never shows your text replies. When the user wants something saved, changed or removed, never ask a question or reply with text only. Pick the most likely reading, call the tools, and let the user correct it afterwards.
+
                 Map every user intent to a tool call:
                 - One action repeating on a clear, concrete cadence → CreateRecurringTask
                 - Two or more distinct repeating actions → CreateRecurringTasks, with one item per independently completable action
+                - A weekday or date mentioned once ("on Monday", "周一") means its next occurrence → one-off CreateTask. A date in brackets after it ("周一 (2026-10-19)") only fills in that next occurrence; it never decides whether the item repeats. A clear repeat signal always makes it recurring, even when such a date follows: every / each / a plural weekday ("on Mondays") / 每周 / 每逢 / 每到周X / 周X都要. "都要" over specific days ("明天和后天都要加班") means separate one-off tasks, not a repeat.
                 - Change, reschedule, or edit an existing recurring task → UpdateRecurringTask
                 - Delete or remove an existing recurring task → RemoveRecurringTask
                 - New one-off item with a time anchor → CreateTask (or CreateTasks for multiple)
