@@ -6,6 +6,7 @@ using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 using static BlotzTask.Modules.AiCoach.Ai.Runtime.ModelContextBuilder;
+using BlotzTask.Modules.AiCoach.Application.Projections;
 
 namespace BlotzTask.Modules.AiCoach.Ai.Runtime;
 
@@ -16,7 +17,8 @@ public sealed record ModelTurnRequest(Guid ConversationId, AiCoachMode Mode, IRe
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? CheckSchedule = null,
     Func<string, object, Task>? Trace = null, string? PreviousClosingSummary = null,
     DateTimeOffset? SegmentStartedAt = null, string? SegmentStartTimeZoneId = null,
-    bool ReviewListEnabled = false);
+    bool ReviewListEnabled = false,
+    Func<string, object, Task>? Stream = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -68,8 +70,10 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                     return Result(null, "context_limit");
                 }
                 var lastCall = calls == limits.MaxModelCallsPerTurn - 1 || executor.BudgetExhausted;
+                await Emit("reply.reset", new { });
                 var completion = await Call(new ModelGatewayRequest(system, transcript,
-                    lastCall ? [] : executor.AvailableTools, MaxOutputTokens: limits.MaxOutputTokens));
+                    lastCall ? [] : executor.AvailableTools, MaxOutputTokens: limits.MaxOutputTokens,
+                    OnTextDelta: request.Stream is null ? null : text => Emit("reply.delta", new { text })));
                 if (completion.FinishReason == ModelFinishReason.ContentFilter)
                 {
                     logger.LogWarning("AiCoach response filtered for {ConversationId}", request.ConversationId);
@@ -99,6 +103,8 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                     return Result(null, "tool_limit");
                 }
                 var assistant = new GatewayAssistantMessage(completion.AssistantText, completion.ToolCalls);
+                // Tool-round commentary is not a persisted assistant reply.
+                await Emit("reply.reset", new { });
                 transcript.Add(assistant);
                 turn.Add(assistant);
                 ToolExecutionResult? singleExecution = null;
@@ -106,6 +112,15 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 {
                     toolCalls++;
                     var execution = await executor.ExecuteAsync(tool, ct);
+                    if (execution.Succeeded && !execution.Replayed && tool.Name is "add_items" or "update_items" or "remove_items")
+                    {
+                        var pending = workspace.Drafts.SingleOrDefault(draft => draft.IsReviewList
+                            && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing);
+                        await Emit("review.preview", new
+                        {
+                            pendingList = pending is null ? null : ConversationSnapshotProjector.ToDto(pending, true),
+                        });
+                    }
                     if ((tool.Name == "list_tasks" && execution.Succeeded) || execution.ScheduleChecked)
                         taskContextRead = true;
                     singleExecution = execution;
@@ -136,6 +151,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                     && singleExecution is { Succeeded: true, Replayed: false, SuccessReply: { } reply })
                 {
                     ct.ThrowIfCancellationRequested();
+                    await Emit("reply.delta", new { text = reply });
                     turn.Add(new GatewayAssistantMessage(reply, []));
                     logger.LogInformation("AiCoach completed {ConversationId} with a prewritten draft reply after one successful tool call",
                         request.ConversationId);
@@ -247,6 +263,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         }
 
         Task Trace(string kind, object payload) => request.Trace?.Invoke(kind, payload) ?? Task.CompletedTask;
+        Task Emit(string kind, object payload) => request.Stream?.Invoke(kind, payload) ?? Task.CompletedTask;
     }
 
 }

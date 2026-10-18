@@ -50,7 +50,9 @@
     "topicStart": "新话题",
     "historyError": "历史记录加载失败，点击重试",
     "busy": "请等待当前回复或保存完成。",
-    "actionFailed": "聊天更新失败，请重试。"
+    "actionFailed": "聊天更新失败，请重试。",
+    "generating": "正在生成回复",
+    "reconnecting": "连接中断，正在同步结果…"
   },
   "feedback": {
     "good": "回复有帮助",
@@ -175,6 +177,9 @@
     "keepReviewing": "继续查看",
     "leave": "离开",
     "newTopicTitle": "开始新话题？",
-    "newTopicDescription": "当前话题中的 {{count}} 项待确认内容将过期，不会被保存。"
+    "newTopicDescription": "当前话题中的 {{count}} 项待确认内容将过期，不会被保存。",
+    "generating": "正在整理…",
+    "generatingDescription": "AI 正在整理清单，完成后可编辑和添加。",
+    "toggleDetails": "展开或收起详情"
   }
 }

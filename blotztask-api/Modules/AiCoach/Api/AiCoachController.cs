@@ -21,7 +21,7 @@ public class AiCoachController(
     EditDraftCommandHandler editDraft,
     MessageFeedbackHandler messageFeedback,
     TranscribeAudioCommandHandler transcribeAudio,
-    IConversationStore store, ChatApplication chat) : ControllerBase
+    IConversationStore store, ChatApplication chat, ILogger<AiCoachController> logger) : ControllerBase
 {
     [HttpGet("chat")]
     public async Task<ActionResult<ConversationSnapshotDto>> OpenChat([FromQuery] string timeZoneId, CancellationToken ct)
@@ -138,6 +138,41 @@ public class AiCoachController(
         {
             return mapped;
         }
+    }
+
+    [HttpPost("conversations/{conversationId:guid}/messages/stream")]
+    public async Task<IActionResult> StreamMessage(Guid conversationId, [FromBody] SendMessageRequest request,
+        [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> json,
+        [FromServices] IHostApplicationLifetime lifetime, CancellationToken ct)
+    {
+        if (Request.Headers[ReviewListProtocolFilter.HeaderName] != "6")
+            return BadRequest(new { errorCode = "ReviewListRequiresProtocol6" });
+        var messageId = request.MessageId ?? Guid.NewGuid();
+        await using var stream = new CoachEventStream(Response, conversationId, messageId, json.Value.JsonSerializerOptions, ct);
+        try
+        {
+            // A dropped connection only ends the event stream. The turn keeps running (bounded by the
+            // per-call model timeouts) and commits, so the client recovers the reply from the snapshot.
+            var snapshot = await sendMessage.Handle(new SendMessageCommand
+            {
+                UserId = GetUserId(), ConversationId = conversationId, MessageId = messageId,
+                Content = request.Content, ExpectedVersion = request.ExpectedVersion,
+                TimeZoneId = request.TimeZoneId, ReviewListEnabled = true, Stream = stream.SendAsync,
+            }, lifetime.ApplicationStopping);
+            await stream.SendAsync(snapshot.GenerationError is null ? "turn.completed" : "turn.failed",
+                new { conversationSnapshot = snapshot, errorCode = snapshot.GenerationError });
+        }
+        catch (Exception ex) when (!Response.HasStarted && TryMapConversationError(ex, out var mapped))
+        {
+            return mapped;
+        }
+        catch (Exception ex) when (Response.HasStarted)
+        {
+            // SendAsync is a no-op once the client has gone; the snapshot is the recovery path.
+            logger.LogError(ex, "AiCoach stream failed for {ConversationId}", conversationId);
+            await stream.SendAsync("turn.failed", new { errorCode = "stream_failed" });
+        }
+        return new EmptyResult();
     }
 
     [HttpPost("conversations/{conversationId:guid}/drafts/{draftId:guid}/confirm")]

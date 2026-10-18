@@ -19,6 +19,7 @@ import {
 } from "../models/ai-coach-dto";
 import { reviewedItems, prepareReviewConfirmation, reviewConfirmationSaved, isDefiniteConfirmationRejection, ReviewConfirmation } from "../models/review-list";
 import * as aiCoachService from "../services/ai-coach-service";
+import { streamCoachMessage } from "../services/coach-stream-service";
 
 export interface ChatItem {
   id: string;
@@ -29,6 +30,7 @@ export interface ChatItem {
   createdAt: string;
   topicStart: boolean;
   draftSnapshot: ArtifactEnvelopeDto[];
+  streaming?: boolean;
 }
 export type ChatStatus = "idle" | "connecting" | "ready" | "sending" | "startFailed";
 export type ConfirmAction = "start_now" | "add_to_task_list";
@@ -45,11 +47,21 @@ export function useAiCoachChat() {
   const [snapshot, setSnapshot] = useState<ConversationSnapshotDto | null>(null);
   const [status, setStatus] = useState<ChatStatus>("connecting");
   const [pendingMessage, setPendingMessage] = useState<ChatItem | null>(null);
+  const [streamingReply, setStreamingReply] = useState<ChatItem | null>(null);
+  // undefined means no preview event yet; null means the tool removed the last item.
+  const [reviewPreview, setReviewPreview] = useState<ArtifactEnvelopeDto | null | undefined>(undefined);
+  const [streaming, setStreaming] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const streamController = useRef<AbortController | null>(null);
   const [feedbackByMessage, setFeedbackByMessage] = useState<Record<string, MessageFeedbackDto>>({});
   const [feedbackSaving, setFeedbackSaving] = useState<Record<string, boolean>>({});
   const feedbackPending = useRef(new Set<string>());
   const busy = useRef(false);
   const lifecycle = useRef(0);
+  useEffect(() => () => {
+    lifecycle.current += 1;
+    streamController.current?.abort();
+  }, []);
   const snapshotRef = useRef<ConversationSnapshotDto | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<ReviewConfirmation | null>(null);
   const pendingConfirmationRef = useRef(pendingConfirmation);
@@ -77,6 +89,7 @@ export function useAiCoachChat() {
     if (previous?.conversationId === next.conversationId && previous.conversationVersion > next.conversationVersion) return;
     snapshotRef.current = next;
     setSnapshot(next);
+    if (next.generationStatus !== "running") setReconnecting(false);
     const operation = pendingConfirmationRef.current;
     if (operation && reviewConfirmationSaved(operation, next)) {
       setConfirmation(null);
@@ -164,7 +177,7 @@ export function useAiCoachChat() {
     return () => { cancelled = true; };
   }, [conversationId]);
   useEffect(() => {
-    if ((!serverBusy && !pendingConfirmation) || !conversationId) return;
+    if (streaming || (!serverBusy && !pendingConfirmation) || !conversationId) return;
     const id = conversationId;
     let cancelled = false;
     const timer = setInterval(() => {
@@ -187,35 +200,97 @@ export function useAiCoachChat() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, pendingConfirmation]);
+  }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, pendingConfirmation, streaming]);
 
   const send = useCallback(
     async (text: string): Promise<string | null> => {
-      if (!snapshot || busy.current || pendingConfirmation) return "NotReady";
+      if (!snapshot || busy.current || pendingConfirmation || snapshot.generationStatus === "running") return "NotReady";
       const content = text.trim();
       if (!content) return null;
       busy.current = true;
-      lifecycle.current += 1;
+      const epoch = ++lifecycle.current;
       setStatus("sending");
+      setStreaming(true);
+      setReconnecting(false);
+      setReviewPreview(undefined);
+      setStreamingReply(null);
+      const controller = new AbortController();
+      streamController.current = controller;
       const messageId = uuid.v4() as string;
+      const createdAt = new Date().toISOString();
       setPendingMessage({ id: messageId, role: "user", text: content, conversationId: snapshot.conversationId,
-        createdAt: new Date().toISOString(), topicStart: snapshot.messages.length === 0, draftSnapshot: [] });
+        createdAt, topicStart: snapshot.messages.length === 0, draftSnapshot: [] });
+      let replyText = "";
+      let activeConversationId = snapshot.conversationId;
+      let flushTimer: ReturnType<typeof setTimeout> | undefined;
+      const flush = () => {
+        flushTimer = undefined;
+        if (epoch !== lifecycle.current) return;
+        setStreamingReply(replyText ? { id: `stream-${messageId}`, role: "assistant", text: replyText,
+          conversationId: activeConversationId, createdAt: new Date(Date.parse(createdAt) + 1).toISOString(),
+          topicStart: false, draftSnapshot: [], streaming: true } : null);
+      };
+      // Until a snapshot proves otherwise, a lost response may still represent accepted work.
+      applySnapshot({ ...snapshot, generationStatus: "running", generationError: null, allowedActions: [] });
       try {
-        const next = await aiCoachService.sendMessage(
+        const next = await streamCoachMessage(
           snapshot.conversationId,
           content,
           snapshot.conversationVersion,
           messageId,
+          (event) => {
+            if (epoch !== lifecycle.current) return;
+            activeConversationId = event.conversationId;
+            switch (event.type) {
+              case "turn.started":
+                setPendingMessage(previous => previous ? { ...previous, conversationId: activeConversationId } : null);
+                break;
+              case "reply.delta":
+                replyText += event.payload.text;
+                flushTimer ??= setTimeout(flush, 75);
+                break;
+              case "reply.reset":
+                replyText = "";
+                clearTimeout(flushTimer);
+                flushTimer = undefined;
+                setStreamingReply(null);
+                break;
+              case "review.preview":
+                setReviewPreview(event.payload.pendingList);
+                break;
+            }
+          },
+          controller.signal,
         );
+        if (epoch !== lifecycle.current) return null;
         applySnapshot(next);
         refreshHistory();
         return next.generationError;
       } catch (error) {
-        return await resync(error);
+        if (epoch !== lifecycle.current) return null;
+        setReconnecting(true);
+        const code = await resync(error);
+        const recovered = snapshotRef.current;
+        const userIndex = recovered?.messages.findIndex(message => message.id === messageId) ?? -1;
+        // The server keeps generating after a lost stream; polling delivers the saved reply.
+        if (recovered?.generationStatus === "running" && userIndex >= 0) return null;
+        if (recovered?.generationStatus === "idle" && userIndex >= 0
+          && recovered.messages.slice(userIndex + 1).some(message => message.role === "assistant")) {
+          refreshHistory();
+          return null;
+        }
+        return code;
       } finally {
+        clearTimeout(flushTimer);
+        if (streamController.current === controller) streamController.current = null;
         busy.current = false;
-        setPendingMessage(null);
-        setStatus("ready");
+        if (epoch === lifecycle.current) {
+          setPendingMessage(null);
+          setStreamingReply(null);
+          setReviewPreview(undefined);
+          setStreaming(false);
+          setStatus("ready");
+        }
       }
     },
     [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
@@ -325,7 +400,7 @@ export function useAiCoachChat() {
     [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
   );
 
-  const pendingList = snapshot?.pendingList ?? null;
+  const pendingList = streaming && reviewPreview !== undefined ? reviewPreview : snapshot?.pendingList ?? null;
   const reviewBusy = status === "connecting" || status === "sending" || !!serverBusy;
 
   const updateReviewItem = useCallback(async (list: ArtifactEnvelopeDto, version: number,
@@ -480,6 +555,7 @@ export function useAiCoachChat() {
   // Snapshot data wins over cached timeline rows, so recent card statuses never regress.
   const merged = new Map<string, ChatItem>();
   if (pendingMessage) merged.set(pendingMessage.id, pendingMessage);
+  if (streamingReply) merged.set(streamingReply.id, streamingReply);
   for (const message of [...(snapshot?.messages ?? [])].reverse()) merged.set(message.id, {
     ...message, conversationId: snapshot!.conversationId,
   });
@@ -490,7 +566,7 @@ export function useAiCoachChat() {
     });
   }
   const messages = [...merged.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
-  return { snapshot, messages, status, start, send, confirm, edit, reject,
+  return { snapshot, messages, status, start, send, confirm, edit, reject, streaming, reconnecting,
     pendingList, pendingCount: pendingList?.payload.items.length ?? 0,
     reviewBusy, confirmationUncertain: pendingConfirmation !== null,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,

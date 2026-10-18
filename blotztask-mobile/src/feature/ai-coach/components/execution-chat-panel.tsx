@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -26,6 +27,20 @@ import { CoachMarkdown } from "./coach-markdown";
 import { ReviewListBar } from "./review-list-bar";
 import { ReviewListModal } from "./review-list-modal";
 
+function StreamingCursor() {
+  const { t } = useTranslation("aiCoach");
+  const [opacity] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    const blink = Animated.loop(Animated.sequence([
+      Animated.timing(opacity, { toValue: 0.25, duration: 500, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]));
+    blink.start();
+    return () => blink.stop();
+  }, [opacity]);
+  return <Animated.Text accessibilityLabel={t("chat.generating")} style={{ opacity }} className="font-baloo text-primary">▍</Animated.Text>;
+}
+
 function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveDetail }: {
   item: ChatItem;
   rateable: boolean;
@@ -46,6 +61,7 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
         // Assistant replies are full width so headings and lists have room to breathe.
         <View className="px-1">
           <CoachMarkdown text={item.text} />
+          {item.streaming && <StreamingCursor />}
         </View>
       )}
       {!isUser && item.taskContextRead && (
@@ -53,7 +69,7 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
           {t("chat.taskContextRead")}
         </Text>
       )}
-      {!isUser && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
+      {!isUser && !item.streaming && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
         busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
     </View>
   );
@@ -64,7 +80,7 @@ export function ExecutionChatPanel() {
   const { t, i18n } = useTranslation("aiCoach");
   const { snapshot, messages, status, start, send, confirm, edit, reject,
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
-    pendingList, pendingCount, reviewBusy, confirmationUncertain,
+    pendingList, pendingCount, reviewBusy, confirmationUncertain, streaming, reconnecting,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
     newTopic, clearChat, loadOlder, loadingOlder, historyError, retryHistory } = useAiCoachChat();
   const [input, setInput] = useState("");
@@ -115,14 +131,15 @@ export function ExecutionChatPanel() {
   const canSend = status === "ready" && !confirmationUncertain && snapshot?.allowedActions.includes("send_message") === true;
 
   const handleSend = async () => {
+    if (!canSend || !input.trim()) return;
     const text = input;
     setInput("");
     const errorCode = await send(text);
     if (errorCode) {
-      setInput(text);
+      setInput(current => current.trim() ? current : text);
       Toast.show({ type: "error", text1: t("chat.sendError") });
     }
-    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
+    if (nearLatest.current) scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
@@ -261,7 +278,8 @@ export function ExecutionChatPanel() {
           {status === "startFailed" && <Pressable onPress={() => void start()}>
             <Text className="font-baloo text-warning p-3">{t("chat.startError")}</Text>
           </Pressable>}
-          {generating && <Text className="font-baloo text-primary p-3">{t("chat.thinking")}</Text>}
+          {reconnecting ? <Text className="font-baloo text-primary p-3">{t("chat.reconnecting")}</Text>
+            : generating && !messages.some(item => item.streaming) && <Text className="font-baloo text-primary p-3">{t("chat.thinking")}</Text>}
           {blockedBanner()}
         </View>}
         renderItem={({ item, index }) => {
@@ -304,12 +322,14 @@ export function ExecutionChatPanel() {
       )}
 
       <ReviewListBar count={pendingCount} saving={pendingList?.status === "processing"}
+        generating={streaming || snapshot?.generationStatus === "running"}
         onOpen={() => setReviewVisible(true)} />
       {confirmationUncertain && !pendingCount && <Pressable className="px-4 py-2" onPress={() => setReviewVisible(true)}>
         <Text className="font-baloo text-warning text-sm">{t("review.confirmationUnknown")}</Text>
       </Pressable>}
       <ReviewListModal visible={reviewVisible} list={pendingList} conversationVersion={snapshot?.conversationVersion ?? 0}
-        busy={reviewBusy} uncertain={confirmationUncertain} onClose={() => setReviewVisible(false)}
+        busy={reviewBusy} generating={streaming || snapshot?.generationStatus === "running"}
+        uncertain={confirmationUncertain} onClose={() => setReviewVisible(false)}
         onEdit={updateReviewItem} onRemove={removeReviewItem} onConfirm={confirmAll} onRefresh={refreshReviewList} />
 
       <View className="flex-row items-center px-4 py-2 gap-2">
@@ -319,7 +339,7 @@ export function ExecutionChatPanel() {
           placeholderTextColor={isRecording ? "#F56767" : "#8C8C8C"}
           value={input}
           onChangeText={setInput}
-          editable={canSend && !isRecording}
+          editable={snapshot !== null && !isRecording}
           onSubmitEditing={() => void handleSend()}
           returnKeyType="send"
           maxLength={2000}

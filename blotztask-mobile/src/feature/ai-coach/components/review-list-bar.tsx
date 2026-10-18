@@ -5,10 +5,12 @@ import Ionicons from "@react-native-vector-icons/ionicons/static";
 export function ReviewListBar({
   count,
   saving,
+  generating = false,
   onOpen,
 }: {
   count: number;
   saving: boolean;
+  generating?: boolean;
   onOpen: () => void;
 }) {
   const { t } = useTranslation("aiCoach");
@@ -20,12 +22,13 @@ export function ReviewListBar({
       accessibilityLabel={t("review.pending", { count })}
       className="mx-4 mt-2 px-4 py-3 rounded-xl bg-white border border-gray-200 flex-row items-center gap-2"
     >
-      {saving ? (
+      {saving || generating ? (
         <ActivityIndicator size="small" />
       ) : (
         <Ionicons name="list-outline" size={20} color="#4CAF50" />
       )}
       <Text className="flex-1 font-balooBold text-secondary">{t("review.pending", { count })}</Text>
+      {generating && <Text className="font-baloo text-xs text-primary">{t("review.generating")}</Text>}
       <Ionicons name="chevron-forward" size={18} color="#8C8C8C" />
     </Pressable>
   );

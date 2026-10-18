@@ -31,7 +31,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
-        bool reviewListEnabled = false)
+        bool reviewListEnabled = false, Func<string, object, Task>? stream = null)
     {
         if (timeZoneId is not null)
         {
@@ -75,7 +75,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
                 await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
-                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled);
+                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream);
             await store.SaveAsync(conversation, ct);
         }
 
@@ -91,6 +91,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         string? error = null;
         try
         {
+            if (stream is not null) await stream("turn.started", new { conversationId, conversationVersion = baseVersion });
             // The new user message and running status are durable before optional summary work starts.
             if (prepared.Ended is not null)
             {

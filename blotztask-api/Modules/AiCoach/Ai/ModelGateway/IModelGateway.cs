@@ -14,7 +14,8 @@ public sealed record ModelGatewayRequest(
     string SystemPrompt,
     IReadOnlyList<GatewayMessage> Messages,
     IReadOnlyList<GatewayToolDefinition> Tools,
-    int? MaxOutputTokens = null);
+    int? MaxOutputTokens = null,
+    Func<string, Task>? OnTextDelta = null);
 
 public sealed record GatewayToolDefinition(
     string Name,

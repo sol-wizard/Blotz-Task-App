@@ -107,6 +107,7 @@ The mobile screen opens the existing Unified chat. An inverted `FlatList` merges
 | GET | `/api/ai-coach/chat/messages?before=&limit=30` | User-scoped timeline, newest first; maximum page size 100 |
 | POST | `/api/ai-coach/chat/topics` | JSON `{ "timeZoneId": "Australia/Perth" }`; end old topic and return the new empty snapshot; reuse an empty topic |
 | DELETE | `/api/ai-coach/chat` | Hard-delete segments, messages and traces; keep feedback; return 409 while busy |
+| POST | `/api/ai-coach/conversations/{id}/messages/stream` | Protocol 6 SSE: text deltas, review-list previews and a saved terminal snapshot; see [streaming contract](ai-coach-streaming.md) |
 
 Timeline paging uses `(CreatedAt DESC, Id DESC)` with an opaque base64url cursor. Both comparisons execute in SQL Server, including its GUID ordering, so equal timestamps and inserts between pages do not duplicate or skip original rows. Timeline draft actions are empty. Existing per-conversation routes remain; foreign/deleted IDs return 404 and ended IDs return 409, including snapshot/feedback routes. The legacy start route reuses the open topic instead of creating duplicate open rows.
 

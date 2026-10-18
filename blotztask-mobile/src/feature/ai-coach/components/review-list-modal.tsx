@@ -28,6 +28,7 @@ export function ReviewListModal({
   list,
   conversationVersion,
   busy,
+  generating = false,
   uncertain,
   onClose,
   onEdit,
@@ -39,6 +40,7 @@ export function ReviewListModal({
   list: ArtifactEnvelopeDto | null;
   conversationVersion: number;
   busy: boolean;
+  generating?: boolean;
   uncertain: boolean;
   onClose: () => void;
   onEdit: (
@@ -59,6 +61,7 @@ export function ReviewListModal({
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   useEffect(() => {
     if (!visible) return;
     const timer = setInterval(() => setNow(Date.now()), 30000);
@@ -158,7 +161,7 @@ export function ReviewListModal({
     (code) => !["ScheduleConflict", "ScheduleUnverified"].includes(code.split(":")[0]),
   );
   const disabled =
-    busy ||
+    busy || generating ||
     (!uncertain &&
       (!list || list.status !== "pending" || past || incomplete || invalid || unverified));
   const editingStale =
@@ -166,7 +169,7 @@ export function ReviewListModal({
     (editing.list.id !== list?.id ||
       editing.list.version !== list.version ||
       editing.version !== conversationVersion);
-  const editorBusy = busy || uncertain;
+  const editorBusy = busy || uncertain || generating;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
@@ -214,6 +217,9 @@ export function ReviewListModal({
               </Pressable>
             </View>
             <Text className="font-baloo text-sm text-primary mb-3">{t("review.explanation")}</Text>
+            {generating && <Text accessibilityLiveRegion="polite" className="font-baloo text-sm text-info mb-3">
+              {t("review.generatingDescription")}
+            </Text>}
             <ScrollView keyboardShouldPersistTaps="handled">
               {!list && <Text className="font-baloo text-secondary py-6">{t("review.empty")}</Text>}
               {list?.payload.items.map((item) => {
@@ -226,9 +232,18 @@ export function ReviewListModal({
                     </Text>
                     <Text className="font-balooBold text-base text-secondary">{item.title}</Text>
                     {item.description && (
-                      <Text className="font-baloo text-secondary text-sm mt-1" numberOfLines={4}>
-                        {item.description}
-                      </Text>
+                      <Pressable accessibilityRole="button" accessibilityLabel={t("review.toggleDetails")}
+                        accessibilityState={{ expanded: expanded.has(item.itemId) }}
+                        onPress={() => setExpanded(previous => {
+                          const next = new Set(previous);
+                          if (next.has(item.itemId)) next.delete(item.itemId);
+                          else next.add(item.itemId);
+                          return next;
+                        })}>
+                        <Text className="font-baloo text-secondary text-sm mt-1" numberOfLines={expanded.has(item.itemId) ? undefined : 4}>
+                          {item.description}
+                        </Text>
+                      </Pressable>
                     )}
                     {!note && (
                       <>
@@ -329,7 +344,7 @@ export function ReviewListModal({
             </ScrollView>
             {(unverified || uncertain) && (
               <Pressable
-                disabled={busy}
+                disabled={busy || generating}
                 onPress={() => void onRefresh()}
                 className="items-center py-2"
               >
@@ -344,7 +359,9 @@ export function ReviewListModal({
                 onPress={() => void confirm()}
                 className={`bg-highlight rounded-xl py-3 items-center mt-3 ${disabled ? "opacity-40" : ""}`}
               >
-                {busy ? (
+                {generating ? (
+                  <Text className="font-balooBold text-white text-base">{t("review.generating")}</Text>
+                ) : busy ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text className="font-balooBold text-white text-base">
