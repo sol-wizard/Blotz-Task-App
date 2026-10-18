@@ -7,6 +7,7 @@ public static class DependencyInjection
     public static IServiceCollection AddChallengeModule(this IServiceCollection services)
     {
         services.AddScoped<CreateChallengeCommandHandler>();
+        services.AddScoped<JoinChallengeCommandHandler>();
         return services;
     }
 }

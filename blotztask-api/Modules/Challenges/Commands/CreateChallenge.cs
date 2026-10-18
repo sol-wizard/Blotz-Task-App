@@ -1,7 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Challenges.Domain;
 using BlotzTask.Modules.Challenges.Enums;
-using Microsoft.EntityFrameworkCore;
+using BlotzTask.Modules.Challenges.Shared;
 
 namespace BlotzTask.Modules.Challenges.Commands;
 
@@ -28,11 +28,9 @@ public class CreateChallengeCommandHandler(
         if (name.Length > MaxNameLength)
             throw new ArgumentException($"Challenge name must be at most {MaxNameLength} characters.");
 
-        // The filtered unique index on CreatorUserId is the final guarantee; this check gives a clear message.
-        var hasUnfinished = await db.Challenges
-            .AnyAsync(c => c.CreatorUserId == command.UserId && c.EndTime == null, ct);
-        if (hasUnfinished)
-            throw new InvalidOperationException("You already have a challenge that hasn't ended.");
+        // The filtered unique index on CreatorUserId also stops a double-tap creating two.
+        if (await ChallengeMembershipRules.IsInUnfinishedChallengeAsync(db, command.UserId, ct))
+            throw new InvalidOperationException("You are already in a challenge that hasn't ended.");
 
         var challenge = new Challenge
         {
@@ -45,7 +43,7 @@ public class CreateChallengeCommandHandler(
         };
 
         db.Challenges.Add(challenge);
-        // The creator is a member too, so they count towards the 7-person limit.
+        // The creator is a member too, so they count towards the required members.
         db.ChallengeMembers.Add(new ChallengeMember { ChallengeId = challenge.Id, MemberId = command.UserId });
 
         await db.SaveChangesAsync(ct);
