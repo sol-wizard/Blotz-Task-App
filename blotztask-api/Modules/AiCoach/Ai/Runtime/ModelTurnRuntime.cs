@@ -15,7 +15,8 @@ public sealed record ModelTurnRequest(Guid ConversationId, AiCoachMode Mode, IRe
     Func<DateOnly, DateOnly, CancellationToken, Task<string>>? ReadTasks = null,
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? CheckSchedule = null,
     Func<string, object, Task>? Trace = null, string? PreviousClosingSummary = null,
-    DateTimeOffset? SegmentStartedAt = null, string? SegmentStartTimeZoneId = null);
+    DateTimeOffset? SegmentStartedAt = null, string? SegmentStartTimeZoneId = null,
+    bool ReviewListEnabled = false);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -39,7 +40,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         logger.LogInformation(
             "AiCoach model turn started for {ConversationId} in {Mode} mode with {HistoryMessageCount} history messages and {DraftCount} drafts",
             request.ConversationId, request.Mode, request.History.Count, request.Drafts.Count);
-        var workspace = new DraftTools(request.Drafts, request.TimeZoneId);
+        var workspace = new DraftTools(request.Drafts, request.TimeZoneId, request.ReviewListEnabled);
         var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule);
         var turn = new List<GatewayMessage>();
         var summary = request.Summary;

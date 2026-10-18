@@ -22,7 +22,7 @@ public sealed class DraftScheduleChecker(GetTasksByDateQueryHandler tasks,
         var windows = new List<(TaskProposal Item, DateTimeOffset Start, DateTimeOffset End)>();
         try
         {
-            foreach (var item in proposals.Where(item => !item.PersistedTaskId.HasValue))
+            foreach (var item in proposals.Where(item => item.Kind == ProposalKind.Task && !item.IsSaved))
             {
                 if (item.Date is not { } date || item.StartTime is not { } start || item.EndTime is not { } end)
                     return new("incomplete", checkedAt, [], Scope: scope);

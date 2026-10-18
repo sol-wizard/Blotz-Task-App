@@ -12,7 +12,7 @@ public static class CorsServiceExtensions
                     builder.WithOrigins("http://localhost:3000") // devtools (local only)
                         .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE")
                         .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent",
-                            "x-requested-with")
+                            "x-requested-with", "X-Ai-Coach-Protocol")
                         .AllowCredentials();
                 });
         });

@@ -12,6 +12,7 @@ namespace BlotzTask.Modules.AiCoach.Api;
 [ApiController]
 [Route("api/ai-coach")]
 [Authorize]
+[ServiceFilter(typeof(ReviewListProtocolFilter))]
 public class AiCoachController(
     StartConversationCommandHandler startConversation,
     SendMessageCommandHandler sendMessage,
@@ -129,6 +130,7 @@ public class AiCoachController(
                 Content = request.Content,
                 ExpectedVersion = request.ExpectedVersion,
                 TimeZoneId = request.TimeZoneId,
+                ReviewListEnabled = Request.Headers[ReviewListProtocolFilter.HeaderName] == "6",
             }, ct);
             return Ok(dto);
         }

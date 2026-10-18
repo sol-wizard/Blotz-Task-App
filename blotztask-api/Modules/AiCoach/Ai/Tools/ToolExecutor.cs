@@ -14,7 +14,7 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<DateOnly, DateOnly, CancellationToken, Task<string>>? readTasks = null,
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null)
 {
-    public const string ContractVersion = "coach-tools-9";
+    public const string ContractVersion = "coach-tools-10";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
         "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Do not use for ordinary sharing or listening.",
@@ -24,7 +24,7 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     public int ExecutedCalls { get; private set; }
     public bool BudgetExhausted => ExecutedCalls >= limits.MaxToolCallsPerTurn;
     public IReadOnlyList<GatewayToolDefinition> AvailableTools => BudgetExhausted ? [] :
-        readTasks is null || _readCalls >= 2 ? DraftTools.Definitions : [.. DraftTools.Definitions, ReadTasksDefinition];
+        readTasks is null || _readCalls >= 2 ? workspace.AvailableDefinitions : [.. workspace.AvailableDefinitions, ReadTasksDefinition];
 
     public async Task<ToolExecutionResult> ExecuteAsync(ModelToolCallRequest call, CancellationToken ct)
     {
@@ -32,11 +32,12 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
         {
             var mutation = Execute(call, ct);
             if (!mutation.Succeeded || mutation.Replayed || checkSchedule is null
-                || call.Name is not ("create_draft" or "update_draft")) return mutation;
+                || call.Name is not ("create_draft" or "update_draft" or "add_items" or "update_items" or "remove_items")) return mutation;
             using var document = JsonDocument.Parse(mutation.Content);
             var id = document.RootElement.GetProperty("draft").GetProperty("draftId").GetGuid();
             var draft = workspace.Drafts.Single(value => value.Id == id);
             if (draft.Status != ProposalSetStatus.Pending) return mutation;
+            if (draft.Proposals.All(item => item.Kind == ProposalKind.Note)) return mutation;
             var assessment = await checkSchedule(draft.Proposals, ct);
             draft.SetSchedule(assessment);
             var content = JsonSerializer.Serialize(new { success = true, draft = DraftTools.View(draft), schedule = assessment });
@@ -105,7 +106,7 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
         ToolExecutionResult result;
         if (Encoding.UTF8.GetByteCount(call.ArgumentsJson) > limits.MaxToolArgumentBytes)
             result = Failure("tool_arguments_too_large", "Tool arguments exceed the resource limit.");
-        else if (!DraftTools.Definitions.Any(tool => tool.Name == call.Name))
+        else if (!workspace.AvailableDefinitions.Any(tool => tool.Name == call.Name))
             result = Failure("unknown_tool", "Unknown tool.");
         else
         {
@@ -131,6 +132,8 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             "create_draft" => allowMultiple || args.GetProperty("items").GetArrayLength() == 1,
             "update_draft" => allowMultiple || args.GetProperty("changes").GetArrayLength() == 1,
             "discard_draft" => true,
+            "add_items" or "update_items" => allowMultiple || args.GetProperty("items").GetArrayLength() == 1,
+            "remove_items" => allowMultiple || args.GetProperty("itemIds").GetArrayLength() == 1,
             _ => false,
         };
         if (!simpleOperation || !args.TryGetProperty("successReply", out var value)

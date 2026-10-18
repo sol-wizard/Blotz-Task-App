@@ -73,6 +73,46 @@ namespace BlotzTask.Migrations
                     b.ToTable("AiCoachConversation", (string)null);
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachDraftConfirmation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SavedDraftJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "DraftId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CommandId")
+                        .IsUnique();
+
+                    b.ToTable("AiCoachDraftConfirmation", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachFeedback", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1162,6 +1202,15 @@ namespace BlotzTask.Migrations
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachDraftConfirmation", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

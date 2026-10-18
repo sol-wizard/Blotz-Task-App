@@ -8,12 +8,14 @@ using BlotzTask.Modules.Tasks.Enums;
 namespace BlotzTask.Modules.AiCoach.Ai.Tools;
 
 /// <summary>Turn-local draft workspace. A failed turn never commits a partial tool operation.</summary>
-public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneId)
+public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneId, bool reviewListEnabled = false)
 {
     public const string ContractVersion = "draft-tools-8";
 
     private readonly List<ProposalSet> _drafts = drafts.Select(draft => draft.Copy()).ToList();
     public IReadOnlyList<ProposalSet> Drafts => _drafts;
+    public IReadOnlyList<GatewayToolDefinition> AvailableDefinitions => reviewListEnabled
+        ? ReviewListTools.Definitions : Definitions;
 
     public static IReadOnlyList<GatewayToolDefinition> Definitions { get; } =
     [
@@ -27,6 +29,7 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
 
     public string Execute(ModelToolCallRequest call)
     {
+        if (reviewListEnabled) return new ReviewListTools(_drafts, timeZoneId).Execute(call);
         try
         {
             using var document = JsonDocument.Parse(call.ArgumentsJson);
@@ -90,11 +93,13 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
     {
         draftId = draft.Id,
         status = draft.Status.ToString().ToLowerInvariant(),
+        draft.IsReviewList,
         items = draft.Proposals.Select(item => new
         {
-            itemId = item.ProposalId, title = item.Title, description = item.Description,
+            itemId = item.ProposalId, kind = item.Kind.ToString().ToLowerInvariant(), title = item.Title, description = item.Description,
             date = item.Date?.ToString("yyyy-MM-dd"), startTime = item.StartTime?.ToString("HH:mm"),
             endTime = item.EndTime?.ToString("HH:mm"), timeZoneId = item.TimeZoneId, savedTaskId = item.PersistedTaskId,
+            savedNoteId = item.PersistedNoteId, suggestedFields = item.SuggestedFields ?? [],
             recurrence = item.Recurrence is { } recurrence ? new {
                 frequency = recurrence.Frequency.ToString(), interval = recurrence.Interval,
                 daysOfWeek = recurrence.DaysOfWeek, dayOfMonth = recurrence.DayOfMonth,
@@ -111,7 +116,7 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
         return draft;
     }
 
-    private TaskProposal ReadItem(JsonElement fields, TaskProposal? original)
+    internal TaskProposal ReadItem(JsonElement fields, TaskProposal? original)
     {
         CheckFields(fields, "title", "description", "date", "startTime", "endTime", "recurrence");
         var title = String(fields, "title", original?.Title)?.Trim();
@@ -129,7 +134,7 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
             original?.TimeZoneId ?? timeZoneId, original?.LabelId, original?.PersistedTaskId, recurrence);
     }
 
-    private static RecurrenceProposal? ReadRecurrence(JsonElement value)
+    internal static RecurrenceProposal? ReadRecurrence(JsonElement value)
     {
         if (value.ValueKind == JsonValueKind.Null) return null;
         CheckFields(value, "frequency", "interval", "daysOfWeek", "dayOfMonth", "endDate");

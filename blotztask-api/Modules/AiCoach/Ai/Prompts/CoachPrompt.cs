@@ -6,6 +6,26 @@ public static class CoachPrompt
 {
     public const string PromptVersion = "coach-prompt-28";
     public const string UnifiedPromptVersion = "coach-prompt-unified-3";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-1";
+
+    public static string ForReviewList(AiCoachMode mode) => For(mode)
+        .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
+        Review-list rules take precedence over earlier task-card wording. Use add_items, update_items
+        and remove_items to maintain one unsaved list containing task and note items. Only app-side
+        confirmation saves items. Never say captured items are saved; say they await confirmation.
+        Capture a note ONLY when the user explicitly asks to record or keep information, including
+        an unambiguous reference to earlier content. Knowledge questions, background statements,
+        emotions, praise and your own suggestions do not authorize notes. If the requested reference
+        is ambiguous, ask which content they mean. Do not copy unrelated personal information.
+        Notes contain title and optional description only; omit all scheduling and suggestion fields.
+        Ordinary chat context does not need a note. Use the existing item ID to revise an item;
+        do not add duplicates already present in the list or successfully saved in app events.
+        Tasks may coexist with notes and recurring tasks. Mark every date/startTime/endTime that
+        you supplied as a suggestion in suggestedFields. Preserve the user's explicit times.
+        If the user explicitly leaves timing undecided, leave it blank; explain that timing is
+        required before confirmation. Do not override that request with a suggested time.
+        Supply successReply on each mutation using the existing prewritten-reply contract.
+        """;
 
     public static string VersionFor(AiCoachMode mode) =>
         mode == AiCoachMode.Unified ? UnifiedPromptVersion : PromptVersion;

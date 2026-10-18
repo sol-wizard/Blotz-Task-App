@@ -34,8 +34,23 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
         if (record is null) return null;
         var messages = await db.AiCoachMessages.AsNoTracking().Where(x => x.ConversationId == conversationId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(ct);
+        var conversation = Restore(record, messages);
+        if (conversation is not null)
+        {
+            var unfinished = conversation.Drafts.Where(draft => draft.IsReviewList
+                && draft.Status is Domain.Proposals.ProposalSetStatus.Pending or Domain.Proposals.ProposalSetStatus.Processing)
+                .Select(draft => draft.Id).ToArray();
+            if (unfinished.Length > 0)
+            {
+                var committed = await db.AiCoachDraftConfirmations.AsNoTracking()
+                    .Where(value => value.ConversationId == conversationId && value.UserId == conversation.UserId
+                        && unfinished.Contains(value.DraftId)).ToListAsync(ct);
+                foreach (var confirmation in committed)
+                    Application.Commands.ConfirmDraftCommandHandler.ApplyCommitted(conversation, confirmation);
+            }
+        }
         await transaction.CommitAsync(ct);
-        return Restore(record, messages);
+        return conversation;
     }
 
     public async Task CreateAsync(Conversation conversation, CancellationToken ct)

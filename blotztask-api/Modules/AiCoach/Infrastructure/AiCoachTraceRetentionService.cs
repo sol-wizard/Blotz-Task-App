@@ -100,6 +100,10 @@ public sealed class AiCoachTraceRetentionService(
                     .SetProperty(row => row.MessageCount, conversation.Messages.Count)
                     .SetProperty(row => row.Revision, record.Revision + 1), ct);
             if (updated == 0) continue;
+            // Completed receipts contain reviewed text as well as IDs; prune that copy with its draft.
+            var retainedDraftIds = conversation.Drafts.Select(draft => draft.Id).ToArray();
+            await db.AiCoachDraftConfirmations.Where(receipt => receipt.ConversationId == id
+                && !retainedDraftIds.Contains(receipt.DraftId)).ExecuteDeleteAsync(ct);
             await db.AiCoachMessages.Where(message => message.ConversationId == id && message.CreatedAt <= cutoff).ExecuteDeleteAsync(ct);
         }
         // The open segment is kept even when empty: clients hold its ID, and it is one row per user.

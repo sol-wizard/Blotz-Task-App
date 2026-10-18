@@ -77,13 +77,24 @@ internal static class DraftEditing
         if (edited.Items.Select(item => item.ItemId).Distinct().Count() != edited.Items.Count)
             throw Invalid("Duplicate item IDs.");
         var known = draft.Proposals.ToDictionary(item => item.ProposalId);
-        if (known.Values.Any(item => item.PersistedTaskId.HasValue && edited.Items.All(value => value.ItemId != item.ProposalId)))
+        if (known.Values.Any(item => item.IsSaved && edited.Items.All(value => value.ItemId != item.ProposalId)))
             throw Invalid("Saved items cannot be removed.");
         var result = edited.Items.Select(item =>
         {
             if (!known.TryGetValue(item.ItemId, out var original)) throw Invalid("Unknown draft item.");
             if (!OperationPolicy.CanEditItem(original)) return original;
             if (string.IsNullOrWhiteSpace(item.Title)) throw Invalid("Title is required.");
+            if (item.Kind is not null && item.Kind != original.Kind.ToString().ToLowerInvariant())
+                throw Invalid("Item kind cannot be changed.");
+            if (original.Kind == ProposalKind.Note)
+            {
+                if (item.Date is not null || item.StartTime is not null || item.EndTime is not null
+                    || item.LabelId is not null || item.Recurrence is not null)
+                    throw Invalid("Notes cannot have scheduling fields.");
+                var note = original with { Title = item.Title.Trim(), Description = item.Description };
+                try { note.Validate(); } catch (ArgumentException ex) { throw Invalid(ex.Message); }
+                return note;
+            }
             if (item.LabelId != original.LabelId) throw Invalid("Label cannot be changed through this draft editor.");
             DateOnly? date = null;
             TimeOnly? start = null;
@@ -124,9 +135,16 @@ internal static class DraftEditing
             }
             if ((original.Recurrence is null) != (recurrence is null))
                 throw Invalid("Draft kind cannot be changed through this editor.");
-            return original with { Title = item.Title.Trim(), Description = item.Description, Date = date, StartTime = start, EndTime = end, Recurrence = recurrence };
+            var suggested = (original.SuggestedFields ?? []).Where(field => field switch
+            {
+                "date" => date == original.Date,
+                "startTime" => start == original.StartTime,
+                "endTime" => end == original.EndTime,
+                _ => false,
+            }).ToArray();
+            return original with { Title = item.Title.Trim(), Description = item.Description, Date = date, StartTime = start, EndTime = end, Recurrence = recurrence, SuggestedFields = suggested };
         }).ToArray();
-        try { DraftTools.CheckDraftShape(result); }
+        try { if (!draft.IsReviewList) DraftTools.CheckDraftShape(result); }
         catch (ArgumentException ex) { throw Invalid(ex.Message); }
         return result;
     }

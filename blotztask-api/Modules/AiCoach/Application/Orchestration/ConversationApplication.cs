@@ -30,7 +30,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
     AiCoachTraceRecorder? trace = null)
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
-        Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null)
+        Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
+        bool reviewListEnabled = false)
     {
         if (timeZoneId is not null)
         {
@@ -47,6 +48,9 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         {
             var conversation = await LoadOwnedAsync(store, userId, conversationId, ct);
             RequireOpen(conversation);
+            if (!reviewListEnabled && conversation.Drafts.Any(draft => draft.IsReviewList
+                && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing))
+                throw new Commands.DraftConflictException("ReviewListRequiresProtocol6", "Use a review-list capable client for the pending list.");
             var existing = conversation.Messages.FirstOrDefault(message => message.Id == messageId);
             if (existing is not null && (existing.Role != ConversationMessageRole.User || existing.Content != content))
                 throw Conflict("MessageIdReused", conversation);
@@ -71,7 +75,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
                 await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
-                conversation.InitialTimeZoneId ?? conversation.TimeZoneId);
+                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled);
             await store.SaveAsync(conversation, ct);
         }
 
@@ -80,7 +84,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "user_message", new
         {
             messageId, content, conversationVersion = baseVersion,
-            mode = request.Mode.ToString(), promptVersion = CoachPrompt.VersionFor(request.Mode),
+            mode = request.Mode.ToString(), promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.VersionFor(request.Mode),
             toolContractVersion = ToolExecutor.ContractVersion,
         });
         ModelTurnRunResult? result = null;
@@ -121,7 +125,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             usageTracker.Add(conversationId, result.InputTokens, result.OutputTokens, result.TotalTokens, result.ModelCallCount);
             logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input, {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
                 conversationId, result.InputTokens, result.OutputTokens, result.ModelCallCount, error,
-                CoachPrompt.VersionFor(request.Mode), ToolExecutor.ContractVersion);
+                request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.VersionFor(request.Mode), ToolExecutor.ContractVersion);
             try
             {
                 using var accountingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
