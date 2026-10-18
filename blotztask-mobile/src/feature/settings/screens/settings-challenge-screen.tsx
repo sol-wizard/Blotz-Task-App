@@ -19,12 +19,13 @@ import { CurrentChallengeDTO } from "@/feature/challenge/models/challenge-dto";
 const AVATAR_SIZE = 64;
 
 // Empty slots "breathe" so the team reads as waiting for people; reduced motion keeps only the fade.
+const SLOT_REST = { transform: [{ scale: 0.92 }], opacity: 0.55 };
 const slotBreath = {
-  from: { transform: [{ scale: 0.92 }], opacity: 0.55 },
+  from: SLOT_REST,
   to: { transform: [{ scale: 1 }], opacity: 1 },
 };
 const slotBreathReduced = {
-  from: { opacity: 0.55 },
+  from: { opacity: SLOT_REST.opacity },
   to: { opacity: 1 },
 };
 
@@ -161,10 +162,17 @@ function ChallengeTeam({ challenge }: { challenge: CurrentChallengeDTO }) {
             Array.from({ length: missing }, (_, i) => (
               <View key={`empty-${i}`} className="items-center" style={{ width: AVATAR_SIZE + 8 }}>
                 <Animated.View
-                  className="rounded-full border-2 border-highlight items-center justify-center"
                   style={{
                     width: AVATAR_SIZE,
                     height: AVATAR_SIZE,
+                    borderRadius: AVATAR_SIZE / 2,
+                    borderWidth: 2,
+                    borderColor: "#9AD513",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    // The resting style equals the first keyframe: Reanimated attaches the animation
+                    // after the first frame is drawn, and any frame without it must look the same.
+                    ...(reducedMotion ? { opacity: SLOT_REST.opacity } : SLOT_REST),
                     animationName: reducedMotion ? slotBreathReduced : slotBreath,
                     animationDuration: "1200ms",
                     animationDirection: "alternate",
@@ -172,8 +180,6 @@ function ChallengeTeam({ challenge }: { challenge: CurrentChallengeDTO }) {
                     animationTimingFunction: "ease-in-out",
                     // Staggered so the empty slots ripple in a wave instead of pulsing in unison.
                     animationDelay: `${i * 150}ms`,
-                    // Hold the first frame during the delay; otherwise each slot shows at full colour,
-                    // then snaps to the faded start when its turn comes.
                     animationFillMode: "backwards",
                   }}
                 >
