@@ -3,7 +3,9 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
+import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { AiCoachRating, MessageFeedbackDto } from "../models/ai-coach-dto";
+import { replyToNoteText } from "../models/reply-note";
 
 const reasons = ["inaccurate", "irrelevant", "unclear", "tone", "other"] as const;
 
@@ -19,6 +21,8 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
   const [detail, setDetail] = useState("");
+  const { createNoteAsync, isNoteCreating } = useNotesMutation();
+  const [noteSaved, setNoteSaved] = useState(false);
 
   const rate = async (rating: AiCoachRating) => {
     if (rating === "down" && feedback?.rating !== "down") {
@@ -44,6 +48,18 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
       Toast.show({ type: "success", text1: t("feedback.copied") });
     } catch {
       Toast.show({ type: "error", text1: t("feedback.copyFailed") });
+    }
+  };
+
+  const saveNote = async () => {
+    const { text: noteText, truncated } = replyToNoteText(text);
+    if (!noteText) return;
+    try {
+      await createNoteAsync({ text: noteText, isPersistent: false });
+      setNoteSaved(true);
+      Toast.show({ type: "success", text1: t(truncated ? "feedback.noteSavedTruncated" : "feedback.noteSaved") });
+    } catch {
+      Toast.show({ type: "error", text1: t("feedback.noteSaveFailed") });
     }
   };
 
@@ -75,6 +91,13 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
           accessibilityRole="button" accessibilityLabel={t("feedback.copy")}
           onPress={() => void copy()}>
           <Ionicons name="copy-outline" size={18} color="#8C8C8C" />
+        </Pressable>
+        <Pressable className="w-10 h-10 items-center justify-center" disabled={isNoteCreating || noteSaved}
+          accessibilityRole="button" accessibilityLabel={t(noteSaved ? "feedback.noteSaved" : "feedback.saveNote")}
+          accessibilityState={{ disabled: isNoteCreating || noteSaved, busy: isNoteCreating }}
+          onPress={() => void saveNote()}>
+          <Ionicons name={noteSaved ? "bookmark" : "bookmark-outline"} size={18}
+            color={noteSaved ? "#4CAF50" : "#8C8C8C"} />
         </Pressable>
       </View>
 
