@@ -20,7 +20,7 @@ public class JoinChallengeCommandHandler(
     public async Task Handle(JoinChallengeCommand command, CancellationToken ct = default)
     {
         // Locking the challenge row makes joins to the same challenge run one at a time until commit,
-        // so two people can't both take the last spot. It also waits out a concurrent start.
+        // so two people can't both take the last spot and the count used for auto-start is exact.
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
         var challenge = await db.Challenges
@@ -44,9 +44,20 @@ public class JoinChallengeCommandHandler(
             throw new InvalidOperationException($"This challenge is full ({ChallengeMembershipRules.RequiredMembers} people).");
 
         db.ChallengeMembers.Add(new ChallengeMember { ChallengeId = command.ChallengeId, MemberId = command.UserId });
+
+        // The last member to join starts the challenge; from then on joins are refused as "already started".
+        var isFull = memberCount + 1 == ChallengeMembershipRules.RequiredMembers;
+        if (isFull)
+        {
+            challenge.Status = ChallengeStatus.InProgress;
+            challenge.StartTime = DateTimeOffset.UtcNow;
+        }
+
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
 
         logger.LogInformation("User {UserId} joined challenge {ChallengeId}", command.UserId, command.ChallengeId);
+        if (isFull)
+            logger.LogInformation("Challenge {ChallengeId} is full and has started", command.ChallengeId);
     }
 }
