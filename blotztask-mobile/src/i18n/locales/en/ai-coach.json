@@ -109,7 +109,10 @@
     "repeats": "Repeats",
     "discarded": "Discarded",
     "expired": "Expired",
-    "timePassed": "This time has passed — edit it before saving."
+    "timePassed": "This time has passed — edit it before saving.",
+    "conflictWith": "Overlaps {{task}}",
+    "timePassedShort": "Time passed",
+    "tomorrow": "Tomorrow"
   },
   "editModal": {
     "title": "Edit task",

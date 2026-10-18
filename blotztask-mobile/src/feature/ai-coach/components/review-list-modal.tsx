@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Toast from "react-native-toast-message";
 import { fromZonedTime } from "date-fns-tz";
 import {
@@ -22,6 +23,8 @@ import { ReviewItem, toReviewItem } from "../models/review-list";
 import { ConfirmOutcome } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 import { ReviewNoteEditor } from "./review-note-editor";
+import { CoachChip } from "./coach-chip";
+import { formatDraftWhen, formatRecurrence } from "../utils/draft-format";
 
 export function ReviewListModal({
   visible,
@@ -52,7 +55,7 @@ export function ReviewListModal({
   onConfirm: (allowConflict?: boolean, token?: string | null) => Promise<ConfirmOutcome>;
   onRefresh: () => Promise<void>;
 }) {
-  const { t } = useTranslation("aiCoach");
+  const { t, i18n } = useTranslation("aiCoach");
   const [editing, setEditing] = useState<{
     item: ReviewItem;
     list: ArtifactEnvelopeDto;
@@ -170,11 +173,25 @@ export function ReviewListModal({
       editing.list.version !== list.version ||
       editing.version !== conversationVersion);
   const editorBusy = busy || uncertain || generating;
+  const notes = list?.payload.items.filter((item) => item.kind === "note") ?? [];
+  const deviceTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Per-item problems sit on the row; list-wide ones collect above the save button.
+  const notices: { tone: "warning" | "info"; text: string; alert?: boolean }[] = [];
+  const unmatchedConflicts = list?.schedule?.status === "conflict"
+    ? list.schedule.conflicts.filter((entry) => !list.payload.items.some((item) => item.itemId === entry.itemId))
+    : [];
+  if (unmatchedConflicts.length > 0) notices.push({ tone: "warning",
+    text: t("draft.scheduleConflict", { tasks: [...new Set(unmatchedConflicts.map((item) => item.taskTitle))].join(", ") }) });
+  if (unverified) notices.push({ tone: "warning", text: t("draft.scheduleUnverified") });
+  if (list?.schedule?.status === "partial") notices.push({ tone: "info", text: t("draft.schedulePartial") });
+  if (past) notices.push({ tone: "warning", text: t("draft.timePassed") });
+  if (uncertain || error) notices.push({ tone: "warning", alert: true,
+    text: uncertain ? t("review.confirmationUnknown") : error ?? "" });
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
       <KeyboardAvoidingView
-        className="flex-1 bg-black/40 justify-center px-5"
+        className={`flex-1 bg-black/40 ${editing ? "justify-center px-5" : "justify-end"}`}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         {editing ? (
@@ -209,169 +226,162 @@ export function ReviewListModal({
             )}
           </>
         ) : (
-          <View className="bg-white rounded-2xl p-5 max-h-[85%]">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="font-balooBold text-lg text-secondary">{t("review.title")}</Text>
-              <Pressable onPress={close} accessibilityRole="button" hitSlop={12}>
-                <Text className="font-baloo text-primary">{t("review.close")}</Text>
-              </Pressable>
+          <View className="bg-white rounded-t-[28px] max-h-[88%]">
+            <View className="w-10 h-[5px] rounded-full bg-[#E0E3E7] self-center mt-2 mb-1" />
+            <View className="px-5 pt-1.5 pb-2">
+              <View className="flex-row items-center gap-2">
+                <Text className="flex-1 font-balooBold text-lg text-secondary">
+                  {t("review.title")}{list ? ` · ${list.payload.items.length}` : ""}
+                </Text>
+                <Pressable onPress={close} accessibilityRole="button" accessibilityLabel={t("review.close")} hitSlop={12}
+                  className="w-8 h-8 rounded-full bg-[#F3F5F7] items-center justify-center">
+                  <Ionicons name="close" size={16} color="#444964" />
+                </Pressable>
+              </View>
+              <Text className="font-baloo text-sm text-primary">{t("review.explanation")}</Text>
+              {generating && <View className="flex-row items-center gap-2 rounded-xl bg-[#EAF3FC] px-3 py-2 mt-2">
+                <ActivityIndicator size="small" color="#3D8DE0" />
+                <Text accessibilityLiveRegion="polite" className="flex-1 font-baloo text-sm text-info">
+                  {t("review.generatingDescription")}
+                </Text>
+              </View>}
             </View>
-            <Text className="font-baloo text-sm text-primary mb-3">{t("review.explanation")}</Text>
-            {generating && <Text accessibilityLiveRegion="polite" className="font-baloo text-sm text-info mb-3">
-              {t("review.generatingDescription")}
-            </Text>}
-            <ScrollView keyboardShouldPersistTaps="handled">
-              {!list && <Text className="font-baloo text-secondary py-6">{t("review.empty")}</Text>}
-              {list?.payload.items.map((item) => {
-                const note = item.kind === "note";
-                const itemErrors = errors.filter((code) => code.endsWith(`:${item.itemId}`));
-                return (
-                  <View key={item.itemId} className="border border-gray-200 rounded-xl p-3 mb-3">
-                    <Text className="font-baloo text-xs text-info mb-1">
-                      {t(note ? "review.note" : "review.task")}
-                    </Text>
-                    <Text className="font-balooBold text-base text-secondary">{item.title}</Text>
-                    {item.description && (
-                      <Pressable accessibilityRole="button" accessibilityLabel={t("review.toggleDetails")}
-                        accessibilityState={{ expanded: expanded.has(item.itemId) }}
-                        onPress={() => setExpanded(previous => {
-                          const next = new Set(previous);
-                          if (next.has(item.itemId)) next.delete(item.itemId);
-                          else next.add(item.itemId);
-                          return next;
-                        })}>
-                        <Text className="font-baloo text-secondary text-sm mt-1" numberOfLines={expanded.has(item.itemId) ? undefined : 4}>
-                          {item.description}
-                        </Text>
-                      </Pressable>
-                    )}
-                    {!note && (
-                      <>
-                        <Text className="font-baloo text-primary text-sm mt-2">
-                          {item.date ?? t("draft.datePending")} · {item.startTime ?? "—"} –{" "}
-                          {item.endTime ?? "—"}
-                        </Text>
-                        <Text className="font-baloo text-primary text-xs">{item.timeZoneId}</Text>
-                        {!!item.suggestedFields?.length && (
-                          <Text className="font-baloo text-info text-xs mt-1">
-                            {t("review.suggested", {
-                              fields: item.suggestedFields
-                                .map((field) => t(`editModal.${field}`))
-                                .join(", "),
-                            })}
-                          </Text>
-                        )}
-                        {item.recurrence && (
-                          <Text className="font-baloo text-info text-xs mt-1">
-                            {t("draft.repeats")} ·{" "}
-                            {t(`editModal.frequency.${item.recurrence.frequency}`)}
-                            {item.recurrence.interval > 1 ? ` × ${item.recurrence.interval}` : ""}
-                          </Text>
-                        )}
-                      </>
-                    )}
-                    {itemErrors.map((code) => (
-                      <Text key={code} className="font-baloo text-warning text-xs mt-1">
-                        {message(code)}
-                      </Text>
-                    ))}
-                    <View className="flex-row gap-5 mt-3">
-                      <Pressable
-                        disabled={editorBusy || list.status !== "pending"}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("review.editItem", { title: item.title })}
-                        onPress={() => {
-                          setError(null);
-                          setDirty(false);
-                          setEditing({
-                            item: toReviewItem(item),
-                            list,
-                            version: conversationVersion,
-                          });
-                        }}
-                      >
-                        <Text
-                          className={`font-balooBold text-info ${editorBusy ? "opacity-40" : ""}`}
-                        >
-                          {t("draft.edit")}
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        disabled={editorBusy || list.status !== "pending"}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("review.removeItem", { title: item.title })}
-                        onPress={() => void remove(item.itemId)}
-                      >
-                        <Text
-                          className={`font-baloo text-warning ${editorBusy ? "opacity-40" : ""}`}
-                        >
-                          {t("review.remove")}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })}
-              {list?.schedule?.status === "conflict" && (
-                <Text className="font-baloo text-warning text-sm mb-2">
-                  {t("draft.scheduleConflict", {
-                    tasks: [...new Set(list.schedule.conflicts.map((item) => item.taskTitle))].join(
-                      ", ",
-                    ),
-                  })}
-                </Text>
-              )}
-              {unverified && (
-                <Text className="font-baloo text-warning text-sm mb-2">
-                  {t("draft.scheduleUnverified")}
-                </Text>
-              )}
-              {list?.schedule?.status === "partial" && (
-                <Text className="font-baloo text-info text-xs mb-2">
-                  {t("draft.schedulePartial")}
-                </Text>
-              )}
-              {(uncertain || error) && (
-                <Text accessibilityRole="alert" className="font-baloo text-warning text-sm mb-2">
-                  {uncertain ? t("review.confirmationUnknown") : error}
-                </Text>
-              )}
-              {past && (
-                <Text className="font-baloo text-warning text-sm mb-2">
-                  {t("draft.timePassed")}
-                </Text>
-              )}
-            </ScrollView>
-            {(unverified || uncertain) && (
-              <Pressable
-                disabled={busy || generating}
-                onPress={() => void onRefresh()}
-                className="items-center py-2"
-              >
-                <Text className="font-baloo text-info">{t("review.refresh")}</Text>
-              </Pressable>
-            )}
-            {(list || uncertain) && (
-              <Pressable
-                disabled={disabled}
-                accessibilityRole="button"
-                accessibilityState={{ disabled }}
-                onPress={() => void confirm()}
-                className={`bg-highlight rounded-xl py-3 items-center mt-3 ${disabled ? "opacity-40" : ""}`}
-              >
-                {generating ? (
-                  <Text className="font-balooBold text-white text-base">{t("review.generating")}</Text>
-                ) : busy ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text className="font-balooBold text-white text-base">
-                    {uncertain
-                      ? t("review.retrySave")
-                      : t("review.addAll", { count: list?.payload.items.length ?? 0 })}
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="px-5 pb-2">
+              {!list && <Text className="font-baloo text-primary text-center py-6">{t("review.empty")}</Text>}
+              {list && ([["task", tasks], ["note", notes]] as const).map(([kind, group]) => group.length > 0 && (
+                <View key={kind}>
+                  <Text className="font-inter font-semibold text-xs text-primary pt-3 pb-0.5">
+                    {t(kind === "note" ? "review.note" : "review.task")} · {group.length}
                   </Text>
-                )}
-              </Pressable>
-            )}
+                  {group.map((item, index) => {
+                    const note = item.kind === "note";
+                    const itemErrors = errors.filter((code) => code.endsWith(`:${item.itemId}`));
+                    const when = note ? null : formatDraftWhen(item, t, i18n.resolvedLanguage ?? i18n.language);
+                    const rowDisabled = editorBusy || list.status !== "pending";
+                    const conflicts = note ? [] : [...new Set((list.schedule?.status === "conflict" ? list.schedule.conflicts : [])
+                      .filter((entry) => entry.itemId === item.itemId).map((entry) => entry.taskTitle))];
+                    return (
+                      <View key={item.itemId}
+                        className={`flex-row items-start gap-3 py-3 ${index > 0 ? "border-t border-[#EEF1F3]" : ""}`}>
+                        <View className={`w-[34px] h-[34px] rounded-[11px] items-center justify-center ${
+                          note ? "bg-[#FFF7ED]" : "bg-[#EAF3FC]"}`}>
+                          <Ionicons name={note ? "document-text-outline" : "checkmark-circle-outline"} size={18}
+                            color={note ? "#F59E0B" : "#3D8DE0"} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-inter font-semibold text-base text-secondary">{item.title}</Text>
+                          {item.description && (
+                            <Pressable accessibilityRole="button" accessibilityLabel={t("review.toggleDetails")}
+                              accessibilityState={{ expanded: expanded.has(item.itemId) }}
+                              onPress={() => setExpanded(previous => {
+                                const next = new Set(previous);
+                                if (next.has(item.itemId)) next.delete(item.itemId);
+                                else next.add(item.itemId);
+                                return next;
+                              })}>
+                              <Text className="font-baloo text-primary text-sm mt-0.5"
+                                numberOfLines={expanded.has(item.itemId) ? undefined : 2}>
+                                {item.description}
+                              </Text>
+                            </Pressable>
+                          )}
+                          {!note && (
+                            <View className="flex-row flex-wrap gap-1.5 mt-1.5">
+                              {when ? <CoachChip label={when} icon="time-outline" />
+                                : <CoachChip label={t("draft.datePending")} tone="info" icon="calendar-outline" />}
+                              {item.recurrence && <CoachChip label={formatRecurrence(item.recurrence, t)} tone="info" icon="repeat" />}
+                              {item.timeZoneId !== deviceTimeZone && <CoachChip label={item.timeZoneId} icon="globe-outline" />}
+                              {!!item.suggestedFields?.length && (
+                                <CoachChip tone="info" icon="bulb-outline" label={t("review.suggested", {
+                                  fields: item.suggestedFields.map((field) => t(`editModal.${field}`)).join(", "),
+                                })} />
+                              )}
+                              {conflicts.map((title) => (
+                                <CoachChip key={title} label={t("draft.conflictWith", { task: title })} tone="warning"
+                                  icon="alert-circle-outline" />
+                              ))}
+                            </View>
+                          )}
+                          {itemErrors.map((code) => (
+                            <Text key={code} className="font-baloo text-[#C2410C] text-xs mt-1">{message(code)}</Text>
+                          ))}
+                        </View>
+                        <View className={`flex-row gap-1.5 ${rowDisabled ? "opacity-40" : ""}`}>
+                          <Pressable
+                            disabled={rowDisabled}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("review.editItem", { title: item.title })}
+                            className="w-8 h-8 rounded-full bg-[#F3F5F7] items-center justify-center"
+                            onPress={() => {
+                              setError(null);
+                              setDirty(false);
+                              setEditing({
+                                item: toReviewItem(item),
+                                list,
+                                version: conversationVersion,
+                              });
+                            }}
+                          >
+                            <Ionicons name="pencil" size={14} color="#8C8C8C" />
+                          </Pressable>
+                          <Pressable
+                            disabled={rowDisabled}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("review.removeItem", { title: item.title })}
+                            className="w-8 h-8 rounded-full bg-[#F3F5F7] items-center justify-center"
+                            onPress={() => void remove(item.itemId)}
+                          >
+                            <Ionicons name="trash-outline" size={14} color="#8C8C8C" />
+                          </Pressable>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
+            </ScrollView>
+            <View className="px-5 pt-2.5 pb-8 border-t border-[#EEF1F3] gap-2">
+              {notices.map((notice) => (
+                <View key={notice.text} accessibilityRole={notice.alert ? "alert" : undefined}
+                  className={`flex-row items-start gap-2 rounded-xl px-3 py-2 ${notice.tone === "warning" ? "bg-[#FFF7ED]" : "bg-[#EAF3FC]"}`}>
+                  <Ionicons name={notice.tone === "warning" ? "warning-outline" : "information-circle-outline"} size={15}
+                    color={notice.tone === "warning" ? "#C2410C" : "#3D8DE0"} style={{ marginTop: 1 }} />
+                  <Text className={`flex-1 font-baloo text-sm ${notice.tone === "warning" ? "text-[#C2410C]" : "text-info"}`}>
+                    {notice.text}
+                  </Text>
+                </View>
+              ))}
+              {(unverified || uncertain) && (
+                <Pressable
+                  disabled={busy || generating}
+                  onPress={() => void onRefresh()}
+                  className="items-center py-1.5"
+                >
+                  <Text className="font-balooBold text-info">{t("review.refresh")}</Text>
+                </Pressable>
+              )}
+              {(list || uncertain) && (
+                <Pressable
+                  disabled={disabled}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled }}
+                  onPress={() => void confirm()}
+                  className={`bg-highlight rounded-2xl py-3.5 items-center ${disabled ? "opacity-40" : ""}`}
+                >
+                  {generating ? (
+                    <Text className="font-balooBold text-white text-base">{t("review.generating")}</Text>
+                  ) : busy ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text className="font-balooBold text-white text-base">
+                      {uncertain
+                        ? t("review.retrySave")
+                        : t("review.addAll", { count: list?.payload.items.length ?? 0 })}
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>

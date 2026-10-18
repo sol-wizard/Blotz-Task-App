@@ -17,7 +17,7 @@ export function FollowUpChips({ items, disabled, onSend }: {
       {items.map((item) => (
         <Pressable key={item} disabled={disabled} accessibilityRole="button" accessibilityLabel={item}
           onPress={() => onSend(item)}
-          className={`rounded-full border border-gray-200 bg-white px-3 py-2 ${disabled ? "opacity-40" : ""}`}>
+          className={`rounded-full border border-[#E3EDCB] bg-white px-3.5 py-2 ${disabled ? "opacity-40" : ""}`}>
           <Text className="font-baloo text-sm text-secondary">{item}</Text>
         </Pressable>
       ))}

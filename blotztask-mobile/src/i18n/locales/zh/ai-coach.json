@@ -109,7 +109,10 @@
     "repeats": "重复",
     "discarded": "已丢弃",
     "expired": "已过期",
-    "timePassed": "这个时间已经过去，请先编辑再保存。"
+    "timePassed": "这个时间已经过去，请先编辑再保存。",
+    "conflictWith": "与「{{task}}」冲突",
+    "timePassedShort": "时间已过",
+    "tomorrow": "明天"
   },
   "editModal": {
     "title": "编辑任务",

@@ -51,27 +51,60 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
   onSaveDetail: (reason: string | null, detail: string | null) => Promise<boolean>;
 }) {
   const { t } = useTranslation("aiCoach");
-  const isUser = item.role === "user";
+  if (item.role === "user") {
+    return (
+      <View className="my-1.5 max-w-[82%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-secondary">
+        <Text className="font-baloo text-base text-white">{item.text}</Text>
+      </View>
+    );
+  }
   return (
-    <View className={`my-1 ${isUser ? "max-w-[85%] self-end" : "self-stretch"}`}>
-      {isUser ? (
-        <View className="rounded-2xl px-4 py-2.5 bg-highlight">
-          <Text className="font-baloo text-base text-white">{item.text}</Text>
-        </View>
-      ) : (
-        // Assistant replies are full width so headings and lists have room to breathe.
-        <View className="px-1">
-          <CoachMarkdown text={item.text} />
-          {item.streaming && <StreamingCursor />}
-        </View>
-      )}
-      {!isUser && item.taskContextRead && (
-        <Text className="font-baloo text-xs text-primary mt-1 ml-2">
-          {t("chat.taskContextRead")}
-        </Text>
-      )}
-      {!isUser && !item.streaming && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
-        busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
+    <View className="my-1.5 flex-row gap-2 self-stretch">
+      <CoachAvatar />
+      {/* Assistant replies take the remaining width so headings and lists have room to breathe. */}
+      <View className="flex-1">
+        {item.taskContextRead && (
+          <View className="self-start flex-row items-center gap-1 rounded-full bg-[#EAF3FC] px-2.5 py-0.5 mb-1">
+            <Ionicons name="search" size={11} color="#3D8DE0" />
+            <Text className="font-baloo text-xs text-info">{t("chat.taskContextRead")}</Text>
+          </View>
+        )}
+        <CoachMarkdown text={item.text} />
+        {item.streaming && <StreamingCursor />}
+        {!item.streaming && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
+          busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
+      </View>
+    </View>
+  );
+}
+
+function CoachAvatar() {
+  return (
+    <View className="w-7 h-7 rounded-full bg-checked items-center justify-center mt-0.5">
+      <Text className="font-balooExtraBold text-sm text-white">B</Text>
+    </View>
+  );
+}
+
+/** Three pulsing dots next to the coach avatar while the first token is pending. */
+function TypingIndicator({ label }: { label: string }) {
+  const [dots] = useState(() => [0, 1, 2].map(() => new Animated.Value(0.3)));
+  useEffect(() => {
+    const loop = Animated.loop(Animated.stagger(160, dots.map(dot => Animated.sequence([
+      Animated.timing(dot, { toValue: 1, duration: 320, useNativeDriver: true }),
+      Animated.timing(dot, { toValue: 0.3, duration: 320, useNativeDriver: true }),
+    ]))));
+    loop.start();
+    return () => loop.stop();
+  }, [dots]);
+  return (
+    <View className="my-1.5 flex-row gap-2" accessibilityLabel={label} accessibilityLiveRegion="polite">
+      <CoachAvatar />
+      <View className="flex-row items-center gap-1 rounded-[20px] rounded-tl-md bg-white px-4 py-3">
+        {dots.map((opacity, index) => (
+          <Animated.View key={index} style={{ opacity }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+        ))}
+      </View>
     </View>
   );
 }
@@ -197,10 +230,10 @@ export function ExecutionChatPanel() {
     if (snapshot?.generationStatus !== "failed") return null;
     if (snapshot.generationError === "quota") {
       return (
-        <View className="bg-white border border-gray-200 rounded-2xl p-4 my-2">
+        <View className="bg-white rounded-3xl p-4 my-2 ml-9">
           <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
           <Pressable
-            className="bg-highlight rounded-xl py-2 items-center mt-3"
+            className="bg-highlight rounded-2xl py-3 items-center mt-3"
             onPress={() => remindBeforeLeaving(() => router.push("/task-create"))}
           >
             <Text className="font-balooBold text-white text-sm">{t("chat.createManually")}</Text>
@@ -215,8 +248,8 @@ export function ExecutionChatPanel() {
           ? "chat.modelUnavailable"
           : "chat.generationFailed";
     return (
-      <View className="bg-white border border-gray-200 rounded-2xl p-3 my-2">
-        <Text className="font-baloo text-sm text-primary">{t(key)}</Text>
+      <View className="bg-[#FFF7ED] rounded-2xl px-3 py-2.5 my-2 ml-9">
+        <Text className="font-baloo text-sm text-[#C2410C]">{t(key)}</Text>
       </View>
     );
   };
@@ -291,7 +324,7 @@ export function ExecutionChatPanel() {
             <Text className="font-baloo text-warning p-3">{t("chat.startError")}</Text>
           </Pressable>}
           {reconnecting ? <Text className="font-baloo text-primary p-3">{t("chat.reconnecting")}</Text>
-            : generating && !messages.some(item => item.streaming) && <Text className="font-baloo text-primary p-3">{t("chat.thinking")}</Text>}
+            : generating && !messages.some(item => item.streaming) && <TypingIndicator label={t("chat.thinking")} />}
           {blockedBanner()}
         </View>}
         renderItem={({ item, index }) => {
@@ -299,9 +332,13 @@ export function ExecutionChatPanel() {
           const active = item.conversationId === snapshot?.conversationId;
           return <View>
             {(!older || dayKey(older.createdAt) !== dayKey(item.createdAt)) &&
-              <Text className="font-baloo text-xs text-primary text-center my-3">{dateLabel(item.createdAt)}</Text>}
-            {item.topicStart && <View className="border-t border-gray-200 mt-3 mb-2 pt-2">
-              <Text className="font-baloo text-xs text-primary text-center">{t("chat.topicStart")}</Text>
+              <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
+                <Text className="font-baloo text-xs text-primary">{dateLabel(item.createdAt)}</Text>
+              </View>}
+            {item.topicStart && <View className="flex-row items-center gap-3 mt-3 mb-2">
+              <View className="flex-1 h-px bg-gray-200" />
+              <Text className="font-baloo text-xs text-primary">{t("chat.topicStart")}</Text>
+              <View className="flex-1 h-px bg-gray-200" />
             </View>}
             <MessageBubble item={item} rateable={active} feedback={feedbackByMessage[item.id]}
               feedbackBusy={feedbackSaving[item.id] === true}
@@ -357,11 +394,12 @@ export function ExecutionChatPanel() {
         }}
         onConfirm={confirmAll} onRefresh={refreshReviewList} />
 
-      <View className="flex-row items-center px-4 py-2 gap-2">
+      <View className="mx-4 mt-2 mb-2 flex-row items-center gap-1 rounded-[26px] bg-white pl-4 pr-1.5 py-1.5"
+        style={{ shadowColor: "#444964", shadowOpacity: 0.07, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
         <TextInput
-          className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 font-baloo text-base text-secondary bg-white"
+          className="flex-1 py-1.5 font-baloo text-base text-secondary"
           placeholder={isRecording ? t("chat.listening") : t("chat.inputPlaceholder")}
-          placeholderTextColor={isRecording ? "#F56767" : "#8C8C8C"}
+          placeholderTextColor={isRecording ? "#F56767" : "#A3A3A3"}
           value={input}
           onChangeText={setInput}
           editable={snapshot !== null && !isRecording}
@@ -370,9 +408,7 @@ export function ExecutionChatPanel() {
           maxLength={2000}
         />
         <Pressable
-          className={`w-11 h-11 rounded-full items-center justify-center ${
-            isRecording ? "bg-warning" : "bg-gray-200"
-          }`}
+          className={`w-9 h-9 rounded-full items-center justify-center ${isRecording ? "bg-warning" : ""}`}
           disabled={!canSend || transcribing}
           onPressIn={() => startListening()}
           onPressOut={() => void stopAndUpload()}
@@ -381,17 +417,17 @@ export function ExecutionChatPanel() {
           {transcribing ? (
             <ActivityIndicator size="small" color="#8C8C8C" />
           ) : (
-            <Ionicons name="mic" size={20} color={isRecording ? "#FFFFFF" : "#8C8C8C"} />
+            <Ionicons name="mic" size={19} color={isRecording ? "#FFFFFF" : "#8C8C8C"} />
           )}
         </Pressable>
         <Pressable
-          className={`w-11 h-11 rounded-full items-center justify-center ${
+          className={`w-9 h-9 rounded-full items-center justify-center ${
             canSend && input.trim().length > 0 ? "bg-highlight" : "bg-gray-200"
           }`}
           disabled={!canSend || input.trim().length === 0}
           onPress={() => void handleSend()}
         >
-          <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
+          <Ionicons name="arrow-up" size={18} color="#FFFFFF" />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
