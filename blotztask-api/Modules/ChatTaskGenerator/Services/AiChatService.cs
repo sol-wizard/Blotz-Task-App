@@ -87,8 +87,11 @@ public class AiChatService(
 
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
+            var drafts = context.Tools.DescribeDrafts();
+            var message = drafts == null ? resolvedMessage : $"{resolvedMessage}\n\n{drafts}";
+
             var runSw = Stopwatch.StartNew();
-            var response = await context.Agent.RunAsync(resolvedMessage, context.Session, cancellationToken: ct);
+            var response = await context.Agent.RunAsync(message, context.Session, cancellationToken: ct);
             runSw.Stop();
 
             inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
