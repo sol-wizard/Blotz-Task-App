@@ -78,6 +78,8 @@ export interface ConversationSnapshotDto {
     createdAt: string; topicStart: boolean; draftSnapshot: ArtifactEnvelopeDto[] }[];
   artifacts: ArtifactEnvelopeDto[];
   allowedActions: ConversationActionWire[];
+  /** Tap-to-send next messages for the latest reply; absent from older servers. */
+  followUps?: string[];
   debugUsage?: {
     inputTokens: number;
     outputTokens: number;

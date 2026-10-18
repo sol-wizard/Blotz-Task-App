@@ -10,7 +10,7 @@ public sealed record ConversationSnapshotDto(
     string GenerationStatus, string? GenerationError,
     IReadOnlyList<ChatMessageDto> Messages, IReadOnlyList<ArtifactEnvelopeDto> Artifacts,
     IReadOnlyList<string> AllowedActions, DebugUsageDto? DebugUsage,
-    ArtifactEnvelopeDto? PendingList = null);
+    ArtifactEnvelopeDto? PendingList = null, IReadOnlyList<string>? FollowUps = null);
 public sealed record ChatMessageDto(Guid Id, string Role, string Text, bool TaskContextRead,
     DateTimeOffset CreatedAt, bool TopicStart, IReadOnlyList<ArtifactEnvelopeDto> DraftSnapshot);
 public sealed record DebugUsageDto(long InputTokens, long OutputTokens, long TotalTokens, decimal? EstUsd);
@@ -46,7 +46,8 @@ public static class ConversationSnapshotProjector
                 usage.EstimateUsd(UsageOptions?.InputTokenUsdPerMillion ?? 0, UsageOptions?.OutputTokenUsdPerMillion ?? 0)),
             conversation.Drafts.Where(draft => draft.IsReviewList
                 && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing)
-                .Select(draft => ToDto(draft, busy)).SingleOrDefault());
+                .Select(draft => ToDto(draft, busy)).SingleOrDefault(),
+            conversation.RunningTurnId.HasValue ? [] : conversation.FollowUps);
     }
 
     public static ArtifactEnvelopeDto ToDto(ProposalSet draft, bool busy)

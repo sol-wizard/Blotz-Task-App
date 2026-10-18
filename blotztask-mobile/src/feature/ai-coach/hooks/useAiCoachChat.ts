@@ -19,7 +19,7 @@ import {
 } from "../models/ai-coach-dto";
 import { reviewedItems, prepareReviewConfirmation, reviewConfirmationSaved, isDefiniteConfirmationRejection, ReviewConfirmation } from "../models/review-list";
 import * as aiCoachService from "../services/ai-coach-service";
-import { streamCoachMessage } from "../services/coach-stream-service";
+import { MessageSource, streamCoachMessage } from "../services/coach-stream-service";
 
 export interface ChatItem {
   id: string;
@@ -203,7 +203,7 @@ export function useAiCoachChat() {
   }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, pendingConfirmation, streaming]);
 
   const send = useCallback(
-    async (text: string): Promise<string | null> => {
+    async (text: string, source?: MessageSource): Promise<string | null> => {
       if (!snapshot || busy.current || pendingConfirmation || snapshot.generationStatus === "running") return "NotReady";
       const content = text.trim();
       if (!content) return null;
@@ -261,6 +261,7 @@ export function useAiCoachChat() {
             }
           },
           controller.signal,
+          source,
         );
         if (epoch !== lifecycle.current) return null;
         applySnapshot(next);

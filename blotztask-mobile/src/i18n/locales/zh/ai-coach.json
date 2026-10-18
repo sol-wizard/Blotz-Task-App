@@ -52,7 +52,8 @@
     "busy": "请等待当前回复或保存完成。",
     "actionFailed": "聊天更新失败，请重试。",
     "generating": "正在生成回复",
-    "reconnecting": "连接中断，正在同步结果…"
+    "reconnecting": "连接中断，正在同步结果…",
+    "followUps": "推荐回复"
   },
   "feedback": {
     "good": "回复有帮助",

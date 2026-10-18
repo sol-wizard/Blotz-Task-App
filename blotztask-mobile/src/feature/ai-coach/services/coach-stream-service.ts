@@ -7,6 +7,9 @@ import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
 import { ConversationSnapshotDto } from "../models/ai-coach-dto";
 import { CoachStreamEvent, createCoachStreamParser } from "../models/coach-stream";
 
+/** "followup" marks a tapped suggestion; the server records it for usage metrics. */
+export type MessageSource = "followup";
+
 class CoachStreamError extends Error {
   constructor(public response: { status: number; data: unknown }) {
     super("Coach stream request failed");
@@ -20,6 +23,7 @@ export async function streamCoachMessage(
   messageId: string,
   onEvent: (event: CoachStreamEvent) => void,
   signal: AbortSignal,
+  source?: MessageSource,
 ): Promise<ConversationSnapshotDto> {
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -35,7 +39,8 @@ export async function streamCoachMessage(
     touch();
     if (!API_CONFIG.baseURL) throw new Error("API base URL is missing");
     const url = `${API_CONFIG.baseURL.replace(/\/$/, "")}/ai-coach/conversations/${conversationId}/messages/stream`;
-    const body = JSON.stringify({ messageId, content, expectedVersion, timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone });
+    const body = JSON.stringify({ messageId, content, expectedVersion, source,
+      timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone });
     const request = (token: string | null) => fetch(url, {
       method: "POST", body, signal: controller.signal,
       headers: { "Content-Type": "application/json", Accept: "text/event-stream",

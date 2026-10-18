@@ -25,6 +25,7 @@ import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
 import { CoachMarkdown } from "./coach-markdown";
 import { ReviewListBar } from "./review-list-bar";
+import { FollowUpChips } from "./follow-up-chips";
 import { ReviewListModal } from "./review-list-modal";
 
 function StreamingCursor() {
@@ -140,6 +141,13 @@ export function ExecutionChatPanel() {
       Toast.show({ type: "error", text1: t("chat.sendError") });
     }
     if (nearLatest.current) scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
+  // A tapped follow-up leaves any draft in the input untouched.
+  const handleFollowUp = async (text: string) => {
+    if (!canSend) return;
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
+    if (await send(text, "followup")) Toast.show({ type: "error", text1: t("chat.sendError") });
   };
 
   const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
@@ -321,6 +329,8 @@ export function ExecutionChatPanel() {
         </Text>
       )}
 
+      {!generating && <FollowUpChips items={snapshot?.followUps ?? []} disabled={!canSend}
+        onSend={(text) => void handleFollowUp(text)} />}
       <ReviewListBar count={pendingCount} saving={pendingList?.status === "processing"}
         generating={streaming || snapshot?.generationStatus === "running"}
         onOpen={() => setReviewVisible(true)} />

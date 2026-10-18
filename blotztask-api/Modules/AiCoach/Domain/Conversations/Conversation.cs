@@ -34,6 +34,8 @@ public sealed class Conversation
     public HashSet<Guid> CompletedMessages { get; } = [];
     [JsonInclude] public string? Summary { get; private set; }
     [JsonInclude] public int SummarizedMessageCount { get; private set; }
+    /// <summary>One-tap next messages for the latest reply; cleared when the next turn starts.</summary>
+    [JsonInclude] public IReadOnlyList<string> FollowUps { get; private set; } = [];
 
     public void Touch() => Version++;
 
@@ -68,6 +70,7 @@ public sealed class Conversation
         RunningTurnId = messageId;
         RunningTurnStartedAt = startedAt;
         GenerationError = null;
+        FollowUps = [];
         if (Messages.All(message => message.Id != messageId))
         {
             InitialTimeZoneId ??= TimeZoneId;
@@ -81,7 +84,8 @@ public sealed class Conversation
     /// <summary>Apply a whole turn once; stale or cancelled results never commit draft changes.</summary>
     public TurnCommitStatus CompleteTurn(Guid messageId, int expectedVersion, string? text, string? error,
         IReadOnlyList<GatewayMessage> turnHistory, IReadOnlyList<ProposalSet> drafts,
-        string? summary, int summarizedCount, bool taskContextRead = false, DateTimeOffset? completedAt = null)
+        string? summary, int summarizedCount, bool taskContextRead = false, DateTimeOffset? completedAt = null,
+        IReadOnlyList<string>? followUps = null)
     {
         if (EndedAt.HasValue) return TurnCommitStatus.NoLongerActive;
         if (RunningTurnId != messageId) return TurnCommitStatus.NoLongerActive;
@@ -92,8 +96,11 @@ public sealed class Conversation
         }
         error ??= string.IsNullOrWhiteSpace(text) ? "invalid_response" : null;
         if (error is null)
+        {
             AcceptReply(messageId, text!, turnHistory, drafts, summary, summarizedCount, taskContextRead,
                 completedAt ?? DateTimeOffset.UtcNow);
+            FollowUps = followUps?.ToArray() ?? [];
+        }
         FinishTurn(messageId, error);
         return error is null ? TurnCommitStatus.Committed : TurnCommitStatus.Failed;
     }
@@ -155,12 +162,21 @@ public sealed class Conversation
         SummarizedMessageCount = 0;
     }
 
+    private const string DraftEventPrefix = "App draft event (data): ";
+    private static readonly System.Text.Json.JsonSerializerOptions DraftEventJson =
+        new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
     public void RecordDraftEvent(string action, ProposalSet draft)
     {
         UpdateDraftSnapshots(draft);
+        // Each event carries the whole draft, so repeated edits in a row only need the latest one.
+        if (History.LastOrDefault() is GatewaySystemMessage { Content: var last }
+            && last.StartsWith(DraftEventPrefix, StringComparison.Ordinal)
+            && last.Contains($"\"Id\":\"{draft.Id}\"", StringComparison.Ordinal))
+            History.RemoveAt(History.Count - 1);
         // Application facts are supplied as data, not as a new user instruction.
-        History.Add(new GatewaySystemMessage("App draft event (data): " +
-            System.Text.Json.JsonSerializer.Serialize(new { action, draft.Id, draft.Status, draft.Proposals })));
+        History.Add(new GatewaySystemMessage(DraftEventPrefix +
+            System.Text.Json.JsonSerializer.Serialize(new { action, draft.Id, draft.Status, draft.Proposals }, DraftEventJson)));
         Touch();
     }
 

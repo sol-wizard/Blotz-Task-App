@@ -31,7 +31,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
-        bool reviewListEnabled = false, Func<string, object, Task>? stream = null)
+        bool reviewListEnabled = false, Func<string, object, Task>? stream = null, string? source = null)
     {
         if (timeZoneId is not null)
         {
@@ -83,7 +83,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             conversationId, baseVersion);
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "user_message", new
         {
-            messageId, content, conversationVersion = baseVersion,
+            messageId, content, conversationVersion = baseVersion, source,
             mode = request.Mode.ToString(), promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.VersionFor(request.Mode),
             toolContractVersion = ToolExecutor.ContractVersion,
         });
@@ -151,7 +151,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             if (ct.IsCancellationRequested) error = "cancelled";
             commit = conversation.CompleteTurn(messageId, baseVersion, result?.Text, error,
                 result?.TurnHistory ?? [], result?.Drafts ?? [], result?.Summary, result?.SummarizedMessageCount ?? 0,
-                result?.TaskContextRead ?? false, clock.GetUtcNow());
+                result?.TaskContextRead ?? false, clock.GetUtcNow(), result?.FollowUps);
             logger.LogInformation("AiCoach turn commit for {ConversationId}: {CommitStatus}", conversationId, commit);
             await store.SaveAsync(conversation, CancellationToken.None);
             logger.LogInformation("AiCoach conversation state saved for {ConversationId} with result {TurnResult} at version {ConversationVersion}",
@@ -166,6 +166,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             await trace.RecordAsync(userId, conversationId, messageId, "assistant_message", new
             {
                 assistantMessage.Id, assistantMessage.Content, assistantMessage.TaskContextRead,
+                followUps = result?.FollowUps ?? [],
             }, assistantMessage.Id);
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "turn_result", new
         {

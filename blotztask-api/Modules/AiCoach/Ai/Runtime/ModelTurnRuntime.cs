@@ -24,7 +24,7 @@ public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
     string? Summary, int SummarizedMessageCount,
     int InputTokens, int OutputTokens, int TotalTokens, int ModelCallCount,
-    bool TaskContextRead = false);
+    bool TaskContextRead = false, IReadOnlyList<string>? FollowUps = null);
 
 public interface IModelTurnRuntime
 {
@@ -71,9 +71,11 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 }
                 var lastCall = calls == limits.MaxModelCallsPerTurn - 1 || executor.BudgetExhausted;
                 await Emit("reply.reset", new { });
+                var filter = request.Stream is null ? null : new FollowUpStreamFilter(text => Emit("reply.delta", new { text }));
                 var completion = await Call(new ModelGatewayRequest(system, transcript,
                     lastCall ? [] : executor.AvailableTools, MaxOutputTokens: limits.MaxOutputTokens,
-                    OnTextDelta: request.Stream is null ? null : text => Emit("reply.delta", new { text })));
+                    OnTextDelta: filter is null ? null : filter.WriteAsync));
+                if (filter is not null) await filter.FlushAsync();
                 if (completion.FinishReason == ModelFinishReason.ContentFilter)
                 {
                     logger.LogWarning("AiCoach response filtered for {ConversationId}", request.ConversationId);
@@ -86,15 +88,17 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 }
                 if (completion.ToolCalls.Count == 0)
                 {
-                    if (completion.FinishReason != ModelFinishReason.Stop || string.IsNullOrWhiteSpace(completion.AssistantText))
+                    var (finalReply, followUps) = FollowUps.Extract(completion.AssistantText ?? "");
+                    if (completion.FinishReason != ModelFinishReason.Stop || string.IsNullOrWhiteSpace(finalReply))
                     {
                         logger.LogWarning("AiCoach returned an invalid response for {ConversationId}: finish reason {FinishReason}",
                             request.ConversationId, completion.FinishReason);
                         return Result(null, "invalid_response");
                     }
                     ct.ThrowIfCancellationRequested();
-                    turn.Add(new GatewayAssistantMessage(completion.AssistantText, []));
-                    return Result(completion.AssistantText, null);
+                    // History keeps only the visible reply, so the model never imitates an old block.
+                    turn.Add(new GatewayAssistantMessage(finalReply, []));
+                    return Result(finalReply, null, followUps);
                 }
                 if (lastCall)
                 {
@@ -102,7 +106,8 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                         request.ConversationId, completion.ToolCalls.Count);
                     return Result(null, "tool_limit");
                 }
-                var assistant = new GatewayAssistantMessage(completion.AssistantText, completion.ToolCalls);
+                var toolRoundText = completion.AssistantText is null ? null : FollowUps.Extract(completion.AssistantText).Reply;
+                var assistant = new GatewayAssistantMessage(toolRoundText, completion.ToolCalls);
                 // Tool-round commentary is not a persisted assistant reply.
                 await Emit("reply.reset", new { });
                 transcript.Add(assistant);
@@ -250,7 +255,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             return completion;
         }
 
-        ModelTurnRunResult Result(string? text, string? error)
+        ModelTurnRunResult Result(string? text, string? error, IReadOnlyList<string>? followUps = null)
         {
             logger.LogInformation(
                 "AiCoach model turn finished for {ConversationId}: {ErrorCode}, {ModelCallCount} model calls, {ToolCallCount} tool calls, {InputTokens} input tokens, {OutputTokens} output tokens",
@@ -259,7 +264,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 logger.LogInformation("AiCoach final response for {ConversationId}: {AssistantText}",
                     request.ConversationId, text);
             return new(text, error, turn, workspace.Drafts, summary, covered, input, output, total, calls,
-                taskContextRead);
+                taskContextRead, followUps ?? []);
         }
 
         Task Trace(string kind, object payload) => request.Trace?.Invoke(kind, payload) ?? Task.CompletedTask;

@@ -52,7 +52,8 @@
     "busy": "Wait for the current reply or save to finish.",
     "actionFailed": "Could not update your chat. Please try again.",
     "generating": "Generating reply",
-    "reconnecting": "Connection interrupted. Syncing the result…"
+    "reconnecting": "Connection interrupted. Syncing the result…",
+    "followUps": "Suggested replies"
   },
   "feedback": {
     "good": "Helpful reply",

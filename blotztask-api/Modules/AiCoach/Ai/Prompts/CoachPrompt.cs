@@ -5,8 +5,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 public static class CoachPrompt
 {
     public const string PromptVersion = "coach-prompt-28";
-    public const string UnifiedPromptVersion = "coach-prompt-unified-4";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-2";
+    public const string UnifiedPromptVersion = "coach-prompt-unified-5";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-3";
 
     public static string ForReviewList(AiCoachMode mode) => For(mode)
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -73,6 +73,19 @@ public static class CoachPrompt
         Only a successful app-side confirmation saves tasks. Always write a normal reply as well.
 
         Use list_tasks only when the user's existing tasks matter.
+
+        When there are natural next steps the user is likely to want, end with a follow-up block
+        after everything else, one message per line, which the app shows as tap-to-send buttons:
+        <followups>
+        Make me a 7-day plan
+        Give me a vocabulary list
+        </followups>
+        - Two or three items, each at most 20 Chinese characters or 8 English words, in the user's
+          language and written as the user's own words.
+        - Each must be something you can deliver in the next reply. Do not repeat the question
+          you just asked or offer what you already gave.
+        - With follow-ups, do not also list "I can help you with..." offers in the reply text.
+        - Omit the block for small talk, venting, a simple confirmation or when no next step fits.
         """;
 
     private const string SharedGuidance = """

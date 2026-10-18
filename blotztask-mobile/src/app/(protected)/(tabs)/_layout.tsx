@@ -1,4 +1,5 @@
 import { Tabs, router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
@@ -98,6 +99,11 @@ export default function ProtectedTabsLayout() {
               <Pressable
                 className="flex-1 items-center justify-center"
                 onPress={() => router.push("/ai-home")}
+                onLongPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/ai-task-sheet");
+                }}
+                delayLongPress={350}
               >
                 <GradientCircle size={58}>
                   <ASSETS.whiteBun

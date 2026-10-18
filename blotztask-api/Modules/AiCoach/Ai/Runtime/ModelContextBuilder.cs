@@ -98,13 +98,15 @@ public sealed class ModelContextBuilder(IOptions<AiCoachModuleOptions> options, 
         var end = start;
         var size = 0;
         var safeEnd = start;
-        // Keep the latest user message and its full turn outside the summary.
+        // Keep the latest user message and its full turn outside the summary. App events are also safe
+        // cut points: tool results directly follow their call, so no event sits inside a call/result pair.
+        // Cutting only at user messages left a long turn plus its draft events unsummarizable.
         for (var index = start; index < history.Count - 1; index++)
         {
             size += Size(new[] { history[index] });
             if (size > budget) break;
             end = index + 1;
-            if (history[end] is GatewayUserMessage) safeEnd = end;
+            if (history[end] is GatewayUserMessage or GatewaySystemMessage) safeEnd = end;
         }
         return history.Skip(start).Take(safeEnd - start).ToList();
     }
