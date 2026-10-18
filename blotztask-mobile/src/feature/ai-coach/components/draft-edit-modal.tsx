@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import TimePicker from "@/feature/task-add-edit/components/time-picker";
@@ -22,21 +22,38 @@ export function DraftEditModal({
   busy,
   onCancel,
   onSave,
+  embedded = false,
+  onDirtyChange,
 }: {
   visible: boolean;
   initial: EditedDraftItemDto;
   busy: boolean;
   onCancel: () => void;
   onSave: (edited: EditedDraftItemDto) => void;
+  embedded?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { t } = useTranslation("aiCoach");
   const [title, setTitle] = useState(initial.title);
+  const [description, setDescription] = useState(initial.description ?? "");
   const [date, setDate] = useState(initial.date);
   const [startTime, setStartTime] = useState(initial.startTime);
   const [endTime, setEndTime] = useState(initial.endTime);
   const [recurrence, setRecurrence] = useState(initial.recurrence);
   const [pickerTarget, setPickerTarget] = useState<PickerTarget>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const dirty = title !== initial.title || description !== (initial.description ?? "") || date !== initial.date ||
+    startTime !== initial.startTime || endTime !== initial.endTime || JSON.stringify(recurrence) !== JSON.stringify(initial.recurrence);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  const cancel = () => {
+    if (busy) return;
+    if (!dirty) { onCancel(); return; }
+    Alert.alert(t("review.discardEditTitle"), t("review.discardEditDescription"), [
+      { text: t("review.keepEditing"), style: "cancel" },
+      { text: t("review.discardEdit"), style: "destructive", onPress: onCancel },
+    ]);
+  };
 
   const save = () => {
     if (!title.trim()) {
@@ -57,11 +74,13 @@ export function DraftEditModal({
         return;
       }
     }
-    onSave({ ...initial, title: title.trim(), date, startTime, endTime, recurrence });
+    onSave({ ...initial, title: title.trim(), description: description.trim() || null, date, startTime, endTime, recurrence });
   };
 
   const fieldRow = (label: string, value: string | null, target: PickerTarget) => (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
       className="flex-row justify-between items-center py-3 border-b border-gray-100"
       disabled={busy}
       onPress={() => setPickerTarget(pickerTarget === target ? null : target)}
@@ -71,9 +90,7 @@ export function DraftEditModal({
     </Pressable>
   );
 
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View className="flex-1 bg-black/40 justify-center px-5">
+  const editor = (
         <View className="bg-white rounded-2xl p-5 max-h-[85%]">
           <Text className="font-balooBold text-lg text-secondary mb-3">{t("editModal.title")}</Text>
           <ScrollView keyboardShouldPersistTaps="handled">
@@ -81,9 +98,16 @@ export function DraftEditModal({
             <TextInput
               className="border border-gray-200 rounded-xl px-3 py-2 font-baloo text-base text-secondary mb-2"
               value={title}
+              accessibilityLabel={t("editModal.taskTitle")}
               onChangeText={setTitle}
               editable={!busy}
             />
+
+            <Text className="font-baloo text-primary text-sm mb-1">{t("review.description")}</Text>
+            <TextInput multiline value={description} onChangeText={setDescription} editable={!busy}
+              accessibilityLabel={t("review.description")}
+              className="border border-gray-200 rounded-xl px-3 py-2 font-baloo text-base text-secondary mb-2 min-h-20"
+              textAlignVertical="top" />
 
             {fieldRow(t(initial.recurrence ? "editModal.startDate" : "editModal.date"), date, "date")}
             {pickerTarget === "date" && (
@@ -174,7 +198,7 @@ export function DraftEditModal({
             <Pressable
               className="flex-1 py-3 rounded-xl bg-gray-100 items-center"
               disabled={busy}
-              onPress={onCancel}
+              onPress={cancel}
             >
               <Text className="font-balooBold text-secondary">{t("editModal.cancel")}</Text>
             </Pressable>
@@ -187,7 +211,10 @@ export function DraftEditModal({
             </Pressable>
           </View>
         </View>
-      </View>
+  );
+  return embedded ? editor : (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={cancel}>
+      <View className="flex-1 bg-black/40 justify-center px-5">{editor}</View>
     </Modal>
   );
 }

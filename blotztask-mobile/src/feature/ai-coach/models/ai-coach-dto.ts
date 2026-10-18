@@ -2,6 +2,7 @@ export type ConversationActionWire =
   | "send_message"
   | "start_now"
   | "add_to_task_list"
+  | "add_all"
   | "reject_draft"
   | "edit_draft";
 export type AvailableAiCoachMode = "Execution" | "Clarify" | "Companion" | "Unified";
@@ -22,6 +23,9 @@ export interface DraftRecurrenceDto {
 }
 
 export interface TaskDraftItemDto {
+  kind: "task" | "note";
+  persistedNoteId: string | null;
+  suggestedFields: ("date" | "startTime" | "endTime")[];
   itemId: string;
   title: string;
   description: string | null;
@@ -50,6 +54,9 @@ export interface DraftScheduleAssessmentDto {
 }
 
 export interface ArtifactEnvelopeDto {
+  isReviewList: boolean;
+  canConfirm: boolean;
+  validationErrors: string[];
   id: string;
   version: number;
   status: "pending" | "processing" | "completed" | "rejected" | "expired";
@@ -60,6 +67,7 @@ export interface ArtifactEnvelopeDto {
 }
 
 export interface ConversationSnapshotDto {
+  pendingList: ArtifactEnvelopeDto | null;
   protocolVersion: number;
   conversationId: string;
   conversationVersion: number;
@@ -93,6 +101,7 @@ export interface ChatTimelinePageDto {
 }
 
 export interface EditedDraftItemDto {
+  kind?: "task" | "note";
   itemId: string;
   title: string;
   description?: string | null;
@@ -103,8 +112,14 @@ export interface EditedDraftItemDto {
   labelId?: number | null;
   recurrence: DraftRecurrenceDto | null;
 }
+export interface EditedNoteDraftItemDto {
+  kind: "note";
+  itemId: string;
+  title: string;
+  description: string | null;
+}
 export interface EditedDraftDto {
-  items: EditedDraftItemDto[];
+  items: (EditedDraftItemDto | EditedNoteDraftItemDto)[];
 }
 export interface EditDraftRequestDto {
   expectedConversationVersion: number;
@@ -113,8 +128,8 @@ export interface EditDraftRequestDto {
 }
 export interface ConfirmDraftRequestDto extends EditDraftRequestDto {
   commandId: string;
-  action: "start_now" | "add_to_task_list";
-  selectedItemIds: string[];
+  action: "start_now" | "add_to_task_list" | "add_all";
+  selectedItemIds?: string[];
   allowScheduleConflict?: boolean;
   acceptedConflictToken?: string | null;
 }

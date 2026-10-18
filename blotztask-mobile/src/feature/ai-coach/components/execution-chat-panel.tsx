@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,7 +11,8 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
+import { router, useFocusEffect, useNavigation } from "expo-router";
+import { usePreventRemove } from "expo-router/react-navigation";
 import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { useVoiceRecorder } from "@/feature/ai-task-generate/hooks/useVoiceRecorder";
@@ -21,6 +22,8 @@ import { transcribeAudio } from "../services/ai-coach-service";
 import { ReturnButton } from "@/shared/components/return-button";
 import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
+import { ReviewListBar } from "./review-list-bar";
+import { ReviewListModal } from "./review-list-modal";
 
 function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveDetail }: {
   item: ChatItem;
@@ -57,8 +60,26 @@ export function ExecutionChatPanel() {
   const { t, i18n } = useTranslation("aiCoach");
   const { snapshot, messages, status, start, send, confirm, edit, reject,
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
+    pendingList, pendingCount, reviewBusy, confirmationUncertain,
+    updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
     newTopic, clearChat, loadOlder, loadingOlder, historyError, retryHistory } = useAiCoachChat();
   const [input, setInput] = useState("");
+  const [reviewVisible, setReviewVisible] = useState(false);
+  const [remindedBatches, setRemindedBatches] = useState<Set<string>>(() => new Set());
+  const navigation = useNavigation();
+  useFocusEffect(useCallback(() => { setRemindedBatches(new Set()); }, []));
+  const needsLeaveReminder = !!pendingList && pendingCount > 0 && !remindedBatches.has(pendingList.id);
+  const remindBeforeLeaving = (leave: () => void) => {
+    if (!needsLeaveReminder || !pendingList) { leave(); return; }
+    setRemindedBatches(previous => new Set(previous).add(pendingList.id));
+    Alert.alert(t("review.leaveTitle"), t("review.leaveDescription", { count: pendingCount }), [
+      { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
+      { text: t("review.leave"), onPress: leave },
+    ]);
+  };
+  usePreventRemove(needsLeaveReminder && !reviewVisible, ({ data }) => {
+    remindBeforeLeaving(() => navigation.dispatch(data.action));
+  });
   const [transcribing, setTranscribing] = useState(false);
   const [calendarNow, setCalendarNow] = useState(() => new Date());
   useEffect(() => {
@@ -87,7 +108,7 @@ export function ExecutionChatPanel() {
   });
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
-  const canSend = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
+  const canSend = status === "ready" && !confirmationUncertain && snapshot?.allowedActions.includes("send_message") === true;
 
   const handleSend = async () => {
     const text = input;
@@ -147,7 +168,7 @@ export function ExecutionChatPanel() {
           <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
           <Pressable
             className="bg-highlight rounded-xl py-2 items-center mt-3"
-            onPress={() => router.push("/task-create")}
+            onPress={() => remindBeforeLeaving(() => router.push("/task-create"))}
           >
             <Text className="font-balooBold text-white text-sm">{t("chat.createManually")}</Text>
           </Pressable>
@@ -173,7 +194,13 @@ export function ExecutionChatPanel() {
     else scrollRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
   const openMenu = () => Alert.alert(t("chat.menu"), undefined, [
-    { text: t("chat.newTopic"), onPress: () => void runMenuAction(newTopic) },
+    { text: t("chat.newTopic"), onPress: () => {
+      if (!pendingCount) { void runMenuAction(newTopic); return; }
+      Alert.alert(t("review.newTopicTitle"), t("review.newTopicDescription", { count: pendingCount }), [
+        { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
+        { text: t("chat.newTopic"), style: "destructive", onPress: () => void runMenuAction(newTopic) },
+      ]);
+    } },
     { text: t("chat.clearHistory"), style: "destructive", onPress: () =>
       Alert.alert(t("chat.clearTitle"), t("chat.clearDescription"), [
         { text: t("draft.cancel"), style: "cancel" },
@@ -201,7 +228,7 @@ export function ExecutionChatPanel() {
       <View className="flex-row items-center justify-between px-5 py-2">
         <ReturnButton onPress={() => router.back()} />
         <Text className="font-balooBold text-lg text-secondary">{t("chat.title")}</Text>
-        <Pressable onPress={openMenu} disabled={status !== "ready" || generating || snapshot?.artifacts.some(card => card.status === "processing")}
+        <Pressable onPress={openMenu} disabled={confirmationUncertain || status !== "ready" || generating || snapshot?.artifacts.some(card => card.status === "processing")}
           accessibilityLabel={t("chat.menu")} hitSlop={12}>
           <Ionicons name="ellipsis-horizontal" size={24} color="#8C8C8C" />
         </Pressable>
@@ -249,6 +276,7 @@ export function ExecutionChatPanel() {
             {item.draftSnapshot.map((historical) => {
               const live = active ? snapshot?.artifacts.find(card => card.id === historical.id) : undefined;
               const artifact = live ?? (!active && historical.status === "pending" ? { ...historical, status: "expired" as const } : historical);
+              if (artifact.isReviewList) return null;
               return <TaskDraftCard key={artifact.id} artifact={artifact} readOnly={!live}
                 busy={status === "sending" || snapshot?.generationStatus === "running"}
                 onConfirm={(action, edited, selectedIds, allowConflict, token) =>
@@ -270,6 +298,15 @@ export function ExecutionChatPanel() {
           }`}
         </Text>
       )}
+
+      <ReviewListBar count={pendingCount} saving={pendingList?.status === "processing"}
+        onOpen={() => setReviewVisible(true)} />
+      {confirmationUncertain && !pendingCount && <Pressable className="px-4 py-2" onPress={() => setReviewVisible(true)}>
+        <Text className="font-baloo text-warning text-sm">{t("review.confirmationUnknown")}</Text>
+      </Pressable>}
+      <ReviewListModal visible={reviewVisible} list={pendingList} conversationVersion={snapshot?.conversationVersion ?? 0}
+        busy={reviewBusy} uncertain={confirmationUncertain} onClose={() => setReviewVisible(false)}
+        onEdit={updateReviewItem} onRemove={removeReviewItem} onConfirm={confirmAll} onRefresh={refreshReviewList} />
 
       <View className="flex-row items-center px-4 py-2 gap-2">
         <TextInput

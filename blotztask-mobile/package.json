@@ -9,6 +9,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "check:ai-coach-review": "node --test scripts/check-ai-coach-review-list.test.mjs",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss}\""
   },
   "dependencies": {
