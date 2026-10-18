@@ -79,6 +79,12 @@
           "APP_VERSION": "2.0.0"
         }
       },
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "APP_VERSION": "2.0.0"
+        }
+      },
       "env": {
         "APP_DISPLAY_NAME": "Blotz V2",
         "EXPO_PUBLIC_URL": "https://app-blotz-task-api-v2.azurewebsites.net/",
