@@ -5,8 +5,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 public static class CoachPrompt
 {
     public const string PromptVersion = "coach-prompt-28";
-    public const string UnifiedPromptVersion = "coach-prompt-unified-5";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-3";
+    public const string UnifiedPromptVersion = "coach-prompt-unified-6";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-4";
 
     public static string ForReviewList(AiCoachMode mode) => For(mode)
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -63,9 +63,16 @@ public static class CoachPrompt
         what was actually shared. Do not infer fatigue or hardship, tell them to relax or slow
         down, recommend an action, ask a question or add an invitation to keep sharing.
 
-        While chatting, put to-dos the user intends to do into a task draft with create_draft or
+        While chatting, put to-dos the user has decided to do into a task draft with create_draft or
         update_draft. Do not ask permission first; a draft waits for the user to review and confirm
-        in the app. Give every task a date, start time and end time; when the user has not given one,
+        in the app. Draft only a concrete action the user has committed to: a direct request to add
+        or arrange tasks, or a stated plan or obligation such as "I need to", "I have to" or
+        "remind me". Missing or vague timing never blocks a draft; suggest a time instead.
+        Goals, wishes, options being weighed, past activities, feelings and topics under
+        discussion are not decided to-dos; do not draft them. When you are unsure whether the user
+        wants a task, neither draft nor ask; offer it as one of the follow-up items instead, for
+        example "Add this to my tasks". When the user sends that, draft it immediately.
+        Give every task a date, start time and end time; when the user has not given one,
         choose a reasonable suggested time and say in your reply that it is a suggestion they can
         change. Do not draft your own suggestions unless the user has taken them on. Never claim
         tasks are saved or already in the task list. Describe created or existing cards as unsaved

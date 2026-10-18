@@ -45,4 +45,36 @@ public sealed class ReviewListLiveTests(ITestOutputHelper output)
             because: "ordinary questions and sharing do not authorize note capture");
         items.Should().OnlyContain(item => !item.IsSaved, because: "model tools cannot save formal entities");
     }
+
+    [CoachLiveTheory]
+    [InlineData(null, "我想今年考雅思。", 0)]
+    [InlineData(null, "明天下午三点提醒我交季度报告。", 1)]
+    [InlineData(null, "下周得把护照续签了。", 1)]
+    [InlineData(null, "最近工作压力好大，每天加班到很晚，我只想吐槽一下。", 0)]
+    [InlineData("我想这周找时间去健身房。", "帮我加到任务", 1)]
+    public async Task Handle_TaskIntent_DraftsOnlyDecidedActions(string? earlierMessage, string message, int tasks)
+    {
+        // Arrange
+        var credentials = CoachLiveSettings.Load() ?? throw new InvalidOperationException("Live credentials missing.");
+        var limits = Options.Create(new AiCoachModuleOptions { DeploymentId = credentials.Deployment });
+        var runtime = new ModelTurnRuntime(new AzureOpenAiModelGateway(
+            new AzureOpenAIClient(new Uri(credentials.Endpoint), new AzureKeyCredential(credentials.Key)), limits),
+            limits, NullLogger<ModelTurnRuntime>.Instance,
+            new ModelContextBuilder(limits, NullLogger<ModelContextBuilder>.Instance));
+        var history = new List<GatewayMessage>();
+        if (earlierMessage is not null)
+            history.AddRange([new GatewayUserMessage(earlierMessage),
+                new GatewayAssistantMessage("好主意，规律运动对精力很有帮助。", [])]);
+        history.Add(new GatewayUserMessage(message));
+        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified, history, [], "Australia/Perth",
+            new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0, ReviewListEnabled: true);
+        // Act
+        var result = await runtime.ExecuteAsync(request, default);
+        output.WriteLine($"error={result.Error}; tokens={result.TotalTokens}; followUps=[{string.Join(" | ", result.FollowUps ?? [])}]; reply={result.Text}");
+        // Assert
+        result.Error.Should().BeNull(because: "the real deployment must accept the review-list tool contract");
+        var items = result.Drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).SelectMany(draft => draft.Proposals).ToArray();
+        items.Count(item => item.Kind == ProposalKind.Task).Should().Be(tasks,
+            because: "only actions the user has decided on are drafted; wishes and venting are not");
+    }
 }

@@ -87,9 +87,13 @@ export function ExecutionChatPanel() {
   const [input, setInput] = useState("");
   const [reviewVisible, setReviewVisible] = useState(false);
   const [remindedBatches, setRemindedBatches] = useState<Set<string>>(() => new Set());
+  // Only lists the user has edited earn a leave reminder; untouched AI captures may be ignored freely.
+  const [touchedBatches, setTouchedBatches] = useState<Set<string>>(() => new Set());
+  const markTouched = (listId: string) => setTouchedBatches(previous => new Set(previous).add(listId));
   const navigation = useNavigation();
   useFocusEffect(useCallback(() => { setRemindedBatches(new Set()); }, []));
-  const needsLeaveReminder = !!pendingList && pendingCount > 0 && !remindedBatches.has(pendingList.id);
+  const needsLeaveReminder = !!pendingList && pendingCount > 0 && touchedBatches.has(pendingList.id)
+    && !remindedBatches.has(pendingList.id);
   const remindBeforeLeaving = (leave: () => void) => {
     if (!needsLeaveReminder || !pendingList) { leave(); return; }
     setRemindedBatches(previous => new Set(previous).add(pendingList.id));
@@ -340,7 +344,18 @@ export function ExecutionChatPanel() {
       <ReviewListModal visible={reviewVisible} list={pendingList} conversationVersion={snapshot?.conversationVersion ?? 0}
         busy={reviewBusy} generating={streaming || snapshot?.generationStatus === "running"}
         uncertain={confirmationUncertain} onClose={() => setReviewVisible(false)}
-        onEdit={updateReviewItem} onRemove={removeReviewItem} onConfirm={confirmAll} onRefresh={refreshReviewList} />
+        onEdit={async (list, version, item) => {
+          const error = await updateReviewItem(list, version, item);
+          if (!error) markTouched(list.id);
+          return error;
+        }}
+        onRemove={async (itemId) => {
+          const listId = pendingList?.id;
+          const error = await removeReviewItem(itemId);
+          if (!error && listId) markTouched(listId);
+          return error;
+        }}
+        onConfirm={confirmAll} onRefresh={refreshReviewList} />
 
       <View className="flex-row items-center px-4 py-2 gap-2">
         <TextInput
