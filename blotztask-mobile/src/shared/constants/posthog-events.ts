@@ -38,6 +38,7 @@ export const EVENTS = {
   ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
   ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
   ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
+  ACCOUNT_DELETED: "account_deleted",
 } as const;
 
 export const SCREEN_NAMES = {
@@ -152,3 +153,18 @@ export type ShareContentType = "review" | "badge";
 export type OnboardingOutcome = "completed" | "skipped";
 
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
+
+/**
+ * Why the user deleted their account, from the optional question in the delete modal.
+ * Fixed keys, not the shown text, so zh and en answers land in one bucket and the wording
+ * can change without splitting the chart. `skipped` = the user answered nothing.
+ */
+export type DeleteAccountReason =
+  | "no_longer_needed"
+  | "too_complicated"
+  | "missing_feature"
+  | "ai_not_good"
+  | "privacy_concern"
+  | "switched_app"
+  | "other"
+  | "skipped";

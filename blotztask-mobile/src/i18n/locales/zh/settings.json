@@ -29,7 +29,18 @@
     "deleteWarning": "将永久删除你的账号及所有数据（任务、笔记、偏好设置）。此操作无法撤销。",
     "deleteConfirmText": "我已了解此操作无法撤销。",
     "deleteLoading": "正在删除你的数据...",
-    "deleteConfirm": "永久删除"
+    "deleteConfirm": "永久删除",
+    "deleteReasonTitle": "你注销账号的主要原因是？（单选）",
+    "deleteReasons": {
+      "no_longer_needed": "我不再需要这类 App",
+      "too_complicated": "用起来太复杂",
+      "missing_feature": "缺少我需要的功能",
+      "ai_not_good": "AI 的结果不够好",
+      "privacy_concern": "担心隐私或数据安全",
+      "switched_app": "我换用了别的 App",
+      "other": "其他"
+    },
+    "deleteReasonOtherPlaceholder": "多说一点..."
   },
   "MembershipPlan": {
     "completedLabel": "本月已完成",
