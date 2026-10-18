@@ -342,5 +342,75 @@
         "label": "Life"
       }
     ]
+  },
+  {
+    "id": "zh-followup-time-adds-task-not-note",
+    "setupInputs": ["明天下午三点去打球"],
+    "input": "七点点名",
+    "expectedTaskCount": 2,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["球", "ball", "sport"],
+        "startDateOffset": 1,
+        "startTimeHour": 15
+      },
+      {
+        "titleContains": ["点名", "roll call"],
+        "startTimeHour": 19,
+        "startTimeMinute": 0
+      }
+    ]
+  },
+  {
+    "id": "zh-followup-name-fix-updates-note",
+    "setupInputs": ["测试A44的新功能"],
+    "input": "測試A14的新功能",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1
+  },
+  {
+    "id": "zh-followup-note-gains-time-becomes-task",
+    "setupInputs": ["我想学吉他"],
+    "input": "明天下午四点到六点去学校学吉他",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["吉他", "guitar"],
+        "startDateOffset": 1,
+        "startTimeHour": 16,
+        "startTimeMinute": 0
+      }
+    ]
+  },
+  {
+    "id": "zh-followup-vague-note-gains-weekday-becomes-task",
+    "setupInputs": ["以后有空想学做饭"],
+    "input": "这周六上午十点到十二点在家学做饭",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["做饭", "cook"],
+        "expectedDayOfWeek": "Saturday",
+        "startTimeHour": 10,
+        "startTimeMinute": 0
+      }
+    ]
+  },
+  {
+    "id": "zh-followup-task-loses-time-becomes-note",
+    "setupInputs": ["明天下午三点学吉他"],
+    "input": "学吉他的时间还没定，先记下来",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1
+  },
+  {
+    "id": "zh-followup-dinner-unscheduled-becomes-note",
+    "setupInputs": ["周五晚上七点和小李吃饭"],
+    "input": "和小李吃饭的时间还没约好，先记一下",
+    "expectedTaskCount": 0,
+    "expectedNoteCount": 1
   }
 ]

@@ -261,4 +261,69 @@ public class TaskGenerationToolsTests
         tools.RecurringTasks.Single().Title.Should().Be("Gym",
             because: "a rejected partial update must not leave other fields changed");
     }
+
+    [Fact]
+    public async Task Handle_UpdateTaskByShortId_ChangesThatDraftEvenWhenTitleDiffers()
+    {
+        // Arrange
+        var tools = new TaskGenerationTools();
+        var created = await tools.CreateTask("看比赛", "", new DateTime(2026, 8, 9, 15, 0, 0),
+            new DateTime(2026, 8, 9, 17, 0, 0), LabelNameEnum.Life);
+        var originalId = tools.Tasks.Single().Id;
+
+        // Act
+        var result = tools.UpdateTask("t1", "看球赛", "", new DateTime(2026, 8, 9, 14, 0, 0),
+            new DateTime(2026, 8, 9, 17, 0, 0), LabelNameEnum.Life);
+
+        // Assert
+        created.Should().Contain("t1", because: "the model needs the id to correct the draft later");
+        result.Should().Be("Task updated.", because: "the id finds the draft whatever title the model writes");
+        var updated = tools.Tasks.Single();
+        updated.Id.Should().Be(originalId, because: "an update must change the existing draft, not add a new one");
+        updated.StartTime.Should().Be(new DateTime(2026, 8, 9, 14, 0, 0), because: "the new time was applied");
+    }
+
+    [Fact]
+    public async Task Handle_UpdateTaskAfterSwipeDelete_ChangesTheRightDraft()
+    {
+        // Arrange
+        var tools = new TaskGenerationTools();
+        var start = new DateTime(2026, 8, 9, 10, 0, 0);
+        await tools.CreateTasks(["Buy groceries", "Wash car"], ["", ""], [start, start.AddHours(1)],
+            [start.AddHours(1), start.AddHours(2)], [LabelNameEnum.Life, LabelNameEnum.Life]);
+        tools.RemoveDraftTaskById(tools.Tasks.First().Id);
+
+        // Act
+        var updateResult = tools.UpdateTask("t2", "Wash car", "", start.AddHours(3), start.AddHours(4),
+            LabelNameEnum.Life);
+        var removeResult = tools.RemoveTask("t1");
+
+        // Assert
+        updateResult.Should().Be("Task updated.", because: "t2 still points at the car wash after t1 was swiped away");
+        tools.Tasks.Single().StartTime.Should().Be(start.AddHours(3), because: "the remaining draft got the new time");
+        removeResult.Should().StartWith("Task not found.",
+            because: "a swiped-away id is never handed to another draft");
+        tools.Tasks.Should().ContainSingle(because: "a missed id must not remove anything");
+    }
+
+    [Fact]
+    public async Task Handle_DescribeDraftsAfterSwipeDelete_ListsOnlyRemainingDrafts()
+    {
+        // Arrange
+        var tools = new TaskGenerationTools();
+        var emptyList = tools.DescribeDrafts();
+        var start = new DateTime(2026, 8, 9, 10, 0, 0);
+        await tools.CreateTasks(["Buy groceries", "Wash car"], ["", ""], [start, start.AddHours(1)],
+            [start.AddHours(1), start.AddHours(2)], [LabelNameEnum.Life, LabelNameEnum.Life]);
+        await tools.CreateNote("测试A44的新功能");
+        tools.RemoveDraftTaskById(tools.Tasks.First().Id);
+
+        // Act
+        var drafts = tools.DescribeDrafts();
+
+        // Assert
+        emptyList.Should().BeNull(because: "nothing is added to the message when there are no drafts");
+        drafts.Should().Be("[Current drafts: t2 \"Wash car\", n1 \"测试A44的新功能\"]",
+            because: "the model must see every remaining draft with its id, and none the user swiped away");
+    }
 }

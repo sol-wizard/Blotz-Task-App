@@ -28,6 +28,8 @@ interface IntroCarouselProps<T> {
   activeDotClassName?: string;
   /** Disables Skip and Continue/Finish while a step has its own pending action (e.g. a redeem request in flight). */
   disableActions?: boolean;
+  /** Hides Skip on items where Continue is the only way on (e.g. the onboarding invite page). */
+  hideSkipFor?: (item: T) => boolean;
 }
 
 export function IntroCarousel<T>({
@@ -41,11 +43,13 @@ export function IntroCarousel<T>({
   dotContainerClassName = "mb-6",
   activeDotClassName = "w-5 bg-black",
   disableActions = false,
+  hideSkipFor,
 }: IntroCarouselProps<T>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const lastViewedIndexRef = useRef(0);
   const isLast = activeIndex === data.length - 1;
+  const showSkip = !hideSkipFor?.(data[activeIndex]);
 
   const updateActiveIndex = (index: number) => {
     setActiveIndex(index);
@@ -93,9 +97,11 @@ export function IntroCarousel<T>({
           </View>
         </GradientColor>
         <View className="flex-1 items-end">
-          <Pressable onPress={() => void onFinish("skipped", data[activeIndex])} hitSlop={10} disabled={disableActions}>
-            <Text className="text-xl font-baloo text-black/40">{skipLabel}</Text>
-          </Pressable>
+          {showSkip && (
+            <Pressable onPress={() => void onFinish("skipped", data[activeIndex])} hitSlop={10} disabled={disableActions}>
+              <Text className="text-xl font-baloo text-black/40">{skipLabel}</Text>
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -105,6 +111,7 @@ export function IntroCarousel<T>({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         getItemLayout={(_, index) => ({
           length: SCREEN_WIDTH,
           offset: SCREEN_WIDTH * index,
