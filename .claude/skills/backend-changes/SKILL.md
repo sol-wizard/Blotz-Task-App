@@ -35,4 +35,4 @@ The production API is deployed **before** the new app goes to store review, so t
 
 **How to change something anyway:** add the new one next to the old one, keep the old one working, and mark it `// Remove after force update to <version>`. A later release removes it, once the minimum supported version is past every app that used it. Optional new params with a default are fine; so is a new endpoint or field.
 
-To check what the live app uses, look at the mobile code at the latest `submitted/*` tag (`git grep <field> submitted/<version> -- blotztask-mobile`), not at `main`.
+To check what the live app uses, look at the mobile code for the version in the latest published GitHub Release (`gh release view --json name -q .name`, e.g. "Release release/2026-10-17 — iOS 1.4.0 (161) · Android 1.4.0 (105)"), then `git grep <field> submitted/<version> -- blotztask-mobile`. Not `main`, and not simply the newest `submitted/*` tag: that tag is made at upload, so it can be a build still in review that no user has yet. Tag Release only publishes the release once both stores are live.
