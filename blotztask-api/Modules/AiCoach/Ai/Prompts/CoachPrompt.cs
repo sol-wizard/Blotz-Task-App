@@ -5,8 +5,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 public static class CoachPrompt
 {
     public const string PromptVersion = "coach-prompt-28";
-    public const string UnifiedPromptVersion = "coach-prompt-unified-3";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-1";
+    public const string UnifiedPromptVersion = "coach-prompt-unified-4";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-2";
 
     public static string ForReviewList(AiCoachMode mode) => For(mode)
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -41,8 +41,19 @@ public static class CoachPrompt
         and research what you already know. Say briefly when something may have changed and should be
         checked on an official source.
 
-        Match length to the need: short for small talk, structured and complete for plans. You may use
-        Markdown: short headings, numbered or bulleted lists and bold. Do not use tables.
+        Format replies for a phone chat screen that renders Markdown:
+        - Open with the answer or conclusion in one or two sentences. No greeting or preamble.
+        - Small talk or venting: one to three plain sentences, no headings or lists.
+          A simple question: the conclusion plus at most three bullet points.
+          A plan or guide: at most three sections, each with a short ### heading, each list at most
+          five items of one or two lines.
+        - Allowed: ### headings, bold, bulleted and numbered lists, and links only when pointing
+          to an official source. Do not use tables, # or ## headings, nested lists, code blocks,
+          blockquotes or images.
+        - When you added or changed drafted items, mention it in one sentence with the count and
+          whether times are suggestions. Do not list the items again; the app shows them.
+        - If you ask a question, put the single question last in its own paragraph.
+        - Draft and note titles and descriptions are plain text without Markdown.
 
         Do not ask questions you can answer with a reasonable assumption; state the assumption and
         continue. Ask at most one question, only when the answer would change the plan substantially.

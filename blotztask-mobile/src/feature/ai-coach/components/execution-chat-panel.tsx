@@ -22,6 +22,7 @@ import { transcribeAudio } from "../services/ai-coach-service";
 import { ReturnButton } from "@/shared/components/return-button";
 import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
+import { CoachMarkdown } from "./coach-markdown";
 import { ReviewListBar } from "./review-list-bar";
 import { ReviewListModal } from "./review-list-modal";
 
@@ -36,14 +37,17 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
   const { t } = useTranslation("aiCoach");
   const isUser = item.role === "user";
   return (
-    <View className={`my-1 max-w-[85%] ${isUser ? "self-end" : "self-start"}`}>
-      <View
-        className={`rounded-2xl px-4 py-2.5 ${isUser ? "bg-highlight" : "bg-white border border-gray-100"}`}
-      >
-        <Text className={`font-baloo text-base ${isUser ? "text-white" : "text-secondary"}`}>
-          {item.text}
-        </Text>
-      </View>
+    <View className={`my-1 ${isUser ? "max-w-[85%] self-end" : "self-stretch"}`}>
+      {isUser ? (
+        <View className="rounded-2xl px-4 py-2.5 bg-highlight">
+          <Text className="font-baloo text-base text-white">{item.text}</Text>
+        </View>
+      ) : (
+        // Assistant replies are full width so headings and lists have room to breathe.
+        <View className="px-1">
+          <CoachMarkdown text={item.text} />
+        </View>
+      )}
       {!isUser && item.taskContextRead && (
         <Text className="font-baloo text-xs text-primary mt-1 ml-2">
           {t("chat.taskContextRead")}

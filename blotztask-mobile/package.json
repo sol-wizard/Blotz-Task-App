@@ -81,6 +81,7 @@
     "react-native-game-engine": "^1.2.0",
     "react-native-gesture-handler": "~2.31.1",
     "react-native-keyboard-controller": "1.21.6",
+    "react-native-marked": "8.3.2",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
