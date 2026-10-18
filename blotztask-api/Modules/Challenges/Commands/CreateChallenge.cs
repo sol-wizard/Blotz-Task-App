@@ -44,7 +44,12 @@ public class CreateChallengeCommandHandler(
 
         db.Challenges.Add(challenge);
         // The creator is a member too, so they count towards the required members.
-        db.ChallengeMembers.Add(new ChallengeMember { ChallengeId = challenge.Id, MemberId = command.UserId });
+        db.ChallengeMembers.Add(new ChallengeMember
+        {
+            ChallengeId = challenge.Id,
+            MemberId = command.UserId,
+            JoinedAt = challenge.CreatedAt
+        });
 
         await db.SaveChangesAsync(ct);
 

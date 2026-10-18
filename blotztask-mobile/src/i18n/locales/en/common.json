@@ -68,6 +68,11 @@
     "loginFailed": "Sign-in failed. Please try again.",
     "loginStalled": "Sign-in didn't come back. Tap Continue to try again, or restart the app.",
     "sessionExpired": "Your session expired. Please sign in again.",
-    "loadFailed": "Couldn't load your account."
+    "loadFailed": "Couldn't load your account.",
+    "challenge": {
+      "alreadyInChallenge": "You are already in a challenge that hasn’t ended.",
+      "notFound": "Challenge not found. Check the ID.",
+      "cannotJoin": "Can’t join: the challenge is full or has started, or you are already in a challenge."
+    }
   }
 }

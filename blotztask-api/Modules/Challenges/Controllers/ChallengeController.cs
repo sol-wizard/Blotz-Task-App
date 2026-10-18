@@ -1,4 +1,5 @@
 using BlotzTask.Modules.Challenges.Commands;
+using BlotzTask.Modules.Challenges.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,8 +10,19 @@ namespace BlotzTask.Modules.Challenges.Controllers;
 [Route("api/challenges")]
 public class ChallengeController(
     CreateChallengeCommandHandler createChallengeCommandHandler,
-    JoinChallengeCommandHandler joinChallengeCommandHandler) : ControllerBase
+    JoinChallengeCommandHandler joinChallengeCommandHandler,
+    GetCurrentChallengeQueryHandler getCurrentChallengeQueryHandler) : ControllerBase
 {
+    // 204 No Content when the user isn't in an unfinished challenge.
+    [HttpGet("current")]
+    public async Task<CurrentChallengeDto?> GetCurrentChallenge(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        return await getCurrentChallengeQueryHandler.Handle(new GetCurrentChallengeQuery { UserId = userId }, ct);
+    }
+
     [HttpPost]
     public async Task<Guid> CreateChallenge([FromBody] CreateChallengeRequest request, CancellationToken ct)
     {

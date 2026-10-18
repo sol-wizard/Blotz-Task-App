@@ -75,6 +75,12 @@ export default function SettingsScreen() {
       icon: "account-plus-outline",
       route: "/settings/invite",
     },
+    {
+      key: "challenge",
+      label: t("menu.challenge"),
+      icon: "account-group-outline",
+      route: "/settings/challenge",
+    },
     // iOS only: tipping is wired to StoreKit, Android has no products configured.
     ...(Platform.OS === "ios"
       ? ([

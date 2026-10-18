@@ -304,6 +304,9 @@ namespace BlotzTask.Migrations
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.HasKey("ChallengeId", "MemberId");
 
                     b.HasIndex("MemberId");

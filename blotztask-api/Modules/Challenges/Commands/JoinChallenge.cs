@@ -43,7 +43,12 @@ public class JoinChallengeCommandHandler(
         if (memberCount >= ChallengeMembershipRules.RequiredMembers)
             throw new InvalidOperationException($"This challenge is full ({ChallengeMembershipRules.RequiredMembers} people).");
 
-        db.ChallengeMembers.Add(new ChallengeMember { ChallengeId = command.ChallengeId, MemberId = command.UserId });
+        db.ChallengeMembers.Add(new ChallengeMember
+        {
+            ChallengeId = command.ChallengeId,
+            MemberId = command.UserId,
+            JoinedAt = DateTimeOffset.UtcNow
+        });
 
         // The last member to join starts the challenge; from then on joins are refused as "already started".
         var isFull = memberCount + 1 == ChallengeMembershipRules.RequiredMembers;

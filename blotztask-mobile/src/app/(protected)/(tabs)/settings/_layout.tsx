@@ -15,6 +15,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="about" options={{ headerShown: false }} />
       <Stack.Screen name="review" options={{ headerShown: false }} />
       <Stack.Screen name="support-us" options={{ headerShown: false }} />
+      <Stack.Screen name="challenge" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -11,7 +11,8 @@
     "allTasks": "所有任务页面 (测试版)",
     "invite": "邀请好友",
     "supportUs": "支持我们",
-    "about": "关于"
+    "about": "关于",
+    "challenge": "挑战"
   },
   "betaFeatures": {
     "title": "测试功能",
@@ -137,5 +138,20 @@
     "failed": "支付失败，请重试。",
     "unavailable": "打赏暂时不可用，请稍后再试。",
     "disclaimer": "打赏是一次性支付，用于支持开发，不会解锁任何功能。"
+  },
+  "challenge": {
+    "title": "组队打卡挑战",
+    "create": "创建挑战",
+    "join": "加入挑战",
+    "namePlaceholder": "挑战名字",
+    "codePlaceholder": "输入挑战 ID",
+    "confirmCreate": "创建",
+    "confirmJoin": "加入",
+    "membersNeeded": "还差 {{count}} 人组队成功",
+    "startsWhenFull": "小组满员后开始挑战",
+    "started": "挑战已开始！",
+    "copyId": "复制 ID",
+    "copied": "已复制挑战 ID",
+    "unnamedMember": "成员"
   }
 }

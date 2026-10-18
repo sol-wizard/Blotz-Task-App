@@ -11,7 +11,8 @@
     "allTasks": "All tasks page (beta)",
     "invite": "Invite Friends",
     "supportUs": "Support Us",
-    "about": "About"
+    "about": "About",
+    "challenge": "Challenge"
   },
   "betaFeatures": {
     "title": "Beta Features",
@@ -137,5 +138,20 @@
     "failed": "Payment failed. Please try again.",
     "unavailable": "Tips aren't available right now. Please try again later.",
     "disclaimer": "Tips are one-off payments that support development. They don't unlock any features."
+  },
+  "challenge": {
+    "title": "Team Challenge",
+    "create": "Create a challenge",
+    "join": "Join a challenge",
+    "namePlaceholder": "Challenge name",
+    "codePlaceholder": "Enter the challenge ID",
+    "confirmCreate": "Create",
+    "confirmJoin": "Join",
+    "membersNeeded": "{{count}} more to complete the team",
+    "startsWhenFull": "The challenge starts once the team is full",
+    "started": "Challenge started!",
+    "copyId": "Copy ID",
+    "copied": "Challenge ID copied",
+    "unnamedMember": "Member"
   }
 }

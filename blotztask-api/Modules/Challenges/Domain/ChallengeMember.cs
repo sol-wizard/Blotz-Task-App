@@ -4,4 +4,5 @@ public class ChallengeMember
 {
     public required Guid ChallengeId { get; set; }
     public required Guid MemberId { get; set; }
+    public required DateTimeOffset JoinedAt { get; set; }
 }

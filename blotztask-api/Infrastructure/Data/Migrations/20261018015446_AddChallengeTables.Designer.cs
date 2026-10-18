@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20261018013151_AddChallengeTables")]
+    [Migration("20261018015446_AddChallengeTables")]
     partial class AddChallengeTables
     {
         /// <inheritdoc />
@@ -306,6 +306,9 @@ namespace BlotzTask.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("ChallengeId", "MemberId");
 
