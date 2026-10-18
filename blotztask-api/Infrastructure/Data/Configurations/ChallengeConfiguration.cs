@@ -17,6 +17,9 @@ public class ChallengeConfiguration : IEntityTypeConfiguration<Challenge>
             .WithMany()
             .HasForeignKey(c => c.CreatorUserId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.HasIndex(c => c.CreatorUserId);
+        // A user can only have one unfinished challenge they created; EndTime is set once it ends.
+        builder.HasIndex(c => c.CreatorUserId)
+            .IsUnique()
+            .HasFilter("[EndTime] IS NULL");
     }
 }

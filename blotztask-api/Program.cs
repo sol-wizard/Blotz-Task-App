@@ -11,6 +11,7 @@ using BlotzTask.Modules.Reviews;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
 using BlotzTask.Modules.Referrals;
+using BlotzTask.Modules.Challenges;
 using BlotzTask.Modules.AppVersion;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
@@ -43,6 +44,7 @@ builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
 builder.Services.AddReferralModule();
+builder.Services.AddChallengeModule();
 
 // External integrations
 builder.Services.AddAgentFrameworkServices();
