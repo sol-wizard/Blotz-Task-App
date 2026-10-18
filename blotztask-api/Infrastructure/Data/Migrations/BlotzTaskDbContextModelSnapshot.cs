@@ -256,6 +256,61 @@ namespace BlotzTask.Migrations
                     b.ToTable("UserProgress", (string)null);
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Challenges.Domain.Challenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("EndTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("PeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("StartTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorUserId")
+                        .IsUnique()
+                        .HasFilter("[EndTime] IS NULL");
+
+                    b.ToTable("Challenges", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Challenges.Domain.ChallengeMember", b =>
+                {
+                    b.Property<Guid>("ChallengeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ChallengeId", "MemberId");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("ChallengeMembers", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Property<int>("LabelId")
@@ -1116,6 +1171,30 @@ namespace BlotzTask.Migrations
                         .WithOne()
                         .HasForeignKey("BlotzTask.Modules.Badges.Domain.UserProgress", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Challenges.Domain.Challenge", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Challenges.Domain.ChallengeMember", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Challenges.Domain.Challenge", null)
+                        .WithMany()
+                        .HasForeignKey("ChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
