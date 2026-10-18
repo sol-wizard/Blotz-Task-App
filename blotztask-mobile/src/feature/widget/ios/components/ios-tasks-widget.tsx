@@ -56,6 +56,8 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
               foregroundStyle("#2F8F46"),
               lineLimit(1),
               layoutPriority(1),
+              // The date is short; keep its natural width so iOS never truncates it.
+              fixedSize({ horizontal: true }),
             ]}
           >
             {isSmallWidget ? props.title : props.dateTitle || props.title}
