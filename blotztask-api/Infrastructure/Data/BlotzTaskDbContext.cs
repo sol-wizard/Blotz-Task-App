@@ -10,6 +10,7 @@ using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
 using BlotzTask.Modules.Referrals.Domain;
+using BlotzTask.Modules.Challenges.Domain;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -46,6 +47,8 @@ public class BlotzTaskDbContext : DbContext
 
     public DbSet<ReferralCode> ReferralCodes { get; set; }
     public DbSet<Referral> Referrals { get; set; }
+    public DbSet<Challenge> Challenges { get; set; }
+    public DbSet<ChallengeMember> ChallengeMembers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

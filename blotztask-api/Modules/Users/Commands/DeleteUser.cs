@@ -37,7 +37,11 @@ public class DeleteUserCommandHandler(
         await db.Referrals
             .Where(r=>r.ReferrerUserId == command.UserId|| r.RefereeUserId == command.UserId)
             .ExecuteDeleteAsync(ct);
-            
+
+        await db.ChallengeMembers
+            .Where(m => m.MemberId == command.UserId)
+            .ExecuteDeleteAsync(ct);
+
         db.AppUsers.Remove(appUser);
         await db.SaveChangesAsync(ct);
 
