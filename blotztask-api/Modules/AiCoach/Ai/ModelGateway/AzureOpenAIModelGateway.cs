@@ -79,7 +79,8 @@ public sealed class AzureOpenAiModelGateway(
             }
             return new(content.Length == 0 ? null : content.ToString(),
                 tools.Values.Select(tool => new ModelToolCallRequest(tool.Id, tool.Name, tool.Arguments.ToString())).ToArray(),
-                MapFinishReason(reason), usage?.InputTokenCount ?? 0, usage?.OutputTokenCount ?? 0, usage?.TotalTokenCount ?? 0);
+                MapFinishReason(reason), usage?.InputTokenCount ?? 0, usage?.OutputTokenCount ?? 0, usage?.TotalTokenCount ?? 0,
+                usage?.InputTokenDetails?.CachedTokenCount ?? 0);
         }
 
         var response = await chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken);
@@ -99,7 +100,8 @@ public sealed class AzureOpenAiModelGateway(
             finishReason,
             completion.Usage?.InputTokenCount ?? 0,
             completion.Usage?.OutputTokenCount ?? 0,
-            completion.Usage?.TotalTokenCount ?? 0);
+            completion.Usage?.TotalTokenCount ?? 0,
+            completion.Usage?.InputTokenDetails?.CachedTokenCount ?? 0);
     }
 
     private static ModelFinishReason MapFinishReason(ChatFinishReason? reason) => reason switch

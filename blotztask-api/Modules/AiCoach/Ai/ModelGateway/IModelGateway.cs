@@ -57,4 +57,6 @@ public sealed record ModelCompletionResult(
     ModelFinishReason FinishReason,
     int InputTokens,
     int OutputTokens,
-    int TotalTokens);
+    int TotalTokens,
+    // Part of InputTokens served from the provider's prompt cache.
+    int CachedInputTokens = 0);

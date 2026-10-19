@@ -124,8 +124,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         if (result is not null)
         {
             usageTracker.Add(conversationId, result.InputTokens, result.OutputTokens, result.TotalTokens, result.ModelCallCount);
-            logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input, {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
-                conversationId, result.InputTokens, result.OutputTokens, result.ModelCallCount, error,
+            logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input ({CachedInputTokens} cached), {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
+                conversationId, result.InputTokens, result.CachedInputTokens, result.OutputTokens, result.ModelCallCount, error,
                 request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.VersionFor(request.Mode), ToolExecutor.ContractVersion);
             try
             {
@@ -170,7 +170,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             }, assistantMessage.Id);
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "turn_result", new
         {
-            commitStatus = commit.ToString(), error, result?.InputTokens, result?.OutputTokens,
+            commitStatus = commit.ToString(), error, result?.InputTokens, result?.CachedInputTokens, result?.OutputTokens,
             result?.TotalTokens, result?.ModelCallCount, conversationVersion = snapshot.ConversationVersion,
         }, assistantMessage?.Id);
         return snapshot;
