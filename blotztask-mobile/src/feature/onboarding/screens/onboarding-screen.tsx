@@ -54,15 +54,16 @@ export default function OnboardingScreen() {
   const handleFinish = async (outcome: CarouselExitOutcome, exit_section: OnboardingSection) => {
     Keyboard.dismiss();
     analytics.trackOnboardingCompleted({ outcome, exit_section });
-    // Mark onboarded before the questions: a user who closes the app during them is not
-    // sent through the slides again, and the home screen sheet asks them once instead.
-    await setUserOnboarded(true);
-    await markAsSeen();
     // Skipped or completed, the slides lead to the "About you" questions.
     setShowAboutYou(true);
   };
 
+  // The questions are part of onboarding: the user is marked onboarded only here, so one
+  // who closes the app during them is still a new user next launch (slides, questions and
+  // the voice coach again) rather than being treated as an existing user.
   const handleAboutYouDone = async () => {
+    await setUserOnboarded(true);
+    await markAsSeen();
     await markAboutYouSeen();
     // The first thing in the app is a nudge to try voice for real.
     showVoiceCoach();
