@@ -12,6 +12,8 @@ export const EVENTS = {
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
   AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
+  AI_COACH_VOICE_FAILED: "ai_coach_voice_failed",
+  AI_COACH_MIC_PERMISSION_RESOLVED: "ai_coach_mic_permission_resolved",
   MIC_PERMISSION_RESOLVED: "mic_permission_resolved",
   ACTIVE_USER_5S: "active_user_5s",
   BREAKDOWN_TASK: "breakdown_task",

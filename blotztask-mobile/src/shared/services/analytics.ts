@@ -329,6 +329,16 @@ export const analytics = {
     posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
   },
 
+  trackAiCoachVoiceFailed(params: { stage: "permission" | "recording" | "send"; errorCode: string }) {
+    posthog.capture(EVENTS.AI_COACH_VOICE_FAILED, { stage: params.stage, error_code: params.errorCode });
+  },
+
+  trackAiCoachMicPermissionResolved(outcome: MicPermissionOutcome, errorCode?: string) {
+    posthog.capture(EVENTS.AI_COACH_MIC_PERMISSION_RESOLVED, {
+      outcome, ...(errorCode ? { error_code: errorCode } : {}),
+    });
+  },
+
   /**
    * Fires when the AI sheet mounts. The denominator for AI attempts: the session event fires
    * only on exit and drops itself when no turn was recorded, so opens were previously invisible.
