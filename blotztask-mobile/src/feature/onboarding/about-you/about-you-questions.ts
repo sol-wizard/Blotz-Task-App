@@ -6,8 +6,8 @@
  * Option keys are what PostHog stores, so keep them stable once shipped.
  */
 /**
- * Existing (already onboarded) users see the questions once, after the update that ships
- * them. Product decision; set to false to ask new users only.
+ * Existing (already onboarded) users get the questions once, as a closable sheet on the
+ * home screen. Product decision; set to false to ask new users only.
  */
 export const SHOW_ABOUT_YOU_TO_EXISTING_USERS = true;
 

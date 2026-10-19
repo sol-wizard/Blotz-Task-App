@@ -55,7 +55,7 @@ export default function OnboardingScreen() {
     Keyboard.dismiss();
     analytics.trackOnboardingCompleted({ outcome, exit_section });
     // Mark onboarded before the questions: a user who closes the app during them is not
-    // sent through the slides again, and the entry gate asks them once on the next launch.
+    // sent through the slides again, and the home screen sheet asks them once instead.
     await setUserOnboarded(true);
     await markAsSeen();
     // Skipped or completed, the slides lead to the "About you" questions.

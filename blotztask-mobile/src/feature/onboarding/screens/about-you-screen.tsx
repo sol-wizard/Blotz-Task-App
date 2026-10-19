@@ -9,15 +9,18 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
 
 type AboutYouScreenProps = {
   audience: AboutYouAudience;
   /** Called once, after the last question is answered or skipped. */
   onDone: () => void | Promise<void>;
+  /** Shown inside a sheet: adds a close button that ends the questions early. */
+  onClose?: () => void;
 };
 
 /** The "About you" questions, one per page. Every question can be skipped on its own. */
-export default function AboutYouScreen({ audience, onDone }: AboutYouScreenProps) {
+export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouScreenProps) {
   const { t } = useTranslation("onboarding");
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -72,9 +75,19 @@ export default function AboutYouScreen({ audience, onDone }: AboutYouScreenProps
   const canSubmit = selected.length > 0 && !isFinishing;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row items-center px-6 h-12" style={{ overflow: "visible" }}>
-        <View className="flex-1" />
+    // In a sheet the top edge is not at the screen edge, so only the bottom needs the inset.
+    <SafeAreaView className="flex-1 bg-white" edges={onClose ? ["bottom"] : undefined}>
+      <View
+        className={`flex-row items-center px-6 h-12 ${onClose ? "mt-4" : ""}`}
+        style={{ overflow: "visible" }}
+      >
+        <View className="flex-1 items-start">
+          {onClose && (
+            <Pressable onPress={onClose} hitSlop={10} disabled={isFinishing}>
+              <Ionicons name="close" size={24} color="#8C8C8C" />
+            </Pressable>
+          )}
+        </View>
         <GradientColor className="h-[45px] w-[135px] overflow-visible">
           <View className="flex-1 flex-row justify-center items-center bg-transparent">
             <Text className="text-[30px] leading-11 font-balooExtraBold text-center">Blotz</Text>

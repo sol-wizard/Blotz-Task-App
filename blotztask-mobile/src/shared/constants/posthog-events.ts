@@ -89,7 +89,7 @@ export type LoginErrorCode =
 export type AppEntrySource = "login" | "restore";
 
 /** Where the post-login gate sent the user once both gate requests succeeded. */
-export type AppEntryDestination = "home" | "onboarding" | "whats_new" | "about_you";
+export type AppEntryDestination = "home" | "onboarding" | "whats_new";
 
 /**
  * How a task was created. `manual` = task form, `ai` = AI generation sheet,
@@ -156,7 +156,7 @@ export type OnboardingOutcome = "completed" | "skipped";
 
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
 
-/** Who saw the "About you" questions: a new user after onboarding, or an existing user once after updating. */
+/** Who saw the "About you" questions: a new user after onboarding, or an existing user once on the home screen. */
 export type AboutYouAudience = "new_user" | "existing_user";
 
 /**
