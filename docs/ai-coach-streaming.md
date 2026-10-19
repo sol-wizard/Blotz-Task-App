@@ -36,9 +36,19 @@ not streamed. Existing token accounting, tool budgets and whole-turn commit rule
 Text updates are batched every 75ms and rendered with the existing Markdown renderer. A
 temporary reply has a blinking cursor and no feedback/copy controls. The review entry updates
 its count and shows an organizing state. The modal permits viewing and expanding descriptions;
-editing, removal, refresh and confirmation wait until generation finishes. Users can compose
-their next message while sending remains disabled. Existing scroll-follow behavior respects
-users reading older messages.
+editing, removal, refresh and confirmation wait until generation finishes. Sending a message
+or tapping a follow-up dismisses the keyboard. During generation users can tap the composer
+to reopen the keyboard and draft their next message; sending waits until generation finishes.
+Dragging the timeline dismisses the keyboard interactively on iOS and at drag start on Android.
+The timeline runs from oldest to newest. After sending, the new question is positioned at
+the top of the chat viewport once. Spare space below that turn makes this possible even
+before a reply arrives, and shrinks as the reply grows. Subsequent text updates and completion
+preserve the reading position. Manual scrolling cancels any pending question positioning;
+opening the chat initially scrolls to the latest messages, and older pages load at the top.
+A floating down arrow appears when more than 80px of content remains below the viewport,
+excluding the spare space used for question positioning. It hides within 40px of the latest
+content. Tapping it cancels pending question positioning and scrolls to the latest content
+once, preserving keyboard state and respecting reduced motion; later updates do not auto-follow.
 
 The client accepts ordered events for the matching turn, ignores duplicates, and rejects gaps
 or malformed events. It reads UTF-8 incrementally and parses SSE frames independently of
