@@ -10,7 +10,6 @@ public sealed class Conversation
 {
     public required Guid Id { get; init; }
     public required Guid UserId { get; init; }
-    public required AiCoachMode Mode { get; init; }
     public required string TimeZoneId { get; set; }
     // Payload-only metadata; older payloads fall back to TimeZoneId until their first zone change.
     public string? InitialTimeZoneId { get; set; }

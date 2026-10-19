@@ -50,7 +50,6 @@ public static class DependencyInjection
         services.AddScoped<MessageFeedbackHandler>();
         services.AddScoped<TaskContextReader>();
         services.AddScoped<DraftScheduleChecker>();
-        services.AddScoped<StartConversationCommandHandler>();
         services.AddScoped<SendMessageCommandHandler>();
         services.AddScoped<EditDraftCommandHandler>();
         services.AddScoped<ConfirmDraftCommandHandler>();

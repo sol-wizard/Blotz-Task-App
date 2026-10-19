@@ -39,7 +39,7 @@ internal sealed class CoachTestSession : IAsyncDisposable
         Reader = new(query, Options.Create(new AiCoachModuleOptions()), Clock);
     }
 
-    public static async Task<CoachTestSession> CreateAsync(DatabaseFixture fixture, AiCoachMode mode = AiCoachMode.Execution)
+    public static async Task<CoachTestSession> CreateAsync(DatabaseFixture fixture)
     {
         var session = new CoachTestSession(fixture);
         try
@@ -47,7 +47,7 @@ internal sealed class CoachTestSession : IAsyncDisposable
             var user = await session.Seeder.CreateUserAsync();
             session.Conversation = new()
             {
-                Id = Guid.NewGuid(), UserId = user, Mode = mode, TimeZoneId = "Australia/Perth",
+                Id = Guid.NewGuid(), UserId = user, TimeZoneId = "Australia/Perth",
                 CreatedAt = Now,
             };
             await session.Store.SaveAsync(session.Conversation, default);

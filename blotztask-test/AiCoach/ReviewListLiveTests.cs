@@ -29,7 +29,7 @@ public sealed class ReviewListLiveTests(ITestOutputHelper output)
             new AzureOpenAIClient(new Uri(credentials.Endpoint), new AzureKeyCredential(credentials.Key)), limits),
             limits, NullLogger<ModelTurnRuntime>.Instance,
             new ModelContextBuilder(limits, NullLogger<ModelContextBuilder>.Instance));
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage(message)], [], "Australia/Perth",
             new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0, ReviewListEnabled: true);
         // Act
@@ -66,7 +66,7 @@ public sealed class ReviewListLiveTests(ITestOutputHelper output)
             history.AddRange([new GatewayUserMessage(earlierMessage),
                 new GatewayAssistantMessage("好主意，规律运动对精力很有帮助。", [])]);
         history.Add(new GatewayUserMessage(message));
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified, history, [], "Australia/Perth",
+        var request = new ModelTurnRequest(Guid.NewGuid(), history, [], "Australia/Perth",
             new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0, ReviewListEnabled: true);
         // Act
         var result = await runtime.ExecuteAsync(request, default);

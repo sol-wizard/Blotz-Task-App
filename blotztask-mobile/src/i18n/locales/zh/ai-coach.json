@@ -1,33 +1,11 @@
 {
   "home": {
-    "greeting": "嗨，我是 Blotz",
-    "intro": "告诉我你想做什么，我陪你迈出下一步",
-    "comingSoon": "即将推出",
-    "modes": {
-      "execution": {
-        "title": "我知道我要做什么",
-        "subtitle": "直接创建任务"
-      },
-      "clarify": {
-        "title": "我有事儿，帮我梳理下一步",
-        "subtitle": "理清思路，找到第一步"
-      },
-      "companion": {
-        "title": "我想聊聊",
-        "subtitle": "想到什么，都可以和我聊聊"
-      },
-      "unified": {
-        "title": "新版（测试）",
-        "subtitle": "直接给答案，自动整理待办"
-      }
-    },
-    "pickModeFirst": "先选择上面的一个模式开始"
+    "intro": "告诉我你想做什么，我陪你迈出下一步"
   },
   "chat": {
     "title": "AI 教练",
     "scrollToLatest": "滚动到最新消息",
     "inputPlaceholder": "想做什么？告诉我",
-    "companionInputPlaceholder": "想聊什么？告诉我",
     "thinking": "正在想…",
     "taskContextRead": "已查看应用内任务",
     "connecting": "正在连接…",

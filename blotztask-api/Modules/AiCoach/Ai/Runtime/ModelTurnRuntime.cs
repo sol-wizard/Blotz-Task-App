@@ -10,7 +10,7 @@ using BlotzTask.Modules.AiCoach.Application.Projections;
 
 namespace BlotzTask.Modules.AiCoach.Ai.Runtime;
 
-public sealed record ModelTurnRequest(Guid ConversationId, AiCoachMode Mode, IReadOnlyList<GatewayMessage> History,
+public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<GatewayMessage> History,
     IReadOnlyList<ProposalSet> Drafts, string TimeZoneId, DateTimeOffset LocalNow,
     string? Summary, int SummarizedMessageCount,
     Func<DateOnly, DateOnly, CancellationToken, Task<string>>? ReadTasks = null,
@@ -40,8 +40,8 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
     {
         var limits = options.Value;
         logger.LogInformation(
-            "AiCoach model turn started for {ConversationId} in {Mode} mode with {HistoryMessageCount} history messages and {DraftCount} drafts",
-            request.ConversationId, request.Mode, request.History.Count, request.Drafts.Count);
+            "AiCoach model turn started for {ConversationId} with {HistoryMessageCount} history messages and {DraftCount} drafts",
+            request.ConversationId, request.History.Count, request.Drafts.Count);
         var workspace = new DraftTools(request.Drafts, request.TimeZoneId, request.ReviewListEnabled);
         var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule);
         var turn = new List<GatewayMessage>();

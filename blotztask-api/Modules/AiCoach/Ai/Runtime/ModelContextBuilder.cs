@@ -30,7 +30,7 @@ public sealed class ModelContextBuilder(IOptions<AiCoachModuleOptions> options, 
         var covered = request.SummarizedMessageCount;
         if (covered < 0 || covered > request.History.Count)
             throw new ModelContextException("invalid_context_cursor");
-        var system = request.ReviewListEnabled ? CoachPrompt.ForReviewList(request.Mode) : CoachPrompt.For(request.Mode);
+        var system = request.ReviewListEnabled ? CoachPrompt.ForReviewList() : CoachPrompt.Instructions;
         // The clock changes every turn, so it sits at the tail with the drafts: the prompt, tools, summary and history
         // before it stay byte-identical across turns and can be served from the provider's prompt cache.
         var clockContext = new GatewaySystemMessage("Current local time: " +

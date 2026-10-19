@@ -17,18 +17,15 @@ public sealed class CoachLiveTests(ITestOutputHelper output) : IDisposable
 {
     private readonly ILoggerFactory _logs = LoggerFactory.Create(builder => builder.AddConsole());
     public void Dispose() => _logs.Dispose();
-    [CoachLiveTheory]
-    [InlineData(AiCoachMode.Execution)]
-    [InlineData(AiCoachMode.Clarify)]
-    [InlineData(AiCoachMode.Companion)]
-    public async Task Handle_OrdinaryConversation_ReturnsNaturalText(AiCoachMode mode)
+    [CoachLiveFact]
+    public async Task Handle_OrdinaryConversation_ReturnsNaturalText()
     {
         // Arrange
         var runtime = Runtime();
-        var request = Request(mode, [new GatewayUserMessage("我只是想聊聊。我今天终于有空休息一下了。")]);
+        var request = Request([new GatewayUserMessage("我只是想聊聊。我今天终于有空休息一下了。")]);
         // Act
         var result = await runtime.ExecuteAsync(request, default);
-        output.WriteLine($"{mode}: {result.Text}; error={result.Error}; tokens={result.TotalTokens}");
+        output.WriteLine($"{result.Text}; error={result.Error}; tokens={result.TotalTokens}");
         // Assert
         result.Error.Should().BeNull(because: "normal conversation has no evidence or response-type protocol to satisfy");
         result.Text.Should().NotBeNullOrWhiteSpace(because: "the user should receive a substantive natural reply");
@@ -42,12 +39,12 @@ public sealed class CoachLiveTests(ITestOutputHelper output) : IDisposable
         var runtime = Runtime();
         var history = new List<GatewayMessage> { new GatewayUserMessage("请创建一个草稿：明天早上9点到9点半阅读第一章。") };
         // Act
-        var created = await runtime.ExecuteAsync(Request(AiCoachMode.Execution, history), default);
+        var created = await runtime.ExecuteAsync(Request(history), default);
         created.Error.Should().BeNull(because: "the real model must be able to call the registered draft tools");
         created.Drafts.Should().ContainSingle(because: "the user requested one draft");
         history.AddRange(created.TurnHistory);
         history.Add(new GatewayUserMessage("把刚才这张草稿的阅读时间改到后天，其他内容不变。"));
-        var updated = await runtime.ExecuteAsync(Request(AiCoachMode.Execution, history) with { Drafts = created.Drafts }, default);
+        var updated = await runtime.ExecuteAsync(Request(history) with { Drafts = created.Drafts }, default);
         output.WriteLine($"Created: {created.Text}\nUpdated: {updated.Text}; error={updated.Error}");
         // Assert
         updated.Error.Should().BeNull(because: "historical references should work without current-turn quotes");
@@ -73,7 +70,7 @@ public sealed class CoachLiveTests(ITestOutputHelper output) : IDisposable
         }
         history.Add(new GatewayUserMessage("我们最开始给计划取的代号是什么？只告诉我代号。"));
         // Act
-        var result = await runtime.ExecuteAsync(Request(AiCoachMode.Clarify, history), default);
+        var result = await runtime.ExecuteAsync(Request(history), default);
         output.WriteLine($"Summary covered {result.SummarizedMessageCount}; summary={result.Summary}; response={result.Text}; error={result.Error}");
         // Assert
         result.Error.Should().BeNull(because: "long conversations should compress context instead of silently dropping it");
@@ -89,8 +86,8 @@ public sealed class CoachLiveTests(ITestOutputHelper output) : IDisposable
         return new(new AzureOpenAiModelGateway(new AzureOpenAIClient(new Uri(credentials.Endpoint),
             new AzureKeyCredential(credentials.Key)), Options.Create(limits)), Options.Create(limits), _logs.CreateLogger<ModelTurnRuntime>(), new ModelContextBuilder(Options.Create(limits), _logs.CreateLogger<ModelContextBuilder>()));
     }
-    private static ModelTurnRequest Request(AiCoachMode mode, IReadOnlyList<GatewayMessage> history) =>
-        new(Guid.NewGuid(), mode, history, [], "Australia/Perth", new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.FromHours(8)), null, 0);
+    private static ModelTurnRequest Request(IReadOnlyList<GatewayMessage> history) =>
+        new(Guid.NewGuid(), history, [], "Australia/Perth", new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.FromHours(8)), null, 0);
 }
 
 public sealed class CoachLiveFactAttribute : FactAttribute

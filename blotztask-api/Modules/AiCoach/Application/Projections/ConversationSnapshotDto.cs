@@ -6,7 +6,7 @@ using BlotzTask.Modules.AiCoach.Infrastructure;
 namespace BlotzTask.Modules.AiCoach.Application.Projections;
 
 public sealed record ConversationSnapshotDto(
-    int ProtocolVersion, Guid ConversationId, int ConversationVersion, string Mode,
+    int ProtocolVersion, Guid ConversationId, int ConversationVersion,
     string GenerationStatus, string? GenerationError,
     IReadOnlyList<ChatMessageDto> Messages, IReadOnlyList<ArtifactEnvelopeDto> Artifacts,
     IReadOnlyList<string> AllowedActions, DebugUsageDto? DebugUsage,
@@ -33,7 +33,7 @@ public static class ConversationSnapshotProjector
     {
         var usage = UsageTracker?.Find(conversation.Id);
         var busy = !OperationPolicy.CanStartOperation(conversation);
-        return new(5, conversation.Id, conversation.Version, conversation.Mode.ToString(),
+        return new(5, conversation.Id, conversation.Version,
             conversation.RunningTurnId.HasValue ? "running" : conversation.GenerationError is null ? "idle" : "failed",
             conversation.GenerationError,
             conversation.Messages.TakeLast(30).Select(message => new ChatMessageDto(message.Id,

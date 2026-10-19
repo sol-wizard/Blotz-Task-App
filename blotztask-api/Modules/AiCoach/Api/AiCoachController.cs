@@ -14,7 +14,6 @@ namespace BlotzTask.Modules.AiCoach.Api;
 [Authorize]
 [ServiceFilter(typeof(ReviewListProtocolFilter))]
 public class AiCoachController(
-    StartConversationCommandHandler startConversation,
     SendMessageCommandHandler sendMessage,
     ConfirmDraftCommandHandler confirmDraft,
     RejectDraftCommandHandler rejectDraft,
@@ -50,18 +49,6 @@ public class AiCoachController(
     {
         try { await chat.ClearAsync(GetUserId(), ct); return NoContent(); }
         catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
-    }
-    [HttpPost("conversations")]
-    public async Task<ActionResult<ConversationSnapshotDto>> StartConversation(
-        [FromBody] StartConversationRequest request, CancellationToken ct)
-    {
-        var dto = await startConversation.Handle(new StartConversationCommand
-        {
-            UserId = GetUserId(),
-            TimeZoneId = request.TimeZoneId,
-            Mode = request.Mode,
-        }, ct);
-        return Ok(dto);
     }
 
     [HttpGet("conversations/{conversationId:guid}")]

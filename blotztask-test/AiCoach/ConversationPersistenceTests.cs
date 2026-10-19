@@ -57,7 +57,7 @@ public sealed class ConversationPersistenceTests
     {
         var conversation = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Mode = AiCoachMode.Clarify,
+            Id = Guid.NewGuid(), UserId = Guid.NewGuid(),
             TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow,
         };
         var turnId = Guid.NewGuid();

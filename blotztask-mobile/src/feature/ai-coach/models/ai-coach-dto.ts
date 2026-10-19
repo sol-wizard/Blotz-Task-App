@@ -5,7 +5,6 @@ export type ConversationActionWire =
   | "add_all"
   | "reject_draft"
   | "edit_draft";
-export type AvailableAiCoachMode = "Execution" | "Clarify" | "Companion" | "Unified";
 export type AiCoachRating = "up" | "down";
 export interface MessageFeedbackDto {
   assistantMessageId: string;
@@ -71,7 +70,6 @@ export interface ConversationSnapshotDto {
   protocolVersion: number;
   conversationId: string;
   conversationVersion: number;
-  mode: AvailableAiCoachMode;
   generationStatus: "idle" | "running" | "failed";
   generationError: string | null;
   messages: { id: string; role: "user" | "assistant"; text: string; taskContextRead: boolean;

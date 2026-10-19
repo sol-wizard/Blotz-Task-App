@@ -1,7 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { apiClient } from "@/shared/services/api/client";
 import {
-  AvailableAiCoachMode,
   EditDraftRequestDto,
   ConfirmDraftRequestDto,
   ConfirmDraftResultDto,
@@ -35,15 +34,6 @@ export async function newTopic(): Promise<ConversationSnapshotDto> {
 }
 export async function clearChat(): Promise<void> {
   return coachClient.delete("/ai-coach/chat");
-}
-
-export async function startConversation(
-  mode: AvailableAiCoachMode = "Execution",
-): Promise<ConversationSnapshotDto> {
-  return coachClient.post("/ai-coach/conversations", {
-    timeZoneId: deviceTimeZoneId(),
-    mode,
-  });
 }
 
 export async function fetchSnapshot(conversationId: string): Promise<ConversationSnapshotDto> {

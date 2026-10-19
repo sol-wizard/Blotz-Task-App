@@ -42,11 +42,6 @@ namespace BlotzTask.Migrations
                     b.Property<int>("MessageCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Mode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("Payload")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

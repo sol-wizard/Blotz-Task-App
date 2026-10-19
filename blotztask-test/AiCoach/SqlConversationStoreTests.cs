@@ -205,7 +205,7 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         await store.SaveAsync(first, default);
         var second = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = first.UserId, Mode = AiCoachMode.Unified,
+            Id = Guid.NewGuid(), UserId = first.UserId,
             TimeZoneId = first.TimeZoneId, CreatedAt = DateTimeOffset.UtcNow,
         };
         // Act
@@ -253,7 +253,7 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         var userId = await new DataSeeder(db).CreateUserAsync();
         var conversation = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = userId, Mode = AiCoachMode.Execution,
+            Id = Guid.NewGuid(), UserId = userId,
             TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow,
         };
         await store.CreateAsync(conversation, default);

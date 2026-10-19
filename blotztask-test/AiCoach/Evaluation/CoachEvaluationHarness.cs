@@ -109,7 +109,7 @@ internal sealed class CoachEvaluationHarness
             sourceFingerprint = SourceFingerprint(root),
             promptVersion = CoachPrompt.PromptVersion, toolContractVersion = ToolExecutor.ContractVersion,
             deployment = _deployment, limits = _limits, localNow = CoachTestSession.Now,
-            mode = _session.Conversation.Mode.ToString(), timeZone = _session.Conversation.TimeZoneId,
+            timeZone = _session.Conversation.TimeZoneId,
             objectiveStatus = failure is null ? "passed" : "failed",
             failure = failure?.ToString(), semanticStatus = "needs_review", reviewCriteria, aiEvaluation,
             turns = _turns, usage = _usage.Find(_session.Conversation.Id),

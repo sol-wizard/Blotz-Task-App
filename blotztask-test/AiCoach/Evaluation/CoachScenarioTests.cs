@@ -11,33 +11,19 @@ namespace BlotzTask.Tests.AiCoach.Evaluation;
 public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelper output) : IClassFixture<DatabaseFixture>
 {
     [CoachLiveTheory]
-    [InlineData("listen", AiCoachMode.Unified)]
-    [InlineData("advice", AiCoachMode.Unified)]
-    [InlineData("accept", AiCoachMode.Unified)]
-    [InlineData("invitation", AiCoachMode.Unified)]
-    [InlineData("content", AiCoachMode.Unified)]
-    [InlineData("defaults", AiCoachMode.Unified)]
-    [InlineData("conflict", AiCoachMode.Unified)]
-    [InlineData("edit-save", AiCoachMode.Unified)]
-    [InlineData("unscheduled", AiCoachMode.Unified)]
-    [InlineData("recurring", AiCoachMode.Unified)]
-    [InlineData("calendar", AiCoachMode.Unified)]
-    [InlineData("two-drafts", AiCoachMode.Unified)]
-    [InlineData("listen", AiCoachMode.Execution)]
-    [InlineData("listen", AiCoachMode.Clarify)]
-    [InlineData("listen", AiCoachMode.Companion)]
-    [InlineData("advice", AiCoachMode.Companion)]
-    [InlineData("accept", AiCoachMode.Clarify)]
-    [InlineData("invitation", AiCoachMode.Companion)]
-    [InlineData("content", AiCoachMode.Clarify)]
-    [InlineData("defaults", AiCoachMode.Execution)]
-    [InlineData("conflict", AiCoachMode.Execution)]
-    [InlineData("edit-save", AiCoachMode.Execution)]
-    [InlineData("unscheduled", AiCoachMode.Execution)]
-    [InlineData("recurring", AiCoachMode.Execution)]
-    [InlineData("calendar", AiCoachMode.Execution)]
-    [InlineData("two-drafts", AiCoachMode.Execution)]
-    public async Task Handle_CoreScenario_RecordsActualOutcomes(string scenario, AiCoachMode mode)
+    [InlineData("listen")]
+    [InlineData("advice")]
+    [InlineData("accept")]
+    [InlineData("invitation")]
+    [InlineData("content")]
+    [InlineData("defaults")]
+    [InlineData("conflict")]
+    [InlineData("edit-save")]
+    [InlineData("unscheduled")]
+    [InlineData("recurring")]
+    [InlineData("calendar")]
+    [InlineData("two-drafts")]
+    public async Task Handle_CoreScenario_RecordsActualOutcomes(string scenario)
     {
         var raw = Environment.GetEnvironmentVariable("AICOACH_EVAL_RUNS") ?? "1";
         if (!int.TryParse(raw, out var runs) || runs is < 1 or > 10)
@@ -46,10 +32,10 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
         for (var repetition = 1; repetition <= runs; repetition++)
         {
             // Arrange
-            await using var session = await CoachTestSession.CreateAsync(fixture, mode);
+            await using var session = await CoachTestSession.CreateAsync(fixture);
             var plan = await session.Seeder.CreateSubscriptionPlanAsync($"eval-{Guid.NewGuid():N}", 1_000_000);
             await session.Seeder.CreateUserSubscriptionAsync(session.UserId, plan.Id);
-            var id = $"{scenario}-{mode}";
+            var id = scenario;
             var harness = new CoachEvaluationHarness(session, id, repetition);
             Exception? failure = null;
             try
@@ -92,11 +78,8 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
             case "invitation":
                 await harness.SendAsync("给我一个明天可以试试的十分钟散步建议，现在先不创建任务。");
                 await harness.SendAsync("明天散步十分钟这个行动我愿意试试。");
-                if (session.Conversation.Mode == AiCoachMode.Unified)
-                    OneItem(session).PersistedTaskId.Should().BeNull(
-                        because: "Unified drafts a concrete action the user adopts, while task persistence still requires confirmation");
-                else
-                    session.Conversation.Drafts.Should().BeEmpty(because: "accepting an action suggestion is distinct from accepting draft creation in this mode");
+                OneItem(session).PersistedTaskId.Should().BeNull(
+                    because: "a concrete action the user adopts is drafted, while task persistence still requires confirmation");
                 await harness.SendAsync("好的，请生成这个散步任务的草稿。");
                 OneItem(session).PersistedTaskId.Should().BeNull(because: "accepting a draft invitation never saves a formal task");
                 break;

@@ -62,7 +62,6 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
         {
             Id = conversation.Id,
             UserId = conversation.UserId,
-            Mode = conversation.Mode,
             MessageCount = conversation.Messages.Count,
             EndedAt = conversation.EndedAt,
             ClosingSummary = conversation.ClosingSummary,

@@ -66,7 +66,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             baseVersion = conversation.Version;
             segmentCreatedAt = conversation.CreatedAt;
             var effectiveTimeZoneId = conversation.TimeZoneId;
-            request = new(conversation.Id, conversation.Mode, conversation.History.ToArray(),
+            request = new(conversation.Id, conversation.History.ToArray(),
                 conversation.Drafts.Select(draft => draft.Copy()).ToArray(), conversation.TimeZoneId,
                 TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(conversation.TimeZoneId)),
                 conversation.Summary, conversation.SummarizedMessageCount,
@@ -84,7 +84,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "user_message", new
         {
             messageId, content, conversationVersion = baseVersion, source,
-            mode = request.Mode.ToString(), promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.VersionFor(request.Mode),
+            promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion,
             toolContractVersion = ToolExecutor.ContractVersion,
         });
         ModelTurnRunResult? result = null;
@@ -126,7 +126,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             usageTracker.Add(conversationId, result.InputTokens, result.OutputTokens, result.TotalTokens, result.ModelCallCount);
             logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input ({CachedInputTokens} cached), {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
                 conversationId, result.InputTokens, result.CachedInputTokens, result.OutputTokens, result.ModelCallCount, error,
-                request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.VersionFor(request.Mode), ToolExecutor.ContractVersion);
+                request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion, ToolExecutor.ContractVersion);
             try
             {
                 using var accountingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));

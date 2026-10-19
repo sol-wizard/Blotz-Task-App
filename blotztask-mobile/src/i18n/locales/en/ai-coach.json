@@ -1,33 +1,11 @@
 {
   "home": {
-    "greeting": "Hi, I'm Blotz",
-    "intro": "Tell me what you want to do — I'll help you take the next step",
-    "comingSoon": "Coming soon",
-    "modes": {
-      "execution": {
-        "title": "I know what I want to do",
-        "subtitle": "Create a task right away"
-      },
-      "clarify": {
-        "title": "I have stuff — help me sort out the next step",
-        "subtitle": "Untangle your thoughts, find the first step"
-      },
-      "companion": {
-        "title": "I just want to talk",
-        "subtitle": "Whatever's on your mind, tell me"
-      },
-      "unified": {
-        "title": "New version (testing)",
-        "subtitle": "Direct answers, to-dos captured for you"
-      }
-    },
-    "pickModeFirst": "Pick a mode above to start"
+    "intro": "Tell me what you want to do — I'll help you take the next step"
   },
   "chat": {
     "title": "AI Coach",
     "scrollToLatest": "Scroll to latest message",
     "inputPlaceholder": "What do you want to do?",
-    "companionInputPlaceholder": "What's on your mind?",
     "thinking": "Thinking…",
     "taskContextRead": "Checked tasks in the app",
     "connecting": "Connecting…",

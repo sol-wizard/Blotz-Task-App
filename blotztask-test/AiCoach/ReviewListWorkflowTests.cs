@@ -411,7 +411,7 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
         await using var db = new BlotzTaskDbContext(fixture.Options);
         var conversation = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = await new DataSeeder(db).CreateUserAsync(), Mode = AiCoachMode.Unified,
+            Id = Guid.NewGuid(), UserId = await new DataSeeder(db).CreateUserAsync(),
             CreatedAt = FixedClock.Now, TimeZoneId = "Australia/Perth",
         };
         var draft = new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };

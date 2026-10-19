@@ -184,7 +184,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
     }
 
     [Fact]
-    public async Task Handle_ConcurrentOpenAcrossInstances_ReturnsOneUnifiedSegment()
+    public async Task Handle_ConcurrentOpenAcrossInstances_ReturnsOneSegment()
     {
         // Arrange
         await using var first = new Session(fixture);
@@ -196,8 +196,6 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         // Assert
         opened.Select(segment => segment.Id).Distinct().Should().ContainSingle(
             because: "the SQL unique index resolves concurrent creation on different app instances");
-        opened.Should().OnlyContain(segment => segment.Mode == AiCoachMode.Unified,
-            because: "all new chat topics use Unified");
     }
 
     [Fact]
@@ -233,7 +231,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
     {
         // Arrange
         await using var session = new Session(fixture);
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("Continue")], [], "Australia/Perth", session.Clock.Now, null, 0,
             PreviousClosingSummary: "On 2026-10-15 the reading draft expired.");
         var builder = new ModelContextBuilder(session.Options, NullLogger<ModelContextBuilder>.Instance);
@@ -279,7 +277,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
 
     private static Conversation NewConversation(Guid userId, DateTimeOffset now) => new()
     {
-        Id = Guid.NewGuid(), UserId = userId, Mode = AiCoachMode.Unified,
+        Id = Guid.NewGuid(), UserId = userId,
         TimeZoneId = "Australia/Perth", CreatedAt = now,
     };
 

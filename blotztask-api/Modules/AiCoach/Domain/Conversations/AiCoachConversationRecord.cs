@@ -5,7 +5,6 @@ public sealed class AiCoachConversationRecord
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    public AiCoachMode Mode { get; set; }
     public int MessageCount { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public string? ClosingSummary { get; set; }

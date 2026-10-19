@@ -326,7 +326,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         var userId = await new DataSeeder(db).CreateUserAsync();
         var conversation = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = userId, Mode = AiCoachMode.Execution,
+            Id = Guid.NewGuid(), UserId = userId,
             TimeZoneId = "Australia/Perth", CreatedAt = DateTimeOffset.UtcNow,
         };
         conversation.Drafts.Add(Draft());

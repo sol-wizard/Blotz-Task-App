@@ -19,7 +19,7 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
         if (current is { EndedAt: null }) return current;
         var created = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = userId, Mode = AiCoachMode.Unified,
+            Id = Guid.NewGuid(), UserId = userId,
             TimeZoneId = timeZoneId, CreatedAt = clock.GetUtcNow(),
         };
         try { await store.CreateAsync(created, ct); }

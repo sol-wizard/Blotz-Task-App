@@ -17,7 +17,7 @@ public sealed class ContextCompressionTests
         // Arrange
         var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
             NullLogger<ModelContextBuilder>.Instance);
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("继续调整家庭清洁清单")], [], "Australia/Perth", DateTimeOffset.UtcNow,
             new string('旧', 5000), 0, ReviewListEnabled: true);
         var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
@@ -46,7 +46,7 @@ public sealed class ContextCompressionTests
         // Arrange
         var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
             NullLogger<ModelContextBuilder>.Instance);
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("旧问题"), new GatewayAssistantMessage("旧回复", []),
                 new GatewayUserMessage("现在继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
             new string('旧', 4000), 0,
@@ -73,7 +73,7 @@ public sealed class ContextCompressionTests
         // Arrange
         var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
             NullLogger<ModelContextBuilder>.Instance);
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
             new string('旧', 5000), 0, ReviewListEnabled: true);
         var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
@@ -109,7 +109,7 @@ public sealed class ContextCompressionTests
         var result = new GatewayToolResultMessage(call.Id,
             System.Text.Json.JsonSerializer.Serialize(new { success = true, description = new string('洁', 2800) }, jsonOptions));
         var draft = new ProposalSet { Id = Guid.NewGuid() };
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("制定家庭清洁日程"), new GatewayAssistantMessage(null, [call]),
                 result, new GatewayAssistantMessage("清单已生成，等待确认。", []),
                 new GatewayUserMessage("可以继续调整吗？")],
@@ -148,7 +148,7 @@ public sealed class ContextCompressionTests
         var builder = new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance);
         var first = new ModelToolCallRequest("first", "create_list", "{}");
         var second = new ModelToolCallRequest("second", "update_list", "{}");
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified,
+        var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayAssistantMessage(null, [first, second]),
                 new GatewayToolResultMessage(first.Id, new string('甲', 2000)),
                 new GatewayToolResultMessage(second.Id, new string('乙', 2000)),
@@ -188,7 +188,7 @@ public sealed class ContextCompressionTests
         List<GatewayMessage> history = [new GatewayAssistantMessage(null, [call]),
             new GatewayToolResultMessage(call.Id, new string('长', 12000)),
             new GatewayUserMessage("继续")];
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified, history, [],
+        var request = new ModelTurnRequest(Guid.NewGuid(), history, [],
             "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
         var summaries = 0;
 
@@ -216,7 +216,7 @@ public sealed class ContextCompressionTests
         List<GatewayMessage> history = [new GatewayUserMessage("最新请求"),
             new GatewayAssistantMessage(null, [call]),
             new GatewayToolResultMessage(call.Id, new string('新', 7000))];
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified, history, [],
+        var request = new ModelTurnRequest(Guid.NewGuid(), history, [],
             "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
         var summaries = 0;
 
@@ -249,7 +249,7 @@ public sealed class ContextCompressionTests
             new GatewaySystemMessage(draftEvent), new GatewaySystemMessage(draftEvent),
             new GatewayUserMessage("哪里比较好玩呢"),
         ];
-        var request = new ModelTurnRequest(Guid.NewGuid(), AiCoachMode.Unified, history, [],
+        var request = new ModelTurnRequest(Guid.NewGuid(), history, [],
             "Australia/Sydney", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
         var summaries = 0;
 
@@ -275,7 +275,7 @@ public sealed class ContextCompressionTests
         // Arrange
         var conversation = new Conversation
         {
-            Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Mode = AiCoachMode.Unified,
+            Id = Guid.NewGuid(), UserId = Guid.NewGuid(),
             TimeZoneId = "Australia/Sydney", CreatedAt = DateTimeOffset.UtcNow,
         };
         var draft = new ProposalSet { Id = Guid.NewGuid() };
