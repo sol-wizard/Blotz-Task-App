@@ -38,6 +38,8 @@ export const EVENTS = {
   ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
   ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
   ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
+  ABOUT_YOU_ANSWERED: "about_you_answered",
+  ABOUT_YOU_SKIPPED: "about_you_skipped",
 } as const;
 
 export const SCREEN_NAMES = {
@@ -86,7 +88,7 @@ export type LoginErrorCode =
 export type AppEntrySource = "login" | "restore";
 
 /** Where the post-login gate sent the user once both gate requests succeeded. */
-export type AppEntryDestination = "home" | "onboarding" | "whats_new";
+export type AppEntryDestination = "home" | "onboarding" | "whats_new" | "about_you";
 
 /**
  * How a task was created. `manual` = task form, `ai` = AI generation sheet,
@@ -152,3 +154,6 @@ export type ShareContentType = "review" | "badge";
 export type OnboardingOutcome = "completed" | "skipped";
 
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
+
+/** Who saw the "About you" questions: a new user after onboarding, or an existing user once after updating. */
+export type AboutYouAudience = "new_user" | "existing_user";

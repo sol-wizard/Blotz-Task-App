@@ -31,5 +31,42 @@
     "dismiss": "Not now",
     "sheetLabel": "Your first task",
     "sheetHint": "Hold the button and tell me.\nI'll write it down!"
+  },
+  "about-you": {
+    "next": "Next",
+    "done": "Done",
+    "skip": "Skip",
+    "multiSelectHint": "Choose all that apply",
+    "questions": {
+      "need": {
+        "title": "What would you like me to help you with most right now?",
+        "options": {
+          "plan": "Capture my to-dos and help me plan",
+          "breakdown": "Break a big task into small steps",
+          "talk": "I'm stressed and want someone to talk to",
+          "browse": "Just looking around"
+        }
+      },
+      "struggles": {
+        "title": "Which of these have you often experienced in the past month?",
+        "options": {
+          "hard_to_start": "I want to do something but can't get started",
+          "distracted": "I get distracted easily or give up halfway",
+          "forgetful": "I often forget things or what I need to do",
+          "none": "None of these"
+        }
+      },
+      "source": {
+        "title": "How did you hear about Blotz?",
+        "options": {
+          "rednote": "rednote",
+          "friend": "A friend",
+          "wechat_group": "A WeChat group",
+          "app_store": "App Store or Google Play search",
+          "other_social": "Other social media",
+          "other": "Other"
+        }
+      }
+    }
   }
 }

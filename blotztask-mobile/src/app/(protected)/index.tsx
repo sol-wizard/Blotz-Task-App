@@ -1,4 +1,7 @@
 import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
+import { SHOW_ABOUT_YOU_TO_EXISTING_USERS } from "@/feature/onboarding/about-you/about-you-questions";
+import { useAboutYouSeen } from "@/feature/onboarding/hooks/useAboutYouSeen";
+import AboutYouScreen from "@/feature/onboarding/screens/about-you-screen";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { useWhatsNewSeen } from "@/feature/whats-new/hooks/useWhatsNewSeen";
@@ -10,6 +13,7 @@ import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { analytics } from "@/shared/services/analytics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";
+import { useAuth0 } from "react-native-auth0";
 
 export default function ProtectedGate() {
   // `entry` is set by the two routes that lead here: the sign-in button after a fresh
@@ -36,6 +40,16 @@ export default function ProtectedGate() {
   } = useUserPreferencesQuery();
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
   const { hasSeen: hasSeenWhatsNew, markAsSeen } = useWhatsNewSeen();
+  const { user } = useAuth0();
+  const { hasSeen: hasSeenAboutYou, markAsSeen: markAboutYouSeen } = useAboutYouSeen(user?.sub);
+  // Existing users get the "About you" questions once, after What's New.
+  // true = show them, false = go home, null = still reading the stored flag (wait).
+  // No Auth0 user yet counts as false: home routing must never wait on the Auth0 hook,
+  // and the questions are simply asked on a later launch.
+  let needsAboutYou: boolean | null = false;
+  if (SHOW_ABOUT_YOU_TO_EXISTING_USERS && user?.sub) {
+    needsAboutYou = hasSeenAboutYou === null ? null : !hasSeenAboutYou;
+  }
 
   const isLoading = isUserProfileLoading || isUserPreferencesLoading || isUpdatingUserPreferences;
   const hasError = isUserProfileError || isUserPreferencesError;
@@ -47,6 +61,8 @@ export default function ProtectedGate() {
     if (isLoading || hasError || !userProfile || !userPreferences || hasSeenWhatsNew === null) {
       return;
     }
+    // Wait for the stored "About you" flag too, so `app_entered` reports the real destination.
+    if (userProfile.isOnBoarded && needsAboutYou === null) return;
 
     // Both gate requests succeeded: the user is in. Fired once per process, before the
     // language update below can re-run this effect.
@@ -54,9 +70,11 @@ export default function ProtectedGate() {
       hasTrackedEntry.current = true;
       const destination: AppEntryDestination = !userProfile.isOnBoarded
         ? "onboarding"
-        : hasSeenWhatsNew
-          ? "home"
-          : "whats_new";
+        : !hasSeenWhatsNew
+          ? "whats_new"
+          : needsAboutYou
+            ? "about_you"
+            : "home";
       analytics.trackAppEntered({
         source: entrySource,
         destination,
@@ -77,7 +95,9 @@ export default function ProtectedGate() {
       return;
     }
 
-    if (hasSeenWhatsNew) {
+    // What's New and the "About you" questions render below; finishing each one
+    // re-runs this effect, which sends the user home once nothing is left to show.
+    if (hasSeenWhatsNew && needsAboutYou === false) {
       router.replace("/(protected)/(tabs)");
     }
   }, [
@@ -86,6 +106,7 @@ export default function ProtectedGate() {
     userProfile?.isOnBoarded,
     userPreferences?.preferredLanguage,
     hasSeenWhatsNew,
+    needsAboutYou,
     entrySource,
   ]);
 
@@ -107,9 +128,13 @@ export default function ProtectedGate() {
     analytics.flush();
   }, [hasError, isUserProfileError, isUserPreferencesError, entrySource]);
 
+  // Both handlers only record "seen"; the routing effect above decides where to go next.
   const handleWhatsNewFinish = async () => {
     await markAsSeen();
-    router.replace("/(protected)/(tabs)");
+  };
+
+  const handleAboutYouDone = async () => {
+    await markAboutYouSeen();
   };
 
   const handleRetry = () => {
@@ -123,6 +148,10 @@ export default function ProtectedGate() {
 
   if (userProfile?.isOnBoarded && hasSeenWhatsNew === false) {
     return <WhatsNewScreen onFinish={handleWhatsNewFinish} />;
+  }
+
+  if (userProfile?.isOnBoarded && hasSeenWhatsNew && needsAboutYou) {
+    return <AboutYouScreen audience="existing_user" onDone={handleAboutYouDone} />;
   }
 
   return <LoadingScreen />;

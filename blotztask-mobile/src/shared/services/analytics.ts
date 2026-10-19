@@ -22,6 +22,7 @@ import {
   type ShareContentType,
   type OnboardingOutcome,
   type OnboardingSection,
+  type AboutYouAudience,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -255,6 +256,35 @@ export const analytics = {
     posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
       task_count: params.taskCount,
     });
+  },
+
+  /**
+   * Fires when the user answers one "About you" question, and saves the answer on their
+   * person profile (`$set`) so every other event can be broken down by it.
+   * Multi-select answers are saved as an array of option keys.
+   */
+  trackAboutYouAnswered(params: {
+    question: string;
+    property: string;
+    answer: string | string[];
+    audience: AboutYouAudience;
+  }) {
+    const properties = {
+      question: params.question,
+      answer: params.answer,
+      audience: params.audience,
+      $set: { [params.property]: params.answer },
+    };
+    // PostHog only sends in production builds, so log the payload locally to check it.
+    if (__DEV__) console.log(EVENTS.ABOUT_YOU_ANSWERED, JSON.stringify(properties));
+    posthog.capture(EVENTS.ABOUT_YOU_ANSWERED, properties);
+  },
+
+  /** Fires when the user skips one "About you" question. Nothing is saved on the person. */
+  trackAboutYouSkipped(params: { question: string; audience: AboutYouAudience }) {
+    const properties = { question: params.question, audience: params.audience };
+    if (__DEV__) console.log(EVENTS.ABOUT_YOU_SKIPPED, JSON.stringify(properties));
+    posthog.capture(EVENTS.ABOUT_YOU_SKIPPED, properties);
   },
 
   /**
