@@ -52,12 +52,11 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
         <HStack alignment="center" spacing={8} modifiers={[frame({ maxWidth: 360 })]}>
           <Text
             modifiers={[
-              font({ size: 16, family: "Baloo2-Bold" }),
+              // System font: Baloo2 has no Chinese glyphs, so iOS measured "10月18日" too narrow and truncated it.
+              font({ size: 16, weight: "bold" }),
               foregroundStyle("#2F8F46"),
               lineLimit(1),
               layoutPriority(1),
-              // The date is short; keep its natural width so iOS never truncates it.
-              fixedSize({ horizontal: true }),
             ]}
           >
             {isSmallWidget ? props.title : props.dateTitle || props.title}
