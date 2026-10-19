@@ -18,12 +18,14 @@ export const NoteRow = ({
   onDelete,
   onRowOpen,
   onAddToTask,
+  animateOnEnter = false,
 }: {
   note: NoteDTO;
   onPressNote: (note: NoteDTO) => void;
   onDelete: (note: NoteDTO) => void;
   onRowOpen: (ref: RefObject<SwipeableMethods | null>) => void;
   onAddToTask: (note: NoteDTO) => void;
+  animateOnEnter?: boolean;
 }) => {
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
@@ -33,7 +35,7 @@ export const NoteRow = ({
 
   return (
     <Animated.View
-      entering={MotionAnimations.upEntering}
+      entering={animateOnEnter ? MotionAnimations.upEntering : undefined}
       exiting={MotionAnimations.leftExiting}
       layout={MotionAnimations.layout}
     >

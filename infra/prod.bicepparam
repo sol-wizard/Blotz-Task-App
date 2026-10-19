@@ -38,6 +38,7 @@ param dbAdminPassword = ''
 
 // Auth0 Configuration (production)
 param auth0Domain = 'dev-k72xachs0fr6nebp.us.auth0.com'
+param auth0CustomDomain = 'auth.blotztask.com'
 param auth0Audience = 'https://blotz-task-prod/api'
 param auth0ManagementClientId = 'xWylVePDs5giZLBopYT1qHecBv2WijQh'
 param auth0ManagementAudience = 'https://dev-k72xachs0fr6nebp.us.auth0.com/api/v2/'

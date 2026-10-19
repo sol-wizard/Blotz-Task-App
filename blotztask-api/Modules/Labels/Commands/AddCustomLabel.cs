@@ -31,7 +31,6 @@ public class AddCustomLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddCust
 
         if (exist)
         {
-            // TODO: Replace with ConflictException once that domain exception is added.
             throw new InvalidOperationException($"Label {command.Name} already exists for {command.UserId}.");
         }
 

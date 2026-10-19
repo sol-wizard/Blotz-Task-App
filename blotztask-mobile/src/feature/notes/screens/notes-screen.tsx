@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useMutationState } from "@tanstack/react-query";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
@@ -10,7 +11,10 @@ import { useSwipeableManager } from "../hooks/useSwipeableManager";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { NoteHeader } from "@/feature/notes/components/note-header";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
-import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import {
+  noteMutationKeys,
+  useNotesMutation,
+} from "@/feature/notes/hooks/useNotesMutation";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { NoteRow } from "@/feature/notes/components/note-row";
 
@@ -24,6 +28,7 @@ import { convertDurationToMinutes } from "@/shared/util/convert-duration";
 export default function NotesScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [screenMountedAt] = useState(() => Date.now());
 
   const { deleteNote } = useNotesMutation();
 
@@ -44,6 +49,22 @@ export default function NotesScreen() {
   );
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
+  const successfulCreateMutations = useMutationState({
+    filters: { mutationKey: noteMutationKeys.create, status: "success" },
+    select: (mutation) => ({
+      note: mutation.state.data as NoteDTO | undefined,
+      submittedAt: mutation.state.submittedAt,
+    }),
+  });
+  const newNoteIds = useMemo(
+    () =>
+      new Set(
+        successfulCreateMutations
+          .filter(({ note, submittedAt }) => note && submittedAt >= screenMountedAt)
+          .map(({ note }) => String(note!.id)),
+      ),
+    [screenMountedAt, successfulCreateMutations],
+  );
   const { onRowOpen, closeAllRows } = useSwipeableManager();
 
   const openEditor = (note: NoteDTO) => {
@@ -127,6 +148,7 @@ export default function NotesScreen() {
                   renderItem={({ item }) => (
                     <NoteRow
                       note={item}
+                      animateOnEnter={newNoteIds.has(String(item.id))}
                       onPressNote={openEditor}
                       onDelete={handleDelete}
                       onRowOpen={onRowOpen}

@@ -32,16 +32,16 @@ public class GetUserBadgesQueryHandler(BlotzTaskDbContext db, ILogger<GetUserBad
                     ub.EarnedAtUtc,
                     EquippedSlot = ub.DisplayOrder
                 })
+            // Clients render badges in the order returned here, so this ordering is part of the contract.
             .OrderBy(b => b.EarnedAtUtc)
             .ToListAsync(ct);
 
         var badges = earnedBadges
-            .Select((badge, index) => new BadgeDto
+            .Select(badge => new BadgeDto
             {
                 Id = badge.Id,
                 Name = language == Language.Zh ? badge.NameZh : badge.NameEn,
                 IconUrl = badge.IconUrl,
-                DisplayOrder = index,
                 EquippedSlot = badge.EquippedSlot
             })
             .ToList();
@@ -56,8 +56,6 @@ public class BadgeDto
     public int Id { get; set; }
     public required string Name { get; set; }
     public required string IconUrl { get; set; }
-    // Position in this response, ordered by earned date — not the UserBadge.DisplayOrder column.
-    public int DisplayOrder { get; set; }
 
     // The user's chosen preview slot from UserBadge.DisplayOrder, null when the badge is not equipped.
     public int? EquippedSlot { get; set; }

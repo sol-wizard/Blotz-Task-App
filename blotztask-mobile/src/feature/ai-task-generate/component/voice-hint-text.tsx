@@ -2,9 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
-export const VoiceHintText = () => {
+type Props = {
+  /** Replaces the small "try saying" line. */
+  label?: string;
+  /** Replaces the typed-out example. */
+  hint?: string;
+};
+
+export const VoiceHintText = ({ label, hint }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
-  const hintText = t("voiceHint.hintText");
+  const hintText = hint ?? t("voiceHint.hintText");
 
   const [displayedHint, setDisplayedHint] = useState("");
   const indexRef = useRef(0);
@@ -23,7 +30,9 @@ export const VoiceHintText = () => {
 
   return (
     <View className="flex-1 w-full items-center justify-center px-8">
-      <Text className="text-white/60 font-baloo text-base mb-2">{t("voiceHint.trySaying")}</Text>
+      <Text className="text-white/60 font-baloo text-base mb-2">
+        {label ?? t("voiceHint.trySaying")}
+      </Text>
       <View style={{ minHeight: 72 }} className="w-full items-center">
         <Text className="text-white font-balooBold text-2xl text-center">{displayedHint}</Text>
       </View>

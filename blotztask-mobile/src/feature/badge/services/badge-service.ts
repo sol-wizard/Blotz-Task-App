@@ -9,3 +9,7 @@ export const fetchAllBadges = async (): Promise<BadgePreviewDTO[]> => {
 export const fetchBadgeDetailById = async (badgeId: number): Promise<BadgeDetailDTO> => {
   return await apiClient.get<BadgeDetailDTO>(`/Badge/${badgeId}`);
 };
+
+export const equipBadge = async (badgeId: number): Promise<void> => {
+  await apiClient.post<void>(`/Badge/${badgeId}/equip`);
+};

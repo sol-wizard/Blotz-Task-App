@@ -50,6 +50,16 @@ public class ErrorHandlingMiddleware
                 Message = ex.Message
             });
         }
+        catch (ForbiddenException ex)
+        {
+            _logger.LogWarning(ex, "Forbidden: {Message}", ex.Message);
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
         catch (KeyNotFoundException ex)
         {
             _logger.LogWarning(ex, "Not found: {Message}", ex.Message);

@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -13,12 +13,13 @@ import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { BadgePreviewSection } from "@/feature/settings/components/badge-preview-section";
 import { useTranslation } from "react-i18next";
 import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
+import LoadingScreen from "@/shared/components/loading-screen";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { userProfile } = useUserProfile();
+  const { userProfile, isUserProfileLoading } = useUserProfile();
   const { t } = useTranslation("settings");
-  const { badges } = useBadgesQuery();
+  const { badges, isLoading: areBadgesLoading } = useBadgesQuery();
   const queryClient = useQueryClient();
 
   useFocusEffect(
@@ -26,6 +27,10 @@ export default function SettingsScreen() {
       queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     }, [queryClient]),
   );
+
+  if (isUserProfileLoading || areBadgesLoading) {
+    return <LoadingScreen />;
+  }
 
   const menuItems: SettingsMenuItem[] = [
     {
@@ -64,6 +69,23 @@ export default function SettingsScreen() {
       icon: "translate",
       route: "/settings/language",
     },
+    {
+      key: "invite",
+      label: t("menu.invite"),
+      icon: "account-plus-outline",
+      route: "/settings/invite",
+    },
+    // iOS only: tipping is wired to StoreKit, Android has no products configured.
+    ...(Platform.OS === "ios"
+      ? ([
+          {
+            key: "support-us",
+            label: t("menu.supportUs"),
+            icon: "heart-outline",
+            route: "/settings/support-us",
+          },
+        ] satisfies SettingsMenuItem[])
+      : []),
     {
       key: "about",
       label: t("menu.about"),
@@ -113,7 +135,9 @@ export default function SettingsScreen() {
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </Pressable>
-              {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
+              {index < menuItems.length - 1 && (
+                <FormDivider marginVertical={2} animateLayout={false} />
+              )}
             </View>
           ))}
         </View>

@@ -82,11 +82,11 @@ export const FilteredTaskList = ({
           contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12, flexGrow: 1 }}
           renderItem={renderTask}
           keyExtractor={(task, index) => {
-            if (task.id != null) return `task-${task.id}`;
             const recurringOccurrence = getRecurringOccurrenceIdentity(task);
             if (recurringOccurrence) {
               return `virtual-${recurringOccurrence.recurringTaskId}-${recurringOccurrence.occurrenceDate}`;
             }
+            if (task.id != null) return `task-${task.id}`;
             return `task-fallback-${index}`;
           }}
           onScrollBeginDrag={closeAllRows}

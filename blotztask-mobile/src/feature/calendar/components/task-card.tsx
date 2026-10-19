@@ -311,6 +311,7 @@ const TaskCard = ({
                     completeOccurrence({
                       recurringTaskId,
                       occurrenceDate,
+                      selectedDay,
                       wasDone: task.isDone,
                       wasOverdue: isOverdue,
                       hasDeadline: task.isDeadline,

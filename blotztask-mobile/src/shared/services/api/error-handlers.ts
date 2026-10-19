@@ -3,6 +3,9 @@ import { clearTokens, forceRefreshAuthToken } from "./token-manager";
 import { router } from "expo-router";
 import { queryClient } from "@/shared/util/queryClient";
 import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
+import * as Sentry from "@sentry/react-native";
+import Toast from "react-native-toast-message";
+import i18n from "@/i18n";
 
 export function handleAuthError(
   error: AxiosError,
@@ -22,7 +25,26 @@ export function handleAuthError(
         }
         return api(originalRequest);
       })
-      .catch(() => {
+      .catch((refreshError: unknown) => {
+        // A voluntary logout also produces a burst of 401s: `useLogout` clears the cache and
+        // credentials before the screens unmount, and their queries refetch without a token.
+        // Only an *unexpected* loss of session deserves a toast and a Sentry record.
+        if (queryClient.getQueryData(AUTH_QUERY_KEY) === true) {
+          // Record why before the evidence is gone: the API's 401 body says whether the
+          // token was rejected or the user is unknown, and the refresh error says whether
+          // Auth0 could be reached at all.
+          Sentry.captureMessage("session_cleared_after_401", {
+            level: "warning",
+            extra: {
+              url: originalRequest.url,
+              status: error.response?.status,
+              body: error.response?.data,
+              refreshError: String(refreshError),
+            },
+          });
+          Toast.show({ type: "error", text1: i18n.t("errors.sessionExpired") });
+        }
+
         clearTokens();
         // Ensure auth state flips immediately for guards + redirects.
         queryClient.setQueryData(AUTH_QUERY_KEY, false);

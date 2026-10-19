@@ -9,6 +9,14 @@ public static class ReviewConstants
     public const int WeeklyLowActivityTaskThreshold = 3;
     public const int MonthlyLowActivityTaskThreshold = 10;
 
+    // Three is enough to break a rut without crowding the prompt.
+    public const int RecentThemesToAvoid = 3;
+
+    // App opens are only recorded from the release that added the activity call (early October
+    // 2026), so earlier months have no rows and hide the stat. The release month is shown on
+    // purpose even though it undercounts for users who updated late. Null would hide it everywhere.
+    public static readonly DateOnly? ActivityTrackingStartDate = new(2026, 10, 1);
+
     public static int LowActivityTaskThreshold(ReviewPeriodType periodType) => periodType switch
     {
         ReviewPeriodType.Weekly => WeeklyLowActivityTaskThreshold,

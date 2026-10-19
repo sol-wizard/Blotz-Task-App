@@ -61,7 +61,9 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
       get().pauseSoundscape();
       return;
     }
-    get().playSoundscape(get().currentSoundscapeType!);
+    const type = get().currentSoundscapeType;
+    if (!type) return;
+    get().playSoundscape(type);
     set({ isPlaying: true });
   },
 

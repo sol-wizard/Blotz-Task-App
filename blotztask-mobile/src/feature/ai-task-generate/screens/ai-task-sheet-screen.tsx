@@ -13,21 +13,27 @@ import {
   useKeyboardState,
   useReanimatedKeyboardAnimation,
 } from "react-native-keyboard-controller";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import LottieView from "lottie-react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
-import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
+import { HoldToTalkPill } from "../component/hold-to-talk-pill";
+import { MicPermissionHint } from "../component/mic-permission-hint";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { useMicPermission } from "../hooks/useMicPermission";
+import { AI_SHEET_SOURCE, type AiSheetSource } from "../models/ai-sheet-source";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
@@ -36,22 +42,54 @@ import { mapRecurringToCreateDTO } from "../utils/map-recurring-to-create-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
+import { useDebouncedCallback } from "use-debounce";
 import { analytics } from "@/shared/services/analytics";
 import { toastConfig } from "@/shared/components/toast-config";
+
+// Presses shorter than this are treated as accidental taps and discarded;
+// anything longer is a real recording and gets uploaded.
+const MIN_HOLD_MS = 300;
+// Shared by the two transient captions below the sheet: the hold-longer nudge and the
+// "mic is off" answer to a tap the OS will not prompt for.
+const HINT_AUTO_HIDE_MS = 2500;
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
+  const { t: tOnboarding } = useTranslation("onboarding");
+  // Set when the sheet is opened from the post-onboarding voice coach.
+  const { source } = useLocalSearchParams<{ source?: AiSheetSource }>();
+  const isFromOnboarding = source === AI_SHEET_SOURCE.ONBOARDING;
+  const taskSource = isFromOnboarding ? "onboarding_ai" : "ai";
+  const micPressCount = useRef(0);
   const { height } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  // Interface opens in voice mode by default; the keyboard toggle switches to text.
-  const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
+  // Text is the safe default: it is the only mode that works without a permission we have not
+  // asked for yet. Voice is chosen below once the mic is known to be granted.
+  const [inputMode, setInputMode] = useState<"voice" | "text">("text");
   const hasSubmittedAiRequest = useRef(false);
-  const longPressTriggered = useRef(false);
+  const heldLongEnough = useRef(false);
+  // Both guard the automatic switch into voice mode; see the mic permission effect below.
+  const hasChosenTextMode = useRef(false);
+  const wasMicGranted = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+  const hideHoldHintLater = useDebouncedCallback(
+    () => setIsHoldHintVisible(false),
+    HINT_AUTO_HIDE_MS,
+  );
+  // Swaps the permission caption to the reason for a moment; see handleSwitchToVoice.
+  const [isMicDisabledReasonVisible, setIsMicDisabledReasonVisible] = useState(false);
+  const hideMicDisabledReasonLater = useDebouncedCallback(
+    () => setIsMicDisabledReasonVisible(false),
+    HINT_AUTO_HIDE_MS,
+  );
+  const micShakeX = useSharedValue(0);
+  const micShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: micShakeX.value }],
+  }));
 
   const { height: keyboardOffset } = useReanimatedKeyboardAnimation();
   const listKeyboardPad = useAnimatedStyle(() => ({
@@ -78,24 +116,34 @@ export default function AiTaskSheetScreen() {
   const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
+  const {
+    status: micStatus,
+    isMicRefused,
+    needsSettings,
+    requestMic,
+    openSettings,
+  } = useMicPermission();
   const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
     useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
-  // Request mic permission on mount; navigate back if denied
   useEffect(() => {
-    requestRecordingPermissionsAsync().then(({ granted }) => {
-      if (!granted) {
-        console.warn("[Mic] Permission not granted");
-        analytics.trackAiTaskGenerationFailed({
-          inputMode: "voice",
-          stage: "permission",
-          errorCode: "PermissionDenied",
-        });
-        router.back();
-      }
-    });
+    analytics.trackAiTaskSheetOpened();
   }, []);
+
+  // Voice is offered only once the mic is known to be granted — including the moment the user
+  // returns from Settings having just enabled it. A deliberate keyboard choice, or a message
+  // already part-typed, outranks the switch.
+  useEffect(() => {
+    const isGranted = micStatus === "granted";
+    const justGranted = isGranted && !wasMicGranted.current;
+    wasMicGranted.current = isGranted;
+
+    if (!justGranted || hasChosenTextMode.current || textInput.length > 0) return;
+
+    Keyboard.dismiss();
+    setInputMode("voice");
+  }, [micStatus, textInput]);
 
   // --- Derived data ---
   const displayTasks = streamedTasks.map((task) =>
@@ -107,6 +155,21 @@ export default function AiTaskSheetScreen() {
   const displayNotes = streamedNotes;
   const hasContent =
     streamedTasks.length > 0 || streamedRecurringTasks.length > 0 || streamedNotes.length > 0;
+
+  // A finished turn appends to `turns`; report the ones that produced something.
+  const lastTurn = turns.at(-1);
+  useEffect(() => {
+    if (!isFromOnboarding || !lastTurn) return;
+    const taskCount =
+      lastTurn.generated_tasks.length +
+      lastTurn.generated_recurring_tasks.length +
+      lastTurn.generated_notes.length;
+    if (taskCount === 0) return;
+    analytics.trackOnboardingVoiceTaskGenerated({
+      inputMode: lastTurn.input_mode,
+      taskCount,
+    });
+  }, [isFromOnboarding, lastTurn]);
 
   // --- Handlers ---
   const handleDismiss = () => {
@@ -140,13 +203,18 @@ export default function AiTaskSheetScreen() {
         // Fire per successful task, not behind the all-succeed gate below, so a partial
         // failure still records the tasks that did land.
         const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
-        analytics.trackTaskCreated({ taskId, source: "ai", isRecurring: false, hasDeadline: false });
+        analytics.trackTaskCreated({
+          taskId,
+          source: taskSource,
+          isRecurring: false,
+          hasDeadline: false,
+        });
       }),
       ...displayRecurringTasks.map(async (task) => {
         const { recurringTaskId } = await createRecurringTaskAsync(mapRecurringToCreateDTO(task));
         analytics.trackTaskCreated({
           taskId: recurringTaskId,
-          source: "ai",
+          source: taskSource,
           isRecurring: true,
           hasDeadline: false,
         });
@@ -159,6 +227,11 @@ export default function AiTaskSheetScreen() {
     if (allSucceeded) {
       displayNotes.forEach(() => analytics.trackNoteCreated({ source: "ai" }));
       analytics.trackAiTaskGenerationSession({ outcome: "accepted", turns });
+      if (isFromOnboarding) {
+        analytics.trackOnboardingVoiceTaskCreated({
+          taskCount: displayTasks.length + displayRecurringTasks.length + displayNotes.length,
+        });
+      }
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
       requestIdleCallback(() => Toast.show({ type: "success", text1: t("success.taskAdded") }));
@@ -167,23 +240,70 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    if (isFromOnboarding) {
+      micPressCount.current += 1;
+      analytics.trackOnboardingVoiceMicPressed({ attempt: micPressCount.current });
+    }
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    heldLongEnough.current = false;
+    hideHoldHintLater.cancel();
     setIsHoldHintVisible(false);
     void startListening();
   };
 
-  const handleMicPressOut = async () => {
+  // Released before MIN_HOLD_MS: discard, but never silently.
+  const handleMicMisfire = async () => {
+    micShakeX.value = withSequence(
+      ...[-8, 8, -5, 5, 0].map((x) => withTiming(x, { duration: 50 })),
+    );
+    setIsHoldHintVisible(true);
+    hideHoldHintLater();
+    await cancelListening(); // iOS mutes haptics while the mic is open
+
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  };
+
+  const handleMicSubmit = async () => {
     const didSubmit = await stopAndUpload();
     if (didSubmit) {
       hasSubmittedAiRequest.current = true;
     }
   };
 
+  const handleMicRelease = () => {
+    if (heldLongEnough.current) {
+      void handleMicSubmit();
+    } else {
+      void handleMicMisfire();
+    }
+  };
+
+  const markHeldLongEnough = () => {
+    heldLongEnough.current = true;
+  };
+
   const handleSwitchToText = () => {
+    hasChosenTextMode.current = true;
     setIsHoldHintVisible(false);
     setInputMode("text"); // TextInput autoFocus pops the keyboard on mount
   };
 
-  const handleSwitchToVoice = () => {
+  // The mic button is where permission gets asked for. The tap only raises the system prompt;
+  // recording still needs a separate hold, and the sheet stays put whichever way the user answers.
+  const handleSwitchToVoice = async () => {
+    const resolved = await requestMic();
+
+    if (resolved !== "granted") {
+      // A rejection at the system prompt has already answered the tap. A blocked mic shows no
+      // prompt at all, so without this the button would look broken.
+      if (resolved === "blocked") {
+        setIsMicDisabledReasonVisible(true);
+        hideMicDisabledReasonLater();
+      }
+      return;
+    }
+
+    hasChosenTextMode.current = false;
     Keyboard.dismiss();
     setInputMode("voice");
   };
@@ -209,7 +329,10 @@ export default function AiTaskSheetScreen() {
             {/* Hint text (no results) */}
             {!hasContent && (
               <View className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}>
-                <VoiceHintText />
+                <VoiceHintText
+                  label={isFromOnboarding ? tOnboarding("voice-coach.sheetLabel") : undefined}
+                  hint={isFromOnboarding ? tOnboarding("voice-coach.sheetHint") : undefined}
+                />
               </View>
             )}
 
@@ -248,6 +371,14 @@ export default function AiTaskSheetScreen() {
             )}
 
             <KeyboardStickyView className="w-full">
+              {isMicRefused && (
+                <MicPermissionHint
+                  showDisabledReason={isMicDisabledReasonVisible}
+                  showSettingsButton={needsSettings}
+                  onOpenSettings={openSettings}
+                />
+              )}
+
               <View
                 className="w-full flex-row items-center px-6 gap-4"
                 style={{ paddingBottom: bottomPadding }}
@@ -255,13 +386,15 @@ export default function AiTaskSheetScreen() {
                 <View className="flex-1 flex-row items-center gap-4">
                   {/* Mode toggle: keyboard icon (voice mode) / mic icon (text mode) */}
                   <Pressable
-                    onPress={inputMode === "voice" ? handleSwitchToText : handleSwitchToVoice}
+                    onPress={
+                      inputMode === "voice" ? handleSwitchToText : () => void handleSwitchToVoice()
+                    }
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: "rgba(255,255,255,0.25)",
                       opacity: isAiGenerating || isRecording ? 0.4 : 1,
                     }}
-                    disabled={isAiGenerating || isRecording}
+                    disabled={isAiGenerating || isRecording || micStatus === "checking"}
                   >
                     <MaterialCommunityIcons
                       name={inputMode === "voice" ? "keyboard-outline" : "microphone"}
@@ -271,52 +404,23 @@ export default function AiTaskSheetScreen() {
                   </Pressable>
 
                   {/* Voice mode: hold-to-talk pill (waveform while recording). Text mode: input. */}
-                  <View className="flex-1 items-center justify-center">
-                    {inputMode === "voice" ? (
-                      <Pressable
-                        onPressIn={() => {
-                          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                          longPressTriggered.current = false;
-                          handleMicPressIn();
-                        }}
-                        onPressOut={() => {
-                          if (!longPressTriggered.current) {
-                            setIsHoldHintVisible(true);
-                            void cancelListening();
-                          } else {
-                            void handleMicPressOut();
-                          }
-                        }}
-                        onLongPress={() => {
-                          longPressTriggered.current = true;
-                        }}
-                        delayLongPress={1000}
-                        className="w-full h-14 rounded-full flex-row items-center justify-center gap-2"
-                        style={{
-                          backgroundColor: isRecording
-                            ? "rgba(255,255,255,0.5)"
-                            : "rgba(255,255,255,0.25)",
-                          opacity: isAiGenerating ? 0.4 : 1,
-                        }}
+                  <Animated.View
+                    className="flex-1 items-center justify-center"
+                    style={micShakeStyle}
+                  >
+                    {micStatus === "checking" ? (
+                      // Hold the row empty until the grant is known: the text input autofocuses,
+                      // and flashing the keyboard at a user whose mic works would be wrong.
+                      <View className="h-14 w-full" />
+                    ) : inputMode === "voice" ? (
+                      <HoldToTalkPill
+                        isRecording={isRecording}
                         disabled={isAiGenerating}
-                      >
-                        {isRecording ? (
-                          <LottieView
-                            source={LOTTIE_ANIMATIONS.voiceWave}
-                            loop
-                            autoPlay
-                            style={{ width: "100%", height: 40 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <>
-                            <MaterialCommunityIcons name="microphone" size={24} color="white" />
-                            <Text className="text-white font-baloo text-base">
-                              {t("buttons.holdToTalk")}
-                            </Text>
-                          </>
-                        )}
-                      </Pressable>
+                        minHoldMs={MIN_HOLD_MS}
+                        onPressIn={handleMicPressIn}
+                        onPressOut={handleMicRelease}
+                        onHeldLongEnough={markHeldLongEnough}
+                      />
                     ) : (
                       <TextInput
                         autoFocus
@@ -331,7 +435,7 @@ export default function AiTaskSheetScreen() {
                         className={`w-full text-white font-baloo text-base px-4 bg-white/25 rounded-full h-14 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
                       />
                     )}
-                  </View>
+                  </Animated.View>
                 </View>
                 {hasContent && !isKeyboardVisible && (
                   <Pressable

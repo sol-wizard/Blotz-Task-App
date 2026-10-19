@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.Tasks.Enums;
 
@@ -16,9 +17,15 @@ public class TaskGenerationTools()
     public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
     public Func<ExtractedRecurringTask, Task>? OnRecurringTaskStreamed { get; set; }
 
+    // Short ids ("t1", "n1") the model uses to point at a one-off task or note, keyed by the
+    // draft's Guid. Counters only go up, so a swipe-deleted draft never hands its id to another.
+    private readonly Dictionary<Guid, string> _shortIds = [];
+    private int _taskCount;
+    private int _noteCount;
+
     public void ResetCallCount() => ToolCallCount = 0;
 
-    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends.")]
+    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends. Returns each task's id (e.g. t1) for later updates or removals.")]
     public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,
         [Description("Array of descriptions (empty string if none)")] string[] descriptions,
@@ -28,6 +35,7 @@ public class TaskGenerationTools()
     {
         ToolCallCount++;
         var count = titles.Length;
+        var added = new List<ExtractedTask>();
         for (var i = 0; i < count; i++)
         {
             var task = new ExtractedTask
@@ -39,13 +47,13 @@ public class TaskGenerationTools()
                 EndTime = endTimes[i],
                 LabelName = labels[i]
             };
-            Tasks.Add(task);
-            if (OnTaskStreamed != null) await OnTaskStreamed(task);
+            await AddTask(task);
+            added.Add(task);
         }
-        return $"{count} task(s) added.";
+        return $"{count} task(s) added: {string.Join(", ", added.Select(DescribeTask))}.";
     }
 
-    [Description("Add a single task that has a specific date or time.")]
+    [Description("Add a single task that has a specific date or time. Returns the task's id (e.g. t1) for later updates or removals.")]
     public async Task<string> CreateTask(
         [Description("Title")] string title,
         [Description("Description or empty")] string description,
@@ -63,81 +71,161 @@ public class TaskGenerationTools()
             EndTime = endTime,
             LabelName = label
         };
-        Tasks.Add(task);
-        if (OnTaskStreamed != null) await OnTaskStreamed(task);
-        return "Task added.";
+        await AddTask(task);
+        return $"Task added: {DescribeTask(task)}.";
     }
 
     [Description(
         "Add a task that REPEATS on a schedule. Use this ONLY when the user states a clear, concrete repeating cadence — e.g. 'gym every Monday', 'standup every weekday at 9am', 'pay rent on the 1st of each month', 'yoga every other Tuesday'. " +
         "Do NOT use this for a one-off item with a single date/time (use CreateTask), and do NOT use it when the repetition is vague with no concrete frequency, e.g. 'go running regularly' or 'study more often' (use CreateNote instead). " +
-        "Rules: daysOfWeek applies only when frequency is Weekly; dayOfMonth applies only when frequency is Monthly; startDate must equal the date part of templateStartTime.")]
+        "Rules: daysOfWeek applies only when frequency is Weekly; dayOfMonth applies only when frequency is Monthly; the first occurrence date is derived from templateStartTime.")]
     public async Task<string> CreateRecurringTask(
         [Description("Title")] string title,
         [Description("Description or empty")] string description,
         [Description("SingleTime when the task is a moment with no duration (end equals start); RangeTime when it spans a start and end time.")] TaskTimeType timeType,
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label,
-        [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence. Its date part MUST equal startDate. If the user gives a day but no time, pick a sensible time of day.")] DateTime templateStartTime,
+        [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence, and its date part becomes the recurring task's start date. If the user gives a day but no time, pick a sensible time of day.")] DateTime templateStartTime,
         [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss. Equal to templateStartTime when timeType is SingleTime; strictly after templateStartTime when RangeTime.")] DateTime templateEndTime,
         [Description("How often it repeats: Daily, Weekly, Monthly, or Yearly.")] RecurrenceFrequency frequency,
         [Description("Repeat every N periods. 1 = every day/week/month/year, 2 = every other, and so on. Use 1 unless the user says otherwise.")] int interval,
         [Description("The weekdays the task repeats on, named directly, e.g. [Monday, Wednesday, Friday]. REQUIRED when frequency is Weekly; leave empty otherwise. Just name the days — never compute a number.")] DayOfWeek[] daysOfWeek,
         [Description("Day of month (1-31). REQUIRED when frequency is Monthly; otherwise leave null.")] int? dayOfMonth,
-        [Description("Date of the first occurrence as yyyy-MM-dd. MUST equal the date part of templateStartTime.")] DateOnly startDate,
-        [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after startDate.")] DateOnly? endDate)
+        [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after the date part of templateStartTime.")] DateOnly? endDate)
     {
         ToolCallCount++;
-
-        // Friendly -> strict translation lives here, not in the model: named weekdays -> WeeklyDayFlags
-        // bitmask, interval clamped, and the fields the endpoint couples to frequency normalized so a
-        // creation failure reflects a genuine extraction error rather than a redundant field.
-        var weeklyMask = daysOfWeek is { Length: > 0 } ? ToWeeklyBitmask(daysOfWeek) : 0;
-        var task = new ExtractedRecurringTask
+        await AddRecurringTask(BuildRecurringTask(new RecurringTaskInput
         {
-            Id = Guid.NewGuid(),
             Title = title,
             Description = description,
             TimeType = timeType,
-            LabelName = label,
+            Label = label,
             TemplateStartTime = templateStartTime,
             TemplateEndTime = templateEndTime,
             Frequency = frequency,
-            Interval = interval < 1 ? 1 : interval,
-            DaysOfWeek = frequency == RecurrenceFrequency.Weekly && weeklyMask != 0 ? weeklyMask : null,
-            DayOfMonth = frequency == RecurrenceFrequency.Monthly ? dayOfMonth : null,
-            StartDate = startDate,
+            Interval = interval,
+            DaysOfWeek = daysOfWeek,
+            DayOfMonth = dayOfMonth,
             EndDate = endDate
-        };
-        RecurringTasks.Add(task);
-        if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
+        }));
         return "Recurring task added.";
     }
 
-    // No-op guards: editing/removing recurring tasks via chat is not supported yet. These give the
-    // model a safe place to route those intents so it does NOT reach for UpdateTask/RemoveTask (which
-    // act only on the one-off Tasks list and would change or delete the wrong item). They mutate no
-    // state; the ToolCallCount bump keeps the run from tripping the "no tool called" error and doubles
-    // as telemetry. Next PBI replaces these bodies with the real recurring update/remove.
     [Description(
-        "Call this when the user wants to change, reschedule, or edit a recurring task they previously created with CreateRecurringTask (e.g. 'move my weekly gym to Tuesdays', 'make the standup 30 minutes'). " +
-        "Editing recurring tasks in chat is not supported yet, so this records the request without changing anything. " +
-        "Never use UpdateTask for a recurring task; UpdateTask acts only on one-off tasks and would change the wrong item.")]
-    public string UpdateRecurringTask(
-        [Description("Short paraphrase of the change the user asked for, e.g. 'move weekly gym to Tuesdays'")] string requestedChange)
+        "Add multiple recurring tasks from one message. Prefer this over CreateRecurringTask whenever the user mentions two or more distinct repeating actions. " +
+        "Create one item per independently completable action, even when actions share the same cadence or are connected by words such as 'and', 'also', 'then', or 'plus'. " +
+        "Apply a cadence stated once to all following actions it logically governs. Do not merge several actions into one title and do not keep only the last action.")]
+    public async Task<string> CreateRecurringTasks(
+        [Description("One item for every distinct recurring action mentioned by the user, in the order mentioned")]
+        RecurringTaskInput[] recurringTasks)
     {
         ToolCallCount++;
-        return $"Editing recurring tasks in chat isn't supported yet, so no change was made ({requestedChange}).";
+        // Validate every item before adding any, so one bad item fails the whole batch
+        // instead of leaving earlier items added (and duplicated if the model retries).
+        var tasks = recurringTasks.Select(BuildRecurringTask).ToList();
+        foreach (var task in tasks)
+        {
+            await AddRecurringTask(task);
+        }
+
+        return $"{recurringTasks.Length} recurring task(s) added.";
+    }
+
+    [Description(
+        "Call this when the user wants to change, reschedule, or edit a recurring task they previously created with CreateRecurringTask (e.g. 'move my weekly gym to Tuesdays', 'make the standup 30 minutes'). " +
+        "Only provide fields the user asked to change; omitted fields remain unchanged. Never use UpdateTask for a recurring task. " +
+        "When changing frequency to Weekly, provide daysOfWeek. When changing it to Monthly, provide dayOfMonth.")]
+    public string UpdateRecurringTask(
+        [Description("Current title of the recurring task to update")] string existingTitle,
+        [Description("New title, or null to leave unchanged")] string? title = null,
+        [Description("New description, or null to leave unchanged")] string? description = null,
+        [Description("New time type, or null to leave unchanged. When changing a moment into a duration, provide RangeTime together with templateEndTime; when changing a duration into a moment, provide SingleTime.")] TaskTimeType? timeType = null,
+        [Description("New label, or null to leave unchanged")] LabelNameEnum? label = null,
+        [Description("New first-occurrence start local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged")] DateTime? templateStartTime = null,
+        [Description("New first-occurrence end local time yyyy-MM-ddTHH:mm:ss, or null to leave unchanged. When making the task a duration, provide this together with timeType RangeTime and make it strictly later than templateStartTime.")] DateTime? templateEndTime = null,
+        [Description("New frequency, or null to leave unchanged")] RecurrenceFrequency? frequency = null,
+        [Description("New repeat interval, or null to leave unchanged")] int? interval = null,
+        [Description("Replacement weekdays for a Weekly task. Provide one or more named days, e.g. [Tuesday]; null or an empty array leaves the existing days unchanged.")] DayOfWeek[]? daysOfWeek = null,
+        [Description("Replacement day of month (1-31) for a Monthly task, or null to leave unchanged")] int? dayOfMonth = null,
+        [Description("New first occurrence date yyyy-MM-dd, or null to leave unchanged")] DateOnly? startDate = null,
+        [Description("New last recurrence date yyyy-MM-dd, or null to leave unchanged")] DateOnly? endDate = null,
+        [Description("True only when the user explicitly wants to remove the end date and repeat forever; otherwise false")] bool clearEndDate = false)
+    {
+        ToolCallCount++;
+        var task = RecurringTasks.FirstOrDefault(t =>
+            t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
+        if (task == null) return "Recurring task not found.";
+
+        var updatedTimeType = timeType ?? task.TimeType;
+        var updatedStartTime = task.TemplateStartTime;
+        if (templateStartTime.HasValue)
+        {
+            updatedStartTime = templateStartTime.Value;
+        }
+        else if (startDate.HasValue)
+        {
+            updatedStartTime = startDate.Value.ToDateTime(TimeOnly.FromDateTime(task.TemplateStartTime));
+        }
+
+        var updatedEndTime = task.TemplateEndTime;
+        if (templateEndTime.HasValue)
+        {
+            updatedEndTime = templateEndTime.Value;
+        }
+        else if (updatedStartTime != task.TemplateStartTime)
+        {
+            updatedEndTime += updatedStartTime - task.TemplateStartTime;
+        }
+
+        if (updatedTimeType == TaskTimeType.SingleTime)
+        {
+            updatedEndTime = updatedStartTime;
+        }
+        else if (updatedEndTime <= updatedStartTime)
+        {
+            updatedEndTime = updatedStartTime.AddHours(1);
+        }
+
+        var updatedFrequency = frequency ?? task.Frequency;
+        var updatedDays = daysOfWeek is { Length: > 0 }
+            ? daysOfWeek
+            : FromWeeklyBitmask(task.DaysOfWeek);
+        var updatedEndDate = clearEndDate ? null : endDate ?? task.EndDate;
+        var pattern = NormalizeRecurringPattern(
+            updatedFrequency,
+            interval ?? task.Interval,
+            updatedDays,
+            dayOfMonth ?? task.DayOfMonth,
+            updatedStartTime,
+            updatedEndDate);
+
+        task.Title = title ?? task.Title;
+        task.Description = description ?? task.Description;
+        task.TimeType = updatedTimeType;
+        task.LabelName = label ?? task.LabelName;
+        task.TemplateStartTime = updatedStartTime;
+        task.TemplateEndTime = updatedEndTime;
+        task.Frequency = pattern.Frequency;
+        task.Interval = pattern.Interval;
+        task.DaysOfWeek = pattern.DaysOfWeek;
+        task.DayOfMonth = pattern.DayOfMonth;
+        task.StartDate = pattern.StartDate;
+        task.EndDate = pattern.EndDate;
+
+        return "Recurring task updated.";
     }
 
     [Description(
         "Call this when the user wants to delete or remove a recurring task they previously created with CreateRecurringTask (e.g. 'delete my recurring gym', 'stop the weekly standup'). " +
-        "Removing recurring tasks in chat is not supported yet, so this records the request without changing anything. " +
-        "Never use RemoveTask for a recurring task; RemoveTask acts only on one-off tasks and would delete the wrong item.")]
+        "Match only recurring task drafts. Never use RemoveTask for a recurring task; RemoveTask acts only on one-off tasks.")]
     public string RemoveRecurringTask(
-        [Description("Short paraphrase of what the user asked to remove, e.g. 'delete weekly gym'")] string requestedChange)
+        [Description("Recurring task title")] string title)
     {
         ToolCallCount++;
-        return $"Removing recurring tasks in chat isn't supported yet, so nothing was removed ({requestedChange}).";
+        var task = RecurringTasks.FirstOrDefault(t =>
+            t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+        if (task == null) return "Recurring task not found.";
+        RecurringTasks.Remove(task);
+        return "Recurring task removed.";
     }
 
     // Maps named weekdays (System.DayOfWeek: Sun=0..Sat=6) to the WeeklyDayFlags bitmask
@@ -162,11 +250,96 @@ public class TaskGenerationTools()
         return mask;
     }
 
-    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item.")]
+    private static DayOfWeek[]? FromWeeklyBitmask(int? mask)
+    {
+        if (mask is null or 0) return null;
+
+        return Enum.GetValues<DayOfWeek>()
+            .Where(day => (mask.Value & ToWeeklyBitmask([day])) != 0)
+            .ToArray();
+    }
+
+    private static RecurringPattern NormalizeRecurringPattern(
+        RecurrenceFrequency frequency,
+        int interval,
+        IEnumerable<DayOfWeek>? daysOfWeek,
+        int? dayOfMonth,
+        DateTime templateStartTime,
+        DateOnly? endDate)
+    {
+        var startDate = DateOnly.FromDateTime(templateStartTime);
+        var weeklyMask = daysOfWeek == null ? 0 : ToWeeklyBitmask(daysOfWeek);
+
+        if (frequency == RecurrenceFrequency.Weekly && weeklyMask == 0)
+        {
+            weeklyMask = ToWeeklyBitmask([templateStartTime.DayOfWeek]);
+        }
+
+        var normalizedDayOfMonth = dayOfMonth is >= 1 and <= 31
+            ? dayOfMonth
+            : startDate.Day;
+
+        if (endDate < startDate)
+        {
+            throw new ValidationException("EndDate must be later than or equal to StartDate.");
+        }
+
+        return new RecurringPattern(
+            frequency,
+            Math.Max(1, interval),
+            frequency == RecurrenceFrequency.Weekly ? weeklyMask : null,
+            frequency == RecurrenceFrequency.Monthly ? normalizedDayOfMonth : null,
+            startDate,
+            endDate);
+    }
+
+    private sealed record RecurringPattern(
+        RecurrenceFrequency Frequency,
+        int Interval,
+        int? DaysOfWeek,
+        int? DayOfMonth,
+        DateOnly StartDate,
+        DateOnly? EndDate);
+
+    private static ExtractedRecurringTask BuildRecurringTask(RecurringTaskInput input)
+    {
+        var pattern = NormalizeRecurringPattern(
+            input.Frequency,
+            input.Interval,
+            input.DaysOfWeek,
+            input.DayOfMonth,
+            input.TemplateStartTime,
+            input.EndDate);
+        return new ExtractedRecurringTask
+        {
+            Id = Guid.NewGuid(),
+            Title = input.Title,
+            Description = input.Description,
+            TimeType = input.TimeType,
+            LabelName = input.Label,
+            TemplateStartTime = input.TemplateStartTime,
+            TemplateEndTime = input.TemplateEndTime,
+            Frequency = pattern.Frequency,
+            Interval = pattern.Interval,
+            DaysOfWeek = pattern.DaysOfWeek,
+            DayOfMonth = pattern.DayOfMonth,
+            StartDate = pattern.StartDate,
+            EndDate = pattern.EndDate
+        };
+    }
+
+    private async Task AddRecurringTask(ExtractedRecurringTask task)
+    {
+        RecurringTasks.Add(task);
+        if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
+    }
+
+    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item. Returns each note's id (e.g. n1) for later updates or removals.")]
     public async Task<string> CreateNotes(
         [Description("Array of note texts")] string[] texts)
     {
         ToolCallCount++;
+        var added = new List<ExtractedNote>();
         foreach (var text in texts)
         {
             var note = new ExtractedNote
@@ -174,13 +347,13 @@ public class TaskGenerationTools()
                 Id = Guid.NewGuid(),
                 Text = text
             };
-            Notes.Add(note);
-            if (OnNoteStreamed != null) await OnNoteStreamed(note);
+            await AddNote(note);
+            added.Add(note);
         }
-        return $"{texts.Length} note(s) added.";
+        return $"{texts.Length} note(s) added: {string.Join(", ", added.Select(DescribeNote))}.";
     }
 
-    [Description("Add a single note for an idea, intention, or reminder with no time anchor. Use this when scheduling the item would require inventing a time the user never mentioned — even vaguely.")]
+    [Description("Add a single note for an idea, intention, or reminder with no time anchor. Use this when scheduling the item would require inventing a time the user never mentioned — even vaguely. Returns the note's id (e.g. n1) for later updates or removals.")]
     public async Task<string> CreateNote(
         [Description("Note content")] string text)
     {
@@ -190,26 +363,24 @@ public class TaskGenerationTools()
             Id = Guid.NewGuid(),
             Text = text
         };
-        Notes.Add(note);
-        if (OnNoteStreamed != null) await OnNoteStreamed(note);
-        return "Note added.";
+        await AddNote(note);
+        return $"Note added: {DescribeNote(note)}.";
     }
 
     [Description("Remove a task. Use this when the user says they no longer want to do something they previously mentioned, e.g. 'I don't want to go to the gym anymore'.")]
     public string RemoveTask(
-        [Description("Task title")] string title)
+        [Description("Id of the task, as returned when it was added or listed under Current drafts, e.g. t1")] string taskId)
     {
         ToolCallCount++;
-        //TODO: text matching is fragile
-        var task = Tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
-        if (task == null) return "Task not found.";
+        var task = FindTask(taskId);
+        if (task == null) return NotFound("Task");
         Tasks.Remove(task);
         return "Task removed.";
     }
 
     [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task. When updating times, ensure the result does not overlap with other tasks — adjust sequentially if needed.")]
     public string UpdateTask(
-        [Description("Current title")] string existingTitle,
+        [Description("Id of the task, as returned when it was added or listed under Current drafts, e.g. t1")] string taskId,
         [Description("New title")] string title,
         [Description("Description or empty")] string description,
         [Description("yyyy-MM-ddTHH:mm:ss")] DateTime startTime,
@@ -217,9 +388,8 @@ public class TaskGenerationTools()
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
-        //TODO: here the same as well
-        var task = Tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
-        if (task == null) return "Task not found.";
+        var task = FindTask(taskId);
+        if (task == null) return NotFound("Task");
         task.Title = title;
         task.Description = description;
         task.StartTime = startTime;
@@ -230,28 +400,65 @@ public class TaskGenerationTools()
 
     [Description("Remove a note. Use this when the user says they no longer want to keep something they previously noted.")]
     public string RemoveNote(
-        [Description("Note text")] string text)
+        [Description("Id of the note, as returned when it was added or listed under Current drafts, e.g. n1")] string noteId)
     {
         ToolCallCount++;
-        //TODO: here
-        var note = Notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
-        if (note == null) return "Note not found.";
+        var note = FindNote(noteId);
+        if (note == null) return NotFound("Note");
         Notes.Remove(note);
         return "Note removed.";
     }
 
     [Description("Update a note. Use this when the user corrects or adjusts the content of an existing note.")]
     public string UpdateNote(
-        [Description("Current text")] string existingText,
+        [Description("Id of the note, as returned when it was added or listed under Current drafts, e.g. n1")] string noteId,
         [Description("New text")] string newText)
     {
         ToolCallCount++;
-        //TODO: here
-        var note = Notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
-        if (note == null) return "Note not found.";
+        var note = FindNote(noteId);
+        if (note == null) return NotFound("Note");
         note.Text = newText;
         return "Note updated.";
     }
+
+    // The model only learns ids from its own tool results, so it can't see notes saved by the
+    // no-tool fallback, or know which drafts the user swiped away. This is sent with each message.
+    public string? DescribeDrafts()
+    {
+        var drafts = Tasks.Select(DescribeTask).Concat(Notes.Select(DescribeNote)).ToList();
+        return drafts.Count == 0 ? null : $"[Current drafts: {string.Join(", ", drafts)}]";
+    }
+
+    private async Task AddTask(ExtractedTask task)
+    {
+        _shortIds[task.Id] = $"t{++_taskCount}";
+        Tasks.Add(task);
+        if (OnTaskStreamed != null) await OnTaskStreamed(task);
+    }
+
+    private async Task AddNote(ExtractedNote note)
+    {
+        _shortIds[note.Id] = $"n{++_noteCount}";
+        Notes.Add(note);
+        if (OnNoteStreamed != null) await OnNoteStreamed(note);
+    }
+
+    private ExtractedTask? FindTask(string taskId) => Tasks.FirstOrDefault(t => HasShortId(t.Id, taskId));
+
+    private ExtractedNote? FindNote(string noteId) => Notes.FirstOrDefault(n => HasShortId(n.Id, noteId));
+
+    // shortId is model-written JSON, so it can arrive null.
+    private bool HasShortId(Guid id, string? shortId) =>
+        _shortIds.TryGetValue(id, out var own) && own.Equals(shortId?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    private string DescribeTask(ExtractedTask task) => $"{_shortIds[task.Id]} \"{task.Title}\"";
+
+    private string DescribeNote(ExtractedNote note) => $"{_shortIds[note.Id]} \"{note.Text}\"";
+
+    // List what is left, so the model retries with a real id instead of creating a duplicate.
+    // The recurring hint stops a misrouted recurring edit being retried on a same-titled one-off task.
+    private string NotFound(string kind) =>
+        $"{kind} not found. {DescribeDrafts() ?? "There are no drafts."} Recurring tasks are not listed; change them only with the recurring tools.";
 
     // Swipe-to-delete removal by Id. Not AI tools: unregistered, and left out of ToolCallCount
     // and the streaming callbacks on purpose.
@@ -260,4 +467,40 @@ public class TaskGenerationTools()
     public bool RemoveDraftNoteById(Guid id) => Notes.RemoveAll(n => n.Id == id) > 0;
 
     public bool RemoveDraftRecurringTaskById(Guid id) => RecurringTasks.RemoveAll(t => t.Id == id) > 0;
+}
+
+public class RecurringTaskInput
+{
+    [Description("Title for exactly one independently completable recurring action. Do not combine multiple actions into one title.")]
+    public required string Title { get; init; }
+
+    [Description("Description or empty")]
+    public required string Description { get; init; }
+
+    [Description("SingleTime when the task is a moment with no duration (end equals start); RangeTime when it spans a start and end time.")]
+    public required TaskTimeType TimeType { get; init; }
+
+    [Description("Work, Life, Learning, or Health")]
+    public required LabelNameEnum Label { get; init; }
+
+    [Description("First occurrence start as local time yyyy-MM-ddTHH:mm:ss (no timezone offset, no Z). This is the time-of-day used for every occurrence, and its date part becomes the recurring task's start date. If the user gives a day but no time, pick a sensible time of day.")]
+    public required DateTime TemplateStartTime { get; init; }
+
+    [Description("First occurrence end as local time yyyy-MM-ddTHH:mm:ss. Equal to TemplateStartTime when TimeType is SingleTime; strictly after TemplateStartTime when RangeTime.")]
+    public required DateTime TemplateEndTime { get; init; }
+
+    [Description("How often it repeats: Daily, Weekly, Monthly, or Yearly.")]
+    public required RecurrenceFrequency Frequency { get; init; }
+
+    [Description("Repeat every N periods. 1 = every day/week/month/year, 2 = every other, and so on. Use 1 unless the user says otherwise.")]
+    public int Interval { get; init; } = 1;
+
+    [Description("The weekdays the task repeats on, named directly, e.g. [Monday, Wednesday, Friday]. REQUIRED when Frequency is Weekly; leave empty otherwise. Just name the days — never compute a number.")]
+    public DayOfWeek[] DaysOfWeek { get; init; } = [];
+
+    [Description("Day of month (1-31). REQUIRED when Frequency is Monthly; otherwise leave null.")]
+    public int? DayOfMonth { get; init; }
+
+    [Description("Optional last date the task may repeat, as yyyy-MM-dd. Leave null for an open-ended repeat. Must be on or after the date part of TemplateStartTime.")]
+    public DateOnly? EndDate { get; init; }
 }

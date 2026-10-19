@@ -1,15 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchPomodoroSettings, updatePomodoroSetting } from "@/shared/services/pomodoro-service";
-import { PomodoroSoundscapeType } from "../utils/pomodoro-setting";
 import { PomodoroDTO } from "@/shared/models/pomodoro-dto";
 import { queryClient } from "@/shared/util/queryClient";
 import { pomodoroKeys } from "@/shared/constants/query-key-factory";
-
-export interface PomodoroSettingResponse {
-  timing: number;
-  sound: PomodoroSoundscapeType | null;
-  isCountdown: boolean;
-}
 
 export const usePomodoroSettingsQuery = () => {
   return useQuery<PomodoroDTO>({

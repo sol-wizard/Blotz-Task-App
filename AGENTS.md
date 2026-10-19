@@ -4,9 +4,34 @@
 
 - If anything is unclear or ambiguous, always ask the user for clarification before proceeding.
 - Never make assumptions on your own — when in doubt, ask.
-- Before making any code change, check whether a project-local skill applies under `.claude/skills/`.
+- Before making any code change, check whether a project-local skill applies — see **Project-local skills** below for the full list.
 - If a project-local skill applies, read its `SKILL.md` and follow it before editing files or running commands.
 - When explaining code changes, mention which relevant project-local skill was used.
+
+## Project-local skills
+
+Each one lives at `.claude/skills/<name>/SKILL.md` and is plain Markdown — any agent or person can
+read and follow it. Claude Code loads them automatically by matching the `description:` in each
+file's frontmatter; **no other tool reads that frontmatter**, so if you are not Claude Code, use the
+table below to pick the right one and open it yourself.
+
+| Skill | Use it when |
+|---|---|
+| `backend-changes` | Adding, modifying or fixing API logic — endpoints, handlers, domain entities, events, anything in `blotztask-api/` |
+| `database-migrations` | Adding, renaming or changing a field, entity or relationship — anything producing an EF Core migration |
+| `writing-tests` | Before writing, adding or modifying any test in `blotztask-test/` |
+| `working-with-ai-agent` | Implementing, modifying or fixing any AI feature |
+| `real-device-test` | Verifying something on a physical phone, or driving the installed app on a USB-connected device |
+| `pr` | The author's side of a pull request: opening one, fixing its description or release note, or fixing review comments and sending it back for re-review |
+| `pr-review` | Reviewing a pull request |
+| `to-learn` | Right after a PR is opened (run by `pr` automatically): a local checklist of what the dev should study from this branch, with docs |
+| `pbi` | Creating a PBI, explaining one before coding, implementing it (tests checked first, small pieces, proof at the end), or updating it — moving its card, ticking finished boxes, adding a short note |
+| `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
+| `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |
+
+The `expo-*` skills (`expo-router`, `expo-native-ui`, `expo-animation`, `expo-data-fetching`,
+`expo-upgrade`) are vendored Expo framework reference, not Blotz-specific — consult them when
+working on navigation, UI, animation, data fetching or an SDK upgrade in `blotztask-mobile/`.
 
 ## Backend & Frontend Judgement
 
@@ -17,6 +42,7 @@
 
 ## Code Changes
 
+- Commits and PRs carry no AI mark: no `Co-Authored-By:` trailer for an AI (Claude, Codex, Copilot…) and no "Generated with …" line in PR descriptions. The history shows only team members.
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 - Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
 

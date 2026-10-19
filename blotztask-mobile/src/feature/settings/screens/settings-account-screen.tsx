@@ -8,9 +8,14 @@ import { FormDivider } from "@/shared/components/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useLogout } from "@/shared/hooks/useLogout";
+import { analytics } from "@/shared/services/analytics";
 import { useTranslation } from "react-i18next";
 import Modal from "react-native-modal";
 import { useDeleteUserMutation } from "@/feature/settings/hooks/useDeleteUserMutation";
+import {
+  DeleteReasonPicker,
+  type PickableReason,
+} from "@/feature/settings/components/delete-reason-picker";
 
 export default function SettingsAccountScreen() {
   const logout = useLogout();
@@ -20,6 +25,8 @@ export default function SettingsAccountScreen() {
   const { userProfile, isUserProfileLoading } = useUserProfile();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
+  const [deleteReason, setDeleteReason] = useState<PickableReason | null>(null);
+  const [deleteReasonOtherText, setDeleteReasonOtherText] = useState("");
 
   const displayName =
     userProfile?.displayName && userProfile.displayName.length > 20
@@ -32,12 +39,25 @@ export default function SettingsAccountScreen() {
       : (userProfile?.email ?? "");
 
   const handleConfirmDelete = async () => {
+    // Queued before the delete request so it leaves while the user is still identified:
+    // logout resets PostHog right after. Analytics must never block the deletion.
+    try {
+      analytics.trackAccountDeleted({
+        reason: deleteReason ?? "skipped",
+        otherText: deleteReasonOtherText.trim(),
+      });
+      analytics.flush();
+    } catch {
+      // ignore — deleting the account matters more than the event
+    }
     await deleteUser();
     await logout();
   };
 
   const openDeleteModal = () => {
     setDeleteConfirmChecked(false);
+    setDeleteReason(null);
+    setDeleteReasonOtherText("");
     setIsDeleteModalVisible(true);
   };
 
@@ -54,39 +74,52 @@ export default function SettingsAccountScreen() {
         </View>
       </View>
 
-      <View className="mt-8 w-full bg-white rounded-2xl items-center">
-        <View className="w-11/12">
-          <Pressable
-            className="px-4 ml-3 mb-2"
-            onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
-          >
-            <View className="flex-row items-center justify-between pt-4 pb">
-              <Text className="text-lg font-baloo text-secondary ">{t("account.name")}</Text>
+      <View className="mt-8 w-full bg-white rounded-2xl pl-4">
+        <Pressable
+          className="mb-2"
+          onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
+        >
+          <View className="flex-row items-center pt-4 pb">
+            <Text className="text-lg font-baloo text-secondary">{t("account.name")}</Text>
 
-              <View className="flex-row items-center ">
-                <Text className="text-lg font-baloo text-secondary mr-2">{displayName}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
-              </View>
+            <View className="ml-3 flex-1 flex-row items-center justify-end">
+              <Text
+                className="shrink text-lg font-baloo text-secondary mr-2"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {displayName}
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
             </View>
-            <Text className="text-primary font-balooThin text-sm">
-              {t("account.nameDescription")}
-            </Text>
-          </Pressable>
+          </View>
+          <Text className="text-primary font-balooThin text-sm">
+            {t("account.nameDescription")}
+          </Text>
+        </Pressable>
 
+        <View className="mr-4">
           <FormDivider marginVertical={2} />
-          <Pressable className="px-4 ml-3 mb-3 mt-2">
-            <View className="flex-row items-center justify-between pb">
-              <Text className="text-lg font-baloo text-secondary ">{t("account.email")}</Text>
-
-              <View className="flex-row items-center ">
-                <Text className="text-lg font-baloo text-secondary mr-2">{displayEmail}</Text>
-              </View>
-            </View>
-            <Text className="text-primary font-balooThin text-sm">
-              {t("account.emailDescription")}
-            </Text>
-          </Pressable>
         </View>
+        <Pressable className="mb-3 mt-2">
+          <View className="flex-row items-center pb">
+            <Text className="text-lg font-baloo text-secondary">{t("account.email")}</Text>
+
+            <View className="ml-3 flex-1 flex-row items-center justify-end">
+              <Text
+                className="shrink text-lg font-baloo text-secondary mr-2"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {displayEmail}
+              </Text>
+              <View style={{ width: 22, flexShrink: 0 }} />
+            </View>
+          </View>
+          <Text className="text-primary font-balooThin text-sm">
+            {t("account.emailDescription")}
+          </Text>
+        </Pressable>
       </View>
       <Pressable
         onPress={async () => await logout()}
@@ -110,6 +143,7 @@ export default function SettingsAccountScreen() {
         animationOut="fadeOut"
         useNativeDriver
         style={{ margin: 0 }}
+        avoidKeyboard
       >
         <View className="bg-white rounded-2xl p-6 mx-6">
           <Text className="text-xl font-baloo text-secondary">{t("account.deleteTitle")}</Text>
@@ -125,6 +159,13 @@ export default function SettingsAccountScreen() {
               <Text className="text-sm font-balooThin text-primary mt-2">
                 {t("account.deleteWarning")}
               </Text>
+
+              <DeleteReasonPicker
+                reason={deleteReason}
+                otherText={deleteReasonOtherText}
+                onReasonChange={setDeleteReason}
+                onOtherTextChange={setDeleteReasonOtherText}
+              />
 
               <Pressable
                 onPress={() => setDeleteConfirmChecked((prev) => !prev)}

@@ -1,17 +1,18 @@
 import { QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, parseISO, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import { format, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import {
   materializeRecurringOccurrence,
   saveRecurringOccurrence,
 } from "@/shared/services/task-service";
-import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 import { analytics } from "@/shared/services/analytics";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 type CompleteRecurringOccurrenceArgs = {
   recurringTaskId: number;
   occurrenceDate: string;
+  selectedDay?: Date;
   wasDone: boolean;
   wasOverdue: boolean;
   hasDeadline: boolean;
@@ -30,6 +31,26 @@ export function useRecurringTaskMutations() {
   const { mutate: completeOccurrence, isPending: isCompletingOccurrence } = useMutation({
     mutationFn: ({ recurringTaskId, occurrenceDate }: CompleteRecurringOccurrenceArgs) =>
       saveRecurringOccurrence({ recurringTaskId, occurrenceDate }),
+    onMutate: (data) => {
+      if (!data?.selectedDay) return;
+      const dayKey = format(data.selectedDay, "yyyy-MM-dd");
+      const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
+        taskKeys.selectedDay(dayKey),
+      );
+      const toggleInList = (list: TaskDetailDTO[] | undefined) =>
+        list?.map((t) =>
+          t.recurringOccurrence?.recurringTaskId === data.recurringTaskId &&
+          t.recurringOccurrence?.occurrenceDate === data.occurrenceDate
+            ? { ...t, isDone: !t.isDone }
+            : t,
+        );
+      queryClient.setQueryData(taskKeys.selectedDay(dayKey), toggleInList(prevSelectedDayData));
+      return { dayKey, prevSelectedDayData };
+    },
+    onError: (_err, _variables, context) => {
+      if (!context) return;
+      queryClient.setQueryData(taskKeys.selectedDay(context.dayKey), context.prevSelectedDayData);
+    },
     onSuccess: (_data, variables) => {
       taskFirework.playIfCompleting(variables.wasDone);
       if (!variables.wasDone) {
@@ -45,18 +66,16 @@ export function useRecurringTaskMutations() {
     },
   });
 
-  const {
-    mutateAsync: materializeOccurrenceAsync,
-    isPending: isMaterializingOccurrence,
-  } = useMutation({
-    mutationFn: ({ recurringTaskId, occurrenceDate }: MaterializeRecurringOccurrenceArgs) =>
-      materializeRecurringOccurrence({ recurringTaskId, occurrenceDate }),
-    onSuccess: (_data, variables) => {
-      if (variables.invalidateOnSuccess === false) return;
+  const { mutateAsync: materializeOccurrenceAsync, isPending: isMaterializingOccurrence } =
+    useMutation({
+      mutationFn: ({ recurringTaskId, occurrenceDate }: MaterializeRecurringOccurrenceArgs) =>
+        materializeRecurringOccurrence({ recurringTaskId, occurrenceDate }),
+      onSuccess: (_data, variables) => {
+        if (variables.invalidateOnSuccess === false) return;
 
-      invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
-    },
-  });
+        invalidateRecurringOccurrenceQueries(queryClient, variables.occurrenceDate);
+      },
+    });
 
   return {
     completeOccurrence,
@@ -65,16 +84,12 @@ export function useRecurringTaskMutations() {
   };
 }
 
-function invalidateRecurringOccurrenceQueries(
-  queryClient: QueryClient,
-  occurrenceDate: string,
-) {
+function invalidateRecurringOccurrenceQueries(queryClient: QueryClient, occurrenceDate: string) {
   const date = parseISO(occurrenceDate);
-  const dayKey = convertToDateTimeOffset(startOfDay(date));
   const mondayKey = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const monthKey = format(startOfMonth(date), "yyyy-MM");
 
-  queryClient.invalidateQueries({ queryKey: taskKeys.selectedDay(dayKey) });
+  queryClient.invalidateQueries({ queryKey: [...taskKeys.all, "selectedDay"] });
   queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
   queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
 }

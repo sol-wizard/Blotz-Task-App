@@ -24,6 +24,7 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
+import { analytics } from "@/shared/services/analytics";
 import "@/shared/util/typography";
 import { CrashScreen } from "@/shared/components/crash-screen";
 
@@ -33,11 +34,13 @@ Sentry.init({
   enabled: process.env.EXPO_PUBLIC_APP_ENV !== "development",
   sendDefaultPii: true,
   enableNative: true,
-  replaysSessionSampleRate: 0.1,
+  tracesSampleRate: 0.4,
   replaysOnErrorSampleRate: 1,
   enableAutoSessionTracking: true,
   integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
 });
+
+analytics.syncSentryIdentityOnLaunch();
 
 function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
