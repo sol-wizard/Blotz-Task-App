@@ -67,6 +67,7 @@
     "loginInProgress": "A sign-in is already in progress. Wait a moment or restart the app.",
     "loginFailed": "Sign-in failed. Please try again.",
     "loginStalled": "Sign-in didn't come back. Tap Continue to try again, or restart the app.",
+    "loginInterrupted": "Your last sign-in was interrupted. Tap Continue to try again.",
     "sessionExpired": "Your session expired. Please sign in again.",
     "loadFailed": "Couldn't load your account."
   }
