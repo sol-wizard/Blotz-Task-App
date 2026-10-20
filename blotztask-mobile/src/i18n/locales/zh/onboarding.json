@@ -32,7 +32,7 @@
     "sheetLabel": "你的第一条任务",
     "sheetHint": "按住按钮告诉我，\n我帮你记下来！"
   },
-  "about-you": {
+  "aboutYou": {
     "next": "下一步",
     "done": "完成",
     "skip": "跳过",
@@ -50,7 +50,7 @@
       "struggles": {
         "title": "下面哪种情况，你最近一个月经常遇到？",
         "options": {
-          "hard_to_start": "明明想做，却很难开始",
+          "hardToStart": "明明想做，却很难开始",
           "distracted": "做事容易分心，或者做到一半就放弃",
           "forgetful": "总是忘事，或者记不住要做什么",
           "none": "都没有"
@@ -61,9 +61,9 @@
         "options": {
           "rednote": "小红书",
           "friend": "朋友推荐",
-          "wechat_group": "微信群聊",
-          "app_store": "应用商店搜索",
-          "other_social": "其他社交媒体",
+          "wechatGroup": "微信群聊",
+          "appStore": "应用商店搜索",
+          "otherSocial": "其他社交媒体",
           "other": "其他"
         }
       }

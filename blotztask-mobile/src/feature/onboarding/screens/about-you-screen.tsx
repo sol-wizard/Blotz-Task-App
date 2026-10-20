@@ -4,12 +4,14 @@ import {
 } from "@/feature/onboarding/about-you/about-you-questions";
 import { GradientColor } from "@/shared/components/gradient-color";
 import type { AboutYouAudience } from "@/shared/constants/posthog-events";
+import { theme } from "@/shared/constants/theme";
 import { analytics } from "@/shared/services/analytics";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
+import Toast from "react-native-toast-message";
 
 type AboutYouScreenProps = {
   audience: AboutYouAudience;
@@ -28,16 +30,23 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
 
   const question: AboutYouQuestion = ABOUT_YOU_QUESTIONS[index];
   const isLast = index === ABOUT_YOU_QUESTIONS.length - 1;
-  const questionText = (path: string) => t(`about-you.questions.${question.key}.${path}`);
+  const questionText = (path: string) => t(`aboutYou.questions.${question.key}.${path}`);
 
-  const goNext = () => {
+  const goNext = async () => {
     if (!isLast) {
       setIndex(index + 1);
       setSelected([]);
       return;
     }
+    // Locks the page while onDone saves (it marks a new user onboarded over the network),
+    // so a double tap can't finish twice. A failure unlocks it so the user can tap again.
     setIsFinishing(true);
-    void onDone();
+    try {
+      await onDone();
+    } catch {
+      setIsFinishing(false);
+      Toast.show({ type: "error", text1: t("errors.default", { ns: "common" }) });
+    }
   };
 
   const toggleOption = (option: string) => {
@@ -63,13 +72,13 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
         : selected[0],
       audience,
     });
-    goNext();
+    void goNext();
   };
 
   const handleSkip = () => {
     if (isFinishing) return;
     analytics.trackAboutYouSkipped({ question: question.key, audience });
-    goNext();
+    void goNext();
   };
 
   const canSubmit = selected.length > 0 && !isFinishing;
@@ -84,7 +93,7 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
         <View className="flex-1 items-start">
           {onClose && (
             <Pressable onPress={onClose} hitSlop={10} disabled={isFinishing}>
-              <Ionicons name="close" size={24} color="#8C8C8C" />
+              <Ionicons name="close" size={24} color={theme.colors.primary} />
             </Pressable>
           )}
         </View>
@@ -95,7 +104,7 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
         </GradientColor>
         <View className="flex-1 items-end">
           <Pressable onPress={handleSkip} hitSlop={10} disabled={isFinishing}>
-            <Text className="text-xl font-baloo text-black/40">{t("about-you.skip")}</Text>
+            <Text className="text-xl font-baloo text-black/40">{t("aboutYou.skip")}</Text>
           </Pressable>
         </View>
       </View>
@@ -107,7 +116,7 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
         <Text className="text-2xl font-balooBold text-black mb-2">{questionText("title")}</Text>
         {question.multiSelect && (
           <Text className="text-base font-baloo text-black/40 mb-2">
-            {t("about-you.multiSelectHint")}
+            {t("aboutYou.multiSelectHint")}
           </Text>
         )}
 
@@ -120,7 +129,7 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
                 onPress={() => toggleOption(option)}
                 disabled={isFinishing}
                 className={`rounded-2xl border-2 px-5 py-4 ${
-                  isSelected ? "border-[#8BCC5A] bg-[#8BCC5A]/10" : "border-gray-200 bg-white"
+                  isSelected ? "border-checked bg-checked/10" : "border-gray-200 bg-white"
                 }`}
               >
                 <Text className="text-base font-baloo text-black">
@@ -147,11 +156,11 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
           onPress={handleSubmit}
           disabled={!canSubmit}
           className={`w-[46%] h-[48px] rounded-full py-4 ${
-            canSubmit ? "bg-[#8BCC5A]" : "bg-gray-200"
+            canSubmit ? "bg-checked" : "bg-gray-200"
           }`}
         >
           <Text className="text-white text-lg font-baloo text-center">
-            {isLast ? t("about-you.done") : t("about-you.next")}
+            {isLast ? t("aboutYou.done") : t("aboutYou.next")}
           </Text>
         </Pressable>
       </View>

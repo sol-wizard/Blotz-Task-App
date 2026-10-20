@@ -282,22 +282,20 @@ export const analytics = {
     answer: string | string[];
     audience: AboutYouAudience;
   }) {
-    const properties = {
+    posthog.capture(EVENTS.ABOUT_YOU_ANSWERED, {
       question: params.question,
       answer: params.answer,
       audience: params.audience,
       $set: { [params.property]: params.answer },
-    };
-    // PostHog only sends in production builds, so log the payload locally to check it.
-    if (__DEV__) console.log(EVENTS.ABOUT_YOU_ANSWERED, JSON.stringify(properties));
-    posthog.capture(EVENTS.ABOUT_YOU_ANSWERED, properties);
+    });
   },
 
   /** Fires when the user skips one "About you" question. Nothing is saved on the person. */
   trackAboutYouSkipped(params: { question: string; audience: AboutYouAudience }) {
-    const properties = { question: params.question, audience: params.audience };
-    if (__DEV__) console.log(EVENTS.ABOUT_YOU_SKIPPED, JSON.stringify(properties));
-    posthog.capture(EVENTS.ABOUT_YOU_SKIPPED, properties);
+    posthog.capture(EVENTS.ABOUT_YOU_SKIPPED, {
+      question: params.question,
+      audience: params.audience,
+    });
   },
 
   /**

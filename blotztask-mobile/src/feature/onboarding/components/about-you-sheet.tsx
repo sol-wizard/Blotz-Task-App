@@ -1,4 +1,3 @@
-import { SHOW_ABOUT_YOU_TO_EXISTING_USERS } from "@/feature/onboarding/about-you/about-you-questions";
 import { useAboutYouSeen } from "@/feature/onboarding/hooks/useAboutYouSeen";
 import AboutYouScreen from "@/feature/onboarding/screens/about-you-screen";
 import { View } from "react-native";
@@ -13,7 +12,7 @@ import Modal from "react-native-modal";
 export function AboutYouSheet() {
   const { user } = useAuth0();
   const { hasSeen, markAsSeen } = useAboutYouSeen(user?.sub);
-  const isVisible = SHOW_ABOUT_YOU_TO_EXISTING_USERS && hasSeen === false;
+  const isVisible = hasSeen === false;
 
   const close = () => {
     void markAsSeen();
