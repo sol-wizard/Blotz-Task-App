@@ -13,8 +13,9 @@
     "subtitle": "Tell AI what you want to achieve. It breaks the goal into small, clear steps you can actually follow."
   },
   "invite": {
-    "title": "Got an invite code?",
-    "subtitle": "Enter a friend's code to get started together.",
+    "title": "Did a friend invite you?",
+    "subtitle": "Enter their code and start Blotz together.",
+    "noCodeHint": "No code? Just tap Continue.",
     "codePlaceholder": "Enter code",
     "redeemButton": "Redeem",
     "redeeming": "Redeeming...",

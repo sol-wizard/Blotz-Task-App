@@ -12,14 +12,16 @@ import { analytics } from "@/shared/services/analytics";
 import { useIsMutating } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect } from "react";
+import { Keyboard } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 
+// Invite comes first: most new users skip before the last page, so invited users never saw it there.
 const SECTIONS = [
+  "invite",
   "ai-voice",
   "note",
   "breakdown",
-  "invite",
 ] as const satisfies readonly OnboardingSection[];
 
 export default function OnboardingScreen() {
@@ -35,6 +37,8 @@ export default function OnboardingScreen() {
   }, []);
 
   const handleSectionViewed = (step: OnboardingSection) => {
+    // The invite code keyboard would otherwise stay open over the next page.
+    Keyboard.dismiss();
     analytics.trackOnboardingStepViewed({ step });
   };
 
@@ -42,6 +46,7 @@ export default function OnboardingScreen() {
     useIsMutating({ mutationKey: REDEEM_REFERRAL_CODE_MUTATION_KEY }) > 0;
 
   const handleFinish = async (outcome: CarouselExitOutcome, exit_section: OnboardingSection) => {
+    Keyboard.dismiss();
     analytics.trackOnboardingCompleted({ outcome, exit_section });
     await setUserOnboarded(true);
     await markAsSeen();
@@ -69,6 +74,8 @@ export default function OnboardingScreen() {
       dotContainerClassName="mb-16 mt-[-90]"
       activeDotClassName="w-2 bg-black"
       disableActions={isRedeemingReferralCode}
+      // No Skip on the invite page: the choice there is enter a code or Continue.
+      hideSkipFor={(item) => item === "invite"}
     />
   );
 }
