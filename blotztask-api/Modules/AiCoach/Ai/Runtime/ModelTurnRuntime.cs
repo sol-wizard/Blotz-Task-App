@@ -45,6 +45,8 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         var workspace = new DraftTools(request.Drafts, request.TimeZoneId, request.ReviewListEnabled);
         var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule);
         var turn = new List<GatewayMessage>();
+        // Schedule reads are shortened only in durable history, never in the active model turn.
+        var liveTurn = new List<GatewayMessage>();
         var summary = request.Summary;
         var covered = request.SummarizedMessageCount;
         var calls = 0;
@@ -64,6 +66,23 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
 
             while (calls < limits.MaxModelCallsPerTurn)
             {
+                // Tool execution mutates only the workspace. Rebuild the model projection with one
+                // current draft snapshot while leaving raw turn results intact for commit and traces.
+                transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                if (liveTurn.Count > 0 && !contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
+                {
+                    var projectedTurn = contextBuilder.BuildTurnTranscript(context with { Transcript = [] },
+                        liveTurn, workspace.Drafts).Take(liveTurn.Count);
+                    var turnBytes = Size(projectedTurn);
+                    context = await contextBuilder.BuildAsync(request with
+                    {
+                        Drafts = workspace.Drafts, Summary = summary, SummarizedMessageCount = covered,
+                    }, executor.AvailableTools, Call, turnBytes);
+                    system = context.SystemPrompt;
+                    summary = context.Summary;
+                    covered = context.SummarizedMessageCount;
+                    transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                }
                 if (!contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
                 {
                     logger.LogWarning("AiCoach context limit reached for {ConversationId} before model call {ModelCallNumber}",
@@ -111,8 +130,8 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 var assistant = new GatewayAssistantMessage(toolRoundText, completion.ToolCalls);
                 // Tool-round commentary is not a persisted assistant reply.
                 await Emit("reply.reset", new { });
-                transcript.Add(assistant);
                 turn.Add(assistant);
+                liveTurn.Add(assistant);
                 ToolExecutionResult? singleExecution = null;
                 foreach (var tool in completion.ToolCalls)
                 {
@@ -146,7 +165,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                             "AiCoach tool payload for {ConversationId}: ToolCallId={ToolCallId}, Tool={ToolName}, Arguments={ToolArguments}, Result={ToolResult}",
                             request.ConversationId, tool.Id, tool.Name, tool.ArgumentsJson, result);
                     var message = new GatewayToolResultMessage(tool.Id, result);
-                    transcript.Add(message);
+                    liveTurn.Add(message);
                     turn.Add(tool.Name == "list_tasks" && execution.Succeeded
                         ? new GatewayToolResultMessage(tool.Id,
                             "Task schedule was read for this turn. Re-read for current task details.")
