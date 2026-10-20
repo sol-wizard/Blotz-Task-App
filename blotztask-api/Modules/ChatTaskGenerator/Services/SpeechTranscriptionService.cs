@@ -1,50 +1,9 @@
-using BlotzTask.Shared.Exceptions;
-using OpenAI.Audio;
-using System.ClientModel;
+using BlotzTask.Shared.Speech;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
-public class SpeechTranscriptionService(AudioClient audioClient, ILogger<SpeechTranscriptionService> logger)
+public class SpeechTranscriptionService(AudioTranscriptionService transcription)
 {
-    public async Task<string> TranscribeAsync(IFormFile audio, CancellationToken ct = default)
-    {
-        if (audio.Length <= 0)
-            throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
-
-        try
-        {
-            await using var stream = audio.OpenReadStream();
-
-            var result = await audioClient.TranscribeAudioAsync(
-                stream,
-                audio.FileName,
-                new AudioTranscriptionOptions
-                {
-                    ResponseFormat = AudioTranscriptionFormat.Text
-                },
-                ct
-            );
-
-            var transcriptionResult = result.Value.Text;
-
-            if (string.IsNullOrWhiteSpace(transcriptionResult))
-                throw new InvalidOperationException("Transcription returned empty text.");
-
-            return transcriptionResult.Trim();
-        }
-        catch (ClientResultException ex)
-        {
-            logger.LogWarning(ex,
-                "Groq transcription request failed. Status: {Status}, Message: {Message}",
-                ex.Status, ex.Message);
-            throw new AiTranscriptionException("Groq transcription request failed.", ex);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex,
-                "Whisper transcription failed. ExceptionType: {ExceptionType}, Message: {Message}",
-                ex.GetType().FullName, ex.Message);
-            throw new AiTranscriptionException("Whisper transcription failed unexpectedly.", ex);
-        }
-    }
+    public Task<string> TranscribeAsync(IFormFile audio, CancellationToken ct = default) =>
+        transcription.TranscribeAsync(audio, ct);
 }

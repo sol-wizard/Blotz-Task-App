@@ -8,28 +8,20 @@
     "title": "Guess what we've been up to.",
     "body": "Swipe to find out!"
   },
-  "badge-detail": {
-    "title": "Your Achievements, Up Close",
-    "body": "Tap any badge to see what you earned it for and what reward it unlocked."
+  "review-letter": {
+    "title": "A letter for your week and month",
+    "body": "Open Review to see how you spent your time. Tap Share in the corner when you want to send it on."
   },
-  "persistent-note": {
-    "title": "Notes That Stay",
-    "body": "Toggle Persistent Note to keep a note alive even after you turn it into a task."
+  "badge-preview": {
+    "title": "Show off the badges you like",
+    "body": "Tap Equip reward on a badge. Up to three show on your profile — you pick which."
   },
-  "time-picker": {
-    "title": "Smoother Time Picking",
-    "body": "Hours and minutes now scroll continuously — no more snapping back when you reach the ends."
+  "invite-friends": {
+    "title": "Bring Your Friends In",
+    "body": "Share your invite code — when a friend joins with it, you both earn a badge."
   },
-  "recurring-subtasks": {
-    "title": "Break Down Repeating Tasks",
-    "body": "From any recurring task's detail page, ask the AI to split it into subtasks — even for just that one instance."
-  },
-  "widget": {
-    "title": "Your Tasks on Your Home Screen",
-    "body": "Add the Blotz widget to see today's tasks at a glance — no need to open the app."
-  },
-  "firework": {
-    "title": "A Little Celebration Every Time",
-    "body": "Complete a task and watch the confetti fly. Subtasks get a smaller burst — every win counts."
+  "toast-icons": {
+    "title": "Clearer At-a-Glance Alerts",
+    "body": "Task created, errors, warnings — every toast now comes with a small icon so you can tell what's up at a glance."
   }
 }

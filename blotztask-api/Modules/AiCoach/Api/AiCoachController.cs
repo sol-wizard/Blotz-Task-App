@@ -12,27 +12,43 @@ namespace BlotzTask.Modules.AiCoach.Api;
 [ApiController]
 [Route("api/ai-coach")]
 [Authorize]
+[ServiceFilter(typeof(ReviewListProtocolFilter))]
 public class AiCoachController(
-    StartConversationCommandHandler startConversation,
     SendMessageCommandHandler sendMessage,
     ConfirmDraftCommandHandler confirmDraft,
     RejectDraftCommandHandler rejectDraft,
     EditDraftCommandHandler editDraft,
     MessageFeedbackHandler messageFeedback,
     TranscribeAudioCommandHandler transcribeAudio,
-    IConversationStore store) : ControllerBase
+    IConversationStore store, ChatApplication chat, ILogger<AiCoachController> logger) : ControllerBase
 {
-    [HttpPost("conversations")]
-    public async Task<ActionResult<ConversationSnapshotDto>> StartConversation(
-        [FromBody] StartConversationRequest request, CancellationToken ct)
+    [HttpGet("chat")]
+    public async Task<ActionResult<ConversationSnapshotDto>> OpenChat([FromQuery] string timeZoneId, CancellationToken ct)
     {
-        var dto = await startConversation.Handle(new StartConversationCommand
-        {
-            UserId = GetUserId(),
-            TimeZoneId = request.TimeZoneId,
-            Mode = request.Mode,
-        }, ct);
-        return Ok(dto);
+        try { return Ok(await chat.OpenAsync(GetUserId(), timeZoneId, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    [HttpGet("chat/messages")]
+    public async Task<ActionResult<ChatTimelinePage>> GetMessages([FromQuery] string? before = null,
+        [FromQuery] int limit = 30, CancellationToken ct = default)
+    {
+        try { return Ok(await chat.MessagesAsync(GetUserId(), before, limit, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    [HttpPost("chat/topics")]
+    public async Task<ActionResult<ConversationSnapshotDto>> NewTopic([FromBody] ChatTopicRequest request, CancellationToken ct)
+    {
+        try { return Ok(await chat.NewTopicAsync(GetUserId(), request.TimeZoneId, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    [HttpDelete("chat")]
+    public async Task<IActionResult> ClearChat(CancellationToken ct)
+    {
+        try { await chat.ClearAsync(GetUserId(), ct); return NoContent(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     [HttpGet("conversations/{conversationId:guid}")]
@@ -42,6 +58,8 @@ public class AiCoachController(
         var conversation = await store.FindAsync(conversationId, ct);
         if (conversation is null || conversation.UserId != GetUserId())
             return NotFound();
+        if (conversation.EndedAt.HasValue)
+            return Conflict(new { errorCode = "ConversationEnded", conversationSnapshot = ConversationSnapshotProjector.ToDto(conversation) });
         return Ok(ConversationSnapshotProjector.ToDto(conversation));
     }
 
@@ -50,7 +68,7 @@ public class AiCoachController(
         Guid conversationId, CancellationToken ct)
     {
         try { return Ok(await messageFeedback.ListAsync(GetUserId(), conversationId, ct)); }
-        catch (ConversationNotFoundException) { return NotFound(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     [HttpPut("conversations/{conversationId:guid}/messages/{messageId:guid}/feedback")]
@@ -60,7 +78,7 @@ public class AiCoachController(
         if (request.Rating is not ("up" or "down"))
             return BadRequest(new { errorCode = "InvalidRating" });
         try { return Ok(await messageFeedback.PutAsync(GetUserId(), conversationId, messageId, request, ct)); }
-        catch (ConversationNotFoundException) { return NotFound(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     [HttpDelete("conversations/{conversationId:guid}/messages/{messageId:guid}/feedback")]
@@ -72,7 +90,7 @@ public class AiCoachController(
             await messageFeedback.DeleteAsync(GetUserId(), conversationId, messageId, ct);
             return NoContent();
         }
-        catch (ConversationNotFoundException) { return NotFound(); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
     /// <summary>Voice input: transcribe a recording; the client puts the text into the input box.</summary>
@@ -98,6 +116,8 @@ public class AiCoachController(
                 MessageId = request.MessageId ?? Guid.NewGuid(),
                 Content = request.Content,
                 ExpectedVersion = request.ExpectedVersion,
+                TimeZoneId = request.TimeZoneId, Source = request.Source,
+                ReviewListEnabled = Request.Headers[ReviewListProtocolFilter.HeaderName] == "6",
             }, ct);
             return Ok(dto);
         }
@@ -105,6 +125,41 @@ public class AiCoachController(
         {
             return mapped;
         }
+    }
+
+    [HttpPost("conversations/{conversationId:guid}/messages/stream")]
+    public async Task<IActionResult> StreamMessage(Guid conversationId, [FromBody] SendMessageRequest request,
+        [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> json,
+        [FromServices] IHostApplicationLifetime lifetime, CancellationToken ct)
+    {
+        if (Request.Headers[ReviewListProtocolFilter.HeaderName] != "6")
+            return BadRequest(new { errorCode = "ReviewListRequiresProtocol6" });
+        var messageId = request.MessageId ?? Guid.NewGuid();
+        await using var stream = new CoachEventStream(Response, conversationId, messageId, json.Value.JsonSerializerOptions, ct);
+        try
+        {
+            // A dropped connection only ends the event stream. The turn keeps running (bounded by the
+            // per-call model timeouts) and commits, so the client recovers the reply from the snapshot.
+            var snapshot = await sendMessage.Handle(new SendMessageCommand
+            {
+                UserId = GetUserId(), ConversationId = conversationId, MessageId = messageId,
+                Content = request.Content, ExpectedVersion = request.ExpectedVersion,
+                TimeZoneId = request.TimeZoneId, Source = request.Source, ReviewListEnabled = true, Stream = stream.SendAsync,
+            }, lifetime.ApplicationStopping);
+            await stream.SendAsync(snapshot.GenerationError is null ? "turn.completed" : "turn.failed",
+                new { conversationSnapshot = snapshot, errorCode = snapshot.GenerationError });
+        }
+        catch (Exception ex) when (!Response.HasStarted && TryMapConversationError(ex, out var mapped))
+        {
+            return mapped;
+        }
+        catch (Exception ex) when (Response.HasStarted)
+        {
+            // SendAsync is a no-op once the client has gone; the snapshot is the recovery path.
+            logger.LogError(ex, "AiCoach stream failed for {ConversationId}", conversationId);
+            await stream.SendAsync("turn.failed", new { errorCode = "stream_failed" });
+        }
+        return new EmptyResult();
     }
 
     [HttpPost("conversations/{conversationId:guid}/drafts/{draftId:guid}/confirm")]
@@ -166,8 +221,20 @@ public class AiCoachController(
     {
         switch (exception)
         {
+            case ConversationEndedException ended:
+                result = Conflict(new
+                {
+                    errorCode = "ConversationEnded",
+                    conversationSnapshot = ConversationSnapshotProjector.ToDto(ended.Conversation),
+                });
+                return true;
+
             case ConversationNotFoundException:
                 result = NotFound();
+                return true;
+
+            case System.ComponentModel.DataAnnotations.ValidationException validation:
+                result = BadRequest(new { errorCode = "InvalidChatRequest", message = validation.Message });
                 return true;
 
             case ConversationVersionConflictException conflict:

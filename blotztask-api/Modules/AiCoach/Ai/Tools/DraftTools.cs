@@ -8,25 +8,28 @@ using BlotzTask.Modules.Tasks.Enums;
 namespace BlotzTask.Modules.AiCoach.Ai.Tools;
 
 /// <summary>Turn-local draft workspace. A failed turn never commits a partial tool operation.</summary>
-public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneId)
+public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneId, bool reviewListEnabled = false)
 {
-    public const string ContractVersion = "draft-tools-7";
+    public const string ContractVersion = "draft-tools-9";
 
     private readonly List<ProposalSet> _drafts = drafts.Select(draft => draft.Copy()).ToList();
     public IReadOnlyList<ProposalSet> Drafts => _drafts;
+    public IReadOnlyList<GatewayToolDefinition> AvailableDefinitions => reviewListEnabled
+        ? ReviewListTools.Definitions : Definitions;
 
     public static IReadOnlyList<GatewayToolDefinition> Definitions { get; } =
     [
         new("create_draft", "Create one unsaved app draft containing the requested task items. Use immediately when the user requests task creation or accepts a task-draft invitation; do not ask for confirmation again. Otherwise obtain draft consent under the mode rules. Do not call for acceptance of chat advice, plans or checklists; deliver that content in chat instead. Inherit dates and constraints from the conversation; resolve relative dates using current local time. Supply reasonable tentative dates, start times and end times for missing scheduling details. Leave timing blank only when the user explicitly requests it. A recurring draft must contain exactly one item.",
-            """{"type":"object","properties":{"items":{"type":"array","items":{"$ref":"#/$defs/item"},"minItems":1},"successReply":{"type":"string","minLength":1,"maxLength":280,"description":"Prewritten reply shown only on success. Briefly describe this draft operation using its arguments and known draft state. Mark default times tentative and adjustable. If timing was explicitly left blank, explain completion is needed before saving or starting. Distinguish task item count from draft count. Do not claim tasks are saved or availability is verified."}},"required":["items","successReply"],"additionalProperties":false,"$defs":{"recurrence":{"type":"object","properties":{"frequency":{"type":"string","enum":["Daily","Weekly","Monthly","Yearly"]},"interval":{"type":"integer","minimum":1},"daysOfWeek":{"type":["integer","null"],"description":"For Weekly, combine weekday flags: Monday=1, Tuesday=2, Wednesday=4, Thursday=8, Friday=16, Saturday=32, Sunday=64."},"dayOfMonth":{"type":["integer","null"]},"endDate":{"type":["string","null"]}},"required":["frequency","interval"],"additionalProperties":false},"item":{"type":"object","properties":{"title":{"type":"string"},"description":{"type":["string","null"]},"date":{"type":["string","null"],"description":"yyyy-MM-dd. Inherit the conversation date, resolving today/tomorrow in local time; otherwise choose a tentative date. Null only if the user requests no date. For recurrence, this is the start date."},"startTime":{"type":["string","null"],"description":"HH:mm in the session time zone. Use the requested start or a reasonable tentative default; null only if the user asks to leave time undecided."},"endTime":{"type":["string","null"],"description":"HH:mm later than startTime on the same local date. Use the requested duration or a reasonable tentative default; null only if the user asks to leave time undecided."},"recurrence":{"anyOf":[{"$ref":"#/$defs/recurrence"},{"type":"null"}]}},"required":["title","date","startTime","endTime"],"additionalProperties":false}}}"""),
-        new("update_draft", "Atomically add, update or remove unsaved items in one draft. Use draft and item IDs from context or tool results. Omitted fields stay unchanged; null clears an optional field. Removing all items discards the draft. Saved items cannot be changed. A recurring draft must contain exactly one item.",
-            """{"type":"object","properties":{"draftId":{"type":"string"},"changes":{"type":"array","minItems":1,"items":{"type":"object","properties":{"operation":{"type":"string","enum":["add","update","remove"]},"itemId":{"type":"string"},"fields":{"type":"object","properties":{"title":{"type":"string"},"description":{"type":["string","null"]},"date":{"type":["string","null"],"description":"yyyy-MM-dd; recurrence start date when recurrence is set"},"startTime":{"type":["string","null"],"description":"HH:mm in the session time zone"},"endTime":{"type":["string","null"],"description":"HH:mm on the same date in the session time zone"},"recurrence":{"anyOf":[{"$ref":"#/$defs/recurrence"},{"type":"null"}]}},"additionalProperties":false}},"required":["operation"],"additionalProperties":false}},"successReply":{"type":"string","minLength":1,"maxLength":280,"description":"Prewritten reply shown only on success. Briefly describe this draft operation using its arguments and known draft state. Mark default times tentative and adjustable. If timing was explicitly left blank, explain completion is needed before saving or starting. Distinguish task item count from draft count. Do not claim tasks are saved or availability is verified."}},"required":["draftId","changes","successReply"],"additionalProperties":false,"$defs":{"recurrence":{"type":"object","properties":{"frequency":{"type":"string","enum":["Daily","Weekly","Monthly","Yearly"]},"interval":{"type":"integer","minimum":1},"daysOfWeek":{"type":["integer","null"],"description":"For Weekly, combine weekday flags: Monday=1, Tuesday=2, Wednesday=4, Thursday=8, Friday=16, Saturday=32, Sunday=64."},"dayOfMonth":{"type":["integer","null"]},"endDate":{"type":["string","null"]}},"required":["frequency","interval"],"additionalProperties":false}}}"""),
+            """{"type":"object","properties":{"items":{"type":"array","items":{"$ref":"#/$defs/item"},"minItems":1},"successReply":{"type":"string","minLength":1,"maxLength":280,"description":"Prewritten reply shown only on success. One plain sentence stating what changed and how many items, and whether times are tentative suggestions the user can adjust. Do not list item titles or details; the app shows them. If timing was explicitly left blank, explain completion is needed before saving or starting. Distinguish task item count from draft count. Do not claim tasks are saved or availability is verified."}},"required":["items","successReply"],"additionalProperties":false,"$defs":{"recurrence":{"type":"object","properties":{"frequency":{"type":"string","enum":["Daily","Weekly","Monthly","Yearly"]},"interval":{"type":"integer","minimum":1},"daysOfWeek":{"type":["integer","null"],"description":"For Weekly, combine weekday flags: Monday=1, Tuesday=2, Wednesday=4, Thursday=8, Friday=16, Saturday=32, Sunday=64."},"dayOfMonth":{"type":["integer","null"]},"endDate":{"type":["string","null"]}},"required":["frequency","interval"],"additionalProperties":false},"item":{"type":"object","properties":{"title":{"type":"string"},"description":{"type":["string","null"]},"date":{"type":["string","null"],"description":"yyyy-MM-dd. Inherit the conversation date, resolving today/tomorrow in local time; otherwise choose a tentative date. Null only if the user requests no date. For recurrence, this is the start date."},"startTime":{"type":["string","null"],"description":"HH:mm in the session time zone. Use the requested start or a reasonable tentative default; null only if the user asks to leave time undecided."},"endTime":{"type":["string","null"],"description":"HH:mm later than startTime on the same local date. Use the requested duration or a reasonable tentative default; null only if the user asks to leave time undecided."},"recurrence":{"anyOf":[{"$ref":"#/$defs/recurrence"},{"type":"null"}]}},"required":["title","date","startTime","endTime"],"additionalProperties":false}}}"""),
+        new("update_draft", "Atomically add, update or remove unsaved items in one draft. Use draft and item IDs from context or tool results. Omitted fields stay unchanged; null clears an optional field. Updates retain each item's time zone; interpret updated local times in that item's zone. New items use the current session zone. Removing all items discards the draft. Saved items cannot be changed. A recurring draft must contain exactly one item.",
+            """{"type":"object","properties":{"draftId":{"type":"string"},"changes":{"type":"array","minItems":1,"items":{"type":"object","properties":{"operation":{"type":"string","enum":["add","update","remove"]},"itemId":{"type":"string"},"fields":{"type":"object","properties":{"title":{"type":"string"},"description":{"type":["string","null"]},"date":{"type":["string","null"],"description":"yyyy-MM-dd; recurrence start date when recurrence is set"},"startTime":{"type":["string","null"],"description":"HH:mm in the existing item's time zone; current session zone for added items"},"endTime":{"type":["string","null"],"description":"HH:mm on the same date in the existing item's time zone; current session zone for added items"},"recurrence":{"anyOf":[{"$ref":"#/$defs/recurrence"},{"type":"null"}]}},"additionalProperties":false}},"required":["operation"],"additionalProperties":false}},"successReply":{"type":"string","minLength":1,"maxLength":280,"description":"Prewritten reply shown only on success. One plain sentence stating what changed and how many items, and whether times are tentative suggestions the user can adjust. Do not list item titles or details; the app shows them. If timing was explicitly left blank, explain completion is needed before saving or starting. Distinguish task item count from draft count. Do not claim tasks are saved or availability is verified."}},"required":["draftId","changes","successReply"],"additionalProperties":false,"$defs":{"recurrence":{"type":"object","properties":{"frequency":{"type":"string","enum":["Daily","Weekly","Monthly","Yearly"]},"interval":{"type":"integer","minimum":1},"daysOfWeek":{"type":["integer","null"],"description":"For Weekly, combine weekday flags: Monday=1, Tuesday=2, Wednesday=4, Thursday=8, Friday=16, Saturday=32, Sunday=64."},"dayOfMonth":{"type":["integer","null"]},"endDate":{"type":["string","null"]}},"required":["frequency","interval"],"additionalProperties":false}}}"""),
         new("discard_draft", "Discard a pending draft. This does not delete any task already saved from it.",
             """{"type":"object","properties":{"draftId":{"type":"string"},"successReply":{"type":"string","minLength":1,"maxLength":280,"description":"Brief reply to show only if the draft is discarded. Do not claim a saved task was deleted."}},"required":["draftId","successReply"],"additionalProperties":false}"""),
     ];
 
     public string Execute(ModelToolCallRequest call)
     {
+        if (reviewListEnabled) return new ReviewListTools(_drafts, timeZoneId).Execute(call);
         try
         {
             using var document = JsonDocument.Parse(call.ArgumentsJson);
@@ -90,11 +93,13 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
     {
         draftId = draft.Id,
         status = draft.Status.ToString().ToLowerInvariant(),
+        draft.IsReviewList,
         items = draft.Proposals.Select(item => new
         {
-            itemId = item.ProposalId, title = item.Title, description = item.Description,
+            itemId = item.ProposalId, kind = item.Kind.ToString().ToLowerInvariant(), title = item.Title, description = item.Description,
             date = item.Date?.ToString("yyyy-MM-dd"), startTime = item.StartTime?.ToString("HH:mm"),
-            endTime = item.EndTime?.ToString("HH:mm"), savedTaskId = item.PersistedTaskId,
+            endTime = item.EndTime?.ToString("HH:mm"), timeZoneId = item.TimeZoneId, savedTaskId = item.PersistedTaskId,
+            savedNoteId = item.PersistedNoteId, suggestedFields = item.SuggestedFields ?? [],
             recurrence = item.Recurrence is { } recurrence ? new {
                 frequency = recurrence.Frequency.ToString(), interval = recurrence.Interval,
                 daysOfWeek = recurrence.DaysOfWeek, dayOfMonth = recurrence.DayOfMonth,
@@ -111,7 +116,7 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
         return draft;
     }
 
-    private TaskProposal ReadItem(JsonElement fields, TaskProposal? original)
+    internal TaskProposal ReadItem(JsonElement fields, TaskProposal? original)
     {
         CheckFields(fields, "title", "description", "date", "startTime", "endTime", "recurrence");
         var title = String(fields, "title", original?.Title)?.Trim();
@@ -126,10 +131,10 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
         ValidateRecurrence(recurrence, date);
         return new(original?.ProposalId ?? Guid.NewGuid(), title,
             String(fields, "description", original?.Description), date, start, end,
-            timeZoneId, original?.LabelId, original?.PersistedTaskId, recurrence);
+            original?.TimeZoneId ?? timeZoneId, original?.LabelId, original?.PersistedTaskId, recurrence);
     }
 
-    private static RecurrenceProposal? ReadRecurrence(JsonElement value)
+    internal static RecurrenceProposal? ReadRecurrence(JsonElement value)
     {
         if (value.ValueKind == JsonValueKind.Null) return null;
         CheckFields(value, "frequency", "interval", "daysOfWeek", "dayOfMonth", "endDate");

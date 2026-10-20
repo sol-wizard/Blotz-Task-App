@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
 import { ReturnButton } from "@/shared/components/return-button";
 import { theme } from "@/shared/constants/theme";
 import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 type NoteEditorParams = {
   noteId?: string;
@@ -18,6 +19,10 @@ type NoteEditorParams = {
 };
 
 export default function NoteEditorScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.NOTE_EDITOR);
+  }, []);
+
   const router = useRouter();
   const { t } = useTranslation("notes");
 

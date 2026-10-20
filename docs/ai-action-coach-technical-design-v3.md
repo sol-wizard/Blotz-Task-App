@@ -1,10 +1,10 @@
 # AiCoach implementation: conversation and draft tools
 
-This document describes the current replacement architecture. The filename is retained for existing documentation links; the API protocol is version 3. There is no legacy policy or model-output protocol branch.
+This document describes the current replacement architecture. The filename is retained for existing documentation links; the API protocol is version 5. There is no legacy policy or model-output protocol branch.
 
 ## Ownership
 
-The model decides how to respond, whether to ask questions, and when a draft is useful. Execution, Clarify and Companion share one runtime and toolset. `CoachPrompt` contains the current user-maintained common instructions and mode guidance. This architecture refactor preserves that prompt verbatim; it does not add a code-level question-count or response-category validator.
+New chats use Unified mode in one continuous timeline per user. Execution, Clarify and Companion remain available to the evaluation harness and share the same runtime and tools. In Unified, explicitly adopting a concrete action authorizes an unsaved draft; advice requests and explicit deferrals do not. Formal tasks still require card confirmation. `CoachPrompt` owns response guidance; the application has no question-count or response-category validator.
 
 The application owns user authorization, draft identities and versions, concurrency, actual persistence and errors. The model cannot create formal tasks. A user-confirmed draft is saved by `ConfirmDraftCommandHandler` through the existing `AddTaskCommandHandler`.
 
@@ -14,7 +14,7 @@ There are no dialogue phases, strategy envelopes, intent/readiness classificatio
 
 | Layer | Owner | Responsibility |
 | --- | --- | --- |
-| Prompt | `CoachPrompt` | User-maintained conversation guidance; unchanged in this refactor |
+| Prompt | `CoachPrompt` | Conversation guidance and mode rules |
 | Context | `ModelContextBuilder` | History selection, summary cursor validation, summary requests, context size and current draft projection |
 | Runtime | `ModelTurnRuntime` | Shared model-call budget, per-call timeout, cancellation, tool loop, completion reasons and usage |
 | Tool execution | `ToolExecutor` | Tool dispatch, argument-size/call limits, cancellation before execution, repeated-call-ID protection and execution result classification |
@@ -26,7 +26,7 @@ There are no dialogue phases, strategy envelopes, intent/readiness classificatio
 
 `OperationPolicy` is used by application checks, draft operations and snapshot projection. It cannot demand a question, force a draft, rewrite a response or infer consent. Domain transition methods independently enforce essential data invariants so bypassing an application check cannot start a second running turn or record a task result outside an active save.
 
-`ModelContextBuilder` requests summarization through a callback supplied by the runtime. It does not call the gateway independently: summaries share the same timeout, usage totals and model-call budget. Prompt text and summary instructions have been moved without changing their contents.
+`ModelContextBuilder` requests summarization through a callback supplied by the runtime. It does not call the gateway independently: summaries share the same timeout, usage totals and model-call budget. Rolling summaries retain absolute dates using the first actual message time/zone and local date/time-zone change events. `ClosingSummaryGenerator` separately makes one quota-checked call after a topic ends, with a 5-second default budget (`ClosingSummaryTimeoutSeconds`, positive and at most 5), linked request cancellation and accounting within the same budget. Automatic rollover persists the incoming message and running state before optional summary work; manual topic changes create the next topic first. Timeout/failure permits the ordinary reply path to continue. Whole-reply latency still needs the existing mobile polling reconciliation.
 
 `ToolExecutor` caches results by tool call ID within a turn. Identical repeats return the original result without repeating a mutation; changed arguments under the same ID fail. Different IDs remain distinct operations. Unknown tools, resource limits and invalid operations have diagnostic outcomes; none are converted into conversation advice.
 
@@ -52,7 +52,7 @@ Usage accounting has a bounded 10-second cancellation token so cooperative datab
 5. For one successful draft tool call, the model may include a short `successReply` in the tool arguments. Show it only after the tool succeeds, and complete the turn without a second model call. A create or update with multiple items or changes may use this path only when the server's schedule assessment is `clear`; single-item operations retain the existing quick-reply behavior for `clear`, `incomplete` and `partial`. Missing or invalid replies, failed tools, schedule conflicts, unverified schedules and turns with multiple tool calls continue through the model loop for a final response. Reacquire the session lock and commit the reply, tool transcript and drafts together only if this is still the expected turn and version.
 6. A failed/cancelled/filtered/exhausted turn commits no draft workspace or assistant success claim. Reset the busy flag even if the HTTP client disconnects. Usage includes all completed model calls, including summary calls.
 
-Resource controls live in `AiCoachModuleOptions`: model/tool-call budgets, output tokens, context budget, timeout and session lifetime. They do not classify or rewrite conversation content. The last allowed model call has no tools, allowing a final response after tool results.
+Resource controls live in `AiCoachModuleOptions`: model/tool-call budgets, output tokens, context budget, timeout, topic idle threshold and retention. They do not classify or rewrite conversation content. The last allowed model call has no tools, allowing a final response after tool results.
 
 `list_tasks` accepts an inclusive local date range of at most seven days. The application supplies the authenticated conversation owner and time zone; the model cannot choose another user. The reader reuses the Tasks module's date query, including virtual recurring occurrences, and returns only titles, local intervals, completion, due and recurrence/overdue flags. It omits descriptions and limits each result to 50 items and a small byte budget. At most two reads run in a turn. A truncated or failed result cannot establish that a time slot is free. The context builder reserves space for those read results; successful reads are marked on the corresponding visible assistant message. The model sees the full result in its current turn, while later turns retain only a short read marker and must query again for current task details.
 
@@ -66,38 +66,60 @@ The Azure adapter explicitly sends `max_completion_tokens`. The SDK cannot infer
 
 The session retains original user and assistant messages and model/tool exchanges. Successful task reads retain a short tool-result marker rather than the full task list, which avoids resending stale task data on later turns. App-side edit/save/discard events also enter history so the model does not act on stale card content.
 
-Model context is budgeted conservatively using serialized UTF-8 byte size as an upper estimate for token use. The builder subtracts the actual prompt, tool definitions and draft data before allocating space to history, so a longer user-maintained prompt triggers additional compression rather than an avoidable post-summary overflow. Older complete exchanges are summarized incrementally. Tool calls are never separated from tool results. The summary is revisable context, not an authorization source. The original transcript remains in session memory. Current draft data is supplied independently of the summary.
+Model context is budgeted conservatively using serialized UTF-8 byte size as an upper estimate for token use. The builder subtracts the actual prompt, tool definitions and draft data before allocating space to history, so a longer user-maintained prompt triggers additional compression rather than an avoidable post-summary overflow. Older complete exchanges are summarized incrementally. Tool calls are never separated from tool results. The summary is revisable context, not an authorization source. Visible messages remain in SQL rows independently of compressed context. Summary-covered history is removed from the working payload and its summary cursor resets to zero. Current draft data is supplied independently of the summary. Each turn also receives only the immediately previous topic's closing summary as historical data; closing summaries are not chained.
 
 A context that cannot fit within the configured resource budget fails visibly instead of silently dropping user context. Summaries remain model-generated and may lose detail; current messages and actual draft data remain available for correction.
 
 ## Drafts and persistence
 
-A conversation holds independent drafts; each has stable IDs, a version, items and `pending`, `processing`, `completed` or `rejected` status. Draft date/start/end fields are nullable. Missing scheduling information is valid until formal confirmation.
+A conversation holds independent drafts; each has stable IDs, a version, items and `pending`, `processing`, `completed`, `rejected` or `expired` status. Draft date/start/end fields are nullable. Missing scheduling information is valid until formal confirmation.
 
 - `create_draft(items)` creates a pending draft.
 - `update_draft(draftId, changes)` applies add/update/remove operations to unsaved items. Omitted fields are preserved; null clears optional fields. Unknown IDs and invalid times reject the whole operation. Removing all unsaved items discards the draft.
 - `discard_draft(draftId)` discards a pending draft and never deletes saved tasks.
 - App edits use a version-checked PUT and are visible to subsequent model turns.
-- Confirmation validates all reviewed data, date/time/time-zone consistency and item ownership before accepting the command. Missing schedules are reported as `ScheduleRequired`.
+- Confirmation validates all reviewed data, date/time/time-zone consistency and item ownership before accepting the command. Missing schedules are reported as `ScheduleRequired`; past starts return `ScheduleInPast` before any task write. `start_now` explicitly moves the interval to now.
 - A database transaction wraps the new task batch. Failure rolls back the batch and keeps the draft editable. Previously saved item identities are not recreated.
 - A command receipt hashes the complete request content, including descriptions. Reusing an ID with different content is rejected; replay returns the original result with a fresh snapshot. Retry a failed confirmation using a new command ID.
 - `start_now` is a single-task confirmation that shifts the resolved interval to now and returns the focus-screen directive after successful persistence.
 
-No EF entities or migrations change in this implementation.
+Working state is serialized in `AiCoachConversation.Payload` (schema v2). Visible messages and draft snapshots live in `AiCoachMessage`; saved message IDs remain stable for feedback. `SqlConversationStore` commits state, new messages and changed snapshots together, uses update-only revision checks, and cannot resurrect a deleted segment. `EndedAt` and a filtered unique user index enforce at most one open topic. The developer generated and applied the storage migration; subsequent chat endpoints, retention and UI changes require no additional migration.
 
 ## Mobile protocol
 
-Version 3 snapshots contain:
+Version 5 snapshots contain:
 
 - `conversationId`, `conversationVersion`, `mode`;
 - `generationStatus` (`idle`, `running`, `failed`) and `generationError`;
-- the visible `messages` transcript with stable message IDs;
+- the latest 30 visible messages with stable IDs, timestamps, topic-start flags and draft snapshots;
 - `artifacts[]`, each with its own version, status, payload and computed `allowedActions`;
 - session actions and optional usage totals.
 
 There is no `state`, `currentArtifact`, `assistantMessage`, blocked-reason enum or question metadata. Capability lists are computed from operation status; they are not stored dialogue state or model strategy instructions.
 
-The UI renders multiple drafts, displays pending schedules, and disables formal confirmation until the required schedule is supplied. The card editor saves draft changes immediately instead of keeping an invisible local edit that blocks chat. Server snapshots reconcile network retries and in-flight work.
+The mobile screen opens the existing Unified chat. An inverted `FlatList` merges snapshots with cursor-paged history by message ID, displays local Today/Yesterday/date separators and topic dividers, and loads older messages when scrolling up. Live cards use current artifact versions; historical cards are read-only and show saved/discarded/expired status. The menu starts a new topic or clears history after confirmation; the confirmation explains that ratings and optional feedback details remain. Past schedules show an edit-before-save warning. Server snapshots reconcile retries and in-flight work; a changed conversation ID switches the hook to the new topic. Query invalidation uses `['aiCoach', 'chat', 'messages']`; clear cancels pending page requests and empties cached history. A lifecycle counter prevents late open responses from restoring deleted messages. Successful reopens cancel pending history requests, discard cached cursor pages and invalidate the history query before resuming from page one; this avoids gaps after remote inserts and removes remotely cleared history despite the shared infinite stale time. Query pages reset for both focus/retry and open-based reconciliation, while ordinary topic changes keep server history.
+
+## Chat API and topic boundaries
+
+| Method | Route | Behavior |
+| --- | --- | --- |
+| GET | `/api/ai-coach/chat?timeZoneId=Australia/Perth` | Open snapshot; refresh pending draft schedule assessments older than ten minutes |
+| GET | `/api/ai-coach/chat/messages?before=&limit=30` | User-scoped timeline, newest first; maximum page size 100 |
+| POST | `/api/ai-coach/chat/topics` | JSON `{ "timeZoneId": "Australia/Perth" }`; end old topic and return the new empty snapshot; reuse an empty topic |
+| DELETE | `/api/ai-coach/chat` | Hard-delete segments, messages and traces; keep feedback; return 409 while busy |
+| POST | `/api/ai-coach/conversations/{id}/messages/stream` | Protocol 6 SSE: text deltas, review-list previews and a saved terminal snapshot; see [streaming contract](ai-coach-streaming.md) |
+
+Timeline paging uses `(CreatedAt DESC, Id DESC)` with an opaque base64url cursor. Both comparisons execute in SQL Server, including its GUID ordering, so equal timestamps and inserts between pages do not duplicate or skip original rows. Timeline draft actions are empty. Existing per-conversation routes remain; foreign/deleted IDs return 404 and ended IDs return 409, including snapshot/feedback routes. The legacy start route reuses the open topic instead of creating duplicate open rows.
+
+`ConversationSegments` ends a nonempty idle topic only when the last-message gap is strictly greater than `TopicIdleHours` (default 8). End runs under the segment lock, refuses a running turn/save, expires pending drafts and saves their originating message snapshots. Closing summary generation happens after releasing state locks and its write requires the database revision captured with the ended source; concurrent retention invalidates stale results. The new turn receives the new ID and no expired live drafts. Crossing local midnight records a data event before the next user turn and does not split an active topic. Sending accepts an optional current device `timeZoneId` (always sent by the new mobile client). Zone changes record old/new local references before the user message and update future model time, task reads and draft defaults; existing draft schedules stay in their own zones. Automatic rollover uses the incoming zone, without adding travel as a topic boundary. Payload-only `InitialTimeZoneId` preserves the original date reference without an EF schema change.
+
+## Retention and clear
+
+`AiCoachTraceRetentionService` runs hourly. `MessageRetentionDays` defaults to 180; message timestamps determine expiry. It deletes empty ended topics and their traces, plus empty open topics older than one hour. Diagnostic traces independently default to 30 days. Retention skips segments with active work and retries them on a later run.
+
+Deleting rows also removes old working-state copies: rolling/closing summaries reset, drafts from expired messages are removed, receipts are removed or rebuilt with retained snapshots, and only bounded recent retained text rebuilds model context. Revision-conditioned cleanup updates protect concurrent sends before deleting message rows. Current pending drafts remain separately available to the model. Clear uses a transaction and refuses active work; it deletes segments before traces so late trace recording cannot reintroduce cleared content. Trace writes check segment existence in the same transaction as insertion. Account deletion uses the existing user cascades, including feedback.
+
+Website privacy-policy work is deferred at the user's request. The existing settings link remains the existing public website link; this change adds no new policy page or policy menu entry.
 
 ## Verification
 
@@ -115,4 +137,10 @@ Credentials are read from local development configuration, never included in tes
 
 ## Operational limits
 
-Conversation history and command receipts are still in memory and expire with the session. A process restart loses them. Database transactions prevent partial batch saves, but they do not provide durable cross-process idempotency across the gap between database commit and in-memory receipt recording. Durable resumable sessions would require persisted receipts and conversation storage in a separately scoped database change.
+Conversations and receipts survive process restarts through SQL storage. In-process user/segment locks coordinate one instance; revision checks and the filtered unique index protect several instances. There is no durable distributed lock or automatic whole-turn retry. A process crash after a formal task transaction commits but before its result is recorded can still leave a confirmation retry at risk of duplication; interrupted processing is released after five minutes. Closing summaries are model-generated and can lose details or fail; the new topic still opens without them.
+
+## Review validation — 17 Oct 2026
+
+The persistence/segment/draft/chat regression suite passes 62 SQL-backed checks. Seven new checks cover source-revision rejection after pruning, continued/idle zone changes, invalid-zone rejection before writes, bounded manual topic changes, durable input before blocked summary work and cancellation cleanup. Three real-deployment checks pass: both closing-summary continuity cases under the 5-second default and Sydney-versus-Perth date grounding with the earlier draft zone preserved. AI Coach ESLint passes; device QA remains pending. These fixes add only optional request/payload metadata, not EF columns or migrations.
+
+Second-review validation: 63 SQL regression checks pass, including an existing-item edit plus a new-item addition across zones. Draft tool contract v8 projects item time zones and preserves an existing item's zone on updates; only new items inherit the current session zone. A real-deployment title-only edit confirms that the earlier Perth schedule survives a Sydney session. The production history-reopen callback also passes focused checks with the installed TanStack Query library for resumed paging, disabled initial queries, remote clear, retained topic history and stale lifecycle guards. AI Coach lint passes; full-project TypeScript retains the same 187 unrelated dependency/widget errors.

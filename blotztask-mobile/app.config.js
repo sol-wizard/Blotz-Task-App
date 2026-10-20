@@ -44,10 +44,7 @@ export default {
     android: {
       package: "com.blotz.blotztask",
       permissions: ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"],
-      blockedPermissions: [
-        "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR",
-      ],
+      blockedPermissions: ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"],
     },
     web: {
       bundler: "metro",
@@ -55,6 +52,7 @@ export default {
     },
     plugins: [
       "expo-router",
+      "expo-iap",
       [
         "expo-dev-client",
         {
@@ -64,7 +62,7 @@ export default {
       [
         "react-native-auth0",
         {
-          domain: "dev-k72xachs0fr6nebp.us.auth0.com",
+          domain: "auth.blotztask.com",
         },
       ],
       "expo-font",
@@ -96,10 +94,7 @@ export default {
         },
       ],
       "expo-status-bar",
-      [
-        "expo-widgets",
-        iosWidgetConfig,
-      ],
+      ["expo-widgets", iosWidgetConfig],
       ["react-native-android-widget", androidWidgetConfig],
       "./plugins/withAndroidWorkManagerFix",
     ],

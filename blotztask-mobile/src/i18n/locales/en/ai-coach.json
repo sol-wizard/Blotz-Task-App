@@ -1,32 +1,37 @@
 {
   "home": {
-    "greeting": "Hi, I'm Blotz",
     "intro": "Tell me what you want to do — I'll help you take the next step",
-    "comingSoon": "Coming soon",
-    "modes": {
-      "execution": {
-        "title": "I know what I want to do",
-        "subtitle": "Create a task right away"
-      },
-      "clarify": {
-        "title": "I have stuff — help me sort out the next step",
-        "subtitle": "Untangle your thoughts, find the first step"
-      },
-      "companion": {
-        "title": "I just want to talk",
-        "subtitle": "Whatever's on your mind, tell me"
-      },
-      "unified": {
-        "title": "New version (testing)",
-        "subtitle": "Direct answers, to-dos captured for you"
-      }
+    "greeting": {
+      "morning": "Good morning — what shall we move forward today?",
+      "afternoon": "Good afternoon — what shall we move forward today?",
+      "evening": "Good evening — anything to wrap up or plan?"
     },
-    "pickModeFirst": "Pick a mode above to start"
+    "todaySummary": "{{open}} left · {{done}} done",
+    "next": "Next",
+    "startersTitle": "Try starting with",
+    "starters": {
+      "planTomorrow": {
+        "title": "Plan tomorrow",
+        "prompt": "Help me plan tomorrow"
+      },
+      "breakDown": {
+        "title": "Break a big task down",
+        "prompt": "Help me break a big task into small steps"
+      },
+      "focusNow": {
+        "title": "Start focusing now",
+        "prompt": "I want to start focusing on something now"
+      },
+      "talk": {
+        "title": "Just talk it through",
+        "prompt": "I just want to talk through what's on my mind"
+      }
+    }
   },
   "chat": {
-    "title": "Execution mode",
+    "title": "AI Coach",
+    "scrollToLatest": "Scroll to latest message",
     "inputPlaceholder": "What do you want to do?",
-    "companionInputPlaceholder": "What's on your mind?",
     "thinking": "Thinking…",
     "taskContextRead": "Checked tasks in the app",
     "connecting": "Connecting…",
@@ -37,9 +42,39 @@
     "modelUnavailable": "The AI is temporarily unavailable. Try again soon.",
     "createManually": "Create task manually",
     "listening": "Listening…",
+    "startVoice": "Start voice input",
+    "send": "Send",
+    "stopAndSend": "Stop and send",
+    "cancelVoice": "Cancel recording",
+    "transcribing": "Transcribing…",
+    "autoSendIn": "{{count}}s left, sending automatically",
+    "voiceSendLater": "Added to the input. Send it when the reply is done.",
     "transcribeFailed": "Couldn't catch that, try again",
-    "holdToTalk": "Hold to talk",
-    "generationFailed": "This reply could not be completed. Please try again or start a new conversation."
+    "recordingFailed": "Could not start recording. Please try again.",
+    "emptyAudio": "No speech detected. Please try again.",
+    "micPermissionTitle": "Microphone access",
+    "micPermissionBlocked": "Allow microphone access in Settings to use voice input.",
+    "micPermissionRequired": "Microphone access is needed for voice input.",
+    "openSettings": "Open Settings",
+    "cancel": "Cancel",
+    "micReady": "Microphone ready. Tap again to speak.",
+    "generationFailed": "This reply could not be completed. Please try again or start a new conversation.",
+    "menu": "Chat options",
+    "newTopic": "New topic",
+    "clearHistory": "Clear chat history",
+    "clearTitle": "Clear chat history?",
+    "clearDescription": "Your messages, drafts and diagnostic traces will be permanently deleted. Thumbs up/down ratings and any reasons or details you submitted are kept for quality review.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "topicStart": "New topic",
+    "historyError": "Could not load history — tap to retry",
+    "busy": "Wait for the current reply or save to finish.",
+    "actionFailed": "Could not update your chat. Please try again.",
+    "generating": "Generating reply",
+    "reconnecting": "Connection interrupted. Syncing the result…",
+    "followUps": "Suggested replies",
+    "status": "Sees your tasks and schedule",
+    "back": "Back"
   },
   "feedback": {
     "good": "Helpful reply",
@@ -47,6 +82,10 @@
     "copy": "Copy reply",
     "copied": "Copied",
     "copyFailed": "Couldn't copy. Try again.",
+    "saveNote": "Save reply as a note",
+    "noteSaved": "Saved to notes",
+    "noteSavedTruncated": "Saved to notes (long reply, first 2,000 characters kept)",
+    "noteSaveFailed": "Couldn't save the note. Try again.",
     "saveFailed": "Couldn't save feedback. Try again.",
     "title": "What could be better? (optional)",
     "detailPlaceholder": "Add details (optional)",
@@ -88,7 +127,13 @@
     "schedulePartial": "Repeats in the first seven days were checked; later dates have not been checked.",
     "cancel": "Cancel",
     "editFailed": "Could not update the draft. Please try again.",
-    "repeats": "Repeats"
+    "repeats": "Repeats",
+    "discarded": "Discarded",
+    "expired": "Expired",
+    "timePassed": "This time has passed — edit it before saving.",
+    "conflictWith": "Overlaps {{task}}",
+    "timePassedShort": "Time passed",
+    "tomorrow": "Tomorrow"
   },
   "editModal": {
     "title": "Edit task",
@@ -107,7 +152,65 @@
     "endDate": "Ends on",
     "noEndDate": "No end date",
     "invalidRecurrence": "Check the repeat interval, selected days and end date.",
-    "frequency": { "Daily": "Daily", "Weekly": "Weekly", "Monthly": "Monthly", "Yearly": "Yearly" },
-    "weekday": { "0": "Mon", "1": "Tue", "2": "Wed", "3": "Thu", "4": "Fri", "5": "Sat", "6": "Sun" }
+    "frequency": {
+      "Daily": "Daily",
+      "Weekly": "Weekly",
+      "Monthly": "Monthly",
+      "Yearly": "Yearly"
+    },
+    "weekday": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    }
+  },
+  "review": {
+    "pending": "{{count}} items to review",
+    "title": "Review list",
+    "explanation": "Items are saved to tasks and notes only when you add them.",
+    "close": "Close",
+    "empty": "No items awaiting review.",
+    "task": "Task",
+    "note": "Note",
+    "description": "Description",
+    "titleLabel": "Title",
+    "noteBody": "Note text",
+    "editNote": "Edit note",
+    "saveChanges": "Save changes",
+    "titleRequired": "Enter a title.",
+    "noteTooLong": "The title and note text together must be at most 2,000 characters.",
+    "noteLength": "{{count}} / 2,000 characters, including title",
+    "suggested": "Suggested: {{fields}}",
+    "remove": "Remove",
+    "editItem": "Edit {{title}}",
+    "removeItem": "Remove {{title}}",
+    "addAll": "Add all ({{count}})",
+    "saved": "Items added",
+    "saveFailed": "Could not save. Your review list is still here.",
+    "invalidFields": "Check the title, dates and times before adding.",
+    "changed": "The list changed. Review the latest items and try again.",
+    "changedWhileEditing": "The list changed while you were editing. Your changes are still here; return to the list to review its latest version.",
+    "confirmationUnknown": "Checking whether your items were saved. Keep this request unchanged; retry if needed.",
+    "retrySave": "Retry this save",
+    "refresh": "Check again",
+    "discardEditTitle": "Discard your changes?",
+    "discardEditDescription": "These edits have not been submitted. The original item will stay in the review list.",
+    "keepEditing": "Keep editing",
+    "discardEdit": "Discard changes",
+    "leaveTitle": "Items still awaiting review",
+    "leaveDescription": "{{count}} items have not been added to tasks or notes. Leaving does not save them.",
+    "keepReviewing": "Review items",
+    "leave": "Leave",
+    "newTopicTitle": "Start a new topic?",
+    "newTopicDescription": "The {{count}} pending items in this topic will expire without being saved.",
+    "pending_one": "{{count}} item to review",
+    "pending_other": "{{count}} items to review",
+    "generating": "Organizing…",
+    "generatingDescription": "AI is organizing the list. You can edit and add items when it finishes.",
+    "toggleDetails": "Expand or collapse details"
   }
 }

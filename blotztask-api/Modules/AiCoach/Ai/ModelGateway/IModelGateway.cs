@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 
 /// <summary>Provider adapter for natural replies and tool calls.</summary>
@@ -12,13 +14,20 @@ public sealed record ModelGatewayRequest(
     string SystemPrompt,
     IReadOnlyList<GatewayMessage> Messages,
     IReadOnlyList<GatewayToolDefinition> Tools,
-    int? MaxOutputTokens = null);
+    int? MaxOutputTokens = null,
+    Func<string, Task>? OnTextDelta = null);
 
 public sealed record GatewayToolDefinition(
     string Name,
     string Description,
     string ParametersJsonSchema);
 
+// Discriminators let persisted conversation history restore each message type.
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(GatewayUserMessage), "user")]
+[JsonDerivedType(typeof(GatewaySystemMessage), "system")]
+[JsonDerivedType(typeof(GatewayAssistantMessage), "assistant")]
+[JsonDerivedType(typeof(GatewayToolResultMessage), "tool")]
 public abstract record GatewayMessage;
 
 public sealed record GatewayUserMessage(string Content) : GatewayMessage;
@@ -48,4 +57,6 @@ public sealed record ModelCompletionResult(
     ModelFinishReason FinishReason,
     int InputTokens,
     int OutputTokens,
-    int TotalTokens);
+    int TotalTokens,
+    // Part of InputTokens served from the provider's prompt cache.
+    int CachedInputTokens = 0);

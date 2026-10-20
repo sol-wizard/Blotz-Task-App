@@ -7,10 +7,7 @@ public static class ReviewTimeZone
     /// Current behavior resolves a request timezone or falls back to UTC until users store a timezone.
     /// Target behavior is stored user timezone, then request fallback, then reject.
     /// </summary>
-    // TIMEZONE TODO: Align with timezone-handling.md Rule 5.
-    // Reviews/reports should prefer the stored user timezone, use request timeZoneId only
-    // when the stored timezone is missing, and reject instead of silently using UTC when
-    // neither timezone is available.
+    // Preferring the stored user timezone over the request one is tracked in PBI #1473.
     public static TimeZoneInfo Resolve(string? timeZoneId)
     {
         if (string.IsNullOrWhiteSpace(timeZoneId))

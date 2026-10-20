@@ -1,32 +1,37 @@
 {
   "home": {
-    "greeting": "嗨，我是 Blotz",
     "intro": "告诉我你想做什么，我陪你迈出下一步",
-    "comingSoon": "即将推出",
-    "modes": {
-      "execution": {
-        "title": "我知道我要做什么",
-        "subtitle": "直接创建任务"
-      },
-      "clarify": {
-        "title": "我有事儿，帮我梳理下一步",
-        "subtitle": "理清思路，找到第一步"
-      },
-      "companion": {
-        "title": "我想聊聊",
-        "subtitle": "想到什么，都可以和我聊聊"
-      },
-      "unified": {
-        "title": "新版（测试）",
-        "subtitle": "直接给答案，自动整理待办"
-      }
+    "greeting": {
+      "morning": "早上好，今天想推进什么？",
+      "afternoon": "下午好，今天想推进什么？",
+      "evening": "晚上好，想收个尾还是规划明天？"
     },
-    "pickModeFirst": "先选择上面的一个模式开始"
+    "todaySummary": "还剩 {{open}} 件 · 已完成 {{done}} 件",
+    "next": "下一个",
+    "startersTitle": "可以这样开始",
+    "starters": {
+      "planTomorrow": {
+        "title": "帮我规划明天",
+        "prompt": "帮我规划一下明天"
+      },
+      "breakDown": {
+        "title": "把一件大事拆小",
+        "prompt": "帮我把一件大事拆成小步骤"
+      },
+      "focusNow": {
+        "title": "现在开始专注",
+        "prompt": "我想现在开始专注做一件事"
+      },
+      "talk": {
+        "title": "随便聊聊，理理思路",
+        "prompt": "我想随便聊聊，理一理思路"
+      }
+    }
   },
   "chat": {
-    "title": "执行模式",
+    "title": "AI 教练",
+    "scrollToLatest": "滚动到最新消息",
     "inputPlaceholder": "想做什么？告诉我",
-    "companionInputPlaceholder": "想聊什么？告诉我",
     "thinking": "正在想…",
     "taskContextRead": "已查看应用内任务",
     "connecting": "正在连接…",
@@ -37,9 +42,39 @@
     "modelUnavailable": "AI 暂时不可用，稍后再试。",
     "createManually": "手动创建任务",
     "listening": "正在听…",
+    "startVoice": "开始语音输入",
+    "send": "发送",
+    "stopAndSend": "停止并发送",
+    "cancelVoice": "取消录音",
+    "transcribing": "正在识别…",
+    "autoSendIn": "还剩 {{count}} 秒，会自动发送",
+    "voiceSendLater": "已转成文字，稍后发送",
     "transcribeFailed": "没听清，再试一次",
-    "holdToTalk": "按住说话",
-    "generationFailed": "这次回复未能完成。请重试，或开始新的对话。"
+    "recordingFailed": "录音失败，请重试。",
+    "emptyAudio": "没有听到说话声，请重试。",
+    "micPermissionTitle": "麦克风权限",
+    "micPermissionBlocked": "请在系统设置中允许麦克风权限，以使用语音输入。",
+    "micPermissionRequired": "使用语音输入需要麦克风权限。",
+    "openSettings": "打开设置",
+    "cancel": "取消",
+    "micReady": "麦克风已就绪，再点一下开始说话。",
+    "generationFailed": "这次回复未能完成。请重试，或开始新的对话。",
+    "menu": "聊天选项",
+    "newTopic": "新话题",
+    "clearHistory": "清空聊天记录",
+    "clearTitle": "清空聊天记录？",
+    "clearDescription": "你的消息、草稿和诊断记录将被永久删除。点赞／点踩及你提交的原因和补充说明会保留，用于质量改进。",
+    "today": "今天",
+    "yesterday": "昨天",
+    "topicStart": "新话题",
+    "historyError": "历史记录加载失败，点击重试",
+    "busy": "请等待当前回复或保存完成。",
+    "actionFailed": "聊天更新失败，请重试。",
+    "generating": "正在生成回复",
+    "reconnecting": "连接中断，正在同步结果…",
+    "followUps": "推荐回复",
+    "status": "能看到你的任务和日程",
+    "back": "返回"
   },
   "feedback": {
     "good": "回复有帮助",
@@ -47,6 +82,10 @@
     "copy": "复制回复",
     "copied": "已复制",
     "copyFailed": "复制失败，请重试",
+    "saveNote": "把回复存为随手记",
+    "noteSaved": "已存到随手记",
+    "noteSavedTruncated": "已存到随手记（内容较长，已截取前 2000 字）",
+    "noteSaveFailed": "随手记保存失败，请重试",
     "saveFailed": "反馈保存失败，请重试",
     "title": "哪里需要改进？（可选）",
     "detailPlaceholder": "补充说明（可选）",
@@ -88,7 +127,13 @@
     "schedulePartial": "已检查开始日期起七天内的重复安排；更远的日期尚未核对。",
     "cancel": "取消",
     "editFailed": "草稿更新失败，请重试。",
-    "repeats": "重复"
+    "repeats": "重复",
+    "discarded": "已丢弃",
+    "expired": "已过期",
+    "timePassed": "这个时间已经过去，请先编辑再保存。",
+    "conflictWith": "与「{{task}}」冲突",
+    "timePassedShort": "时间已过",
+    "tomorrow": "明天"
   },
   "editModal": {
     "title": "编辑任务",
@@ -107,7 +152,63 @@
     "endDate": "结束日期",
     "noEndDate": "不设结束日期",
     "invalidRecurrence": "请检查重复间隔、星期和结束日期。",
-    "frequency": { "Daily": "每天", "Weekly": "每周", "Monthly": "每月", "Yearly": "每年" },
-    "weekday": { "0": "一", "1": "二", "2": "三", "3": "四", "4": "五", "5": "六", "6": "日" }
+    "frequency": {
+      "Daily": "每天",
+      "Weekly": "每周",
+      "Monthly": "每月",
+      "Yearly": "每年"
+    },
+    "weekday": {
+      "0": "一",
+      "1": "二",
+      "2": "三",
+      "3": "四",
+      "4": "五",
+      "5": "六",
+      "6": "日"
+    }
+  },
+  "review": {
+    "pending": "{{count}} 项待确认",
+    "title": "待确认清单",
+    "explanation": "点击全部加入后，才会保存到任务和随手记。",
+    "close": "关闭",
+    "empty": "没有待确认的内容。",
+    "task": "任务",
+    "note": "笔记",
+    "description": "说明",
+    "titleLabel": "标题",
+    "noteBody": "笔记正文",
+    "editNote": "编辑笔记",
+    "saveChanges": "保存修改",
+    "titleRequired": "请输入标题。",
+    "noteTooLong": "标题与正文合计最多 2,000 字符。",
+    "noteLength": "{{count}} / 2,000 字符（含标题）",
+    "suggested": "建议：{{fields}}",
+    "remove": "删除",
+    "editItem": "编辑{{title}}",
+    "removeItem": "删除{{title}}",
+    "addAll": "全部加入（{{count}}）",
+    "saved": "清单内容已加入 App",
+    "saveFailed": "保存失败，待确认清单仍然保留。",
+    "invalidFields": "请检查标题、日期和起止时间。",
+    "changed": "清单已更新，请查看最新内容后重试。",
+    "changedWhileEditing": "编辑期间清单发生了变化。你的修改仍保留在这里，请返回清单查看最新版本。",
+    "confirmationUnknown": "正在确认是否已保存。请保持本次请求不变，必要时重试。",
+    "retrySave": "重试本次保存",
+    "refresh": "重新检查",
+    "discardEditTitle": "放弃本次修改？",
+    "discardEditDescription": "这些修改尚未提交，原来的条目会保留在待确认清单中。",
+    "keepEditing": "继续编辑",
+    "discardEdit": "放弃修改",
+    "leaveTitle": "还有内容待确认",
+    "leaveDescription": "还有 {{count}} 项尚未加入任务或随手记。离开页面不会保存这些内容。",
+    "keepReviewing": "继续查看",
+    "leave": "离开",
+    "newTopicTitle": "开始新话题？",
+    "newTopicDescription": "当前话题中的 {{count}} 项待确认内容将过期，不会被保存。",
+    "generating": "正在整理…",
+    "generatingDescription": "AI 正在整理清单，完成后可编辑和添加。",
+    "toggleDetails": "展开或收起详情"
   }
 }

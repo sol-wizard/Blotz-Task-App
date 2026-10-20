@@ -65,7 +65,9 @@ public class CreateRecurringTaskCommandHandler(
 
         var deadlineTemplate = BuildDeadlineTemplate(details, templateEndTime.Value);
 
-        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        // Standalone callers own a transaction; AI review batches supply their existing transaction.
+        await using var transaction = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(ct) : null;
 
         var now = DateTime.UtcNow;
         var series = new RecurringTaskSeries
@@ -114,7 +116,7 @@ public class CreateRecurringTaskCommandHandler(
 
         db.RecurringTasks.Add(recurringTask);
         await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
+        if (transaction is not null) await transaction.CommitAsync(ct);
 
         logger.LogInformation(
             "RecurringTask {RecurringTaskId} was successfully created for user {UserId}",

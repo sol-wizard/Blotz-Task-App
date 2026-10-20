@@ -1,12 +1,20 @@
 import type { WebAuthErrorCodes } from "react-native-auth0";
 
 export const EVENTS = {
+  SUBTASK_CREATED: "subtask_created",
+  MONTHLY_CALENDAR_VIEWED: "monthly_calendar_viewed",
   CREATE_TASK_MANUALLY: "create_task_manually",
   LOGIN_STARTED: "login_started",
   LOGIN_SUCCEEDED: "login_succeeded",
   LOGIN_FAILED: "login_failed",
+  APP_ENTERED: "app_entered",
+  POST_LOGIN_LOAD_FAILED: "post_login_load_failed",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
+  AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
+  AI_COACH_VOICE_FAILED: "ai_coach_voice_failed",
+  AI_COACH_MIC_PERMISSION_RESOLVED: "ai_coach_mic_permission_resolved",
+  MIC_PERMISSION_RESOLVED: "mic_permission_resolved",
   ACTIVE_USER_5S: "active_user_5s",
   BREAKDOWN_TASK: "breakdown_task",
   SCREEN_VIEWED: "screen_viewed",
@@ -21,18 +29,36 @@ export const EVENTS = {
   REVIEW_GENERATED: "review_generated",
   SHARE_CLICKED: "share_clicked",
   SHARE_SHEET_OPENED: "share_sheet_opened",
-  SHARE_COMPLETED: "share_completed",
+  SHARE_SHEET_DISMISSED: "share_sheet_dismissed",
   SHARE_FAILED: "share_failed",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_STEP_VIEWED: "onboarding_step_viewed",
+  ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_VOICE_COACH_SHOWN: "onboarding_voice_coach_shown",
+  ONBOARDING_VOICE_COACH_TAPPED: "onboarding_voice_coach_tapped",
+  ONBOARDING_VOICE_COACH_DISMISSED: "onboarding_voice_coach_dismissed",
+  ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
+  ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
+  ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
+  ACCOUNT_DELETED: "account_deleted",
 } as const;
 
 export const SCREEN_NAMES = {
   SIGN_IN: "SignIn",
   NOTES: "Notes",
   GASHAPON_MACHINE: "GashaponMachine",
+  SETTINGS_REVIEW: "SettingsReview",
+  BADGE_WALL: "BadgeWall",
+  DDL: "Ddl",
+  MONTHLY_CALENDAR: "MonthlyCalendar",
+  NOTE_EDITOR: "NoteEditor",
+  POMODORO_FOCUS: "PomodoroFocus",
+  TASK_CREATE: "TaskCreate",
+  TASK_DETAILS: "TaskDetails",
 } as const;
 
-/** Which sign-in button was used. `sms` is only rendered outside production. */
-export type LoginConnection = "default" | "sms";
+/** Which sign-in button was used. Only the Auth0 Universal Login button exists today. */
+export type LoginConnection = "default";
 
 /**
  * Why a login attempt did not produce tokens.
@@ -41,18 +67,35 @@ export type LoginConnection = "default" | "sms";
  * on Android a swiped-away Custom Tab surfaces as `BROWSER_TERMINATED`, and folding it
  * into `auth0_error` would inflate the "Auth0 broke" bucket with users who just left.
  */
-export type LoginFailureReason = "cancelled" | "browser_dismissed" | "no_tokens" | "auth0_error";
+export type LoginFailureReason =
+  | "cancelled"
+  | "browser_dismissed"
+  | "no_tokens"
+  | "auth0_error"
+  | "stalled";
 
 /**
- * Bounded to react-native-auth0's 18 `WebAuthErrorCodes`, plus our own token-shape check.
+ * Bounded to react-native-auth0's 18 `WebAuthErrorCodes`, plus two of our own:
+ * `NoTokensReturned` for a token-shape check, and `Stalled` for a login whose result never
+ * came back after the app returned to the foreground (the SDK neither resolved nor rejected).
  * Raw error messages are never sent — they carry Auth0 descriptions and are unbounded.
  */
 export type LoginErrorCode =
   | (typeof WebAuthErrorCodes)[keyof typeof WebAuthErrorCodes]
-  | "NoTokensReturned";
+  | "NoTokensReturned"
+  | "Stalled";
 
-/** How a task was created. `manual` = task form, `ai` = AI generation sheet. */
-export type TaskSource = "manual" | "ai";
+/** How the user reached `(protected)`: fresh `authorize()` or a session restored on launch. */
+export type AppEntrySource = "login" | "restore";
+
+/** Where the post-login gate sent the user once both gate requests succeeded. */
+export type AppEntryDestination = "home" | "onboarding" | "whats_new";
+
+/**
+ * How a task was created. `manual` = task form, `ai` = AI generation sheet,
+ * `onboarding_ai` = the AI sheet when opened from the post-onboarding voice coach.
+ */
+export type TaskSource = "manual" | "ai" | "onboarding_ai";
 
 export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";
 export type AiTaskInputMode = "voice" | "text";
@@ -62,6 +105,12 @@ export type AiTaskFailureStage =
   | "send"
   | "transcription"
   | "generation";
+
+/**
+ * Microphone permission outcome for the AI voice flow. `already_granted` involves no prompt, so
+ * it is not a grant decision. `blocked` (`canAskAgain` false) can only be fixed in Settings.
+ */
+export type MicPermissionOutcome = "already_granted" | "granted" | "denied" | "blocked" | "error";
 
 export type AiTaskGenerationTurn = {
   turn_index: number;
@@ -77,15 +126,47 @@ export type AiTaskGenerationTurn = {
   generated_notes: {
     text: string;
   }[];
+  // Recurring drafts were missing from this event, so a "gym every Monday" session read as
+  // zero output in PostHog even when the user saved it.
+  generated_recurring_tasks: {
+    title: string;
+    description: string;
+    frequency: string;
+    interval: number;
+    days_of_week: number | null;
+    template_start_time: string;
+    template_end_time: string;
+    task_label: string;
+  }[];
 };
 
 // sharing records
 export type ShareEvent =
   | typeof EVENTS.SHARE_CLICKED
   | typeof EVENTS.SHARE_SHEET_OPENED
-  | typeof EVENTS.SHARE_COMPLETED
+  | typeof EVENTS.SHARE_SHEET_DISMISSED
   | typeof EVENTS.SHARE_FAILED;
 
 export type ShareSource = "weekly_review" | "monthly_review" | "badge";
 
 export type ShareContentType = "review" | "badge";
+
+// onboarding
+export type OnboardingOutcome = "completed" | "skipped";
+
+export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
+
+/**
+ * Why the user deleted their account, from the optional question in the delete modal.
+ * Fixed keys, not the shown text, so zh and en answers land in one bucket and the wording
+ * can change without splitting the chart. `skipped` = the user answered nothing.
+ */
+export type DeleteAccountReason =
+  | "no_longer_needed"
+  | "too_complicated"
+  | "missing_feature"
+  | "ai_not_good"
+  | "privacy_concern"
+  | "switched_app"
+  | "other"
+  | "skipped";

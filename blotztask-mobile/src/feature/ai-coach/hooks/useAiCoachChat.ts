@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AxiosError } from "axios";
-import { useQueryClient } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
 import uuid from "react-native-uuid";
-import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
+import { ddlKeys, noteKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import {
-  AvailableAiCoachMode,
+  ArtifactEnvelopeDto,
+  ChatTimelinePageDto,
   ConfirmDraftResultDto,
   ConversationConflictDto,
   ConversationSnapshotDto,
@@ -12,14 +14,23 @@ import {
   EditedDraftDto,
   AiCoachRating,
   MessageFeedbackDto,
+  EditedDraftItemDto,
+  EditedNoteDraftItemDto,
 } from "../models/ai-coach-dto";
+import { reviewedItems, prepareReviewConfirmation, reviewConfirmationSaved, isDefiniteConfirmationRejection, ReviewConfirmation } from "../models/review-list";
 import * as aiCoachService from "../services/ai-coach-service";
+import { MessageSource, streamCoachMessage } from "../services/coach-stream-service";
 
 export interface ChatItem {
   id: string;
   role: "user" | "assistant";
   text: string;
   taskContextRead?: boolean;
+  conversationId: string;
+  createdAt: string;
+  topicStart: boolean;
+  draftSnapshot: ArtifactEnvelopeDto[];
+  streaming?: boolean;
 }
 export type ChatStatus = "idle" | "connecting" | "ready" | "sending" | "startFailed";
 export type ConfirmAction = "start_now" | "add_to_task_list";
@@ -29,68 +40,124 @@ export interface ConfirmOutcome {
   scheduleAssessment?: DraftScheduleAssessmentDto | null;
 }
 
-export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") {
+export const chatMessagesKey = ["aiCoach", "chat", "messages"] as const;
+
+export function useAiCoachChat() {
   const queryClient = useQueryClient();
   const [snapshot, setSnapshot] = useState<ConversationSnapshotDto | null>(null);
-  const [status, setStatus] = useState<ChatStatus>(mode ? "connecting" : "idle");
+  const [status, setStatus] = useState<ChatStatus>("connecting");
   const [pendingMessage, setPendingMessage] = useState<ChatItem | null>(null);
+  const [streamingReply, setStreamingReply] = useState<ChatItem | null>(null);
+  // undefined means no preview event yet; null means the tool removed the last item.
+  const [reviewPreview, setReviewPreview] = useState<ArtifactEnvelopeDto | null | undefined>(undefined);
+  const [streaming, setStreaming] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const streamController = useRef<AbortController | null>(null);
   const [feedbackByMessage, setFeedbackByMessage] = useState<Record<string, MessageFeedbackDto>>({});
   const [feedbackSaving, setFeedbackSaving] = useState<Record<string, boolean>>({});
   const feedbackPending = useRef(new Set<string>());
   const busy = useRef(false);
-  const applySnapshot = useCallback((next: ConversationSnapshotDto) => {
-    setSnapshot((previous) =>
-      previous?.conversationId === next.conversationId &&
-      previous.conversationVersion > next.conversationVersion
-        ? previous
-        : next,
-    );
+  const lifecycle = useRef(0);
+  useEffect(() => () => {
+    lifecycle.current += 1;
+    streamController.current?.abort();
   }, []);
+  const snapshotRef = useRef<ConversationSnapshotDto | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<ReviewConfirmation | null>(null);
+  const pendingConfirmationRef = useRef(pendingConfirmation);
+  const setConfirmation = useCallback((value: typeof pendingConfirmation) => {
+    pendingConfirmationRef.current = value;
+    setPendingConfirmation(value);
+  }, []);
+  const invalidateSavedItems = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    void queryClient.invalidateQueries({ queryKey: ddlKeys.all });
+    void queryClient.invalidateQueries({ queryKey: noteKeys.all });
+  }, [queryClient]);
+  const history = useInfiniteQuery({
+    queryKey: chatMessagesKey,
+    queryFn: ({ pageParam, signal }) => aiCoachService.fetchMessages(pageParam, signal),
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    enabled: snapshot !== null,
+  });
+  const refreshHistory = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: chatMessagesKey });
+  }, [queryClient]);
+  const applySnapshot = useCallback((next: ConversationSnapshotDto) => {
+    const previous = snapshotRef.current;
+    if (previous?.conversationId === next.conversationId && previous.conversationVersion > next.conversationVersion) return;
+    snapshotRef.current = next;
+    setSnapshot(next);
+    if (next.generationStatus !== "running") setReconnecting(false);
+    const operation = pendingConfirmationRef.current;
+    if (operation && reviewConfirmationSaved(operation, next)) {
+      setConfirmation(null);
+      invalidateSavedItems();
+      refreshHistory();
+    }
+  }, [setConfirmation, invalidateSavedItems, refreshHistory]);
+
+  const applyOpenSnapshot = useCallback(async (next: ConversationSnapshotDto, isCurrent: () => boolean) => {
+    if (!isCurrent()) return;
+    await queryClient.cancelQueries({ queryKey: chatMessagesKey, exact: true });
+    if (!isCurrent()) return;
+    // An old cursor chain cannot bridge remote inserts or identify a remote clear. Restart from page one.
+    queryClient.setQueryData<InfiniteData<ChatTimelinePageDto, string | null>>(chatMessagesKey,
+      { pages: [], pageParams: [] });
+    applySnapshot(next);
+    refreshHistory();
+  }, [applySnapshot, queryClient, refreshHistory]);
 
   const start = useCallback(async () => {
-    if (!mode) return;
+    if (busy.current) return;
+    const epoch = ++lifecycle.current;
     setStatus("connecting");
     try {
-      applySnapshot(await aiCoachService.startConversation(mode));
-      setStatus("ready");
+      const next = await aiCoachService.openChat();
+      await applyOpenSnapshot(next, () => epoch === lifecycle.current);
+      if (epoch === lifecycle.current) setStatus("ready");
     } catch {
-      setStatus("startFailed");
+      if (epoch === lifecycle.current) setStatus("startFailed");
     }
-  }, [mode, applySnapshot]);
+  }, [applyOpenSnapshot]);
 
-  useEffect(() => {
-    if (!mode) return;
+  useFocusEffect(useCallback(() => {
+    if (busy.current) return;
+    const epoch = ++lifecycle.current;
     let cancelled = false;
-    void aiCoachService.startConversation(mode).then(
-      (next) => {
-        if (!cancelled) {
-          applySnapshot(next);
-          setStatus("ready");
-        }
-      },
-      () => {
-        if (!cancelled) setStatus("startFailed");
-      },
-    );
+    setStatus("connecting");
+    const isCurrent = () => !cancelled && epoch === lifecycle.current;
+    void (async () => {
+      try {
+        const next = await aiCoachService.openChat();
+        await applyOpenSnapshot(next, isCurrent);
+        if (isCurrent()) setStatus("ready");
+      } catch {
+        if (isCurrent()) setStatus("startFailed");
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [mode, applySnapshot]);
+  }, [applyOpenSnapshot]));
 
   const resync = useCallback(
     async (error: unknown): Promise<string> => {
       const body = (error as AxiosError<ConversationConflictDto>).response?.data;
-      if (body?.conversationSnapshot) applySnapshot(body.conversationSnapshot);
-      else if (snapshot) {
+      if (body?.errorCode !== "ConversationEnded" && body?.conversationSnapshot) applySnapshot(body.conversationSnapshot);
+      else {
+        // The open topic may have changed server-side (idle rollover after a timed-out send, 404, ended).
         try {
-          applySnapshot(await aiCoachService.fetchSnapshot(snapshot.conversationId));
+          const next = await aiCoachService.openChat();
+          await applyOpenSnapshot(next, () => true);
         } catch {
           /* Keep visible data when the network is offline. */
         }
       }
       return body?.errorCode ?? "RequestFailed";
     },
-    [snapshot, applySnapshot],
+    [applySnapshot, applyOpenSnapshot],
   );
 
   // Reconcile a request that continued on the server after an HTTP timeout.
@@ -110,50 +177,124 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
     return () => { cancelled = true; };
   }, [conversationId]);
   useEffect(() => {
-    if (!serverBusy || !conversationId) return;
+    if (streaming || (!serverBusy && !pendingConfirmation) || !conversationId) return;
     const id = conversationId;
     let cancelled = false;
     const timer = setInterval(() => {
       void aiCoachService
         .fetchSnapshot(id)
         .then((next) => {
-          if (!cancelled) applySnapshot(next);
+          if (!cancelled && snapshotRef.current?.conversationId === id) applySnapshot(next);
         })
-        .catch(() => undefined);
+        .catch(async (error: unknown) => {
+          const code = (error as AxiosError<ConversationConflictDto>).response?.data?.errorCode;
+          if (!cancelled && (code === "ConversationEnded" || (error as AxiosError).response?.status === 404)) {
+            try {
+              const next = await aiCoachService.openChat();
+              await applyOpenSnapshot(next, () => !cancelled && snapshotRef.current?.conversationId === id);
+            } catch { /* Retry on the next poll. */ }
+          }
+        });
     }, 2000);
     return () => {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [serverBusy, conversationId, applySnapshot]);
+  }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, pendingConfirmation, streaming]);
 
   const send = useCallback(
-    async (text: string): Promise<string | null> => {
-      if (!snapshot || busy.current) return "NotReady";
+    async (text: string, source?: MessageSource): Promise<string | null> => {
+      if (!snapshot || busy.current || pendingConfirmation || snapshot.generationStatus === "running") return "NotReady";
       const content = text.trim();
       if (!content) return null;
       busy.current = true;
+      const epoch = ++lifecycle.current;
       setStatus("sending");
+      setStreaming(true);
+      setReconnecting(false);
+      setReviewPreview(undefined);
+      setStreamingReply(null);
+      const controller = new AbortController();
+      streamController.current = controller;
       const messageId = uuid.v4() as string;
-      setPendingMessage({ id: messageId, role: "user", text: content });
+      const createdAt = new Date().toISOString();
+      setPendingMessage({ id: messageId, role: "user", text: content, conversationId: snapshot.conversationId,
+        createdAt, topicStart: snapshot.messages.length === 0, draftSnapshot: [] });
+      let replyText = "";
+      let activeConversationId = snapshot.conversationId;
+      let flushTimer: ReturnType<typeof setTimeout> | undefined;
+      const flush = () => {
+        flushTimer = undefined;
+        if (epoch !== lifecycle.current) return;
+        setStreamingReply(replyText ? { id: `stream-${messageId}`, role: "assistant", text: replyText,
+          conversationId: activeConversationId, createdAt: new Date(Date.parse(createdAt) + 1).toISOString(),
+          topicStart: false, draftSnapshot: [], streaming: true } : null);
+      };
+      // Until a snapshot proves otherwise, a lost response may still represent accepted work.
+      applySnapshot({ ...snapshot, generationStatus: "running", generationError: null, allowedActions: [] });
       try {
-        const next = await aiCoachService.sendMessage(
+        const next = await streamCoachMessage(
           snapshot.conversationId,
           content,
           snapshot.conversationVersion,
           messageId,
+          (event) => {
+            if (epoch !== lifecycle.current) return;
+            activeConversationId = event.conversationId;
+            switch (event.type) {
+              case "turn.started":
+                setPendingMessage(previous => previous ? { ...previous, conversationId: activeConversationId } : null);
+                break;
+              case "reply.delta":
+                replyText += event.payload.text;
+                flushTimer ??= setTimeout(flush, 75);
+                break;
+              case "reply.reset":
+                replyText = "";
+                clearTimeout(flushTimer);
+                flushTimer = undefined;
+                setStreamingReply(null);
+                break;
+              case "review.preview":
+                setReviewPreview(event.payload.pendingList);
+                break;
+            }
+          },
+          controller.signal,
+          source,
         );
+        if (epoch !== lifecycle.current) return null;
         applySnapshot(next);
+        refreshHistory();
         return next.generationError;
       } catch (error) {
-        return await resync(error);
+        if (epoch !== lifecycle.current) return null;
+        setReconnecting(true);
+        const code = await resync(error);
+        const recovered = snapshotRef.current;
+        const userIndex = recovered?.messages.findIndex(message => message.id === messageId) ?? -1;
+        // The server keeps generating after a lost stream; polling delivers the saved reply.
+        if (recovered?.generationStatus === "running" && userIndex >= 0) return null;
+        if (recovered?.generationStatus === "idle" && userIndex >= 0
+          && recovered.messages.slice(userIndex + 1).some(message => message.role === "assistant")) {
+          refreshHistory();
+          return null;
+        }
+        return code;
       } finally {
+        clearTimeout(flushTimer);
+        if (streamController.current === controller) streamController.current = null;
         busy.current = false;
-        setPendingMessage(null);
-        setStatus("ready");
+        if (epoch === lifecycle.current) {
+          setPendingMessage(null);
+          setStreamingReply(null);
+          setReviewPreview(undefined);
+          setStreaming(false);
+          setStatus("ready");
+        }
       }
     },
-    [snapshot, applySnapshot, resync],
+    [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
   );
 
   const confirm = useCallback(
@@ -168,6 +309,7 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
       const draft = snapshot?.artifacts.find((item) => item.id === draftId);
       if (!snapshot || !draft || busy.current) return { result: null, errorCode: "NotReady" };
       busy.current = true;
+      lifecycle.current += 1;
       setStatus("sending");
       try {
         const result = await aiCoachService.confirmDraft(snapshot.conversationId, draftId, {
@@ -181,10 +323,12 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
           acceptedConflictToken,
         });
         applySnapshot(result.conversationSnapshot);
+        refreshHistory();
         if (result.status === "succeeded") {
           // Confirmed drafts create tasks server-side; refresh task list, calendars, and DDL.
           void queryClient.invalidateQueries({ queryKey: taskKeys.all });
           void queryClient.invalidateQueries({ queryKey: ddlKeys.all });
+          void queryClient.invalidateQueries({ queryKey: noteKeys.all });
         }
         return { result, errorCode: result.errorCode };
       } catch (error) {
@@ -200,14 +344,15 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
         setStatus("ready");
       }
     },
-    [snapshot, applySnapshot, resync, queryClient],
+    [snapshot, applySnapshot, resync, queryClient, refreshHistory],
   );
 
   const edit = useCallback(
     async (draftId: string, edited: EditedDraftDto): Promise<string | null> => {
       const draft = snapshot?.artifacts.find((item) => item.id === draftId);
-      if (!snapshot || !draft || busy.current) return "NotReady";
+      if (!snapshot || !draft || busy.current || pendingConfirmation) return "NotReady";
       busy.current = true;
+      lifecycle.current += 1;
       setStatus("sending");
       try {
         applySnapshot(
@@ -217,6 +362,7 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
             editedDraft: edited,
           }),
         );
+        refreshHistory();
         return null;
       } catch (error) {
         return await resync(error);
@@ -225,13 +371,14 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
         setStatus("ready");
       }
     },
-    [snapshot, applySnapshot, resync],
+    [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
   );
 
   const reject = useCallback(
     async (draftId: string): Promise<string | null> => {
-      if (!snapshot || busy.current) return "NotReady";
+      if (!snapshot || busy.current || pendingConfirmation) return "NotReady";
       busy.current = true;
+      lifecycle.current += 1;
       setStatus("sending");
       try {
         applySnapshot(
@@ -242,6 +389,7 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
             snapshot.conversationVersion,
           ),
         );
+        refreshHistory();
         return null;
       } catch (error) {
         return await resync(error);
@@ -250,8 +398,75 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
         setStatus("ready");
       }
     },
-    [snapshot, applySnapshot, resync],
+    [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
   );
+
+  const pendingList = streaming && reviewPreview !== undefined ? reviewPreview : snapshot?.pendingList ?? null;
+  const reviewBusy = status === "connecting" || status === "sending" || !!serverBusy;
+
+  const updateReviewItem = useCallback(async (list: ArtifactEnvelopeDto, version: number,
+    item: EditedDraftItemDto | EditedNoteDraftItemDto): Promise<string | null> => {
+    if (snapshotRef.current?.conversationVersion !== version || snapshotRef.current.pendingList?.version !== list.version)
+      return "StaleDraftVersion";
+    return edit(list.id, { items: reviewedItems(list).items.map(value => value.itemId === item.itemId ? item : value) });
+  }, [edit]);
+
+  const removeReviewItem = useCallback(async (itemId: string): Promise<string | null> => {
+    const list = snapshotRef.current?.pendingList;
+    if (!list || !list.payload.items.some(item => item.itemId === itemId)) return "StaleDraftVersion";
+    const remaining = reviewedItems(list).items.filter(item => item.itemId !== itemId);
+    return remaining.length ? edit(list.id, { items: remaining }) : reject(list.id);
+  }, [edit, reject]);
+
+  const refreshReviewList = useCallback(async (): Promise<void> => {
+    if (busy.current) return;
+    await start();
+  }, [start]);
+
+  const confirmAll = useCallback(async (allowScheduleConflict = false, acceptedConflictToken?: string | null): Promise<ConfirmOutcome> => {
+    const current = snapshotRef.current;
+    const list = current?.pendingList;
+    if (!current || busy.current || serverBusy || (!list && !pendingConfirmation))
+      return { result: null, errorCode: "NotReady" };
+    const operation = prepareReviewConfirmation(current, uuid.v4() as string,
+      pendingConfirmation, allowScheduleConflict, acceptedConflictToken);
+    if (!operation) return { result: null, errorCode: "NotReady" };
+    busy.current = true;
+    lifecycle.current += 1;
+    setStatus("sending");
+    setConfirmation(operation);
+    try {
+      const result = await aiCoachService.confirmDraft(operation.conversationId, operation.draftId, operation.request);
+      applySnapshot(result.conversationSnapshot);
+      setConfirmation(null);
+      refreshHistory();
+      if (result.status === "succeeded") invalidateSavedItems();
+      return { result, errorCode: result.errorCode };
+    } catch (error) {
+      const response = (error as AxiosError<ConfirmDraftResultDto | ConversationConflictDto>).response;
+      const body = response?.data;
+      if (body && "status" in body) {
+        applySnapshot(body.conversationSnapshot);
+        setConfirmation(null);
+        return { result: body, errorCode: body.errorCode };
+      }
+      // Only validation/conflict responses prove the command did not commit. Network/5xx
+      // failures remain uncertain: preserve the complete request and its command ID.
+      const rejected = isDefiniteConfirmationRejection(response?.status);
+      if (rejected) setConfirmation(null);
+      const code = await resync(error);
+      if (snapshotRef.current && reviewConfirmationSaved(operation, snapshotRef.current)) {
+        setConfirmation(null);
+        invalidateSavedItems();
+        return { result: null, errorCode: null };
+      }
+      return { result: null, errorCode: rejected ? code : "ConfirmationUnknown",
+        scheduleAssessment: body && "scheduleAssessment" in body ? body.scheduleAssessment : null };
+    } finally {
+      busy.current = false;
+      setStatus("ready");
+    }
+  }, [pendingConfirmation, serverBusy, applySnapshot, refreshHistory, invalidateSavedItems, resync, setConfirmation]);
 
   const rateMessage = useCallback(async (messageId: string, rating: AiCoachRating): Promise<boolean> => {
     if (!conversationId || feedbackPending.current.has(messageId)) return false;
@@ -312,11 +527,54 @@ export function useAiCoachChat(mode: AvailableAiCoachMode | null = "Execution") 
     }
   }, [conversationId, feedbackByMessage]);
 
-  const messages: ChatItem[] = snapshot?.messages ?? [];
-  const visibleMessages =
-    pendingMessage && !messages.some((message) => message.id === pendingMessage.id)
-      ? [...messages, pendingMessage]
-      : messages;
-  return { snapshot, messages: visibleMessages, status, start, send, confirm, edit, reject,
-    feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail };
+  const changeTopic = useCallback(async (clear: boolean): Promise<string | null> => {
+    if (!snapshotRef.current || busy.current || pendingConfirmation) return "NotReady";
+    busy.current = true;
+    lifecycle.current += 1;
+    setStatus("sending");
+    try {
+      if (clear) {
+        await aiCoachService.clearChat();
+        await queryClient.cancelQueries({ queryKey: chatMessagesKey });
+        queryClient.setQueryData<InfiniteData<ChatTimelinePageDto, string | null>>(chatMessagesKey, { pages: [], pageParams: [] });
+        snapshotRef.current = null;
+        setSnapshot(null);
+      }
+      applySnapshot(clear ? await aiCoachService.openChat() : await aiCoachService.newTopic());
+      setFeedbackByMessage({});
+      refreshHistory();
+      return null;
+    } catch (error) {
+      if (!snapshotRef.current) setStatus("startFailed");
+      return await resync(error);
+    } finally {
+      busy.current = false;
+      if (snapshotRef.current) setStatus("ready");
+    }
+  }, [applySnapshot, queryClient, refreshHistory, resync, pendingConfirmation]);
+
+  // Snapshot data wins over cached timeline rows, so recent card statuses never regress.
+  const merged = new Map<string, ChatItem>();
+  if (pendingMessage) merged.set(pendingMessage.id, pendingMessage);
+  if (streamingReply) merged.set(streamingReply.id, streamingReply);
+  for (const message of [...(snapshot?.messages ?? [])].reverse()) merged.set(message.id, {
+    ...message, conversationId: snapshot!.conversationId,
+  });
+  for (const page of snapshot ? history.data?.pages ?? [] : []) for (const item of page.items) {
+    if (!merged.has(item.messageId)) merged.set(item.messageId, {
+      id: item.messageId, conversationId: item.conversationId, role: item.role, text: item.content,
+      createdAt: item.createdAt, topicStart: item.topicStart, draftSnapshot: item.draftSnapshot,
+    });
+  }
+  const messages = [...merged.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
+  return { snapshot, messages, status, start, send, confirm, edit, reject, streaming, reconnecting,
+    pendingList, pendingCount: pendingList?.payload.items.length ?? 0,
+    reviewBusy, confirmationUncertain: pendingConfirmation !== null,
+    updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
+    feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
+    newTopic: () => changeTopic(false), clearChat: () => changeTopic(true),
+    loadOlder: () => { if (history.hasNextPage && !history.isFetchingNextPage) void history.fetchNextPage(); },
+    retryHistory: () => { void history.refetch(); },
+    loadingOlder: history.isFetchingNextPage, historyError: history.isError,
+  };
 }

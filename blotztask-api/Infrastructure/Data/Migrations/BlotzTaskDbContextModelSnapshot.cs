@@ -22,6 +22,92 @@ namespace BlotzTask.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClosingSummary")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("LastActivityAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("MessageCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastActivityAt");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[EndedAt] IS NULL");
+
+                    b.HasIndex("UserId", "LastActivityAt");
+
+                    b.ToTable("AiCoachConversation", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachDraftConfirmation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SavedDraftJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "DraftId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CommandId")
+                        .IsUnique();
+
+                    b.ToTable("AiCoachDraftConfirmation", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachFeedback", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -62,6 +148,50 @@ namespace BlotzTask.Migrations
                     b.HasIndex("UserId", "ConversationId");
 
                     b.ToTable("AiCoachFeedback", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DraftSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("TaskContextRead")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("TurnId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId", "CreatedAt", "Id")
+                        .IsDescending(false, true, true);
+
+                    b.ToTable("AiCoachMessage", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachTraceEvent", b =>
@@ -479,6 +609,68 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.Referral", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeUsed")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<DateTime>("RedeemedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RefereeUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReferrerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RefereeUserId")
+                        .IsUnique();
+
+                    b.HasIndex("ReferrerUserId");
+
+                    b.ToTable("Referrals", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.ReferralCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("[Code] IS NOT NULL");
+
+                    b.HasIndex("OwnerUserId")
+                        .IsUnique();
+
+                    b.ToTable("ReferralCodes", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Reviews.Domain.ReviewReport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -504,6 +696,9 @@ namespace BlotzTask.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("OneThingToTryNext")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTimeOffset>("PeriodEndUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -514,6 +709,9 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Theme")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -976,6 +1174,19 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserActivityDay", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("UserId", "LocalDate");
+
+                    b.ToTable("UserActivityDays", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1062,11 +1273,38 @@ namespace BlotzTask.Migrations
                     b.ToTable("UserPushTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachDraftConfirmation", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachFeedback", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachMessage", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.AiCoach.Domain.Conversations.AiCoachConversationRecord", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1175,6 +1413,30 @@ namespace BlotzTask.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.Referral", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("RefereeUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ReferrerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Referrals.Domain.ReferralCode", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithOne()
+                        .HasForeignKey("BlotzTask.Modules.Referrals.Domain.ReferralCode", "OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Reviews.Domain.ReviewReport", b =>
@@ -1345,6 +1607,15 @@ namespace BlotzTask.Migrations
                     b.Navigation("RecurringOccurrenceOverride");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserActivityDay", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>

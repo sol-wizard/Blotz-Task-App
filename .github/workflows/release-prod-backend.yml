@@ -1,0 +1,215 @@
+name: Prod - Ship backend
+
+# Button 2 of the two-button production release.
+#
+# Run this AFTER you have pressed release in App Store Connect / started the
+# rollout in Play Console AND confirmed the new version is actually live. It
+# deploys the production API, points the in-app update prompt at the new version,
+# and records the release in GitHub.
+#
+# Deploying after the stores publish leaves a short window - the length of this
+# run - where a freshly updated app talks to the old API. The rule that keeps
+# that harmless: if an app change needs a new endpoint, ship the endpoint ahead
+# of the release with a plain "Prod - Build and deploy WebApi" run, the way the
+# badges equip endpoint went out before the app that used it.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release-prod-backend
+  cancel-in-progress: false
+
+jobs:
+  meta:
+    name: Check the tag and collect build numbers
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      ios_build: ${{ steps.builds.outputs.ios_build }}
+      android_build: ${{ steps.builds.outputs.android_build }}
+    steps:
+      # The dropdown accepts branches too. Running from main is exactly the mistake
+      # this button exists to prevent, so refuse anything that is not a release tag.
+      - name: Refuse anything but a submitted/* tag
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            echo "::error::Run this on the submitted/<version> tag, not on ${{ github.ref_name }}."
+            exit 1
+          fi
+          case "${{ github.ref_name }}" in
+            submitted/*) ;;
+            *) echo "::error::${{ github.ref_name }} is not a submitted/* tag."; exit 1 ;;
+          esac
+
+      - name: Read the version out of the tag name
+        id: parse
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#submitted/}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "### Shipping the backend for \`$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "From \`${{ github.ref_name }}\` (\`${{ github.sha }}\`), not from main." >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Build numbers only decorate the release title, so this must never be able to
+      # fail the run - a change in the EAS output shape should cost a nice title, not
+      # a deploy. They used to be copied by hand out of App Store Connect.
+      - name: Look up the build numbers on EAS
+        id: builds
+        continue-on-error: true
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        working-directory: blotztask-mobile
+        run: |
+          set -uo pipefail
+          for PLATFORM in ios android; do
+            BUILD=$(eas build:list \
+                      --platform "$PLATFORM" \
+                      --status finished \
+                      --limit 20 \
+                      --json \
+                      --non-interactive 2>/dev/null \
+                    | jq -r --arg v "$VERSION" \
+                        'map(select(.appVersion == $v)) | .[0].appBuildVersion // empty' \
+                    || true)
+            echo "${PLATFORM}_build=$BUILD" >> "$GITHUB_OUTPUT"
+            echo "$PLATFORM build number: ${BUILD:-not found}"
+          done
+
+  deploy-api:
+    name: Deploy the API from the tag
+    needs: meta
+    uses: ./.github/workflows/deploy-prod-api.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+
+  verify:
+    name: Health check
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    steps:
+      # Retries ride out the App Service warm-up after the deploy - a cold .NET
+      # start can take a couple of minutes. /health also covers the database,
+      # which matters because the deploy runs EF migrations right before it.
+      - name: Check the production API is healthy
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-prod.azurewebsites.net/health)
+          echo "/health returned: $BODY"
+          if [ "$BODY" != "Healthy" ]; then
+            echo "::error::production API is not healthy"
+            exit 1
+          fi
+
+  update-prompt:
+    name: Point the update prompt at the new version
+    needs: [meta, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    # Required: the AZURE_* secrets live on this environment, and the managed
+    # identity's federated credential is scoped to
+    # `repo:sol-wizard/Blotz-Task-App:environment:prod` - a job without it gets a
+    # token Entra ID will not accept.
+    environment:
+      name: "prod"
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # MinimumSupportedVersion follows LatestVersion, which is what production
+      # already carries. Every release so far has changed the API in ways older
+      # builds cannot talk to, so the wall goes up with the release: from here the
+      # only client that can reach the API is the one it was deployed for.
+      #
+      # This is safe only because the workflow runs AFTER the stores have
+      # published - the users it locks out can all install the version it demands.
+      # Move this step earlier and it becomes a wall with nothing behind it.
+      #
+      # To ship a release without forcing the update, lower
+      # MinimumSupportedVersion in the portal afterwards.
+      #
+      # `appsettings set` adds and updates only the settings named here; it leaves
+      # everything else on the App Service alone.
+      - name: Point the update prompt at ${{ needs.meta.outputs.version }}
+        run: |
+          az webapp config appsettings set \
+            --name app-blotz-task-api-prod \
+            --resource-group rg-blotz-task-prod \
+            --settings \
+              AppVersion__Ios__LatestVersion=${{ needs.meta.outputs.version }} \
+              AppVersion__Ios__MinimumSupportedVersion=${{ needs.meta.outputs.version }} \
+              AppVersion__Android__LatestVersion=${{ needs.meta.outputs.version }} \
+              AppVersion__Android__MinimumSupportedVersion=${{ needs.meta.outputs.version }} \
+            --output none
+
+      - name: azure logout
+        if: always()
+        run: az logout
+
+      # Writing app settings restarts the App Service, so this waits out the cold
+      # start and confirms the policy the app will actually read - a reachable API
+      # is not proof that the new configuration took.
+      - name: Check the served policy
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-prod.azurewebsites.net/api/app-version)
+          echo "$BODY" | jq .
+          EXPECTED="${{ needs.meta.outputs.version }}"
+          for FIELD in .ios.latestVersion .ios.minimumSupportedVersion \
+                       .android.latestVersion .android.minimumSupportedVersion; do
+            SERVED=$(echo "$BODY" | jq -r "$FIELD")
+            if [ "$SERVED" != "$EXPECTED" ]; then
+              echo "::error::API is serving $FIELD = $SERVED, expected $EXPECTED"
+              exit 1
+            fi
+          done
+
+  tag-release:
+    name: Record the release
+    # Last, so a release is only written down once the API is healthy and the
+    # update prompt is actually serving the new version.
+    #
+    # TODO: fold tag-release.yml into this job once the two-button flow has
+    # survived a few real releases. It is ~30 lines whose whole job is one
+    # `gh release create`, and this is the only caller that matters - its own
+    # workflow_dispatch is a rarely used manual fallback. Kept separate for now
+    # because it is proven code and none of this has run against a real release
+    # yet; rewriting it would buy one fewer file at the cost of re-verifying
+    # something that already works.
+    needs: [meta, update-prompt]
+    uses: ./.github/workflows/tag-release.yml
+    permissions:
+      contents: write
+    with:
+      # Passed explicitly rather than left blank. Tag Release falls back to reading
+      # eas.json, and the commit this tag points at still carries the OLD version -
+      # button 1 bumps the version inside its own run and only writes it back to
+      # main through a pull request afterwards.
+      ios_version: ${{ needs.meta.outputs.version }}
+      android_version: ${{ needs.meta.outputs.version }}
+      ios_build: ${{ needs.meta.outputs.ios_build }}
+      android_build: ${{ needs.meta.outputs.android_build }}
+      commit: ${{ github.sha }}

@@ -10,6 +10,8 @@ export type SettingsMenuKey =
   | "task-handling"
   | "notifications"
   | "language"
+  | "invite"
+  | "support-us"
   | "about";
 export type SettingsMenuItem = {
   key: SettingsMenuKey;

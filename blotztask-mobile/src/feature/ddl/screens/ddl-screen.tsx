@@ -8,8 +8,15 @@ import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { useEffect } from "react";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function DdlScreen() {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.DDL);
+  }, []);
+
   const { t } = useTranslation("deadline");
   const { ddlTasks, isLoading } = useAllDdl();
   const sortedTasks = [...ddlTasks].sort(

@@ -70,6 +70,7 @@ export const useSubtaskMutations = () => {
   const addSubtaskMutation = useMutation({
     mutationFn: addSubtask,
     onSuccess: (_, variables) => {
+      analytics.trackSubtaskCreated();
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },

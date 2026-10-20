@@ -1,7 +1,8 @@
 {
   "actions": {
     "skip": "Skip",
-    "continue": "Continue"
+    "continue": "Continue",
+    "start": "Get Started"
   },
   "ai-voice": {
     "title": "Just say it, \nWe'll handle the rest.",
@@ -11,8 +12,24 @@
     "title": "Big goals, \nbroken down",
     "subtitle": "Tell AI what you want to achieve. It breaks the goal into small, clear steps you can actually follow."
   },
+  "invite": {
+    "title": "Did a friend invite you?",
+    "subtitle": "Enter their code and start Blotz together.",
+    "noCodeHint": "No code? Just tap Continue.",
+    "codePlaceholder": "Enter code",
+    "redeemButton": "Redeem",
+    "redeeming": "Redeeming...",
+    "redeemSuccess": "Code redeemed successfully!"
+  },
   "notes": {
     "title": "Catch ideas \nbefore they fade",
     "subtitle": "Save your thoughts in Notes, Spin the gacha, \nand AI picks one task for you to do today."
+  },
+  "voice-coach": {
+    "title": "Hi! I'm your AI helper",
+    "subtitle": "Tap me and tell me what's on today.",
+    "dismiss": "Not now",
+    "sheetLabel": "Your first task",
+    "sheetHint": "Hold the button and tell me.\nI'll write it down!"
   }
 }

@@ -1,13 +1,18 @@
 /* eslint-disable camelcase */
 import { ReviewPeriodType } from "@/feature/review/models/review-dto";
 import posthog from "@/shared/constants/posthog-client";
+import * as Sentry from "@sentry/react-native";
+import { AUTH_CONFIG } from "@/shared/services/api/config";
 import {
   EVENTS,
   SCREEN_NAMES,
+  type AppEntryDestination,
+  type AppEntrySource,
   type AiTaskFailureStage,
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
   type AiTaskOutcome,
+  type MicPermissionOutcome,
   type LoginConnection,
   type LoginErrorCode,
   type LoginFailureReason,
@@ -15,11 +20,42 @@ import {
   type ShareEvent,
   type ShareSource,
   type ShareContentType,
+  type OnboardingOutcome,
+  type OnboardingSection,
+  type DeleteAccountReason,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
 
+// Module scope runs once per process, and this module is imported by the root layout, so
+// this is the closest thing to "the user opened the app" that JS can see.
+const APP_LAUNCHED_AT = Date.now();
+
+/**
+ * Stamps the current PostHog distinct_id onto every Sentry event as a tag.
+ *
+ * PostHog and Sentry otherwise share no identifier: a Sentry `login_failed` cannot be joined
+ * to the PostHog timeline of the same device, and vice versa. The distinct_id changes at
+ * `identify` and `reset`, so this runs at each of those and once at launch.
+ */
+function syncSentryIdentity() {
+  Sentry.setTag("posthog_distinct_id", posthog.getDistinctId());
+}
+
 export const analytics = {
+  /** Milliseconds since the JS bundle started. Shared start point for every startup timing. */
+  msSinceLaunch() {
+    return Date.now() - APP_LAUNCHED_AT;
+  },
+
+  /**
+   * Called once at app launch, after PostHog has loaded its persisted distinct_id. Before
+   * that, `getDistinctId()` would return a fresh id that is replaced a moment later.
+   */
+  syncSentryIdentityOnLaunch() {
+    void posthog.ready().then(syncSentryIdentity);
+  },
+
   /**
    * Links an anonymous PostHog user to a real Auth0 identity.
    * Called once when the user enters the authenticated area.
@@ -30,6 +66,7 @@ export const analytics = {
     if (profile?.email) userProperties.email = profile.email;
     if (profile?.name) userProperties.name = profile.name;
     posthog.identify(userId, userProperties);
+    syncSentryIdentity();
   },
 
   /**
@@ -38,6 +75,16 @@ export const analytics = {
    */
   resetUser() {
     posthog.reset();
+    syncSentryIdentity();
+  },
+
+  /**
+   * Sends queued events now instead of on the next batch interval. Used at the end of a
+   * login attempt: a user who gives up and reinstalls takes the queue with them, and the
+   * login funnel is exactly where reinstalls happen.
+   */
+  flush() {
+    void posthog.flush().catch(() => {});
   },
 
   /**
@@ -56,7 +103,10 @@ export const analytics = {
    * so PostHog joins these to the identified person at `$identify`.
    */
   trackLoginStarted(params: { connection: LoginConnection }) {
-    posthog.capture(EVENTS.LOGIN_STARTED, { connection: params.connection });
+    posthog.capture(EVENTS.LOGIN_STARTED, {
+      connection: params.connection,
+      auth_domain: AUTH_CONFIG.domain,
+    });
   },
 
   /**
@@ -66,10 +116,17 @@ export const analytics = {
    * Note this is not proof the user reached the app — it fires before `refreshAuthState`
    * and the redirect, so pair it with the screen views to measure that last hop.
    */
-  trackLoginSucceeded(params: { connection: LoginConnection; durationMs: number }) {
+  trackLoginSucceeded(params: {
+    connection: LoginConnection;
+    durationMs: number;
+    /** True when a `Stalled` failure was already recorded for this same attempt. */
+    afterStall?: boolean;
+  }) {
     posthog.capture(EVENTS.LOGIN_SUCCEEDED, {
       connection: params.connection,
+      auth_domain: AUTH_CONFIG.domain,
       duration_ms: params.durationMs,
+      after_stall: params.afterStall ?? false,
     });
   },
 
@@ -90,9 +147,126 @@ export const analytics = {
   }) {
     posthog.capture(EVENTS.LOGIN_FAILED, {
       connection: params.connection,
+      auth_domain: AUTH_CONFIG.domain,
       reason: params.reason,
       error_code: params.errorCode,
       duration_ms: params.durationMs,
+    });
+  },
+
+  /**
+   * Fires once per process when the post-login gate has both its requests and routes the
+   * user into the app. Closes the funnel: `login_started` → `login_succeeded` → `app_entered`.
+   * `source` separates a fresh login from a session restored at launch, so the two chains
+   * (first login vs. returning user) can be measured separately.
+   */
+  trackAppEntered(params: {
+    source: AppEntrySource;
+    destination: AppEntryDestination;
+    msSinceLaunch: number;
+  }) {
+    posthog.capture(EVENTS.APP_ENTERED, {
+      source: params.source,
+      destination: params.destination,
+      ms_since_launch: params.msSinceLaunch,
+    });
+  },
+
+  /**
+   * Fires when the post-login gate shows the error screen: the user has valid tokens but
+   * `/User` or `/user-preferences` failed. Sentry already has the exception; this puts the
+   * same outcome on the PostHog timeline next to `login_succeeded`, so a device that got
+   * tokens but never entered the app can be told apart from one that never got tokens.
+   */
+  trackPostLoginLoadFailed(params: {
+    source: AppEntrySource;
+    profileFailed: boolean;
+    preferencesFailed: boolean;
+    msSinceLaunch: number;
+  }) {
+    posthog.capture(EVENTS.POST_LOGIN_LOAD_FAILED, {
+      source: params.source,
+      profile_failed: params.profileFailed,
+      preferences_failed: params.preferencesFailed,
+      ms_since_launch: params.msSinceLaunch,
+    });
+  },
+
+  /**
+   * Fires just before the delete request, so the event is queued while the user is still
+   * identified — logout resets PostHog right after. Pair with `flush()`.
+   * `otherText` is only sent for `other`, and is capped at 200 characters by the input.
+   */
+  trackAccountDeleted(params: { reason: DeleteAccountReason; otherText?: string }) {
+    posthog.capture(EVENTS.ACCOUNT_DELETED, {
+      reason: params.reason,
+      ...(params.reason === "other" && params.otherText ? { other_text: params.otherText } : {}),
+    });
+  },
+
+  /** Fires when the user reaches the onboarding screen. */
+  trackOnboardingStarted() {
+    posthog.capture(EVENTS.ONBOARDING_STARTED);
+  },
+
+  /** Fires when an onboarding section becomes visible. */
+  trackOnboardingStepViewed(params: { step: OnboardingSection }) {
+    posthog.capture(EVENTS.ONBOARDING_STEP_VIEWED, {
+      step: params.step,
+    });
+  },
+
+  /**
+   * Fires after the user's onboarded state is persisted.
+   * `outcome` separates users who reached the final tutorial section from users who skipped.
+   */
+  trackOnboardingCompleted(params: {
+    outcome: OnboardingOutcome;
+    exit_section: OnboardingSection;
+  }) {
+    posthog.capture(EVENTS.ONBOARDING_COMPLETED, {
+      outcome: params.outcome,
+      last_section_reached: params.exit_section,
+    });
+  },
+
+  /** Fires when the voice coach (the spotlight on the AI button) appears after onboarding. */
+  trackOnboardingVoiceCoachShown() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_SHOWN);
+  },
+
+  /** Fires when the user taps the spotlighted AI button and the sheet opens. */
+  trackOnboardingVoiceCoachTapped() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_TAPPED);
+  },
+
+  /** Fires when the user closes the voice coach without opening the AI sheet. */
+  trackOnboardingVoiceCoachDismissed() {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_COACH_DISMISSED);
+  },
+
+  /** Fires on every mic press in the AI sheet opened from the voice coach. `attempt` starts at 1. */
+  trackOnboardingVoiceMicPressed(params: { attempt: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_MIC_PRESSED, {
+      attempt: params.attempt,
+    });
+  },
+
+  /**
+   * Fires when a turn in the coached sheet ends with at least one draft.
+   * `taskCount` counts every draft shown (tasks, recurring tasks and notes).
+   */
+  trackOnboardingVoiceTaskGenerated(params: { inputMode: AiTaskInputMode; taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_GENERATED, {
+      input_mode: params.inputMode,
+      task_count: params.taskCount,
+    });
+  },
+
+  /** Fires after the drafts from the coached sheet are saved. The coach's success event. */
+  trackOnboardingVoiceTaskCreated(params: { taskCount: number }) {
+    posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
+      task_count: params.taskCount,
     });
   },
 
@@ -153,6 +327,36 @@ export const analytics = {
     };
     if (params.durationMs !== undefined) properties.duration_ms = params.durationMs;
     posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
+  },
+
+  trackAiCoachVoiceFailed(params: { stage: "permission" | "recording" | "send"; errorCode: string }) {
+    posthog.capture(EVENTS.AI_COACH_VOICE_FAILED, { stage: params.stage, error_code: params.errorCode });
+  },
+
+  trackAiCoachMicPermissionResolved(outcome: MicPermissionOutcome, errorCode?: string) {
+    posthog.capture(EVENTS.AI_COACH_MIC_PERMISSION_RESOLVED, {
+      outcome, ...(errorCode ? { error_code: errorCode } : {}),
+    });
+  },
+
+  /**
+   * Fires when the AI sheet mounts. The denominator for AI attempts: the session event fires
+   * only on exit and drops itself when no turn was recorded, so opens were previously invisible.
+   */
+  trackAiTaskSheetOpened() {
+    posthog.capture(EVENTS.AI_TASK_SHEET_OPENED);
+  },
+
+  /**
+   * Fires once per AI sheet open, when the mic permission question has an answer.
+   * `outcome` is classified from the state read *before* asking; that is the only way to
+   * separate a fresh rejection (`denied`) from one the OS will not re-prompt for (`blocked`).
+   */
+  trackMicPermissionResolved(params: { outcome: MicPermissionOutcome; errorCode?: string }) {
+    posthog.capture(EVENTS.MIC_PERMISSION_RESOLVED, {
+      outcome: params.outcome,
+      ...(params.errorCode ? { error_code: params.errorCode } : {}),
+    });
   },
 
   /**
@@ -251,6 +455,14 @@ export const analytics = {
 
   trackGashaponSpin() {
     posthog.capture(EVENTS.GASHAPON_SPIN);
+  },
+
+  trackSubtaskCreated() {
+    posthog.capture(EVENTS.SUBTASK_CREATED);
+  },
+
+  trackMonthlyCalendarViewed() {
+    posthog.capture(EVENTS.MONTHLY_CALENDAR_VIEWED);
   },
 
   trackPomodoroStarted(params: { isCountdown: boolean; durationMinutes: number }) {
