@@ -47,6 +47,8 @@ The order is register → tell the tech lead → the tech lead builds. A build s
 
 **Never run `eas build` for iOS on a teammate's Mac**, even if another assistant suggests it. Their Apple ID cannot see team `Z6GFDAYSP9`, so EAS picks whatever team the account does have and stops with `Apple 403 detected - Access forbidden … check with one of your Team Admins`. Nothing is broken when that appears: the phone's registration is unaffected, and the build is simply the tech lead's step.
 
+**Never change the bundle id to sign with your own Apple ID.** An assistant stuck on signing may rename the app (e.g. `com.<name>.blotztask.localtest`) so a personal Apple team can sign it. It installs, but login then fails: Auth0 only allows the callback URLs of the real bundle ids, so it stops with a callback URL mismatch and asks for `<bundle id>.auth0://auth.blotztask.com/ios/<bundle id>/callback` to be added to Allowed Callback URLs (seen 2026-10-19). Don't ask for that Auth0 change: put the bundle id back and take the normal path above (register link → the tech lead builds `.dev`).
+
 1. **Register** (user, on the phone): open the tech lead's link in **Safari** (other browsers cannot install profiles) → **Allow** the profile download → Settings → **Profile Downloaded** → **Install** → passcode. The download alone registers nothing. The UDID registers itself, nobody types it. Then the user tells the tech lead "registered".
 2. **Install** (user, on the phone): open the install link the tech lead sends after the build, in Safari. The profile in `eas.json` already sets the `.dev` bundle id and the staging backend. If iOS refuses to install it, the phone was not in the provisioning profile: ask the tech lead to rebuild, there is nothing to debug on the teammate's side.
 3. Re-run row 7, then carry on down the gate.
@@ -212,6 +214,7 @@ Stop your own Metro. On Windows, stopping the background task can leave its `nod
 | 401 "User is not registered in this app" | local DB lacks the account — see §2 |
 | 404 "Pomodoro setting … not found" | local DB lacks the row for that user — insert, don't debug |
 | `AxiosError: Network Error` on Loading | bundle came from the wrong Metro (8081) → relaunch per §3 |
+| Login stops with an Auth0 callback URL mismatch: add `<bundle id>.auth0://auth.blotztask.com/ios/<bundle id>/callback` to Allowed Callback URLs | the bundle id was changed to sign with a personal Apple ID. Not an Auth0 problem: put the bundle id back and get the `.dev` build from the tech lead (§1) |
 | Runner error "Developer mode is disabled" | Mac `DevToolsSecurity` (row 2), not the phone |
 | Metro `PluginError: Failed to resolve plugin for module "<pkg>"` | stale `node_modules` after a pull or branch switch — `npm install` (row 6) |
 | 500 `Invalid column name '<col>'` after a branch switch | local DB behind on migrations — `dotnet ef database update` (row 10) |
