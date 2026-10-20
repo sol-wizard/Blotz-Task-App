@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useMemo } from "react";
+import { Fragment, ReactNode, memo, useMemo } from "react";
 import { StyleSheet, TextStyle, View, ViewStyle } from "react-native";
 import { MarkedStyles, MarkedTokenizer, Renderer, Tokens, useMarkdown } from "react-native-marked";
 
@@ -40,6 +40,17 @@ const coachMarkdownStyles: MarkedStyles = StyleSheet.create({
 const listSpacing = { marginTop: 2, marginBottom: 8 } as const;
 
 class CoachRenderer extends Renderer {
+  private keyCount = 0;
+
+  // The stock renderer never resets its key counter, so every re-parse remounted the whole reply.
+  resetKeys() {
+    this.keyCount = 0;
+  }
+
+  getKey(): string {
+    return `coach-md-${this.keyCount++}`;
+  }
+
   list(ordered: boolean, li: ReactNode[], _listStyle?: ViewStyle, textStyle?: TextStyle, startIndex?: number): ReactNode {
     return (
       <View key={this.getKey()} style={listSpacing}>
@@ -81,14 +92,49 @@ const coachTokenizer = new CoachTokenizer();
 // collapsing them keeps every list evenly spaced.
 const looseListGap = /^(\s*(?:[-*+]|\d+\.)\s.*)\n[ \t]*\n(?=\s*(?:[-*+]|\d+\.)\s)/gm;
 
-/** Renders an assistant reply as Markdown; user messages stay plain text. */
-export function CoachMarkdown({ text }: { text: string }) {
+/** Splits on blank lines outside code fences, so a finished paragraph never re-renders. */
+function splitBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  let current: string[] = [];
+  let fenced = false;
+  for (const line of text.split("\n")) {
+    if (/^\s*```/.test(line)) fenced = !fenced;
+    if (!fenced && !line.trim()) {
+      if (current.length) blocks.push(current.join("\n"));
+      current = [];
+    } else current.push(line);
+  }
+  if (current.length) blocks.push(current.join("\n"));
+  return blocks;
+}
+
+/** Closes markers a half-streamed block leaves open, so `**` never flashes before turning bold. */
+function closeOpenMarkers(block: string): string {
+  if ((block.match(/^\s*```/gm)?.length ?? 0) % 2) return `${block}\n\`\`\``;
+  let closed = block;
+  if ((closed.match(/\*\*/g)?.length ?? 0) % 2) closed += "**";
+  if ((closed.match(/`/g)?.length ?? 0) % 2) closed += "`";
+  return closed;
+}
+
+const MarkdownBlock = memo(function MarkdownBlock({ text }: { text: string }) {
   const renderer = useMemo(() => new CoachRenderer({ selectable: true }), []);
-  const source = useMemo(() => text.replace(looseListGap, "$1\n"), [text]);
-  const elements = useMarkdown(source, { renderer, styles: coachMarkdownStyles, tokenizer: coachTokenizer });
+  // Parsing happens during this render, so keys restart at zero and stay stable per structure.
+  renderer.resetKeys();
+  const elements = useMarkdown(text, { renderer, styles: coachMarkdownStyles, tokenizer: coachTokenizer });
+  return <>{elements.map((element, index) => <Fragment key={index}>{element}</Fragment>)}</>;
+});
+
+/** Renders an assistant reply as Markdown; user messages stay plain text. */
+export function CoachMarkdown({ text, streaming = false }: { text: string; streaming?: boolean }) {
+  const blocks = useMemo(() => {
+    const split = splitBlocks(text.replace(looseListGap, "$1\n"));
+    if (streaming && split.length) split[split.length - 1] = closeOpenMarkers(split[split.length - 1]);
+    return split;
+  }, [text, streaming]);
   return (
     <View>
-      {elements.map((element, index) => <Fragment key={index}>{element}</Fragment>)}
+      {blocks.map((block, index) => <MarkdownBlock key={index} text={block} />)}
     </View>
   );
 }

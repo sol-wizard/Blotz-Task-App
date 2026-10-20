@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AxiosError } from "axios";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
+import { useReducedMotion } from "react-native-reanimated";
 import uuid from "react-native-uuid";
 import { ddlKeys, noteKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import {
@@ -42,12 +43,29 @@ export interface ConfirmOutcome {
 
 export const chatMessagesKey = ["aiCoach", "chat", "messages"] as const;
 
+const REVEAL_TICK_MS = 33;
+const FINISH_REVEAL_MS = 300;
+
+/** Reveals a steady trickle, catching up faster as the backlog grows; never splits a surrogate pair. */
+function nextRevealLength(text: string, shown: number, finishing: boolean): number {
+  const backlog = text.length - shown;
+  let next = Math.min(text.length, shown + Math.max(2, Math.ceil(backlog / (finishing ? 3 : 8))));
+  const code = text.charCodeAt(next - 1);
+  if (code >= 0xd800 && code <= 0xdbff && next < text.length) next += 1;
+  return next;
+}
+
 export function useAiCoachChat() {
   const queryClient = useQueryClient();
   const [snapshot, setSnapshot] = useState<ConversationSnapshotDto | null>(null);
   const [status, setStatus] = useState<ChatStatus>("connecting");
   const [pendingMessage, setPendingMessage] = useState<ChatItem | null>(null);
   const [streamingReply, setStreamingReply] = useState<ChatItem | null>(null);
+  // A saved reply keeps its streamed row's key, so the list cell is updated rather than remounted.
+  const [rowKeys, setRowKeys] = useState<Record<string, string>>({});
+  const reducedMotion = useReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion);
+  useEffect(() => { reducedMotionRef.current = reducedMotion; }, [reducedMotion]);
   // undefined means no preview event yet; null means the tool removed the last item.
   const [reviewPreview, setReviewPreview] = useState<ArtifactEnvelopeDto | null | undefined>(undefined);
   const [streaming, setStreaming] = useState(false);
@@ -217,19 +235,43 @@ export function useAiCoachChat() {
       const controller = new AbortController();
       streamController.current = controller;
       const messageId = uuid.v4() as string;
+      const streamKey = `stream-${messageId}`;
       const createdAt = new Date().toISOString();
       setPendingMessage({ id: messageId, role: "user", text: content, conversationId: snapshot.conversationId,
         createdAt, topicStart: snapshot.messages.length === 0, draftSnapshot: [] });
       let replyText = "";
+      let shown = 0;
+      let finishing = false;
+      let streamed = false;
       let activeConversationId = snapshot.conversationId;
-      let flushTimer: ReturnType<typeof setTimeout> | undefined;
-      const flush = () => {
-        flushTimer = undefined;
-        if (epoch !== lifecycle.current) return;
-        setStreamingReply(replyText ? { id: `stream-${messageId}`, role: "assistant", text: replyText,
-          conversationId: activeConversationId, createdAt: new Date(Date.parse(createdAt) + 1).toISOString(),
-          topicStart: false, draftSnapshot: [], streaming: true } : null);
+      let revealTimer: ReturnType<typeof setInterval> | undefined;
+      let drained: (() => void) | undefined;
+      const stopReveal = () => {
+        clearInterval(revealTimer);
+        revealTimer = undefined;
+        drained?.();
+        drained = undefined;
       };
+      const reveal = () => {
+        if (epoch !== lifecycle.current) { stopReveal(); return; }
+        shown = reducedMotionRef.current ? replyText.length : nextRevealLength(replyText, shown, finishing);
+        // An empty reset round keeps the previous bubble until its first delta, instead of flashing away.
+        if (shown > 0) streamed = true;
+        if (shown > 0) setStreamingReply({ id: streamKey, role: "assistant", text: replyText.slice(0, shown),
+          conversationId: activeConversationId, createdAt: new Date(Date.parse(createdAt) + 1).toISOString(),
+          topicStart: false, draftSnapshot: [], streaming: true });
+        if (shown >= replyText.length) stopReveal();
+      };
+      const startReveal = () => {
+        revealTimer ??= setInterval(reveal, reducedMotionRef.current ? 75 : REVEAL_TICK_MS);
+      };
+      // Plays out text already received before the saved reply replaces it, within a short cap.
+      const finishReveal = () => new Promise<void>(resolve => {
+        if (!revealTimer || reducedMotionRef.current) { stopReveal(); resolve(); return; }
+        finishing = true;
+        const cap = setTimeout(() => { shown = replyText.length; reveal(); }, FINISH_REVEAL_MS);
+        drained = () => { clearTimeout(cap); resolve(); };
+      });
       // Until a snapshot proves otherwise, a lost response may still represent accepted work.
       applySnapshot({ ...snapshot, generationStatus: "running", generationError: null, allowedActions: [] });
       try {
@@ -247,13 +289,12 @@ export function useAiCoachChat() {
                 break;
               case "reply.delta":
                 replyText += event.payload.text;
-                flushTimer ??= setTimeout(flush, 75);
+                startReveal();
                 break;
               case "reply.reset":
                 replyText = "";
-                clearTimeout(flushTimer);
-                flushTimer = undefined;
-                setStreamingReply(null);
+                shown = 0;
+                stopReveal();
                 break;
               case "review.preview":
                 setReviewPreview(event.payload.pendingList);
@@ -264,6 +305,12 @@ export function useAiCoachChat() {
           source,
         );
         if (epoch !== lifecycle.current) return null;
+        await finishReveal();
+        if (epoch !== lifecycle.current) return null;
+        const userIndex = next.messages.findIndex(message => message.id === messageId);
+        const savedReply = userIndex < 0 ? undefined
+          : next.messages.slice(userIndex + 1).find(message => message.role === "assistant");
+        if (savedReply && streamed) setRowKeys(previous => ({ ...previous, [savedReply.id]: streamKey }));
         applySnapshot(next);
         refreshHistory();
         return next.generationError;
@@ -282,7 +329,7 @@ export function useAiCoachChat() {
         }
         return code;
       } finally {
-        clearTimeout(flushTimer);
+        stopReveal();
         if (streamController.current === controller) streamController.current = null;
         busy.current = false;
         if (epoch === lifecycle.current) {
@@ -567,7 +614,8 @@ export function useAiCoachChat() {
     });
   }
   const messages = [...merged.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
-  return { snapshot, messages, status, start, send, confirm, edit, reject, streaming, reconnecting,
+  const keyFor = useCallback((item: ChatItem) => rowKeys[item.id] ?? item.id, [rowKeys]);
+  return { snapshot, messages, keyFor, status, start, send, confirm, edit, reject, streaming, reconnecting,
     pendingList, pendingCount: pendingList?.payload.items.length ?? 0,
     reviewBusy, confirmationUncertain: pendingConfirmation !== null,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,

@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Alert,
   Keyboard,
   CellRendererProps,
@@ -18,10 +17,10 @@ import { router, useFocusEffect, useNavigation } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
 import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
-import { useReducedMotion } from "react-native-reanimated";
+import Animated, { Easing, FadeIn, FadeOut, Keyframe, useReducedMotion } from "react-native-reanimated";
 import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
 import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
-import { AiCoachRating, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
+import { AiCoachRating, ArtifactEnvelopeDto, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
 import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
 import { CoachMarkdown } from "./coach-markdown";
@@ -33,22 +32,29 @@ import { CoachComposer } from "./coach-composer";
 import { CoachHeader } from "./coach-header";
 import { CoachWelcome } from "./coach-welcome";
 
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const fadeIn = FadeIn.duration(180).easing(EASE_OUT);
+const fadeOut = FadeOut.duration(120);
+const popIn = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.95 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: EASE_OUT },
+}).duration(150);
+const popOut = new Keyframe({
+  0: { opacity: 1, transform: [{ scale: 1 }] },
+  100: { opacity: 0, transform: [{ scale: 0.95 }], easing: EASE_OUT },
+}).duration(150);
+
 function StreamingCursor() {
   const { t } = useTranslation("aiCoach");
-  const [opacity] = useState(() => new Animated.Value(1));
-  useEffect(() => {
-    const blink = Animated.loop(Animated.sequence([
-      Animated.timing(opacity, { toValue: 0.25, duration: 500, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-    ]));
-    blink.start();
-    return () => blink.stop();
-  }, [opacity]);
-  return <Animated.Text accessibilityLabel={t("chat.generating")} style={{ opacity }} className="font-baloo text-primary">▍</Animated.Text>;
+  return <Animated.Text accessibilityLabel={t("chat.generating")} exiting={fadeOut} style={{
+    animationName: { from: { opacity: 1 }, to: { opacity: 0.25 } },
+    animationDuration: "500ms", animationIterationCount: "infinite", animationDirection: "alternate",
+  }} className="font-baloo text-primary">▍</Animated.Text>;
 }
 
-function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveDetail }: {
+function MessageBubble({ item, rateable, feedback, feedbackBusy, animateIn, onRate, onSaveDetail }: {
   item: ChatItem;
+  animateIn: boolean;
   rateable: boolean;
   feedback: MessageFeedbackDto | undefined;
   feedbackBusy: boolean;
@@ -72,10 +78,12 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
           <Text className="font-inter text-xs text-[#6B7280]">{t("chat.taskContextRead")}</Text>
         </View>
       )}
-      <CoachMarkdown text={item.text} />
+      <CoachMarkdown text={item.text} streaming={item.streaming} />
       {item.streaming && <StreamingCursor />}
-      {!item.streaming && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
-        busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
+      {!item.streaming && <Animated.View entering={animateIn ? fadeIn : undefined}>
+        <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
+          busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />
+      </Animated.View>}
     </View>
   );
 }
@@ -93,30 +101,81 @@ function TopicDivider() {
 
 /** Three pulsing dots while the first token is pending. */
 function TypingIndicator({ label }: { label: string }) {
-  const [dots] = useState(() => [0, 1, 2].map(() => new Animated.Value(0.3)));
-  useEffect(() => {
-    const loop = Animated.loop(Animated.stagger(160, dots.map(dot => Animated.sequence([
-      Animated.timing(dot, { toValue: 1, duration: 320, useNativeDriver: true }),
-      Animated.timing(dot, { toValue: 0.3, duration: 320, useNativeDriver: true }),
-    ]))));
-    loop.start();
-    return () => loop.stop();
-  }, [dots]);
   return (
-    <View className="my-1.5 flex-row" accessibilityLabel={label} accessibilityLiveRegion="polite">
+    <Animated.View entering={fadeIn} exiting={fadeOut} className="my-1.5 flex-row" accessibilityLabel={label}
+      accessibilityLiveRegion="polite">
       <View className="flex-row items-center gap-1 rounded-[20px] rounded-tl-md bg-white px-4 py-3">
-        {dots.map((opacity, index) => (
-          <Animated.View key={index} style={{ opacity }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+        {[0, 1, 2].map(index => (
+          <Animated.View key={index} className="w-1.5 h-1.5 rounded-full bg-primary" style={{
+            animationName: { from: { opacity: 0.3 }, to: { opacity: 1 } }, animationDuration: "320ms",
+            animationDelay: `${index * 160}ms`, animationIterationCount: "infinite", animationDirection: "alternate",
+          }} />
         ))}
       </View>
-    </View>
+    </Animated.View>
   );
 }
+
+interface RowActions {
+  rate: (messageId: string, rating: AiCoachRating) => Promise<boolean>;
+  saveDetail: (messageId: string, reason: string | null, detail: string | null) => Promise<boolean>;
+  confirm: (draftId: string, action: ConfirmAction, edited: EditedDraftDto, selectedItemIds: string[],
+    allowScheduleConflict?: boolean, acceptedConflictToken?: string | null) => void;
+  edit: (draftId: string, edited: EditedDraftDto) => Promise<string | null>;
+  reject: (draftId: string) => void;
+}
+
+interface ChatRowProps {
+  item: ChatItem;
+  dateText: string | null;
+  active: boolean;
+  liveArtifacts: ArtifactEnvelopeDto[] | undefined;
+  feedback: MessageFeedbackDto | undefined;
+  feedbackBusy: boolean;
+  cardsBusy: boolean;
+  animateIn: boolean;
+  actions: RowActions;
+}
+
+// The hook rebuilds message objects every render, so rows compare by content instead of identity.
+const sameItem = (left: ChatItem, right: ChatItem) => left.id === right.id && left.text === right.text
+  && left.streaming === right.streaming && left.topicStart === right.topicStart && left.createdAt === right.createdAt
+  && left.conversationId === right.conversationId && left.taskContextRead === right.taskContextRead
+  && left.draftSnapshot === right.draftSnapshot;
+
+/** One timeline row; while a reply streams only its own row re-renders. */
+const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, feedback, feedbackBusy, cardsBusy,
+  animateIn, actions }: ChatRowProps) {
+  return <View>
+    {dateText && <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
+      <Text className="font-baloo text-xs text-[#6B7280]">{dateText}</Text>
+    </View>}
+    {item.topicStart && <TopicDivider />}
+    <MessageBubble item={item} rateable={active} feedback={feedback} feedbackBusy={feedbackBusy} animateIn={animateIn}
+      onRate={(rating) => actions.rate(item.id, rating)}
+      onSaveDetail={(reason, detail) => actions.saveDetail(item.id, reason, detail)} />
+    {item.draftSnapshot.map((historical) => {
+      const live = active ? liveArtifacts?.find(card => card.id === historical.id) : undefined;
+      const artifact = live ?? (!active && historical.status === "pending" ? { ...historical, status: "expired" as const } : historical);
+      if (artifact.isReviewList) return null;
+      return <Animated.View key={artifact.id} entering={animateIn ? fadeIn : undefined}>
+        <TaskDraftCard artifact={artifact} readOnly={!live} busy={cardsBusy}
+          onConfirm={(action, edited, selectedIds, allowConflict, token) =>
+            actions.confirm(artifact.id, action, edited, selectedIds, allowConflict, token)}
+          onEdit={(edited) => actions.edit(artifact.id, edited)}
+          onReject={() => actions.reject(artifact.id)} />
+      </Animated.View>;
+    })}
+  </View>;
+}, (previous, next) => sameItem(previous.item, next.item) && previous.dateText === next.dateText
+  && previous.active === next.active && previous.liveArtifacts === next.liveArtifacts
+  && previous.feedback === next.feedback && previous.feedbackBusy === next.feedbackBusy
+  && previous.cardsBusy === next.cardsBusy && previous.animateIn === next.animateIn && previous.actions === next.actions);
 
 /** Chronological timeline; growing replies leave the reading position in place. */
 export function ExecutionChatPanel() {
   const { t, i18n } = useTranslation("aiCoach");
-  const { snapshot, messages, status, start, send, confirm, edit, reject,
+  const { snapshot, messages, keyFor, status, start, send, confirm, edit, reject,
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
     pendingList, pendingCount, reviewBusy, confirmationUncertain, streaming, reconnecting,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
@@ -159,6 +218,10 @@ export function ExecutionChatPanel() {
   const contentHeight = useRef(0);
   const scrollMetrics = useRef({ offset: 0, viewport: 0, spacer: 0 });
   const [showScrollToLatest, setShowScrollToLatest] = useState(false);
+  // Sending closes the keyboard; the question only glides up once the viewport stops resizing.
+  const [keyboardSettling, setKeyboardSettling] = useState(false);
+  const keyboardWait = useRef<{ remove: () => void } | null>(null);
+  useEffect(() => () => keyboardWait.current?.remove(), []);
   const reducedMotion = useReducedMotion();
   const updateScrollToLatest = useCallback(() => {
     const { offset, viewport, spacer } = scrollMetrics.current;
@@ -212,7 +275,9 @@ export function ExecutionChatPanel() {
           questionToPosition.current = true;
           setQuestionLayout({ y: null, turnHeight: 0 });
           // Bring an unmounted new question into the render window before measuring it.
-          if (!cellLayouts.current.has(latest.id)) scrollRef.current?.scrollToEnd({ animated: false });
+          const { offset, viewport, spacer } = scrollMetrics.current;
+          const farFromEnd = contentHeight.current - spacer - viewport - offset > viewport * 5;
+          if (!cellLayouts.current.has(latest.id) && farFromEnd) scrollRef.current?.scrollToEnd({ animated: false });
         }
       }
       if (questionIdRef.current && !chronologicalMessages.some(item => item.id === questionIdRef.current)) {
@@ -226,17 +291,31 @@ export function ExecutionChatPanel() {
   const prepareQuestionPosition = () => {
     initialScrollPending.current = false;
     previousQuestion.current = { id: [...chronologicalMessages].reverse().find(item => item.role === "user")?.id };
+    if (Keyboard.isVisible()) {
+      keyboardWait.current?.remove();
+      setKeyboardSettling(true);
+      const subscription = Keyboard.addListener("keyboardDidHide", () => settle());
+      // Some Android keyboards never report hiding; don't hold the question back for long.
+      const fallback = setTimeout(() => settle(), 600);
+      const settle = () => {
+        subscription.remove();
+        clearTimeout(fallback);
+        keyboardWait.current = null;
+        setKeyboardSettling(false);
+      };
+      keyboardWait.current = { remove: settle };
+    }
     Keyboard.dismiss();
   };
   // Shrink only the spare space as the reply grows, keeping the question's offset reachable.
   const replySpace = questionLayout
     ? Math.max(0, viewportHeight - questionLayout.turnHeight - footerHeight - 12) : 0;
   const positionQuestion = useCallback(() => {
-    if (!questionToPosition.current || questionLayout?.y == null || viewportHeight <= 0
+    if (!questionToPosition.current || keyboardSettling || questionLayout?.y == null || viewportHeight <= 0
       || contentHeight.current < questionLayout.y + viewportHeight - 1) return;
     questionToPosition.current = false;
-    scrollRef.current?.scrollToOffset({ offset: questionLayout.y, animated: false });
-  }, [questionLayout, viewportHeight]);
+    scrollRef.current?.scrollToOffset({ offset: questionLayout.y, animated: !reducedMotion });
+  }, [questionLayout, viewportHeight, keyboardSettling, reducedMotion]);
   useEffect(() => { positionQuestion(); }, [positionQuestion]);
   useEffect(() => {
     if (status !== "connecting") return;
@@ -340,6 +419,27 @@ export function ExecutionChatPanel() {
         ? "draft.scheduleUnverified" : "draft.saveFailed") });
   };
 
+  // Rows get one stable action object, so a streaming update doesn't re-render every visible row.
+  const latestRowActions = useRef<RowActions | null>(null);
+  useEffect(() => {
+    latestRowActions.current = {
+      rate: rateMessage,
+      saveDetail: saveFeedbackDetail,
+      confirm: (...args) => void handleConfirm(...args),
+      edit,
+      reject: (draftId) => void reject(draftId).then(error => {
+        if (error) Toast.show({ type: "error", text1: t("draft.editFailed") });
+      }),
+    };
+  });
+  const rowActions = useMemo<RowActions>(() => ({
+    rate: (...args) => latestRowActions.current?.rate(...args) ?? Promise.resolve(false),
+    saveDetail: (...args) => latestRowActions.current?.saveDetail(...args) ?? Promise.resolve(false),
+    confirm: (...args) => latestRowActions.current?.confirm(...args),
+    edit: (...args) => latestRowActions.current?.edit(...args) ?? Promise.resolve("NotReady"),
+    reject: (draftId) => latestRowActions.current?.reject(draftId),
+  }), []);
+
   const blockedBanner = () => {
     if (snapshot?.generationStatus !== "failed") return null;
     if (snapshot.generationError === "quota") {
@@ -422,7 +522,7 @@ export function ExecutionChatPanel() {
           ref={scrollRef}
           data={chronologicalMessages}
           CellRendererComponent={QuestionCell}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyFor}
           className="flex-1 px-4"
           contentContainerStyle={{ paddingVertical: 12 }}
           maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
@@ -453,9 +553,11 @@ export function ExecutionChatPanel() {
               positionQuestion();
               return;
             }
-            if (!initialScrollPending.current || generating || status !== "ready" || messages.length === 0) return;
-            initialScrollPending.current = false;
-            scrollRef.current?.scrollToEnd({ animated: false });
+            if (!initialScrollPending.current || status !== "ready" || messages.length === 0) return;
+            // Rows render in batches and re-measure late, so stay pinned to the end until the user scrolls or sends.
+            // scrollToEnd reads row metrics that aren't measured yet here; the reported height is already real.
+            const { viewport, spacer } = scrollMetrics.current;
+            scrollRef.current?.scrollToOffset({ offset: Math.max(0, height - spacer - viewport), animated: false });
           }}
           ListHeaderComponent={<View>
             {loadingOlder && <ActivityIndicator />}
@@ -471,8 +573,9 @@ export function ExecutionChatPanel() {
               </Pressable>}
               {reconnecting ? <Text className="font-baloo text-primary p-3">{t("chat.reconnecting")}</Text>
                 : generating && !messages.some(item => item.streaming) && <TypingIndicator label={t("chat.thinking")} />}
-              {!generating && <FollowUpChips items={snapshot?.followUps ?? []} disabled={!canSend}
-                onSend={(text) => void handleFollowUp(text)} />}
+              {!generating && !!snapshot?.followUps?.length && <Animated.View entering={fadeIn}>
+                <FollowUpChips items={snapshot.followUps} disabled={!canSend} onSend={(text) => void handleFollowUp(text)} />
+              </Animated.View>}
               {blockedBanner()}
             </View>
             <View style={{ height: replySpace }} onLayout={event => {
@@ -483,48 +586,32 @@ export function ExecutionChatPanel() {
           renderItem={({ item, index }) => {
             const older = chronologicalMessages[index - 1];
             const active = item.conversationId === snapshot?.conversationId;
-            return <View>
-              {(!older || dayKey(older.createdAt) !== dayKey(item.createdAt)) &&
-                <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
-                  <Text className="font-baloo text-xs text-[#6B7280]">{dateLabel(item.createdAt)}</Text>
-                </View>}
-              {item.topicStart && <TopicDivider />}
-              <MessageBubble item={item} rateable={active} feedback={feedbackByMessage[item.id]}
-                feedbackBusy={feedbackSaving[item.id] === true}
-                onRate={(rating) => rateMessage(item.id, rating)}
-                onSaveDetail={(reason, detail) => saveFeedbackDetail(item.id, reason, detail)} />
-              {item.draftSnapshot.map((historical) => {
-                const live = active ? snapshot?.artifacts.find(card => card.id === historical.id) : undefined;
-                const artifact = live ?? (!active && historical.status === "pending" ? { ...historical, status: "expired" as const } : historical);
-                if (artifact.isReviewList) return null;
-                return <TaskDraftCard key={artifact.id} artifact={artifact} readOnly={!live}
-                  busy={status === "sending" || snapshot?.generationStatus === "running"}
-                  onConfirm={(action, edited, selectedIds, allowConflict, token) =>
-                    void handleConfirm(artifact.id, action, edited, selectedIds, allowConflict, token)}
-                  onEdit={(edited) => edit(artifact.id, edited)}
-                  onReject={() => void reject(artifact.id).then(error => {
-                    if (error) Toast.show({ type: "error", text1: t("draft.editFailed") });
-                  })} />;
-              })}
-            </View>;
+            return <ChatRow item={item} active={active} liveArtifacts={active ? snapshot?.artifacts : undefined}
+              dateText={!older || dayKey(older.createdAt) !== dayKey(item.createdAt) ? dateLabel(item.createdAt) : null}
+              feedback={feedbackByMessage[item.id]} feedbackBusy={feedbackSaving[item.id] === true}
+              cardsBusy={generating} animateIn={keyFor(item) !== item.id} actions={rowActions} />;
           }}
         />
         {/* Outside the list: after a clear, the list keeps its old offset and would hide a header welcome. */}
-        {showWelcome && <ScrollView className="absolute inset-0 bg-background"
-          contentContainerClassName="px-4" keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}>
-          <CoachWelcome disabled={!canSend} onStart={(text) => void handleStarter(text)} />
-        </ScrollView>}
-        {showScrollToLatest && status !== "connecting" && <Pressable
-          onPress={scrollToLatest}
-          accessibilityRole="button"
-          accessibilityLabel={t("chat.scrollToLatest")}
-          hitSlop={4}
-          className="absolute right-4 bottom-3 w-10 h-10 rounded-full bg-white items-center justify-center"
-          style={{ boxShadow: "0 2px 8px rgba(68, 73, 100, 0.16)" }}
-        >
-          <Ionicons name="arrow-down" size={21} color="#444964" />
-        </Pressable>}
+        {showWelcome && <Animated.View exiting={FadeOut.duration(200)} className="absolute inset-0 bg-background">
+          <ScrollView className="flex-1" contentContainerClassName="px-4" keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}>
+            <CoachWelcome disabled={!canSend} onStart={(text) => void handleStarter(text)} />
+          </ScrollView>
+        </Animated.View>}
+        {showScrollToLatest && status !== "connecting" && <Animated.View entering={popIn} exiting={popOut}
+          className="absolute right-4 bottom-3">
+          <Pressable
+            onPress={scrollToLatest}
+            accessibilityRole="button"
+            accessibilityLabel={t("chat.scrollToLatest")}
+            hitSlop={4}
+            className="w-10 h-10 rounded-full bg-white items-center justify-center"
+            style={{ boxShadow: "0 2px 8px rgba(68, 73, 100, 0.16)" }}
+          >
+            <Ionicons name="arrow-down" size={21} color="#444964" />
+          </Pressable>
+        </Animated.View>}
       </View>
 
       {/* TEMPORARY debug line (2026-08-24): session token usage — remove with snapshot.debugUsage. */}
