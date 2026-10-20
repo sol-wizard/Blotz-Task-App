@@ -17,9 +17,15 @@ public class TaskGenerationTools()
     public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
     public Func<ExtractedRecurringTask, Task>? OnRecurringTaskStreamed { get; set; }
 
+    // Short ids ("t1", "n1") the model uses to point at a one-off task or note, keyed by the
+    // draft's Guid. Counters only go up, so a swipe-deleted draft never hands its id to another.
+    private readonly Dictionary<Guid, string> _shortIds = [];
+    private int _taskCount;
+    private int _noteCount;
+
     public void ResetCallCount() => ToolCallCount = 0;
 
-    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends.")]
+    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task. Assign sequential, non-overlapping times — estimate a realistic duration for each task and start the next where the previous ends. Returns each task's id (e.g. t1) for later updates or removals.")]
     public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,
         [Description("Array of descriptions (empty string if none)")] string[] descriptions,
@@ -29,6 +35,7 @@ public class TaskGenerationTools()
     {
         ToolCallCount++;
         var count = titles.Length;
+        var added = new List<ExtractedTask>();
         for (var i = 0; i < count; i++)
         {
             var task = new ExtractedTask
@@ -40,13 +47,13 @@ public class TaskGenerationTools()
                 EndTime = endTimes[i],
                 LabelName = labels[i]
             };
-            Tasks.Add(task);
-            if (OnTaskStreamed != null) await OnTaskStreamed(task);
+            await AddTask(task);
+            added.Add(task);
         }
-        return $"{count} task(s) added.";
+        return $"{count} task(s) added: {string.Join(", ", added.Select(DescribeTask))}.";
     }
 
-    [Description("Add a single task that has a specific date or time.")]
+    [Description("Add a single task that has a specific date or time. Returns the task's id (e.g. t1) for later updates or removals.")]
     public async Task<string> CreateTask(
         [Description("Title")] string title,
         [Description("Description or empty")] string description,
@@ -64,9 +71,8 @@ public class TaskGenerationTools()
             EndTime = endTime,
             LabelName = label
         };
-        Tasks.Add(task);
-        if (OnTaskStreamed != null) await OnTaskStreamed(task);
-        return "Task added.";
+        await AddTask(task);
+        return $"Task added: {DescribeTask(task)}.";
     }
 
     [Description(
@@ -328,11 +334,12 @@ public class TaskGenerationTools()
         if (OnRecurringTaskStreamed != null) await OnRecurringTaskStreamed(task);
     }
 
-    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item.")]
+    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one timeless item. Returns each note's id (e.g. n1) for later updates or removals.")]
     public async Task<string> CreateNotes(
         [Description("Array of note texts")] string[] texts)
     {
         ToolCallCount++;
+        var added = new List<ExtractedNote>();
         foreach (var text in texts)
         {
             var note = new ExtractedNote
@@ -340,13 +347,13 @@ public class TaskGenerationTools()
                 Id = Guid.NewGuid(),
                 Text = text
             };
-            Notes.Add(note);
-            if (OnNoteStreamed != null) await OnNoteStreamed(note);
+            await AddNote(note);
+            added.Add(note);
         }
-        return $"{texts.Length} note(s) added.";
+        return $"{texts.Length} note(s) added: {string.Join(", ", added.Select(DescribeNote))}.";
     }
 
-    [Description("Add a single note for an idea, intention, or reminder with no time anchor. Use this when scheduling the item would require inventing a time the user never mentioned — even vaguely.")]
+    [Description("Add a single note for an idea, intention, or reminder with no time anchor. Use this when scheduling the item would require inventing a time the user never mentioned — even vaguely. Returns the note's id (e.g. n1) for later updates or removals.")]
     public async Task<string> CreateNote(
         [Description("Note content")] string text)
     {
@@ -356,26 +363,24 @@ public class TaskGenerationTools()
             Id = Guid.NewGuid(),
             Text = text
         };
-        Notes.Add(note);
-        if (OnNoteStreamed != null) await OnNoteStreamed(note);
-        return "Note added.";
+        await AddNote(note);
+        return $"Note added: {DescribeNote(note)}.";
     }
 
     [Description("Remove a task. Use this when the user says they no longer want to do something they previously mentioned, e.g. 'I don't want to go to the gym anymore'.")]
     public string RemoveTask(
-        [Description("Task title")] string title)
+        [Description("Id of the task, as returned when it was added or listed under Current drafts, e.g. t1")] string taskId)
     {
         ToolCallCount++;
-        //TODO: text matching is fragile
-        var task = Tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
-        if (task == null) return "Task not found.";
+        var task = FindTask(taskId);
+        if (task == null) return NotFound("Task");
         Tasks.Remove(task);
         return "Task removed.";
     }
 
     [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task. When updating times, ensure the result does not overlap with other tasks — adjust sequentially if needed.")]
     public string UpdateTask(
-        [Description("Current title")] string existingTitle,
+        [Description("Id of the task, as returned when it was added or listed under Current drafts, e.g. t1")] string taskId,
         [Description("New title")] string title,
         [Description("Description or empty")] string description,
         [Description("yyyy-MM-ddTHH:mm:ss")] DateTime startTime,
@@ -383,9 +388,8 @@ public class TaskGenerationTools()
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
-        //TODO: here the same as well
-        var task = Tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
-        if (task == null) return "Task not found.";
+        var task = FindTask(taskId);
+        if (task == null) return NotFound("Task");
         task.Title = title;
         task.Description = description;
         task.StartTime = startTime;
@@ -396,28 +400,65 @@ public class TaskGenerationTools()
 
     [Description("Remove a note. Use this when the user says they no longer want to keep something they previously noted.")]
     public string RemoveNote(
-        [Description("Note text")] string text)
+        [Description("Id of the note, as returned when it was added or listed under Current drafts, e.g. n1")] string noteId)
     {
         ToolCallCount++;
-        //TODO: here
-        var note = Notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
-        if (note == null) return "Note not found.";
+        var note = FindNote(noteId);
+        if (note == null) return NotFound("Note");
         Notes.Remove(note);
         return "Note removed.";
     }
 
     [Description("Update a note. Use this when the user corrects or adjusts the content of an existing note.")]
     public string UpdateNote(
-        [Description("Current text")] string existingText,
+        [Description("Id of the note, as returned when it was added or listed under Current drafts, e.g. n1")] string noteId,
         [Description("New text")] string newText)
     {
         ToolCallCount++;
-        //TODO: here
-        var note = Notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
-        if (note == null) return "Note not found.";
+        var note = FindNote(noteId);
+        if (note == null) return NotFound("Note");
         note.Text = newText;
         return "Note updated.";
     }
+
+    // The model only learns ids from its own tool results, so it can't see notes saved by the
+    // no-tool fallback, or know which drafts the user swiped away. This is sent with each message.
+    public string? DescribeDrafts()
+    {
+        var drafts = Tasks.Select(DescribeTask).Concat(Notes.Select(DescribeNote)).ToList();
+        return drafts.Count == 0 ? null : $"[Current drafts: {string.Join(", ", drafts)}]";
+    }
+
+    private async Task AddTask(ExtractedTask task)
+    {
+        _shortIds[task.Id] = $"t{++_taskCount}";
+        Tasks.Add(task);
+        if (OnTaskStreamed != null) await OnTaskStreamed(task);
+    }
+
+    private async Task AddNote(ExtractedNote note)
+    {
+        _shortIds[note.Id] = $"n{++_noteCount}";
+        Notes.Add(note);
+        if (OnNoteStreamed != null) await OnNoteStreamed(note);
+    }
+
+    private ExtractedTask? FindTask(string taskId) => Tasks.FirstOrDefault(t => HasShortId(t.Id, taskId));
+
+    private ExtractedNote? FindNote(string noteId) => Notes.FirstOrDefault(n => HasShortId(n.Id, noteId));
+
+    // shortId is model-written JSON, so it can arrive null.
+    private bool HasShortId(Guid id, string? shortId) =>
+        _shortIds.TryGetValue(id, out var own) && own.Equals(shortId?.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    private string DescribeTask(ExtractedTask task) => $"{_shortIds[task.Id]} \"{task.Title}\"";
+
+    private string DescribeNote(ExtractedNote note) => $"{_shortIds[note.Id]} \"{note.Text}\"";
+
+    // List what is left, so the model retries with a real id instead of creating a duplicate.
+    // The recurring hint stops a misrouted recurring edit being retried on a same-titled one-off task.
+    private string NotFound(string kind) =>
+        $"{kind} not found. {DescribeDrafts() ?? "There are no drafts."} Recurring tasks are not listed; change them only with the recurring tools.";
 
     // Swipe-to-delete removal by Id. Not AI tools: unregistered, and left out of ToolCallCount
     // and the streaming callbacks on purpose.
