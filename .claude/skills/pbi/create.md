@@ -111,6 +111,11 @@ Pick the one that fits the task. POC (🔍) takes priority when the work is an i
 3. Decide whether staging verification applies (ask if unclear), then confirm the review level (`L1`–`L4`), the priority (`P1`–`P3`), other labels, and estimate.
 4. Title = the PBI title.
 5. Body in this order, keeping the user's wording. **Keep it short and concise** — write the minimum a dev needs to pick this up, favour tight bullets over prose, and cut any sentence that doesn't change what someone would do:
+   - `## 为什么做` — **first, and in Chinese** (the rest of the body stays in English). Three short bullets anyone on the team can read in 10 seconds, so they see the problem and its cause before any detail:
+     - `**问题：**` what the user (or the team) runs into
+     - `**现在 App 怎么做：**` how the app or system handles it today, which is why the problem happens
+     - `**改成：**` what this PBI changes
+     Plain words, no code, file names or jargon.
    - `## Description` — first bullet is `**Where:** <feature> — <how to reach it>` (see the readiness gate), then requirements (what & why)
    - `## Suggested Solution` — proposed approach (POC: replace with `## Investigation Goal` — questions to answer + what success looks like)
    - `## Scope / Tasks` — checkboxes (`- [ ]`), `###` subheadings if grouped
