@@ -1,6 +1,32 @@
 {
   "home": {
-    "intro": "Tell me what you want to do — I'll help you take the next step"
+    "intro": "Tell me what you want to do — I'll help you take the next step",
+    "greeting": {
+      "morning": "Good morning — what shall we move forward today?",
+      "afternoon": "Good afternoon — what shall we move forward today?",
+      "evening": "Good evening — anything to wrap up or plan?"
+    },
+    "todaySummary": "{{open}} left · {{done}} done",
+    "next": "Next",
+    "startersTitle": "Try starting with",
+    "starters": {
+      "planTomorrow": {
+        "title": "Plan tomorrow",
+        "prompt": "Help me plan tomorrow"
+      },
+      "breakDown": {
+        "title": "Break a big task down",
+        "prompt": "Help me break a big task into small steps"
+      },
+      "focusNow": {
+        "title": "Start focusing now",
+        "prompt": "I want to start focusing on something now"
+      },
+      "talk": {
+        "title": "Just talk it through",
+        "prompt": "I just want to talk through what's on my mind"
+      }
+    }
   },
   "chat": {
     "title": "AI Coach",
@@ -46,7 +72,9 @@
     "actionFailed": "Could not update your chat. Please try again.",
     "generating": "Generating reply",
     "reconnecting": "Connection interrupted. Syncing the result…",
-    "followUps": "Suggested replies"
+    "followUps": "Suggested replies",
+    "status": "Sees your tasks and schedule",
+    "back": "Back"
   },
   "feedback": {
     "good": "Helpful reply",

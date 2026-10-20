@@ -71,7 +71,7 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
           accessibilityState={{ selected: feedback?.rating === "up" }}
           onPress={() => void rate("up")}>
           <Ionicons name={feedback?.rating === "up" ? "thumbs-up" : "thumbs-up-outline"}
-            size={16} color={feedback?.rating === "up" ? "#84CC16" : "#A3A3A3"} />
+            size={16} color={feedback?.rating === "up" ? "#84CC16" : "#8A8F9C"} />
         </Pressable>
         <Pressable className="w-9 h-9 items-center justify-center" disabled={busy}
           accessibilityRole="button" accessibilityLabel={t("feedback.bad")}
@@ -84,20 +84,20 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
             setOpen(true);
           }}>
           <Ionicons name={feedback?.rating === "down" ? "thumbs-down" : "thumbs-down-outline"}
-            size={16} color={feedback?.rating === "down" ? "#444964" : "#A3A3A3"} />
+            size={16} color={feedback?.rating === "down" ? "#444964" : "#8A8F9C"} />
         </Pressable>
         </>}
         <Pressable className="w-9 h-9 items-center justify-center"
           accessibilityRole="button" accessibilityLabel={t("feedback.copy")}
           onPress={() => void copy()}>
-          <Ionicons name="copy-outline" size={16} color="#A3A3A3" />
+          <Ionicons name="copy-outline" size={16} color="#8A8F9C" />
         </Pressable>
         <Pressable className="w-9 h-9 items-center justify-center" disabled={isNoteCreating || noteSaved}
           accessibilityRole="button" accessibilityLabel={t(noteSaved ? "feedback.noteSaved" : "feedback.saveNote")}
           accessibilityState={{ disabled: isNoteCreating || noteSaved, busy: isNoteCreating }}
           onPress={() => void saveNote()}>
           <Ionicons name={noteSaved ? "bookmark" : "bookmark-outline"} size={16}
-            color={noteSaved ? "#84CC16" : "#A3A3A3"} />
+            color={noteSaved ? "#84CC16" : "#8A8F9C"} />
         </Pressable>
       </View>
 

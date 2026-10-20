@@ -21,7 +21,6 @@ import { useReducedMotion } from "react-native-reanimated";
 import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
 import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
 import { AiCoachRating, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
-import { ReturnButton } from "@/shared/components/return-button";
 import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
 import { CoachMarkdown } from "./coach-markdown";
@@ -30,6 +29,8 @@ import { FollowUpChips } from "./follow-up-chips";
 import { ReviewListModal } from "./review-list-modal";
 import { VoiceRecordingBar } from "./voice-recording-bar";
 import { CoachComposer } from "./coach-composer";
+import { CoachHeader } from "./coach-header";
+import { CoachWelcome } from "./coach-welcome";
 
 function StreamingCursor() {
   const { t } = useTranslation("aiCoach");
@@ -56,40 +57,29 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
   const { t } = useTranslation("aiCoach");
   if (item.role === "user") {
     return (
-      <View className="my-1.5 max-w-[82%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-secondary">
+      <View className="my-1.5 max-w-[80%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-secondary">
         <Text className="font-baloo text-base text-white">{item.text}</Text>
       </View>
     );
   }
+  // Assistant replies run the full width: the header already says who is talking.
   return (
-    <View className="my-1.5 flex-row gap-2 self-stretch">
-      <CoachAvatar />
-      {/* Assistant replies take the remaining width so headings and lists have room to breathe. */}
-      <View className="flex-1">
-        {item.taskContextRead && (
-          <View className="self-start flex-row items-center gap-1 rounded-full bg-[#EAF3FC] px-2.5 py-0.5 mb-1">
-            <Ionicons name="search" size={11} color="#3D8DE0" />
-            <Text className="font-baloo text-xs text-info">{t("chat.taskContextRead")}</Text>
-          </View>
-        )}
-        <CoachMarkdown text={item.text} />
-        {item.streaming && <StreamingCursor />}
-        {!item.streaming && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
-          busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
-      </View>
+    <View className="my-1.5 self-stretch">
+      {item.taskContextRead && (
+        <View className="flex-row items-center gap-1.5 mb-1">
+          <Ionicons name="search" size={12} color="#6B7280" />
+          <Text className="font-inter text-xs text-[#6B7280]">{t("chat.taskContextRead")}</Text>
+        </View>
+      )}
+      <CoachMarkdown text={item.text} />
+      {item.streaming && <StreamingCursor />}
+      {!item.streaming && <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
+        busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />}
     </View>
   );
 }
 
-function CoachAvatar() {
-  return (
-    <View className="w-7 h-7 rounded-full bg-checked items-center justify-center mt-0.5">
-      <Text className="font-balooExtraBold text-sm text-white">B</Text>
-    </View>
-  );
-}
-
-/** Three pulsing dots next to the coach avatar while the first token is pending. */
+/** Three pulsing dots while the first token is pending. */
 function TypingIndicator({ label }: { label: string }) {
   const [dots] = useState(() => [0, 1, 2].map(() => new Animated.Value(0.3)));
   useEffect(() => {
@@ -101,8 +91,7 @@ function TypingIndicator({ label }: { label: string }) {
     return () => loop.stop();
   }, [dots]);
   return (
-    <View className="my-1.5 flex-row gap-2" accessibilityLabel={label} accessibilityLiveRegion="polite">
-      <CoachAvatar />
+    <View className="my-1.5 flex-row" accessibilityLabel={label} accessibilityLiveRegion="polite">
       <View className="flex-row items-center gap-1 rounded-[20px] rounded-tl-md bg-white px-4 py-3">
         {dots.map((opacity, index) => (
           <Animated.View key={index} style={{ opacity }} className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -286,6 +275,12 @@ export function ExecutionChatPanel() {
     }
   };
 
+  const handleStarter = async (text: string) => {
+    if (!canSend) return;
+    prepareQuestionPosition();
+    if (await send(text)) Toast.show({ type: "error", text1: t("chat.sendError") });
+  };
+
   // A tapped follow-up leaves any draft in the input untouched.
   const handleFollowUp = async (text: string) => {
     if (!canSend) return;
@@ -336,7 +331,7 @@ export function ExecutionChatPanel() {
     if (snapshot?.generationStatus !== "failed") return null;
     if (snapshot.generationError === "quota") {
       return (
-        <View className="bg-white rounded-3xl p-4 my-2 ml-9">
+        <View className="bg-white rounded-3xl p-4 my-2">
           <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
           <Pressable
             className="bg-highlight rounded-2xl py-3 items-center mt-3"
@@ -354,7 +349,7 @@ export function ExecutionChatPanel() {
           ? "chat.modelUnavailable"
           : "chat.generationFailed";
     return (
-      <View className="bg-[#FFF7ED] rounded-2xl px-3 py-2.5 my-2 ml-9">
+      <View className="bg-[#FFF7ED] rounded-2xl px-3 py-2.5 my-2">
         <Text className="font-baloo text-sm text-[#C2410C]">{t(key)}</Text>
       </View>
     );
@@ -369,14 +364,14 @@ export function ExecutionChatPanel() {
     if (error) Toast.show({ type: "error", text1: t(error === "ConversationBusy" ? "chat.busy" : "chat.actionFailed") });
     else scrollRef.current?.scrollToEnd({ animated: false });
   };
+  const startNewTopic = () => {
+    if (!pendingCount) { void runMenuAction(newTopic); return; }
+    Alert.alert(t("review.newTopicTitle"), t("review.newTopicDescription", { count: pendingCount }), [
+      { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
+      { text: t("chat.newTopic"), style: "destructive", onPress: () => void runMenuAction(newTopic) },
+    ]);
+  };
   const openMenu = () => Alert.alert(t("chat.menu"), undefined, [
-    { text: t("chat.newTopic"), onPress: () => {
-      if (!pendingCount) { void runMenuAction(newTopic); return; }
-      Alert.alert(t("review.newTopicTitle"), t("review.newTopicDescription", { count: pendingCount }), [
-        { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
-        { text: t("chat.newTopic"), style: "destructive", onPress: () => void runMenuAction(newTopic) },
-      ]);
-    } },
     { text: t("chat.clearHistory"), style: "destructive", onPress: () =>
       Alert.alert(t("chat.clearTitle"), t("chat.clearDescription"), [
         { text: t("draft.cancel"), style: "cancel" },
@@ -401,14 +396,11 @@ export function ExecutionChatPanel() {
 
   return (
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View className="flex-row items-center justify-between px-5 py-2">
-        <ReturnButton onPress={() => router.back()} />
-        <Text className="font-balooBold text-lg text-secondary">{t("chat.title")}</Text>
-        <Pressable onPress={openMenu} disabled={confirmationUncertain || status !== "ready" || generating || snapshot?.artifacts.some(card => card.status === "processing")}
-          accessibilityLabel={t("chat.menu")} hitSlop={12}>
-          <Ionicons name="ellipsis-horizontal" size={24} color="#8C8C8C" />
-        </Pressable>
-      </View>
+      <CoachHeader
+        status={voiceBusy ? "listening" : generating ? "thinking" : "idle"}
+        actionsDisabled={confirmationUncertain || status !== "ready" || generating
+          || snapshot?.artifacts.some(card => card.status === "processing") === true}
+        onBack={() => router.back()} onNewTopic={startNewTopic} onMenu={openMenu} />
       <View className="flex-1 relative">
         <FlatList
           ref={scrollRef}
@@ -452,7 +444,8 @@ export function ExecutionChatPanel() {
           ListHeaderComponent={<View>
             {loadingOlder && <ActivityIndicator />}
             {historyError && <Pressable onPress={retryHistory}><Text className="font-baloo text-primary text-center py-3">{t("chat.historyError")}</Text></Pressable>}
-            {messages.length === 0 && status === "ready" && <Text className="font-baloo text-primary text-center py-6">{t("home.intro")}</Text>}
+            {messages.length === 0 && status === "ready" && <CoachWelcome disabled={!canSend}
+              onStart={(text) => void handleStarter(text)} />}
           </View>}
           ListFooterComponent={<View>
             <View onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}>
@@ -462,6 +455,8 @@ export function ExecutionChatPanel() {
               </Pressable>}
               {reconnecting ? <Text className="font-baloo text-primary p-3">{t("chat.reconnecting")}</Text>
                 : generating && !messages.some(item => item.streaming) && <TypingIndicator label={t("chat.thinking")} />}
+              {!generating && <FollowUpChips items={snapshot?.followUps ?? []} disabled={!canSend}
+                onSend={(text) => void handleFollowUp(text)} />}
               {blockedBanner()}
             </View>
             <View style={{ height: replySpace }} onLayout={event => {
@@ -475,11 +470,11 @@ export function ExecutionChatPanel() {
             return <View>
               {(!older || dayKey(older.createdAt) !== dayKey(item.createdAt)) &&
                 <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
-                  <Text className="font-baloo text-xs text-primary">{dateLabel(item.createdAt)}</Text>
+                  <Text className="font-baloo text-xs text-[#6B7280]">{dateLabel(item.createdAt)}</Text>
                 </View>}
               {item.topicStart && <View className="flex-row items-center gap-3 mt-3 mb-2">
                 <View className="flex-1 h-px bg-gray-200" />
-                <Text className="font-baloo text-xs text-primary">{t("chat.topicStart")}</Text>
+                <Text className="font-baloo text-xs text-[#6B7280]">{t("chat.topicStart")}</Text>
                 <View className="flex-1 h-px bg-gray-200" />
               </View>}
               <MessageBubble item={item} rateable={active} feedback={feedbackByMessage[item.id]}
@@ -515,7 +510,7 @@ export function ExecutionChatPanel() {
       </View>
 
       {/* TEMPORARY debug line (2026-08-24): session token usage — remove with snapshot.debugUsage. */}
-      {snapshot?.debugUsage && (
+      {__DEV__ && snapshot?.debugUsage && (
         <Text className="font-baloo text-[11px] text-primary text-center pb-0.5 opacity-60">
           {`${snapshot.debugUsage.totalTokens.toLocaleString()} tokens (in ${snapshot.debugUsage.inputTokens.toLocaleString()} / out ${snapshot.debugUsage.outputTokens.toLocaleString()})${
             snapshot.debugUsage.estUsd != null ? ` · $${snapshot.debugUsage.estUsd.toFixed(4)}` : ""
@@ -523,8 +518,6 @@ export function ExecutionChatPanel() {
         </Text>
       )}
 
-      {!generating && <FollowUpChips items={snapshot?.followUps ?? []} disabled={!canSend}
-        onSend={(text) => void handleFollowUp(text)} />}
       <ReviewListBar count={pendingCount} saving={pendingList?.status === "processing"}
         generating={streaming || snapshot?.generationStatus === "running"}
         onOpen={() => setReviewVisible(true)} />
@@ -547,7 +540,7 @@ export function ExecutionChatPanel() {
         }}
         onConfirm={confirmAll} onRefresh={refreshReviewList} />
 
-      <View className="mx-4 mt-2 mb-2">
+      <View className="mx-3 mt-2 mb-2">
         {voiceBusy ? (
           <VoiceRecordingBar sending={voice.phase === "sending"} elapsedMs={voice.elapsedMs}
             onCancel={() => void voice.cancel()} onSend={() => void voice.stopAndSend()} />

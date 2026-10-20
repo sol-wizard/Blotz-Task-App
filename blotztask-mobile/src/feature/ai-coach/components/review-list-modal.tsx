@@ -230,7 +230,7 @@ export function ReviewListModal({
             <View className="w-10 h-[5px] rounded-full bg-[#E0E3E7] self-center mt-2 mb-1" />
             <View className="px-5 pt-1.5 pb-2">
               <View className="flex-row items-center gap-2">
-                <Text className="flex-1 font-balooBold text-lg text-secondary">
+                <Text className="flex-1 font-balooExtraBold text-[22px] leading-7 text-secondary">
                   {t("review.title")}{list ? ` · ${list.payload.items.length}` : ""}
                 </Text>
                 <Pressable onPress={close} accessibilityRole="button" accessibilityLabel={t("review.close")} hitSlop={12}
@@ -238,7 +238,7 @@ export function ReviewListModal({
                   <Ionicons name="close" size={16} color="#444964" />
                 </Pressable>
               </View>
-              <Text className="font-baloo text-sm text-primary">{t("review.explanation")}</Text>
+              <Text className="font-baloo text-sm text-[#6B7280]">{t("review.explanation")}</Text>
               {generating && <View className="flex-row items-center gap-2 rounded-xl bg-[#EAF3FC] px-3 py-2 mt-2">
                 <ActivityIndicator size="small" color="#3D8DE0" />
                 <Text accessibilityLiveRegion="polite" className="flex-1 font-baloo text-sm text-info">
@@ -247,10 +247,10 @@ export function ReviewListModal({
               </View>}
             </View>
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="px-5 pb-2">
-              {!list && <Text className="font-baloo text-primary text-center py-6">{t("review.empty")}</Text>}
+              {!list && <Text className="font-baloo text-[#6B7280] text-center py-6">{t("review.empty")}</Text>}
               {list && ([["task", tasks], ["note", notes]] as const).map(([kind, group]) => group.length > 0 && (
                 <View key={kind}>
-                  <Text className="font-inter font-semibold text-xs text-primary pt-3 pb-0.5">
+                  <Text className="font-inter font-semibold text-xs text-[#6B7280] pt-3 pb-0.5">
                     {t(kind === "note" ? "review.note" : "review.task")} · {group.length}
                   </Text>
                   {group.map((item, index) => {
@@ -279,7 +279,7 @@ export function ReviewListModal({
                                 else next.add(item.itemId);
                                 return next;
                               })}>
-                              <Text className="font-baloo text-primary text-sm mt-0.5"
+                              <Text className="font-baloo text-[#6B7280] text-sm mt-0.5"
                                 numberOfLines={expanded.has(item.itemId) ? undefined : 2}>
                                 {item.description}
                               </Text>
@@ -366,14 +366,14 @@ export function ReviewListModal({
                   accessibilityRole="button"
                   accessibilityState={{ disabled }}
                   onPress={() => void confirm()}
-                  className={`bg-highlight rounded-2xl py-3.5 items-center ${disabled ? "opacity-40" : ""}`}
+                  className={`bg-highlight rounded-[14px] py-3.5 items-center ${disabled ? "opacity-40" : ""}`}
                 >
                   {generating ? (
-                    <Text className="font-balooBold text-white text-base">{t("review.generating")}</Text>
+                    <Text className="font-balooBold text-[#2F3347] text-base">{t("review.generating")}</Text>
                   ) : busy ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color="#2F3347" />
                   ) : (
-                    <Text className="font-balooBold text-white text-base">
+                    <Text className="font-balooBold text-[#2F3347] text-base">
                       {uncertain
                         ? t("review.retrySave")
                         : t("review.addAll", { count: list?.payload.items.length ?? 0 })}

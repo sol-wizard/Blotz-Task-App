@@ -86,10 +86,14 @@ export function TaskDraftCard({
     ? (artifact.schedule?.conflicts ?? []).filter((entry) => !items.some((item) => item.itemId === entry.itemId))
     : [];
   const inactive = artifact.status === "rejected" || artifact.status === "expired";
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  // When every task falls on one day, the header names it once instead of repeating it per row.
+  const sharedDay = items.every((item) => item.date && item.date === items[0].date)
+    ? formatDraftWhen({ date: items[0].date, startTime: null, endTime: null }, t, language) : null;
   const header = artifact.status === "completed" ? { text: t("draft.alreadySaved"), icon: "checkmark" as const }
     : artifact.status === "rejected" ? { text: t("draft.discarded"), icon: "close" as const }
     : artifact.status === "expired" ? { text: t("draft.expired"), icon: "time-outline" as const }
-    : { text: t("draft.taskCount", { count: items.length }), icon: "sparkles" as const };
+    : { text: [sharedDay, t("draft.taskCount", { count: items.length })].filter(Boolean).join(" · "), icon: null };
 
   // Card-level notices; per-task problems sit on the task row as chips.
   const notices: { tone: "warning" | "info"; text: string }[] = [];
@@ -111,18 +115,21 @@ export function TaskDraftCard({
   const rejectLabel = items.length > 1 ? t("draft.rejectAll") : t("draft.reject");
 
   return (
-    <View className={`bg-white rounded-3xl px-4 pt-3.5 pb-3 my-2 ml-9 ${inactive ? "opacity-60" : ""}`}>
-      <View className="flex-row items-center gap-2 mb-1">
-        <View className={`w-7 h-7 rounded-[9px] items-center justify-center ${inactive ? "bg-[#F3F5F7]" : "bg-[#F1F9E1]"}`}>
-          <Ionicons name={header.icon} size={15} color={inactive ? theme.colors.primary : theme.colors.checked} />
-        </View>
+    <View className={`bg-white rounded-[22px] px-3.5 pt-3.5 pb-3 my-2 gap-1 ${inactive ? "opacity-60" : ""}`}
+      style={{ boxShadow: "0 1px 2px rgba(68, 73, 100, 0.06)" }}>
+      <View className="flex-row items-center gap-2 px-0.5 pb-1.5">
+        {header.icon && (
+          <View className={`w-7 h-7 rounded-[9px] items-center justify-center ${inactive ? "bg-[#F3F5F7]" : "bg-[#F1F9E1]"}`}>
+            <Ionicons name={header.icon} size={15} color={inactive ? theme.colors.primary : theme.colors.checked} />
+          </View>
+        )}
         <Text className={`flex-1 font-balooBold text-base ${inactive ? "text-primary" : "text-secondary"}`}>
           {header.text}
         </Text>
         {selectable && unsavedCount > 1 && (
           <Pressable disabled={disabled} hitSlop={8} onPress={() => setSelectedIds(selected.length === unsavedCount
             ? new Set() : new Set(items.filter((item) => !saved(item.itemId)).map((item) => item.itemId)))}>
-            <Text className="font-inter font-semibold text-xs text-[#5E8A00]">
+            <Text className="font-inter font-semibold text-xs text-[#4D7300]">
               {selected.length === unsavedCount ? t("draft.clearSelection") : t("draft.selectAll")}
             </Text>
           </Pressable>
@@ -133,11 +140,11 @@ export function TaskDraftCard({
         const isSaved = saved(item.itemId);
         const isSelected = selectedIds.has(item.itemId);
         const dimmed = selectable && !isSaved && !isSelected;
-        const when = formatDraftWhen(item, t, i18n.resolvedLanguage ?? i18n.language);
+        const day = sharedDay ? null : formatDraftWhen({ ...item, startTime: null, endTime: null }, t, language);
         const labelColor = labels.find((label) => label.labelId === item.labelId)?.color ?? theme.colors.disabled;
         const canEditRow = editable && !isSaved;
         return (
-          <View key={item.itemId} className={`flex-row items-center gap-3 py-2.5 ${index > 0 ? "border-t border-[#EEF1F3]" : ""}`}>
+          <View key={item.itemId} className="flex-row items-center gap-3 rounded-[14px] bg-[#F7F9FA] px-3 py-2.5">
             {isSaved ? (
               <View className="w-[22px] h-[22px] rounded-full bg-checked items-center justify-center">
                 <Ionicons name="checkmark" size={14} color="#FFFFFF" />
@@ -155,7 +162,13 @@ export function TaskDraftCard({
                 })}
               />
             )}
-            <View className="h-9 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
+            <View className="w-11">
+              <Text className={`font-inter font-semibold text-sm ${dimmed || inactive ? "text-neutral-400" : "text-secondary"}`}
+                style={{ fontVariant: ["tabular-nums"] }}>{item.startTime ?? "--:--"}</Text>
+              {item.endTime && <Text className="font-inter text-xs text-[#6B7280]"
+                style={{ fontVariant: ["tabular-nums"] }}>{item.endTime}</Text>}
+            </View>
+            <View className="w-[3px] self-stretch rounded-full" style={{ backgroundColor: labelColor }} />
             <Pressable
               className="flex-1"
               disabled={!canEditRow || disabled}
@@ -171,11 +184,11 @@ export function TaskDraftCard({
                 {item.title}
               </Text>
               {item.description && (
-                <Text className="font-baloo text-sm text-primary" numberOfLines={2}>{item.description}</Text>
+                <Text className="font-baloo text-sm text-[#6B7280]" numberOfLines={2}>{item.description}</Text>
               )}
               <View className="flex-row flex-wrap gap-1.5 mt-1">
-                {when ? <CoachChip label={when} icon="time-outline" />
-                  : <CoachChip label={t("draft.datePending")} tone="info" icon="calendar-outline" />}
+                {day && <CoachChip label={day} icon="calendar-outline" />}
+                {!item.date && <CoachChip label={t("draft.datePending")} tone="info" icon="calendar-outline" />}
                 {item.recurrence && <CoachChip label={formatRecurrence(item.recurrence, t)} tone="info" icon="repeat" />}
                 {items.length === 1 && artifact.payload.focusMinutes != null && editable && (
                   <CoachChip label={t("draft.focusPreview", { minutes: artifact.payload.focusMinutes })} tone="success"
@@ -197,10 +210,10 @@ export function TaskDraftCard({
                 onPress={() => void saveEdit(items.filter((entry) => entry.itemId !== item.itemId))}
                 accessibilityLabel={t("draft.removeTask")}
               >
-                <Ionicons name="close" size={18} color="#C4C4C4" />
+                <Ionicons name="close" size={18} color="#8A8F9C" />
               </Pressable>
             ) : canEditRow && (
-              <Ionicons name="chevron-forward" size={16} color="#C4C4C4" />
+              <Ionicons name="chevron-forward" size={16} color="#8A8F9C" />
             )}
           </View>
         );
@@ -221,38 +234,38 @@ export function TaskDraftCard({
         <View className="mt-3"><ActivityIndicator /></View>
       ) : (
         editable && (
-          <View className={`mt-3 gap-1 ${disabled ? "opacity-50" : ""}`}>
+          <View className={`mt-2 gap-1 ${disabled ? "opacity-50" : ""}`}>
             <View className="flex-row items-center gap-2">
               {!showStart && can("reject_draft") && (
                 <Pressable className="px-3 py-3" disabled={disabled} onPress={onReject}>
-                  <Text className="font-inter font-medium text-sm text-primary">{rejectLabel}</Text>
+                  <Text className="font-inter font-medium text-sm text-[#6B7280]">{rejectLabel}</Text>
                 </Pressable>
               )}
               {can("add_to_task_list") && (
                 <Pressable
-                  className={`flex-1 rounded-2xl py-3 items-center ${showStart ? "bg-[#F1F9E1]" : "bg-highlight"} ${
+                  className={`flex-1 rounded-[14px] h-11 items-center justify-center ${showStart ? "bg-[#F1F9E1]" : "bg-highlight"} ${
                     !scheduled || hasPastTime ? "opacity-40" : ""}`}
                   disabled={disabled || !scheduled || hasPastTime}
                   onPress={() => confirmAction("add_to_task_list")}
                 >
-                  <Text className={`font-balooBold text-base ${showStart ? "text-[#5E8A00]" : "text-white"}`}>{addLabel}</Text>
+                  <Text className={`font-balooBold text-base ${showStart ? "text-[#4D7300]" : "text-[#2F3347]"}`}>{addLabel}</Text>
                 </Pressable>
               )}
               {showStart && (
                 <Pressable
-                  className={`flex-1 bg-highlight rounded-2xl py-3 flex-row items-center justify-center gap-1.5 ${
+                  className={`flex-1 bg-highlight rounded-[14px] h-11 flex-row items-center justify-center gap-1.5 ${
                     !scheduled ? "opacity-40" : ""}`}
                   disabled={disabled || !scheduled}
                   onPress={() => confirmAction("start_now")}
                 >
-                  <Ionicons name="play" size={14} color="#FFFFFF" />
-                  <Text className="font-balooBold text-white text-base">{t("draft.startNow")}</Text>
+                  <Ionicons name="play" size={14} color="#2F3347" />
+                  <Text className="font-balooBold text-[#2F3347] text-base">{t("draft.startNow")}</Text>
                 </Pressable>
               )}
             </View>
             {showStart && can("reject_draft") && (
               <Pressable className="items-center py-1.5" disabled={disabled} onPress={onReject}>
-                <Text className="font-inter font-medium text-sm text-primary">{rejectLabel}</Text>
+                <Text className="font-inter font-medium text-sm text-[#6B7280]">{rejectLabel}</Text>
               </Pressable>
             )}
           </View>

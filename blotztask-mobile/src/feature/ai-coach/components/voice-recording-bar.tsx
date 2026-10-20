@@ -57,57 +57,55 @@ export function VoiceRecordingBar({ sending, elapsedMs, onCancel, onSend }: Prop
   const countingDown = !sending && remainingMs <= COUNTDOWN_MS;
 
   return (
-    <Animated.View entering={FadeIn.duration(180)} className="flex-row items-center gap-2">
-      <View className="flex-1 h-12 flex-row items-center gap-2.5 rounded-full bg-white pl-1.5 pr-4"
-        style={{ borderWidth: 1.5, borderColor: GREEN }}>
-        <RoundButton onPress={onCancel} disabled={sending} label={t("chat.cancelVoice")}>
-          {(pressed) => (
-            <Animated.View className="w-9 h-9 rounded-full items-center justify-center bg-[#F1F2F4]"
-              style={pressStyle(pressed)}>
-              <Ionicons name="close" size={19} color={sending ? "#C4C4C4" : "#8C8C8C"} />
-            </Animated.View>
-          )}
-        </RoundButton>
+    <Animated.View entering={FadeIn.duration(180)} className="flex-row items-center gap-2.5 rounded-[26px] bg-white p-1.5"
+      style={{ borderWidth: 1.5, borderColor: GREEN, boxShadow: "0 4px 16px rgba(68, 73, 100, 0.10)" }}>
+      <RoundButton onPress={onCancel} disabled={sending} label={t("chat.cancelVoice")}>
+        {(pressed) => (
+          <Animated.View className="w-11 h-11 rounded-full items-center justify-center bg-[#F3F5F7]"
+            style={pressStyle(pressed)}>
+            <Ionicons name="close" size={20} color={sending ? "#C4C4C4" : "#444964"} />
+          </Animated.View>
+        )}
+      </RoundButton>
 
-        <View className="flex-row items-center gap-[3px] h-5" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {BAR_DELAYS.map((delay) => (
-            <Animated.View key={delay} className="w-[3px] h-5 rounded-full"
-              style={sending || reducedMotion
-                ? { backgroundColor: GREEN, opacity: 0.45, transform: [{ scaleY: 0.3 }] }
-                : {
-                  backgroundColor: GREEN,
-                  animationName: wave,
-                  animationDuration: "900ms",
-                  animationDelay: delay,
-                  animationIterationCount: "infinite",
-                  animationTimingFunction: "ease-in-out",
-                }} />
-          ))}
-        </View>
+      <View className="flex-row items-center gap-[3px] h-5" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {BAR_DELAYS.map((delay) => (
+          <Animated.View key={delay} className="w-[3px] h-5 rounded-full"
+            style={sending || reducedMotion
+              ? { backgroundColor: GREEN, opacity: 0.45, transform: [{ scaleY: 0.3 }] }
+              : {
+                backgroundColor: GREEN,
+                animationName: wave,
+                animationDuration: "900ms",
+                animationDelay: delay,
+                animationIterationCount: "infinite",
+                animationTimingFunction: "ease-in-out",
+              }} />
+        ))}
+      </View>
 
-        <View className="flex-1" accessibilityLiveRegion="polite">
-          {sending ? (
-            <Text className="font-baloo text-base text-[#6B8F0E]">{t("chat.transcribing")}</Text>
-          ) : countingDown ? (
-            <Text className="font-baloo text-base text-[#C2410C]" numberOfLines={1}>
-              {t("chat.autoSendIn", { count: Math.max(1, Math.ceil(remainingMs / 1000)) })}
+      <View className="flex-1" accessibilityLiveRegion="polite">
+        {sending ? (
+          <Text className="font-baloo text-base text-[#4D7300]">{t("chat.transcribing")}</Text>
+        ) : countingDown ? (
+          <Text className="font-baloo text-base text-[#C2410C]" numberOfLines={1}>
+            {t("chat.autoSendIn", { count: Math.max(1, Math.ceil(remainingMs / 1000)) })}
+          </Text>
+        ) : (
+          <View className="flex-row items-baseline gap-2">
+            <Text className="font-baloo text-base text-[#4D7300]">{t("chat.listening")}</Text>
+            <Text className="font-baloo text-base text-secondary" style={{ fontVariant: ["tabular-nums"] }}>
+              {formatElapsed(elapsedMs)}
             </Text>
-          ) : (
-            <View className="flex-row items-baseline gap-2">
-              <Text className="font-baloo text-base text-[#6B8F0E]">{t("chat.listening")}</Text>
-              <Text className="font-baloo text-base text-secondary" style={{ fontVariant: ["tabular-nums"] }}>
-                {formatElapsed(elapsedMs)}
-              </Text>
-            </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
 
       <RoundButton onPress={onSend} disabled={sending} label={t("chat.stopAndSend")}>
         {(pressed) => (
-          <View className="w-12 h-12 items-center justify-center">
+          <View className="w-11 h-11 items-center justify-center">
             {!sending && !reducedMotion && (
-              <Animated.View className="absolute w-12 h-12 rounded-full"
+              <Animated.View className="absolute w-11 h-11 rounded-full"
                 style={{
                   borderWidth: 2,
                   borderColor: GREEN,
@@ -117,11 +115,11 @@ export function VoiceRecordingBar({ sending, elapsedMs, onCancel, onSend }: Prop
                   animationTimingFunction: "ease-out",
                 }} />
             )}
-            <Animated.View className="w-12 h-12 rounded-full items-center justify-center bg-highlight"
+            <Animated.View className="w-11 h-11 rounded-full items-center justify-center bg-highlight"
               style={pressStyle(pressed)}>
               {sending
-                ? <ActivityIndicator size="small" color="#FFFFFF" />
-                : <Ionicons name="arrow-up" size={24} color="#FFFFFF" />}
+                ? <ActivityIndicator size="small" color="#2F3347" />
+                : <Ionicons name="arrow-up" size={22} color="#2F3347" />}
             </Animated.View>
           </View>
         )}

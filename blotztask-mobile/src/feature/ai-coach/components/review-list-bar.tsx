@@ -15,25 +15,25 @@ export function ReviewListBar({
 }) {
   const { t } = useTranslation("aiCoach");
   if (!count) return null;
+  // A compact pill docked above the composer, so the conversation keeps its height.
   return (
     <Pressable
       onPress={onOpen}
       accessibilityRole="button"
       accessibilityLabel={t("review.pending", { count })}
-      className="mx-4 mt-2 px-3 py-2.5 rounded-2xl bg-secondary flex-row items-center gap-2.5"
+      className="self-center mt-2 pl-3 pr-2 py-1.5 rounded-full bg-secondary flex-row items-center gap-2"
     >
       {saving || generating ? (
         <ActivityIndicator size="small" color="#9AD513" />
       ) : (
-        <Ionicons name="checkbox-outline" size={18} color="#9AD513" />
+        <Ionicons name="checkbox-outline" size={15} color="#9AD513" />
       )}
-      <Text className="flex-1 font-balooBold text-white">
+      <Text className="font-balooBold text-sm text-white">
         {generating ? t("review.generating") : t("review.title")}
       </Text>
-      <View className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-highlight items-center justify-center">
-        <Text className="font-balooBold text-xs text-white">{count}</Text>
+      <View className="min-w-[20px] h-5 px-1.5 rounded-full bg-highlight items-center justify-center">
+        <Text className="font-balooBold text-xs text-[#2F3347]">{count}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
     </Pressable>
   );
 }
