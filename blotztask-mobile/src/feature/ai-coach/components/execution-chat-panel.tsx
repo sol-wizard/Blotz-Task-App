@@ -9,6 +9,7 @@ import {
   Platform,
   Pressable,
   FlatList,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -79,6 +80,17 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, onRate, onSaveD
   );
 }
 
+function TopicDivider() {
+  const { t } = useTranslation("aiCoach");
+  return (
+    <View className="flex-row items-center gap-3 mt-3 mb-2">
+      <View className="flex-1 h-px bg-gray-200" />
+      <Text className="font-baloo text-xs text-[#6B7280]">{t("chat.topicStart")}</Text>
+      <View className="flex-1 h-px bg-gray-200" />
+    </View>
+  );
+}
+
 /** Three pulsing dots while the first token is pending. */
 function TypingIndicator({ label }: { label: string }) {
   const [dots] = useState(() => [0, 1, 2].map(() => new Animated.Value(0.3)));
@@ -108,7 +120,7 @@ export function ExecutionChatPanel() {
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
     pendingList, pendingCount, reviewBusy, confirmationUncertain, streaming, reconnecting,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
-    newTopic, clearChat, loadOlder, loadingOlder, historyError, retryHistory } = useAiCoachChat();
+    newTopic, clearChat, loadOlder, loadingOlder, historyLoading, historyError, retryHistory } = useAiCoachChat();
   const [input, setInput] = useState("");
   const [reviewVisible, setReviewVisible] = useState(false);
   const [remindedBatches, setRemindedBatches] = useState<Set<string>>(() => new Set());
@@ -261,6 +273,7 @@ export function ExecutionChatPanel() {
   const voiceBusy = voice.busy;
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
+  const showWelcome = status === "ready" && messages.length === 0 && !historyLoading && !historyError;
   const canSend = !voiceBusy && chatReady;
 
   const handleSend = async () => {
@@ -355,20 +368,23 @@ export function ExecutionChatPanel() {
     );
   };
 
-  const runMenuAction = async (action: () => Promise<string | null>) => {
+  const runMenuAction = async (action: () => Promise<string | null>, successText?: string) => {
     if (voiceBusy) {
       Toast.show({ type: "info", text1: t("chat.busy") });
       return;
     }
     const error = await action();
     if (error) Toast.show({ type: "error", text1: t(error === "ConversationBusy" ? "chat.busy" : "chat.actionFailed") });
-    else scrollRef.current?.scrollToEnd({ animated: false });
+    else {
+      if (successText) Toast.show({ type: "success", text1: successText });
+      scrollRef.current?.scrollToEnd({ animated: false });
+    }
   };
   const startNewTopic = () => {
-    if (!pendingCount) { void runMenuAction(newTopic); return; }
+    if (!pendingCount) { void runMenuAction(newTopic, t("chat.newTopicStarted")); return; }
     Alert.alert(t("review.newTopicTitle"), t("review.newTopicDescription", { count: pendingCount }), [
       { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
-      { text: t("chat.newTopic"), style: "destructive", onPress: () => void runMenuAction(newTopic) },
+      { text: t("chat.newTopic"), style: "destructive", onPress: () => void runMenuAction(newTopic, t("chat.newTopicStarted")) },
     ]);
   };
   const openMenu = () => Alert.alert(t("chat.menu"), undefined, [
@@ -444,11 +460,11 @@ export function ExecutionChatPanel() {
           ListHeaderComponent={<View>
             {loadingOlder && <ActivityIndicator />}
             {historyError && <Pressable onPress={retryHistory}><Text className="font-baloo text-primary text-center py-3">{t("chat.historyError")}</Text></Pressable>}
-            {messages.length === 0 && status === "ready" && <CoachWelcome disabled={!canSend}
-              onStart={(text) => void handleStarter(text)} />}
           </View>}
           ListFooterComponent={<View>
             <View onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}>
+              {/* An empty new topic still marks where it starts; its first message takes the divider over. */}
+              {status === "ready" && snapshot?.messages.length === 0 && messages.length > 0 && <TopicDivider />}
               {status === "connecting" && <ActivityIndicator />}
               {status === "startFailed" && <Pressable onPress={() => void start()}>
                 <Text className="font-baloo text-warning p-3">{t("chat.startError")}</Text>
@@ -472,11 +488,7 @@ export function ExecutionChatPanel() {
                 <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
                   <Text className="font-baloo text-xs text-[#6B7280]">{dateLabel(item.createdAt)}</Text>
                 </View>}
-              {item.topicStart && <View className="flex-row items-center gap-3 mt-3 mb-2">
-                <View className="flex-1 h-px bg-gray-200" />
-                <Text className="font-baloo text-xs text-[#6B7280]">{t("chat.topicStart")}</Text>
-                <View className="flex-1 h-px bg-gray-200" />
-              </View>}
+              {item.topicStart && <TopicDivider />}
               <MessageBubble item={item} rateable={active} feedback={feedbackByMessage[item.id]}
                 feedbackBusy={feedbackSaving[item.id] === true}
                 onRate={(rating) => rateMessage(item.id, rating)}
@@ -497,6 +509,12 @@ export function ExecutionChatPanel() {
             </View>;
           }}
         />
+        {/* Outside the list: after a clear, the list keeps its old offset and would hide a header welcome. */}
+        {showWelcome && <ScrollView className="absolute inset-0 bg-background"
+          contentContainerClassName="px-4" keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}>
+          <CoachWelcome disabled={!canSend} onStart={(text) => void handleStarter(text)} />
+        </ScrollView>}
         {showScrollToLatest && status !== "connecting" && <Pressable
           onPress={scrollToLatest}
           accessibilityRole="button"

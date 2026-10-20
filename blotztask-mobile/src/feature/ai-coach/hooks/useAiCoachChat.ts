@@ -575,6 +575,6 @@ export function useAiCoachChat() {
     newTopic: () => changeTopic(false), clearChat: () => changeTopic(true),
     loadOlder: () => { if (history.hasNextPage && !history.isFetchingNextPage) void history.fetchNextPage(); },
     retryHistory: () => { void history.refetch(); },
-    loadingOlder: history.isFetchingNextPage, historyError: history.isError,
+    loadingOlder: history.isFetchingNextPage, historyLoading: history.isPending, historyError: history.isError,
   };
 }
