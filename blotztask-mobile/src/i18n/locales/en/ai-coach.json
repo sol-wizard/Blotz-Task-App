@@ -74,7 +74,8 @@
     "reconnecting": "Connection interrupted. Syncing the result…",
     "followUps": "Suggested replies",
     "status": "Sees your tasks and schedule",
-    "back": "Back"
+    "back": "Back",
+    "newTopicStarted": "New topic started — earlier messages won't carry over"
   },
   "feedback": {
     "good": "Helpful reply",
