@@ -11,8 +11,18 @@ namespace BlotzTask.Modules.Challenges.Controllers;
 public class ChallengeController(
     CreateChallengeCommandHandler createChallengeCommandHandler,
     JoinChallengeCommandHandler joinChallengeCommandHandler,
-    GetCurrentChallengeQueryHandler getCurrentChallengeQueryHandler) : ControllerBase
+    GetCurrentChallengeQueryHandler getCurrentChallengeQueryHandler,
+    GetChallengeHistoryQueryHandler getChallengeHistoryQueryHandler) : ControllerBase
 {
+    [HttpGet("history")]
+    public async Task<List<ChallengeHistoryItemDto>> GetChallengeHistory(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        return await getChallengeHistoryQueryHandler.Handle(new GetChallengeHistoryQuery { UserId = userId }, ct);
+    }
+
     // 204 No Content when the user isn't in an unfinished challenge.
     [HttpGet("current")]
     public async Task<CurrentChallengeDto?> GetCurrentChallenge(CancellationToken ct)

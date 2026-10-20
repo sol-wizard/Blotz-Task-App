@@ -149,9 +149,16 @@
     "confirmJoin": "Join",
     "membersNeeded": "{{count}} more to complete the team",
     "startsWhenFull": "The challenge starts once the team is full",
-    "started": "Challenge started!",
     "copyId": "Copy ID",
     "copied": "Challenge ID copied",
-    "unnamedMember": "Member"
+    "unnamedMember": "Member",
+    "inProgress": "Open Blotz every day. Two missed days in a row ends the challenge.",
+    "succeeded": "Challenge completed!",
+    "failed": "Challenge failed",
+    "history": "Challenge history",
+    "historyTitle": "History",
+    "historyEmpty": "No finished challenges yet",
+    "statusSucceeded": "Succeeded",
+    "statusFailed": "Failed"
   }
 }

@@ -149,9 +149,16 @@
     "confirmJoin": "加入",
     "membersNeeded": "还差 {{count}} 人组队成功",
     "startsWhenFull": "小组满员后开始挑战",
-    "started": "挑战已开始！",
     "copyId": "复制 ID",
     "copied": "已复制挑战 ID",
-    "unnamedMember": "成员"
+    "unnamedMember": "成员",
+    "inProgress": "每天打开 Blotz 打卡，连续两天没打卡挑战就会失败。",
+    "succeeded": "挑战成功！",
+    "failed": "挑战失败",
+    "history": "历史挑战",
+    "historyTitle": "历史挑战",
+    "historyEmpty": "还没有已结束的挑战",
+    "statusSucceeded": "成功",
+    "statusFailed": "失败"
   }
 }

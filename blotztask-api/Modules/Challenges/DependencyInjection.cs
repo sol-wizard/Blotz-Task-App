@@ -10,6 +10,7 @@ public static class DependencyInjection
         services.AddScoped<CreateChallengeCommandHandler>();
         services.AddScoped<JoinChallengeCommandHandler>();
         services.AddScoped<GetCurrentChallengeQueryHandler>();
+        services.AddScoped<GetChallengeHistoryQueryHandler>();
         return services;
     }
 }

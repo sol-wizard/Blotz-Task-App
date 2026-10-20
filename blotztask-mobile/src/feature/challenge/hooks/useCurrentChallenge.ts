@@ -3,6 +3,7 @@ import { fetchCurrentChallenge } from "../services/challenge-service";
 
 export const challengeKeys = {
   current: ["challenge", "current"] as const,
+  history: ["challenge", "history"] as const,
 };
 
 // While the team is still filling up, poll so new members' avatars show up without a manual refresh.
