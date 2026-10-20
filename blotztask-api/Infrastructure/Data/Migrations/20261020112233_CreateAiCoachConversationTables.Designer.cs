@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20261019143123_RemoveModeFromAiCoachConversation")]
-    partial class RemoveModeFromAiCoachConversation
+    [Migration("20261020112233_CreateAiCoachConversationTables")]
+    partial class CreateAiCoachConversationTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

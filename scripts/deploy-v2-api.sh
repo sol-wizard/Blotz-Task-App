@@ -7,7 +7,7 @@
 # What it does:
 #   1. fetches origin/<branch> into a separate worktree (~/.cache/blotz-v2-deploy),
 #      so it always deploys pushed commits, never your dirty working tree
-#   2. allows only the AI Coach migration that creates two new tables
+#   2. allows only the consolidated migration that creates three conversation tables
 #   3. dotnet publish (Release), same command CI uses
 #   4. with --apply-migrations, runs SQL for only that migration on shared staging SQL
 #   5. pushes the zip to the app's Kudu publish endpoint and restarts it
@@ -46,9 +46,7 @@ REPO="${BLOTZ_REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CACHE="$HOME/.cache/blotz-v2-deploy"
 WT="$CACHE/src"; OUT="$CACHE/publish"; ZIP="$CACHE/api.zip"
 SQL="$CACHE/ai-coach-migration.sql"
-MIGRATIONS_DIR="blotztask-api/Infrastructure/Data/Migrations"
-AI_MIGRATION="20260928030534_AddAiCoachFeedbackAndTraceEvents"
-PREVIOUS_MIGRATION="20260712043011_AllowRecurringOverridePerTemplateOccurrence"
+PREVIOUS_MIGRATION="20260928030534_AddAiCoachFeedbackAndTraceEvents"
 
 echo "== 0/6 Azure subscription"
 SUB=$(az account list --only-show-errors -o tsv --query "[?name=='$SUB_NAME'].id | [0]")
@@ -65,29 +63,7 @@ fi
 git -C "$WT" log -1 --format='   deploying: %h %ci %s'
 
 echo "== 2/6 check AI Coach migration"
-SOURCE_FOUND=false
-DESIGNER_FOUND=false
-SNAPSHOT_FOUND=false
-while IFS=$'\t' read -r STATUS MIGRATION_PATH; do
-  [ -n "$STATUS" ] || continue
-  case "$STATUS:$MIGRATION_PATH" in
-    "A:$MIGRATIONS_DIR/$AI_MIGRATION.cs") SOURCE_FOUND=true ;;
-    "A:$MIGRATIONS_DIR/$AI_MIGRATION.Designer.cs") DESIGNER_FOUND=true ;;
-    "M:$MIGRATIONS_DIR/BlotzTaskDbContextModelSnapshot.cs") SNAPSHOT_FOUND=true ;;
-    *) echo "!! unexpected migration change: $STATUS $MIGRATION_PATH" >&2; exit 1 ;;
-  esac
-done < <(git -C "$WT" diff --name-status --no-renames origin/main...HEAD -- "$MIGRATIONS_DIR")
-if [ "$SOURCE_FOUND" != true ] || [ "$DESIGNER_FOUND" != true ] || [ "$SNAPSHOT_FOUND" != true ]; then
-  echo "!! expected AI Coach migration files and model snapshot change were not found." >&2
-  exit 1
-fi
-UP_OPERATIONS=$(sed -n '/protected override void Up(/,/protected override void Down(/p' \
-  "$WT/$MIGRATIONS_DIR/$AI_MIGRATION.cs" | grep -oE 'migrationBuilder\.[[:alpha:]]+' | sort -u)
-if [ "$UP_OPERATIONS" != $'migrationBuilder.CreateIndex\nmigrationBuilder.CreateTable' ] || \
-   [ "$(grep -c 'migrationBuilder.CreateTable(' "$WT/$MIGRATIONS_DIR/$AI_MIGRATION.cs")" -ne 2 ]; then
-  echo "!! AI Coach migration must only create its two tables and indexes." >&2
-  exit 1
-fi
+AI_MIGRATION=$(bash "$WT/scripts/check-v2-migration.sh" "$WT")
 echo "   additive migration: $AI_MIGRATION"
 if [ "$APPLY_MIGRATIONS" != true ]; then
   echo "!! V2 shares the staging DB. Review the migration, then rerun with --apply-migrations." >&2
@@ -125,6 +101,16 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
     echo "!! EF could not determine the status of $UNKNOWN_COUNT migrations. Check staging SQL access." >&2
     exit 1
   }
+  if ! jq -e --arg id "$PREVIOUS_MIGRATION" \
+    'any(.[]; .id == $id and .applied == true)' <<< "$MIGRATION_STATE" >/dev/null; then
+    echo "!! Required baseline $PREVIOUS_MIGRATION is not applied; no database changes were made." >&2
+    exit 1
+  fi
+  if ! jq -e --arg baseline "$PREVIOUS_MIGRATION" --arg target "$AI_MIGRATION" \
+    '[.[] | select(.id > $baseline) | .id] == [$target]' <<< "$MIGRATION_STATE" >/dev/null; then
+    echo "!! Expected exactly one migration after $PREVIOUS_MIGRATION; no database changes were made." >&2
+    exit 1
+  fi
   PENDING_OTHER=$(jq -r --arg id "$AI_MIGRATION" \
     '.[] | select(.id != $id and .applied == false) | .id' <<< "$MIGRATION_STATE")
   if [ -n "$PENDING_OTHER" ]; then
