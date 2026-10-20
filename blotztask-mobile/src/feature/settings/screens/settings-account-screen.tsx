@@ -8,9 +8,14 @@ import { FormDivider } from "@/shared/components/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useLogout } from "@/shared/hooks/useLogout";
+import { analytics } from "@/shared/services/analytics";
 import { useTranslation } from "react-i18next";
 import Modal from "react-native-modal";
 import { useDeleteUserMutation } from "@/feature/settings/hooks/useDeleteUserMutation";
+import {
+  DeleteReasonPicker,
+  type PickableReason,
+} from "@/feature/settings/components/delete-reason-picker";
 
 export default function SettingsAccountScreen() {
   const logout = useLogout();
@@ -20,6 +25,8 @@ export default function SettingsAccountScreen() {
   const { userProfile, isUserProfileLoading } = useUserProfile();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
+  const [deleteReason, setDeleteReason] = useState<PickableReason | null>(null);
+  const [deleteReasonOtherText, setDeleteReasonOtherText] = useState("");
 
   const displayName =
     userProfile?.displayName && userProfile.displayName.length > 20
@@ -32,12 +39,25 @@ export default function SettingsAccountScreen() {
       : (userProfile?.email ?? "");
 
   const handleConfirmDelete = async () => {
+    // Queued before the delete request so it leaves while the user is still identified:
+    // logout resets PostHog right after. Analytics must never block the deletion.
+    try {
+      analytics.trackAccountDeleted({
+        reason: deleteReason ?? "skipped",
+        otherText: deleteReasonOtherText.trim(),
+      });
+      analytics.flush();
+    } catch {
+      // ignore — deleting the account matters more than the event
+    }
     await deleteUser();
     await logout();
   };
 
   const openDeleteModal = () => {
     setDeleteConfirmChecked(false);
+    setDeleteReason(null);
+    setDeleteReasonOtherText("");
     setIsDeleteModalVisible(true);
   };
 
@@ -123,6 +143,7 @@ export default function SettingsAccountScreen() {
         animationOut="fadeOut"
         useNativeDriver
         style={{ margin: 0 }}
+        avoidKeyboard
       >
         <View className="bg-white rounded-2xl p-6 mx-6">
           <Text className="text-xl font-baloo text-secondary">{t("account.deleteTitle")}</Text>
@@ -138,6 +159,13 @@ export default function SettingsAccountScreen() {
               <Text className="text-sm font-balooThin text-primary mt-2">
                 {t("account.deleteWarning")}
               </Text>
+
+              <DeleteReasonPicker
+                reason={deleteReason}
+                otherText={deleteReasonOtherText}
+                onReasonChange={setDeleteReason}
+                onOtherTextChange={setDeleteReasonOtherText}
+              />
 
               <Pressable
                 onPress={() => setDeleteConfirmChecked((prev) => !prev)}

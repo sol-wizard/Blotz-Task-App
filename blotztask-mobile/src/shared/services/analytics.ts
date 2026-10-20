@@ -22,6 +22,7 @@ import {
   type ShareContentType,
   type OnboardingOutcome,
   type OnboardingSection,
+  type DeleteAccountReason,
 } from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
@@ -188,6 +189,18 @@ export const analytics = {
       profile_failed: params.profileFailed,
       preferences_failed: params.preferencesFailed,
       ms_since_launch: params.msSinceLaunch,
+    });
+  },
+
+  /**
+   * Fires just before the delete request, so the event is queued while the user is still
+   * identified — logout resets PostHog right after. Pair with `flush()`.
+   * `otherText` is only sent for `other`, and is capped at 200 characters by the input.
+   */
+  trackAccountDeleted(params: { reason: DeleteAccountReason; otherText?: string }) {
+    posthog.capture(EVENTS.ACCOUNT_DELETED, {
+      reason: params.reason,
+      ...(params.reason === "other" && params.otherText ? { other_text: params.otherText } : {}),
     });
   },
 
