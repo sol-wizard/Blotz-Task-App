@@ -191,6 +191,7 @@ adb -s <serial> exec-out screencap -p > artifacts/<step>.png
 adb -s <serial> shell uiautomator dump /sdcard/ui.xml && adb -s <serial> shell cat /sdcard/ui.xml   # text + bounds of every node
 adb -s <serial> shell input tap <x> <y>           # physical pixels, as in the bounds above (not screenshot-preview pixels)
 adb -s <serial> shell input swipe <x1> <y1> <x2> <y2> 250
+adb -s <serial> shell input text "Buy%smilk"      # tap the field first; %s is a space; ASCII only — the user types Chinese and emoji on the phone
 adb -s <serial> shell input keyevent KEYCODE_BACK # KEYCODE_HOME goes to the first home page; BACK out of the app returns to the last one
 adb -s <serial> logcat -d --pid=$(adb -s <serial> shell pidof com.blotz.blotztask) | grep ReactNativeJS
 ```
