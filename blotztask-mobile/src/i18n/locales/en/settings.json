@@ -7,6 +7,7 @@
     "betaFeatures": "Beta Features",
     "taskHandling": "Task Handling",
     "notifications": "Notifications",
+    "aiMemory": "AI Memory",
     "language": "Language",
     "allTasks": "All tasks page (beta)",
     "invite": "Invite Friends",
@@ -61,6 +62,17 @@
     "title": "Notifications",
     "taskNotifications": "Task notifications",
     "upcomingDueTasks": "Upcoming due tasks"
+  },
+  "aiMemory": {
+    "title": "AI Memory",
+    "toggleLabel": "Let AI remember things about me",
+    "toggleDescription": "Ask the AI coach to remember something, like \"remember I have class on Wednesday evenings\". It will use what it remembers in later chats.",
+    "offNotice": "Memory is off. The AI coach won't remember new things or use anything remembered before.",
+    "turnOffTitle": "Turn off AI memory?",
+    "turnOffDescription": "Delete what the AI already remembers about you as well? If you keep it, it comes back when you turn memory on again.",
+    "cancel": "Cancel",
+    "keepAndTurnOff": "Keep and turn off",
+    "deleteAndTurnOff": "Delete and turn off"
   },
   "language": {
     "title": "Language",

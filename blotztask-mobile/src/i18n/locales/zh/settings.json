@@ -7,6 +7,7 @@
     "betaFeatures": "测试功能",
     "taskHandling": "任务处理",
     "notifications": "通知",
+    "aiMemory": "AI 记忆",
     "language": "语言",
     "allTasks": "所有任务页面 (测试版)",
     "invite": "邀请好友",
@@ -61,6 +62,17 @@
     "title": "通知",
     "taskNotifications": "任务通知",
     "upcomingDueTasks": "即将到期的任务"
+  },
+  "aiMemory": {
+    "title": "AI 记忆",
+    "toggleLabel": "允许 AI 记住关于我的事",
+    "toggleDescription": "在聊天中对 AI 教练说“记住……”，例如“记住我周三晚上有课”。之后的对话里它会用上这些内容。",
+    "offNotice": "记忆已关闭。AI 教练不会记住新内容，也不会使用之前记住的内容。",
+    "turnOffTitle": "关闭 AI 记忆？",
+    "turnOffDescription": "是否同时删除 AI 之前记住的关于你的内容？选择保留的话，重新开启后会恢复。",
+    "cancel": "取消",
+    "keepAndTurnOff": "保留并关闭",
+    "deleteAndTurnOff": "删除并关闭"
   },
   "language": {
     "title": "语言",

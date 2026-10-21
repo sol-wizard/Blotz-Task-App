@@ -63,7 +63,7 @@
     "newTopic": "New topic",
     "clearHistory": "Clear chat history",
     "clearTitle": "Clear chat history?",
-    "clearDescription": "Your messages, drafts and diagnostic traces will be permanently deleted. Thumbs up/down ratings and any reasons or details you submitted are kept for quality review.",
+    "clearDescription": "Your messages, drafts and diagnostic traces will be permanently deleted. Thumbs up/down ratings and any reasons or details you submitted are kept for quality review. Things you asked the AI to remember are kept; you can turn memory off and delete them in Settings > AI Memory.",
     "today": "Today",
     "yesterday": "Yesterday",
     "topicStart": "New topic",
@@ -75,7 +75,7 @@
     "followUps": "Suggested replies",
     "status": "Sees your tasks and schedule",
     "back": "Back",
-    "newTopicStarted": "New topic started — earlier messages won't carry over"
+    "newTopicStarted": "New topic started — earlier messages won't carry over (except what AI remembers)"
   },
   "feedback": {
     "good": "Helpful reply",

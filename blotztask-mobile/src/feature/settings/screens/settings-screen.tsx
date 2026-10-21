@@ -64,6 +64,12 @@ export default function SettingsScreen() {
       route: "/settings/notifications",
     },
     {
+      key: "ai-memory",
+      label: t("menu.aiMemory"),
+      icon: "brain",
+      route: "/settings/ai-memory",
+    },
+    {
       key: "language",
       label: t("menu.language"),
       icon: "translate",

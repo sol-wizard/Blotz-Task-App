@@ -9,6 +9,7 @@ export type SettingsMenuKey =
   | "beta-features"
   | "task-handling"
   | "notifications"
+  | "ai-memory"
   | "language"
   | "invite"
   | "support-us"

@@ -10,4 +10,6 @@ export interface UserPreferencesDTO {
   dailyPlanningNotification: boolean;
   eveningWrapUpNotification: boolean;
   preferredLanguage: Language;
+  // Optional on writes: the API keeps the stored value when it is left out.
+  aiMemoryEnabled?: boolean;
 }

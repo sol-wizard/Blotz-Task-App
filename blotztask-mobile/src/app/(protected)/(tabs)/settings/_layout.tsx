@@ -8,6 +8,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="beta-features" options={{ headerShown: false }} />
       <Stack.Screen name="task-handling" options={{ headerShown: false }} />
       <Stack.Screen name="notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="ai-memory" options={{ headerShown: false }} />
       <Stack.Screen name="all-tasks" options={{ headerShown: false }} />
       <Stack.Screen name="update-user-name" options={{ headerShown: false }} />
       <Stack.Screen name="avatar" options={{ headerShown: false }} />
