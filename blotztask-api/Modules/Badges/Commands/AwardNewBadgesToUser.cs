@@ -76,6 +76,6 @@ public class AwardNewBadgesToUserHandler(BlotzTaskDbContext db, ILogger<AwardNew
         logger.LogInformation("User {UserId} awarded {Count} new badge(s): {BadgeIds}",
             command.UserId, toAward.Count, toAward);
 
-        return toAward.Select(badgeId => new AwardedBadge { BadgeId = badgeId, EarnedAt = earnedAt }).ToList();
+        return [.. toAward.Select(badgeId => new AwardedBadge { BadgeId = badgeId, EarnedAt = earnedAt })];
     }
 }

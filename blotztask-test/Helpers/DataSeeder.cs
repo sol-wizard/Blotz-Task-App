@@ -7,7 +7,6 @@ using BlotzTask.Modules.Reviews.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Tests.Helpers;
 
