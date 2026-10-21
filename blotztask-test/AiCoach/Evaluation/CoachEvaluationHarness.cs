@@ -45,10 +45,7 @@ internal sealed class CoachEvaluationHarness
         _application = new(session.Store, runtime, new CheckAiQuotaService(session.Db, session.Cache),
             new RecordAiUsageService(session.Db), _usage, session.Reader, session.Checker,
             session.Clock, NullLogger<ConversationApplication>.Instance,
-            new ConversationSegments(session.Store,
-                new ClosingSummaryGenerator(_gateway, new CheckAiQuotaService(session.Db, session.Cache),
-                    new RecordAiUsageService(session.Db), _usage, options, NullLogger<ClosingSummaryGenerator>.Instance),
-                session.Clock, options, NullLogger<ConversationSegments>.Instance));
+            new ConversationSegments(session.Store, session.Clock, options));
         var root = FindRepository();
         var directory = Path.Combine(root, "blotztask-test", "TestResults", "ai-coach-evals", RunId);
         Directory.CreateDirectory(directory);

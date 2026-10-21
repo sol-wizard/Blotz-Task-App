@@ -180,7 +180,6 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         // Arrange
         await using var session = await Session.CreateAsync(fixture);
         await session.AddTurnAsync();
-        session.Options.Value.ClosingSummaryTimeoutSeconds = 0.5;
         await using var blocker = await LockQuotaAsync(session);
         // Act
         var next = await session.Segments.NewTopicAsync(session.UserId, "Australia/Sydney", default)
@@ -202,7 +201,6 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         await using var session = await Session.CreateAsync(fixture);
         await session.AddTurnAsync();
         session.Clock.Now = session.Clock.Now.AddHours(9);
-        session.Options.Value.ClosingSummaryTimeoutSeconds = 0.5;
         await using var blocker = await LockQuotaAsync(session);
         using var request = new CancellationTokenSource();
         var messageId = Guid.NewGuid();
@@ -229,8 +227,8 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
             because: "the user message must be committed while the real quota query is still blocked");
         accepted.RunningTurnId.Should().Be(messageId, because: "clients can reconcile accepted work by polling its running state");
         result.GenerationError.Should().Be(cancel ? "cancelled" : "quota",
-            because: "cancellation finishes the accepted turn and summary timeout permits the ordinary quota check to continue");
-        result.GenerationStatus.Should().Be("failed", because: "neither cancellation nor summary timeout may leave a permanent running turn");
+            because: "cancellation finishes the accepted turn; otherwise the ordinary quota check resumes once unblocked");
+        result.GenerationStatus.Should().Be("failed", because: "neither cancellation nor a blocked quota read may leave a permanent running turn");
         result.Messages.Should().Contain(message => message.Id == messageId, because: "request cancellation must not erase accepted input");
     }
 

@@ -8,6 +8,8 @@ public sealed class AiCoachConversationRecord
     public int MessageCount { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public string? ClosingSummary { get; set; }
+    /// <summary>Messages up to this time have been read for memories; existing rows start at migration time.</summary>
+    public DateTimeOffset MemoryProcessedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset LastActivityAt { get; set; }
     /// <summary>Optimistic concurrency token, incremented by every save.</summary>

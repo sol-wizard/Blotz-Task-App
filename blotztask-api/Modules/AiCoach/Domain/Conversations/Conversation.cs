@@ -35,8 +35,23 @@ public sealed class Conversation
     [JsonInclude] public int SummarizedMessageCount { get; private set; }
     /// <summary>One-tap next messages for the latest reply; cleared when the next turn starts.</summary>
     [JsonInclude] public IReadOnlyList<string> FollowUps { get; private set; } = [];
+    /// <summary>Facts about the user, kept for the segment so the cached prompt prefix stays byte-identical.</summary>
+    [JsonInclude] public string? UserContext { get; private set; }
+    [JsonInclude] public bool UserContextCaptured { get; private set; }
+    /// <summary>Memory state the context was built from; a different stamp means memories changed.</summary>
+    [JsonInclude] public string? UserContextStamp { get; private set; }
 
     public void Touch() => Version++;
+
+    /// <summary>Re-capture only when memories changed, so a deletion stops being used from the next turn.</summary>
+    public bool NeedsUserContext(string memoryStamp) => !UserContextCaptured || UserContextStamp != memoryStamp;
+
+    public void CaptureUserContext(string? userContext, string memoryStamp)
+    {
+        UserContext = userContext;
+        UserContextStamp = memoryStamp;
+        UserContextCaptured = true;
+    }
 
     /// <summary>Future turns use the device zone; existing draft schedules retain their own zones.</summary>
     public bool ChangeTimeZone(string timeZoneId, DateTimeOffset now)

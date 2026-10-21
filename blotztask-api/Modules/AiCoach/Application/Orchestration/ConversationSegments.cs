@@ -7,9 +7,9 @@ using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
 
-/// <summary>Coordinates user-level topic boundaries; model calls run after releasing state locks.</summary>
-public sealed class ConversationSegments(IConversationStore store, ClosingSummaryGenerator summaries,
-    TimeProvider clock, IOptions<AiCoachModuleOptions> options, ILogger<ConversationSegments> logger)
+/// <summary>Coordinates user-level topic boundaries. Closing summaries are written later by <see cref="SegmentDigestProcessor"/>.</summary>
+public sealed class ConversationSegments(IConversationStore store,
+    TimeProvider clock, IOptions<AiCoachModuleOptions> options)
 {
     public async Task<Conversation> OpenAsync(Guid userId, string timeZoneId, CancellationToken ct)
     {
@@ -36,7 +36,6 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
     public async Task<Conversation> NewTopicAsync(Guid userId, string timeZoneId, CancellationToken ct)
     {
         _ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-        Conversation? ended = null;
         using (await store.AcquireUserLockAsync(userId, ct))
         {
             var current = await store.FindOpenAsync(userId, ct);
@@ -51,16 +50,10 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
                     if (current.ChangeTimeZone(timeZoneId, clock.GetUtcNow())) await store.SaveAsync(current, ct);
                     return current;
                 }
-                if (current.End(clock.GetUtcNow()))
-                {
-                    await store.SaveAsync(current, ct);
-                    ended = current;
-                }
+                if (current.End(clock.GetUtcNow())) await store.SaveAsync(current, ct);
             }
         }
-        var next = await OpenAsync(userId, timeZoneId, ct);
-        if (ended is not null) await TrySummarizeAsync(ended, ct);
-        return next;
+        return await OpenAsync(userId, timeZoneId, ct);
     }
 
     public async Task<(Guid ConversationId, int? ExpectedVersion, Conversation? Ended)> PrepareSendAsync(Guid userId,
@@ -85,21 +78,5 @@ public sealed class ConversationSegments(IConversationStore store, ClosingSummar
         }
         var next = await OpenAsync(userId, timeZoneId ?? ended.TimeZoneId, ct);
         return (next.Id, next.Version, ended);
-    }
-
-    public async Task TrySummarizeAsync(Conversation ended, CancellationToken ct)
-    {
-        // Optional context gets a small independent budget; never hold state locks during this call.
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeout.CancelAfter(TimeSpan.FromSeconds(options.Value.ClosingSummaryTimeoutSeconds));
-        try
-        {
-            var summary = await summaries.GenerateAsync(ended, timeout.Token);
-            await store.SaveClosingSummaryAsync(ended, summary, timeout.Token);
-        }
-        catch (Exception error)
-        {
-            logger.LogWarning(error, "AiCoach closing summary failed for ended segment {ConversationId}; continuing without it", ended.Id);
-        }
     }
 }

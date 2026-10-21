@@ -9,6 +9,8 @@ using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.AiCoach.Ai.Prompts;
 using BlotzTask.Modules.AiCoach.Ai.Tools;
 using BlotzTask.Modules.AiCoach.Application.Queries;
+using BlotzTask.Modules.UserUnderstanding.Commands;
+using BlotzTask.Modules.UserUnderstanding.Queries;
 
 namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
 
@@ -27,7 +29,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
     ICheckAiQuotaService checkQuota, IRecordAiUsageService recordUsage,
     AiCoachUsageTracker usageTracker, TaskContextReader taskContextReader, DraftScheduleChecker scheduleChecker,
     TimeProvider clock, ILogger<ConversationApplication> logger, ConversationSegments segments,
-    AiCoachTraceRecorder? trace = null)
+    AiCoachTraceRecorder? trace = null, GetUserContextQueryHandler? userContextQuery = null,
+    RememberUserMemoryCommandHandler? rememberMemory = null, ForgetUserMemoryCommandHandler? forgetMemory = null)
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
@@ -63,6 +66,24 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 throw Conflict("MessageSuperseded", conversation);
             if (timeZoneId is not null) conversation.ChangeTimeZone(timeZoneId, clock.GetUtcNow());
             conversation.BeginTurn(messageId, content, clock.GetUtcNow());
+            if (userContextQuery is not null)
+            {
+                try
+                {
+                    var stamp = await userContextQuery.GetMemoryStampAsync(userId, ct);
+                    if (conversation.NeedsUserContext(stamp))
+                        conversation.CaptureUserContext(await userContextQuery.Handle(new() { UserId = userId }, ct), stamp);
+                }
+                catch (Exception contextError) when (contextError is not OperationCanceledException)
+                {
+                    // Optional context: the turn continues without it and the next turn tries again.
+                    logger.LogWarning(contextError, "AiCoach user context capture failed for {ConversationId}", conversationId);
+                }
+            }
+            var memoryTools = userContextQuery is not null && rememberMemory is not null && forgetMemory is not null
+                              && await userContextQuery.IsMemoryEnabledAsync(userId, ct)
+                ? new MemoryTools(rememberMemory, forgetMemory, userId, messageId, content, conversation.TimeZoneId)
+                : null;
             baseVersion = conversation.Version;
             segmentCreatedAt = conversation.CreatedAt;
             var effectiveTimeZoneId = conversation.TimeZoneId;
@@ -75,7 +96,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
                 await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
-                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream);
+                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
+                conversation.UserContext, memoryTools);
             await store.SaveAsync(conversation, ct);
         }
 
@@ -86,21 +108,14 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             messageId, content, conversationVersion = baseVersion, source,
             promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion,
             toolContractVersion = ToolExecutor.ContractVersion,
+            userContextVersion = request.UserContext is null ? null : GetUserContextQueryHandler.Version,
+            userContextBytes = System.Text.Encoding.UTF8.GetByteCount(request.UserContext ?? ""),
         });
         ModelTurnRunResult? result = null;
         string? error = null;
         try
         {
             if (stream is not null) await stream("turn.started", new { conversationId, conversationVersion = baseVersion });
-            // The new user message and running status are durable before optional summary work starts.
-            if (prepared.Ended is not null)
-            {
-                await segments.TrySummarizeAsync(prepared.Ended, ct);
-                request = request with
-                {
-                    PreviousClosingSummary = await store.FindPreviousSummaryAsync(userId, segmentCreatedAt, ct),
-                };
-            }
             await checkQuota.CheckQuotaAsync(userId, ct);
             result = await runtime.ExecuteAsync(request, ct);
             error = result.Error;

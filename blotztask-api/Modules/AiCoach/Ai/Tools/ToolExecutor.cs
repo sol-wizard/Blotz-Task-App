@@ -12,9 +12,10 @@ public sealed record ToolExecutionResult(string Content, bool Succeeded, string?
 /// <summary>Per-turn dispatch, resource budget, cancellation and duplicate-call protection.</summary>
 public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limits,
     Func<DateOnly, DateOnly, CancellationToken, Task<string>>? readTasks = null,
-    Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null)
+    Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
+    MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-11";
+    public const string ContractVersion = "coach-tools-14";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
         "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Do not use for ordinary sharing or listening.",
@@ -24,10 +25,15 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     public int ExecutedCalls { get; private set; }
     public bool BudgetExhausted => ExecutedCalls >= limits.MaxToolCallsPerTurn;
     public IReadOnlyList<GatewayToolDefinition> AvailableTools => BudgetExhausted ? [] :
-        readTasks is null || _readCalls >= 2 ? workspace.AvailableDefinitions : [.. workspace.AvailableDefinitions, ReadTasksDefinition];
+    [
+        .. workspace.AvailableDefinitions,
+        .. readTasks is null || _readCalls >= 2 ? [] : new[] { ReadTasksDefinition },
+        .. memory is null ? [] : MemoryTools.Definitions,
+    ];
 
     public async Task<ToolExecutionResult> ExecuteAsync(ModelToolCallRequest call, CancellationToken ct)
     {
+        if (memory is not null && MemoryTools.Handles(call.Name)) return await ExecuteMemoryAsync(call, ct);
         if (call.Name != ReadTasksDefinition.Name)
         {
             var mutation = Execute(call, ct);
@@ -89,6 +95,29 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             {
                 result = Failure("task_context_unavailable", "Task schedule could not be read. Do not assume availability.");
             }
+        }
+        _results.Add(call.Id, (call, result));
+        return result;
+    }
+
+    private async Task<ToolExecutionResult> ExecuteMemoryAsync(ModelToolCallRequest call, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (_results.TryGetValue(call.Id, out var previous))
+            return previous.Request == call
+                ? previous.Result with { Replayed = true }
+                : Failure("tool_call_id_reused", "Tool call ID was reused with different arguments.");
+        if (BudgetExhausted) return Failure("tool_limit", "Tool call budget exhausted.");
+        ExecutedCalls++;
+        ToolExecutionResult result;
+        if (Encoding.UTF8.GetByteCount(call.ArgumentsJson) > limits.MaxToolArgumentBytes)
+            result = Failure("tool_arguments_too_large", "Tool arguments exceed the resource limit.");
+        else
+        {
+            var content = await memory!.ExecuteAsync(call, ct);
+            using var payload = JsonDocument.Parse(content);
+            var success = payload.RootElement.GetProperty("success").GetBoolean();
+            result = new(content, success, success ? null : payload.RootElement.GetProperty("errorCode").GetString());
         }
         _results.Add(call.Id, (call, result));
         return result;

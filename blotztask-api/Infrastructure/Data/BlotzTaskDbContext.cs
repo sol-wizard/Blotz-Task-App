@@ -1,3 +1,4 @@
+using BlotzTask.Modules.UserUnderstanding.Domain;
 using BlotzTask.Infrastructure.Data.Configurations;
 using BlotzTask.Infrastructure.Data.SeedData;
 using BlotzTask.Modules.Badges.Domain;
@@ -49,6 +50,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiCoachMessage> AiCoachMessages => Set<AiCoachMessage>();
     public DbSet<AiCoachDraftConfirmation> AiCoachDraftConfirmations => Set<AiCoachDraftConfirmation>();
     public DbSet<UserActivityDay> UserActivityDays { get; set; }
+    public DbSet<UserMemory> UserMemories => Set<UserMemory>();
 
     public DbSet<ReferralCode> ReferralCodes { get; set; }
     public DbSet<Referral> Referrals { get; set; }

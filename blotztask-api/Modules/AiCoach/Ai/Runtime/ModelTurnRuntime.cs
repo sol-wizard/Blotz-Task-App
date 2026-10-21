@@ -18,7 +18,7 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     Func<string, object, Task>? Trace = null, string? PreviousClosingSummary = null,
     DateTimeOffset? SegmentStartedAt = null, string? SegmentStartTimeZoneId = null,
     bool ReviewListEnabled = false,
-    Func<string, object, Task>? Stream = null);
+    Func<string, object, Task>? Stream = null, string? UserContext = null, MemoryTools? MemoryTools = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -43,7 +43,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             "AiCoach model turn started for {ConversationId} with {HistoryMessageCount} history messages and {DraftCount} drafts",
             request.ConversationId, request.History.Count, request.Drafts.Count);
         var workspace = new DraftTools(request.Drafts, request.TimeZoneId, request.ReviewListEnabled);
-        var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule);
+        var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule, request.MemoryTools);
         var turn = new List<GatewayMessage>();
         // Schedule reads are shortened only in durable history, never in the active model turn.
         var liveTurn = new List<GatewayMessage>();

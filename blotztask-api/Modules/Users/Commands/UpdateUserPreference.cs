@@ -31,6 +31,9 @@ public class UpdateUserPreferenceCommandHandler(
         preference.DailyPlanningNotification = command.UserPreferences.DailyPlanningNotification;
         preference.EveningWrapUpNotification = command.UserPreferences.EveningWrapUpNotification;
         preference.PreferredLanguage = command.UserPreferences.PreferredLanguage;
+        // Older clients omit this field; leaving it untouched keeps their PUT from switching memory off.
+        if (command.UserPreferences.AiMemoryEnabled is { } aiMemoryEnabled)
+            preference.AiMemoryEnabled = aiMemoryEnabled;
 
         db.UserPreferences.Update(preference);
         await db.SaveChangesAsync(ct);
@@ -49,4 +52,5 @@ public class UpdateUserPreferenceDto
     public bool DailyPlanningNotification { get; set; }
     public bool EveningWrapUpNotification { get; set; }
     public Language PreferredLanguage { get; set; }
+    public bool? AiMemoryEnabled { get; set; }
 }

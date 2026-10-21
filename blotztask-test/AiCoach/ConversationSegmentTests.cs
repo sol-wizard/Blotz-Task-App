@@ -1,3 +1,5 @@
+using BlotzTask.Modules.UserUnderstanding.Commands;
+using BlotzTask.Modules.UserUnderstanding.Queries;
 using Azure;
 using Azure.AI.OpenAI;
 using BlotzTask.Infrastructure.Data;
@@ -260,6 +262,8 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         await session.AddTurnAsync(withDraft: true);
         session.Clock.Now = session.Open.Messages.Last().CreatedAt.AddHours(9);
         // Act
+        // The background pass summarizes a topic idle past the boundary before the user returns.
+        await session.Digest.ProcessBatchAsync(default);
         var next = await session.Application.SendAsync(session.UserId, session.Open.Id, Guid.NewGuid(),
             "What was the date of the expired reading draft from our previous topic? Reply with the ISO date only. Do not create or save any drafts.",
             session.Open.Version, default);
@@ -269,7 +273,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         previous.ClosingSummary.Should().Contain(draftDate, because: "tomorrow is relative to the first message, even if the empty segment was created earlier");
         next.ConversationId.Should().NotBe(session.Open.Id, because: "the idle message is routed to a new topic");
         next.GenerationError.Should().BeNull(because: "the new topic should complete a real model turn");
-        next.Messages.Last().Text.Should().Contain(draftDate, because: "the new turn receives the immediately previous closing summary");
+        next.Messages.Last().Text.Should().Contain(draftDate, because: "the summary written in the background reaches the first turn of the new topic");
         next.Artifacts.Should().BeEmpty(because: "the new topic carries context but not expired draft state");
         (await session.Db.AiUsageRecords.AnyAsync(x => x.UserId == session.UserId)).Should().BeTrue(
             because: "summary model usage is included in the user's AI accounting");
@@ -297,6 +301,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         public IOptions<AiCoachModuleOptions> Options { get; }
         public SqlConversationStore Store { get; }
         public ConversationSegments Segments { get; }
+        public SegmentDigestProcessor Digest { get; }
         public ConversationApplication Application { get; }
         public IModelGateway Gateway { get; }
         public ChatApplication Chat { get; }
@@ -321,8 +326,11 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
             var quota = new CheckAiQuotaService(Db, _cache);
             var accounting = new RecordAiUsageService(Db);
             var usage = new AiCoachUsageTracker();
-            var summaries = new ClosingSummaryGenerator(Gateway, quota, accounting, usage, Options, _logs.CreateLogger<ClosingSummaryGenerator>());
-            Segments = new(Store, summaries, Clock, Options, _logs.CreateLogger<ConversationSegments>());
+            Segments = new(Store, Clock, Options);
+            var digests = new SegmentDigestGenerator(Gateway, quota, accounting, usage, Options, _logs.CreateLogger<SegmentDigestGenerator>());
+            Digest = new(Db, Store, digests,
+                new RememberUserMemoryCommandHandler(Db, Clock, NullLogger<RememberUserMemoryCommandHandler>.Instance),
+                new GetUserContextQueryHandler(Db, Clock), Clock, Options, NullLogger<SegmentDigestProcessor>.Instance);
             var query = new GetTasksByDateQueryHandler(Db, new(), NullLogger<GetTasksByDateQueryHandler>.Instance);
             var checker = new DraftScheduleChecker(query, new(), Clock, NullLogger<DraftScheduleChecker>.Instance);
             Chat = new(Db, Store, Segments, checker, Clock);
@@ -349,6 +357,16 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
             Open.BeginTurn(turn, "Create a reading draft for tomorrow at 20:00", Clock.Now);
             Open.CompleteTurn(turn, Open.Version, "An unsaved draft", null,
                 [new GatewayAssistantMessage("An unsaved draft", [])], withDraft ? [draft] : [], null, 0, completedAt: Clock.Now);
+            await Store.SaveAsync(Open, default);
+        }
+
+        public async Task AddUserTurnAsync(string userText, string assistantText)
+        {
+            var turn = Guid.NewGuid();
+            Open.BeginTurn(turn, userText, Clock.Now);
+            Clock.Now = Clock.Now.AddSeconds(5);
+            Open.CompleteTurn(turn, Open.Version, assistantText, null,
+                [new GatewayAssistantMessage(assistantText, [])], [], null, 0, completedAt: Clock.Now);
             await Store.SaveAsync(Open, default);
         }
 

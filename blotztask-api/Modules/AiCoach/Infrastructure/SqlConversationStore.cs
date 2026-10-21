@@ -67,6 +67,9 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
             ClosingSummary = conversation.ClosingSummary,
             CreatedAt = conversation.CreatedAt,
             LastActivityAt = now,
+            // A new segment has no earlier messages. Not the CLR default: EF would send the column default
+            // (the database clock) instead, which only rows that predate the column should get.
+            MemoryProcessedAt = conversation.CreatedAt.AddTicks(-1),
             Revision = 1,
             SchemaVersion = ConversationSerializer.SchemaVersion,
             Payload = ConversationSerializer.Serialize(conversation),
