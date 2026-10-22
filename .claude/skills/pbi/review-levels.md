@@ -30,5 +30,6 @@ GitHub logins of the tech leads — `L3`/`L4` need one of them to approve:
 - `sol-wizard` (Ben)
 - `nxn-nicole` (Nicole)
 - `Xu-create-ops` (Chen)
+- `LiliZ3681` (Zyx)
 
 Update this list when someone becomes a tech lead or leaves. `L1`/`L2` don't need a check: any approval is fine.
