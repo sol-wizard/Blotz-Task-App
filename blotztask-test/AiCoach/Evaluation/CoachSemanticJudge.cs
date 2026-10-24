@@ -34,7 +34,8 @@ internal sealed class CoachSemanticJudge(IModelGateway gateway)
         """;
 
     public async Task<JudgeRun> EvaluateAsync(string caseId, string[] criteria,
-        IReadOnlyList<JudgeTurnEvidence> turns, CancellationToken cancellationToken = default)
+        IReadOnlyList<JudgeTurnEvidence> turns, CancellationToken cancellationToken = default,
+        DateTimeOffset? localNow = null)
     {
         if (turns.Count == 0)
             return new("unavailable", Version, null, "No completed turns to evaluate.", 0, 0);
@@ -42,7 +43,7 @@ internal sealed class CoachSemanticJudge(IModelGateway gateway)
         try
         {
             var evidence = JsonSerializer.Serialize(new { caseId, criteria,
-                localNow = CoachTestSession.Now, timeZone = "Australia/Perth", turns });
+                localNow = localNow ?? CoachTestSession.Now, timeZone = "Australia/Perth", turns });
             var request = new ModelGatewayRequest(Instructions,
                 [new GatewayUserMessage(evidence)],
                 [new GatewayToolDefinition("submit_evaluation", "Submit the independent quality evaluation for every turn.", ResultSchema)],
