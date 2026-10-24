@@ -5,6 +5,10 @@ namespace BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 /// <summary>Provider adapter for natural replies and tool calls.</summary>
 public interface IModelGateway
 {
+    // Stateless adapters may reuse themselves. Responses adapters return an isolated turn session.
+    IModelGateway OpenTurn() => this;
+    AiCoachModelProfile? Profile => null;
+
     Task<ModelCompletionResult> CompleteAsync(
         ModelGatewayRequest request,
         CancellationToken cancellationToken);

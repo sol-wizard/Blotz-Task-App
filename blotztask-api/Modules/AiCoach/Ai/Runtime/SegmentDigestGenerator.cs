@@ -56,8 +56,10 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaS
         DateTimeOffset now, CancellationToken ct)
     {
         var limits = options.Value;
+        var turnGateway = gateway.OpenTurn();
+        var model = turnGateway.Profile;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeout.CancelAfter(TimeSpan.FromSeconds(limits.ModelRequestTimeoutSeconds));
+        timeout.CancelAfter(TimeSpan.FromSeconds(model?.RequestTimeoutSeconds ?? limits.ModelRequestTimeoutSeconds));
         await quota.CheckQuotaAsync(segment.UserId, timeout.Token);
 
         var zone = TimeZoneInfo.FindSystemTimeZoneById(segment.TimeZoneId);
@@ -97,12 +99,16 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaS
                 : null,
         }, ModelContextBuilder.ContextJson);
         var messages = new GatewayMessage[] { new GatewayUserMessage(data) };
-        var maxOutput = Math.Min(1600, limits.MaxOutputTokens);
+        var maxOutput = Math.Min(1600, model?.MaxOutputTokens ?? limits.MaxOutputTokens);
         if (ModelContextBuilder.Bytes(prompt) + ModelContextBuilder.Size(messages) + maxOutput * 4 + 512 > limits.ContextTokenBudget)
             throw new ModelContextException("digest_context_limit");
 
-        var result = await gateway.CompleteAsync(new(prompt, messages, [SaveDigest], maxOutput), timeout.Token);
-        usage.Add(segment.Id, result.InputTokens, result.OutputTokens, result.TotalTokens, 1);
+        var result = await turnGateway.CompleteAsync(new(prompt, messages, [SaveDigest], maxOutput), timeout.Token);
+        usage.Add(segment.Id, result.InputTokens, result.OutputTokens, result.TotalTokens, 1,
+            model?.EstimateUsd(result.InputTokens, result.CachedInputTokens, result.OutputTokens));
+        logger.LogInformation("AiCoach digest model {Model} deployment {DeploymentId} API {Api}: {InputTokens} input, {OutputTokens} output",
+            model?.Name, model?.DeploymentId ?? limits.DeploymentId, model?.Api ?? "ChatCompletions",
+            result.InputTokens, result.OutputTokens);
         try
         {
             using var accountingTimeout = CancellationTokenSource.CreateLinkedTokenSource(ct);

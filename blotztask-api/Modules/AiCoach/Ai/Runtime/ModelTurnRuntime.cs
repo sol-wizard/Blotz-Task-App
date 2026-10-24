@@ -24,7 +24,8 @@ public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
     string? Summary, int SummarizedMessageCount,
     int InputTokens, int OutputTokens, int TotalTokens, int ModelCallCount,
-    bool TaskContextRead = false, IReadOnlyList<string>? FollowUps = null, int CachedInputTokens = 0);
+    bool TaskContextRead = false, IReadOnlyList<string>? FollowUps = null, int CachedInputTokens = 0,
+    AiCoachModelProfile? Model = null, decimal? EstimatedUsd = null);
 
 public interface IModelTurnRuntime
 {
@@ -39,6 +40,9 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
     public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
     {
         var limits = options.Value;
+        var turnGateway = gateway.OpenTurn();
+        var model = turnGateway.Profile;
+        decimal? estimatedUsd = 0;
         logger.LogInformation(
             "AiCoach model turn started for {ConversationId} with {HistoryMessageCount} history messages and {DraftCount} drafts",
             request.ConversationId, request.History.Count, request.Drafts.Count);
@@ -93,7 +97,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 await Emit("reply.reset", new { });
                 var filter = request.Stream is null ? null : new FollowUpStreamFilter(text => Emit("reply.delta", new { text }));
                 var completion = await Call(new ModelGatewayRequest(system, transcript,
-                    lastCall ? [] : executor.AvailableTools, MaxOutputTokens: limits.MaxOutputTokens,
+                    lastCall ? [] : executor.AvailableTools, MaxOutputTokens: model?.MaxOutputTokens ?? limits.MaxOutputTokens,
                     OnTextDelta: filter is null ? null : filter.WriteAsync));
                 if (filter is not null) await filter.FlushAsync();
                 if (completion.FinishReason == ModelFinishReason.ContentFilter)
@@ -198,6 +202,12 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             logger.LogWarning(ex, "AiCoach gateway request failed for {ConversationId}", request.ConversationId);
             return Result(null, ex.Status is 401 or 403 ? "configuration_error" : "model_unavailable");
         }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "AiCoach gateway request failed for {ConversationId}", request.ConversationId);
+            return Result(null, ex.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden
+                ? "configuration_error" : "model_unavailable");
+        }
         catch (ModelContextException ex)
         {
             return Result(null, ex.Code);
@@ -216,10 +226,14 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         async Task<ModelCompletionResult> Call(ModelGatewayRequest modelRequest)
         {
             if (calls >= limits.MaxModelCallsPerTurn) throw new ModelCallBudgetException();
+            if (model is not null)
+                modelRequest = modelRequest with { MaxOutputTokens = Math.Min(
+                    modelRequest.MaxOutputTokens ?? model.MaxOutputTokens, model.MaxOutputTokens) };
             calls++;
             await Trace("model_request", new
             {
-                modelCallNumber = calls, limits.DeploymentId, modelRequest.SystemPrompt,
+                modelCallNumber = calls, model = model?.Name, deploymentId = model?.DeploymentId ?? limits.DeploymentId,
+                api = model?.Api ?? "ChatCompletions", model?.ReasoningEffort, modelRequest.SystemPrompt,
                 messages = Elements(modelRequest.Messages), modelRequest.Tools,
                 modelRequest.MaxOutputTokens,
             });
@@ -237,11 +251,11 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             }
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeout.CancelAfter(TimeSpan.FromSeconds(limits.ModelRequestTimeoutSeconds));
+            timeout.CancelAfter(TimeSpan.FromSeconds(model?.RequestTimeoutSeconds ?? limits.ModelRequestTimeoutSeconds));
             ModelCompletionResult completion;
             try
             {
-                completion = await gateway.CompleteAsync(modelRequest, timeout.Token);
+                completion = await turnGateway.CompleteAsync(modelRequest, timeout.Token);
             }
             catch (Exception ex)
             {
@@ -258,13 +272,15 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             cachedInput += completion.CachedInputTokens;
             output += completion.OutputTokens;
             total += completion.TotalTokens;
+            estimatedUsd += model?.EstimateUsd(completion.InputTokens, completion.CachedInputTokens, completion.OutputTokens);
             logger.LogInformation(
                 "AiCoach model call {ModelCallNumber} completed for {ConversationId}: {FinishReason}, {InputTokens} input tokens ({CachedInputTokens} cached), {OutputTokens} output tokens, {ElapsedMs}ms, {ToolCallCount} tool calls",
                 calls, request.ConversationId, completion.FinishReason, completion.InputTokens,
                 completion.CachedInputTokens, completion.OutputTokens, stopwatch.ElapsedMilliseconds, completion.ToolCalls.Count);
             await Trace("model_response", new
             {
-                modelCallNumber = calls, completion.FinishReason, completion.AssistantText,
+                modelCallNumber = calls, model = model?.Name, deploymentId = model?.DeploymentId ?? limits.DeploymentId,
+                api = model?.Api ?? "ChatCompletions", completion.FinishReason, completion.AssistantText,
                 completion.ToolCalls, completion.InputTokens, completion.CachedInputTokens, completion.OutputTokens,
                 completion.TotalTokens, elapsedMs = stopwatch.ElapsedMilliseconds,
             });
@@ -285,7 +301,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 logger.LogInformation("AiCoach final response for {ConversationId}: {AssistantText}",
                     request.ConversationId, text);
             return new(text, error, turn, workspace.Drafts, summary, covered, input, output, total, calls,
-                taskContextRead, followUps ?? [], cachedInput);
+                taskContextRead, followUps ?? [], cachedInput, model, estimatedUsd);
         }
 
         Task Trace(string kind, object payload) => request.Trace?.Invoke(kind, payload) ?? Task.CompletedTask;

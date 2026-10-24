@@ -27,10 +27,13 @@ public static class DependencyInjection
                 && options.TopicIdleHours > 0 && options.MessageRetentionDays > 0
                 && options.TraceRetentionDays > 0,
                 "AiCoach resource limits must be positive and context budget at least 8000.")
+            .Validate(AiCoachModelProfile.IsValid,
+                "AiCoach requires a valid DefaultModel/profile or legacy DeploymentId. Profiles require a deployment, supported API, positive limits and valid pricing/reasoning settings; Sol requires Responses.")
             .ValidateOnStart();
         if (services.All(service => service.ServiceType != typeof(TimeProvider)))
             services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<IModelGateway, AzureOpenAiModelGateway>();
+        services.AddHttpClient("AiCoachResponses", client => client.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddSingleton<IModelGateway, ConfiguredModelGateway>();
         services.AddSingleton<ModelContextBuilder>();
         services.AddSingleton<IModelTurnRuntime, ModelTurnRuntime>();
         services.AddSingleton<IConversationStore, SqlConversationStore>();
@@ -38,7 +41,6 @@ public static class DependencyInjection
         {
             var tracker = new AiCoachUsageTracker();
             ConversationSnapshotProjector.UsageTracker = tracker;
-            ConversationSnapshotProjector.UsageOptions = provider.GetRequiredService<IOptions<AiCoachModuleOptions>>().Value;
             return tracker;
         });
         services.AddScoped<ConversationApplication>();
