@@ -1,9 +1,12 @@
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using BlotzTask.Extension;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.AiUsage;
 using BlotzTask.Modules.Badges;
 using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.ChatTaskGenerator;
+using BlotzTask.Modules.Feedback;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.Pomodoro;
@@ -30,6 +33,24 @@ builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 builder.Services.AddHostedService<QueuedHostedService>();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("feedback", context =>
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                     ?? context.Connection.RemoteIpAddress?.ToString()
+                     ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromHours(24),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // Feature modules
 builder.Services.AddAiUsageModule();
 builder.Services.AddBadgeModule(builder.Configuration);
@@ -43,6 +64,7 @@ builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
 builder.Services.AddReferralModule();
+builder.Services.AddFeedbackModule(builder.Configuration);
 
 // External integrations
 builder.Services.AddAgentFrameworkServices();
@@ -58,6 +80,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowSpecificOrigin");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<UserContextMiddleware>();
