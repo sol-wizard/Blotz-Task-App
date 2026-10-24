@@ -17,17 +17,19 @@ public sealed class AiCoachUsageTracker
         int inputTokens,
         int outputTokens,
         int totalTokens,
-        int modelCalls)
+        int modelCalls,
+        decimal? estimatedUsd = null)
     {
         return _byConversation.AddOrUpdate(
             conversationId,
-            _ => new ConversationUsage(inputTokens, outputTokens, totalTokens, modelCalls, 1),
+            _ => new ConversationUsage(inputTokens, outputTokens, totalTokens, modelCalls, 1, estimatedUsd),
             (_, current) => new ConversationUsage(
                 current.InputTokens + inputTokens,
                 current.OutputTokens + outputTokens,
                 current.TotalTokens + totalTokens,
                 current.ModelCalls + modelCalls,
-                current.Turns + 1));
+                current.Turns + 1,
+                current.EstimatedUsd + estimatedUsd));
     }
 
     public ConversationUsage? Find(Guid conversationId) =>
@@ -41,11 +43,6 @@ public sealed record ConversationUsage(
     long OutputTokens,
     long TotalTokens,
     long ModelCalls,
-    long Turns)
-{
-    /// <summary>USD estimate from per-million prices; null when prices are not configured.</summary>
-    public decimal? EstimateUsd(decimal inputUsdPerMillion, decimal outputUsdPerMillion) =>
-        inputUsdPerMillion <= 0 && outputUsdPerMillion <= 0
-            ? null
-            : (InputTokens * inputUsdPerMillion + OutputTokens * outputUsdPerMillion) / 1_000_000m;
-}
+    long Turns,
+    // Accumulate at the rate used for each turn; never reprice earlier tokens after a model switch.
+    decimal? EstimatedUsd = null);

@@ -27,7 +27,6 @@ public sealed record RecurrenceDraftDto(string Frequency, int Interval, int? Day
 public static class ConversationSnapshotProjector
 {
     public static AiCoachUsageTracker? UsageTracker { get; set; }
-    public static AiCoachModuleOptions? UsageOptions { get; set; }
 
     public static ConversationSnapshotDto ToDto(Conversation conversation)
     {
@@ -43,7 +42,7 @@ public static class ConversationSnapshotProjector
             conversation.Drafts.Select(draft => ToDto(draft, busy)).ToArray(),
             busy ? [] : ["send_message"],
             usage is null ? null : new(usage.InputTokens, usage.OutputTokens, usage.TotalTokens,
-                usage.EstimateUsd(UsageOptions?.InputTokenUsdPerMillion ?? 0, UsageOptions?.OutputTokenUsdPerMillion ?? 0)),
+                usage.EstimatedUsd),
             conversation.Drafts.Where(draft => draft.IsReviewList
                 && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing)
                 .Select(draft => ToDto(draft, busy)).SingleOrDefault(),
