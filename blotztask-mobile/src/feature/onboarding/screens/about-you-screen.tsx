@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
-import Toast from "react-native-toast-message";
 
 type AboutYouScreenProps = {
   audience: AboutYouAudience;
@@ -39,13 +38,13 @@ export default function AboutYouScreen({ audience, onDone, onClose }: AboutYouSc
       return;
     }
     // Locks the page while onDone saves (it marks a new user onboarded over the network),
-    // so a double tap can't finish twice. A failure unlocks it so the user can tap again.
+    // so a double tap can't finish twice. A failure unlocks it so the user can tap again;
+    // the shared mutation error handler already shows the toast.
     setIsFinishing(true);
     try {
       await onDone();
     } catch {
       setIsFinishing(false);
-      Toast.show({ type: "error", text1: t("errors.default", { ns: "common" }) });
     }
   };
 
