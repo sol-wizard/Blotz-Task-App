@@ -19,6 +19,11 @@ name: Prod - Submit app to the stores
 # drives the optional "update available" prompt), and its
 # `AppVersion__<Ios|Android>__MinimumSupportedVersion` too if this release forces
 # the update. Run Tag Release on the `submitted/<version>` tag once both are live.
+#
+# It also builds an APK for China users, who can't use Google Play, and once the API
+# is healthy publishes it to the `downloads` container in `stgblotztaskprod`: as
+# `BlotzTask-<version>.apk` (history) and over `BlotzTask-latest.apk`, the file the
+# website download page links to. APK users get the release then, without store review.
 
 on:
   workflow_dispatch:
@@ -157,6 +162,55 @@ jobs:
             --auto-submit \
             --non-interactive
 
+  # The China APK: same code and signing key as the Play build, but it opens the website
+  # download page to update. Kept out of the matrix above so a failed APK never blocks the
+  # store release; it is only published once the API is healthy (publish-apk below).
+  build-apk:
+    name: Build the China APK
+    needs: version
+    runs-on: ubuntu-latest
+    outputs:
+      apk_url: ${{ steps.build.outputs.apk_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: blotztask-mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile
+
+      - name: Build the APK
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          URL=$(eas build \
+                  --platform android \
+                  --profile production-apk \
+                  --non-interactive \
+                  --json \
+                | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "::error::EAS did not return an APK download URL"
+            exit 1
+          fi
+          echo "apk_url=$URL" >> "$GITHUB_OUTPUT"
+
   tag-and-record:
     name: Tag the submitted commit and record the version
     # Every matrix leg must pass, so a half-submitted release never gets tagged.
@@ -232,3 +286,58 @@ jobs:
           fi
           echo "### Production API deployed and healthy" >> "$GITHUB_STEP_SUMMARY"
           echo "Log in once with the prod build on TestFlight, then submit for review." >> "$GITHUB_STEP_SUMMARY"
+
+  publish-apk:
+    name: Publish the China APK
+    # After the health check, so the APK never goes out ahead of the API it was built for.
+    needs: [version, build-apk, verify-api]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    # The AZURE_* secrets and the managed identity's federated credential are scoped to
+    # this environment. The identity needs "Storage Blob Data Contributor" on the container.
+    environment:
+      name: "prod"
+    defaults:
+      run:
+        working-directory: .
+    env:
+      ACCOUNT: stgblotztaskprod
+      CONTAINER: downloads
+      VERSION: ${{ needs.version.outputs.new_version }}
+    steps:
+      - name: Download the APK from EAS
+        env:
+          APK_URL: ${{ needs.build-apk.outputs.apk_url }}
+        run: curl -fsSL --retry 3 -o blotz.apk "$APK_URL"
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # History copy first, then the fixed name the website links to. --overwrite on both:
+      # a "none" bump resubmits the same version. no-cache on latest so phones and proxies
+      # never hand out last release's file; the APK content type makes Android install it.
+      - name: Upload the APK
+        run: |
+          set -euo pipefail
+          for NAME in "BlotzTask-$VERSION.apk" "BlotzTask-latest.apk"; do
+            CACHE=$([ "$NAME" = "BlotzTask-latest.apk" ] && echo "no-cache" || echo "public, max-age=31536000")
+            az storage blob upload \
+              --account-name "$ACCOUNT" --container-name "$CONTAINER" \
+              --name "$NAME" --file blotz.apk --overwrite \
+              --content-type application/vnd.android.package-archive \
+              --content-cache-control "$CACHE" \
+              --auth-mode login --only-show-errors --output none
+          done
+          URL="https://$ACCOUNT.blob.core.windows.net/$CONTAINER/BlotzTask-latest.apk"
+          echo "### China APK $VERSION published" >> "$GITHUB_STEP_SUMMARY"
+          echo "The download page now serves it: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: azure logout
+        if: always()
+        run: az logout

@@ -8,5 +8,6 @@ public sealed record AppVersionResponse(
 public sealed record PlatformVersionPolicyResponse(
     string LatestVersion,
     string MinimumSupportedVersion,
-    string StoreUrl
+    string StoreUrl,
+    string ApkDownloadUrl
 );
