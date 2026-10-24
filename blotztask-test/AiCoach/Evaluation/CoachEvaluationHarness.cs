@@ -26,6 +26,8 @@ internal sealed class CoachEvaluationHarness
     private readonly List<object> _turns = [];
     private readonly List<JudgeTurnEvidence> _judgeTurns = [];
     private readonly string _deployment;
+    private readonly string _judgeDeployment;
+    private readonly string _transport;
     private readonly AiCoachModuleOptions _limits;
     public string ReportPath { get; }
 
@@ -33,13 +35,21 @@ internal sealed class CoachEvaluationHarness
     {
         _session = session;
         var credentials = CoachLiveSettings.Load() ?? throw new InvalidOperationException("Live credentials missing.");
-        _deployment = credentials.Deployment;
+        _deployment = Environment.GetEnvironmentVariable("AICOACH_EVAL_MODEL") ?? credentials.Deployment;
         _limits = new() { DeploymentId = _deployment };
         var options = Options.Create(_limits);
-        var provider = new AzureOpenAiModelGateway(new AzureOpenAIClient(new Uri(credentials.Endpoint),
-            new AzureKeyCredential(credentials.Key)), options);
+        var client = new AzureOpenAIClient(new Uri(credentials.Endpoint), new AzureKeyCredential(credentials.Key));
+        _transport = Environment.GetEnvironmentVariable("AICOACH_EVAL_TRANSPORT") ?? "chat";
+        IModelGateway provider = _transport switch
+        {
+            "chat" => new AzureOpenAiModelGateway(client, options),
+            "responses" => new ResponsesEvaluationGateway(credentials.Endpoint, credentials.Key, _deployment),
+            _ => throw new InvalidOperationException("AICOACH_EVAL_TRANSPORT must be chat or responses."),
+        };
         _gateway = new(provider);
-        _judge = new(provider);
+        _judgeDeployment = Environment.GetEnvironmentVariable("AICOACH_EVAL_JUDGE_MODEL") ?? credentials.Deployment;
+        _judge = new(new AzureOpenAiModelGateway(client,
+            Options.Create(new AiCoachModuleOptions { DeploymentId = _judgeDeployment })));
         var runtime = new ModelTurnRuntime(_gateway, options, NullLogger<ModelTurnRuntime>.Instance,
             new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance));
         _application = new(session.Store, runtime, new CheckAiQuotaService(session.Db, session.Cache),
@@ -105,7 +115,8 @@ internal sealed class CoachEvaluationHarness
             commit = Git(root, "rev-parse", "HEAD"),
             sourceFingerprint = SourceFingerprint(root),
             promptVersion = CoachPrompt.PromptVersion, toolContractVersion = ToolExecutor.ContractVersion,
-            deployment = _deployment, limits = _limits, localNow = CoachTestSession.Now,
+            deployment = _deployment, transport = _transport, judgeDeployment = _judgeDeployment,
+            limits = _limits, localNow = CoachTestSession.Now,
             timeZone = _session.Conversation.TimeZoneId,
             objectiveStatus = failure is null ? "passed" : "failed",
             failure = failure?.ToString(), semanticStatus = "needs_review", reviewCriteria, aiEvaluation,
@@ -118,14 +129,14 @@ internal sealed class CoachEvaluationHarness
         await File.WriteAllTextAsync(ReportPath, JsonSerializer.Serialize(record) + Environment.NewLine);
     }
 
-    private static string FindRepository()
+    internal static string FindRepository()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
             if (Directory.Exists(Path.Combine(dir.FullName, "blotztask-api"))) return dir.FullName;
         throw new DirectoryNotFoundException("Cannot locate repository for evaluation artifacts.");
     }
 
-    private static string Git(string root, params string[] args)
+    internal static string Git(string root, params string[] args)
     {
         var info = new ProcessStartInfo("git") { WorkingDirectory = root, RedirectStandardOutput = true, UseShellExecute = false };
         foreach (var arg in args) info.ArgumentList.Add(arg);
@@ -136,7 +147,7 @@ internal sealed class CoachEvaluationHarness
         return value.Trim();
     }
 
-    private static string SourceFingerprint(string root)
+    internal static string SourceFingerprint(string root)
     {
         using var hash = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
         // Hash tracked and untracked implementation files, never local credentials or generated binaries.

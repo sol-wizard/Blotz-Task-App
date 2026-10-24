@@ -54,7 +54,34 @@ AICOACH_MODEL_TESTS=1 AICOACH_EVAL_RUNS=3 dotnet test blotztask-test/BlotzTask.T
   --filter FullyQualifiedName~CoachScenarioTests
 ```
 
-`AICOACH_EVAL_RUNS` 接受 1–10。未显式启用真实模型或缺少本地 Azure 配置时，模型测试为 skipped，不算通过。凭据读取沿用 `CoachLiveSettings` 的本地 development 配置，不写入报告。每次应用场景运行在教练对话结束后额外调用一次同一 Azure 部署作为独立 AI 评审，产生额外 token 消耗；评审不修改对话或草稿。
+`AICOACH_EVAL_RUNS` 接受 1–10。未显式启用真实模型或缺少本地 Azure 配置时，模型测试为 skipped，不算通过。凭据读取沿用 `CoachLiveSettings` 的本地 development 配置，不写入报告。每次应用场景运行在教练对话结束后额外调用一次配置的 Azure 评审部署，产生额外 token 消耗；评审不修改对话或草稿。
+
+### 模型成本与速度对比
+
+`AICOACH_EVAL_MODEL` 显式指定被测部署；未设置时仍使用本地 TaskGeneration 部署。
+`AICOACH_EVAL_JUDGE_MODEL` 指定统一评审部署，默认使用本地 TaskGeneration 部署，
+避免切换被测模型时无意切换评审。`AICOACH_EVAL_TRANSPORT` 接受 `chat`（默认）或
+`responses`。Responses 适配器仅用于评测，保留 function call 的推理上下文，
+不会更改生产调用方式。报告记录被测部署、transport 和评审部署。
+
+例如，使用固定 Luna 评审，对 Sol 的三个场景各测三次：
+
+```sh
+AICOACH_MODEL_TESTS=1 AICOACH_EVAL_MODEL=gpt-6.1-sol \
+  AICOACH_EVAL_TRANSPORT=responses AICOACH_EVAL_JUDGE_MODEL=gpt-5.6-luna \
+  AICOACH_EVAL_RUNS=3 dotnet test blotztask-test/BlotzTask.Tests.csproj \
+  --filter 'FullyQualifiedName~CoachScenarioTests&DisplayName~advice|FullyQualifiedName~CoachScenarioTests&DisplayName~calendar|FullyQualifiedName~CoachScenarioTests&DisplayName~edit-save'
+
+python3 scripts/summarize-ai-coach-benchmark.py \
+  blotztask-test/TestResults/ai-coach-evals/<run-id> --prices 2 .1 10
+```
+
+`--prices` 依次为每百万 token 的输入、缓存输入、输出美元单价，必须明确提供并核验来源；
+示例 Sol 价格采用 OpenAI Standard 公开单价作估算，不代表 Azure 账单。
+汇总按用户消息统计整轮应用耗时和全部模型调用 token，另列缓存用量、
+无缓存等价成本、失败记录及评审费用。无缓存等价成本只重新计算价格，不能推断冷缓存速度。
+评审费用按固定 Luna 的未缓存输入单价估算，因为现有评审报告未单独记录缓存 token。
+模型错误轮次不进入成功轮次的平均值；失败期间可能发生但未返回 usage 的消耗不完整。
 
 ## 结果和复核
 

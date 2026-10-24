@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "timeZone": "Australia/Perth",
+  "keywords": {
+    "advice": ["喝点水", "喝几口水", "喝水", "坐一会", "休息吧", "好好休息", "好好享受", "好好歇", "享受这段", "安安静静", "不用处理", "放空一下"],
+    "formal": ["您", "建议您", "综上所述"],
+    "stockEmpathy": ["我理解你的感受", "我能理解你", "I understand how you feel"]
+  },
+  "scenarios": [
+    {
+      "id": "upset",
+      "category": "emotional",
+      "source": "真机截图：今天好烦 → 说不上来 → 不知道",
+      "runs": 5,
+      "localTime": "2026-10-24T11:46:00+08:00",
+      "turns": [
+        { "user": "今天好烦", "tone": ["asksOrOffersButtons", "noAdvice", "noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] },
+        { "user": "说不上来", "tone": ["asksOrOffersButtons", "noAdvice"], "business": ["noNewDraft"] },
+        { "user": "不知道", "tone": ["noAdvice"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [
+        "用户在倾诉情绪时，回复先陪伴、不诊断，不推任务，也不给用户没要求的建议（比如喝水、坐一会儿）。",
+        "用户说不清感受时，不再要求他给情绪分类，可以改问他现在想怎么样。",
+        "如果提问，问题要几个字就能回答，最好有对应的可点按钮；不要难回答或多问的问题。",
+        "只回应用户实际说的内容，不夸张推测他的处境。"
+      ]
+    },
+    {
+      "id": "presentation",
+      "category": "emotional",
+      "source": "第二位用户真机测试：presentation 后很累，想复盘",
+      "runs": 3,
+      "localTime": "2026-10-24T15:03:00+08:00",
+      "turns": [
+        { "user": "今天上午刚结束一个presentation，好累啊😔", "tone": ["asksOrOffersButtons", "noAdvice"], "business": ["noNewDraft"] },
+        { "user": "啥也不想干", "tone": ["asksOrOffersButtons", "noAdvice"], "business": ["noNewDraft"] },
+        { "user": "你能跟我一起复盘一下吗", "tone": ["asksQuestion"], "business": ["noNewDraft"] },
+        { "user": "一直在说话吧，虽然不知道说的对不对，至少一直在说", "tone": ["asksOrOffersButtons"], "business": ["noNewDraft"] },
+        { "user": "嗯", "tone": ["asksOrOffersButtons"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [
+        "用户很累时先接住情绪，并留一个容易回答的问题或按钮，不要把对话聊死。",
+        "不主动给用户没要求的建议。",
+        "复盘时一次只问一个容易回答的问题，带选项更好；用户只回“嗯”时，用选项而不是开放式问题。",
+        "回复简短，用户很累时不需要大段文字。"
+      ]
+    },
+    {
+      "id": "listen",
+      "category": "listen",
+      "source": "语气测试 + CoachScenarioTests 的 listen 场景",
+      "runs": 5,
+      "localTime": "2026-10-24T15:03:00+08:00",
+      "turns": [
+        { "user": "我今天终于能休息了，只想分享一下。请不要提问、建议或安排任务。", "tone": ["noQuestion", "noAdvice", "noFollowUps"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [
+        "用户要求只听：不能提问、不能给任何建议（包括“好好休息”“好好享受”“不用处理”这类叮嘱）、不能安排任务、不能邀请他继续分享。",
+        "不推测用户没说过的情况（比如之前忙了很久、紧绷了很久），也不夸他愿意分享。",
+        "用一两句自然的话回应他说的内容和感受，停在感受上。"
+      ]
+    },
+    {
+      "id": "vent",
+      "category": "listen",
+      "source": "语气测试：只想吐槽",
+      "runs": 3,
+      "localTime": "2026-10-24T15:03:00+08:00",
+      "turns": [
+        { "user": "我就想吐槽一下，不用给建议：老板今天又把需求改了第三遍", "tone": ["noQuestion", "noAdvice"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [
+        "用户只想吐槽、不要建议：回复要站在用户这边、有温度地回应这件事，不给建议，不复述原话。"
+      ]
+    },
+    {
+      "id": "phone",
+      "category": "business",
+      "source": "第一位用户真机测试：五点关门前去店里拿手机",
+      "runs": 2,
+      "localTime": "2026-10-24T15:20:00+08:00",
+      "turns": [
+        { "user": "下午要去店里拿手机，人家五点关门", "tone": [], "business": ["noNewDraft", "asksQuestion", "mentionsCurrentTime"] },
+        { "user": "10分钟吧，我走路", "tone": [], "business": ["draftCreated"] },
+        { "user": "我还没吃饭呢，我是先去，回来再吃饭还是先吃饭再去", "tone": [], "business": [] },
+        { "user": "不行啊，我怕没那么快，耽误了怎么着，我还是先去吧，回来再吃饭，几点吃都行", "tone": [], "business": ["draftChanged"] }
+      ],
+      "criteria": [
+        "有硬截止时间的任务，缺少路上要多久这类信息时，先问这一个问题，用户回答后再建草稿。",
+        "涉及时间时，以当前时间（15:20）为起点说清楚离截止还有多久，不问用户现在几点。",
+        "建草稿时给路上和店里留余量，并说明时间是建议值、草稿待确认。",
+        "用户改主意或说出担心时，先说他的考虑有没有道理、为什么，再修改时间。"
+      ]
+    },
+    {
+      "id": "tired-obligation",
+      "category": "business",
+      "source": "冲突修复：情绪为主、顺带提到要做的事",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "好累，今天加班到十点，明天上午还有个汇报要讲", "tone": ["noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [
+        "消息以表达疲惫为主、只是顺带提到汇报：先回应累，不自动建卡；可以用按钮提供“把汇报加进任务”。"
+      ]
+    },
+    {
+      "id": "explicit-add",
+      "category": "business",
+      "source": "冲突修复：情绪 + 明确要求建卡",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "好累，今天加班到十点。帮我把明天上午10点的汇报加到任务里", "tone": [], "business": ["draftCreated"] }
+      ],
+      "criteria": [
+        "用户明确要求建卡：直接建草稿（明天 10:00 开始），回复先简短回应累，再说明草稿待确认、结束时间是建议值；不要说已保存。"
+      ]
+    },
+    {
+      "id": "win",
+      "category": "emotional",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "我终于把论文初稿写完了！", "tone": ["noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "真诚地肯定这个进展，不空洞夸大；不推任务。" ]
+    },
+    {
+      "id": "self-blame",
+      "category": "emotional",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "最近总是拖延，觉得自己很没用", "tone": ["noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "回应自我否定而不是替用户下结论；用建议口吻而不是命令；不说套话共情。" ]
+    },
+    {
+      "id": "setback",
+      "category": "emotional",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "计划又没完成，感觉每天都在重来", "tone": ["noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "接住“努力像被浪费”的挫败感，不急着给一整套方法；不说教。" ]
+    },
+    {
+      "id": "anxious-night",
+      "category": "emotional",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "现在凌晨两点了，脑子停不下来，很焦虑睡不着", "tone": ["noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "温和地回应焦虑，可给很小的放松方法；没有自伤或危险迹象时不提急救或危机热线；篇幅不要太长。" ]
+    },
+    {
+      "id": "streak",
+      "category": "emotional",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "我这周每天都去跑步了，一天没落下", "tone": ["noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "真诚肯定坚持，不复述原话，不立刻推下一步计划。" ]
+    },
+    {
+      "id": "memory",
+      "category": "emotional",
+      "source": "语气测试（带用户记忆）",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "userContext": "Name: 小林. Goal: 2026年12月考研. Routine: 每天晚上8点到10点刷题. Recent completion rate: low.",
+      "turns": [
+        { "user": "今天又刷了两套数学题，错的有点多", "tone": ["noStockEmpathy", "noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "自然地用上用户记忆（比如考研），不报完成率数据、不说“根据你的数据”；完成率低时不加压力。" ]
+    },
+    {
+      "id": "factual",
+      "category": "basic",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "雅思口语怎么准备？", "tone": ["noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "纯知识问题：直接给有干货的答案，不加情绪开场；格式适合手机阅读。" ]
+    },
+    {
+      "id": "hello",
+      "category": "basic",
+      "source": "语气测试",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "你好", "tone": ["noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "自然友好，不用客服腔（比如“有什么可以帮您”）。" ]
+    },
+    {
+      "id": "en-stress",
+      "category": "basic",
+      "source": "语气测试（英文）",
+      "runs": 2,
+      "localTime": "2026-10-24T22:30:00+08:00",
+      "turns": [
+        { "user": "I'm so stressed. I have three deadlines this week and haven't started any of them.", "tone": ["noStockEmpathy"], "business": ["repliesInEnglish", "noNewDraft"] }
+      ],
+      "criteria": [ "用英文回复；先回应压力，再给能马上开始的小步骤；不说套话共情。" ]
+    }
+  ]
+}
