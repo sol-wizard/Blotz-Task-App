@@ -29,7 +29,18 @@
     "deleteWarning": "This permanently deletes your account and all data (tasks, notes, preferences). This can’t be undone.",
     "deleteConfirmText": "I understand this cannot be undone.",
     "deleteLoading": "Deleting your data...",
-    "deleteConfirm": "Delete permanently"
+    "deleteConfirm": "Delete permanently",
+    "deleteReasonTitle": "What’s the main reason you’re deleting your account?",
+    "deleteReasons": {
+      "no_longer_needed": "I no longer need this kind of app",
+      "too_complicated": "It's too complicated",
+      "missing_feature": "It's missing a feature I need",
+      "ai_not_good": "The AI results weren't good",
+      "privacy_concern": "I’m concerned about privacy or data security",
+      "switched_app": "I switched to another app",
+      "other": "Other"
+    },
+    "deleteReasonOtherPlaceholder": "Tell us more..."
   },
   "MembershipPlan": {
     "completedLabel": "Completed this month",
@@ -126,7 +137,9 @@
     "title": "Invite Friends",
     "myCodeLabel": "Your invite code",
     "myCodeHint": "Share this code with friends so they can join Blotz.",
-    "copied": "Copied to clipboard"
+    "copied": "Copied to clipboard",
+    "progressLabel": "Invite progress",
+    "completedLabel": "Badge unlocked!"
   },
   "supportUs": {
     "title": "Support Blotz",

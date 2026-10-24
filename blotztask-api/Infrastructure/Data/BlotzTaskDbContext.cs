@@ -42,6 +42,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
     public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
+    public DbSet<UserActivityDay> UserActivityDays { get; set; }
 
     public DbSet<ReferralCode> ReferralCodes { get; set; }
     public DbSet<Referral> Referrals { get; set; }

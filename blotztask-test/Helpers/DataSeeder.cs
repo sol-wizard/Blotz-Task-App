@@ -1,11 +1,12 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Entities;
+using BlotzTask.Modules.Badges.Domain;
+using BlotzTask.Modules.Badges.Enum;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Reviews.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Tests.Helpers;
 
@@ -18,7 +19,7 @@ public class DataSeeder
         _context = context;
     }
 
-    public async Task<Guid> CreateUserAsync()
+    public async Task<Guid> CreateUserAsync(string? timezone = null)
     {
         var userId = Guid.NewGuid();
         var user = new AppUser
@@ -30,7 +31,8 @@ public class DataSeeder
             PictureUrl = "https://example.com/pic.png",
             CreationAt = DateTime.UtcNow,
             SignUpAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Timezone = timezone
         };
 
         _context.AppUsers.Add(user);
@@ -186,6 +188,15 @@ public class DataSeeder
         return task;
     }
 
+    public async Task<UserActivityDay> CreateActivityDayAsync(Guid userId, DateOnly localDate)
+    {
+        var activityDay = new UserActivityDay { UserId = userId, LocalDate = localDate };
+
+        _context.UserActivityDays.Add(activityDay);
+        await _context.SaveChangesAsync();
+        return activityDay;
+    }
+
     public async Task<ReviewReport> CreateReviewReportAsync(
         Guid userId,
         ReviewPeriodType periodType,
@@ -242,6 +253,40 @@ public class DataSeeder
         _context.SubscriptionPlans.Add(plan);
         await _context.SaveChangesAsync();
         return plan;
+    }
+
+    public async Task<Badge> CreateBadgeAsync(string name, bool isRepeatable = false)
+    {
+        var badge = new Badge
+        {
+            NameEn = name,
+            NameZh = name,
+            DescriptionEn = $"{name} description",
+            DescriptionZh = $"{name} description",
+            IconUrl = "https://example.com/badge.png",
+            Category = BadgeCategory.TaskCompletion,
+            IsRepeatable = isRepeatable,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        _context.Badges.Add(badge);
+        await _context.SaveChangesAsync();
+        return badge;
+    }
+
+    public async Task<UserBadge> CreateUserBadgeAsync(Guid userId, int badgeId, DateTimeOffset earnedAtUtc, int? displayOrder = null)
+    {
+        var userBadge = new UserBadge
+        {
+            UserId = userId,
+            BadgeId = badgeId,
+            EarnedAtUtc = earnedAtUtc,
+            DisplayOrder = displayOrder
+        };
+
+        _context.UserBadges.Add(userBadge);
+        await _context.SaveChangesAsync();
+        return userBadge;
     }
 
     public async Task<AiUsageRecord> CreateAiUsageRecordAsync(Guid userId, int inputTokens, int outputTokens, int totalTokens, DateTime? createdAt = null)

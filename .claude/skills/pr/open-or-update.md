@@ -18,6 +18,8 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - Working tree has uncommitted or untracked changes → the work simply is not committed yet. Say so and offer to commit it.
    - Working tree is clean → the branch genuinely has nothing main does not already have. There is no PR to open.
 
+   **Check the branch against the latest `main`**, in both modes: `git fetch origin main`, then `git merge-tree --write-tree --name-only origin/main HEAD`. It changes no files; on a conflict it exits 1 and lists the conflicted files. Conflict → stop and name the files: the dev merges `origin/main` into the branch and resolves them first. GitHub runs no build and no check on a PR that conflicts with `main`, and it can't be merged until the conflict is gone. Behind `main` without a conflict is fine — carry on.
+
 2. **Read the real work.** Base is `main`.
    - `git log main..HEAD --oneline`
    - `git diff main...HEAD` — **three dots**. Branches here carry merge commits from `main`, and two dots would attribute other people's work to this PR.
@@ -75,8 +77,9 @@ CI will not catch a mistake. `pr-release-note-check.yml` only greps for *any* `-
    - **Screenshots:** `gh` can't upload images, so never write "screenshots below". Right after creating, give the dev the screenshot file paths and ask them to drag them into the description on GitHub, then check the body has image links (`gh pr view <n> --json body`). Not there yet → say so; for `L1` the proof isn't complete until they are.
    - Update mode: `gh pr edit --body-file <file>` (add `--add-label <level>` if the PR had none)
    - Create mode, when there's a PBI: then update it with the `pbi` skill (`update.md`) — status `In Review`, tick what this PR covers, PR link in the note. Its own confirm step still applies.
+   - Create mode, last: run the `to-learn` skill straight away — no need to ask. It saves the dev's to-learn list locally and never blocks the PR.
 
-10. **Reply with the PR URL only.**
+10. **Reply with the PR URL**, plus the to-learn file path from the step above.
 
 
 ## Notes

@@ -151,6 +151,9 @@ namespace BlotzTask.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsRepeatable")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -230,8 +233,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "BadgeId")
-                        .IsUnique();
+                    b.HasIndex("UserId", "BadgeId");
 
                     b.ToTable("UserBadges", (string)null);
                 });
@@ -955,6 +957,19 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserActivityDay", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("UserId", "LocalDate");
+
+                    b.ToTable("UserActivityDays", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1330,6 +1345,15 @@ namespace BlotzTask.Migrations
                     b.Navigation("RecurringOccurrenceOverride");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserActivityDay", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>

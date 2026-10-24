@@ -9,6 +9,7 @@ using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Enums;
 using BlotzTask.Modules.Reviews.Prompts;
+using BlotzTask.Modules.Reviews.Services;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -172,12 +173,15 @@ public class GenerateReviewCommandHandler(
                      && t.CompletedAt < period.EndUtc,
                 ct);
 
+        var daysActive = await ReviewMetrics.CountDaysActiveAsync(db, command.UserId, period, ct);
+
         return new ReviewReportDto
         {
             PeriodType = period.PeriodType,
             PeriodStartLocal = period.StartLocalDate,
             PeriodEndLocalExclusive = period.EndLocalDateExclusive,
             TasksCompleted = tasksCompleted,
+            DaysActive = daysActive,
             Letter = report.AiGeneratedLetter,
             Theme = report.Theme,
             OneThingToTryNext = report.OneThingToTryNext,

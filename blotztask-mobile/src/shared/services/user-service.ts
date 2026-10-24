@@ -30,6 +30,13 @@ export const upsertPushToken = async ({ token, deviceId }: PushTokenDTO): Promis
   await apiClient.post<void>(url, { token, deviceId });
 };
 
+// timeZoneId is the device's IANA timezone. When it is unknown it is left out, so the backend
+// falls back to the user's stored timezone rather than UTC.
+export const recordUserActivity = async (timeZoneId: string | undefined): Promise<void> => {
+  const url = `/User/activity`;
+  await apiClient.post<void>(url, { timeZoneId });
+};
+
 export const deleteUser = async (): Promise<void> => {
   const url = `/User`;
   await apiClient.delete<void>(url);

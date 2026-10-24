@@ -1,20 +1,22 @@
-import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, Text, View } from "react-native";
 import { GradientColor } from "@/shared/components/gradient-color";
+import { ReturnButton } from "@/shared/components/return-button";
 import Animated, {
   cancelAnimation,
   Easing,
   Extrapolation,
   interpolate,
   ReduceMotion,
+  useAnimatedRef,
   useAnimatedStyle,
+  useScrollOffset,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { useBadgeDetailQuery } from "../hooks/useBadgeDetailQuery";
 import type { BadgePreviewDTO } from "../models/badge-preview-dto";
@@ -29,6 +31,7 @@ interface BadgeRevealOverlayProps {
 }
 
 const REVEAL_DURATION_MS = 500;
+const HEADER_HEIGHT = 64;
 const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);
 
 export function BadgeRevealOverlay({
@@ -39,6 +42,12 @@ export function BadgeRevealOverlay({
 }: BadgeRevealOverlayProps) {
   const { t } = useTranslation("badge");
   const { badgeDetail, isBadgeDetailError } = useBadgeDetailQuery(badge.id);
+  // SafeAreaView inside this Modal reports no top inset on iPhone, so read it from the root provider.
+  const insets = useSafeAreaInsets();
+  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+  const contentTop = insets.top + HEADER_HEIGHT;
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollOffset(scrollRef);
   const badgeTargetRef = useRef<View>(null);
   const hasStarted = useRef(false);
   const isClosing = useRef(false);
@@ -153,7 +162,8 @@ export function BadgeRevealOverlay({
   const badgePositionStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: targetTranslateX.get() * progress.get() },
-      { translateY: targetTranslateY.get() * progress.get() },
+      // The badge floats above the ScrollView, so it has to follow the scroll itself.
+      { translateY: (targetTranslateY.get() - scrollOffset.get()) * progress.get() },
     ],
   }));
 
@@ -182,20 +192,13 @@ export function BadgeRevealOverlay({
 
         {badgeDetail || !isBadgeDetailError ? (
           <View style={styles.detailLayer}>
-            <SafeAreaView style={styles.detailLayer}>
-              <View className="items-end px-5 py-4">
-                <Pressable
-                  onPress={closeReveal}
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close badge details"
-                  className="h-8 w-8 items-center justify-center rounded-full"
-                >
-                  <MaterialCommunityIcons name="close" size={24} color="#6B7280" />
-                </Pressable>
+            <View style={[styles.detailLayer, safeAreaStyle]}>
+              <View className="justify-center px-5" style={styles.header}>
+                <ReturnButton onPress={closeReveal} accessibilityLabel="Close badge details" />
               </View>
 
-              <ScrollView
+              <Animated.ScrollView
+                ref={scrollRef}
                 className="flex-1"
                 contentContainerStyle={{
                   flexGrow: 1,
@@ -231,47 +234,50 @@ export function BadgeRevealOverlay({
                     />
                   </View>
                 )}
-              </ScrollView>
-            </SafeAreaView>
+              </Animated.ScrollView>
+            </View>
           </View>
         ) : (
-          <SafeAreaView style={styles.detailLayer}>
-            <View className="items-end px-5 py-4">
-              <Pressable
-                onPress={closeReveal}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Close badge details"
-                className="h-8 w-8 items-center justify-center"
-              >
-                <MaterialCommunityIcons name="close" size={24} color="#6B7280" />
-              </Pressable>
+          <View style={[styles.detailLayer, safeAreaStyle]}>
+            <View className="justify-center px-5" style={styles.header}>
+              <ReturnButton onPress={closeReveal} accessibilityLabel="Close badge details" />
             </View>
             <View className="flex-1 items-center justify-center px-6">
               <Text className="text-2xl font-balooBold text-secondary text-center">
                 {t("details.notFound")}
               </Text>
             </View>
-          </SafeAreaView>
+          </View>
         )}
 
-        <Animated.View
+        {/* Clipped below the header, like the ScrollView, so a scrolled badge never covers the status bar. */}
+        <View
           pointerEvents="none"
-          style={[
-            styles.floatingBadgePosition,
-            {
-              left: sourceRect.x,
-              top: sourceRect.y,
-              width: sourceRect.width,
-              height: sourceRect.height,
-            },
-            badgePositionStyle,
-          ]}
+          collapsable={false}
+          style={[styles.badgeClip, { top: contentTop }]}
         >
-          <Animated.View style={[styles.floatingBadge, badgeTransformStyle]}>
-            <Image source={{ uri: badge.iconUrl }} style={styles.badgeImage} contentFit="contain" />
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.floatingBadgePosition,
+              {
+                left: sourceRect.x,
+                top: sourceRect.y - contentTop,
+                width: sourceRect.width,
+                height: sourceRect.height,
+              },
+              badgePositionStyle,
+            ]}
+          >
+            <Animated.View style={[styles.floatingBadge, badgeTransformStyle]}>
+              <Image
+                source={{ uri: badge.iconUrl }}
+                style={styles.badgeImage}
+                contentFit="contain"
+              />
+            </Animated.View>
           </Animated.View>
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -286,6 +292,16 @@ const styles = StyleSheet.create({
   },
   detailLayer: {
     flex: 1,
+  },
+  header: {
+    height: HEADER_HEIGHT,
+  },
+  badgeClip: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: "hidden",
   },
   floatingBadgePosition: {
     position: "absolute",
