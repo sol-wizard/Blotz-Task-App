@@ -7,9 +7,9 @@
 # What it does:
 #   1. fetches origin/<branch> into a separate worktree (~/.cache/blotz-v2-deploy),
 #      so it always deploys pushed commits, never your dirty working tree
-#   2. allows only the consolidated migration that creates three conversation tables
+#   2. allows only the reviewed conversation and memory migrations
 #   3. dotnet publish (Release), same command CI uses
-#   4. with --apply-migrations, runs SQL for only that migration on shared staging SQL
+#   4. with --apply-migrations, runs SQL for only pending allowed migrations on shared staging SQL
 #   5. pushes the zip to the app's Kudu publish endpoint and restarts it
 #   6. waits for /health to say Healthy (F1 cold start can take a minute or two)
 #
@@ -63,8 +63,15 @@ fi
 git -C "$WT" log -1 --format='   deploying: %h %ci %s'
 
 echo "== 2/6 check AI Coach migration"
-AI_MIGRATION=$(bash "$WT/scripts/check-v2-migration.sh" "$WT")
-echo "   additive migration: $AI_MIGRATION"
+# Use the checker beside this script to validate the fetched, pushed source.
+ALLOWED_OUTPUT=$(bash "$(dirname "${BASH_SOURCE[0]}")/check-v2-migration.sh" "$WT")
+AI_MIGRATIONS=()
+while IFS= read -r MIGRATION_ID; do
+  [ -z "$MIGRATION_ID" ] || AI_MIGRATIONS+=("$MIGRATION_ID")
+done <<< "$ALLOWED_OUTPUT"
+[ "${#AI_MIGRATIONS[@]}" -eq 2 ] || { echo "!! Expected two allowed V2 migrations." >&2; exit 1; }
+ALLOWED_JSON=$(printf '%s\n' "${AI_MIGRATIONS[@]}" | jq -R . | jq -s .)
+printf '   allowed migration: %s\n' "${AI_MIGRATIONS[@]}"
 if [ "$APPLY_MIGRATIONS" != true ]; then
   echo "!! V2 shares the staging DB. Review the migration, then rerun with --apply-migrations." >&2
   exit 1
@@ -91,9 +98,10 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
     echo "!! could not parse EF migration status; no database changes were made." >&2
     exit 1
   fi
-  if ! jq -e --arg id "$AI_MIGRATION" '[.[] | select(.id == $id)] | length == 1' \
+  if ! jq -e --argjson allowed "$ALLOWED_JSON" \
+    '[.[].id] as $ids | all($allowed[]; . as $id | [$ids[] | select(. == $id)] | length == 1)' \
     <<< "$MIGRATION_STATE" >/dev/null; then
-    echo "!! EF did not list $AI_MIGRATION; no database changes were made." >&2
+    echo "!! EF did not list every allowed migration; no database changes were made." >&2
     exit 1
   fi
   UNKNOWN_COUNT=$(jq '[.[] | select(.applied == null)] | length' <<< "$MIGRATION_STATE")
@@ -106,33 +114,47 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
     echo "!! Required baseline $PREVIOUS_MIGRATION is not applied; no database changes were made." >&2
     exit 1
   fi
-  if ! jq -e --arg baseline "$PREVIOUS_MIGRATION" --arg target "$AI_MIGRATION" \
-    '[.[] | select(.id > $baseline) | .id] == [$target]' <<< "$MIGRATION_STATE" >/dev/null; then
-    echo "!! Expected exactly one migration after $PREVIOUS_MIGRATION; no database changes were made." >&2
+  if ! jq -e --arg baseline "$PREVIOUS_MIGRATION" --argjson allowed "$ALLOWED_JSON" \
+    '[.[] | select(.id > $baseline) | .id] == $allowed' <<< "$MIGRATION_STATE" >/dev/null; then
+    echo "!! Expected only the two allowed migrations after $PREVIOUS_MIGRATION; no database changes were made." >&2
     exit 1
   fi
-  PENDING_OTHER=$(jq -r --arg id "$AI_MIGRATION" \
-    '.[] | select(.id != $id and .applied == false) | .id' <<< "$MIGRATION_STATE")
+  PENDING_OTHER=$(jq -r --argjson allowed "$ALLOWED_JSON" \
+    '.[] | .id as $id | select(.applied == false and ($allowed | index($id) | not)) | .id' <<< "$MIGRATION_STATE")
   if [ -n "$PENDING_OTHER" ]; then
     echo "   other migrations left pending in staging (will not be applied):"
     printf '%s\n' "$PENDING_OTHER" | sed 's/^/     /'
   fi
-  AI_APPLIED=$(jq -r --arg id "$AI_MIGRATION" \
-    '.[] | select(.id == $id) | .applied' <<< "$MIGRATION_STATE")
-  if [ "$AI_APPLIED" = true ]; then
-    echo "   $AI_MIGRATION is already applied"
-  else
-    rm -f "$SQL"
-    ConnectionStrings__DefaultConnection="$DB_CONN" ASPNETCORE_ENVIRONMENT=Staging \
-      dotnet ef migrations script "$PREVIOUS_MIGRATION" "$AI_MIGRATION" \
-        --idempotent --configuration Release --no-build -o "$SQL"
-    [ -s "$SQL" ] || { echo "!! EF produced no AI Coach migration SQL." >&2; exit 1; }
-    echo "   AI Coach migration SQL: $SQL"
-    BLOTZ_SQL_CONNECTION_STRING="$DB_CONN" dotnet run \
-      --project "$WT/scripts/v2-sql-runner/V2SqlRunner.csproj" \
-      --configuration Release -- "$SQL" "$AI_MIGRATION"
-    echo "   applied: $AI_MIGRATION"
-  fi
+  FROM_MIGRATION="$PREVIOUS_MIGRATION"
+  PENDING_SEEN=false
+  for AI_MIGRATION in "${AI_MIGRATIONS[@]}"; do
+    AI_APPLIED=$(jq -r --arg id "$AI_MIGRATION" \
+      '.[] | select(.id == $id) | .applied' <<< "$MIGRATION_STATE")
+    if [ "$AI_APPLIED" = true ]; then
+      [ "$PENDING_SEEN" = false ] || { echo "!! Migration history is out of order." >&2; exit 1; }
+    else
+      PENDING_SEEN=true
+    fi
+  done
+  for AI_MIGRATION in "${AI_MIGRATIONS[@]}"; do
+    AI_APPLIED=$(jq -r --arg id "$AI_MIGRATION" \
+      '.[] | select(.id == $id) | .applied' <<< "$MIGRATION_STATE")
+    if [ "$AI_APPLIED" = true ]; then
+      echo "   $AI_MIGRATION is already applied"
+    else
+      rm -f "$SQL"
+      ConnectionStrings__DefaultConnection="$DB_CONN" ASPNETCORE_ENVIRONMENT=Staging \
+        dotnet ef migrations script "$FROM_MIGRATION" "$AI_MIGRATION" \
+          --idempotent --configuration Release --no-build -o "$SQL"
+      [ -s "$SQL" ] || { echo "!! EF produced no AI Coach migration SQL." >&2; exit 1; }
+      echo "   AI Coach migration SQL: $SQL"
+      BLOTZ_SQL_CONNECTION_STRING="$DB_CONN" dotnet run \
+        --project "$WT/scripts/v2-sql-runner/V2SqlRunner.csproj" \
+        --configuration Release -- "$SQL" "$AI_MIGRATION"
+      echo "   applied: $AI_MIGRATION"
+    fi
+    FROM_MIGRATION="$AI_MIGRATION"
+  done
 )
 unset DB_CONN
 
@@ -146,7 +168,8 @@ CODE=$(curl -s -m 600 -o /dev/null -w '%{http_code}' -X POST \
 echo "   uploaded and restarted"
 
 echo "== 6/6 wait for /health"
-BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors "https://$APP.azurewebsites.net/health")
+BODY=$(curl -fsS --connect-timeout 10 --max-time 30 \
+  --retry 12 --retry-delay 15 --retry-all-errors "https://$APP.azurewebsites.net/health")
 echo "   /health => $BODY"
 [ "$BODY" = "Healthy" ] || { echo "!! API did not come up healthy" >&2; exit 1; }
 echo "OK  https://$APP.azurewebsites.net"
