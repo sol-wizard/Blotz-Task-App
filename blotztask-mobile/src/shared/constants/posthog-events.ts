@@ -38,6 +38,8 @@ export const EVENTS = {
   ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
   ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
   ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
+  ABOUT_YOU_ANSWERED: "about_you_answered",
+  ABOUT_YOU_SKIPPED: "about_you_skipped",
   ACCOUNT_DELETED: "account_deleted",
 } as const;
 
@@ -153,6 +155,9 @@ export type ShareContentType = "review" | "badge";
 export type OnboardingOutcome = "completed" | "skipped";
 
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
+
+/** Who saw the "About you" questions: a new user after onboarding, or an existing user once on the home screen. */
+export type AboutYouAudience = "new_user" | "existing_user";
 
 /**
  * Why the user deleted their account, from the optional question in the delete modal.
