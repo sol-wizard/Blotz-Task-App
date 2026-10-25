@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only validation; prints the two allowed migration IDs in execution order.
+# Read-only validation; prints the three allowed migration IDs in execution order.
 # Can also run against the local checkout after generating the migration:
 #   bash scripts/check-v2-migration.sh
 set -euo pipefail
@@ -11,6 +11,7 @@ DIR="blotztask-api/Infrastructure/Data/Migrations"
 BASELINE="e197e5fe56d6336c6528332f8404e808562ed37b"
 NAME="CreateAiCoachConversationTables"
 MEMORY_MIGRATION="20261021012358_AddUserMemoryAndBackgroundExtraction"
+BUDGET_MIGRATION="20261025014216_AddAiCoachDailyBudget"
 export LC_ALL=C
 
 fail() { echo "!! $*" >&2; exit 1; }
@@ -39,6 +40,7 @@ while IFS= read -r PATH_NAME; do
 done <<< "$UNTRACKED"
 SOURCE_FOUND=false; DESIGNER_FOUND=false
 MEMORY_SOURCE_FOUND=false; MEMORY_DESIGNER_FOUND=false
+BUDGET_SOURCE_FOUND=false; BUDGET_DESIGNER_FOUND=false
 while IFS=$'\t' read -r STATUS PATH_NAME; do
   [ -n "$STATUS" ] || continue
   case "$STATUS:$PATH_NAME" in
@@ -46,6 +48,8 @@ while IFS=$'\t' read -r STATUS PATH_NAME; do
     "A:$DIR/$MIGRATION.Designer.cs") DESIGNER_FOUND=true ;;
     "A:$DIR/$MEMORY_MIGRATION.cs") MEMORY_SOURCE_FOUND=true ;;
     "A:$DIR/$MEMORY_MIGRATION.Designer.cs") MEMORY_DESIGNER_FOUND=true ;;
+    "A:$DIR/$BUDGET_MIGRATION.cs") BUDGET_SOURCE_FOUND=true ;;
+    "A:$DIR/$BUDGET_MIGRATION.Designer.cs") BUDGET_DESIGNER_FOUND=true ;;
     "M:$DIR/BlotzTaskDbContextModelSnapshot.cs") ;;
     D:*)
       ALLOWED=false
@@ -59,6 +63,10 @@ while IFS=$'\t' read -r STATUS PATH_NAME; do
 done <<< "$CHANGES"
 [ "$SOURCE_FOUND" = true ] && [ "$DESIGNER_FOUND" = true ] || fail "Expected new migration files were not found."
 [ "$MEMORY_SOURCE_FOUND" = true ] && [ "$MEMORY_DESIGNER_FOUND" = true ] || fail "Expected memory migration files were not found."
+[ "$BUDGET_SOURCE_FOUND" = true ] && [ "$BUDGET_DESIGNER_FOUND" = true ] || fail "Expected budget migration files were not found."
+[ "$(git hash-object "$REPO/$DIR/$BUDGET_MIGRATION.cs")" = "4bc87c6ecc09f4b8805f43dacdb0bcffaf2eebba" ] || fail "Budget migration differs from the reviewed version."
+grep -Fq "[Migration(\"$BUDGET_MIGRATION\")]" "$REPO/$DIR/$BUDGET_MIGRATION.Designer.cs" || fail "Budget Designer migration ID does not match."
+grep -Fq 'b.ToTable("AiCoachBudgetCharge"' "$REPO/$DIR/BlotzTaskDbContextModelSnapshot.cs" || fail "Model snapshot is missing AiCoachBudgetCharge."
 # Pin the reviewed memory migration, including its two added columns and seed
 # update. Any later SQL change must be reviewed before this deployment allows it.
 [ "$(git hash-object "$REPO/$DIR/$MEMORY_MIGRATION.cs")" = "4d0cf15220f678027ca679bc5fc8d641d1c7d89e" ] || fail "Memory migration differs from the reviewed version."
@@ -76,4 +84,4 @@ for TABLE_NAME in AiCoachConversation AiCoachDraftConfirmation AiCoachMessage; d
   grep -Fq "b.ToTable(\"$TABLE_NAME\"" "$REPO/$DIR/BlotzTaskDbContextModelSnapshot.cs" || fail "Model snapshot is missing $TABLE_NAME."
 done
 grep -Fq "[Migration(\"$MIGRATION\")]" "$REPO/$DIR/$MIGRATION.Designer.cs" || fail "Designer migration ID does not match."
-printf '%s\n' "$MIGRATION" "$MEMORY_MIGRATION"
+printf '%s\n' "$MIGRATION" "$MEMORY_MIGRATION" "$BUDGET_MIGRATION"

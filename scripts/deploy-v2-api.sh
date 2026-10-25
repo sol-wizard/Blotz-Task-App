@@ -7,14 +7,15 @@
 # What it does:
 #   1. fetches origin/<branch> into a separate worktree (~/.cache/blotz-v2-deploy),
 #      so it always deploys pushed commits, never your dirty working tree
-#   2. allows only the reviewed conversation and memory migrations
+#   2. allows only the reviewed conversation, memory and daily budget migrations
 #   3. dotnet publish (Release), same command CI uses
-#   4. with --apply-migrations, runs SQL for only pending allowed migrations on shared staging SQL
+#   4. verifies required migrations on shared staging SQL; stops if pending unless
+#      --apply-migrations was explicitly supplied
 #   5. pushes the zip to the app's Kudu publish endpoint and restarts it
 #   6. waits for /health to say Healthy (F1 cold start can take a minute or two)
 #
 # Needs: az CLI logged in to an account that can see the "BlotzTask" subscription,
-#        .NET 10 SDK, zip, jq. Applying the migration also needs Key Vault
+#        .NET 10 SDK, zip, jq. Checking migrations also needs Key Vault
 #        secret read access and network access to staging SQL. Secrets are
 #        fetched at run time and never written to disk.
 #
@@ -69,13 +70,9 @@ AI_MIGRATIONS=()
 while IFS= read -r MIGRATION_ID; do
   [ -z "$MIGRATION_ID" ] || AI_MIGRATIONS+=("$MIGRATION_ID")
 done <<< "$ALLOWED_OUTPUT"
-[ "${#AI_MIGRATIONS[@]}" -eq 2 ] || { echo "!! Expected two allowed V2 migrations." >&2; exit 1; }
+[ "${#AI_MIGRATIONS[@]}" -eq 3 ] || { echo "!! Expected three allowed V2 migrations." >&2; exit 1; }
 ALLOWED_JSON=$(printf '%s\n' "${AI_MIGRATIONS[@]}" | jq -R . | jq -s .)
 printf '   allowed migration: %s\n' "${AI_MIGRATIONS[@]}"
-if [ "$APPLY_MIGRATIONS" != true ]; then
-  echo "!! V2 shares the staging DB. Review the migration, then rerun with --apply-migrations." >&2
-  exit 1
-fi
 
 echo "== 3/6 dotnet publish (Release)"
 rm -rf "$OUT" "$ZIP"
@@ -83,7 +80,7 @@ dotnet publish "$WT/blotztask-api/BlotzTask.csproj" -c Release -o "$OUT" --nolog
 ( cd "$OUT" && zip -qr "$ZIP" . )
 echo "   package: $(du -h "$ZIP" | cut -f1)"
 
-echo "== 4/6 apply AI Coach migration to shared staging DB"
+echo "== 4/6 check AI Coach migrations on shared staging DB"
 DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT" \
   --name sql-connection-string --query value -o tsv --only-show-errors)
 [ -n "$DB_CONN" ] || { echo "!! staging SQL connection string is unavailable" >&2; exit 1; }
@@ -116,7 +113,7 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
   fi
   if ! jq -e --arg baseline "$PREVIOUS_MIGRATION" --argjson allowed "$ALLOWED_JSON" \
     '[.[] | select(.id > $baseline) | .id] == $allowed' <<< "$MIGRATION_STATE" >/dev/null; then
-    echo "!! Expected only the two allowed migrations after $PREVIOUS_MIGRATION; no database changes were made." >&2
+    echo "!! Expected only the three allowed migrations after $PREVIOUS_MIGRATION; no database changes were made." >&2
     exit 1
   fi
   PENDING_OTHER=$(jq -r --argjson allowed "$ALLOWED_JSON" \
@@ -136,6 +133,13 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
       PENDING_SEEN=true
     fi
   done
+  if [ "$PENDING_SEEN" = true ] && [ "$APPLY_MIGRATIONS" != true ]; then
+    echo "!! Required AI Coach migrations are pending on staging SQL; no database changes were made." >&2
+    jq -r --argjson allowed "$ALLOWED_JSON" \
+      '.[] | .id as $id | select(.applied == false and ($allowed | index($id))) | "   pending: " + .id' <<< "$MIGRATION_STATE" >&2
+    echo "!! Apply the reviewed migrations to staging yourself, then rerun this deployment." >&2
+    exit 1
+  fi
   for AI_MIGRATION in "${AI_MIGRATIONS[@]}"; do
     AI_APPLIED=$(jq -r --arg id "$AI_MIGRATION" \
       '.[] | select(.id == $id) | .applied' <<< "$MIGRATION_STATE")
