@@ -1,6 +1,7 @@
 using BlotzTask.Modules.Pomodoro.Commands;
 using BlotzTask.Modules.Pomodoro.Queries;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Pomodoro.Controllers;
@@ -11,13 +12,12 @@ namespace BlotzTask.Modules.Pomodoro.Controllers;
 public class PomodoroController(
     GetPomodoroSettingQueryHandler getPomodoroSettingQueryHandler,
     UpdatePomodoroSettingCommandHandler updatePomodoroSettingCommandHandler,
-    ILogger<PomodoroController> logger) : Controller
+    ILogger<PomodoroController> logger) : AuthorizedControllerBase
 {
     [HttpGet]
     public async Task<GetPomodoroSettingDto> GetPomodoroSetting(CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         logger.LogInformation("Fetching Pomodoro Setting for user {UserId}", userId);
 
@@ -34,8 +34,7 @@ public class PomodoroController(
         [FromBody] UpdatePomodoroSettingDto updatePomodoroSettingDto,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         
         logger.LogInformation("Updating Pomodoro Setting for user {UserId}", userId);
         

@@ -1,5 +1,6 @@
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
@@ -13,14 +14,14 @@ public class RecurringTaskController(
     MaterializeRecurringOccurrenceCommandHandler materializeRecurringOccurrenceCommandHandler,
     UpdateRecurringOccurrenceCommandHandler updateRecurringOccurrenceCommandHandler,
     UpdateRecurringTaskFutureCommandHandler updateRecurringTaskFutureCommandHandler,
-    DeleteRecurringOccurrenceCommandHandler deleteRecurringOccurrenceCommandHandler) : ControllerBase
+    DeleteRecurringOccurrenceCommandHandler deleteRecurringOccurrenceCommandHandler) : AuthorizedControllerBase
 {
     [HttpPost]
     public async Task<CreateRecurringTaskResult> CreateRecurringTask(
         [FromBody] CreateRecurringTaskRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = UserId;
         var command = new CreateRecurringTaskCommand
         {
             UserId = userId,
@@ -35,7 +36,7 @@ public class RecurringTaskController(
         [FromBody] SaveRecurringOccurrenceRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = UserId;
         var command = new SaveRecurringOccurrenceCommand
         {
             RecurringTaskId = request.RecurringTaskId,
@@ -52,7 +53,7 @@ public class RecurringTaskController(
         [FromBody] MaterializeRecurringOccurrenceRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = UserId;
         var command = new MaterializeRecurringOccurrenceCommand
         {
             RecurringTaskId = request.RecurringTaskId,
@@ -69,7 +70,7 @@ public class RecurringTaskController(
         [FromBody] UpdateRecurringOccurrenceRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = UserId;
         var command = new UpdateRecurringOccurrenceCommand
         {
             RecurringTaskId = request.RecurringTaskId,
@@ -87,7 +88,7 @@ public class RecurringTaskController(
         [FromBody] UpdateRecurringTaskFutureRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = UserId;
         var command = new UpdateRecurringTaskFutureCommand
         {
             RecurringTaskId = request.RecurringTaskId,
@@ -114,7 +115,7 @@ public class RecurringTaskController(
         [FromBody] DeleteRecurringOccurrenceRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = UserId;
         var command = new DeleteRecurringOccurrenceCommand
         {
             RecurringTaskId = request.RecurringTaskId,
@@ -125,13 +126,5 @@ public class RecurringTaskController(
 
         await deleteRecurringOccurrenceCommandHandler.Handle(command, ct);
         return Ok();
-    }
-
-    private Guid GetUserId()
-    {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-
-        return userId;
     }
 }

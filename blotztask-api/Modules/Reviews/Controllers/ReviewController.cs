@@ -2,6 +2,7 @@ using BlotzTask.Modules.Reviews.Commands;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Queries;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Reviews.Controllers;
@@ -19,15 +20,14 @@ namespace BlotzTask.Modules.Reviews.Controllers;
 public class ReviewController(
     GetReviewQueryHandler getReviewQueryHandler,
     GenerateReviewCommandHandler generateReviewCommandHandler,
-    ILogger<ReviewController> logger) : ControllerBase
+    ILogger<ReviewController> logger) : AuthorizedControllerBase
 {
     [HttpGet]
     public async Task<ReviewReportDto> GetReview(
         [FromQuery] GetReviewRequest request,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         logger.LogInformation(
             "GetReview for user {UserId} ({PeriodType}, anchor {AnchorDate})",
@@ -51,8 +51,7 @@ public class ReviewController(
         [FromBody] GenerateReviewRequest request,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         logger.LogInformation(
             "Generate review (manual) for user {UserId} ({PeriodType}, anchor {AnchorDate})",

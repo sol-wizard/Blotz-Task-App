@@ -2,6 +2,7 @@ using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Labels.Queries;
 using BlotzTask.Modules.Labels.Commands;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Labels;
@@ -14,14 +15,13 @@ public class LabelController(
     GetLabelTaskCountQueryHandler getLabelTaskCountQueryHandler,
     AddCustomLabelCommandHandler addCustomLabelCommandHandler,
     DeleteCustomLabelCommandHandler deleteCustomLabelCommandHandler
-) : ControllerBase
+) : AuthorizedControllerBase
 {
 
     [HttpGet]
     public async Task<List<LabelDTO>> GetAllLabels(CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var query = new GetAllLabelsQuery { UserId = userId };
         return await getAllLabelsQueryHandler.Handle(query, ct);
@@ -38,8 +38,7 @@ public class LabelController(
     public async Task<IActionResult> AddCustomLabel([FromBody] AddCustomLabelCommand request,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new AddCustomLabelCommand
         {
@@ -57,8 +56,7 @@ public class LabelController(
     [HttpDelete("{id}")]
     public async Task<string> DeleteCustomLabel(int id, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         var command = new DeleteCustomLabelCommand
         {
             LabelId = id,

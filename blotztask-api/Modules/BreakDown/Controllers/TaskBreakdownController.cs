@@ -1,6 +1,7 @@
 using BlotzTask.Modules.BreakDown.Commands;
 using BlotzTask.Modules.BreakDown.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.BreakDown.Controllers;
@@ -8,7 +9,7 @@ namespace BlotzTask.Modules.BreakDown.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class TaskBreakdownController : ControllerBase
+public class TaskBreakdownController : AuthorizedControllerBase
 {
     private readonly BreakdownTaskCommandHandler _breakdownTaskCommandHandler;
     private readonly BreakdownAndReplaceTaskCommandHandler _breakdownAndReplaceTaskCommandHandler;
@@ -35,8 +36,7 @@ public class TaskBreakdownController : ControllerBase
             request.RecurringTaskId,
             request.OccurrenceDate);
 
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new BreakdownAndReplaceTaskCommand
         {
@@ -54,8 +54,7 @@ public class TaskBreakdownController : ControllerBase
     {
         _logger.LogInformation("BreakdownTask called with taskId: {TaskId}", taskId);
 
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new BreakdownTaskCommand
         {

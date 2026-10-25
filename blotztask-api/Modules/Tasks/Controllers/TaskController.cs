@@ -5,6 +5,7 @@ using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
@@ -24,15 +25,14 @@ public class TaskController(
     GetMonthlyTaskAvailabilityQueryHandler getMonthlyTaskAvailabilityQueryHandler,
     IBackgroundTaskQueue backgroundTaskQueue,
     ILogger<TaskController> logger
-) : ControllerBase
+) : AuthorizedControllerBase
 {
     private readonly ILogger<TaskController> _logger = logger;
 
     [HttpGet("{id}")]
     public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var query = new GetTasksByIdQuery { TaskId = id, UserId = userId };
         return await getTaskByIdQueryHandler.Handle(query, ct);
@@ -45,8 +45,7 @@ public class TaskController(
         var stopwatch = Stopwatch.StartNew();
 
         _logger.LogInformation("Resolving UserId from HttpContext for GetTaskByDate");
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         _logger.LogInformation(
             "Handling GetTaskByDate for user {UserId} on date {Date} (timezone {TimeZoneId})",
@@ -74,8 +73,7 @@ public class TaskController(
         var stopwatch = Stopwatch.StartNew();
 
         _logger.LogInformation("Resolving UserId from HttpContext for GetWeeklyTaskAvailability");
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var query = new GetWeeklyTaskAvailabilityQuery
         {
@@ -104,8 +102,7 @@ public class TaskController(
         var stopwatch = Stopwatch.StartNew();
     
         _logger.LogInformation("Resolving UserId from HttpContext for GetMonthlyTaskAvailability");
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
     
         var query = new GetMonthlyTaskAvailabilityQuery
         {
@@ -125,15 +122,11 @@ public class TaskController(
             stopwatch.ElapsedMilliseconds);
         return result;
     }
-    
-    
-
 
     [HttpGet("all")]
     public async Task<IEnumerable<AllTaskItemDto>> GetAllTasks(CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var query = new GetAllTasksQuery { UserId = userId };
         return await getAllTasksQueryHandler.Handle(query, ct);
@@ -142,8 +135,7 @@ public class TaskController(
     [HttpPost]
     public async Task<int> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
 
         var command = new AddTaskCommand
@@ -159,8 +151,7 @@ public class TaskController(
     [HttpPut("{id}")]
     public async Task<string> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new EditTaskCommand { TaskId = id, TaskDetails = editTaskItem, UserId = userId };
 
@@ -170,8 +161,7 @@ public class TaskController(
     [HttpPut("task-completion-status/{id}")]
     public async Task<TaskStatusResultDto> TaskStatusUpdate(int id, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new TaskStatusUpdateCommand { TaskId = id, UserId = userId };
         var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
@@ -199,8 +189,7 @@ public class TaskController(
     [HttpDelete("{id}")]
     public async Task<string> DeleteTaskById(int id, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new DeleteTaskCommand { TaskId = id, UserId = userId };
 

@@ -1,6 +1,7 @@
 using BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
 using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
@@ -13,7 +14,7 @@ public class DeadlineController(
     UpdateDeadlinePinCommandHandler updateDeadlinePinCommandHandler,
     DeleteDeadlineTaskCommandHandler deleteDeadlineTaskCommandHandler,
     ILogger<DeadlineController> logger
-) : ControllerBase
+) : AuthorizedControllerBase
 {
     private readonly ILogger<DeadlineController> _logger = logger;
 
@@ -22,8 +23,7 @@ public class DeadlineController(
         [FromQuery] GetAllDdlTasksRequest request,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var query = new GetAllDdlTasksQuery { UserId = userId, TimeZoneId = request.TimeZoneId };
         return await getAllDdlTasksQueryHandler.Handle(query, ct);
@@ -33,8 +33,7 @@ public class DeadlineController(
     public async Task<IActionResult> UpdatePin(int taskId,
         [FromBody] UpdateDeadlinePinCommand command, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         command.TaskId = taskId;
         command.UserId = userId;
@@ -47,8 +46,7 @@ public class DeadlineController(
     [HttpDelete("{TaskId}")]
     public async Task<string> DeleteDeadlineTask([FromRoute] DeleteDeadlineTaskCommand command, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         
         return await deleteDeadlineTaskCommandHandler.Handle(command, ct);
     }
