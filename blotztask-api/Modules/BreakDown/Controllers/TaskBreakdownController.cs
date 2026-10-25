@@ -1,14 +1,11 @@
 using BlotzTask.Modules.BreakDown.Commands;
 using BlotzTask.Modules.BreakDown.DTOs;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.BreakDown.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class TaskBreakdownController : AuthorizedControllerBase
 {
     private readonly BreakdownTaskCommandHandler _breakdownTaskCommandHandler;

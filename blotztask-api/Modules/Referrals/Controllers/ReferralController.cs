@@ -4,14 +4,11 @@ using BlotzTask.Modules.Referrals.Events;
 using BlotzTask.Modules.Referrals.Queries;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Referrals.Controllers;
 
-[Authorize]
-[ApiController]
 [Route("api/referral")]
 public class ReferralController(
     GetMyReferralCodeQueryHandler getMyReferralCodeQueryHandler,

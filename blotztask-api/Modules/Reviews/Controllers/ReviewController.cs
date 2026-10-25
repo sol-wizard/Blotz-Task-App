@@ -1,7 +1,6 @@
 using BlotzTask.Modules.Reviews.Commands;
 using BlotzTask.Modules.Reviews.Dtos;
 using BlotzTask.Modules.Reviews.Queries;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,9 +13,7 @@ namespace BlotzTask.Modules.Reviews.Controllers;
 //          -> snapped to Mon 2026-06-08 local -> queried as a UTC range.
 //  Later - store TimeZoneId on the user (PBI), so review resolution becomes
 //          saved timezone -> request fallback -> reject.
-[ApiController]
 [Route("/api/[controller]")]
-[Authorize]
 public class ReviewController(
     GetReviewQueryHandler getReviewQueryHandler,
     GenerateReviewCommandHandler generateReviewCommandHandler,

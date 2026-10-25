@@ -1,14 +1,11 @@
 using BlotzTask.Modules.Users.Commands;
 using BlotzTask.Modules.Users.Queries;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Users;
 
-[ApiController]
 [Route("api/user-preferences")]
-[Authorize]
 public class UserPreferencesController(
     UpdateUserPreferenceCommandHandler updateUserPreferenceCommandHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler

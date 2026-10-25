@@ -1,14 +1,11 @@
 using BlotzTask.Modules.Badges.Commands;
 using BlotzTask.Modules.Badges.Queries;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Badges.Controllers;
 
-[ApiController]
 [Route("/api/[controller]")]
-[Authorize]
 public class BadgeController(
     GetUserBadgesQueryHandler getUserBadgesQueryHandler,
     GetBadgeByIdQueryHandler getBadgeByIdQueryHandler,

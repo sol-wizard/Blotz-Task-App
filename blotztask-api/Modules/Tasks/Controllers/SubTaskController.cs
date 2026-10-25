@@ -1,13 +1,10 @@
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
-[ApiController]
-[Authorize]
 [Route("api/[controller]")]
 public class SubTaskController(
     GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler,

@@ -1,14 +1,11 @@
 using BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
 using BlotzTask.Modules.Tasks.Queries.Deadlines;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
-[ApiController]
 [Route("/api/[controller]")]
-[Authorize]
 public class DeadlineController(
     GetAllDdlTasksQueryHandler getAllDdlTasksQueryHandler,
     UpdateDeadlinePinCommandHandler updateDeadlinePinCommandHandler,

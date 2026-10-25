@@ -1,14 +1,11 @@
 using BlotzTask.Modules.Pomodoro.Commands;
 using BlotzTask.Modules.Pomodoro.Queries;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Pomodoro.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class PomodoroController(
     GetPomodoroSettingQueryHandler getPomodoroSettingQueryHandler,
     UpdatePomodoroSettingCommandHandler updatePomodoroSettingCommandHandler,

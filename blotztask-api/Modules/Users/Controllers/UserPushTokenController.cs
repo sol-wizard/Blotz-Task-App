@@ -1,12 +1,9 @@
 using BlotzTask.Modules.Users.Commands;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Users.Controllers;
 
-[Authorize]
-[ApiController]
 [Route("api/user-push-tokens")]
 public class UserPushTokenController(UpsertPushTokenCommandHandler upsertPushTokenCommandHandler) : AuthorizedControllerBase
 {

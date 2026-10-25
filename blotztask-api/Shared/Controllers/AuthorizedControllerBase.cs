@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Shared.Controllers;
 
+[ApiController]
+[Authorize]
 public abstract class AuthorizedControllerBase : ControllerBase
 {
     // Set by UserContextMiddleware for authenticated requests

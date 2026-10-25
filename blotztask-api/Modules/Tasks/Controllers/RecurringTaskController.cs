@@ -1,13 +1,10 @@
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class RecurringTaskController(
     CreateRecurringTaskCommandHandler createRecurringTaskCommandHandler,
     SaveRecurringOccurrenceCommandHandler saveRecurringOccurrenceCommandHandler,

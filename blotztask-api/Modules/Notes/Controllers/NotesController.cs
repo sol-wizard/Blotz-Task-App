@@ -1,14 +1,11 @@
 using BlotzTask.Modules.Notes.Commands;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Queries;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Notes;
 
-[Authorize]
-[ApiController]
 [Route("api/[controller]")]
 public class NotesController(
     CreateNoteCommandHandler createNoteCommandHandler,

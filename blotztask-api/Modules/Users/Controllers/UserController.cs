@@ -7,9 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Users;
 
-[ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class UserController(
     SyncUserCommandHandler syncUserCommandHandler,
     GetUserProfileQueryHandler getUserProfileQueryHandler,

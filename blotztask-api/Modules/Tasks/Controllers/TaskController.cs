@@ -4,15 +4,12 @@ using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
-[ApiController]
 [Route("/api/[controller]")]
-[Authorize]
 public class TaskController(
     GetTasksByDateQueryHandler getTasksByDateQueryHandler,
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,

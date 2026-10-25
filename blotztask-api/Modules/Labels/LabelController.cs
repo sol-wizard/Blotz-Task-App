@@ -1,14 +1,11 @@
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Labels.Queries;
 using BlotzTask.Modules.Labels.Commands;
-using Microsoft.AspNetCore.Authorization;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Labels;
 
-[Authorize]
-[ApiController]
 [Route("api/[controller]")]
 public class LabelController(
     GetAllLabelsQueryHandler getAllLabelsQueryHandler,
