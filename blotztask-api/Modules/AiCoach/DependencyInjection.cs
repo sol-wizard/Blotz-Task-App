@@ -29,11 +29,14 @@ public static class DependencyInjection
                 "AiCoach resource limits must be positive and context budget at least 8000.")
             .Validate(AiCoachModelProfile.IsValid,
                 "AiCoach requires a valid DefaultModel/profile or legacy DeploymentId. Profiles require a deployment, supported API, positive limits and valid pricing/reasoning settings; Sol requires Responses.")
+            .Validate(options => options.DailyBudgetUsd is null or > 0,
+                "AiCoach:DailyBudgetUsd must be positive when configured.")
             .ValidateOnStart();
         if (services.All(service => service.ServiceType != typeof(TimeProvider)))
             services.AddSingleton(TimeProvider.System);
         services.AddHttpClient("AiCoachResponses", client => client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton<IModelGateway, ConfiguredModelGateway>();
+        services.AddSingleton<AiCoachDailyBudget>();
         services.AddSingleton<ModelContextBuilder>();
         services.AddSingleton<IModelTurnRuntime, ModelTurnRuntime>();
         services.AddSingleton<IConversationStore, SqlConversationStore>();

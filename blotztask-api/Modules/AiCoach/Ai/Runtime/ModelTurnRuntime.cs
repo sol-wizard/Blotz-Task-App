@@ -7,6 +7,7 @@ using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 using static BlotzTask.Modules.AiCoach.Ai.Runtime.ModelContextBuilder;
 using BlotzTask.Modules.AiCoach.Application.Projections;
+using BlotzTask.Modules.AiUsage.Exceptions;
 
 namespace BlotzTask.Modules.AiCoach.Ai.Runtime;
 
@@ -191,6 +192,11 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                     request.ConversationId, toolCalls, singleExecution?.Succeeded, singleExecution?.SuccessReply is not null);
             }
             return Result(null, "model_call_limit");
+        }
+        catch (AiQuotaExceededException)
+        {
+            logger.LogWarning("AiCoach daily model budget exhausted for {ConversationId}", request.ConversationId);
+            return Result(null, "quota");
         }
         catch (OperationCanceledException)
         {

@@ -5,6 +5,8 @@ public sealed class AiCoachModuleOptions
     public const string SectionName = "AiCoach";
     public string DefaultModel { get; set; } = "";
     public Dictionary<string, AiCoachModelOptions> Models { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    // Only enforced in Staging; all AI Coach model profiles share this Perth-calendar-day budget.
+    public decimal? DailyBudgetUsd { get; set; }
     // Retained for deployments that have not adopted named profiles yet.
     public string DeploymentId { get; set; } = "";
     public int MaxModelCallsPerTurn { get; set; } = 12;

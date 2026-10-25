@@ -246,6 +246,42 @@ namespace BlotzTask.Migrations
                     b.ToTable("AiCoachTraceEvent", (string)null);
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.AiCoach.Infrastructure.AiCoachBudgetCharge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("BudgetDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("ChargedUsd")
+                        .HasPrecision(20, 10)
+                        .HasColumnType("decimal(20,10)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Environment")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<bool>("Settled")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Environment", "BudgetDate");
+
+                    b.ToTable("AiCoachBudgetCharge", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.AiUsageRecord", b =>
                 {
                     b.Property<Guid>("Id")

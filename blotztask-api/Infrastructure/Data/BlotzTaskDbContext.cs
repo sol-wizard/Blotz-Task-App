@@ -11,6 +11,7 @@ using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.Referrals.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,6 +50,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiCoachConversationRecord> AiCoachConversations => Set<AiCoachConversationRecord>();
     public DbSet<AiCoachMessage> AiCoachMessages => Set<AiCoachMessage>();
     public DbSet<AiCoachDraftConfirmation> AiCoachDraftConfirmations => Set<AiCoachDraftConfirmation>();
+    public DbSet<AiCoachBudgetCharge> AiCoachBudgetCharges => Set<AiCoachBudgetCharge>();
     public DbSet<UserActivityDay> UserActivityDays { get; set; }
     public DbSet<UserMemory> UserMemories => Set<UserMemory>();
 
