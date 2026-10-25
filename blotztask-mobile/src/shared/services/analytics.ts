@@ -22,6 +22,7 @@ import {
   type ShareContentType,
   type OnboardingOutcome,
   type OnboardingSection,
+  type AboutYouAudience,
   type DeleteAccountReason,
 } from "@/shared/constants/posthog-events";
 
@@ -155,6 +156,29 @@ export const analytics = {
   },
 
   /**
+   * Fires at cold start when a login that was still open when the app was killed (Android
+   * killing the process while the user is in the browser) is recovered by `resumeSession()`.
+   * Without it these logins showed no outcome at all: `login_started`, then nothing.
+   */
+  trackLoginResumed(params: { msSinceLoginStarted: number }) {
+    posthog.capture(EVENTS.LOGIN_RESUMED, {
+      auth_domain: AUTH_CONFIG.domain,
+      ms_since_login_started: params.msSinceLoginStarted,
+    });
+  },
+
+  /**
+   * Fires at cold start when a login was still open when the app was killed and could not be
+   * recovered — the in-progress login state died with the app, so the user must log in again.
+   */
+  trackLoginInterrupted(params: { msSinceLoginStarted: number }) {
+    posthog.capture(EVENTS.LOGIN_INTERRUPTED, {
+      auth_domain: AUTH_CONFIG.domain,
+      ms_since_login_started: params.msSinceLoginStarted,
+    });
+  },
+
+  /**
    * Fires once per process when the post-login gate has both its requests and routes the
    * user into the app. Closes the funnel: `login_started` → `login_succeeded` → `app_entered`.
    * `source` separates a fresh login from a session restored at launch, so the two chains
@@ -267,6 +291,33 @@ export const analytics = {
   trackOnboardingVoiceTaskCreated(params: { taskCount: number }) {
     posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
       task_count: params.taskCount,
+    });
+  },
+
+  /**
+   * Fires when the user answers one "About you" question, and saves the answer on their
+   * person profile (`$set`) so every other event can be broken down by it.
+   * Multi-select answers are saved as an array of option keys.
+   */
+  trackAboutYouAnswered(params: {
+    question: string;
+    property: string;
+    answer: string | string[];
+    audience: AboutYouAudience;
+  }) {
+    posthog.capture(EVENTS.ABOUT_YOU_ANSWERED, {
+      question: params.question,
+      answer: params.answer,
+      audience: params.audience,
+      $set: { [params.property]: params.answer },
+    });
+  },
+
+  /** Fires when the user skips one "About you" question. Nothing is saved on the person. */
+  trackAboutYouSkipped(params: { question: string; audience: AboutYouAudience }) {
+    posthog.capture(EVENTS.ABOUT_YOU_SKIPPED, {
+      question: params.question,
+      audience: params.audience,
     });
   },
 

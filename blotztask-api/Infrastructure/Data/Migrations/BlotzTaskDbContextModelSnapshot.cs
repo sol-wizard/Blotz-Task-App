@@ -151,6 +151,9 @@ namespace BlotzTask.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsRepeatable")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -230,8 +233,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "BadgeId")
-                        .IsUnique();
+                    b.HasIndex("UserId", "BadgeId");
 
                     b.ToTable("UserBadges", (string)null);
                 });
