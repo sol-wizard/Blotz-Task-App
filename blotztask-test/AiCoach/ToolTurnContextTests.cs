@@ -16,7 +16,9 @@ public sealed class ToolTurnContextTests
     public async Task Handle_AddThenUpdateLargeList_KeepsOneCurrentDraftAndFitsBudget()
     {
         // Arrange: execute the real tools; only model selection is outside this context test.
-        var limits = new AiCoachModuleOptions();
+        // Accumulated snapshots measure about 47k bytes and the projection about 32k, so 40k separates them
+        // regardless of the default budget.
+        var limits = new AiCoachModuleOptions { ContextTokenBudget = 40000 };
         var builder = new ModelContextBuilder(Options.Create(limits), NullLogger<ModelContextBuilder>.Instance);
         var workspace = new DraftTools([], "Australia/Perth", true);
         var executor = new ToolExecutor(workspace, limits);
@@ -75,7 +77,7 @@ public sealed class ToolTurnContextTests
     public async Task Handle_ExtraTurnContext_ReservesSpaceWhenCompressingOldHistory()
     {
         // Arrange
-        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
+        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions { ContextTokenBudget = 32000 }),
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage("旧请求"),
             new GatewayAssistantMessage(new string('旧', 3000), []), new GatewayUserMessage("最新请求")], [],

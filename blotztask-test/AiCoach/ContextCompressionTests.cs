@@ -11,11 +11,14 @@ namespace BlotzTask.Tests.AiCoach;
 
 public sealed class ContextCompressionTests
 {
+    // Fixtures are sized against this budget so they still force compression when the default grows.
+    private static AiCoachModuleOptions CompressionLimits() => new() { ContextTokenBudget = 32000 };
+
     [Fact]
     public async Task Handle_OversizedSummaryWithNoOlderMessages_RecompressesSummaryAndPreservesLatestMessage()
     {
         // Arrange
-        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
+        var builder = new ModelContextBuilder(Options.Create(CompressionLimits()),
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("继续调整家庭清洁清单")], [], "Australia/Perth", DateTimeOffset.UtcNow,
@@ -44,7 +47,7 @@ public sealed class ContextCompressionTests
     public async Task Handle_HistorySummaryStillTooLong_RecompressesBeforeReturningContext()
     {
         // Arrange
-        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
+        var builder = new ModelContextBuilder(Options.Create(CompressionLimits()),
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("旧问题"), new GatewayAssistantMessage("旧回复", []),
@@ -71,7 +74,7 @@ public sealed class ContextCompressionTests
     public async Task Handle_SummaryNeverShrinks_StopsAfterTwoRecompressionAttempts()
     {
         // Arrange
-        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
+        var builder = new ModelContextBuilder(Options.Create(CompressionLimits()),
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
@@ -98,7 +101,7 @@ public sealed class ContextCompressionTests
     public async Task Handle_LargeToolExchange_SummarizesWholeExchangeAndPreservesCurrentState()
     {
         // Arrange: a complete tool exchange exceeds the preferred 32,000 / 3 byte batch.
-        var options = Options.Create(new AiCoachModuleOptions());
+        var options = Options.Create(CompressionLimits());
         var builder = new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance);
         var jsonOptions = new System.Text.Json.JsonSerializerOptions
         {
@@ -144,7 +147,7 @@ public sealed class ContextCompressionTests
     public async Task Handle_MultipleToolResults_KeepsCallAndResultsInOneBoundedSummaryRequest()
     {
         // Arrange
-        var options = Options.Create(new AiCoachModuleOptions());
+        var options = Options.Create(CompressionLimits());
         var builder = new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance);
         var first = new ModelToolCallRequest("first", "create_list", "{}");
         var second = new ModelToolCallRequest("second", "update_list", "{}");
@@ -182,7 +185,7 @@ public sealed class ContextCompressionTests
     public async Task Handle_ToolExchangeExceedingHardSummaryBudget_DoesNotSendOversizedSummaryOrDropHistory()
     {
         // Arrange
-        var options = Options.Create(new AiCoachModuleOptions());
+        var options = Options.Create(CompressionLimits());
         var builder = new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance);
         var call = new ModelToolCallRequest("oversized", "create_list", "{}");
         List<GatewayMessage> history = [new GatewayAssistantMessage(null, [call]),
@@ -210,7 +213,7 @@ public sealed class ContextCompressionTests
     public async Task Handle_LatestUserTurnWithToolResults_PreservesTheWholeCurrentTurn()
     {
         // Arrange
-        var options = Options.Create(new AiCoachModuleOptions());
+        var options = Options.Create(CompressionLimits());
         var builder = new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance);
         var call = new ModelToolCallRequest("current", "create_list", "{}");
         List<GatewayMessage> history = [new GatewayUserMessage("最新请求"),
@@ -238,7 +241,7 @@ public sealed class ContextCompressionTests
     {
         // Arrange: the shape that stuck a real conversation — one long reply, then many full-draft
         // events before the next user message, larger than one summary window.
-        var options = Options.Create(new AiCoachModuleOptions());
+        var options = Options.Create(CompressionLimits());
         var builder = new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance);
         var draftEvent = "App draft event (data): " + new string('周', 2000);
         List<GatewayMessage> history =

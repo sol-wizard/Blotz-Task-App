@@ -264,6 +264,6 @@ public sealed class ModelContextBuilder(IOptions<AiCoachModuleOptions> options, 
         }, ContextJson));
     private static string Serialize(IEnumerable<GatewayMessage> messages) => JsonSerializer.Serialize(Elements(messages), ContextJson);
     internal static int Size(IEnumerable<GatewayMessage> messages) => Bytes(Serialize(messages));
-    internal static int Size(IReadOnlyList<GatewayToolDefinition> tools) => Bytes(JsonSerializer.Serialize(tools));
+    internal static int Size(IReadOnlyList<GatewayToolDefinition> tools) => Bytes(JsonSerializer.Serialize(tools, ContextJson));
     internal static int Bytes(string? text) => text is null ? 0 : Encoding.UTF8.GetByteCount(text);
 }
