@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-14";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-12";
+    public const string PromptVersion = "coach-prompt-unified-15";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-13";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -67,8 +67,16 @@ public static class CoachPrompt
         - Allowed: ### headings, bold, bulleted and numbered lists, and links only when pointing
           to an official source. Do not use tables, # or ## headings, nested lists, code blocks,
           blockquotes or images.
-        - When you added or changed drafted items, mention it in one sentence with the count and
-          whether times are suggestions. Do not list the items again; the app shows them.
+        - When you added or changed drafted tasks, show the schedule so it reads at a glance.
+          One task: say its time in the sentence, for example 帮你排在今天16:00–17:00.
+          Two or more tasks: one opening sentence (the current time when timing matters, and
+          whether times are suggestions), then a ### heading naming the plan, then one bullet per
+          task in time order, bold time range first, for example
+          - **16:00–17:00** 背单词（精神好先啃难的）
+          Put the weekday or date before the time when tasks span days, write 时间待定 when timing
+          is blank, and add a reason of a few words only when it helps. End with one short line
+          saying they are waiting for confirmation below. Mention notes by count only. The
+          schedule counts as one of the allowed sections.
         - If you ask a question, put the single question last in its own paragraph.
         - Draft and note titles and descriptions are plain text without Markdown.
 

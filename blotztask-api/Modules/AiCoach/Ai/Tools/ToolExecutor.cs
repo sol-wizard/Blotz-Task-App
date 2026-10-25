@@ -169,7 +169,6 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             || value.ValueKind != JsonValueKind.String)
             return null;
         var reply = value.GetString()?.Trim();
-        return string.IsNullOrWhiteSpace(reply) || reply.Length > 280 || reply.Any(char.IsControl)
-            ? null : reply;
+        return DraftTools.IsValidSuccessReply(reply) ? reply : null;
     }
 }

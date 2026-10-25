@@ -19,7 +19,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
         item["properties"]!["suggestedFields"] = JsonNode.Parse("""{"type":"array","uniqueItems":true,"items":{"type":"string","enum":["date","startTime","endTime"]},"description":"Only task date/time fields supplied as AI suggestions. Preserve unchanged flags on updates."}""");
         item["required"] = JsonNode.Parse("""["kind","title"]""");
         var reply = legacy["properties"]!["successReply"]!.DeepClone();
-        reply["description"] = "Success reply of at most 280 characters, often the entire reply. One or two short, natural sentences in the user's register, like a friend helping out (in Chinese, spoken Mandarin), not a system notice. If the user's message carried feeling, open with a few words responding to it. If they changed their mind or voiced a worry, say in a few words whether their reasoning holds and why. Say what changed and that items await their confirmation in the list, not saved; mention suggested times when applicable. Do not list item titles or details; the app shows them.";
+        reply["description"] = "Success reply, often the entire reply, rendered as Markdown. Write in the user's register, like a friend helping out (in Chinese, spoken Mandarin), not a system notice. If the user's message carried feeling, open with a few words responding to it. If they changed their mind or voiced a worry, say in a few words whether their reasoning holds and why. For one task, one or two sentences that include its time range. For two or more tasks, use the schedule format from the instructions: one opening sentence, a ### heading, one bullet per task in time order with the bold time range first. Mention notes by count only. Say that items await their confirmation in the list, not saved; mention suggested times when applicable.";
         var updateFields = item.DeepClone();
         updateFields.AsObject().Remove("required");
         updateFields["properties"]!.AsObject().Remove("kind");
@@ -68,8 +68,8 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
             var args = document.RootElement;
             CheckFields(args, call.Name == "remove_items" ? ["itemIds", "successReply"] : ["items", "successReply"]);
             var reply = args.GetProperty("successReply").GetString();
-            if (string.IsNullOrWhiteSpace(reply) || reply.Length > 280 || reply.Any(char.IsControl))
-                throw new ArgumentException("Provide a successReply of at most 280 characters without control characters.");
+            if (!DraftTools.IsValidSuccessReply(reply))
+                throw new ArgumentException($"Provide a successReply of at most {DraftTools.SuccessReplyMaxLength} characters without control characters other than line breaks.");
             var pending = drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).ToArray();
             // Consolidate older task cards only after the complete operation has validated.
             var proposals = pending.SelectMany(draft => draft.Proposals).Where(item => !item.IsSaved).ToList();
