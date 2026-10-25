@@ -22,6 +22,7 @@ import {
   type ShareContentType,
   type OnboardingOutcome,
   type OnboardingSection,
+  type AboutYouAudience,
   type DeleteAccountReason,
 } from "@/shared/constants/posthog-events";
 
@@ -290,6 +291,33 @@ export const analytics = {
   trackOnboardingVoiceTaskCreated(params: { taskCount: number }) {
     posthog.capture(EVENTS.ONBOARDING_VOICE_TASK_CREATED, {
       task_count: params.taskCount,
+    });
+  },
+
+  /**
+   * Fires when the user answers one "About you" question, and saves the answer on their
+   * person profile (`$set`) so every other event can be broken down by it.
+   * Multi-select answers are saved as an array of option keys.
+   */
+  trackAboutYouAnswered(params: {
+    question: string;
+    property: string;
+    answer: string | string[];
+    audience: AboutYouAudience;
+  }) {
+    posthog.capture(EVENTS.ABOUT_YOU_ANSWERED, {
+      question: params.question,
+      answer: params.answer,
+      audience: params.audience,
+      $set: { [params.property]: params.answer },
+    });
+  },
+
+  /** Fires when the user skips one "About you" question. Nothing is saved on the person. */
+  trackAboutYouSkipped(params: { question: string; audience: AboutYouAudience }) {
+    posthog.capture(EVENTS.ABOUT_YOU_SKIPPED, {
+      question: params.question,
+      audience: params.audience,
     });
   },
 
