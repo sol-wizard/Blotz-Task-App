@@ -1,3 +1,5 @@
+using BlotzTask.Modules.Badges.Queries;
+
 namespace BlotzTask.Modules.Referrals.DTOs;
 
 public class ReferralCodeDto
@@ -12,5 +14,11 @@ public class ReferralCodeDto
 public class RedeemReferralCodeRequest
 {
     public required string Code { get; init; }
+}
+
+public class RedeemReferralCodeResponse
+{
+    // Null when no badge matched (e.g. its row isn't inserted yet) or awarding it failed.
+    public required BadgeByIdItemDto? Badge { get; init; }
 }
 
