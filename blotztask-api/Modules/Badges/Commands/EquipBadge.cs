@@ -20,7 +20,11 @@ public class EquipBadgeCommandHandler(BlotzTaskDbContext db, ILogger<EquipBadgeC
             .Where(ub => ub.UserId == command.UserId)
             .ToListAsync(ct);
 
-        var target = userBadges.FirstOrDefault(ub => ub.BadgeId == command.BadgeId)
+        // A repeatable badge has one record per award; its first award stands for the badge on the wall.
+        var target = userBadges
+            .Where(ub => ub.BadgeId == command.BadgeId)
+            .OrderBy(ub => ub.EarnedAtUtc)
+            .FirstOrDefault()
             ?? throw new NotFoundException($"Badge with ID {command.BadgeId} not found for the current user.");
 
         var equipped = userBadges

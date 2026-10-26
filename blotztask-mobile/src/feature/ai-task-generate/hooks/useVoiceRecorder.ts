@@ -15,7 +15,9 @@ import { usePeakLevelMeter } from "./usePeakLevelMeter";
 // ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
 const SPEECH_LEVEL_DBFS = -45;
 
-export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
+export function useVoiceRecorder(
+  submitAudioForTranscription: (uri: string, releasedAt: number) => Promise<void>,
+) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
   const { isRecording } = useAudioRecorderState(recorder);
@@ -114,6 +116,8 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const stopAndUpload = async (): Promise<boolean> => {
+    // The user's wait starts at mic release; stopping the recorder and reading the file count too.
+    const releasedAt = Date.now();
     await startPromiseRef.current;
 
     if (!recorder.isRecording) {
@@ -150,13 +154,14 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
 
     try {
-      await submitAudioForTranscription(uri);
+      await submitAudioForTranscription(uri, releasedAt);
     } catch (error) {
       console.warn("[Mic] Error submitting audio for transcription.", error);
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
         stage: "send",
         errorCode: "AudioSubmitFailed",
+        durationMs: Date.now() - releasedAt,
       });
       return false;
     }

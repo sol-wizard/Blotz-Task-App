@@ -14,5 +14,9 @@ namespace BlotzTask.Modules.AppVersion.Options
         public string MinimumSupportedVersion {get;set;} = "";
 
         public string StoreUrl {get;set;} = "";
+
+        // The website download page for APK installs (China users without Google Play).
+        // Empty means "use StoreUrl"; Play builds always use StoreUrl.
+        public string ApkDownloadUrl {get;set;} = "";
     }
 }

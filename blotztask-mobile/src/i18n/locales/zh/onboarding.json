@@ -31,5 +31,42 @@
     "dismiss": "以后再说",
     "sheetLabel": "你的第一条任务",
     "sheetHint": "按住按钮告诉我，\n我帮你记下来！"
+  },
+  "aboutYou": {
+    "next": "下一步",
+    "done": "完成",
+    "skip": "跳过",
+    "multiSelectHint": "可多选",
+    "questions": {
+      "need": {
+        "title": "你现在最想让我帮你做什么？",
+        "options": {
+          "plan": "记录我的待办，帮我安排",
+          "breakdown": "把一件大事拆成小步骤",
+          "talk": "压力有点大，想找人聊聊",
+          "browse": "随便看看"
+        }
+      },
+      "struggles": {
+        "title": "下面哪种情况，你最近一个月经常遇到？",
+        "options": {
+          "hardToStart": "明明想做，却很难开始",
+          "distracted": "做事容易分心，或者做到一半就放弃",
+          "forgetful": "总是忘事，或者记不住要做什么",
+          "none": "都没有"
+        }
+      },
+      "source": {
+        "title": "你是从哪里知道 Blotz 的？",
+        "options": {
+          "rednote": "小红书",
+          "friend": "朋友推荐",
+          "wechatGroup": "微信群聊",
+          "appStore": "应用商店搜索",
+          "otherSocial": "其他社交媒体",
+          "other": "其他"
+        }
+      }
+    }
   }
 }
