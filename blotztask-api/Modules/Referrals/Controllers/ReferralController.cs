@@ -24,26 +24,26 @@ public class ReferralController(
     }
 
     [HttpPost("redeem")]
-    public async Task<IActionResult> RedeemReferralCode([FromBody] RedeemReferralCodeRequest request, CancellationToken ct)
+    public async Task<RedeemReferralCodeResponse> RedeemReferralCode([FromBody] RedeemReferralCodeRequest request, CancellationToken ct)
     {
         var userId = UserId;
 
-        var referrerId = await redeemReferralCodeCommandHandler.Handle(new RedeemReferralCodeCommand
+        var result = await redeemReferralCodeCommandHandler.Handle(new RedeemReferralCodeCommand
         {
             RefereeUserId = userId,
             Code = request.Code
         }, ct);
-        
+
         backgroundTaskQueue.Enqueue(async (sp, ct) =>
         {
             var dispatcher = sp.GetRequiredService<IEventDispatcher>();
             await dispatcher.DispatchAsync(new ReferralCodeRedeemedEvent
             {
-                ReferrerUserId = referrerId,
+                ReferrerUserId = result.ReferrerUserId,
                 RefereeUserId = userId
             }, ct);
         });
-        
-        return Ok();
+
+        return new RedeemReferralCodeResponse { Badge = result.Badge };
     }
 }
