@@ -11,6 +11,8 @@ export type PlatformVersionPolicy = {
   latestVersion: string;
   minimumSupportedVersion: string;
   storeUrl: string;
+  /** Website download page for APK installs. Empty or missing → use storeUrl. */
+  apkDownloadUrl?: string;
 };
 
 export type AppVersionResponse = {
@@ -31,11 +33,17 @@ export const checkForUpdate = async (): Promise<UpdateCheckResult> => {
   }
   if (!currentVersion) return { kind: "upToDate" };
 
+  // APK installs (China, no Google Play) update from the website download page. Play builds must
+  // keep updating through Play only (Play policy), and only the APK build profiles set this flag.
+  const isApkBuild = process.env.EXPO_PUBLIC_DISTRIBUTION === "apk";
+  const updateUrl =
+    isApkBuild && platform.apkDownloadUrl ? platform.apkDownloadUrl : platform.storeUrl;
+
   if (isNewerVersion(platform.minimumSupportedVersion, currentVersion)) {
-    return { kind: "forcedUpdate", storeUrl: platform.storeUrl };
+    return { kind: "forcedUpdate", storeUrl: updateUrl };
   }
   if (isNewerVersion(platform.latestVersion, currentVersion)) {
-    return { kind: "outdated", storeUrl: platform.storeUrl };
+    return { kind: "outdated", storeUrl: updateUrl };
   }
   return { kind: "upToDate" };
 };
