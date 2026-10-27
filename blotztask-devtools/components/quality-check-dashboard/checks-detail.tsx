@@ -1,4 +1,4 @@
-import type { EvalCheck, QualityCheckExtractedTask } from "@/types/quality-check";
+import type { QualityCheckItem, QualityCheckExtractedTask } from "@/types/quality-check";
 import { TaskCardPreview } from "./task-card-preview";
 
 const LABEL_COLORS: Record<string, string> = {
@@ -8,7 +8,7 @@ const LABEL_COLORS: Record<string, string> = {
   Health: "text-rose-300",
 };
 
-const SummaryChecks = ({ checks }: { checks: EvalCheck[] }) => (
+const SummaryChecks = ({ checks }: { checks: QualityCheckItem[] }) => (
   <div className="flex flex-wrap gap-2 mb-6">
     {checks.map((check, i) => (
       <div
@@ -32,7 +32,7 @@ const SummaryChecks = ({ checks }: { checks: EvalCheck[] }) => (
   </div>
 );
 
-const TaskChecksTable = ({ checks }: { checks: EvalCheck[] }) => (
+const TaskChecksTable = ({ checks }: { checks: QualityCheckItem[] }) => (
   <table className="w-full text-xs font-[family-name:var(--font-geist-mono)]">
     <thead>
       <tr className="text-zinc-600 text-left">
@@ -71,7 +71,7 @@ export const ChecksDetail = ({
   extractedTasks,
   extractedNotes,
 }: {
-  checks: EvalCheck[];
+  checks: QualityCheckItem[];
   extractedTasks: QualityCheckExtractedTask[];
   extractedNotes: string[];
 }) => {
@@ -79,7 +79,7 @@ export const ChecksDetail = ({
 
   const taskGroups = checks
     .filter((c) => c.field.startsWith("task["))
-    .reduce<Record<number, EvalCheck[]>>((acc, check) => {
+    .reduce<Record<number, QualityCheckItem[]>>((acc, check) => {
       const match = check.field.match(/^task\[(\d+)\]\.(.+)$/);
       if (!match) return acc;
       const index = Number(match[1]);

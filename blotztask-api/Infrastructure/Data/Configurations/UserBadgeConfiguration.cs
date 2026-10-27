@@ -20,7 +20,7 @@ public class UserBadgeConfiguration : IEntityTypeConfiguration<UserBadge>
             .WithMany()
             .HasForeignKey(ub => ub.BadgeId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.HasIndex(ub => new { ub.UserId, ub.BadgeId }).IsUnique();
+        builder.HasIndex(ub => new { ub.UserId, ub.BadgeId });
         builder.HasIndex(ub => ub.UserId);
         builder.HasIndex(ub => ub.BadgeId);
     }

@@ -71,6 +71,15 @@
         "simulator": true
       }
     },
+    "preview-apk": {
+      "extends": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISTRIBUTION": "apk"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "ios": {
@@ -96,6 +105,15 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_APPLE_TEAM_ID": "Z6GFDAYSP9",
         "EXPO_APPLE_TEAM_TYPE": "INDIVIDUAL"
+      }
+    },
+    "production-apk": {
+      "extends": "production",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISTRIBUTION": "apk"
       }
     }
   },
