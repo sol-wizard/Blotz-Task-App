@@ -4,6 +4,7 @@ import DashedHouse from "../../../assets/images-svg/house-dashed.svg";
 import DashedSettings from "../../../assets/images-svg/settings-dashed.svg";
 import BunWhite from "../../../assets/images-svg/bun-white";
 import EditIcon from "../../../assets/images-svg/edit-icon.svg";
+import BadgeModalDecoration from "../../../assets/images-svg/badge-modal-decoration.svg";
 import ToastFail from "../../../assets/toast/toast1.svg";
 import ToastSuccess from "../../../assets/toast/toast2.svg";
 import ToastWarning from "../../../assets/toast/toast3.svg";
@@ -72,6 +73,7 @@ export const SVGIMAGES = {
   dashedSettings: DashedSettings,
   whiteBun: BunWhite,
   editIcon: EditIcon,
+  badgeModalDecoration: BadgeModalDecoration,
   toastFail: ToastFail,
   toastSuccess: ToastSuccess,
   toastWarning: ToastWarning,
