@@ -20,10 +20,11 @@ export function OnboardingInviteSection() {
     const trimmed = code.trim();
     if (!trimmed || isRedeeming) return;
     redeemReferralCode(trimmed, {
-      onSuccess: () => {
+      onSuccess: ({ badge }) => {
         Keyboard.dismiss();
         setRedeemed(true);
-        Toast.show({ type: "success", text1: t("invite.redeemSuccess") });
+        // The badge pop-up is the success feedback; the toast is only the fallback when there's no badge.
+        if (!badge) Toast.show({ type: "success", text1: t("invite.redeemSuccess") });
       },
     });
   };

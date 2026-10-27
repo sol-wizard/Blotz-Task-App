@@ -156,6 +156,29 @@ export const analytics = {
   },
 
   /**
+   * Fires at cold start when a login that was still open when the app was killed (Android
+   * killing the process while the user is in the browser) is recovered by `resumeSession()`.
+   * Without it these logins showed no outcome at all: `login_started`, then nothing.
+   */
+  trackLoginResumed(params: { msSinceLoginStarted: number }) {
+    posthog.capture(EVENTS.LOGIN_RESUMED, {
+      auth_domain: AUTH_CONFIG.domain,
+      ms_since_login_started: params.msSinceLoginStarted,
+    });
+  },
+
+  /**
+   * Fires at cold start when a login was still open when the app was killed and could not be
+   * recovered — the in-progress login state died with the app, so the user must log in again.
+   */
+  trackLoginInterrupted(params: { msSinceLoginStarted: number }) {
+    posthog.capture(EVENTS.LOGIN_INTERRUPTED, {
+      auth_domain: AUTH_CONFIG.domain,
+      ms_since_login_started: params.msSinceLoginStarted,
+    });
+  },
+
+  /**
    * Fires once per process when the post-login gate has both its requests and routes the
    * user into the app. Closes the funnel: `login_started` → `login_succeeded` → `app_entered`.
    * `source` separates a fresh login from a session restored at launch, so the two chains
@@ -341,6 +364,8 @@ export const analytics = {
    * Fires whenever an AI task generation attempt fails — covers client-side issues
    * (mic permission, recording, send) and backend errors (transcription, generation).
    * Use this to monitor reliability and slice by input mode, stage, and error code.
+   * `duration_ms`, when present, is timed from mic release (voice) or the send tap (text),
+   * the same clock as `ai_task_generation_succeeded`.
    */
   trackAiTaskGenerationFailed(params: {
     inputMode: AiTaskInputMode | "unknown";
@@ -355,6 +380,29 @@ export const analytics = {
     };
     if (params.durationMs !== undefined) properties.duration_ms = params.durationMs;
     posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
+  },
+
+  /**
+   * Fires once per AI task generation turn that returns a result: the wait the user felt,
+   * timed on the phone from mic release (voice) or the send tap (text) to the final result.
+   * Shares its clock with `ai_task_generation_failed.duration_ms`, so the two are comparable.
+   * `transcript_ms` (voice only) is the time until the transcript arrived, which separates slow
+   * transcription from slow generation. `task_count` counts every draft shown after the turn
+   * (tasks, recurring tasks and notes), including drafts kept from earlier turns.
+   */
+  trackAiTaskGenerationSucceeded(params: {
+    inputMode: AiTaskInputMode;
+    durationMs: number;
+    transcriptMs?: number;
+    taskCount: number;
+  }) {
+    const properties: Record<string, string | number> = {
+      input_mode: params.inputMode,
+      duration_ms: params.durationMs,
+      task_count: params.taskCount,
+    };
+    if (params.transcriptMs !== undefined) properties.transcript_ms = params.transcriptMs;
+    posthog.capture(EVENTS.AI_TASK_GENERATION_SUCCEEDED, properties);
   },
 
   /**
