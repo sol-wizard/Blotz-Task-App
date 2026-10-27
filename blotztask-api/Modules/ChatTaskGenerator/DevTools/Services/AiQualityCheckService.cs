@@ -29,13 +29,14 @@ public class AiQualityCheckService(
         if (!File.Exists(QualityCheckCasesPath))
             return QualityCheckRunResult.Fail("quality-check-cases.json not found");
 
-        var allCases = await LoadCasesAsync(caseId, ct);
+        var requestedIds = RequestedIds(caseId, request.CaseIds);
+        var allCases = await LoadCasesAsync(requestedIds, ct);
 
         if (allCases.Count == 0)
         {
-            var message = string.IsNullOrWhiteSpace(caseId)
+            var message = requestedIds.Count == 0
                 ? "No test cases found in quality-check-cases.json"
-                : $"No quality check case found with id '{caseId}'";
+                : $"No quality check case found with id '{string.Join(", ", requestedIds)}'";
             return QualityCheckRunResult.Fail(message);
         }
 
@@ -77,7 +78,11 @@ public class AiQualityCheckService(
                     PassCount = passCount,
                     ReliabilityRate = $"{(double)passCount / reliabilityRuns * 100:F0}%",
                     Checks = [],
-                    ExtractedTasks = []
+                    ExtractedTasks = [],
+                    // Summed over every run, so the scorecard shows what the whole reliability run cost.
+                    InputTokens = caseRuns.Sum(r => r.InputTokens),
+                    OutputTokens = caseRuns.Sum(r => r.OutputTokens),
+                    TotalTokens = caseRuns.Sum(r => r.TotalTokens)
                 };
             }).ToList();
         }
@@ -122,13 +127,33 @@ public class AiQualityCheckService(
         return results;
     }
 
-    private async Task<List<QualityCheckCase>> LoadCasesAsync(string? caseId, CancellationToken ct)
+    public async Task<List<QualityCheckCaseSummary>> ListCasesAsync(CancellationToken ct)
+    {
+        if (!File.Exists(QualityCheckCasesPath))
+            return [];
+
+        var cases = await LoadCasesAsync([], ct);
+        return cases
+            .Select(c => new QualityCheckCaseSummary { Id = c.Id, Input = c.Input, Turns = c.SetupInputs.Count + 1 })
+            .ToList();
+    }
+
+    private static HashSet<string> RequestedIds(string? caseId, List<string>? caseIds)
+    {
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(caseId)) ids.Add(caseId);
+        foreach (var id in caseIds ?? [])
+            if (!string.IsNullOrWhiteSpace(id)) ids.Add(id);
+        return ids;
+    }
+
+    private async Task<List<QualityCheckCase>> LoadCasesAsync(HashSet<string> requestedIds, CancellationToken ct)
     {
         var json = await File.ReadAllTextAsync(QualityCheckCasesPath, ct);
         var allCases = JsonSerializer.Deserialize<List<QualityCheckCase>>(json, JsonOptions) ?? [];
 
-        if (!string.IsNullOrWhiteSpace(caseId))
-            allCases = allCases.Where(c => c.Id.Equals(caseId, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (requestedIds.Count > 0)
+            allCases = allCases.Where(c => requestedIds.Contains(c.Id)).ToList();
 
         return allCases;
     }

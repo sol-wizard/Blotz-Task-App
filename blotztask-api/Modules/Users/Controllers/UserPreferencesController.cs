@@ -1,25 +1,22 @@
 using BlotzTask.Modules.Users.Commands;
 using BlotzTask.Modules.Users.Queries;
-using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Users;
 
-[ApiController]
 [Route("api/user-preferences")]
-[Authorize]
 public class UserPreferencesController(
     UpdateUserPreferenceCommandHandler updateUserPreferenceCommandHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler
-) : ControllerBase
+) : AuthorizedControllerBase
 {
     [HttpPut]
     public async Task<string> UpdateUserPreferences(
         [FromBody] UpdateUserPreferenceDto updateUserPreferenceDto,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new UpdateUserPreferenceCommand
         {
@@ -33,8 +30,7 @@ public class UserPreferencesController(
     [HttpGet]
     public async Task<GetUserPreferencesDTO> GetUserPreferences(CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var query = new GetUserPreferencesQuery
         {
