@@ -1,13 +1,11 @@
 using BlotzTask.Modules.Notes.Commands;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Queries;
-using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Notes;
 
-[Authorize]
-[ApiController]
 [Route("api/[controller]")]
 public class NotesController(
     CreateNoteCommandHandler createNoteCommandHandler,
@@ -16,13 +14,12 @@ public class NotesController(
     DeleteNoteCommandHandler deleteNoteCommandHandler,
     TimeEstimateCommandHandler timeEstimateCommandHandler,
     ConvertNoteToTaskCommandHandler convertNoteToTaskCommandHandler
-) : ControllerBase
+) : AuthorizedControllerBase
 {
     [HttpPost]
     public async Task<NoteDto> CreateNote([FromBody] NoteRequestDto request, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         var command = new CreateNoteCommand
         {
             UserId = userId,
@@ -36,8 +33,7 @@ public class NotesController(
     public async Task<AITimeEstimationResult?> EstimateNoteTime([FromBody] NoteTimeEstimationDto note,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new NoteTimeEstimationRequest
         {
@@ -51,8 +47,7 @@ public class NotesController(
     [HttpGet]
     public async Task<List<NoteDto>> SearchNote([FromQuery] string? query, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         var searchQuery = new SearchNotesQuery { UserId = userId, QueryString = query };
         return await searchNotesQueryHandler.Handle(searchQuery, ct);
     }
@@ -60,8 +55,7 @@ public class NotesController(
     [HttpPut("{id:guid}")]
     public async Task<NoteDto> UpdateNote(Guid id, [FromBody] NoteRequestDto dto, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         var command = new UpdateNoteCommand
         {
             NoteId = id,
@@ -75,8 +69,7 @@ public class NotesController(
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteNote(Guid id, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         var command = new DeleteNoteCommand
         {
             NoteId = id,
@@ -92,8 +85,7 @@ public class NotesController(
         [FromBody] Commands.ConvertNoteToTaskRequestDto? request,
         CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
         if (request is null)
             return BadRequest("Request body with StartTime and EndTime is required.");
 
