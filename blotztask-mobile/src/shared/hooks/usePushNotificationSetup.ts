@@ -1,5 +1,6 @@
 import { BadgeNotificationDTO } from "@/feature/badge/models/badge-notification-dto";
-import { useEffect, useState } from "react";
+import { useBadgeQueueStore } from "@/feature/badge/hooks/useBadgeQueueStore";
+import { useEffect } from "react";
 import * as Notifications from "expo-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
@@ -10,7 +11,6 @@ import { badgeKeys } from "../constants/query-key-factory";
 export function usePushNotificationSetup() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [badgeQueue, setBadgeQueue] = useState<BadgeNotificationDTO[]>([]);
 
   useEffect(() => {
     registerForPushNotificationsAsync();
@@ -29,9 +29,7 @@ export function usePushNotificationSetup() {
         obtainedAt: earnedAtUtc ? new Date(earnedAtUtc) : new Date(),
       };
 
-      setBadgeQueue((prev) =>
-        prev.some((queued) => queued.badgeId === badge.badgeId) ? prev : [...prev, badge],
-      );
+      useBadgeQueueStore.getState().enqueue(badge);
 
       queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     });
@@ -59,8 +57,4 @@ export function usePushNotificationSetup() {
       responseListener.remove();
     };
   }, []);
-
-  const dismissBadge = () => setBadgeQueue((prev) => prev.slice(1));
-
-  return { badgeQueue, dismissBadge };
 }
