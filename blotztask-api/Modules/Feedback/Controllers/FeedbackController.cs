@@ -19,15 +19,29 @@ public class FeedbackController(
     public async Task<IActionResult> Submit(
         [FromForm][MaxLength(500)] string text,
         [FromForm] IFormFile? image,
+        [FromForm] string? appVersion,
+        [FromForm] string? platform,
+        [FromForm] string? deviceModel,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 500)
             return BadRequest("Text is required and must be 500 characters or fewer.");
 
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            return Unauthorized();
+
         logger.LogInformation("Feedback submission received, hasImage={HasImage}", image is not null);
 
         await submitFeedbackCommandHandler.Handle(
-            new SubmitFeedbackCommand { Text = text, Image = image }, ct);
+            new SubmitFeedbackCommand
+            {
+                Text = text,
+                UserId = userId,
+                Image = image,
+                AppVersion = appVersion,
+                Platform = platform,
+                DeviceModel = deviceModel
+            }, ct);
 
         return Ok();
     }

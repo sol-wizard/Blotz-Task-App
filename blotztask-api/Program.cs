@@ -80,9 +80,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowSpecificOrigin");
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseMiddleware<UserContextMiddleware>();
 
 if (app.Environment.IsDevelopment())
