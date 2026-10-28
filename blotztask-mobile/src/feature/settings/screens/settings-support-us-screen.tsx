@@ -67,17 +67,17 @@ export default function SettingsSupportUsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row px-6 pt-6">
+      <View className="flex-row items-center px-5 py-4">
         <ReturnButton />
+        <Text className="text-2xl font-balooBold text-secondary ml-3">{t("supportUs.title")}</Text>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-balooExtraBold text-secondary">{t("supportUs.title")}</Text>
-        <Text className="text-base font-baloo text-gray-500 mt-2 leading-6">
+        <Text className="text-base font-baloo text-gray-500 leading-6">
           {t("supportUs.blurb")}
         </Text>
 
