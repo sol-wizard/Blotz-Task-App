@@ -1,6 +1,6 @@
 name: Prod - Submit app to the stores
 
-# Button 1 of the two-button production release.
+# Production release.
 #
 # Builds the production iOS + Android apps from main and uploads them - the iOS
 # build to App Store Connect, the Android bundle to the Play production track -
@@ -11,11 +11,19 @@ name: Prod - Submit app to the stores
 # upload lands as a draft (`releaseStatus: "draft"`) that only goes out when
 # someone starts the rollout in the console.
 #
-# It deploys no backend on purpose. Store review sits in the middle of a
-# production release, so by the time it passes, main has usually moved on.
-# Button 2 (Prod - Ship backend) deploys the API from the `submitted/<version>`
-# tag once the release is live in the stores, which is what keeps the API and the
-# binary users installed on one commit.
+# Then it deploys the production API from the same commit, before the build is
+# sent for review. The deploy waits for approval on the `prod` environment.
+#
+# After that, by hand, once each store is live: in Azure set that platform's
+# `AppVersion__<Ios|Android>__LatestVersion` to the new version (every release, it
+# drives the optional "update available" prompt), and its
+# `AppVersion__<Ios|Android>__MinimumSupportedVersion` too if this release forces
+# the update. Run Tag Release on the `submitted/<version>` tag once both are live.
+#
+# It also builds an APK for China users, who can't use Google Play, and once the API
+# is healthy publishes it to the `downloads` container in `stgblotztaskprod`: as
+# `BlotzTask-<version>.apk` (history) and over `BlotzTask-latest.apk`, the file the
+# website download page links to. APK users get the release then, without store review.
 
 on:
   workflow_dispatch:
@@ -154,6 +162,55 @@ jobs:
             --auto-submit \
             --non-interactive
 
+  # The China APK: same code and signing key as the Play build, but it opens the website
+  # download page to update. Kept out of the matrix above so a failed APK never blocks the
+  # store release; it is only published once the API is healthy (publish-apk below).
+  build-apk:
+    name: Build the China APK
+    needs: version
+    runs-on: ubuntu-latest
+    outputs:
+      apk_url: ${{ steps.build.outputs.apk_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: blotztask-mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: eas-json
+          path: blotztask-mobile
+
+      - name: Build the APK
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          URL=$(eas build \
+                  --platform android \
+                  --profile production-apk \
+                  --non-interactive \
+                  --json \
+                | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "::error::EAS did not return an APK download URL"
+            exit 1
+          fi
+          echo "apk_url=$URL" >> "$GITHUB_OUTPUT"
+
   tag-and-record:
     name: Tag the submitted commit and record the version
     # Every matrix leg must pass, so a half-submitted release never gets tagged.
@@ -165,9 +222,9 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      # This tag is the whole point of button 1. It pins the commit that became the
-      # binaries now waiting in the store consoles, so that button 2 can deploy the
-      # API from it days later instead of from whatever main has become by then.
+      # This tag is the whole point of this workflow. It pins the commit that became the
+      # binaries now waiting in the store consoles, so that Tag Release can record the
+      # release against it days later instead of whatever main has become by then.
       #
       # Forced because a rejected review is resubmitted under the same version, and
       # the tag should follow the code that was actually submitted last.
@@ -178,7 +235,7 @@ jobs:
           git tag -f "$TAG" "$GITHUB_SHA"
           git push --force origin "refs/tags/$TAG"
           echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Next: submit for review in App Store Connect, then once the release is live in both stores run **Prod - Ship backend** on this tag." >> "$GITHUB_STEP_SUMMARY"
+          echo "Next: approve the API deploy below. Once it is healthy, log in once with the prod build on TestFlight and check the task list loads, then submit for review. Once each store is live, set that platform's \`AppVersion__<Ios|Android>__LatestVersion\` in Azure to the new version, and its \`MinimumSupportedVersion\` too if this release forces the update. Once both are live, run **Tag Release** with commit \`$TAG\`." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/download-artifact@v4
         with:
@@ -201,3 +258,86 @@ jobs:
             Tagged as `submitted/${{ needs.version.outputs.new_version }}`.
 
             Merge to keep `eas.json` on `main` in step with what is in the stores.
+
+  deploy-api:
+    name: Deploy the API from the submitted commit
+    needs: tag-and-record
+    uses: ./.github/workflows/deploy-prod-api.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      contents: read
+
+  verify-api:
+    name: Health check
+    needs: deploy-api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the production API is healthy
+        working-directory: .
+        run: |
+          set -euo pipefail
+          BODY=$(curl -fsS --retry 12 --retry-delay 15 --retry-all-errors \
+            https://app-blotz-task-api-prod.azurewebsites.net/health)
+          echo "/health returned: $BODY"
+          if [ "$BODY" != "Healthy" ]; then
+            echo "::error::production API is not healthy"
+            exit 1
+          fi
+          echo "### Production API deployed and healthy" >> "$GITHUB_STEP_SUMMARY"
+          echo "Log in once with the prod build on TestFlight, then submit for review." >> "$GITHUB_STEP_SUMMARY"
+
+  publish-apk:
+    name: Publish the China APK
+    # After the health check, so the APK never goes out ahead of the API it was built for.
+    needs: [version, build-apk, verify-api]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    # The AZURE_* secrets and the managed identity's federated credential are scoped to
+    # this environment. The identity needs "Storage Blob Data Contributor" on the container.
+    environment:
+      name: "prod"
+    defaults:
+      run:
+        working-directory: .
+    env:
+      ACCOUNT: stgblotztaskprod
+      CONTAINER: downloads
+      VERSION: ${{ needs.version.outputs.new_version }}
+    steps:
+      - name: Download the APK from EAS
+        env:
+          APK_URL: ${{ needs.build-apk.outputs.apk_url }}
+        run: curl -fsSL --retry 3 -o blotz.apk "$APK_URL"
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # History copy first, then the fixed name the website links to. --overwrite on both:
+      # a "none" bump resubmits the same version. no-cache on latest so phones and proxies
+      # never hand out last release's file; the APK content type makes Android install it.
+      - name: Upload the APK
+        run: |
+          set -euo pipefail
+          for NAME in "BlotzTask-$VERSION.apk" "BlotzTask-latest.apk"; do
+            CACHE=$([ "$NAME" = "BlotzTask-latest.apk" ] && echo "no-cache" || echo "public, max-age=31536000")
+            az storage blob upload \
+              --account-name "$ACCOUNT" --container-name "$CONTAINER" \
+              --name "$NAME" --file blotz.apk --overwrite \
+              --content-type application/vnd.android.package-archive \
+              --content-cache-control "$CACHE" \
+              --auth-mode login --only-show-errors --output none
+          done
+          URL="https://$ACCOUNT.blob.core.windows.net/$CONTAINER/BlotzTask-latest.apk"
+          echo "### China APK $VERSION published" >> "$GITHUB_STEP_SUMMARY"
+          echo "The download page now serves it: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: azure logout
+        if: always()
+        run: az logout

@@ -7,10 +7,13 @@ export const EVENTS = {
   LOGIN_STARTED: "login_started",
   LOGIN_SUCCEEDED: "login_succeeded",
   LOGIN_FAILED: "login_failed",
+  LOGIN_RESUMED: "login_resumed",
+  LOGIN_INTERRUPTED: "login_interrupted",
   APP_ENTERED: "app_entered",
   POST_LOGIN_LOAD_FAILED: "post_login_load_failed",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
+  AI_TASK_GENERATION_SUCCEEDED: "ai_task_generation_succeeded",
   AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
   MIC_PERMISSION_RESOLVED: "mic_permission_resolved",
   ACTIVE_USER_5S: "active_user_5s",
@@ -38,6 +41,8 @@ export const EVENTS = {
   ONBOARDING_VOICE_MIC_PRESSED: "onboarding_voice_mic_pressed",
   ONBOARDING_VOICE_TASK_GENERATED: "onboarding_voice_task_generated",
   ONBOARDING_VOICE_TASK_CREATED: "onboarding_voice_task_created",
+  ABOUT_YOU_ANSWERED: "about_you_answered",
+  ABOUT_YOU_SKIPPED: "about_you_skipped",
   ACCOUNT_DELETED: "account_deleted",
 } as const;
 
@@ -53,6 +58,23 @@ export const SCREEN_NAMES = {
   POMODORO_FOCUS: "PomodoroFocus",
   TASK_CREATE: "TaskCreate",
   TASK_DETAILS: "TaskDetails",
+  HOME_CALENDAR: "HomeCalendar",
+  SETTINGS: "Settings",
+  SETTINGS_ABOUT: "SettingsAbout",
+  SETTINGS_ACCOUNT: "SettingsAccount",
+  SETTINGS_ALL_TASKS: "SettingsAllTasks",
+  SETTINGS_AVATAR: "SettingsAvatar",
+  SETTINGS_BETA_FEATURES: "SettingsBetaFeatures",
+  SETTINGS_INVITE: "SettingsInvite",
+  SETTINGS_LANGUAGE: "SettingsLanguage",
+  SETTINGS_MEMBERSHIP_PLAN: "SettingsMembershipPlan",
+  SETTINGS_NOTIFICATIONS: "SettingsNotifications",
+  SETTINGS_SUPPORT_US: "SettingsSupportUs",
+  SETTINGS_TASK_HANDLING: "SettingsTaskHandling",
+  SETTINGS_UPDATE_USER_NAME: "SettingsUpdateUserName",
+  BADGE_DETAILS: "BadgeDetails",
+  TASK_EDIT: "TaskEdit",
+  UPDATE_REQUIRED: "UpdateRequired",
 } as const;
 
 /** Which sign-in button was used. Only the Auth0 Universal Login button exists today. */
@@ -153,6 +175,9 @@ export type ShareContentType = "review" | "badge";
 export type OnboardingOutcome = "completed" | "skipped";
 
 export type OnboardingSection = "ai-voice" | "note" | "breakdown" | "invite";
+
+/** Who saw the "About you" questions: a new user after onboarding, or an existing user once on the home screen. */
+export type AboutYouAudience = "new_user" | "existing_user";
 
 /**
  * Why the user deleted their account, from the optional question in the delete modal.

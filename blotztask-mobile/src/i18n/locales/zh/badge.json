@@ -2,7 +2,6 @@
   "achievementUnlocked": " 成就解锁！",
   "shareCardHeadline": "成就解锁！",
   "obtainedOn": "获得于 {{date}}",
-  "view": "查看",
   "shareReward": "分享奖励",
   "sharing": "分享中…",
   "preview": {
@@ -15,6 +14,7 @@
   "details": {
     "equipReward": "装备奖励",
     "equipped": "已装备",
+    "equipFailed": "装备失败，请重试。",
     "notFound": "未找到徽章"
   }
 }

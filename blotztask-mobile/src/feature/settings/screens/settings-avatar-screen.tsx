@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
@@ -7,12 +8,18 @@ import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 import { LOCAL_AVATARS } from "@/feature/settings/constants/local-avatar-catalog";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsAvatarScreen() {
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   const avatars = LOCAL_AVATARS;
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_AVATAR);
+  }, []);
 
   const handleAvatarSelect = (avatar: AvatarDTO) => {
     if (isUserUpdating) return;

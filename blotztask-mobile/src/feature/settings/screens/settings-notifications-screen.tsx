@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
@@ -7,11 +8,17 @@ import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPref
 import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsNotificationsScreen() {
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
   const { t } = useTranslation("settings");
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_NOTIFICATIONS);
+  }, []);
 
   const handleUpdateUserPreferences = async () => {
     if (!userPreferences) return;

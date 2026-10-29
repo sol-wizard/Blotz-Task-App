@@ -39,10 +39,13 @@ export function useAiTaskGenerator({
   );
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
+  // Set when a voice turn's transcript arrives. Cleared at every new request, so a voice turn
+  // that failed after its transcript cannot leave its time on the next turn.
+  const transcriptReceivedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
   const isDismissedRef = useRef(false);
 
-  const submitAudioForTranscription = async (uri: string): Promise<void> => {
+  const submitAudioForTranscription = async (uri: string, releasedAt: number): Promise<void> => {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
       throw new Error("Cannot submit audio: not connected.");
     }
@@ -52,13 +55,16 @@ export function useAiTaskGenerator({
 
     setTranscript(undefined);
     setIsAiGenerating(true);
-    requestStartedAtRef.current = Date.now();
+    requestStartedAtRef.current = releasedAt; // mic release, so the file read above counts too
+    transcriptReceivedAtRef.current = null;
     pendingInputModeRef.current = "voice";
 
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
     } catch (error) {
       if (isDismissedRef.current) return;
+      // Already closed by a result or error handler; the connection dropped after it.
+      if (requestStartedAtRef.current === null) return;
 
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
@@ -67,7 +73,8 @@ export function useAiTaskGenerator({
       pendingInputModeRef.current = null;
       analytics.trackAiTaskGenerationFailed({
         inputMode: "voice",
-        stage: "transcription",
+        // The invoke spans both steps; a transcript means the drop came during generation.
+        stage: transcriptReceivedAtRef.current !== null ? "generation" : "transcription",
         errorCode: "NetworkError",
         durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
@@ -83,12 +90,15 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
+    transcriptReceivedAtRef.current = null;
     pendingInputModeRef.current = "text";
 
     try {
       await signalRService.invoke(connection, "SendMessage", text);
     } catch (error) {
       if (isDismissedRef.current) return;
+      // Already closed by a result or error handler; the connection dropped after it.
+      if (requestStartedAtRef.current === null) return;
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
       const startedAt = requestStartedAtRef.current;
@@ -176,10 +186,24 @@ export function useAiTaskGenerator({
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
     setTranscript(undefined);
     setIsAiGenerating(false);
+    const startedAt = requestStartedAtRef.current;
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
     pendingInputModeRef.current = null;
     const inputText = result.userInput;
+
+    if (inputMode && startedAt !== null) {
+      const transcriptReceivedAt = transcriptReceivedAtRef.current;
+      analytics.trackAiTaskGenerationSucceeded({
+        inputMode,
+        durationMs: Date.now() - startedAt,
+        transcriptMs: transcriptReceivedAt !== null ? transcriptReceivedAt - startedAt : undefined,
+        taskCount:
+          (result.extractedTasks?.length ?? 0) +
+          (result.extractedRecurringTasks?.length ?? 0) +
+          (result.extractedNotes?.length ?? 0),
+      });
+    }
 
     if (inputMode && inputText) {
       setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
@@ -228,6 +252,7 @@ export function useAiTaskGenerator({
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
         conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
+          transcriptReceivedAtRef.current = Date.now();
           setTranscript(text);
         });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {

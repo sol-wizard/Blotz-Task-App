@@ -159,6 +159,21 @@ public class QualityCheckRequest
     /// aggregated into a reliability score (e.g. 3/5). Defaults to 1 (single run).
     /// </summary>
     public int ReliabilityRuns { get; set; } = 1;
+
+    /// <summary>
+    /// Only run these case ids. Empty runs every case. Lets a dev re-run just the cases they are
+    /// tuning instead of the whole file, which is where most of the token cost goes.
+    /// </summary>
+    public List<string>? CaseIds { get; set; }
+}
+
+public class QualityCheckCaseSummary
+{
+    public required string Id { get; set; }
+    public required string Input { get; set; }
+
+    /// <summary>Model turns per run: the setup inputs plus the case input.</summary>
+    public int Turns { get; set; }
 }
 
 public class QualityCheckScorecard
