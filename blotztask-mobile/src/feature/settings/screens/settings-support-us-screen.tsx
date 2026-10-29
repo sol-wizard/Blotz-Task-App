@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { ASSETS } from "@/shared/constants/assets";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 // Must match the Consumable product IDs created in App Store Connect.
 // Array order is the display order — the store returns products unordered.
@@ -22,6 +24,10 @@ export default function SettingsSupportUsScreen() {
   const [status, setStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const [pendingSku, setPendingSku] = useState<string | null>(null);
   const [showThanks, setShowThanks] = useState(false);
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_SUPPORT_US);
+  }, []);
 
   const { connected, products, fetchProducts, requestPurchase, finishTransaction } = useIAP({
     onPurchaseSuccess: async (purchase) => {

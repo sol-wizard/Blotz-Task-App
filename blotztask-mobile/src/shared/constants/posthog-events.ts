@@ -58,6 +58,23 @@ export const SCREEN_NAMES = {
   POMODORO_FOCUS: "PomodoroFocus",
   TASK_CREATE: "TaskCreate",
   TASK_DETAILS: "TaskDetails",
+  HOME_CALENDAR: "HomeCalendar",
+  SETTINGS: "Settings",
+  SETTINGS_ABOUT: "SettingsAbout",
+  SETTINGS_ACCOUNT: "SettingsAccount",
+  SETTINGS_ALL_TASKS: "SettingsAllTasks",
+  SETTINGS_AVATAR: "SettingsAvatar",
+  SETTINGS_BETA_FEATURES: "SettingsBetaFeatures",
+  SETTINGS_INVITE: "SettingsInvite",
+  SETTINGS_LANGUAGE: "SettingsLanguage",
+  SETTINGS_MEMBERSHIP_PLAN: "SettingsMembershipPlan",
+  SETTINGS_NOTIFICATIONS: "SettingsNotifications",
+  SETTINGS_SUPPORT_US: "SettingsSupportUs",
+  SETTINGS_TASK_HANDLING: "SettingsTaskHandling",
+  SETTINGS_UPDATE_USER_NAME: "SettingsUpdateUserName",
+  BADGE_DETAILS: "BadgeDetails",
+  TASK_EDIT: "TaskEdit",
+  UPDATE_REQUIRED: "UpdateRequired",
 } as const;
 
 /** Which sign-in button was used. Only the Auth0 Universal Login button exists today. */
