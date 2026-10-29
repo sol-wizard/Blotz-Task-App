@@ -17,18 +17,24 @@ public class BadgeAwardService(
 {
     public async Task ProcessAsync(BadgeAwardCommand command, CancellationToken ct = default)
     {
+        var awardedBadges = await AwardAsync(command, ct);
+
+        await notifyBadgesToUser.HandleAsync(command.UserId, awardedBadges, ct);
+    }
+
+    // Awards without a push, for callers that show the badge from their own response instead.
+    public async Task<List<AwardedBadge>> AwardAsync(BadgeAwardCommand command, CancellationToken ct = default)
+    {
         var matchingBadgeIds = await findMatchingBadgesHandler.Handle(new FindMatchingBadgesCommand
         {
             TriggerAction = command.TriggerAction,
             EventValues = command.EventValues
         }, ct);
 
-        var awardedBadges = await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
+        return await awardNewBadgesToUserHandler.Handle(new AwardNewBadgesToUserCommand
         {
             UserId = command.UserId,
             BadgeIds = matchingBadgeIds
         }, ct);
-
-        await notifyBadgesToUser.HandleAsync(command.UserId, awardedBadges, ct);
     }
 }
