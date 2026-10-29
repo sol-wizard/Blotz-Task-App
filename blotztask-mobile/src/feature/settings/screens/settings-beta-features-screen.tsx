@@ -1,12 +1,19 @@
+import { useEffect } from "react";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsBetaFeaturesScreen() {
   const router = useRouter();
   const { t } = useTranslation("settings");
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_BETA_FEATURES);
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
