@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { ReturnButton } from "@/shared/components/return-button";
 import { useLocalSearchParams } from "expo-router";
@@ -6,6 +7,8 @@ import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBadgeDetailQuery } from "../hooks/useBadgeDetailQuery";
 import { BadgeDetailContent } from "../components/badge-detail-content";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function BadgeDetailsScreen() {
   const { t } = useTranslation("badge");
@@ -13,6 +16,10 @@ export default function BadgeDetailsScreen() {
   const params = useLocalSearchParams<{ badgeId: string }>();
   const badgeId = Number(params.badgeId);
   const { badgeDetail, isBadgeDetailLoading, isBadgeDetailError } = useBadgeDetailQuery(badgeId);
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.BADGE_DETAILS);
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-[#F5FAF8]">
