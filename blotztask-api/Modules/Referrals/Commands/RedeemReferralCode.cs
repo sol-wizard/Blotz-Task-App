@@ -1,4 +1,7 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Badges.Enum;
+using BlotzTask.Modules.Badges.Queries;
+using BlotzTask.Modules.Badges.Services;
 using BlotzTask.Modules.Referrals.Domain;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +14,19 @@ public class RedeemReferralCodeCommand
     public required string Code { get; init; }
 }
 
+public class RedeemReferralCodeResult
+{
+    public required Guid ReferrerUserId { get; init; }
+    public required BadgeByIdItemDto? Badge { get; init; }
+}
+
 public class RedeemReferralCodeCommandHandler(
     BlotzTaskDbContext db,
+    BadgeAwardService badgeAwardService,
+    GetBadgeByIdQueryHandler getBadgeByIdQueryHandler,
     ILogger<RedeemReferralCodeCommandHandler> logger)
 {
-    public async Task<Guid> Handle(RedeemReferralCodeCommand command, CancellationToken ct = default)
+    public async Task<RedeemReferralCodeResult> Handle(RedeemReferralCodeCommand command, CancellationToken ct = default)
     {
         var code = command.Code.Trim().ToUpperInvariant();
 
@@ -48,6 +59,44 @@ public class RedeemReferralCodeCommandHandler(
         logger.LogInformation("User {RefereeUserId} redeemed referral code from {ReferrerUserId}",
             command.RefereeUserId, referralCode.OwnerUserId);
 
-        return referralCode.OwnerUserId;
+        return new RedeemReferralCodeResult
+        {
+            ReferrerUserId = referralCode.OwnerUserId,
+            Badge = await TryAwardRefereeBadgeAsync(command.RefereeUserId, ct)
+        };
+    }
+
+    // The badge is returned in the response, not pushed, so the app can show it even with notifications off.
+    // The redeem is already saved, so a badge failure must not turn it into an error the user cannot retry.
+    private async Task<BadgeByIdItemDto?> TryAwardRefereeBadgeAsync(Guid refereeUserId, CancellationToken ct)
+    {
+        try
+        {
+            var awarded = await badgeAwardService.AwardAsync(new BadgeAwardCommand
+            {
+                UserId = refereeUserId,
+                TriggerAction = TriggerAction.ReferralCodeUsed,
+                EventValues = new Dictionary<EventValueKey, double>
+                {
+                    [EventValueKey.CodeUsed] = 1
+                }
+            }, ct);
+
+            if (awarded.Count == 0)
+                return null;
+
+            return await getBadgeByIdQueryHandler.Handle(new GetBadgeByIdQuery
+            {
+                UserId = refereeUserId,
+                BadgeId = awarded[0].BadgeId
+            }, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Failed to award the referee badge to user {RefereeUserId}", refereeUserId);
+            // Drop the unsaved badge row so a later save in this request can't retry it.
+            db.ChangeTracker.Clear();
+            return null;
+        }
     }
 }

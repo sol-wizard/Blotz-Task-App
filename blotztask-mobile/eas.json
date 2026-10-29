@@ -40,13 +40,13 @@
         "buildType": "app-bundle",
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.3.4"
+          "APP_VERSION": "1.3.5"
         }
       },
       "ios": {
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.3.4"
+          "APP_VERSION": "1.3.5"
         }
       },
       "env": {
@@ -69,6 +69,15 @@
       "autoIncrement": false,
       "ios": {
         "simulator": true
+      }
+    },
+    "preview-apk": {
+      "extends": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISTRIBUTION": "apk"
       }
     },
     "production": {
@@ -96,6 +105,15 @@
         "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_APPLE_TEAM_ID": "Z6GFDAYSP9",
         "EXPO_APPLE_TEAM_TYPE": "INDIVIDUAL"
+      }
+    },
+    "production-apk": {
+      "extends": "production",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISTRIBUTION": "apk"
       }
     }
   },

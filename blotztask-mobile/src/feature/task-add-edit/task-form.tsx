@@ -14,7 +14,7 @@ import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
 import { getTaskFormDefaults } from "./util/get-task-form-defaults";
-import { getTaskNotification } from "./util/get-task-notification";
+import { getTaskNotification } from "@/shared/util/get-task-notification";
 import { RecurrenceSelect } from "./components/recurrence-select";
 import {
   buildTaskTimePayload,

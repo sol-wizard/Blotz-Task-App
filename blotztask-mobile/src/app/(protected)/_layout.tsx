@@ -1,4 +1,5 @@
 import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
+import { useBadgeQueueStore } from "@/feature/badge/hooks/useBadgeQueueStore";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { FireworkOverlays } from "@/feature/firework-animation/components/firework-overlay";
 import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
@@ -30,7 +31,9 @@ export default function ProtectedLayout() {
   useTrackActiveUser5s();
   useRecordAppOpen();
   useSyncTodayTasksWidget();
-  const { badgeQueue, dismissBadge } = usePushNotificationSetup();
+  usePushNotificationSetup();
+  const badgeQueue = useBadgeQueueStore((state) => state.queue);
+  const dismissBadge = useBadgeQueueStore((state) => state.dismiss);
 
   return (
     <FireworkProvider>

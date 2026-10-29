@@ -2,15 +2,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useTranslation } from "react-i18next";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsUpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
   const { t } = useTranslation();
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_UPDATE_USER_NAME);
+  }, []);
 
   const enableDoneButton = name.trim().length > 0 && name.trim().length <= 20;
 
