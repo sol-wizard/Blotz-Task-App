@@ -78,6 +78,18 @@
     "title": "个人资料",
     "editProfile": "编辑个人资料"
   },
+  "feedback": {
+    "title": "意见反馈",
+    "placeholder": "说说你的想法：遇到的问题、建议，什么都可以。",
+    "addImage": "添加截图（可选）",
+    "processingImage": "正在处理图片…",
+    "removeImage": "移除",
+    "submit": "提交反馈",
+    "submitting": "提交中…",
+    "accountNote": "提交时会附上你的账号，方便我们排查问题",
+    "success": "谢谢！我们收到你的反馈了。",
+    "imageError": "这张图片添加失败，请换一张试试。"
+  },
   "about": {
     "title": "关于",
     "visitWebsite": "访问官网",

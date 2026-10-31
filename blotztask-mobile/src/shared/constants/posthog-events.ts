@@ -65,6 +65,7 @@ export const SCREEN_NAMES = {
   SETTINGS_ALL_TASKS: "SettingsAllTasks",
   SETTINGS_AVATAR: "SettingsAvatar",
   SETTINGS_BETA_FEATURES: "SettingsBetaFeatures",
+  SETTINGS_FEEDBACK: "SettingsFeedback",
   SETTINGS_INVITE: "SettingsInvite",
   SETTINGS_LANGUAGE: "SettingsLanguage",
   SETTINGS_MEMBERSHIP_PLAN: "SettingsMembershipPlan",

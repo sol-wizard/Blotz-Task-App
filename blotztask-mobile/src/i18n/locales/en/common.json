@@ -55,6 +55,7 @@
     "server": "Something went wrong on our end. Please try again later.",
     "validation": "That didn't work. Please check your input.",
     "default": "Something went wrong. Please try again.",
+    "feedbackRateLimited": "You've sent a lot of feedback today. Please try again tomorrow.",
     "invite": {
       "selfCode": "You cannot use your own invite code.",
       "onboardingOnly": "Invite codes can only be redeemed during onboarding.",

@@ -78,6 +78,18 @@
     "title": "Profile",
     "editProfile": "Edit Profile"
   },
+  "feedback": {
+    "title": "Feedback",
+    "placeholder": "Tell us what's on your mind: a bug, an idea, anything.",
+    "addImage": "Add a screenshot (optional)",
+    "processingImage": "Preparing image…",
+    "removeImage": "Remove",
+    "submit": "Send feedback",
+    "submitting": "Sending…",
+    "accountNote": "Your account is attached when you send, so we can look into your case.",
+    "success": "Thanks! We got your feedback.",
+    "imageError": "Couldn't add that image. Please try another one."
+  },
   "about": {
     "title": "About",
     "visitWebsite": "Visit Website",

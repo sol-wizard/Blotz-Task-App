@@ -55,6 +55,7 @@
     "server": "服务出了点问题，请稍后再试。",
     "validation": "请检查输入内容",
     "default": "出了点问题，请稍后再试。",
+    "feedbackRateLimited": "今天的反馈已经很多啦，请明天再试。",
     "invite": {
       "selfCode": "不能使用自己的邀请码。",
       "onboardingOnly": "邀请码只能在新手引导期间兑换。",
