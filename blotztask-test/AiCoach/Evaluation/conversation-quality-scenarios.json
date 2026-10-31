@@ -197,6 +197,84 @@
       "criteria": [ "纯知识问题：直接给有干货的答案，不加情绪开场；格式适合手机阅读。" ]
     },
     {
+      "id": "interview",
+      "category": "business",
+      "source": "Ronny 真机截图 10-29：准备面试，AI 先给整篇通用攻略，最后才问岗位（PBI 1679）",
+      "runs": 3,
+      "localTime": "2026-10-29T12:35:00+08:00",
+      "turns": [
+        { "user": "I'm going to prepare an interview.What should I do?", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion", "repliesInEnglish"] },
+        { "user": "Frontend developer, first round", "tone": ["noQuestion"], "business": ["draftCreated", "repliesInEnglish"] }
+      ],
+      "criteria": [
+        "第一轮只用一句话说明为什么要问，再问一个简短问题（岗位、第几面等）；不给通用攻略或步骤列表。",
+        "第一轮的快捷按钮是这个问题的答案（例如某个岗位和轮次），其中一个可以跳过、先要通用版。",
+        "第二轮按用户说的岗位和轮次给具体步骤并建草稿，说明用了什么假设；不再追问同一件事，不写「了解公司」这类通用步骤。"
+      ]
+    },
+    {
+      "id": "interview-full-info",
+      "category": "business",
+      "source": "PBI 1679：信息已给全时不应再问",
+      "runs": 2,
+      "localTime": "2026-10-29T12:35:00+08:00",
+      "turns": [
+        { "user": "下周二前端二面，面试官是技术总监，帮我准备一下", "tone": [], "business": ["draftCreated"] }
+      ],
+      "criteria": [ "用户已经给了岗位、轮次和面试官：直接给针对前端二面和技术总监的具体准备步骤并建草稿，不再问岗位或轮次。" ]
+    },
+    {
+      "id": "interview-with-time",
+      "category": "business",
+      "source": "PBI 1679：硬截止例外和准备类例外同时适用时只问一次",
+      "runs": 2,
+      "localTime": "2026-10-29T10:00:00+08:00",
+      "turns": [
+        { "user": "明天下午要去面试，我得准备一下", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion"] },
+        { "user": "下午三点，产品经理一面", "tone": ["noQuestion"], "business": ["draftCreated"] }
+      ],
+      "criteria": [
+        "第一轮只问一个问题（岗位、轮次；如果还要问时间，就合在同一个问题里），不给通用攻略。",
+        "第二轮直接按产品经理一面、下午三点给具体步骤并建草稿，不再问第二个问题。"
+      ]
+    },
+    {
+      "id": "milk",
+      "category": "business",
+      "source": "PBI 1679：简单小事不受准备类例外影响",
+      "runs": 2,
+      "localTime": "2026-10-29T10:00:00+08:00",
+      "turns": [
+        { "user": "提醒我明天买牛奶", "tone": ["noQuestion"], "business": ["draftCreated"] }
+      ],
+      "criteria": [ "简单提醒：直接建草稿并给建议时间，不提问。" ]
+    },
+    {
+      "id": "ccl",
+      "category": "basic",
+      "source": "PBI 1679：AI 自己能规划的考试不先问",
+      "runs": 2,
+      "localTime": "2026-10-29T10:00:00+08:00",
+      "turns": [
+        { "user": "CCL 怎么准备？", "tone": ["noFormalChinese"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "有名字的考试：直接给有干货的准备方法，不先反问岗位、轮次之类的信息才给内容。" ]
+    },
+    {"id": "gen-talk-en", "category": "generalization", "source": "PBI 1679 泛化：英文演讲", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "I have to give a talk next week. How should I prepare?", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion", "repliesInEnglish"]}, {"user": "Product update for about 50 colleagues, 20 minutes", "tone": ["noQuestion"], "business": ["draftCreated", "repliesInEnglish"]}], "criteria": ["第一轮只用一句话说明为什么要问，再问一个简短问题（两三项只有用户知道、会改变计划的信息）；不给通用攻略或步骤列表；按钮是这个问题的答案，其中一个可以跳过。", "第二轮按用户给的信息给具体步骤并建草稿，说明假设；不再追问。"]},
+    {"id": "gen-pitch", "category": "generalization", "source": "PBI 1679 泛化：客户方案汇报", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "下周要跟客户做方案汇报，帮我准备一下", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion"]}, {"user": "给一家连锁超市讲会员小程序方案，对方是运营总监，30分钟", "tone": ["noQuestion"], "business": ["draftCreated"]}], "criteria": ["第一轮只用一句话说明为什么要问，再问一个简短问题（两三项只有用户知道、会改变计划的信息）；不给通用攻略或步骤列表；按钮是这个问题的答案，其中一个可以跳过。", "第二轮按用户给的信息给具体步骤并建草稿，说明假设；不再追问。"]},
+    {"id": "gen-wedding", "category": "generalization", "source": "PBI 1679 泛化：婚礼致辞", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "我要在朋友婚礼上致辞，怎么准备？", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion"]}, {"user": "大学室友，伴郎致辞，三分钟左右", "tone": ["noQuestion"], "business": ["draftCreated"]}], "criteria": ["第一轮只用一句话说明为什么要问，再问一个简短问题（两三项只有用户知道、会改变计划的信息）；不给通用攻略或步骤列表；按钮是这个问题的答案，其中一个可以跳过。", "第二轮按用户给的信息给具体步骤并建草稿，说明假设；不再追问。"]},
+    {"id": "gen-defense", "category": "generalization", "source": "PBI 1679 泛化：论文答辩", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "我下个月要论文答辩，该怎么准备", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion"]}, {"user": "硕士答辩，计算机视觉方向，讲15分钟加10分钟提问", "tone": ["noQuestion"], "business": ["draftCreated"]}], "criteria": ["第一轮只用一句话说明为什么要问，再问一个简短问题（两三项只有用户知道、会改变计划的信息）；不给通用攻略或步骤列表；按钮是这个问题的答案，其中一个可以跳过。", "第二轮按用户给的信息给具体步骤并建草稿，说明假设；不再追问。"]},
+    {"id": "gen-raise", "category": "generalization", "source": "PBI 1679 泛化：谈加薪", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "下周要和老板谈加薪，我该怎么准备？", "tone": ["hasFollowUps"], "business": ["noNewDraft", "asksQuestion"]}, {"user": "做了两年运营，今年负责的活动拉新涨了40%，想涨20%", "tone": ["noQuestion"], "business": ["draftCreated"]}], "criteria": ["第一轮只用一句话说明为什么要问，再问一个简短问题（两三项只有用户知道、会改变计划的信息）；不给通用攻略或步骤列表；按钮是这个问题的答案，其中一个可以跳过。", "第二轮按用户给的信息给具体步骤并建草稿，说明假设；不再追问。"]},
+    {"id": "gen-interview-nervous", "category": "generalization", "source": "PBI 1679 泛化：面试 + 情绪", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "明天有个面试，好紧张", "tone": [], "business": ["noNewDraft"]}], "criteria": ["先回应紧张；可以问一个简短问题或给按钮，但不给整篇攻略，不自动建卡。"]},
+    {"id": "gen-ielts-en", "category": "generalization", "source": "PBI 1679 泛化：有名字的考试（英文）", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "How do I prepare for the IELTS speaking test?", "tone": [], "business": ["noNewDraft", "repliesInEnglish"]}], "criteria": ["有名字的考试：直接给有干货的准备方法，不先反问才给内容。"]},
+    {"id": "gen-driving", "category": "generalization", "source": "PBI 1679 泛化：有名字的考试（驾考）", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "我下周考科目二，怎么准备", "tone": [], "business": ["noNewDraft"]}], "criteria": ["有名字的考试：直接给科目二的具体练法，不先反问才给内容。"]},
+    {"id": "gen-howto-general", "category": "generalization", "source": "PBI 1679 泛化：一般知识问题", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "面试一般会问哪些问题？", "tone": [], "business": ["noNewDraft"]}], "criteria": ["一般知识问题：直接列常见面试问题，不先反问岗位、轮次才给内容。"]},
+    {"id": "gen-explicit-add", "category": "generalization", "source": "PBI 1679 泛化：明确要加任务", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "帮我加个任务：周五下午三点面试", "tone": ["noQuestion"], "business": ["draftCreated"]}], "criteria": ["用户明确要加任务：直接建草稿，不先问岗位或轮次。"]},
+    {"id": "gen-talk-full", "category": "generalization", "source": "PBI 1679 泛化：演讲信息已给全", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "周五给新员工做30分钟的介绍，讲我们自己的记账App怎么用，帮我准备一下", "tone": [], "business": ["draftCreated"]}], "criteria": ["信息已给全：直接给具体准备步骤并建草稿，不再问听众或时长。"]},
+    {"id": "gen-interview-full-en", "category": "generalization", "source": "PBI 1679 泛化：英文面试信息已给全", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "I have a second-round product manager interview with the CEO next Monday. Help me prepare.", "tone": [], "business": ["draftCreated", "repliesInEnglish"]}], "criteria": ["信息已给全：直接给针对产品经理二面、CEO 面试官的具体步骤并建草稿，不再问岗位或轮次。"]},
+    {"id": "gen-dentist", "category": "generalization", "source": "PBI 1679 泛化：简单预约", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "明天上午要去看牙医", "tone": [], "business": ["draftCreated"]}], "criteria": ["简单预约：直接建草稿，不因准备类例外先问问题。"]},
+    {"id": "gen-moving", "category": "generalization", "source": "PBI 1679 泛化：灰色地带（搬家）", "runs": 2, "localTime": "2026-10-29T10:00:00+08:00", "turns": [{"user": "下个月要搬家，帮我规划一下", "tone": [], "business": []}], "criteria": ["观察用：可以先问一个会改变计划的问题（比如东西多少、距离），也可以直接按假设规划；不能问「先从哪部分开始」，不能问两轮。"]},
+    {
       "id": "hello",
       "category": "basic",
       "source": "语气测试",
