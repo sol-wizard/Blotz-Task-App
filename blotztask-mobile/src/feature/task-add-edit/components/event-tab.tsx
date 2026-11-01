@@ -100,7 +100,7 @@ export const EventTab = ({ animateOnEnter = true }: { animateOnEnter?: boolean }
               className="bg-background px-4 py-2 rounded-xl"
             >
               <Text className="text-xl font-balooThin text-secondary ">
-                {startTimeValue ? format(startTimeValue, "hh:mm a") : t("form.selectTime")}
+                {startTimeValue ? format(startTimeValue, "HH:mm") : t("form.selectTime")}
               </Text>
             </Pressable>
           </View>
@@ -170,7 +170,7 @@ export const EventTab = ({ animateOnEnter = true }: { animateOnEnter?: boolean }
                       : "text-secondary"
                 }`}
               >
-                {endTimeValue ? format(endTimeValue, "hh:mm a") : t("form.selectTime")}
+                {endTimeValue ? format(endTimeValue, "HH:mm") : t("form.selectTime")}
               </Text>
             </Pressable>
           </View>

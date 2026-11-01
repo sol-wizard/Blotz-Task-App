@@ -30,7 +30,8 @@
     "subtitle": "Tap me and tell me what's on today.",
     "dismiss": "Not now",
     "sheetLabel": "Your first task",
-    "sheetHint": "Hold the button and tell me.\nI'll write it down!"
+    "sheetHint": "Hold the button and tell me.\nI'll write it down!",
+    "sheetHintTyping": "Type what you need to do.\nI'll write it down!"
   },
   "aboutYou": {
     "next": "Next",
