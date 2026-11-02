@@ -7,6 +7,7 @@ import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { useRecordAppOpen } from "@/shared/hooks/useRecordAppOpen";
 import { useSyncTodayTasksWidget } from "@/feature/widget/hooks/useSyncTodayTasksWidget";
+import { usePrefetchTodayScreen } from "@/feature/calendar/hooks/usePrefetchTodayScreen";
 import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
 import { useAuth0 } from "react-native-auth0";
@@ -30,6 +31,7 @@ export default function ProtectedLayout() {
   useLanguageInit();
   useTrackActiveUser5s();
   useRecordAppOpen();
+  usePrefetchTodayScreen();
   useSyncTodayTasksWidget();
   usePushNotificationSetup();
   const badgeQueue = useBadgeQueueStore((state) => state.queue);

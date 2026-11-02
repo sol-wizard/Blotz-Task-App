@@ -5,16 +5,21 @@ import { useUpdateCheck, UpdateCheckStatus } from "@/shared/hooks/useUpdateCheck
 import LoadingScreen from "@/shared/components/loading-screen";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { AppState } from "react-native";
 import { analytics } from "@/shared/services/analytics";
 
 /**
- * How long the splash may hold before it is reported. Both gates are network-bound: the
- * auth check can wait on an Auth0 token refresh (10 s per host on Android, 60 s on iOS) and
- * the version check on our API (30 s axios timeout), and the version request itself waits
- * for the token first. A user stuck here sees only the splash and reports "stuck loading".
+ * How long the splash may hold before it is reported. The auth check can wait on an Auth0
+ * token refresh (10 s per host on Android, 60 s on iOS). The version gate only reads the
+ * policy saved by the last launch; the network check runs in the background. A user stuck
+ * here sees only the splash and reports "stuck loading".
  */
 const SLOW_STARTUP_MS = 10_000;
+
+// Module scope, so once per process: a later mount of this route (after a login, or any
+// `router.replace("/")`) is not a cold start and must not report.
+let isSlowStartupWatchArmed = true;
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,7 +60,6 @@ export default function Index() {
 
   const isUpdateCheckPending = updateCheck.status === UpdateCheckStatus.Pending;
   const isReady = !isAuthLoading && !isUpdateCheckPending;
-  const hasReportedSlowStartup = useRef(false);
 
   useEffect(() => {
     if (isReady) {
@@ -65,20 +69,25 @@ export default function Index() {
 
   // Report a slow splash, naming which gate was still open at the threshold. The timer is
   // anchored to bundle start rather than mount, so re-arming when a gate flips before the
-  // threshold re-targets the same absolute moment; the cleanup on `isReady` cancels it for
-  // good.
+  // threshold re-targets the same absolute moment.
   //
-  // Once per launch. A gate flipping *after* the threshold re-runs this effect with a
-  // `remaining` that is already negative, which `Math.max` turns into "fire now" — without
-  // the ref that second arm would report the same slow startup again under a narrower
-  // `waiting_on`. Which gate was the long pole belongs in a completion event carrying both
-  // durations, not in a repeat of this warning.
+  // Disarmed for good once the splash is ready, once reported (a gate flipping *after* the
+  // threshold would otherwise report again under a narrower `waiting_on`), and when the app
+  // goes to the background: the clock keeps running there, so the wait is not the user's.
   useEffect(() => {
-    if (isReady || hasReportedSlowStartup.current) return;
+    if (!isSlowStartupWatchArmed) return;
+    if (isReady || AppState.currentState === "background") {
+      isSlowStartupWatchArmed = false;
+      return;
+    }
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "background") isSlowStartupWatchArmed = false;
+    });
     const remaining = SLOW_STARTUP_MS - analytics.msSinceLaunch();
     const timer = setTimeout(
       () => {
-        hasReportedSlowStartup.current = true;
+        if (!isSlowStartupWatchArmed) return;
+        isSlowStartupWatchArmed = false;
         /* eslint-disable camelcase */
         Sentry.captureMessage("startup_slow", {
           level: "warning",
@@ -95,7 +104,10 @@ export default function Index() {
       },
       Math.max(remaining, 0),
     );
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      subscription.remove();
+    };
   }, [isReady, isAuthLoading, isUpdateCheckPending]);
 
   if (!isReady) {
