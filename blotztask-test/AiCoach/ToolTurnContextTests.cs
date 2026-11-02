@@ -76,8 +76,10 @@ public sealed class ToolTurnContextTests
     [Fact]
     public async Task Handle_ExtraTurnContext_ReservesSpaceWhenCompressingOldHistory()
     {
-        // Arrange
-        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions { ContextTokenBudget = 32000 }),
+        // Arrange: the prompt, tools and fixed context measure about 22.8k bytes. At 38k the 9k history fits on its
+        // own, so only the 10k reservation can force a summary. The budget moves with the prompt: this scenario needs
+        // roughly fixed + 10.5k (below that, context_limit) to fixed + 19.7k (above that, nothing is summarized).
+        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions { ContextTokenBudget = 38000 }),
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage("旧请求"),
             new GatewayAssistantMessage(new string('旧', 3000), []), new GatewayUserMessage("最新请求")], [],
