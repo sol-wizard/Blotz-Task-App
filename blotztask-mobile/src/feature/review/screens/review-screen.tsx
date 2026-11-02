@@ -1,9 +1,6 @@
-import { useEffect, useState, useRef } from "react";
-import { analytics } from "@/shared/services/analytics";
-import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
+import { useState, useRef } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { addMonths, format, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
@@ -21,12 +18,7 @@ import { useReviewShare } from "../hooks/useReviewShare";
 import { ReviewPeriodType } from "../models/review-dto";
 
 export default function ReviewScreen() {
-  useEffect(() => {
-    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_REVIEW);
-  }, []);
-
   // — Hooks ——————————————————————————————————————————————————————
-  const router = useRouter();
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
   const [activeTab, setActiveTab] = useState<ReviewPeriodType>(ReviewPeriodType.Weekly);
@@ -92,7 +84,6 @@ export default function ReviewScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ReviewHeader
         title={t("review.title")}
-        onBack={() => router.back()}
         showShare={showShareButton}
         isSharing={isSharingImage}
         onShare={handleShareReview}

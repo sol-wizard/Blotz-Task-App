@@ -1,7 +1,7 @@
 import DashedStar from "../../../assets/images-svg/star-dashed.svg";
-import DashedPlus from "../../../assets/images-svg/plus-dashed.svg";
 import DashedHouse from "../../../assets/images-svg/house-dashed.svg";
 import DashedSettings from "../../../assets/images-svg/settings-dashed.svg";
+import DashedEnvelope from "../../../assets/images-svg/envelope-dashed.svg";
 import BunWhite from "../../../assets/images-svg/bun-white";
 import EditIcon from "../../../assets/images-svg/edit-icon.svg";
 import ToastFail from "../../../assets/toast/toast1.svg";
@@ -67,9 +67,9 @@ export const PNGIMAGES = {
 
 export const SVGIMAGES = {
   dashedStar: DashedStar,
-  dashedPlus: DashedPlus,
   dashedHouse: DashedHouse,
   dashedSettings: DashedSettings,
+  dashedEnvelope: DashedEnvelope,
   whiteBun: BunWhite,
   editIcon: EditIcon,
   toastFail: ToastFail,

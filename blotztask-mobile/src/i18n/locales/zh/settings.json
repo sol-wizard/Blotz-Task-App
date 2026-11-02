@@ -1,18 +1,22 @@
 {
   "title": "设置",
   "menu": {
-    "account": "账户",
-    "review": "回顾",
-    "MembershipPlan": "会员计划",
-    "betaFeatures": "测试功能",
-    "taskHandling": "任务处理",
-    "notifications": "通知",
-    "aiMemory": "AI 记忆",
+    "manageAccount": "管理账户",
+    "preferences": "偏好设置",
+    "upcomingReminder": "即将到期提醒",
+    "autoRollover": "逾期任务自动顺延到今天",
     "language": "语言",
-    "allTasks": "所有任务页面 (测试版)",
+    "aiMemory": "AI 记忆",
+    "withBlotz": "陪 Blotz 一起",
     "invite": "邀请好友",
-    "supportUs": "支持我们",
-    "about": "关于"
+    "supportUs": "支持 Blotz",
+    "aboutBlotz": "关于 Blotz",
+    "feedback": "意见反馈",
+    "website": "Blotz 官网",
+    "xiaohongshu": "关注我们 · 小红书",
+    "privacyPolicy": "隐私声明",
+    "betaFeatures": "测试功能",
+    "version": "版本 {{version}}（{{buildNumber}}）"
   },
   "betaFeatures": {
     "title": "测试功能",
@@ -25,7 +29,8 @@
     "nameDescription": "此名字将显示在您的账户中。",
     "email": "邮箱",
     "emailDescription": "用于登录和通知。",
-    "deleteAccount": "⚠️ 删除账户",
+    "signOutTitle": "确定要退出登录吗？",
+    "deleteAccount": "删除账户",
     "deleteTitle": "删除账户",
     "deleteWarning": "将永久删除你的账号及所有数据（任务、笔记、偏好设置）。此操作无法撤销。",
     "deleteConfirmText": "我已了解此操作无法撤销。",
@@ -53,16 +58,6 @@
     "remaining": "剩余",
     "plan": "会员计划"
   },
-  "taskHandling": {
-    "title": "任务处理",
-    "autoRollover": "自动滚动",
-    "autoRolloverDescription": "自动将过期任务移动到今天。"
-  },
-  "notifications": {
-    "title": "通知",
-    "taskNotifications": "任务通知",
-    "upcomingDueTasks": "即将到期的任务"
-  },
   "aiMemory": {
     "title": "AI 记忆",
     "toggleLabel": "允许 AI 记住关于我的事",
@@ -74,30 +69,12 @@
     "keepAndTurnOff": "保留并关闭",
     "deleteAndTurnOff": "删除并关闭"
   },
-  "language": {
-    "title": "语言",
-    "english": "English",
-    "englishDescription": "默认语言",
-    "chinese": "中文",
-    "chineseDescription": "简体中文",
-    "infoText": "您的语言偏好将被保存并在所有设备上同步。",
-    "infoTextChinese": "您的语言偏好将被保存并在所有设备上同步。"
-  },
   "updateName": {
     "title": "名字"
   },
   "profile": {
     "title": "个人资料",
     "editProfile": "编辑个人资料"
-  },
-  "about": {
-    "title": "关于",
-    "visitWebsite": "访问官网",
-    "feedback": "意见反馈",
-    "privacyPolicy": "隐私声明",
-    "followUs": "关注我们",
-    "xiaohongshu": "小红书",
-    "version": "版本 {{version}}（{{buildNumber}}）"
   },
   "monthlyReview": {
     "letterLabel": "月度信件",
