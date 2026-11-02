@@ -566,7 +566,8 @@ export function useAiCoachChat() {
   const keyFor = useCallback((item: ChatItem) => rowKeys[item.id] ?? item.id, [rowKeys]);
   return { snapshot, messages, keyFor, status, start, send, edit, reject, streaming, reconnecting,
     pendingList, pendingCount: pendingList?.payload.items.length ?? 0,
-    reviewBusy, confirmationUncertain: pendingConfirmation !== null,
+    // A request still in flight is not uncertain yet; only a failed one leaves this pending and idle.
+    reviewBusy, confirmationUncertain: pendingConfirmation !== null && status !== "sending",
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
     newTopic: () => changeTopic(false), clearChat: () => changeTopic(true),
