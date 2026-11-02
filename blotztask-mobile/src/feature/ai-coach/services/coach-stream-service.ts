@@ -44,7 +44,7 @@ export async function streamCoachMessage(
     const request = (token: string | null) => fetch(url, {
       method: "POST", body, signal: controller.signal,
       headers: { "Content-Type": "application/json", Accept: "text/event-stream",
-        "X-Ai-Coach-Protocol": "6", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     });
     let response = await request(await getAuthToken());
     if (response.status === 401) {

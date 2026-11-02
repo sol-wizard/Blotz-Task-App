@@ -19,9 +19,8 @@ import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Animated, { Easing, FadeIn, FadeOut, Keyframe, useReducedMotion } from "react-native-reanimated";
 import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
-import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
-import { AiCoachRating, ArtifactEnvelopeDto, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
-import { TaskDraftCard } from "./task-draft-card";
+import { useAiCoachChat, ChatItem } from "../hooks/useAiCoachChat";
+import { AiCoachRating, MessageFeedbackDto } from "../models/ai-coach-dto";
 import { MessageFeedbackActions } from "./message-feedback-actions";
 import { CoachMarkdown } from "./coach-markdown";
 import { ReviewListBar } from "./review-list-bar";
@@ -119,20 +118,14 @@ function TypingIndicator({ label }: { label: string }) {
 interface RowActions {
   rate: (messageId: string, rating: AiCoachRating) => Promise<boolean>;
   saveDetail: (messageId: string, reason: string | null, detail: string | null) => Promise<boolean>;
-  confirm: (draftId: string, action: ConfirmAction, edited: EditedDraftDto, selectedItemIds: string[],
-    allowScheduleConflict?: boolean, acceptedConflictToken?: string | null) => void;
-  edit: (draftId: string, edited: EditedDraftDto) => Promise<string | null>;
-  reject: (draftId: string) => void;
 }
 
 interface ChatRowProps {
   item: ChatItem;
   dateText: string | null;
   active: boolean;
-  liveArtifacts: ArtifactEnvelopeDto[] | undefined;
   feedback: MessageFeedbackDto | undefined;
   feedbackBusy: boolean;
-  cardsBusy: boolean;
   animateIn: boolean;
   actions: RowActions;
 }
@@ -144,8 +137,8 @@ const sameItem = (left: ChatItem, right: ChatItem) => left.id === right.id && le
   && left.draftSnapshot === right.draftSnapshot;
 
 /** One timeline row; while a reply streams only its own row re-renders. */
-const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, feedback, feedbackBusy, cardsBusy,
-  animateIn, actions }: ChatRowProps) {
+const ChatRow = memo(function ChatRow({ item, dateText, active, feedback, feedbackBusy, animateIn,
+  actions }: ChatRowProps) {
   return <View>
     {dateText && <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
       <Text className="font-baloo text-xs text-[#6B7280]">{dateText}</Text>
@@ -154,28 +147,16 @@ const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, f
     <MessageBubble item={item} rateable={active} feedback={feedback} feedbackBusy={feedbackBusy} animateIn={animateIn}
       onRate={(rating) => actions.rate(item.id, rating)}
       onSaveDetail={(reason, detail) => actions.saveDetail(item.id, reason, detail)} />
-    {item.draftSnapshot.map((historical) => {
-      const live = active ? liveArtifacts?.find(card => card.id === historical.id) : undefined;
-      const artifact = live ?? (!active && historical.status === "pending" ? { ...historical, status: "expired" as const } : historical);
-      if (artifact.isReviewList) return null;
-      return <Animated.View key={artifact.id} entering={animateIn ? fadeIn : undefined}>
-        <TaskDraftCard artifact={artifact} readOnly={!live} busy={cardsBusy}
-          onConfirm={(action, edited, selectedIds, allowConflict, token) =>
-            actions.confirm(artifact.id, action, edited, selectedIds, allowConflict, token)}
-          onEdit={(edited) => actions.edit(artifact.id, edited)}
-          onReject={() => actions.reject(artifact.id)} />
-      </Animated.View>;
-    })}
   </View>;
 }, (previous, next) => sameItem(previous.item, next.item) && previous.dateText === next.dateText
-  && previous.active === next.active && previous.liveArtifacts === next.liveArtifacts
+  && previous.active === next.active
   && previous.feedback === next.feedback && previous.feedbackBusy === next.feedbackBusy
-  && previous.cardsBusy === next.cardsBusy && previous.animateIn === next.animateIn && previous.actions === next.actions);
+  && previous.animateIn === next.animateIn && previous.actions === next.actions);
 
 /** Chronological timeline; growing replies leave the reading position in place. */
 export function ExecutionChatPanel() {
   const { t, i18n } = useTranslation("aiCoach");
-  const { snapshot, messages, keyFor, status, start, send, confirm, edit, reject,
+  const { snapshot, messages, keyFor, status, start, send,
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
     pendingList, pendingCount, reviewBusy, confirmationUncertain, streaming, reconnecting,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
@@ -380,64 +361,17 @@ export function ExecutionChatPanel() {
     if (await send(text, "followup")) Toast.show({ type: "error", text1: t("chat.sendError") });
   };
 
-  const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
-    selectedItemIds: string[], allowScheduleConflict = false, acceptedConflictToken?: string | null): Promise<void> => {
-    const outcome = await confirm(draftId, action, edited, selectedItemIds, allowScheduleConflict, acceptedConflictToken);
-
-    if (outcome.result?.status === "succeeded") {
-      const directive = outcome.result.clientDirective;
-      const [persisted] = outcome.result.persistedEntities;
-      if (directive?.type === "start_focus" && persisted) {
-        // Focus uses the server-confirmed task and duration.
-        // Only ever issued for a single-task card, so the one persisted entity is the task.
-        router.push({
-          pathname: "/pomodoro-focus",
-          params: {
-            taskId: persisted.id,
-            focusMinutes: String(directive.focusMinutes),
-          },
-        });
-      }
-      return;
-    }
-
-    if (outcome.errorCode === "ScheduleConflict" && outcome.scheduleAssessment?.conflictToken) {
-      const assessment = outcome.scheduleAssessment;
-      Alert.alert(t("draft.scheduleConflictTitle"),
-        t("draft.scheduleConflictConfirm") + "\n" +
-          t("draft.scheduleConflict", { tasks: [...new Set(assessment.conflicts.map((entry) => entry.taskTitle))].join("、") }), [
-          { text: t("draft.cancel"), style: "cancel" },
-          { text: t("draft.saveDespiteConflict"), onPress: () =>
-            void handleConfirm(draftId, action, edited, selectedItemIds, true, assessment.conflictToken) },
-        ]);
-      return;
-    }
-
-    // Failed persistence keeps the draft retryable; conflicts already resynced the UI.
-    Toast.show({ type: "error", text1: t(outcome.errorCode === "ScheduleInPast" ? "draft.timePassed" : outcome.errorCode === "ScheduleConflict"
-      ? "draft.scheduleChanged" : outcome.errorCode === "ScheduleUnverified"
-        ? "draft.scheduleUnverified" : "draft.saveFailed") });
-  };
-
   // Rows get one stable action object, so a streaming update doesn't re-render every visible row.
   const latestRowActions = useRef<RowActions | null>(null);
   useEffect(() => {
     latestRowActions.current = {
       rate: rateMessage,
       saveDetail: saveFeedbackDetail,
-      confirm: (...args) => void handleConfirm(...args),
-      edit,
-      reject: (draftId) => void reject(draftId).then(error => {
-        if (error) Toast.show({ type: "error", text1: t("draft.editFailed") });
-      }),
     };
   });
   const rowActions = useMemo<RowActions>(() => ({
     rate: (...args) => latestRowActions.current?.rate(...args) ?? Promise.resolve(false),
     saveDetail: (...args) => latestRowActions.current?.saveDetail(...args) ?? Promise.resolve(false),
-    confirm: (...args) => latestRowActions.current?.confirm(...args),
-    edit: (...args) => latestRowActions.current?.edit(...args) ?? Promise.resolve("NotReady"),
-    reject: (draftId) => latestRowActions.current?.reject(draftId),
   }), []);
 
   const blockedBanner = () => {
@@ -586,10 +520,10 @@ export function ExecutionChatPanel() {
           renderItem={({ item, index }) => {
             const older = chronologicalMessages[index - 1];
             const active = item.conversationId === snapshot?.conversationId;
-            return <ChatRow item={item} active={active} liveArtifacts={active ? snapshot?.artifacts : undefined}
+            return <ChatRow item={item} active={active}
               dateText={!older || dayKey(older.createdAt) !== dayKey(item.createdAt) ? dateLabel(item.createdAt) : null}
               feedback={feedbackByMessage[item.id]} feedbackBusy={feedbackSaving[item.id] === true}
-              cardsBusy={generating} animateIn={keyFor(item) !== item.id} actions={rowActions} />;
+              animateIn={keyFor(item) !== item.id} actions={rowActions} />;
           }}
         />
         {/* Outside the list: after a clear, the list keeps its old offset and would hide a header welcome. */}

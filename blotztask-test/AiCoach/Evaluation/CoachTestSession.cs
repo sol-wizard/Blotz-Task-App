@@ -51,6 +51,7 @@ internal sealed class CoachTestSession : IAsyncDisposable
                 CreatedAt = Now,
             };
             await session.Store.SaveAsync(session.Conversation, default);
+            await session.Db.AddConversationRecordAsync(session.Conversation);
             return session;
         }
         catch { await session.DisposeAsync(); throw; }
@@ -77,7 +78,7 @@ internal sealed class CoachTestSession : IAsyncDisposable
         }).ToArray(),
     };
 
-    public ConfirmDraftCommand Confirmation(ProposalSet draft, string? token = null, string action = "add_to_task_list") => new()
+    public ConfirmDraftCommand Confirmation(ProposalSet draft, string? token = null, string action = "add_all") => new()
     {
         UserId = UserId, ConversationId = Conversation.Id, DraftId = draft.Id,
         Request = new()
@@ -88,11 +89,30 @@ internal sealed class CoachTestSession : IAsyncDisposable
         },
     };
 
-    public ConfirmDraftCommandHandler ConfirmHandler() => new(Store,
+    public ConfirmDraftCommandHandler ConfirmHandler(DraftScheduleChecker? checker = null) => new(Store,
         new AddTaskCommandHandler(Db, NullLogger<AddTaskCommandHandler>.Instance),
         new CreateRecurringTaskCommandHandler(Db, NullLogger<CreateRecurringTaskCommandHandler>.Instance),
-        Db, Clock, NullLogger<ConfirmDraftCommandHandler>.Instance, Checker);
+        Db, Clock, NullLogger<ConfirmDraftCommandHandler>.Instance, checker ?? Checker);
+
+    public DraftScheduleChecker CheckerFor(BlotzTaskDbContext db) => new(
+        new GetTasksByDateQueryHandler(db, new(), NullLogger<GetTasksByDateQueryHandler>.Instance), new(), Clock,
+        NullLogger<DraftScheduleChecker>.Instance);
 
     public async ValueTask DisposeAsync() { await Db.DisposeAsync(); Cache.Dispose(); }
     private sealed class EvaluationClock : TimeProvider { public override DateTimeOffset GetUtcNow() => Now.ToUniversalTime(); }
+}
+
+internal static class ConversationRecordSeeding
+{
+    // Confirmation batches reference the stored conversation row, which the in-memory store never writes.
+    public static async Task AddConversationRecordAsync(this BlotzTaskDbContext db, Conversation conversation)
+    {
+        db.AiCoachConversations.Add(new AiCoachConversationRecord
+        {
+            Id = conversation.Id, UserId = conversation.UserId, CreatedAt = conversation.CreatedAt,
+            LastActivityAt = conversation.CreatedAt, MemoryProcessedAt = conversation.CreatedAt, Revision = 1,
+            SchemaVersion = ConversationSerializer.SchemaVersion, Payload = ConversationSerializer.Serialize(conversation),
+        });
+        await db.SaveChangesAsync();
+    }
 }

@@ -34,7 +34,6 @@ export interface ChatItem {
   streaming?: boolean;
 }
 export type ChatStatus = "idle" | "connecting" | "ready" | "sending" | "startFailed";
-export type ConfirmAction = "start_now" | "add_to_task_list";
 export interface ConfirmOutcome {
   result: ConfirmDraftResultDto | null;
   errorCode: string | null;
@@ -344,56 +343,6 @@ export function useAiCoachChat() {
     [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
   );
 
-  const confirm = useCallback(
-    async (
-      draftId: string,
-      action: ConfirmAction,
-      edited: EditedDraftDto,
-      selectedItemIds: string[],
-      allowScheduleConflict = false,
-      acceptedConflictToken?: string | null,
-    ): Promise<ConfirmOutcome> => {
-      const draft = snapshot?.artifacts.find((item) => item.id === draftId);
-      if (!snapshot || !draft || busy.current) return { result: null, errorCode: "NotReady" };
-      busy.current = true;
-      lifecycle.current += 1;
-      setStatus("sending");
-      try {
-        const result = await aiCoachService.confirmDraft(snapshot.conversationId, draftId, {
-          commandId: uuid.v4() as string,
-          expectedConversationVersion: snapshot.conversationVersion,
-          expectedDraftVersion: draft.version,
-          action,
-          editedDraft: edited,
-          selectedItemIds,
-          allowScheduleConflict,
-          acceptedConflictToken,
-        });
-        applySnapshot(result.conversationSnapshot);
-        refreshHistory();
-        if (result.status === "succeeded") {
-          // Confirmed drafts create tasks server-side; refresh task list, calendars, and DDL.
-          void queryClient.invalidateQueries({ queryKey: taskKeys.all });
-          void queryClient.invalidateQueries({ queryKey: ddlKeys.all });
-          void queryClient.invalidateQueries({ queryKey: noteKeys.all });
-        }
-        return { result, errorCode: result.errorCode };
-      } catch (error) {
-        const body = (error as AxiosError<ConfirmDraftResultDto | ConversationConflictDto>).response?.data;
-        const errorCode = await resync(error);
-        return {
-          result: body && "status" in body ? body : null,
-          errorCode,
-          scheduleAssessment: body && "scheduleAssessment" in body ? body.scheduleAssessment : null,
-        };
-      } finally {
-        busy.current = false;
-        setStatus("ready");
-      }
-    },
-    [snapshot, applySnapshot, resync, queryClient, refreshHistory],
-  );
-
   const edit = useCallback(
     async (draftId: string, edited: EditedDraftDto): Promise<string | null> => {
       const draft = snapshot?.artifacts.find((item) => item.id === draftId);
@@ -615,7 +564,7 @@ export function useAiCoachChat() {
   }
   const messages = [...merged.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
   const keyFor = useCallback((item: ChatItem) => rowKeys[item.id] ?? item.id, [rowKeys]);
-  return { snapshot, messages, keyFor, status, start, send, confirm, edit, reject, streaming, reconnecting,
+  return { snapshot, messages, keyFor, status, start, send, edit, reject, streaming, reconnecting,
     pendingList, pendingCount: pendingList?.payload.items.length ?? 0,
     reviewBusy, confirmationUncertain: pendingConfirmation !== null,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,

@@ -22,8 +22,8 @@ public sealed class ContextCompressionTests
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("继续调整家庭清洁清单")], [], "Australia/Perth", DateTimeOffset.UtcNow,
-            new string('旧', 5000), 0, ReviewListEnabled: true);
-        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
+            new string('旧', 5000), 0);
+        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId).AvailableDefinitions;
         var summaries = 0;
 
         // Act
@@ -53,9 +53,8 @@ public sealed class ContextCompressionTests
             [new GatewayUserMessage("旧问题"), new GatewayAssistantMessage("旧回复", []),
                 new GatewayUserMessage("现在继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
             new string('旧', 4000), 0,
-            ReadTasks: (_, _, _) => throw new InvalidOperationException("Context building must not read tasks."),
-            ReviewListEnabled: true);
-        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
+            ReadTasks: (_, _, _) => throw new InvalidOperationException("Context building must not read tasks."));
+        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId).AvailableDefinitions;
         var summaries = 0;
 
         // Act
@@ -78,8 +77,8 @@ public sealed class ContextCompressionTests
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage("继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
-            new string('旧', 5000), 0, ReviewListEnabled: true);
-        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
+            new string('旧', 5000), 0);
+        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId).AvailableDefinitions;
         var summaries = 0;
 
         // Act
@@ -116,8 +115,8 @@ public sealed class ContextCompressionTests
             [new GatewayUserMessage("制定家庭清洁日程"), new GatewayAssistantMessage(null, [call]),
                 result, new GatewayAssistantMessage("清单已生成，等待确认。", []),
                 new GatewayUserMessage("可以继续调整吗？")],
-            [draft], "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
-        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([draft], request.TimeZoneId, true).AvailableDefinitions;
+            [draft], "Australia/Perth", DateTimeOffset.UtcNow, null, 0);
+        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([draft], request.TimeZoneId).AvailableDefinitions;
         var summaryRequests = new List<ModelGatewayRequest>();
 
         // Act
@@ -156,8 +155,8 @@ public sealed class ContextCompressionTests
                 new GatewayToolResultMessage(first.Id, new string('甲', 2000)),
                 new GatewayToolResultMessage(second.Id, new string('乙', 2000)),
                 new GatewayUserMessage("保留我刚才的修改")], [], "Australia/Perth", DateTimeOffset.UtcNow,
-            new string('\\', 2000), 0, ReviewListEnabled: true);
-        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
+            new string('\\', 2000), 0);
+        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId).AvailableDefinitions;
         var summaryRequests = new List<ModelGatewayRequest>();
 
         // Act
@@ -192,7 +191,7 @@ public sealed class ContextCompressionTests
             new GatewayToolResultMessage(call.Id, new string('长', 12000)),
             new GatewayUserMessage("继续")];
         var request = new ModelTurnRequest(Guid.NewGuid(), history, [],
-            "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
+            "Australia/Perth", DateTimeOffset.UtcNow, null, 0);
         var summaries = 0;
 
         // Act
@@ -220,7 +219,7 @@ public sealed class ContextCompressionTests
             new GatewayAssistantMessage(null, [call]),
             new GatewayToolResultMessage(call.Id, new string('新', 7000))];
         var request = new ModelTurnRequest(Guid.NewGuid(), history, [],
-            "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
+            "Australia/Perth", DateTimeOffset.UtcNow, null, 0);
         var summaries = 0;
 
         // Act
@@ -253,7 +252,7 @@ public sealed class ContextCompressionTests
             new GatewayUserMessage("哪里比较好玩呢"),
         ];
         var request = new ModelTurnRequest(Guid.NewGuid(), history, [],
-            "Australia/Sydney", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
+            "Australia/Sydney", DateTimeOffset.UtcNow, null, 0);
         var summaries = 0;
 
         // Act

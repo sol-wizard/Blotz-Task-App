@@ -37,8 +37,7 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
         var conversation = Restore(record, messages);
         if (conversation is not null)
         {
-            var unfinished = conversation.Drafts.Where(draft => draft.IsReviewList
-                && draft.Status is Domain.Proposals.ProposalSetStatus.Pending or Domain.Proposals.ProposalSetStatus.Processing)
+            var unfinished = conversation.Drafts.Where(draft => draft.Status is Domain.Proposals.ProposalSetStatus.Pending or Domain.Proposals.ProposalSetStatus.Processing)
                 .Select(draft => draft.Id).ToArray();
             if (unfinished.Length > 0)
             {

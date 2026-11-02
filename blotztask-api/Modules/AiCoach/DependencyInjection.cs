@@ -60,7 +60,6 @@ public static class DependencyInjection
         services.AddScoped<SendMessageCommandHandler>();
         services.AddScoped<EditDraftCommandHandler>();
         services.AddScoped<ConfirmDraftCommandHandler>();
-        services.AddScoped<Api.ReviewListProtocolFilter>();
         services.AddScoped<RejectDraftCommandHandler>();
         services.AddScoped<TranscribeAudioCommandHandler>();
         return services;

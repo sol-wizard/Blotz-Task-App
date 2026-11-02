@@ -34,7 +34,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
-        bool reviewListEnabled = false, Func<string, object, Task>? stream = null, string? source = null)
+        Func<string, object, Task>? stream = null, string? source = null)
     {
         if (timeZoneId is not null)
         {
@@ -51,9 +51,6 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         {
             var conversation = await LoadOwnedAsync(store, userId, conversationId, ct);
             RequireOpen(conversation);
-            if (!reviewListEnabled && conversation.Drafts.Any(draft => draft.IsReviewList
-                && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing))
-                throw new Commands.DraftConflictException("ReviewListRequiresProtocol6", "Use a review-list capable client for the pending list.");
             var existing = conversation.Messages.FirstOrDefault(message => message.Id == messageId);
             if (existing is not null && (existing.Role != ConversationMessageRole.User || existing.Content != content))
                 throw Conflict("MessageIdReused", conversation);
@@ -92,11 +89,11 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(conversation.TimeZoneId)),
                 conversation.Summary, conversation.SummarizedMessageCount,
                 (startDate, endDate, token) => taskContextReader.ReadAsync(userId, effectiveTimeZoneId, startDate, endDate, token),
-                (items, token) => scheduleChecker.CheckAsync(userId, items, false, token),
+                (items, token) => scheduleChecker.CheckAsync(userId, items, token),
                 trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
                 await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
-                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
+                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, stream,
                 conversation.UserContext, memoryTools);
             await store.SaveAsync(conversation, ct);
         }
@@ -106,7 +103,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "user_message", new
         {
             messageId, content, conversationVersion = baseVersion, source,
-            promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion,
+            promptVersion = CoachPrompt.PromptVersion,
             toolContractVersion = ToolExecutor.ContractVersion,
             userContextVersion = request.UserContext is null ? null : GetUserContextQueryHandler.Version,
             userContextBytes = System.Text.Encoding.UTF8.GetByteCount(request.UserContext ?? ""),
@@ -142,7 +139,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 result.EstimatedUsd);
             logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input ({CachedInputTokens} cached), {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
                 conversationId, result.InputTokens, result.CachedInputTokens, result.OutputTokens, result.ModelCallCount, error,
-                request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion, ToolExecutor.ContractVersion);
+                CoachPrompt.PromptVersion, ToolExecutor.ContractVersion);
             try
             {
                 using var accountingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));

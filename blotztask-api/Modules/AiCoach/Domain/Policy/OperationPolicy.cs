@@ -18,9 +18,6 @@ public static class OperationPolicy
     public static IReadOnlyList<string> DraftActions(ProposalSet draft, bool sessionAvailable)
     {
         if (!sessionAvailable || !CanEdit(draft)) return [];
-        if (draft.IsReviewList) return ["edit_draft", "add_all", "reject_draft"];
-        return draft.Proposals.Count == 1 && draft.Proposals[0].Kind == ProposalKind.Task && draft.Proposals[0].Recurrence is null
-            ? ["edit_draft", "add_to_task_list", "reject_draft", "start_now"]
-            : ["edit_draft", "add_to_task_list", "reject_draft"];
+        return ["edit_draft", "add_all", "reject_draft"];
     }
 }

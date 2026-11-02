@@ -75,7 +75,7 @@ public sealed class ConversationPersistenceTests
         pending.Replace([new(Guid.NewGuid(), "Read", "Chapter one", null, null, null, "Australia/Perth", null)]);
         conversation.CompleteTurn(turnId, conversation.Version, "Two drafts are ready.", null,
             [
-                new GatewayAssistantMessage(null, [new(callId, "create_draft", "{\"items\":[]}")]),
+                new GatewayAssistantMessage(null, [new(callId, "add_items", "{\"items\":[]}")]),
                 new GatewayToolResultMessage(callId, "{\"success\":true}"),
                 new GatewayAssistantMessage("Two drafts are ready.", []),
             ],

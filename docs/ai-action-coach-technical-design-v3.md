@@ -47,8 +47,8 @@ Usage accounting has a bounded 10-second cancellation token so cooperative datab
 
 1. Lock the session, check ownership/version/idempotency and mark the message running. Capture immutable history and draft copies.
 2. Release the lock, check the existing AI quota and run the model.
-3. Supply the fixed local date/time, transcript, summary and actual draft data. Provide `create_draft`, `update_draft`, `discard_draft` and the on-demand `list_tasks` read tool.
-4. Execute tools sequentially against a turn-local draft workspace. Return success or concrete parameter errors to the model. A multi-operation update is atomic. Other drafts do not block ordinary conversation or creation of a new draft.
+3. Supply the fixed local date/time, transcript, summary and actual draft data. Provide `add_items`, `update_items`, `remove_items` and the on-demand `list_tasks` read tool.
+4. Execute tools sequentially against a turn-local draft workspace. Return success or concrete parameter errors to the model. A multi-item operation is atomic. A conversation holds at most one pending review list; captures accumulate in it.
 5. For one successful draft tool call, the model may include a short `successReply` in the tool arguments. Show it only after the tool succeeds, and complete the turn without a second model call. A create or update with multiple items or changes may use this path only when the server's schedule assessment is `clear`; single-item operations retain the existing quick-reply behavior for `clear`, `incomplete` and `partial`. Missing or invalid replies, failed tools, schedule conflicts, unverified schedules and turns with multiple tool calls continue through the model loop for a final response. Reacquire the session lock and commit the reply, tool transcript and drafts together only if this is still the expected turn and version.
 6. A failed/cancelled/filtered/exhausted turn commits no draft workspace or assistant success claim. Reset the busy flag even if the HTTP client disconnects. Usage includes all completed model calls, including summary calls.
 
@@ -72,32 +72,31 @@ A context that cannot fit within the configured resource budget fails visibly in
 
 ## Drafts and persistence
 
-A conversation holds independent drafts; each has stable IDs, a version, items and `pending`, `processing`, `completed`, `rejected` or `expired` status. Draft date/start/end fields are nullable. Missing scheduling information is valid until formal confirmation.
+A conversation holds at most one pending review list (see [W4](ai-coach-w4-review-list.md)); each list has stable IDs, a version, task and note items and `pending`, `processing`, `completed`, `rejected` or `expired` status. Draft date/start/end fields are nullable. Missing scheduling information is valid until formal confirmation.
 
-- `create_draft(items)` creates a pending draft.
-- `update_draft(draftId, changes)` applies add/update/remove operations to unsaved items. Omitted fields are preserved; null clears optional fields. Unknown IDs and invalid times reject the whole operation. Removing all unsaved items discards the draft.
-- `discard_draft(draftId)` discards a pending draft and never deletes saved tasks.
+- `add_items(items)` appends unsaved items, creating the list when none is pending.
+- `update_items(items)` edits unsaved items by ID. Omitted fields are preserved; null clears optional fields. Unknown IDs and invalid times reject the whole operation.
+- `remove_items(itemIds)` removes unsaved items; removing the last one discards the list. It never deletes saved tasks or notes.
 - App edits use a version-checked PUT and are visible to subsequent model turns.
-- Confirmation validates all reviewed data, date/time/time-zone consistency and item ownership before accepting the command. Missing schedules are reported as `ScheduleRequired`; past starts return `ScheduleInPast` before any task write. `start_now` explicitly moves the interval to now.
+- Confirmation validates all reviewed data, date/time/time-zone consistency and item ownership before accepting the command. Missing schedules are reported as `ScheduleRequired`; past starts return `ScheduleInPast` before any task write. The only confirmation action is `add_all`, which saves every unsaved item.
 - A database transaction wraps the new task batch. Failure rolls back the batch and keeps the draft editable. Previously saved item identities are not recreated.
 - A command receipt hashes the complete request content, including descriptions. Reusing an ID with different content is rejected; replay returns the original result with a fresh snapshot. Retry a failed confirmation using a new command ID.
-- `start_now` is a single-task confirmation that shifts the resolved interval to now and returns the focus-screen directive after successful persistence.
 
 Working state is serialized in `AiCoachConversation.Payload` (schema v2). Visible messages and draft snapshots live in `AiCoachMessage`; saved message IDs remain stable for feedback. `SqlConversationStore` commits state, new messages and changed snapshots together, uses update-only revision checks, and cannot resurrect a deleted segment. `EndedAt` and a filtered unique user index enforce at most one open topic. The developer generated and applied the storage migration; subsequent chat endpoints, retention and UI changes require no additional migration.
 
 ## Mobile protocol
 
-Version 5 snapshots contain:
+Snapshots (`protocolVersion` 6) contain:
 
 - `conversationId`, `conversationVersion`, `mode`;
 - `generationStatus` (`idle`, `running`, `failed`) and `generationError`;
 - the latest 30 visible messages with stable IDs, timestamps, topic-start flags and draft snapshots;
-- `artifacts[]`, each with its own version, status, payload and computed `allowedActions`;
+- `artifacts[]`, each with its own version, status, payload and computed `allowedActions`, plus `pendingList` for the current review list;
 - session actions and optional usage totals.
 
 There is no `state`, `currentArtifact`, `assistantMessage`, blocked-reason enum or question metadata. Capability lists are computed from operation status; they are not stored dialogue state or model strategy instructions.
 
-The mobile screen opens the existing Unified chat. An inverted `FlatList` merges snapshots with cursor-paged history by message ID, displays local Today/Yesterday/date separators and topic dividers, and loads older messages when scrolling up. Live cards use current artifact versions; historical cards are read-only and show saved/discarded/expired status. The menu starts a new topic or clears history after confirmation; the confirmation explains that ratings and optional feedback details remain. Past schedules show an edit-before-save warning. Server snapshots reconcile retries and in-flight work; a changed conversation ID switches the hook to the new topic. Query invalidation uses `['aiCoach', 'chat', 'messages']`; clear cancels pending page requests and empties cached history. A lifecycle counter prevents late open responses from restoring deleted messages. Successful reopens cancel pending history requests, discard cached cursor pages and invalidate the history query before resuming from page one; this avoids gaps after remote inserts and removes remotely cleared history despite the shared infinite stale time. Query pages reset for both focus/retry and open-based reconciliation, while ordinary topic changes keep server history.
+The mobile screen opens the existing Unified chat. An inverted `FlatList` merges snapshots with cursor-paged history by message ID, displays local Today/Yesterday/date separators and topic dividers, and loads older messages when scrolling up. The pending review list appears in the review bar and sheet, not as cards inside messages. The menu starts a new topic or clears history after confirmation; the confirmation explains that ratings and optional feedback details remain. Past schedules show an edit-before-save warning. Server snapshots reconcile retries and in-flight work; a changed conversation ID switches the hook to the new topic. Query invalidation uses `['aiCoach', 'chat', 'messages']`; clear cancels pending page requests and empties cached history. A lifecycle counter prevents late open responses from restoring deleted messages. Successful reopens cancel pending history requests, discard cached cursor pages and invalidate the history query before resuming from page one; this avoids gaps after remote inserts and removes remotely cleared history despite the shared infinite stale time. Query pages reset for both focus/retry and open-based reconciliation, while ordinary topic changes keep server history.
 
 ## Chat API and topic boundaries
 
@@ -107,7 +106,7 @@ The mobile screen opens the existing Unified chat. An inverted `FlatList` merges
 | GET | `/api/ai-coach/chat/messages?before=&limit=30` | User-scoped timeline, newest first; maximum page size 100 |
 | POST | `/api/ai-coach/chat/topics` | JSON `{ "timeZoneId": "Australia/Perth" }`; end old topic and return the new empty snapshot; reuse an empty topic |
 | DELETE | `/api/ai-coach/chat` | Hard-delete segments, messages and traces; keep feedback; return 409 while busy |
-| POST | `/api/ai-coach/conversations/{id}/messages/stream` | Protocol 6 SSE: text deltas, review-list previews and a saved terminal snapshot; see [streaming contract](ai-coach-streaming.md) |
+| POST | `/api/ai-coach/conversations/{id}/messages/stream` | SSE: text deltas, review-list previews and a saved terminal snapshot; see [streaming contract](ai-coach-streaming.md) |
 
 Timeline paging uses `(CreatedAt DESC, Id DESC)` with an opaque base64url cursor. Both comparisons execute in SQL Server, including its GUID ordering, so equal timestamps and inserts between pages do not duplicate or skip original rows. Timeline draft actions are empty. Existing per-conversation routes remain; foreign/deleted IDs return 404 and ended IDs return 409, including snapshot/feedback routes. The legacy start route reuses the open topic instead of creating duplicate open rows.
 

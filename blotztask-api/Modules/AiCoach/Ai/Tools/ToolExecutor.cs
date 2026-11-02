@@ -38,7 +38,7 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
         {
             var mutation = Execute(call, ct);
             if (!mutation.Succeeded || mutation.Replayed || checkSchedule is null
-                || call.Name is not ("create_draft" or "update_draft" or "add_items" or "update_items" or "remove_items")) return mutation;
+                || call.Name is not ("add_items" or "update_items" or "remove_items")) return mutation;
             using var document = JsonDocument.Parse(mutation.Content);
             var id = document.RootElement.GetProperty("draft").GetProperty("draftId").GetGuid();
             var draft = workspace.Drafts.Single(value => value.Id == id);
@@ -158,9 +158,6 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
         var args = payload.RootElement;
         var simpleOperation = toolName switch
         {
-            "create_draft" => allowMultiple || args.GetProperty("items").GetArrayLength() == 1,
-            "update_draft" => allowMultiple || args.GetProperty("changes").GetArrayLength() == 1,
-            "discard_draft" => true,
             "add_items" or "update_items" => allowMultiple || args.GetProperty("items").GetArrayLength() == 1,
             "remove_items" => allowMultiple || args.GetProperty("itemIds").GetArrayLength() == 1,
             _ => false,

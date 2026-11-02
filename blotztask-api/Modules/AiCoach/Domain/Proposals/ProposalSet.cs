@@ -54,7 +54,6 @@ public sealed record TaskProposal(
 public sealed class ProposalSet
 {
     public required Guid Id { get; init; }
-    public bool IsReviewList { get; init; }
     [JsonInclude] public int Version { get; private set; } = 1;
     [JsonInclude] public ProposalSetStatus Status { get; private set; } = ProposalSetStatus.Pending;
     [JsonInclude] public IReadOnlyList<TaskProposal> Proposals { get; private set; } = [];
@@ -64,7 +63,7 @@ public sealed class ProposalSet
 
     public ProposalSet Copy() => new()
     {
-        Id = Id, IsReviewList = IsReviewList, Version = Version, Status = Status,
+        Id = Id, Version = Version, Status = Status,
         Proposals = Proposals.ToArray(), SaveError = SaveError, Schedule = Schedule,
         SavingStartedAt = SavingStartedAt,
     };

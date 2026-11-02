@@ -31,7 +31,7 @@ public sealed class ReviewListLiveTests(ITestOutputHelper output)
             new ModelContextBuilder(limits, NullLogger<ModelContextBuilder>.Instance));
         var request = new ModelTurnRequest(Guid.NewGuid(),
             [new GatewayUserMessage(message)], [], "Australia/Perth",
-            new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0, ReviewListEnabled: true);
+            new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0);
         // Act
         var result = await runtime.ExecuteAsync(request, default);
         output.WriteLine($"Deployment={credentials.Deployment}; error={result.Error}; tokens={result.TotalTokens}; reply={result.Text}");
@@ -67,7 +67,7 @@ public sealed class ReviewListLiveTests(ITestOutputHelper output)
                 new GatewayAssistantMessage("好主意，规律运动对精力很有帮助。", [])]);
         history.Add(new GatewayUserMessage(message));
         var request = new ModelTurnRequest(Guid.NewGuid(), history, [], "Australia/Perth",
-            new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0, ReviewListEnabled: true);
+            new DateTimeOffset(2026, 10, 18, 9, 0, 0, TimeSpan.FromHours(8)), null, 0);
         // Act
         var result = await runtime.ExecuteAsync(request, default);
         output.WriteLine($"error={result.Error}; tokens={result.TotalTokens}; followUps=[{string.Join(" | ", result.FollowUps ?? [])}]; reply={result.Text}");

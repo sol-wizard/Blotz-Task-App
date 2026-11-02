@@ -1,5 +1,7 @@
 # W4: mixed task and note review list
 
+> **Update 2026-11-01:** protocol 5 task cards, `start_now` and the `X-Ai-Coach-Protocol` header were removed. The review list is now the only mode and needs no opt-in. The rest of this page records the original rollout.
+
 ## Scope
 
 Protocol 6 adds an opt-in review list to the existing AI Coach endpoints. Notes are saved into

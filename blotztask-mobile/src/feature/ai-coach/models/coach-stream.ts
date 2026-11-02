@@ -27,7 +27,7 @@ function snapshot(value: unknown): value is ConversationSnapshotDto {
 
 function artifact(value: unknown): value is ArtifactEnvelopeDto {
   return record(value) && typeof value.id === "string" && typeof value.version === "number"
-    && value.isReviewList === true && record(value.payload) && Array.isArray(value.payload.items)
+    && record(value.payload) && Array.isArray(value.payload.items)
     && value.payload.items.every((item: unknown) => record(item) && typeof item.itemId === "string"
       && typeof item.title === "string" && (item.kind === "task" || item.kind === "note"));
 }

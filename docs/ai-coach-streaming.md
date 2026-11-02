@@ -1,6 +1,6 @@
 # AI Coach streaming replies and review previews
 
-The mobile client sends protocol 6 requests to
+The mobile client sends requests to
 `POST /api/ai-coach/conversations/{conversationId}/messages/stream` with the same body as
 the existing JSON message endpoint. The JSON endpoint remains available to older clients
 and evaluation tools. Deploy the backend before releasing this mobile change.

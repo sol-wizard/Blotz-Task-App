@@ -29,7 +29,7 @@ public sealed class ChatApplication(BlotzTaskDbContext db, IConversationStore st
         var checks = new List<(Guid Id, int Version, ScheduleAssessment Assessment)>();
         foreach (var draft in opened.Drafts.Where(draft => draft.Status == ProposalSetStatus.Pending
                      && (draft.Schedule is null || draft.Schedule.CheckedAt < clock.GetUtcNow().AddMinutes(-10))))
-            checks.Add((draft.Id, draft.Version, await checker.CheckAsync(userId, draft.Proposals, false, ct)));
+            checks.Add((draft.Id, draft.Version, await checker.CheckAsync(userId, draft.Proposals, ct)));
         using var held = await store.AcquireLockAsync(opened.Id, ct);
         var current = await ConversationApplication.LoadOwnedAsync(store, userId, opened.Id, ct);
         ConversationApplication.RequireOpen(current);

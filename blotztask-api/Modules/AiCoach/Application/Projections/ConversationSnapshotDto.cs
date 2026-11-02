@@ -16,8 +16,8 @@ public sealed record ChatMessageDto(Guid Id, string Role, string Text, bool Task
 public sealed record DebugUsageDto(long InputTokens, long OutputTokens, long TotalTokens, decimal? EstUsd);
 public sealed record ArtifactEnvelopeDto(Guid Id, int Version, string Status, string? SaveError,
     TaskDraftPayloadDto Payload, IReadOnlyList<string> AllowedActions, ScheduleAssessment? Schedule,
-    bool IsReviewList = false, bool CanConfirm = false, IReadOnlyList<string>? ValidationErrors = null);
-public sealed record TaskDraftPayloadDto(IReadOnlyList<TaskDraftItemDto> Items, int? EstimatedMinutes, int? FocusMinutes);
+    bool CanConfirm = false, IReadOnlyList<string>? ValidationErrors = null);
+public sealed record TaskDraftPayloadDto(IReadOnlyList<TaskDraftItemDto> Items, int? EstimatedMinutes);
 public sealed record TaskDraftItemDto(Guid ItemId, string Title, string? Description, string? Date,
     string? StartTime, string? EndTime, string TimeZoneId, int? LabelId, int? EstimatedMinutes,
     int? PersistedTaskId, RecurrenceDraftDto? Recurrence, string Kind = "task",
@@ -32,7 +32,7 @@ public static class ConversationSnapshotProjector
     {
         var usage = UsageTracker?.Find(conversation.Id);
         var busy = !OperationPolicy.CanStartOperation(conversation);
-        return new(5, conversation.Id, conversation.Version,
+        return new(6, conversation.Id, conversation.Version,
             conversation.RunningTurnId.HasValue ? "running" : conversation.GenerationError is null ? "idle" : "failed",
             conversation.GenerationError,
             conversation.Messages.TakeLast(30).Select(message => new ChatMessageDto(message.Id,
@@ -43,8 +43,7 @@ public static class ConversationSnapshotProjector
             busy ? [] : ["send_message"],
             usage is null ? null : new(usage.InputTokens, usage.OutputTokens, usage.TotalTokens,
                 usage.EstimatedUsd),
-            conversation.Drafts.Where(draft => draft.IsReviewList
-                && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing)
+            conversation.Drafts.Where(draft => draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing)
                 .Select(draft => ToDto(draft, busy)).SingleOrDefault(),
             conversation.RunningTurnId.HasValue ? [] : conversation.FollowUps);
     }
@@ -64,8 +63,7 @@ public static class ConversationSnapshotProjector
         if (draft.Schedule?.Status == "unverified") errors.Add("ScheduleUnverified");
         if (draft.Schedule?.Status == "conflict") errors.Add("ScheduleConflict");
         return new(draft.Id, draft.Version, draft.Status.ToString().ToLowerInvariant(), draft.SaveError,
-            new(items, minutes, items.Length == 1 && items[0].Kind == "task" && items[0].Recurrence is null && minutes is > 0
-                ? Math.Min(15, minutes.Value) : null), actions, draft.Schedule, draft.IsReviewList,
+            new(items, minutes), actions, draft.Schedule,
             !busy && draft.Status == ProposalSetStatus.Pending && items.Length > 0 && errors.Count == 0, errors);
     }
 

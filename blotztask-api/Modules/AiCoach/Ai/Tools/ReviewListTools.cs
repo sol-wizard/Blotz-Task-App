@@ -8,17 +8,17 @@ namespace BlotzTask.Modules.AiCoach.Ai.Tools;
 /// <summary>Mutates only the turn-local workspace; formal writes require app confirmation.</summary>
 internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneId)
 {
+    private const string ItemDefinitions = """{"recurrence":{"type":"object","properties":{"frequency":{"type":"string","enum":["Daily","Weekly","Monthly","Yearly"]},"interval":{"type":"integer","minimum":1},"daysOfWeek":{"type":["integer","null"],"description":"For Weekly, combine weekday flags: Monday=1, Tuesday=2, Wednesday=4, Thursday=8, Friday=16, Saturday=32, Sunday=64."},"dayOfMonth":{"type":["integer","null"]},"endDate":{"type":["string","null"]}},"required":["frequency","interval"],"additionalProperties":false},"item":{"type":"object","properties":{"title":{"type":"string"},"description":{"type":["string","null"]},"date":{"type":["string","null"],"description":"yyyy-MM-dd. Inherit the conversation date, resolving today/tomorrow in local time; otherwise choose a tentative date. Null only if the user requests no date. For recurrence, this is the start date."},"startTime":{"type":["string","null"],"description":"HH:mm in the session time zone. Use the requested start or a reasonable tentative default; null only if the user asks to leave time undecided."},"endTime":{"type":["string","null"],"description":"HH:mm later than startTime on the same local date. Use the requested duration or a reasonable tentative default; null only if the user asks to leave time undecided."},"recurrence":{"anyOf":[{"$ref":"#/$defs/recurrence"},{"type":"null"}]}},"required":["title","date","startTime","endTime"],"additionalProperties":false}}""";
     public static IReadOnlyList<GatewayToolDefinition> Definitions { get; } = BuildDefinitions();
 
     private static IReadOnlyList<GatewayToolDefinition> BuildDefinitions()
     {
-        var legacy = JsonNode.Parse(DraftTools.Definitions[0].ParametersJsonSchema)!.AsObject();
-        var definitions = legacy["$defs"]!.DeepClone().AsObject();
+        var definitions = JsonNode.Parse(ItemDefinitions)!.AsObject();
         var item = definitions["item"]!.AsObject();
         item["properties"]!["kind"] = JsonNode.Parse("""{"type":"string","enum":["task","note"]}""");
         item["properties"]!["suggestedFields"] = JsonNode.Parse("""{"type":"array","uniqueItems":true,"items":{"type":"string","enum":["date","startTime","endTime"]},"description":"Only task date/time fields supplied as AI suggestions. Preserve unchanged flags on updates."}""");
         item["required"] = JsonNode.Parse("""["kind","title"]""");
-        var reply = legacy["properties"]!["successReply"]!.DeepClone();
+        var reply = JsonNode.Parse("""{"type":"string","minLength":1,"maxLength":600}""")!;
         reply["description"] = "Success reply, often the entire reply, rendered as Markdown. Write in the user's register, like a friend helping out (in Chinese, spoken Mandarin), not a system notice. If the user's message carried feeling, open with a few words responding to it. If they changed their mind or voiced a worry, say in a few words whether their reasoning holds and why. For one task, one or two sentences that include its time range. For two or more tasks, use the schedule format from the instructions: one opening sentence, a ### heading, one bullet per task in time order with the bold time range first. Mention notes by count only. Say that items await their confirmation in the list, not saved; mention suggested times when applicable.";
         var updateFields = item.DeepClone();
         updateFields.AsObject().Remove("required");
@@ -70,9 +70,8 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
             var reply = args.GetProperty("successReply").GetString();
             if (!DraftTools.IsValidSuccessReply(reply))
                 throw new ArgumentException($"Provide a successReply of at most {DraftTools.SuccessReplyMaxLength} characters without control characters other than line breaks.");
-            var pending = drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).ToArray();
-            // Consolidate older task cards only after the complete operation has validated.
-            var proposals = pending.SelectMany(draft => draft.Proposals).Where(item => !item.IsSaved).ToList();
+            var current = drafts.SingleOrDefault(draft => draft.Status == ProposalSetStatus.Pending);
+            var proposals = current?.Proposals.Where(item => !item.IsSaved).ToList() ?? [];
             switch (call.Name)
             {
                 case "add_items":
@@ -100,11 +99,9 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
                 default: throw new ArgumentException("Unknown review tool.");
             }
             if (proposals.Count > 100) throw new ArgumentException("The review list can contain at most 100 items.");
-            var current = pending.SingleOrDefault(draft => draft.IsReviewList);
-            var draft = current ?? new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
+            var draft = current ?? new ProposalSet { Id = Guid.NewGuid() };
             draft.Replace(proposals);
             if (proposals.Count == 0) draft.Discard();
-            foreach (var old in pending.Where(value => value.Id != draft.Id)) old.Discard();
             if (current is null) drafts.Add(draft);
             return JsonSerializer.Serialize(new { success = true, draft = DraftTools.View(draft) });
         }

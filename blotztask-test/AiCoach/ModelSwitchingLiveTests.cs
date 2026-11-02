@@ -28,7 +28,7 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
         var deltas = new List<string>();
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
         var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage(message)], [], "Australia/Perth",
-            DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true, Stream: (kind, payload) =>
+            DateTimeOffset.UtcNow, null, 0, Stream: (kind, payload) =>
             {
                 if (kind == "reply.delta") deltas.Add(System.Text.Json.JsonSerializer.Serialize(payload));
                 return Task.CompletedTask;
@@ -102,7 +102,7 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
         };
         ModelTurnRequest Request() => new(conversationId, history, [], "Australia/Perth",
             new DateTimeOffset(2026, 10, 24, 8, 0, 0, TimeSpan.FromHours(8)), null, 0,
-            ReviewListEnabled: true, Stream: (_, _) => Task.CompletedTask);
+            Stream: (_, _) => Task.CompletedTask);
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(180));
 
         // Act

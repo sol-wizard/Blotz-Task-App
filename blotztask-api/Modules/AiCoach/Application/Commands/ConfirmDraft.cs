@@ -22,11 +22,9 @@ public class ConfirmDraftRequest
     public required Guid CommandId { get; init; }
     public required int ExpectedConversationVersion { get; init; }
     public required int ExpectedDraftVersion { get; init; }
-    /// <summary>start_now | add_to_task_list | add_all (review-list protocol)</summary>
+    /// <summary>add_all</summary>
     public required string Action { get; init; }
     public required EditedDraftDto EditedDraft { get; init; }
-    /// <summary>Unsaved draft items approved for this confirmation. Omitted by older clients means all unsaved items.</summary>
-    public IReadOnlyList<Guid>? SelectedItemIds { get; init; }
     /// <summary>The user explicitly accepted the conflicts shown for this confirmation.</summary>
     public bool AllowScheduleConflict { get; init; }
     public string? AcceptedConflictToken { get; init; }
@@ -75,7 +73,6 @@ public class ConfirmDraftResultDto
     public string? ErrorCode { get; init; }
     /// <summary>Every task created by this confirmation (and earlier retries of the same card).</summary>
     public required IReadOnlyList<PersistedEntityDto> PersistedEntities { get; init; }
-    public ClientDirectiveDto? ClientDirective { get; init; }
     public required ConversationSnapshotDto ConversationSnapshot { get; init; }
 }
 
@@ -84,14 +81,6 @@ public class PersistedEntityDto
     public required string Kind { get; init; }
     public required string Id { get; init; }
     public string? SeriesId { get; init; }
-}
-
-public class ClientDirectiveDto
-{
-    public required string Type { get; init; }
-    public required string AssociationId { get; init; }
-    public required int FocusMinutes { get; init; }
-    public required bool ReturnToAi { get; init; }
 }
 
 /// <summary>Field-level validation failure — mapped to HTTP 422 with a stable code.</summary>
@@ -128,9 +117,9 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
     public async Task<ConfirmDraftResultDto> Handle(ConfirmDraftCommand command, CancellationToken ct = default)
     {
         var request = command.Request;
-        if (request.Action is not ("start_now" or "add_to_task_list" or "add_all"))
+        if (request.Action != "add_all")
             throw new DraftFieldValidationException("InvalidDraftFields", "Unknown confirmation action.");
-        var hash = DraftEditing.Hash(new { command.DraftId, request.Action, request.EditedDraft, request.SelectedItemIds,
+        var hash = DraftEditing.Hash(new { command.DraftId, request.Action, request.EditedDraft,
             request.AllowScheduleConflict, request.AcceptedConflictToken });
         ProposalSet draft;
         IReadOnlyList<ResolvedDraftItem> resolved;
@@ -140,22 +129,19 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         {
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
             ConversationApplication.RequireOpen(conversation);
-            if (request.Action == "add_all")
+            var committed = await db.AiCoachDraftConfirmations.AsNoTracking()
+                .SingleOrDefaultAsync(value => value.UserId == command.UserId && value.CommandId == request.CommandId, ct);
+            if (committed is not null && (committed.ConversationId != command.ConversationId
+                || committed.DraftId != command.DraftId || committed.RequestHash != hash))
+                throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused with different data.");
+            committed ??= await db.AiCoachDraftConfirmations.AsNoTracking().SingleOrDefaultAsync(value =>
+                value.ConversationId == command.ConversationId && value.DraftId == command.DraftId
+                && value.UserId == command.UserId, ct);
+            if (committed is not null)
             {
-                var committed = await db.AiCoachDraftConfirmations.AsNoTracking()
-                    .SingleOrDefaultAsync(value => value.UserId == command.UserId && value.CommandId == request.CommandId, ct);
-                if (committed is not null && (committed.ConversationId != command.ConversationId
-                    || committed.DraftId != command.DraftId || committed.RequestHash != hash))
-                    throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused with different data.");
-                committed ??= await db.AiCoachDraftConfirmations.AsNoTracking().SingleOrDefaultAsync(value =>
-                    value.ConversationId == command.ConversationId && value.DraftId == command.DraftId
-                    && value.UserId == command.UserId, ct);
-                if (committed is not null)
-                {
-                    ApplyCommitted(conversation, committed);
-                    await store.SaveAsync(conversation, ct);
-                    return Result(conversation, DraftEditing.Find(conversation, command.DraftId), request.CommandId, false, 0);
-                }
+                ApplyCommitted(conversation, committed);
+                await store.SaveAsync(conversation, ct);
+                return Result(conversation, DraftEditing.Find(conversation, command.DraftId), request.CommandId);
             }
             if (conversation.Receipts.TryGetValue(request.CommandId, out var receipt))
             {
@@ -165,39 +151,24 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 throw new DraftConflictException("DraftConfirmationInProgress", "Confirmation is running.", ConversationSnapshotProjector.ToDto(conversation));
             }
             draft = DraftEditing.Find(conversation, command.DraftId);
-            if (draft.IsReviewList != (request.Action == "add_all"))
-                throw new DraftFieldValidationException("InvalidDraftAction", "Review lists require add_all; task cards use their existing actions.");
             if (draft.Status == ProposalSetStatus.Completed)
             {
-                // Repeating an already completed action must not create another task or restart focus.
-                return Result(conversation, draft, request.CommandId, false, 0);
+                // Repeating an already completed action must not create another task.
+                return Result(conversation, draft, request.CommandId);
             }
             DraftEditing.CheckEditable(conversation, draft, request.ExpectedConversationVersion, request.ExpectedDraftVersion);
-            if (request.SelectedItemIds is not null &&
-                (request.EditedDraft?.Items is null ||
-                 request.EditedDraft.Items.Count != draft.Proposals.Count ||
-                 request.EditedDraft.Items.Select(item => item.ItemId).ToHashSet()
-                     .SetEquals(draft.Proposals.Select(item => item.ProposalId)) == false))
-                throw new DraftFieldValidationException("InvalidDraftSelection",
-                    "A selection confirmation must include every draft item.");
             items = DraftEditing.Apply(request.EditedDraft, draft);
-            if (draft.IsReviewList && (request.SelectedItemIds is not null
-                || items.Count != draft.Proposals.Count))
+            if (items.Count != draft.Proposals.Count)
                 throw new DraftFieldValidationException("InvalidDraftSelection", "Edit or remove items before confirming the complete review list.");
-            var selectedIds = request.SelectedItemIds ?? items.Where(item => !item.IsSaved)
-                .Select(item => item.ProposalId).ToArray();
-            if (selectedIds.Count == 0 || selectedIds.Distinct().Count() != selectedIds.Count ||
-                selectedIds.Any(id => !items.Any(item => item.ProposalId == id && !item.IsSaved)))
+            selected = items.Where(item => !item.IsSaved).ToArray();
+            if (selected.Count == 0)
                 throw new DraftFieldValidationException("InvalidDraftSelection", "Select one or more unsaved draft items.");
-            selected = items.Where(item => selectedIds.Contains(item.ProposalId)).ToArray();
-            if (request.Action == "start_now" && (selected.Count != 1 || selected[0].Kind != ProposalKind.Task || selected[0].Recurrence is not null))
-                throw new DraftFieldValidationException("InvalidDraftFields", "Start now requires one non-recurring task.");
             foreach (var item in selected.Where(item => item.Kind == ProposalKind.Task))
-                _ = Resolve(item, request.Action == "start_now");
+                _ = Resolve(item);
         }
 
-        var assessment = scheduleChecker is null || selected.All(item => item.Kind == ProposalKind.Note) ? null : await scheduleChecker.CheckAsync(command.UserId, selected,
-            request.Action == "start_now", ct);
+        var assessment = scheduleChecker is null || selected.All(item => item.Kind == ProposalKind.Note) ? null
+            : await scheduleChecker.CheckAsync(command.UserId, selected, ct);
         using (await store.AcquireLockAsync(command.ConversationId, ct))
         {
             var conversation = await ConversationApplication.LoadOwnedAsync(store, command.UserId, command.ConversationId, ct);
@@ -216,21 +187,18 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 if (assessment.Status == "unverified" || !request.AllowScheduleConflict
                     || assessment.ConflictToken != request.AcceptedConflictToken)
                 {
-                    if (request.SelectedItemIds is null)
-                    {
-                        // Older clients read the reviewed conflict token from the draft snapshot.
-                        draft.Replace(items);
-                        draft.SetSchedule(assessment);
-                        conversation.Touch();
-                        await store.SaveAsync(conversation, ct);
-                    }
+                    // The client reads the reviewed conflict token from the draft snapshot.
+                    draft.Replace(items);
+                    draft.SetSchedule(assessment);
+                    conversation.Touch();
+                    await store.SaveAsync(conversation, ct);
                     throw new DraftConflictException(assessment.Status == "conflict" ? "ScheduleConflict" : "ScheduleUnverified",
                         "Review the latest schedule check before confirming.", ConversationSnapshotProjector.ToDto(conversation), assessment);
                 }
             }
             draft.Replace(items);
             resolved = selected.Where(item => item.Kind == ProposalKind.Task)
-                .Select(item => Resolve(item, request.Action == "start_now")).ToArray();
+                .Select(Resolve).ToArray();
             draft.StartSaving(clock.GetUtcNow());
             conversation.Touch();
             conversation.Receipts.Add(request.CommandId, new(command.DraftId, hash, null));
@@ -244,18 +212,15 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         try
         {
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
-            if (draft.IsReviewList)
+            // Reserve the unique batch and command IDs before creating any business entities.
+            committedBatch = new AiCoachDraftConfirmation
             {
-                // Reserve the unique batch and command IDs before creating any business entities.
-                committedBatch = new AiCoachDraftConfirmation
-                {
-                    Id = Guid.NewGuid(), UserId = command.UserId, ConversationId = command.ConversationId,
-                    DraftId = draft.Id, CommandId = request.CommandId, RequestHash = hash,
-                    SavedDraftJson = "[]", CreatedAt = clock.GetUtcNow(),
-                };
-                db.AiCoachDraftConfirmations.Add(committedBatch);
-                await db.SaveChangesAsync(ct);
-            }
+                Id = Guid.NewGuid(), UserId = command.UserId, ConversationId = command.ConversationId,
+                DraftId = draft.Id, CommandId = request.CommandId, RequestHash = hash,
+                SavedDraftJson = "[]", CreatedAt = clock.GetUtcNow(),
+            };
+            db.AiCoachDraftConfirmations.Add(committedBatch);
+            await db.SaveChangesAsync(ct);
             var resolvedById = resolved.ToDictionary(item => item.Item.ProposalId);
             foreach (var proposal in selected)
             {
@@ -303,15 +268,12 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                     saved.Add((item.Item.ProposalId, taskId, null));
                 }
             }
-            if (committedBatch is not null)
-            {
-                var completed = draft.Copy();
-                foreach (var item in saved) completed.RecordSaved(item.ItemId, item.TaskId, item.SeriesId);
-                foreach (var item in savedNotes) completed.RecordSavedNote(item.ItemId, item.NoteId);
-                completed.CompleteSelection(selected.Select(item => item.ProposalId).ToArray());
-                committedBatch.SavedDraftJson = ConversationSerializer.SerializeDrafts([completed])!;
-                await db.SaveChangesAsync(ct);
-            }
+            var completed = draft.Copy();
+            foreach (var item in saved) completed.RecordSaved(item.ItemId, item.TaskId, item.SeriesId);
+            foreach (var item in savedNotes) completed.RecordSavedNote(item.ItemId, item.NoteId);
+            completed.CompleteSelection(selected.Select(item => item.ProposalId).ToArray());
+            committedBatch.SavedDraftJson = ConversationSerializer.SerializeDrafts([completed])!;
+            await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -321,9 +283,9 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             savedNotes.Clear();
             db.ChangeTracker.Clear();
             // A commit acknowledgement can be lost; the durable record is authoritative.
-            committedBatch = draft.IsReviewList ? await db.AiCoachDraftConfirmations.AsNoTracking()
+            committedBatch = await db.AiCoachDraftConfirmations.AsNoTracking()
                 .SingleOrDefaultAsync(value => value.ConversationId == command.ConversationId
-                    && value.DraftId == command.DraftId && value.UserId == command.UserId, CancellationToken.None) : null;
+                    && value.DraftId == command.DraftId && value.UserId == command.UserId, CancellationToken.None);
             error = committedBatch is null ? "TaskPersistenceFailed" : null;
         }
 
@@ -346,8 +308,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 else draft.FinishSaving(error);
                 conversation.RecordDraftEvent(error is null ? "saved" : "save_failed", draft);
             }
-            var focusMinutes = resolved.Count == 1 ? Math.Min(15, (int)(resolved[0].End - resolved[0].Start).TotalMinutes) : 0;
-            finalResult = Result(conversation, draft, request.CommandId, request.Action == "start_now" && error is null, focusMinutes);
+            finalResult = Result(conversation, draft, request.CommandId);
             conversation.Receipts[request.CommandId] = new(command.DraftId, hash, finalResult);
             await store.SaveAsync(conversation, CancellationToken.None);
         }
@@ -359,7 +320,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         return finalResult;
     }
 
-    private ResolvedDraftItem Resolve(TaskProposal item, bool startNow)
+    private ResolvedDraftItem Resolve(TaskProposal item)
     {
         if (item.Date is not { } date || item.StartTime is not { } start || item.EndTime is not { } end)
             throw new DraftFieldValidationException("ScheduleRequired", "Set a date, start time and end time before saving.");
@@ -367,13 +328,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         var startUtc = DraftEditing.ResolveLocal(date, start, zone);
         var endUtc = DraftEditing.ResolveLocal(date, end, zone);
         if (endUtc <= startUtc) throw new DraftFieldValidationException("InvalidDraftFields", "End must be after start.");
-        if (startNow)
-        {
-            var duration = endUtc - startUtc;
-            startUtc = clock.GetUtcNow();
-            endUtc = startUtc + duration;
-        }
-        else if (startUtc < clock.GetUtcNow())
+        if (startUtc < clock.GetUtcNow())
             throw new DraftFieldValidationException("ScheduleInPast", "This time has passed. Edit the draft before saving.");
         return new(item, startUtc, endUtc);
     }
@@ -393,10 +348,10 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             conversation.RecordDraftEvent("saved", saved);
         }
         conversation.Receipts[confirmation.CommandId] = new(saved.Id, confirmation.RequestHash,
-            Result(conversation, saved, confirmation.CommandId, false, 0));
+            Result(conversation, saved, confirmation.CommandId));
     }
 
-    private static ConfirmDraftResultDto Result(Conversation conversation, ProposalSet draft, Guid commandId, bool startFocus, int focusMinutes)
+    private static ConfirmDraftResultDto Result(Conversation conversation, ProposalSet draft, Guid commandId)
     {
         var succeeded = draft.Status == ProposalSetStatus.Completed;
         var saved = draft.Proposals.Where(item => item.IsSaved).ToArray();
@@ -409,8 +364,6 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 Id = item.Kind == ProposalKind.Note ? item.PersistedNoteId!.Value.ToString()
                     : item.PersistedTaskId!.Value.ToString(CultureInfo.InvariantCulture),
                 SeriesId = item.PersistedSeriesId?.ToString(CultureInfo.InvariantCulture) }).ToArray(),
-            ClientDirective = succeeded && startFocus && saved.Length == 1 && focusMinutes > 0
-                ? new ClientDirectiveDto { Type = "start_focus", AssociationId = $"task:{saved[0].PersistedTaskId}", FocusMinutes = focusMinutes, ReturnToAi = true } : null,
             ConversationSnapshot = ConversationSnapshotProjector.ToDto(conversation),
         };
     }
@@ -418,7 +371,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
     private static ConfirmDraftResultDto CopyResult(ConfirmDraftResultDto previous, ConversationSnapshotDto snapshot) => new()
     {
         CommandId = previous.CommandId, Status = previous.Status, ErrorCode = previous.ErrorCode,
-        PersistedEntities = previous.PersistedEntities, ClientDirective = previous.ClientDirective, ConversationSnapshot = snapshot,
+        PersistedEntities = previous.PersistedEntities, ConversationSnapshot = snapshot,
     };
     private sealed record ResolvedDraftItem(TaskProposal Item, DateTimeOffset Start, DateTimeOffset End);
 }

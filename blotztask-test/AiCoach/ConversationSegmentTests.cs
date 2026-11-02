@@ -170,7 +170,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
             UserId = session.UserId, ConversationId = stale.Id, DraftId = draft.Id,
             Request = new()
             {
-                CommandId = Guid.NewGuid(), Action = "add_to_task_list", ExpectedConversationVersion = stale.Version,
+                CommandId = Guid.NewGuid(), Action = "add_all", ExpectedConversationVersion = stale.Version,
                 ExpectedDraftVersion = draft.Version, EditedDraft = edited,
             },
         });

@@ -25,23 +25,26 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         var draft = session.Open.Drafts.Single();
         var original = draft.Proposals.Single();
         var tools = new DraftTools([draft], "Australia/Sydney");
-        var args = JsonSerializer.Serialize(new
+        var update = JsonSerializer.Serialize(new
         {
-            draftId = draft.Id,
-            changes = new object[]
-            {
-                new { operation = "update", itemId = original.ProposalId, fields = new { title = "Read chapter two" } },
-                new { operation = "add", fields = new { title = "Walk", date = "2026-10-18", startTime = "15:00", endTime = "15:30" } },
-            },
+            items = new[] { new { itemId = original.ProposalId, fields = new { title = "Read chapter two" } } },
+            successReply = "Updated.",
+        });
+        var add = JsonSerializer.Serialize(new
+        {
+            items = new[] { new { kind = "task", title = "Walk", date = "2026-10-18", startTime = "15:00", endTime = "15:30" } },
+            successReply = "Added.",
         });
         // Act
-        var result = JsonSerializer.Deserialize<JsonElement>(tools.Execute(new("zone-update", "update_draft", args)));
+        var result = JsonSerializer.Deserialize<JsonElement>(tools.Execute(new("zone-update", "update_items", update)));
+        var added = JsonSerializer.Deserialize<JsonElement>(tools.Execute(new("zone-add", "add_items", add)));
         session.Open.Drafts.Clear();
         session.Open.Drafts.AddRange(tools.Drafts);
         await session.Store.SaveAsync(session.Open, default);
         var restored = (await session.Store.FindAsync(session.Open.Id, default))!.Drafts.Single();
         // Assert
-        result.GetProperty("success").GetBoolean().Should().BeTrue(because: "a title edit and an independent addition are valid");
+        result.GetProperty("success").GetBoolean().Should().BeTrue(because: "a title edit is valid");
+        added.GetProperty("success").GetBoolean().Should().BeTrue(because: "an independent addition is valid");
         restored.Proposals.Single(item => item.ProposalId == original.ProposalId).TimeZoneId.Should().Be("Australia/Perth",
             because: "editing an existing item's title must not reinterpret its local schedule");
         restored.Proposals.Single(item => item.ProposalId != original.ProposalId).TimeZoneId.Should().Be("Australia/Sydney",

@@ -20,10 +20,10 @@ public sealed class ToolTurnContextTests
         // regardless of the default budget.
         var limits = new AiCoachModuleOptions { ContextTokenBudget = 40000 };
         var builder = new ModelContextBuilder(Options.Create(limits), NullLogger<ModelContextBuilder>.Instance);
-        var workspace = new DraftTools([], "Australia/Perth", true);
+        var workspace = new DraftTools([], "Australia/Perth");
         var executor = new ToolExecutor(workspace, limits);
         var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage("规划日本旅行")], [],
-            "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
+            "Australia/Perth", DateTimeOffset.UtcNow, null, 0);
         var initial = await builder.BuildAsync(request, executor.AvailableTools,
             _ => throw new InvalidOperationException("A short initial history needs no summary."));
         var add = new ModelToolCallRequest("add-trip", "add_items", JsonSerializer.Serialize(new
@@ -81,8 +81,8 @@ public sealed class ToolTurnContextTests
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage("旧请求"),
             new GatewayAssistantMessage(new string('旧', 3000), []), new GatewayUserMessage("最新请求")], [],
-            "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
-        var tools = new DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
+            "Australia/Perth", DateTimeOffset.UtcNow, null, 0);
+        var tools = new DraftTools([], request.TimeZoneId).AvailableDefinitions;
         var summaries = 0;
 
         // Act

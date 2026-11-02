@@ -27,7 +27,6 @@ internal sealed class CoachEventStream(HttpResponse response, Guid conversationI
         {
             if (Disconnected) return;
             var node = JsonSerializer.SerializeToNode(payload, json)!;
-            ReviewListProtocolFilter.Project(node, true);
             if (type == "turn.started" && node["conversationId"] is { } id) conversationId = id.GetValue<Guid>();
             if (!response.HasStarted)
             {

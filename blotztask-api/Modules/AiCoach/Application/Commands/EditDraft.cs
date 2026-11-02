@@ -32,7 +32,7 @@ public sealed class EditDraftCommandHandler(IConversationStore store,
             items = DraftEditing.Apply(request.EditedDraft, original);
         }
         var assessment = scheduleChecker is null ? null
-            : await scheduleChecker.CheckAsync(userId, items, false, ct);
+            : await scheduleChecker.CheckAsync(userId, items, ct);
         ConversationSnapshotDto snapshot;
         using (await store.AcquireLockAsync(conversationId, ct))
         {
@@ -144,8 +144,6 @@ internal static class DraftEditing
             }).ToArray();
             return original with { Title = item.Title.Trim(), Description = item.Description, Date = date, StartTime = start, EndTime = end, Recurrence = recurrence, SuggestedFields = suggested };
         }).ToArray();
-        try { if (!draft.IsReviewList) DraftTools.CheckDraftShape(result); }
-        catch (ArgumentException ex) { throw Invalid(ex.Message); }
         return result;
     }
 

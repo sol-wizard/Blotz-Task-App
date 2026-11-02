@@ -18,7 +18,6 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? CheckSchedule = null,
     Func<string, object, Task>? Trace = null, string? PreviousClosingSummary = null,
     DateTimeOffset? SegmentStartedAt = null, string? SegmentStartTimeZoneId = null,
-    bool ReviewListEnabled = false,
     Func<string, object, Task>? Stream = null, string? UserContext = null, MemoryTools? MemoryTools = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
@@ -47,7 +46,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         logger.LogInformation(
             "AiCoach model turn started for {ConversationId} with {HistoryMessageCount} history messages and {DraftCount} drafts",
             request.ConversationId, request.History.Count, request.Drafts.Count);
-        var workspace = new DraftTools(request.Drafts, request.TimeZoneId, request.ReviewListEnabled);
+        var workspace = new DraftTools(request.Drafts, request.TimeZoneId);
         var executor = new ToolExecutor(workspace, limits, request.ReadTasks, request.CheckSchedule, request.MemoryTools);
         var turn = new List<GatewayMessage>();
         // Schedule reads are shortened only in durable history, never in the active model turn.
@@ -144,8 +143,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                     var execution = await executor.ExecuteAsync(tool, ct);
                     if (execution.Succeeded && !execution.Replayed && tool.Name is "add_items" or "update_items" or "remove_items")
                     {
-                        var pending = workspace.Drafts.SingleOrDefault(draft => draft.IsReviewList
-                            && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing);
+                        var pending = workspace.Drafts.SingleOrDefault(draft => draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing);
                         await Emit("review.preview", new
                         {
                             pendingList = pending is null ? null : ConversationSnapshotProjector.ToDto(pending, true),

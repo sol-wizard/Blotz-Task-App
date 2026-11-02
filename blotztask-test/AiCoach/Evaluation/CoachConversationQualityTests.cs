@@ -61,7 +61,7 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
         {
             commit = CoachEvaluationHarness.Git(root, "rev-parse", "HEAD"),
             sourceFingerprint = CoachEvaluationHarness.SourceFingerprint(root),
-            promptVersion = CoachPrompt.ReviewListPromptVersion, toolContractVersion = ToolExecutor.ContractVersion,
+            promptVersion = CoachPrompt.PromptVersion, toolContractVersion = ToolExecutor.ContractVersion,
             deployment, transport, judgeDeployment, judgeVersion = CoachSemanticJudge.Version,
         };
         var businessFailures = new List<string>();
@@ -105,7 +105,7 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
             // list_tasks always sees an empty schedule, so scenarios never depend on real task data.
             var request = new ModelTurnRequest(conversationId, history.ToList(), drafts, suite.TimeZone, scenario.LocalTime,
                 null, 0, ReadTasks: (_, _, _) => Task.FromResult("No tasks scheduled in this range."),
-                ReviewListEnabled: true, UserContext: scenario.UserContext);
+                UserContext: scenario.UserContext);
             var watch = Stopwatch.StartNew();
             var result = await runtime.ExecuteAsync(request, default);
             history.AddRange(result.TurnHistory);

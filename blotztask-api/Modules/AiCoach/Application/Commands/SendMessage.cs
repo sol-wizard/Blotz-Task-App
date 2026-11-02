@@ -26,7 +26,6 @@ public class SendMessageRequest
 public class SendMessageCommand
 {
     public Func<string, object, Task>? Stream { get; init; }
-    public bool ReviewListEnabled { get; init; }
     public required Guid UserId { get; init; }
     public required Guid ConversationId { get; init; }
     public required Guid MessageId { get; init; }
@@ -43,7 +42,7 @@ public class SendMessageCommandHandler(ConversationApplication application)
         if (string.IsNullOrWhiteSpace(command.Content))
             throw new ValidationException("Message must not be empty.");
         return application.SendAsync(command.UserId, command.ConversationId, command.MessageId,
-            command.Content.Trim(), command.ExpectedVersion, ct, command.TimeZoneId, command.ReviewListEnabled, command.Stream,
+            command.Content.Trim(), command.ExpectedVersion, ct, command.TimeZoneId, command.Stream,
             command.Source);
     }
 }

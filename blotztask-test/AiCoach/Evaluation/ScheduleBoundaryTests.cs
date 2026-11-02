@@ -1,4 +1,5 @@
 using System.Text.Json;
+using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Ai.Tools;
@@ -22,7 +23,7 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         var start = CoachTestSession.Now.AddHours(1).AddMinutes(minute);
         await session.Seeder.CreateTaskAsync(session.UserId, "Existing", start, start.AddMinutes(30));
         // Act
-        var result = await session.Checker.CheckAsync(session.UserId, [CoachTestSession.Item()], false, default);
+        var result = await session.Checker.CheckAsync(session.UserId, [CoachTestSession.Item()], default);
         // Assert
         result.Status.Should().Be(conflict ? "conflict" : "clear", because: "touching boundaries do not overlap");
     }
@@ -40,7 +41,7 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         var other = await session.Seeder.CreateUserAsync();
         await session.Seeder.CreateTaskAsync(other, "Private", start, start.AddMinutes(30));
         // Act
-        var assessment = await session.Checker.CheckAsync(session.UserId, [CoachTestSession.Item()], false, default);
+        var assessment = await session.Checker.CheckAsync(session.UserId, [CoachTestSession.Item()], default);
         var read = await session.Reader.ReadAsync(session.UserId, "Australia/Perth", CoachTestSession.Today, CoachTestSession.Today, default);
         // Assert
         assessment.Status.Should().Be("clear", because: "only unfinished owner intervals block time");
@@ -57,7 +58,7 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         var first = CoachTestSession.Item();
         var second = CoachTestSession.Item();
         // Act
-        var result = await session.Checker.CheckAsync(session.UserId, [first, second], false, default);
+        var result = await session.Checker.CheckAsync(session.UserId, [first, second], default);
         // Assert
         result.Conflicts.Should().Contain(value => value.TaskTitle == "Daily meeting", because: "virtual occurrences occupy time without materialization");
         result.Conflicts.Should().Contain(value => value.TaskIdentity == $"draft:{second.ProposalId}", because: "items inside the draft also compete for time");
@@ -70,7 +71,7 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         await using var session = await CoachTestSession.CreateAsync(fixture);
         var item = CoachTestSession.Item() with { Recurrence = new(RecurrenceFrequency.Daily, 1, null, null, null) };
         // Act
-        var result = await session.Checker.CheckAsync(session.UserId, [item], false, default);
+        var result = await session.Checker.CheckAsync(session.UserId, [item], default);
         // Assert
         result.Status.Should().Be("partial", because: "a seven-day check cannot establish unlimited recurrence availability");
     }
@@ -83,7 +84,7 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         var draft = session.AddDraft(CoachTestSession.Item());
         var start = CoachTestSession.Now.AddHours(1);
         await session.Seeder.CreateTaskAsync(session.UserId, "First conflict", start, start.AddMinutes(30));
-        var reviewed = await session.Checker.CheckAsync(session.UserId, draft.Proposals, false, default);
+        var reviewed = await session.Checker.CheckAsync(session.UserId, draft.Proposals, default);
         await session.Seeder.CreateTaskAsync(session.UserId, "New conflict", start, start.AddMinutes(20));
         var handler = session.ConfirmHandler();
         // Act
@@ -96,20 +97,6 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         countBeforeRetry.Should().Be(2, because: "rejected confirmation must not create a formal task");
         accepted.Status.Should().Be("succeeded", because: "an explicit override of the current conflicts permits saving");
         (await session.Db.TaskItems.CountAsync(task => task.UserId == session.UserId)).Should().Be(3, because: "the reviewed draft is saved once");
-    }
-
-    [Fact]
-    public async Task Handle_StartNow_RechecksShiftedInterval()
-    {
-        // Arrange
-        await using var session = await CoachTestSession.CreateAsync(fixture);
-        var draft = session.AddDraft(CoachTestSession.Item(12));
-        await session.Seeder.CreateTaskAsync(session.UserId, "Busy now", CoachTestSession.Now, CoachTestSession.Now.AddMinutes(20));
-        // Act
-        var attempt = () => session.ConfirmHandler().Handle(session.Confirmation(draft, action: "start_now"));
-        // Assert
-        (await attempt.Should().ThrowAsync<DraftConflictException>(because: "starting now moves the task into an occupied interval"))
-            .Which.ErrorCode.Should().Be("ScheduleConflict", because: "the original noon slot is irrelevant to start now");
     }
 
     [Fact]
@@ -132,9 +119,10 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         // Arrange
         await using var session = await CoachTestSession.CreateAsync(fixture);
         var draft = session.AddDraft(CoachTestSession.Item());
-        var handler = session.ConfirmHandler();
         // A disposed real DB context exercises the actual reader failure path, without a mock.
-        await session.Db.DisposeAsync();
+        var calendarDb = new BlotzTaskDbContext(fixture.Options);
+        var handler = session.ConfirmHandler(session.CheckerFor(calendarDb));
+        await calendarDb.DisposeAsync();
         // Act
         var attempt = () => handler.Handle(session.Confirmation(draft));
         // Assert
@@ -166,9 +154,9 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
             await session.Seeder.CreateTaskAsync(session.UserId, "Meeting", CoachTestSession.Now.AddHours(1), CoachTestSession.Now.AddHours(2));
         var workspace = new DraftTools([], "Australia/Perth");
         var executor = new ToolExecutor(workspace, new AiCoachModuleOptions(), checkSchedule:
-            (items, ct) => session.Checker.CheckAsync(session.UserId, items, false, ct));
-        var call = new ModelToolCallRequest("create", "create_draft", """
-            {"items":[{"title":"Read","date":"2026-10-01","startTime":"09:00","endTime":"09:30"}],"successReply":"Draft ready for review."}
+            (items, ct) => session.Checker.CheckAsync(session.UserId, items, ct));
+        var call = new ModelToolCallRequest("create", "add_items", """
+            {"items":[{"kind":"task","title":"Read","date":"2026-10-01","startTime":"09:00","endTime":"09:30"}],"successReply":"Draft ready for review."}
             """);
         // Act
         var result = await executor.ExecuteAsync(call, default);

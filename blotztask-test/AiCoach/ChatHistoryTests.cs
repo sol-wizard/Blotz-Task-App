@@ -59,7 +59,7 @@ public sealed class ChatHistoryTests(DatabaseFixture fixture) : IClassFixture<Da
             UserId = session.UserId, ConversationId = session.Open.Id, DraftId = draft.Id,
             Request = new()
             {
-                CommandId = Guid.NewGuid(), Action = "add_to_task_list", ExpectedConversationVersion = session.Open.Version,
+                CommandId = Guid.NewGuid(), Action = "add_all", ExpectedConversationVersion = session.Open.Version,
                 ExpectedDraftVersion = draft.Version, EditedDraft = new() { Items = [new()
                 {
                     ItemId = item.ProposalId, Title = item.Title, Date = item.Date!.Value.ToString("yyyy-MM-dd"),
@@ -208,6 +208,8 @@ public sealed class ChatHistoryTests(DatabaseFixture fixture) : IClassFixture<Da
         session.Open.BeginTurn(oldTurn, "old-user-secret", cutoff.AddMinutes(-1));
         session.Open.CompleteTurn(oldTurn, session.Open.Version, "old-reply-secret", null,
             [new GatewayAssistantMessage("old-reply-secret", [])], [oldDraft], "old-summary-secret", 0, completedAt: cutoff);
+        // A conversation holds one pending review list; the old one was set aside before the new turn.
+        oldDraft.Discard();
         var currentTurn = Guid.NewGuid();
         var draft = new ProposalSet { Id = Guid.NewGuid() };
         draft.Replace([new(Guid.NewGuid(), "Recent draft", null, null, null, null, "Australia/Perth", null)]);

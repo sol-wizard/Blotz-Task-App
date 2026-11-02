@@ -1,5 +1,7 @@
 # W5: mobile review list
 
+> **Update 2026-11-01:** protocol 5 task cards, `start_now` and the `X-Ai-Coach-Protocol` header were removed. The review list is now the only mode and needs no opt-in. The rest of this page records the original rollout.
+
 The mobile AI Coach opts into the [W4 protocol](ai-coach-w4-review-list.md) using
 `X-Ai-Coach-Protocol: 6` on all Coach requests. Deploy the W4 backend and apply its migration
 before releasing this client. W5 adds no database migration or dependency.

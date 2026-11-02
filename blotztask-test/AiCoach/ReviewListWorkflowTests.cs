@@ -36,82 +36,12 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
         await using var session = await Evaluation.CoachTestSession.CreateAsync(fixture);
         // Act
         var mixed = await session.Checker.CheckAsync(session.UserId,
-            [Evaluation.CoachTestSession.Item(), NoteItem()], false, default);
-        var notes = await session.Checker.CheckAsync(session.UserId, [NoteItem()], false, default);
+            [Evaluation.CoachTestSession.Item(), NoteItem()], default);
+        var notes = await session.Checker.CheckAsync(session.UserId, [NoteItem()], default);
         // Assert
         mixed.Status.Should().Be("clear", because: "notes with no date cannot make a task schedule incomplete");
         notes.Status.Should().Be("clear", because: "a note-only list has no task intervals to check");
     }
-
-    [Fact]
-    public void Handle_RemoveLastItemThenCapture_StartsNewPendingBatch()
-    {
-        // Arrange
-        var tools = new DraftTools([], "Australia/Perth", reviewListEnabled: true);
-        Call(tools, "add_items", new { items = new[] { new { kind = "note", title = "First" } }, successReply = "待确认" });
-        var original = tools.Drafts.Single();
-        // Act
-        var removed = Call(tools, "remove_items", new { itemIds = new[] { original.Proposals.Single().ProposalId }, successReply = "已移除" });
-        Call(tools, "add_items", new { items = new[] { new { kind = "note", title = "Second" } }, successReply = "待确认" });
-        // Assert
-        removed.GetProperty("success").GetBoolean().Should().BeTrue(because: "the final pending item can be removed");
-        original.Status.Should().Be(ProposalSetStatus.Rejected, because: "an empty batch is no longer actionable");
-        tools.Drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).Should().ContainSingle(
-            because: "the next capture creates exactly one current review list");
-        tools.Drafts.Last().Id.Should().NotBe(original.Id, because: "a finished batch is never reopened");
-    }
-
-    [Theory]
-    [InlineData("5", false)]
-    [InlineData("6", true)]
-    public async Task Handle_ProtocolOptIn_ControlsMixedListProjection(string version, bool visible)
-    {
-        // Arrange
-        using var services = Services();
-        var store = Store(services);
-        var conversation = await Session(store, [NoteItem()]);
-        var http = new DefaultHttpContext();
-        http.Request.Headers[ReviewListProtocolFilter.HeaderName] = version;
-        var action = new ActionContext(http, new RouteData(), new ActionDescriptor());
-        var context = new ActionExecutingContext(action, [], new Dictionary<string, object?>(), new object());
-        var result = new OkObjectResult(ConversationSnapshotProjector.ToDto(conversation));
-        // Act
-        await new ReviewListProtocolFilter(store, Options.Create(new JsonOptions())).OnActionExecutionAsync(context,
-            () => Task.FromResult(new ActionExecutedContext(action, [], new object()) { Result = result }));
-        // Assert
-        var json = (JsonNode)result.Value!;
-        json["protocolVersion"]!.GetValue<int>().Should().Be(int.Parse(version), because: "the response honors the negotiated protocol");
-        json.AsObject().ContainsKey("pendingList").Should().Be(visible, because: "only protocol 6 exposes a mixed list");
-        json["artifacts"]!.AsArray().Count.Should().Be(visible ? 1 : 0, because: "legacy clients cannot render note artifacts");
-    }
-
-    [Fact]
-    public async Task Handle_LegacyMutationOfReviewList_ReturnsConflictBeforeAction()
-    {
-        // Arrange
-        using var services = Services();
-        var store = Store(services);
-        var conversation = await Session(store, [NoteItem()]);
-        var http = new DefaultHttpContext();
-        http.Request.Method = "PUT";
-        http.Items["UserId"] = conversation.UserId;
-        var action = new ActionContext(http, new RouteData(), new ActionDescriptor());
-        var context = new ActionExecutingContext(action, [], new Dictionary<string, object?>
-        {
-            ["conversationId"] = conversation.Id, ["draftId"] = conversation.Drafts[0].Id,
-        }, new object());
-        var invoked = false;
-        // Act
-        await new ReviewListProtocolFilter(store, Options.Create(new JsonOptions())).OnActionExecutionAsync(context, () =>
-        {
-            invoked = true;
-            return Task.FromResult(new ActionExecutedContext(action, [], new object()));
-        });
-        // Assert
-        invoked.Should().BeFalse(because: "legacy draft editing must not silently remove notes");
-        context.Result.Should().BeOfType<ConflictObjectResult>(because: "the client must opt in before mutating mixed lists");
-    }
-
     [Fact]
     public async Task Handle_MixedBatch_SavesTaskRecurringTaskAndNoteExactlyOnce()
     {
@@ -316,7 +246,7 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
     public async Task Handle_ReviewTools_AccumulatesMixedItemsAndPreservesSuccessReply()
     {
         // Arrange
-        var tools = new DraftTools([], "Australia/Perth", reviewListEnabled: true);
+        var tools = new DraftTools([], "Australia/Perth");
         var executor = new ToolExecutor(tools, new AiCoachModuleOptions());
         var first = new ModelToolCallRequest("first", "add_items", JsonSerializer.Serialize(new
         {
@@ -347,7 +277,7 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
     public void Handle_InvalidLaterReviewUpdate_DoesNotApplyEarlierChange()
     {
         // Arrange
-        var tools = new DraftTools([], "Australia/Perth", reviewListEnabled: true);
+        var tools = new DraftTools([], "Australia/Perth");
         Call(tools, "add_items", new { items = new[] { new { kind = "note", title = "Original" } }, successReply = "待确认" });
         var draft = tools.Drafts[0];
         var version = draft.Version;
@@ -367,7 +297,7 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
     public void Handle_NoteWithTaskFields_RejectsWithoutAddingAnything()
     {
         // Arrange
-        var tools = new DraftTools([], "Australia/Perth", reviewListEnabled: true);
+        var tools = new DraftTools([], "Australia/Perth");
         // Act
         var result = Call(tools, "add_items", new
         {
@@ -377,28 +307,6 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
         result.GetProperty("success").GetBoolean().Should().BeFalse(because: "notes cannot accidentally inherit task scheduling");
         tools.Drafts.Should().BeEmpty(because: "a rejected capture must not leave a partial list");
     }
-
-    [Fact]
-    public async Task Handle_LegacyResponse_HidesMixedListsAndKeepsProtocolFive()
-    {
-        // Arrange
-        using var services = Services();
-        var store = Store(services);
-        var conversation = await Session(store, [TaskItem(), NoteItem()]);
-        var http = new DefaultHttpContext();
-        var action = new ActionContext(http, new RouteData(), new ActionDescriptor());
-        var context = new ActionExecutingContext(action, [], new Dictionary<string, object?>(), new object());
-        var result = new OkObjectResult(ConversationSnapshotProjector.ToDto(conversation));
-        var filter = new ReviewListProtocolFilter(store, Options.Create(new JsonOptions()));
-        // Act
-        await filter.OnActionExecutionAsync(context, () => Task.FromResult(new ActionExecutedContext(action, [], new object()) { Result = result }));
-        // Assert
-        var json = (JsonNode)result.Value!;
-        json["protocolVersion"]!.GetValue<int>().Should().Be(5, because: "protocol 6 requires explicit client opt-in");
-        json["artifacts"]!.AsArray().Should().BeEmpty(because: "an old task-card client cannot render mixed entries");
-        json.AsObject().ContainsKey("pendingList").Should().BeFalse(because: "legacy clients retain their existing response shape");
-    }
-
     private ServiceProvider Services() => new ServiceCollection()
         .AddScoped(_ => new BlotzTaskDbContext(fixture.Options)).BuildServiceProvider();
 
@@ -414,7 +322,7 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
             Id = Guid.NewGuid(), UserId = await new DataSeeder(db).CreateUserAsync(),
             CreatedAt = FixedClock.Now, TimeZoneId = "Australia/Perth",
         };
-        var draft = new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
+        var draft = new ProposalSet { Id = Guid.NewGuid() };
         draft.Replace(items);
         conversation.Drafts.Add(draft);
         await store.CreateAsync(conversation, default);

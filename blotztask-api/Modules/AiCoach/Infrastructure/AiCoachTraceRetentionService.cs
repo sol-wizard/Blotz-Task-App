@@ -90,7 +90,7 @@ public sealed class AiCoachTraceRetentionService(
                 conversation.Receipts[key] = receipt with { Result = new ConfirmDraftResultDto
                 {
                     CommandId = result.CommandId, Status = result.Status, ErrorCode = result.ErrorCode,
-                    PersistedEntities = result.PersistedEntities, ClientDirective = result.ClientDirective,
+                    PersistedEntities = result.PersistedEntities,
                     ConversationSnapshot = ConversationSnapshotProjector.ToDto(conversation),
                 }};
             }

@@ -12,7 +12,6 @@ namespace BlotzTask.Modules.AiCoach.Api;
 [ApiController]
 [Route("api/ai-coach")]
 [Authorize]
-[ServiceFilter(typeof(ReviewListProtocolFilter))]
 public class AiCoachController(
     SendMessageCommandHandler sendMessage,
     ConfirmDraftCommandHandler confirmDraft,
@@ -117,7 +116,6 @@ public class AiCoachController(
                 Content = request.Content,
                 ExpectedVersion = request.ExpectedVersion,
                 TimeZoneId = request.TimeZoneId, Source = request.Source,
-                ReviewListEnabled = Request.Headers[ReviewListProtocolFilter.HeaderName] == "6",
             }, ct);
             return Ok(dto);
         }
@@ -132,8 +130,6 @@ public class AiCoachController(
         [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> json,
         [FromServices] IHostApplicationLifetime lifetime, CancellationToken ct)
     {
-        if (Request.Headers[ReviewListProtocolFilter.HeaderName] != "6")
-            return BadRequest(new { errorCode = "ReviewListRequiresProtocol6" });
         var messageId = request.MessageId ?? Guid.NewGuid();
         await using var stream = new CoachEventStream(Response, conversationId, messageId, json.Value.JsonSerializerOptions, ct);
         try
@@ -144,7 +140,7 @@ public class AiCoachController(
             {
                 UserId = GetUserId(), ConversationId = conversationId, MessageId = messageId,
                 Content = request.Content, ExpectedVersion = request.ExpectedVersion,
-                TimeZoneId = request.TimeZoneId, Source = request.Source, ReviewListEnabled = true, Stream = stream.SendAsync,
+                TimeZoneId = request.TimeZoneId, Source = request.Source, Stream = stream.SendAsync,
             }, lifetime.ApplicationStopping);
             await stream.SendAsync(snapshot.GenerationError is null ? "turn.completed" : "turn.failed",
                 new { conversationSnapshot = snapshot, errorCode = snapshot.GenerationError });

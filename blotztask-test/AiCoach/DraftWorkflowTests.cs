@@ -12,6 +12,7 @@ using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
+using BlotzTask.Tests.AiCoach.Evaluation;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -27,31 +28,17 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         // Arrange
         var draft = Draft();
         var tools = new DraftTools([draft], "Australia/Perth");
-        var request = new { draftId = draft.Id, changes = new object[]
+        var request = new { items = new object[]
         {
-            new { operation = "update", itemId = draft.Proposals[0].ProposalId, fields = new { title = "Changed" } },
-            new { operation = "remove", itemId = Guid.NewGuid() },
-        }};
+            new { itemId = draft.Proposals[0].ProposalId, fields = new { title = "Changed" } },
+            new { itemId = Guid.NewGuid(), fields = new { title = "Missing" } },
+        }, successReply = "Updated." };
         // Act
-        var result = Call(tools, "update_draft", request);
+        var result = Call(tools, "update_items", request);
         // Assert
         result.GetProperty("success").GetBoolean().Should().BeFalse(because: "an invalid item must reject the entire update");
         tools.Drafts[0].Proposals[0].Title.Should().Be("Read", because: "an earlier valid operation cannot leak from a failed batch");
         tools.Drafts[0].Version.Should().Be(draft.Version, because: "a failed operation cannot advance the draft version");
-    }
-
-    [Fact]
-    public void Handle_MultipleUnscheduledDrafts_PreservesBothWithoutTaskWrites()
-    {
-        // Arrange
-        var tools = new DraftTools([], "Australia/Perth");
-        // Act
-        Call(tools, "create_draft", new { items = new[] { new { title = "Read" } } });
-        Call(tools, "create_draft", new { items = new[] { new { title = "Walk" } } });
-        // Assert
-        tools.Drafts.Should().HaveCount(2, because: "an existing draft must not block another topic");
-        tools.Drafts.SelectMany(draft => draft.Proposals).Should().OnlyContain(item => item.Date == null && item.PersistedTaskId == null,
-            because: "the tool need not invent a schedule or save a formal task");
     }
 
     [Fact]
@@ -61,8 +48,8 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         var draft = Draft();
         var tools = new DraftTools([draft], "Australia/Perth");
         // Act
-        var result = Call(tools, "update_draft", new { draftId = draft.Id, changes = new[]
-        { new { operation = "update", itemId = draft.Proposals[0].ProposalId, fields = new { date = "2026-10-05" } } } });
+        var result = Call(tools, "update_items", new { items = new[]
+        { new { itemId = draft.Proposals[0].ProposalId, fields = new { date = "2026-10-05" } } }, successReply = "Updated." });
         // Assert
         result.GetProperty("success").GetBoolean().Should().BeTrue(because: "the change is valid");
         tools.Drafts[0].Proposals[0].StartTime.Should().Be(new TimeOnly(9, 0), because: "omitted fields must stay unchanged");
@@ -79,8 +66,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         draft.FinishSaving(null);
         var tools = new DraftTools([draft], "Australia/Perth");
         // Act
-        var result = Call(tools, "update_draft", new { draftId = draft.Id, changes = new[]
-        { new { operation = "remove", itemId = draft.Proposals[0].ProposalId } } });
+        var result = Call(tools, "remove_items", new { itemIds = new[] { draft.Proposals[0].ProposalId }, successReply = "Removed." });
         // Assert
         result.GetProperty("success").GetBoolean().Should().BeFalse(because: "draft tools cannot delete saved tasks");
         tools.Drafts[0].Proposals[0].PersistedTaskId.Should().Be(123, because: "the saved association remains authoritative");
@@ -161,7 +147,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         var countAfterFailure = await db.TaskItems.CountAsync(item => item.UserId == conversation.UserId);
         // Correct the failed data through the real draft tool, removing the unsaved invalid item.
         var tools = new DraftTools(conversation.Drafts, conversation.TimeZoneId);
-        Call(tools, "update_draft", new { draftId = draft.Id, changes = new[] { new { operation = "remove", itemId = draft.Proposals[1].ProposalId } } });
+        Call(tools, "remove_items", new { itemIds = new[] { draft.Proposals[1].ProposalId }, successReply = "Removed." });
         draft.Replace(tools.Drafts[0].Proposals);
         var retried = await handler.Handle(Command(conversation));
         // Assert
@@ -273,7 +259,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         // Arrange
         var workspace = new DraftTools([], "Australia/Perth");
         var executor = new ToolExecutor(workspace, new AiCoachModuleOptions { MaxToolCallsPerTurn = 1 });
-        var call = new ModelToolCallRequest("call-1", "create_draft", "{\"items\":[{\"title\":\"Read\"}]}");
+        var call = new ModelToolCallRequest("call-1", "add_items", "{\"items\":[{\"kind\":\"task\",\"title\":\"Read\"}],\"successReply\":\"Added.\"}");
         // Act
         var first = executor.Execute(call, default);
         var replay = executor.Execute(call, default);
@@ -296,7 +282,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         using var cancel = new CancellationTokenSource();
         cancel.Cancel();
         // Act
-        var action = () => executor.Execute(new("call-1", "create_draft", "{\"items\":[{\"title\":\"Read\"}]}"), cancel.Token);
+        var action = () => executor.Execute(new("call-1", "add_items", "{\"items\":[{\"kind\":\"task\",\"title\":\"Read\"}],\"successReply\":\"Added.\"}"), cancel.Token);
         // Assert
         action.Should().Throw<OperationCanceledException>(because: "cancellation is checked before tool execution");
         workspace.Drafts.Should().BeEmpty(because: "cancelled tools cannot change data");
@@ -331,6 +317,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         };
         conversation.Drafts.Add(Draft());
         await store.SaveAsync(conversation, default);
+        await db.AddConversationRecordAsync(conversation);
         return conversation;
     }
 
@@ -352,7 +339,7 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
     private static ConfirmDraftCommand Command(Conversation conversation, Guid? id = null, string? description = null) => new()
     {
         UserId = conversation.UserId, ConversationId = conversation.Id, DraftId = conversation.Drafts[0].Id,
-        Request = new() { CommandId = id ?? Guid.NewGuid(), Action = "add_to_task_list", ExpectedConversationVersion = conversation.Version,
+        Request = new() { CommandId = id ?? Guid.NewGuid(), Action = "add_all", ExpectedConversationVersion = conversation.Version,
             ExpectedDraftVersion = conversation.Drafts[0].Version, EditedDraft = Edited(conversation.Drafts[0], description) },
     };
     private static ConfirmDraftCommandHandler Confirm(IConversationStore store, BlotzTaskDbContext db) => new(store,
