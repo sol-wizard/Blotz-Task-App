@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -8,12 +8,18 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { Language } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/loading-screen";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsLanguageScreen() {
   const router = useRouter();
   const { i18n, t } = useTranslation("settings");
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_LANGUAGE);
+  }, []);
 
   const handleLanguageChange = async (language: Language) => {
     if (!userPreferences) return;

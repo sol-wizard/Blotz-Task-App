@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -9,11 +9,17 @@ import { ReturnButton } from "@/shared/components/return-button";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useMyReferralCode } from "@/feature/referral/hooks/useMyReferralCode";
 import { Image } from "expo-image";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function SettingsInviteScreen() {
   const { t } = useTranslation("settings");
   const { referralCode, redemptionCount, targetCount, badgeIconUrl, hasEarnedBadge, isLoading } =
     useMyReferralCode();
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_INVITE);
+  }, []);
 
   if (isLoading) return <LoadingScreen />;
 

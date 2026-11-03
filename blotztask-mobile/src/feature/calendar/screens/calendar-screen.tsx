@@ -13,6 +13,9 @@ import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
 import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 import { useTranslation } from "react-i18next";
+import { useFocusEffect } from "expo-router";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
@@ -26,6 +29,13 @@ export default function CalendarScreen() {
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
   const { data: pomodoroSetting } = usePomodoroSettingsQuery();
+
+  // Tab screens stay mounted, so record a view on every focus, not only on mount.
+  useFocusEffect(
+    useCallback(() => {
+      analytics.trackScreenViewed(SCREEN_NAMES.HOME_CALENDAR);
+    }, []),
+  );
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 

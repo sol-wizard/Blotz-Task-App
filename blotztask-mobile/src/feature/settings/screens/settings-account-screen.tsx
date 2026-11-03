@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ReturnButton } from "@/shared/components/return-button";
 import { router } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -9,6 +9,7 @@ import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useLogout } from "@/shared/hooks/useLogout";
 import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import Modal from "react-native-modal";
 import { useDeleteUserMutation } from "@/feature/settings/hooks/useDeleteUserMutation";
@@ -27,6 +28,10 @@ export default function SettingsAccountScreen() {
   const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
   const [deleteReason, setDeleteReason] = useState<PickableReason | null>(null);
   const [deleteReasonOtherText, setDeleteReasonOtherText] = useState("");
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_ACCOUNT);
+  }, []);
 
   const displayName =
     userProfile?.displayName && userProfile.displayName.length > 20

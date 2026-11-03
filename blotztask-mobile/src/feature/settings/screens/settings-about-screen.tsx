@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { View, Text, Pressable, Linking, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -6,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import * as WebBrowser from "expo-web-browser";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import * as Application from "expo-application";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 const WEBSITE_URL = "https://www.blotztask.com/";
 const PRIVACY_POLICY_URLS = {
@@ -22,6 +25,10 @@ export default function SettingsAboutScreen() {
   const { t , i18n } = useTranslation("settings");
   const version = Application.nativeApplicationVersion ?? "—";
   const buildNumber = Application.nativeBuildVersion ?? "—";
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_ABOUT);
+  }, []);
 
   const handleVisitWebsite = () => {
     Linking.openURL(WEBSITE_URL);
