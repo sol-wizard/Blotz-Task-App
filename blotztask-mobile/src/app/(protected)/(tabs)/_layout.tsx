@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Tabs, router } from "expo-router";
+import { Tabs, router, useGlobalSearchParams, usePathname } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
@@ -62,7 +63,11 @@ function getTabIcon(routeKey: string, focused: boolean) {
 }
 
 export default function ProtectedTabsLayout() {
+  const { t } = useTranslation("common");
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  // Only the Calendar tab sets `date`, so "+" from any other tab opens the form on today.
+  const { date: calendarDate } = useGlobalSearchParams<{ date?: string }>();
   const aiButtonRef = useRef<View>(null);
   const [aiButtonFrame, setAiButtonFrame] = useState<ButtonFrame | null>(null);
 
@@ -97,12 +102,14 @@ export default function ProtectedTabsLayout() {
           name="index"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("calendar", focused),
+            tabBarAccessibilityLabel: t("bottomNav.calendar"),
           }}
         />
         <Tabs.Screen
           name="notes"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("notes", focused),
+            tabBarAccessibilityLabel: t("bottomNav.notes"),
           }}
         />
         <Tabs.Screen
@@ -113,6 +120,8 @@ export default function ProtectedTabsLayout() {
                 ref={aiButtonRef}
                 onLayout={reportAiButtonFrame}
                 className="flex-1 items-center justify-center"
+                accessibilityRole="button"
+                accessibilityLabel={t("bottomNav.aiAssistant")}
                 onPress={() => router.push("/ai-task-sheet")}
               >
                 <AiTabButtonIcon />
@@ -126,7 +135,15 @@ export default function ProtectedTabsLayout() {
             tabBarButton: () => (
               <Pressable
                 className="flex-1 items-center justify-center"
-                onPress={() => router.push("/task-create")}
+                accessibilityRole="button"
+                accessibilityLabel={t("bottomNav.newTask")}
+                onPress={() =>
+                  router.push(
+                    pathname === "/" && calendarDate
+                      ? { pathname: "/task-create", params: { date: calendarDate } }
+                      : "/task-create",
+                  )
+                }
               >
                 {getTabIcon("createTask", true)}
               </Pressable>
@@ -137,6 +154,7 @@ export default function ProtectedTabsLayout() {
           name="settings"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("settings", focused),
+            tabBarAccessibilityLabel: t("bottomNav.settings"),
           }}
         />
       </Tabs>

@@ -30,7 +30,8 @@
     "subtitle": "点我一下，说说今天要做什么吧。",
     "dismiss": "以后再说",
     "sheetLabel": "你的第一条任务",
-    "sheetHint": "按住按钮告诉我，\n我帮你记下来！"
+    "sheetHint": "按住按钮告诉我，\n我帮你记下来！",
+    "sheetHintTyping": "把要做的事打给我，\n我帮你记下来！"
   },
   "aboutYou": {
     "next": "下一步",

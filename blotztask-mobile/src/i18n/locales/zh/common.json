@@ -26,6 +26,8 @@
   "bottomNav": {
     "calendar": "日历",
     "notes": "随手记",
+    "aiAssistant": "AI 助手",
+    "newTask": "新建任务",
     "settings": "设置"
   },
   "permissions": {

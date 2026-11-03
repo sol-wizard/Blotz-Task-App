@@ -361,7 +361,17 @@ export default function AiTaskSheetScreen() {
               <View className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}>
                 <VoiceHintText
                   label={isFromOnboarding ? tOnboarding("voice-coach.sheetLabel") : undefined}
-                  hint={isFromOnboarding ? tOnboarding("voice-coach.sheetHint") : undefined}
+                  hint={
+                    isFromOnboarding
+                      ? tOnboarding(
+                          // Keep the voice hint while the mic check runs: the sheet starts in
+                          // text mode and flips to voice once the grant is known.
+                          inputMode === "text" && micStatus !== "checking"
+                            ? "voice-coach.sheetHintTyping"
+                            : "voice-coach.sheetHint",
+                        )
+                      : undefined
+                  }
                 />
               </View>
             )}
@@ -460,9 +470,12 @@ export default function AiTaskSheetScreen() {
                         placeholder={t("input.placeholder")}
                         placeholderTextColor="rgba(255,255,255,0.6)"
                         returnKeyType="send"
-                        multiline={false}
+                        // Wraps long sentences so they can be read back; return still sends.
+                        multiline
+                        submitBehavior="blurAndSubmit"
+                        textAlignVertical="top"
                         editable={!isAiGenerating}
-                        className={`w-full text-white font-baloo text-base px-4 bg-white/25 rounded-full h-14 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
+                        className={`w-full text-white font-baloo text-base px-4 py-4 bg-white/25 rounded-[28px] min-h-14 max-h-32 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
                       />
                     )}
                   </Animated.View>

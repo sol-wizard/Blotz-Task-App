@@ -32,7 +32,7 @@ export const ReminderTab = ({ animateOnEnter = true }: { animateOnEnter?: boolea
   const dateDisplayText = startDate
     ? formatLocalizedDate(startDate, "abbrevMonthDayYear")
     : t("form.selectDate");
-  const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
+  const timeDisplayText = startTime ? format(startTime, "HH:mm") : t("form.selectTime");
 
   return (
     <Animated.View
