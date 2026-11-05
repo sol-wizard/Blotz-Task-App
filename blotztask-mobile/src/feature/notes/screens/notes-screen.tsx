@@ -176,7 +176,7 @@ export default function NotesScreen() {
               closeAllRows();
               router.push("/(protected)/note-editor");
             }}
-            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+            className="mx-6 mb-4 border-2 rounded-2xl
               h-14 items-center justify-center bg-background"
             style={{ borderColor: "#9AD513", backgroundColor: "#FBFFF6" }}
           >

@@ -75,7 +75,7 @@ export default {
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
       "expo-asset",
-      "expo-build-properties",
+      ["expo-build-properties", { ios: { enableSceneSupport: true } }],
       "@react-native-vector-icons/ionicons",
       "@react-native-vector-icons/feather",
       "@react-native-vector-icons/material-design-icons",
