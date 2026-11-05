@@ -80,6 +80,7 @@ export default function CalendarScreen() {
             exiting={MotionAnimations.outExiting}
           >
             <WeekCalendar
+              testID="week-calendar"
               theme={calendarTheme}
               allowShadow={false}
               calendarHeight={82}
