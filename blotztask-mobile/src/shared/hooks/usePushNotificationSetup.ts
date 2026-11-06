@@ -42,6 +42,8 @@ export function usePushNotificationSetup() {
         const taskId = data?.taskId as string | undefined;
 
         if (response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+          // Letter reminders open the Review tab instead; see useOpenReviewFromReminder.
+          if (data?.type === "review") return;
           router.push("/(protected)");
           return;
         }

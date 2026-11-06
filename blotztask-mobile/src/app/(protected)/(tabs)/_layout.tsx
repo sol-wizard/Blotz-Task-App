@@ -7,6 +7,8 @@ import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/bottom-nav-image";
 import { AiTabButtonIcon } from "@/shared/components/ai-tab-button-icon";
 import { theme } from "@/shared/constants/theme";
+import { useOpenReviewFromReminder } from "@/feature/review/hooks/useOpenReviewFromReminder";
+import { useHasUnreadLetter } from "@/feature/review/hooks/useHasUnreadLetter";
 import {
   VoiceCoachOverlay,
   type ButtonFrame,
@@ -65,10 +67,25 @@ function getTabIcon(routeKey: string, focused: boolean) {
   }
 }
 
+// The Review tab icon, with a red dot while the latest weekly or monthly letter is unread.
+function ReviewTabIcon({ focused }: { focused: boolean }) {
+  const hasUnreadLetter = useHasUnreadLetter();
+
+  return (
+    <View>
+      {getTabIcon("review", focused)}
+      {hasUnreadLetter && (
+        <View className="absolute top-0 right-0 w-3 h-3 rounded-full bg-red-500 border-2 border-background" />
+      )}
+    </View>
+  );
+}
+
 export default function ProtectedTabsLayout() {
   const insets = useSafeAreaInsets();
   const aiButtonRef = useRef<View>(null);
   const [aiButtonFrame, setAiButtonFrame] = useState<ButtonFrame | null>(null);
+  useOpenReviewFromReminder();
 
   // The voice coach puts its spotlight exactly where this button is drawn.
   const reportAiButtonFrame = () => {
@@ -132,7 +149,7 @@ export default function ProtectedTabsLayout() {
         <Tabs.Screen
           name="review"
           options={{
-            tabBarIcon: ({ focused }) => getTabIcon("review", focused),
+            tabBarIcon: ({ focused }) => <ReviewTabIcon focused={focused} />,
           }}
         />
         <Tabs.Screen

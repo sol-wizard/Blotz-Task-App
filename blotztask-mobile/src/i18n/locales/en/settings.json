@@ -5,6 +5,8 @@
     "preferences": "Preferences",
     "upcomingReminder": "Due Soon Reminders",
     "autoRollover": "Move Overdue Tasks to Today",
+    "reviewReminder": "Review Reminders",
+    "newBadge": "New",
     "language": "Language",
     "aiMemory": "AI Memory",
     "withBlotz": "With Blotz",
@@ -108,6 +110,12 @@
     "generatingStage1": "Reading through your tasks… 📖",
     "generatingStage2": "Noticing your little patterns… ✨",
     "generatingStage3": "Writing your letter… 💌"
+  },
+  "reviewReminder": {
+    "weeklyTitle": "Last week's letter is ready 💌",
+    "weeklyBody": "Come read the weekly letter Blotz wrote for you.",
+    "monthlyTitle": "Last month's letter is ready 💌",
+    "monthlyBody": "Come read the monthly letter Blotz wrote for you."
   },
   "weeklyReview": {
     "letterLabel": "Weekly Letter",

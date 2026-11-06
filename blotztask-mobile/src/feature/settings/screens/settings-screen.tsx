@@ -148,6 +148,21 @@ export default function SettingsScreen() {
             }
           />
           <SettingsRow
+            label={t("menu.reviewReminder")}
+            badge={t("menu.newBadge")}
+            trailing={
+              <ToggleSwitch
+                value={userPreferences?.reviewNotification ?? true}
+                disabled={isUpdatingUserPreferences}
+                onChange={() =>
+                  updatePreferences({
+                    reviewNotification: !(userPreferences?.reviewNotification ?? true),
+                  })
+                }
+              />
+            }
+          />
+          <SettingsRow
             label={t("menu.language")}
             trailing={
               <View className="bg-background rounded-full px-3 py-1">

@@ -5,6 +5,8 @@
     "preferences": "偏好设置",
     "upcomingReminder": "即将到期提醒",
     "autoRollover": "逾期任务自动顺延到今天",
+    "reviewReminder": "回顾提醒",
+    "newBadge": "新增",
     "language": "语言",
     "aiMemory": "AI 记忆",
     "withBlotz": "陪 Blotz 一起",
@@ -108,6 +110,12 @@
     "generatingStage1": "正在翻阅你的任务… 📖",
     "generatingStage2": "正在发现你的小规律… ✨",
     "generatingStage3": "正在为你写信… 💌"
+  },
+  "reviewReminder": {
+    "weeklyTitle": "上周的信已准备好 💌",
+    "weeklyBody": "来看看 Blotz 写给你的每周信件吧。",
+    "monthlyTitle": "上个月的信已准备好 💌",
+    "monthlyBody": "来看看 Blotz 写给你的每月信件吧。"
   },
   "weeklyReview": {
     "letterLabel": "每周信件",

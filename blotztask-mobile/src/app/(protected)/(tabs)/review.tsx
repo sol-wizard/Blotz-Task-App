@@ -1,13 +1,17 @@
 import { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { format } from "date-fns";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import ReviewScreen from "@/feature/review/screens/review-screen";
+import { ReviewPeriodType } from "@/feature/review/models/review-dto";
 
 const today = () => format(new Date(), "yyyy-MM-dd");
 
 export default function ReviewTab() {
+  // Set by a letter reminder: which letter to open, and a new openedAt for every tap.
+  const { period, openedAt } = useLocalSearchParams<{ period?: string; openedAt?: string }>();
+
   // A tab stays mounted, so the page would keep showing the week it first opened on.
   // Re-mounting it on a new day makes it start from the latest week and month again.
   const [day, setDay] = useState(today);
@@ -21,5 +25,13 @@ export default function ReviewTab() {
     }, []),
   );
 
-  return <ReviewScreen key={day} />;
+  // The params stay on the route, so only a tap from today picks the tab: a later new-day
+  // remount starts on Weekly again.
+  const isTapFromToday = openedAt !== undefined && format(Number(openedAt), "yyyy-MM-dd") === day;
+  const initialTab =
+    isTapFromToday && period === ReviewPeriodType.Monthly
+      ? ReviewPeriodType.Monthly
+      : ReviewPeriodType.Weekly;
+
+  return <ReviewScreen key={`${day}-${openedAt ?? ""}`} initialTab={initialTab} />;
 }

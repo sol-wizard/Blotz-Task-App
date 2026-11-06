@@ -9,8 +9,9 @@ import { ReviewComingSoon } from "./review-coming-soon";
 import { ReviewTipBanner } from "./review-tip-banner";
 import { PeriodSelector } from "./period-selector";
 import { useReview } from "../hooks/useReviewReport";
+import { useMarkLetterRead } from "../hooks/useReadLettersStore";
 import { ReviewPeriodType } from "../models/review-dto";
-import { formatWeek, startOfReviewWeek } from "../utils/week-utils";
+import { formatWeek, getLatestReviewableWeek, startOfReviewWeek } from "../utils/week-utils";
 
 // Mon–Sun week (see week-utils). Matches date-fns weekStartsOn used there.
 const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
@@ -25,7 +26,7 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
   const { userProfile } = useUserProfile();
 
   // Latest viewable week is last week — the current one is still in progress.
-  const latestReviewableWeek = startOfReviewWeek(subWeeks(new Date(), 1));
+  const latestReviewableWeek = getLatestReviewableWeek();
   const [selectedWeek, setSelectedWeek] = useState<Date>(() => latestReviewableWeek);
   const [isTipDismissed, setIsTipDismissed] = useState(false);
 
@@ -57,6 +58,8 @@ export function WeeklyReviewView({ shareCardRef, onShareAvailableChange }: Props
   useEffect(() => {
     onShareAvailableChange(canShare);
   }, [canShare, onShareAvailableChange]);
+
+  useMarkLetterRead(ReviewPeriodType.Weekly, anchorDate, report !== null && isAtLatestWeek);
 
   const handlePrevWeek = () => {
     if (!isAtEarliestWeek) setSelectedWeek((week) => subWeeks(week, 1));

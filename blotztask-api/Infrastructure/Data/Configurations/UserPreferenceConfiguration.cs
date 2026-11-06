@@ -36,6 +36,9 @@ namespace BlotzTask.Infrastructure.Data.Configurations
             builder.Property(x => x.EveningWrapUpNotification)
                    .HasDefaultValue(false);
 
+            builder.Property(x => x.ReviewNotification)
+                   .HasDefaultValue(true);
+
             builder.Property(x => x.AiMemoryEnabled)
                    .HasDefaultValue(true);
 

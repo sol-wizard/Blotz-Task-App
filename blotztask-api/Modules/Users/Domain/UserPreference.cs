@@ -10,6 +10,7 @@ namespace BlotzTask.Modules.Users.Domain
         public bool OverdueNotification { get; set; } = true;
         public bool DailyPlanningNotification { get; set; } = false;
         public bool EveningWrapUpNotification { get; set; } = false;
+        public bool ReviewNotification { get; set; } = true;
         public Language PreferredLanguage { get; set; } = Language.En;
         public bool AiMemoryEnabled { get; set; } = true;
     }

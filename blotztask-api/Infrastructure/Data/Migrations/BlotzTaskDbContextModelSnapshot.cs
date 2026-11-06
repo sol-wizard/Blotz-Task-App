@@ -1334,6 +1334,11 @@ namespace BlotzTask.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("En");
 
+                    b.Property<bool>("ReviewNotification")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("UpcomingNotification")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -1353,6 +1358,7 @@ namespace BlotzTask.Migrations
                             EveningWrapUpNotification = false,
                             OverdueNotification = true,
                             PreferredLanguage = "Zh",
+                            ReviewNotification = true,
                             UpcomingNotification = true
                         });
                 });
