@@ -22,8 +22,7 @@ public class UpdateUserPreferenceTests : IClassFixture<DatabaseFixture>
             TestDbContextFactory.CreateLogger<UpdateUserPreferenceCommandHandler>());
     }
 
-    // Reminders start on. Inserting false would not stick: EF leaves a false bool out of the INSERT,
-    // so the column's default (true) wins.
+    // Reminders start on, the same as for every new user.
     private async Task<Guid> CreateUserWithRemindersOnAsync()
     {
         var userId = await _seeder.CreateUserAsync();
