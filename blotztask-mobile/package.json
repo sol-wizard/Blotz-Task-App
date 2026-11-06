@@ -9,8 +9,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss}\"",
-    "optimize-images": "node ./scripts/optimize-images.mjs"
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss}\""
   },
   "dependencies": {
     "@expo-google-fonts/baloo-2": "^0.4.2",
@@ -112,7 +111,6 @@
     "eslint-config-prettier": "^10.1.8",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "react-native-svg-transformer": "^1.5.2",
-    "sharp": "^0.35.5",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.59.4"
   },
