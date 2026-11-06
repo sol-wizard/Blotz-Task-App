@@ -23,7 +23,7 @@ function UnfocusedTabIcon({ children }: { children: React.ReactNode }) {
 function getTabIcon(routeKey: string, focused: boolean) {
   const DashedStar = ASSETS.dashedStar;
   const DashedHouse = ASSETS.dashedHouse;
-  const DashedPlus = ASSETS.dashedPlus;
+  const DashedEnvelope = ASSETS.dashedEnvelope;
   const DashedSettings = ASSETS.dashedSettings;
 
   switch (routeKey) {
@@ -43,10 +43,13 @@ function getTabIcon(routeKey: string, focused: boolean) {
           <DashedStar width={24} height={24} />
         </UnfocusedTabIcon>
       );
-    case "createTask":
-      return (
+    case "review":
+      // TODO: swap in the design team's selected envelope (same style as greenHouse) when it arrives.
+      return focused ? (
+        <BottomNavImage source={ASSETS.letterEnvelope} imageClassName="w-8 h-[26px]" />
+      ) : (
         <UnfocusedTabIcon>
-          <DashedPlus width={24} height={24} />
+          <DashedEnvelope width={24} height={24} />
         </UnfocusedTabIcon>
       );
     case "settings":
@@ -127,22 +130,17 @@ export default function ProtectedTabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="create-task"
+          name="review"
           options={{
-            tabBarButton: () => (
-              <Pressable
-                className="flex-1 items-center justify-center"
-                onPress={() => router.push("/task-create")}
-              >
-                {getTabIcon("createTask", true)}
-              </Pressable>
-            ),
+            tabBarIcon: ({ focused }) => getTabIcon("review", focused),
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("settings", focused),
+            // Coming back to Settings shows its home, not the sub-page the user left on.
+            popToTopOnBlur: true,
           }}
         />
       </Tabs>

@@ -1,10 +1,9 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { useState } from "react";
 import { ReturnButton } from "@/shared/components/return-button";
 import { router } from "expo-router";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import { FormDivider } from "@/shared/components/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useLogout } from "@/shared/hooks/useLogout";
@@ -16,6 +15,48 @@ import {
   DeleteReasonPicker,
   type PickableReason,
 } from "@/feature/settings/components/delete-reason-picker";
+import { SettingsSection } from "@/feature/settings/components/settings-section";
+
+// Keeps the first letter and the domain, e.g. A*****@gmail.com. The star count is fixed so the
+// length of the address isn't shown either.
+function maskEmail(email: string) {
+  const at = email.lastIndexOf("@");
+  if (at <= 0) return email;
+  return `${email[0]}*****${email.slice(at)}`;
+}
+
+type AccountInfoRowProps = {
+  label: string;
+  description: string;
+  value: string;
+  onPress?: () => void;
+};
+
+function AccountInfoRow({ label, description, value, onPress }: AccountInfoRowProps) {
+  const content = (
+    <>
+      <View className="flex-1 mr-3">
+        <Text className="text-base font-balooBold text-secondary">{label}</Text>
+        <Text className="text-sm font-balooThin text-primary">{description}</Text>
+      </View>
+      <View className="max-w-[50%] flex-row items-center">
+        <Text className="shrink text-base font-baloo text-secondary" numberOfLines={1}>
+          {value}
+        </Text>
+        {onPress && <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />}
+      </View>
+    </>
+  );
+
+  // A read-only row is a plain View, so VoiceOver doesn't read it as a "dimmed" button.
+  if (!onPress) return <View className="flex-row items-center py-4">{content}</View>;
+
+  return (
+    <Pressable onPress={onPress} className="flex-row items-center py-4">
+      {content}
+    </Pressable>
+  );
+}
 
 export default function SettingsAccountScreen() {
   const logout = useLogout();
@@ -28,15 +69,12 @@ export default function SettingsAccountScreen() {
   const [deleteReason, setDeleteReason] = useState<PickableReason | null>(null);
   const [deleteReasonOtherText, setDeleteReasonOtherText] = useState("");
 
-  const displayName =
-    userProfile?.displayName && userProfile.displayName.length > 20
-      ? `${userProfile.displayName.slice(0, 20)}...`
-      : (userProfile?.displayName ?? "");
-
-  const displayEmail =
-    userProfile?.email && userProfile.email.length > 20
-      ? `${userProfile.email.slice(0, 20)}...`
-      : (userProfile?.email ?? "");
+  const confirmSignOut = () => {
+    Alert.alert(t("account.signOutTitle"), undefined, [
+      { text: t("common:buttons.cancel"), style: "cancel" },
+      { text: t("common:buttons.signOut"), style: "destructive", onPress: () => void logout() },
+    ]);
+  };
 
   const handleConfirmDelete = async () => {
     // Queued before the delete request so it leaves while the user is still identified:
@@ -74,66 +112,34 @@ export default function SettingsAccountScreen() {
         </View>
       </View>
 
-      <View className="mt-8 w-full bg-white rounded-2xl pl-4">
-        <Pressable
-          className="mb-2"
-          onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
-        >
-          <View className="flex-row items-center pt-4 pb">
-            <Text className="text-lg font-baloo text-secondary">{t("account.name")}</Text>
+      <View className="w-full mt-3">
+        <SettingsSection>
+          <AccountInfoRow
+            label={t("account.name")}
+            description={t("account.nameDescription")}
+            value={userProfile?.displayName ?? ""}
+            onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
+          />
+          <AccountInfoRow
+            label={t("account.email")}
+            description={t("account.emailDescription")}
+            value={userProfile?.email ? maskEmail(userProfile.email) : ""}
+          />
+        </SettingsSection>
 
-            <View className="ml-3 flex-1 flex-row items-center justify-end">
-              <Text
-                className="shrink text-lg font-baloo text-secondary mr-2"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {displayName}
-              </Text>
-              <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
-            </View>
-          </View>
-          <Text className="text-primary font-balooThin text-sm">
-            {t("account.nameDescription")}
-          </Text>
-        </Pressable>
-
-        <View className="mr-4">
-          <FormDivider marginVertical={2} />
-        </View>
-        <Pressable className="mb-3 mt-2">
-          <View className="flex-row items-center pb">
-            <Text className="text-lg font-baloo text-secondary">{t("account.email")}</Text>
-
-            <View className="ml-3 flex-1 flex-row items-center justify-end">
-              <Text
-                className="shrink text-lg font-baloo text-secondary mr-2"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {displayEmail}
-              </Text>
-              <View style={{ width: 22, flexShrink: 0 }} />
-            </View>
-          </View>
-          <Text className="text-primary font-balooThin text-sm">
-            {t("account.emailDescription")}
-          </Text>
-        </Pressable>
+        <SettingsSection>
+          <Pressable onPress={confirmSignOut} className="py-4">
+            <Text className="text-base font-balooBold text-secondary">
+              {t("common:buttons.signOut")}
+            </Text>
+          </Pressable>
+          <Pressable onPress={openDeleteModal} className="py-4">
+            <Text className="text-base font-balooBold text-secondary">
+              {t("account.deleteAccount")}
+            </Text>
+          </Pressable>
+        </SettingsSection>
       </View>
-      <Pressable
-        onPress={async () => await logout()}
-        className="bg-white rounded-xl w-96 py-4 items-center justify-center pr-4 shadow mt-12"
-      >
-        <Text className="text-red-500 font-baloo text-xl ml-4">{t("common:buttons.signOut")}</Text>
-      </Pressable>
-
-      <Pressable
-        onPress={openDeleteModal}
-        className="bg-red-500 rounded-xl w-96 py-4 items-center justify-center pr-4 shadow mt-4"
-      >
-        <Text className="text-white font-baloo text-xl ml-4">{t("account.deleteAccount")}</Text>
-      </Pressable>
 
       <Modal
         isVisible={isDeleteModalVisible}

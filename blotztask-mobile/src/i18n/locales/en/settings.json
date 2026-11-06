@@ -1,18 +1,22 @@
 {
   "title": "Settings",
   "menu": {
-    "account": "Account",
-    "review": "Review",
-    "MembershipPlan": "Membership Plan",
-    "betaFeatures": "Beta Features",
-    "taskHandling": "Task Handling",
-    "notifications": "Notifications",
-    "aiMemory": "AI Memory",
+    "manageAccount": "Manage Account",
+    "preferences": "Preferences",
+    "upcomingReminder": "Due Soon Reminders",
+    "autoRollover": "Move Overdue Tasks to Today",
     "language": "Language",
-    "allTasks": "All tasks page (beta)",
+    "aiMemory": "AI Memory",
+    "withBlotz": "With Blotz",
     "invite": "Invite Friends",
-    "supportUs": "Support Us",
-    "about": "About"
+    "supportUs": "Support Blotz",
+    "aboutBlotz": "About Blotz",
+    "feedback": "Share Feedback",
+    "website": "Blotz Website",
+    "xiaohongshu": "Follow Us · Xiaohongshu",
+    "privacyPolicy": "Privacy Policy",
+    "betaFeatures": "Beta Features",
+    "version": "Version {{version}} ({{buildNumber}})"
   },
   "betaFeatures": {
     "title": "Beta Features",
@@ -25,7 +29,8 @@
     "nameDescription": "This name appears across your account.",
     "email": "Email",
     "emailDescription": "Used for login and notifications.",
-    "deleteAccount": "⚠️ Delete Account",
+    "signOutTitle": "Sign out of Blotz?",
+    "deleteAccount": "Delete Account",
     "deleteTitle": "Delete Account",
     "deleteWarning": "This permanently deletes your account and all data (tasks, notes, preferences). This can’t be undone.",
     "deleteConfirmText": "I understand this cannot be undone.",
@@ -53,16 +58,6 @@
     "remaining": "Remaining",
     "plan": "Membership Plan"
   },
-  "taskHandling": {
-    "title": "Task Handling",
-    "autoRollover": "Auto Rollover",
-    "autoRolloverDescription": "Move overdue tasks to today automatically."
-  },
-  "notifications": {
-    "title": "Notifications",
-    "taskNotifications": "Task notifications",
-    "upcomingDueTasks": "Upcoming due tasks"
-  },
   "aiMemory": {
     "title": "AI Memory",
     "toggleLabel": "Let AI remember things about me",
@@ -74,30 +69,12 @@
     "keepAndTurnOff": "Keep and turn off",
     "deleteAndTurnOff": "Delete and turn off"
   },
-  "language": {
-    "title": "Language",
-    "english": "English",
-    "englishDescription": "Default language",
-    "chinese": "中文",
-    "chineseDescription": "简体中文",
-    "infoText": "Your language preference will be saved and synced across all your devices.",
-    "infoTextChinese": "您的语言偏好将被保存并在所有设备上同步。"
-  },
   "updateName": {
     "title": "Name"
   },
   "profile": {
     "title": "Profile",
     "editProfile": "Edit Profile"
-  },
-  "about": {
-    "title": "About",
-    "visitWebsite": "Visit Website",
-    "feedback": "Share Feedback",
-    "privacyPolicy": "Privacy Policy",
-    "followUs": "Follow Us",
-    "xiaohongshu": "Xiaohongshu",
-    "version": "Version {{version}} ({{buildNumber}})"
   },
   "monthlyReview": {
     "letterLabel": "Monthly Letter",

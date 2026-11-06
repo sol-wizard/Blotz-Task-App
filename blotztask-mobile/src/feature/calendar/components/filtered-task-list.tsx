@@ -79,7 +79,14 @@ export const FilteredTaskList = ({
         <FlatList
           className="flex-1"
           data={tasksOfSelectedStatus}
-          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12, flexGrow: 1 }}
+          // paddingBottom lets the last task scroll up from under the floating + on Home.
+          contentContainerStyle={{
+            paddingHorizontal: 22,
+            paddingTop: 8,
+            paddingBottom: 88,
+            gap: 12,
+            flexGrow: 1,
+          }}
           renderItem={renderTask}
           keyExtractor={(task, index) => {
             const recurringOccurrence = getRecurringOccurrenceIdentity(task);

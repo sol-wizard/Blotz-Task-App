@@ -48,7 +48,10 @@ export default function SettingsAiMemoryScreen() {
       <View className="flex-row px-6 pt-6">
         <ReturnButton />
         <View className="flex-1 items-center">
-          <Text className="text-3xl font-balooExtraBold text-secondary">{t("aiMemory.title")}</Text>
+          {/* "AI" is Baloo but 记忆 falls back to the system font; text-3xl's line height clips it. */}
+          <Text className="text-3xl font-balooExtraBold text-secondary" style={{ lineHeight: 40 }}>
+            {t("aiMemory.title")}
+          </Text>
         </View>
       </View>
 
