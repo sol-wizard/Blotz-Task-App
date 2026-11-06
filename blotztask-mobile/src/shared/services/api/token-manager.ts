@@ -17,7 +17,7 @@ function reportRefreshFailure(error: unknown, durationMs: number) {
   const code = typeof type === "string" ? type : "UNKNOWN";
 
   // No stored credentials at all: a logged-out user (or a fresh install) hitting an
-  // endpoint that does not need a token, such as `/app-version`. Not a failure.
+  // endpoint that does not need a token. Not a failure.
   if (code === CredentialsManagerErrorCodes.NO_CREDENTIALS) return;
 
   const now = Date.now();

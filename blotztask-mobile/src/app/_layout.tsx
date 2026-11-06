@@ -23,6 +23,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { prefetchVersionPolicy, useForcedUpdateRedirect } from "@/shared/hooks/useUpdateCheck";
 import posthog from "@/shared/constants/posthog-client";
 import { analytics } from "@/shared/services/analytics";
 import "@/shared/util/typography";
@@ -41,6 +42,7 @@ Sentry.init({
 });
 
 analytics.syncSentryIdentityOnLaunch();
+prefetchVersionPolicy(queryClient);
 
 function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -83,6 +85,7 @@ export default Sentry.wrap(RootLayout);
 
 function RootStack() {
   const { isAuthenticated } = useAuth();
+  useForcedUpdateRedirect();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

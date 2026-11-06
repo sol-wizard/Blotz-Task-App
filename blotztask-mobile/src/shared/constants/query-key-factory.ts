@@ -7,6 +7,12 @@ export const userKeys = {
   delete: () => [...userKeys.all, "delete"] as const,
 } as const;
 
+export const appVersionKeys = {
+  all: ["appVersion"] as const,
+  latest: () => [...appVersionKeys.all, "latest"] as const,
+  saved: () => [...appVersionKeys.all, "saved"] as const,
+} as const;
+
 export const labelKeys = {
   all: ["label"] as const,
 } as const;
