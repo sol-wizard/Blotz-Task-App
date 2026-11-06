@@ -6,7 +6,7 @@ Every PBI — and the PR that implements it — carries exactly one level label.
 |---|---|---|
 | `L1` · Verifiable | Small and isolated, **and the AI can prove it works 100%** — unit tests, or driving the UI (`real-device-test` for the app, Playwright for the website). The proof goes in the PR. | 1 approval from anyone |
 | `L2` · Contained | A normal change. If it's wrong, only one feature is hit and a revert fixes it completely. | 1 tech-lead candidate |
-| `L3` · Wide or lasting | If it's wrong, many parts or other systems are hit, or it leaves something a revert can't undo — stored data, behaviour users rely on, shared contracts, upgrades. | 1 tech lead |
+| `L3` · Wide or lasting | If it's wrong, many parts or other systems are hit, or it leaves something a revert can't undo — stored data, behaviour users rely on, shared contracts, upgrades. | 1 tech lead or tech-lead candidate |
 | `L4` · Critical | If it's wrong, the harm goes beyond a bug: security or access, personal data, money, production infrastructure. | 2 approvals, at least 1 tech lead |
 
 ## How to pick
@@ -25,11 +25,20 @@ An `L1` PR must show how the AI verified it: the test command and its result, or
 
 ## Tech leads
 
-GitHub logins of the tech leads — `L3`/`L4` need one of them to approve:
+GitHub logins of the tech leads. `L4` needs one of them to approve; for `L3`, one of them or a candidate below is enough:
 
 - `sol-wizard` (Ben)
 - `nxn-nicole` (Nicole)
 - `Xu-create-ops` (Chen)
 - `LiliZ3681` (Zyx)
 
-Update this list when someone becomes a tech lead or leaves. `L1`/`L2` don't need a check: any approval is fine.
+## Tech-lead candidates
+
+GitHub logins of the tech-lead candidates (Discord role Blotz-TechLead-candidate) — their approval counts for `L3`:
+
+- `LiChenyang-GZ` (Christy)
+- `lyx2-2` (Lyx)
+- `Guotai812` (Guotai)
+- `leahw509` (Leah)
+
+Update these lists when someone becomes a tech lead or candidate, or leaves. `L1`/`L2` don't need a check: any approval is fine.

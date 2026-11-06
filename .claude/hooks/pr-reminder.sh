@@ -11,14 +11,21 @@ command -v gh >/dev/null || exit 0
 # (set it under "env" in .claude/settings.local.json).
 ME=${BLOTZ_GH_USER:-$(gh api user -q .login 2>/dev/null)}
 [ -n "$ME" ] || exit 0
-# Tech leads = the list in review-levels.md. They also see L3/L4 PRs to review,
-# and L3/L4 only count as approved once the level's rule is met:
-# L3 = a tech lead approved, L4 = 2 approvals with at least 1 tech lead.
-TLS=$(grep -oE '^- `[^`]+`' .claude/skills/pbi/review-levels.md 2>/dev/null |
-  sed -e 's/^- `//' -e 's/`$//' -e 's/.*/"&"/' | paste -sd, -)
-TLS="[$TLS]"
-TL=false
-grep -qE "^- \`$ME\`" .claude/skills/pbi/review-levels.md 2>/dev/null && TL=true
+# Tech leads and tech-lead candidates = the two lists in review-levels.md.
+# Tech leads also see L3/L4 PRs to review, candidates also see L3 ones, and
+# L3/L4 only count as approved once the level's rule is met:
+# L3 = a tech lead or candidate approved, L4 = 2 approvals with at least 1 tech lead.
+# Logins under one "## <heading>" of review-levels.md, as "a","b".
+logins() {
+  awk -v h="## $1" '$0 == h {on = 1; next} /^## / {on = 0} on && /^- `/' \
+    .claude/skills/pbi/review-levels.md 2>/dev/null |
+    sed -e 's/^- `//' -e 's/`.*//' -e 's/.*/"&"/' | paste -sd, -
+}
+TLS="[$(logins "Tech leads")]"
+CANDS="[$(logins "Tech-lead candidates")]"
+TL=false; CAND=false
+case "$TLS" in *"\"$ME\""*) TL=true ;; esac
+case "$CANDS" in *"\"$ME\""*) CAND=true ;; esac
 
 # jq program (gh --jq takes no --arg, so the values are filled in below).
 read -r -d '' PROG <<'JQ'
@@ -29,9 +36,11 @@ def sentback: .reviewDecision == "CHANGES_REQUESTED" and (.reviewRequests | leng
 def approvers: [.latestReviews[]? | select(.state == "APPROVED") | .author.login];
 def approved:
   approvers as $a | ([$a[] | select(. as $x | __TLS__ | index($x))] | length) as $t
+  | ([$a[] | select(. as $x | (__TLS__ + __CANDS__) | index($x))] | length) as $tc
   | if level == "L4" then ($a | length) >= 2 and $t >= 1
-    elif level == "L3" then $t >= 1
+    elif level == "L3" then $tc >= 1
     else .reviewDecision == "APPROVED" end;
+def canreview: if level == "L4" then __TL__ elif level == "L3" then __TL__ or __CAND__ else true end;
 def line($icon; $note): "\($icon) #\(.number) · \(.title) · \(level) · \($note)";
 [.[] | select(.isDraft | not)] | sort_by(.createdAt)
 | ([.[] | select(.author.login == "__ME__")
@@ -41,7 +50,7 @@ def line($icon; $note): "\($icon) #\(.number) · \(.title) · \(level) · \($not
        else empty end]) as $mine
 | ([.[] | select(.author.login != "__ME__" and (.author.is_bot | not)
             and (sentback | not) and (approved | not)
-            and (__TL__ or (level | test("L[34]") | not)))
+            and canreview)
      | line("👀"; "\(.author.login) · waiting \(age)")]) as $review
 | if ($mine + $review | length) == 0 then empty else
     ((if ($review | length) > 0 then ["Waiting for your review:"] + $review else [] end)
@@ -54,7 +63,9 @@ def line($icon; $note): "\($icon) #\(.number) · \(.title) · \(level) · \($not
 JQ
 PROG=${PROG//__ME__/$ME}
 PROG=${PROG//__TLS__/$TLS}
+PROG=${PROG//__CANDS__/$CANDS}
 PROG=${PROG//__TL__/$TL}
+PROG=${PROG//__CAND__/$CAND}
 
 gh pr list -R "$REPO" --state open --limit 100 \
   --json number,title,author,labels,createdAt,isDraft,reviewDecision,reviewRequests,latestReviews,mergeStateStatus \
