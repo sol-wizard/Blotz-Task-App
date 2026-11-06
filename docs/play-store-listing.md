@@ -62,6 +62,7 @@ Needs a Play Console admin for steps 1–2 and a repo admin for step 3.
 |---|---|
 | ❌ lines from the check | Fix those files in a new PR |
 | Changes cannot be sent for review automatically | Play Console has other changes waiting. Send them for review or discard them under Publishing overview, then re-run the workflow from `main` |
+| More than one release found in this track | A new version is waiting or still rolling out on the production track, and fastlane needs exactly one release there. Wait until the rollout finishes, then re-run the workflow from `main` |
 | The caller does not have permission / 401 / 403 | The service account lost its Play permission, or the secret is wrong |
 
 If Google rejects the listing, Play Console says why. Fix it in a new PR. If managed publishing is on in Play Console, approved changes wait there until someone clicks Publish.
