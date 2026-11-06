@@ -30,13 +30,15 @@ export function SettingsSection({ title, children }: SettingsSectionProps) {
 
 type SettingsRowProps = {
   label: string;
+  // A small pill after the label, e.g. "New".
+  badge?: string;
   icon?: ReactNode;
   // "chevron" opens a page inside the app, "external" leaves it.
   trailing?: "chevron" | "external" | ReactNode;
   onPress?: () => void;
 };
 
-export function SettingsRow({ label, icon, trailing, onPress }: SettingsRowProps) {
+export function SettingsRow({ label, badge, icon, trailing, onPress }: SettingsRowProps) {
   const trailingElement =
     trailing === "chevron" ? (
       <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
@@ -51,6 +53,11 @@ export function SettingsRow({ label, icon, trailing, onPress }: SettingsRowProps
       <View className="flex-row items-center flex-1 mr-3">
         {icon && <View className="mr-3">{icon}</View>}
         <Text className="text-base font-baloo text-secondary shrink">{label}</Text>
+        {badge && (
+          <View className="ml-2 rounded-full bg-lime-100 px-2 py-0.5">
+            <Text className="font-balooBold text-[11px] text-highlight">{badge}</Text>
+          </View>
+        )}
       </View>
       {trailingElement}
     </>

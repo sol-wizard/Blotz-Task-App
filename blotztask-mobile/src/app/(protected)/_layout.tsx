@@ -4,6 +4,7 @@ import { FireworkOverlays } from "@/feature/firework-animation/components/firewo
 import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { useReviewReminderSync } from "@/feature/review/hooks/useReviewReminderSync";
 import { useRecordAppOpen } from "@/shared/hooks/useRecordAppOpen";
 import { useSyncTodayTasksWidget } from "@/feature/widget/hooks/useSyncTodayTasksWidget";
 import { analytics } from "@/shared/services/analytics";
@@ -31,6 +32,7 @@ export default function ProtectedLayout() {
   useRecordAppOpen();
   useSyncTodayTasksWidget();
   const { badgeQueue, dismissBadge } = usePushNotificationSetup();
+  useReviewReminderSync();
 
   return (
     <FireworkProvider>
