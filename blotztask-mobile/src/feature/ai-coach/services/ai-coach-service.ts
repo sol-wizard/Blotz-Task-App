@@ -9,6 +9,7 @@ import {
   MessageFeedbackDto,
   ChatTimelinePageDto,
 } from "../models/ai-coach-dto";
+import { AiCoachAllowanceDto } from "../models/ai-coach-allowance";
 
 // Keep protocol negotiation local to AI Coach, including reads and history pagination.
 const protocol = { headers: { "X-Ai-Coach-Protocol": "6" } };
@@ -114,4 +115,8 @@ export async function editDraft(
   request: EditDraftRequestDto,
 ): Promise<ConversationSnapshotDto> {
   return coachClient.put(`/ai-coach/conversations/${conversationId}/drafts/${draftId}`, request);
+}
+
+export async function getAllowance(): Promise<AiCoachAllowanceDto> {
+  return apiClient.get("/ai-coach/allowance");
 }

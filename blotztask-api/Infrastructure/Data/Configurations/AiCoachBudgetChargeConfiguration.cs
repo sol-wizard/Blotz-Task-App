@@ -14,5 +14,6 @@ public sealed class AiCoachBudgetChargeConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.Model).HasMaxLength(128).IsRequired();
         builder.Property(x => x.ChargedUsd).HasPrecision(20, 10);
         builder.HasIndex(x => new { x.Environment, x.BudgetDate });
+        builder.HasIndex(x => new { x.UserId, x.BudgetDate });
     }
 }

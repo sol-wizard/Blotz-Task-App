@@ -275,9 +275,14 @@ namespace BlotzTask.Migrations
                     b.Property<bool>("Settled")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Environment", "BudgetDate");
+
+                    b.HasIndex("UserId", "BudgetDate");
 
                     b.ToTable("AiCoachBudgetCharge", (string)null);
                 });

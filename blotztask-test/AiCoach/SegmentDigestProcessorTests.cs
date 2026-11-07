@@ -5,7 +5,6 @@ using BlotzTask.Modules.AiCoach.Ai.Runtime;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Infrastructure;
-using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.UserUnderstanding.Commands;
 using BlotzTask.Modules.UserUnderstanding.Domain;
@@ -14,7 +13,6 @@ using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -170,10 +168,10 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
     }
 
     [Fact]
-    public async Task Handle_UserWithoutQuota_LeavesTheCursorForALaterPass()
+    public async Task Handle_UserAllowanceUsedUp_LeavesTheCursorForALaterPass()
     {
         // Arrange
-        await using var harness = await Harness.CreateAsync(fixture, withPlan: false);
+        await using var harness = await Harness.CreateAsync(fixture, allowanceLeft: false);
         await harness.ChatAsync("From now on please keep your replies short", "Sure.");
         harness.Clock.Now = harness.Clock.Now.AddMinutes(11);
         var before = (await harness.Db.AiCoachConversations.AsNoTracking().SingleAsync(r => r.Id == harness.Open.Id)).MemoryProcessedAt;
@@ -182,9 +180,9 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         await harness.Processor.ProcessBatchAsync(default);
 
         // Assert
-        harness.Gateway.Calls.Should().Be(0, because: "background work never runs past the user's AI quota");
+        harness.Gateway.Calls.Should().Be(0, because: "background work never runs past the user's AI Coach allowance");
         (await harness.Db.AiCoachConversations.AsNoTracking().SingleAsync(r => r.Id == harness.Open.Id)).MemoryProcessedAt
-            .Should().Be(before, because: "skipped messages stay pending until quota allows");
+            .Should().Be(before, because: "skipped messages stay pending until the allowance resets");
     }
 
     private static object Memory(string kind, string content, int messageIndex, string? replaces = null) =>
@@ -209,7 +207,6 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
     private sealed class Harness : IAsyncDisposable
     {
         private readonly ServiceProvider _services;
-        private readonly MemoryCache _cache = new(new MemoryCacheOptions());
         public BlotzTaskDbContext Db { get; }
         public ConversationSegmentTests.SegmentClock Clock { get; } = new();
         public ScriptedGateway Gateway { get; } = new();
@@ -217,6 +214,7 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         public ConversationSegments Segments { get; }
         public SegmentDigestProcessor Processor { get; }
         public RememberUserMemoryCommandHandler Remember { get; }
+        public TestCoachBudget Budget { get; }
         public Conversation Open { get; private set; } = null!;
         public Guid UserId => Open.UserId;
 
@@ -224,26 +222,22 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         {
             Db = new(fixture.Options);
             _services = new ServiceCollection().AddScoped(_ => new BlotzTaskDbContext(fixture.Options)).BuildServiceProvider();
-            var options = Options.Create(new AiCoachModuleOptions { DeploymentId = "scripted" });
+            var options = Options.Create(TestCoachBudget.Options("scripted"));
             Store = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, options, NullLogger<SqlConversationStore>.Instance);
             Segments = new(Store, Clock, options);
             Remember = new(Db, Clock, NullLogger<RememberUserMemoryCommandHandler>.Instance);
-            var generator = new SegmentDigestGenerator(Gateway, new CheckAiQuotaService(Db, _cache), new RecordAiUsageService(Db),
-                new AiCoachUsageTracker(), options, NullLogger<SegmentDigestGenerator>.Instance);
+            Budget = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, options);
+            var generator = new SegmentDigestGenerator(Budget.Wrap(Gateway), new AiCoachUsageTracker(), options,
+                NullLogger<SegmentDigestGenerator>.Instance);
             Processor = new(Db, Store, generator, Remember, new GetUserContextQueryHandler(Db, Clock), Clock, options,
                 TestDbContextFactory.CreateLogger<SegmentDigestProcessor>());
         }
 
-        public static async Task<Harness> CreateAsync(DatabaseFixture fixture, bool withPlan = true)
+        public static async Task<Harness> CreateAsync(DatabaseFixture fixture, bool allowanceLeft = true)
         {
             var harness = new Harness(fixture);
-            var seeder = new DataSeeder(harness.Db);
-            var userId = await seeder.CreateUserAsync();
-            if (withPlan)
-            {
-                var plan = await seeder.CreateSubscriptionPlanAsync($"digest-{Guid.NewGuid():N}", 1_000_000);
-                await seeder.CreateUserSubscriptionAsync(userId, plan.Id);
-            }
+            var userId = await new DataSeeder(harness.Db).CreateUserAsync();
+            if (!allowanceLeft) await harness.Budget.UseUpAllowanceAsync(harness.Db, userId);
             harness.Open = await harness.Segments.OpenAsync(userId, "Australia/Perth", default);
             return harness;
         }
@@ -262,7 +256,6 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         {
             await Db.DisposeAsync();
             await _services.DisposeAsync();
-            _cache.Dispose();
         }
     }
 }

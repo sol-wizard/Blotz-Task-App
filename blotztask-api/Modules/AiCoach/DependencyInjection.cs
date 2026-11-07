@@ -29,14 +29,19 @@ public static class DependencyInjection
                 "AiCoach resource limits must be positive and context budget at least 8000.")
             .Validate(AiCoachModelProfile.IsValid,
                 "AiCoach requires a valid DefaultModel/profile or legacy DeploymentId. Profiles require a deployment, supported API, positive limits and valid pricing/reasoning settings; Sol requires Responses.")
-            .Validate(options => options.DailyBudgetUsd is null or > 0,
-                "AiCoach:DailyBudgetUsd must be positive when configured.")
+            .Validate(options => options.MonthlyBudgetUsd.HasValue == options.UserMonthlyAllowanceUsd.HasValue
+                    && options.MonthlyBudgetUsd is null or > 0 && options.UserMonthlyAllowanceUsd is null or > 0,
+                "AiCoach:MonthlyBudgetUsd and AiCoach:UserMonthlyAllowanceUsd must be set together and be positive.")
+            // A model without prices would be reserved at zero cost, i.e. free and unlimited.
+            .Validate(options => options.MonthlyBudgetUsd is null || !AiCoachModelProfile.IsValid(options)
+                    || AiCoachModelProfile.Select(options) is { InputTokenUsdPerMillion: > 0, OutputTokenUsdPerMillion: > 0 },
+                "AiCoach budgets require positive input and output prices on the selected model (AiCoach:DefaultModel).")
             .ValidateOnStart();
         if (services.All(service => service.ServiceType != typeof(TimeProvider)))
             services.AddSingleton(TimeProvider.System);
         services.AddHttpClient("AiCoachResponses", client => client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton<IModelGateway, ConfiguredModelGateway>();
-        services.AddSingleton<AiCoachDailyBudget>();
+        services.AddSingleton<AiCoachBudget>();
         services.AddSingleton<ModelContextBuilder>();
         services.AddSingleton<IModelTurnRuntime, ModelTurnRuntime>();
         services.AddSingleton<IConversationStore, SqlConversationStore>();
@@ -56,6 +61,7 @@ public static class DependencyInjection
         services.AddHostedService<AiCoachTraceRetentionService>();
         services.AddScoped<MessageFeedbackHandler>();
         services.AddScoped<TaskContextReader>();
+        services.AddScoped<GetAiCoachAllowanceQueryHandler>();
         services.AddScoped<DraftScheduleChecker>();
         services.AddScoped<SendMessageCommandHandler>();
         services.AddScoped<EditDraftCommandHandler>();

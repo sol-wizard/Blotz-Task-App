@@ -52,8 +52,7 @@ internal sealed class CoachEvaluationHarness
             Options.Create(new AiCoachModuleOptions { DeploymentId = _judgeDeployment })));
         var runtime = new ModelTurnRuntime(_gateway, options, NullLogger<ModelTurnRuntime>.Instance,
             new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance));
-        _application = new(session.Store, runtime, new CheckAiQuotaService(session.Db, session.Cache),
-            new RecordAiUsageService(session.Db), _usage, session.Reader, session.Checker,
+        _application = new(session.Store, runtime, _usage, session.Reader, session.Checker,
             session.Clock, NullLogger<ConversationApplication>.Instance,
             new ConversationSegments(session.Store, session.Clock, options));
         var root = FindRepository();

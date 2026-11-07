@@ -5,7 +5,6 @@ using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.AiUsage.Exceptions;
-using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.AiCoach.Ai.Prompts;
 using BlotzTask.Modules.AiCoach.Ai.Tools;
 using BlotzTask.Modules.AiCoach.Application.Queries;
@@ -26,7 +25,6 @@ public sealed class ConversationVersionConflictException(Conversation conversati
 }
 
 public sealed class ConversationApplication(IConversationStore store, IModelTurnRuntime runtime,
-    ICheckAiQuotaService checkQuota, IRecordAiUsageService recordUsage,
     AiCoachUsageTracker usageTracker, TaskContextReader taskContextReader, DraftScheduleChecker scheduleChecker,
     TimeProvider clock, ILogger<ConversationApplication> logger, ConversationSegments segments,
     AiCoachTraceRecorder? trace = null, GetUserContextQueryHandler? userContextQuery = null,
@@ -97,7 +95,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
                 conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
-                conversation.UserContext, memoryTools);
+                conversation.UserContext, memoryTools, userId);
             await store.SaveAsync(conversation, ct);
         }
 
@@ -116,7 +114,6 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         try
         {
             if (stream is not null) await stream("turn.started", new { conversationId, conversationVersion = baseVersion });
-            await checkQuota.CheckQuotaAsync(userId, ct);
             result = await runtime.ExecuteAsync(request, ct);
             error = result.Error;
         }
@@ -143,17 +140,6 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input ({CachedInputTokens} cached), {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
                 conversationId, result.InputTokens, result.CachedInputTokens, result.OutputTokens, result.ModelCallCount, error,
                 request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion, ToolExecutor.ContractVersion);
-            try
-            {
-                using var accountingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                if (result.TotalTokens > 0)
-                    await recordUsage.RecordAiUsageAsync(new RecordAiUsageRequest
-                    {
-                        UserId = userId, InputTokens = result.InputTokens,
-                        OutputTokens = result.OutputTokens, TotalTokens = result.TotalTokens,
-                    }, accountingTimeout.Token);
-            }
-            catch (Exception ex) { logger.LogError(ex, "AiCoach usage recording failed for {ConversationId}", conversationId); }
         }
 
         // Complete even after client cancellation, so an abandoned HTTP request cannot leave a busy session.
