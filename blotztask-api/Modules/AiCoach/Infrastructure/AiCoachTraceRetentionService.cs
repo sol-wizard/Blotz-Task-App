@@ -1,7 +1,5 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
-using BlotzTask.Modules.AiCoach.Application.Commands;
-using BlotzTask.Modules.AiCoach.Application.Projections;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using Microsoft.EntityFrameworkCore;
@@ -82,18 +80,10 @@ public sealed class AiCoachTraceRetentionService(
                 conversation.History.Add(message.Role == ConversationMessageRole.User
                     ? new GatewayUserMessage(message.Content) : new GatewayAssistantMessage(message.Content, []));
             }
+            // Receipts hold IDs and statuses only; drop those whose draft was pruned.
             foreach (var key in conversation.Receipts.Keys.ToArray())
-            {
-                var receipt = conversation.Receipts[key];
-                if (conversation.Drafts.All(draft => draft.Id != receipt.DraftId)) { conversation.Receipts.Remove(key); continue; }
-                if (receipt.Result is not { } result) continue;
-                conversation.Receipts[key] = receipt with { Result = new ConfirmDraftResultDto
-                {
-                    CommandId = result.CommandId, Status = result.Status, ErrorCode = result.ErrorCode,
-                    PersistedEntities = result.PersistedEntities, ClientDirective = result.ClientDirective,
-                    ConversationSnapshot = ConversationSnapshotProjector.ToDto(conversation),
-                }};
-            }
+                if (conversation.Drafts.All(draft => draft.Id != conversation.Receipts[key].DraftId))
+                    conversation.Receipts.Remove(key);
             var updated = await db.AiCoachConversations.Where(row => row.Id == id && row.Revision == record.Revision)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.Payload, ConversationSerializer.Serialize(conversation))
                     .SetProperty(row => row.ClosingSummary, (string?)null)

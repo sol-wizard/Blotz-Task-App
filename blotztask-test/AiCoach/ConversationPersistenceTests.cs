@@ -32,6 +32,27 @@ public sealed class ConversationPersistenceTests
     }
 
     [Fact]
+    public void Handle_StoredConfirmationReceipt_KeepsNoSnapshotAndReadsOlderPayloads()
+    {
+        // Arrange
+        var conversation = Populated();
+        var receipt = conversation.Receipts.Single(pair => pair.Value.Result is not null);
+        var payload = ConversationSerializer.Serialize(conversation);
+        // Payloads written before this change embedded a full snapshot in each confirmation result.
+        var older = System.Text.Json.Nodes.JsonNode.Parse(payload)!;
+        older["receipts"]![receipt.Key.ToString()]!["result"]!["conversationSnapshot"] =
+            System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(
+                ConversationSnapshotProjector.ToDto(conversation), System.Text.Json.JsonSerializerOptions.Web));
+        // Act
+        var restored = ConversationSerializer.Deserialize(older.ToJsonString());
+        // Assert
+        payload.Should().NotContain("conversationSnapshot",
+            because: "a replay projects the current snapshot, so storing one only grows the payload and keeps old text");
+        restored.Receipts[receipt.Key].Result.Should().BeEquivalentTo(receipt.Value.Result,
+            because: "conversations saved before the receipt was slimmed must still load and replay");
+    }
+
+    [Fact]
     public void Handle_SummarizedHistory_TrimsCoveredContextAndPreservesTimeline()
     {
         // Arrange
@@ -82,12 +103,9 @@ public sealed class ConversationPersistenceTests
             [saved, pending], "User plans the week.", 1, taskContextRead: true);
         conversation.RecordDraftEvent("saved", conversation.Drafts[0]);
         conversation.Receipts.Add(Guid.NewGuid(), new(pending.Id, "discard-hash", null));
-        conversation.Receipts.Add(Guid.NewGuid(), new(saved.Id, "confirm-hash", new ConfirmDraftResultDto
-        {
-            CommandId = Guid.NewGuid(), Status = "succeeded",
-            PersistedEntities = [new() { Kind = "recurring_task", Id = "41", SeriesId = "7" }],
-            ConversationSnapshot = ConversationSnapshotProjector.ToDto(conversation),
-        }));
+        conversation.Receipts.Add(Guid.NewGuid(), new(saved.Id, "confirm-hash", new ConfirmDraftReceiptResult(
+            Guid.NewGuid(), "succeeded", null,
+            [new() { Kind = "recurring_task", Id = "41", SeriesId = "7" }], null)));
         return conversation;
     }
 }
