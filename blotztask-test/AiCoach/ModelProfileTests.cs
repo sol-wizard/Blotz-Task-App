@@ -13,6 +13,7 @@ public sealed class ModelProfileTests
 {
     [Theory]
     [InlineData("luna", "gpt-5.6-luna", "ChatCompletions")]
+    [InlineData("luna6", "gpt-6-luna", "Responses")]
     [InlineData("sol", "gpt-6.1-sol", "Responses")]
     public void Handle_NamedProfile_SelectsConfiguredTransport(string name, string deployment, string api)
     {
@@ -26,7 +27,7 @@ public sealed class ModelProfileTests
 
         // Assert
         selected.DeploymentId.Should().Be(deployment, because: "a turn retains an immutable selection");
-        selected.Api.Should().Be(api, because: "Sol tools require Responses while Luna retains its existing transport");
+        selected.Api.Should().Be(api, because: "each profile must select its configured tool-compatible transport");
     }
 
     [Theory]

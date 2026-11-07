@@ -19,7 +19,9 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     Func<string, object, Task>? Trace = null, string? PreviousClosingSummary = null,
     DateTimeOffset? SegmentStartedAt = null, string? SegmentStartTimeZoneId = null,
     bool ReviewListEnabled = false,
-    Func<string, object, Task>? Stream = null, string? UserContext = null, MemoryTools? MemoryTools = null);
+    Func<string, object, Task>? Stream = null, string? UserContext = null, MemoryTools? MemoryTools = null,
+    // Every model call in the turn, compression included, is charged to this user's allowance.
+    Guid? UserId = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -41,7 +43,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
     public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
     {
         var limits = options.Value;
-        var turnGateway = gateway.OpenTurn();
+        var turnGateway = request.UserId is { } userId ? gateway.OpenTurn(userId) : gateway.OpenTurn();
         var model = turnGateway.Profile;
         decimal? estimatedUsd = 0;
         logger.LogInformation(
@@ -195,7 +197,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         }
         catch (AiQuotaExceededException)
         {
-            logger.LogWarning("AiCoach daily model budget exhausted for {ConversationId}", request.ConversationId);
+            logger.LogWarning("AiCoach budget exhausted for {ConversationId}", request.ConversationId);
             return Result(null, "quota");
         }
         catch (OperationCanceledException)

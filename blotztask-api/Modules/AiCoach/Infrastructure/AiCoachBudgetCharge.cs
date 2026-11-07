@@ -5,6 +5,9 @@ namespace BlotzTask.Modules.AiCoach.Infrastructure;
 public sealed class AiCoachBudgetCharge
 {
     public Guid Id { get; set; }
+    // Null only for charges recorded before per-user allowances existed. No FK on purpose:
+    // deleting an account must not erase spend from the environment's monthly total.
+    public Guid? UserId { get; set; }
     public DateOnly BudgetDate { get; set; }
     public string Environment { get; set; } = "";
     public string Model { get; set; } = "";

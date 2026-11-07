@@ -79,9 +79,6 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
     {
         // Arrange
         await using var session = await Session.CreateAsync(fixture, live: true);
-        var seeder = new DataSeeder(session.Db);
-        var plan = await seeder.CreateSubscriptionPlanAsync($"zone-edit-{Guid.NewGuid():N}", 1_000_000);
-        await seeder.CreateUserSubscriptionAsync(session.UserId, plan.Id);
         await session.AddTurnAsync(withDraft: true);
         var original = session.Open.Drafts.Single().Proposals.Single();
         // Act
@@ -152,9 +149,6 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
     {
         // Arrange
         await using var session = await Session.CreateAsync(fixture, live: true);
-        var seeder = new DataSeeder(session.Db);
-        var plan = await seeder.CreateSubscriptionPlanAsync($"zone-{Guid.NewGuid():N}", 1_000_000);
-        await seeder.CreateUserSubscriptionAsync(session.UserId, plan.Id);
         session.Clock.Now = new DateTimeOffset(2026, 10, 16, 20, 30, 0, TimeSpan.FromHours(8));
         await session.AddTurnAsync(withDraft: true);
         session.Clock.Now = session.Clock.Now.AddHours(2);
@@ -180,7 +174,7 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         // Arrange
         await using var session = await Session.CreateAsync(fixture);
         await session.AddTurnAsync();
-        await using var blocker = await LockQuotaAsync(session);
+        await using var blocker = await LockBudgetAsync(session);
         // Act
         var next = await session.Segments.NewTopicAsync(session.UserId, "Australia/Sydney", default)
             .WaitAsync(TimeSpan.FromSeconds(5));
@@ -189,7 +183,7 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         (await session.Store.FindOpenAsync(session.UserId, default))!.TimeZoneId.Should().Be("Australia/Sydney",
             because: "the new topic is durable before summary completion");
         (await session.Store.FindAsync(session.Open.Id, default))!.ClosingSummary.Should().BeNull(
-            because: "a timed-out quota read produces no closing summary");
+            because: "a summary still waiting on the budget lock is not written");
     }
 
     [Theory]
@@ -201,7 +195,7 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         await using var session = await Session.CreateAsync(fixture);
         await session.AddTurnAsync();
         session.Clock.Now = session.Clock.Now.AddHours(9);
-        await using var blocker = await LockQuotaAsync(session);
+        await using var blocker = await LockBudgetAsync(session);
         using var request = new CancellationTokenSource();
         var messageId = Guid.NewGuid();
         // Act
@@ -224,24 +218,26 @@ public sealed class ConversationReviewRegressionTests(DatabaseFixture fixture) :
         var result = await sending.WaitAsync(TimeSpan.FromSeconds(5));
         // Assert
         accepted!.Messages.Should().Contain(message => message.Id == messageId,
-            because: "the user message must be committed while the real quota query is still blocked");
+            because: "the user message must be committed while the real budget lock is still held");
         accepted.RunningTurnId.Should().Be(messageId, because: "clients can reconcile accepted work by polling its running state");
         result.GenerationError.Should().Be(cancel ? "cancelled" : "quota",
-            because: "cancellation finishes the accepted turn; otherwise the ordinary quota check resumes once unblocked");
-        result.GenerationStatus.Should().Be("failed", because: "neither cancellation nor a blocked quota read may leave a permanent running turn");
+            because: "cancellation finishes the accepted turn; otherwise the budget check resumes once unblocked and finds the allowance used up");
+        result.GenerationStatus.Should().Be("failed", because: "neither cancellation nor a blocked budget check may leave a permanent running turn");
         result.Messages.Should().Contain(message => message.Id == messageId, because: "request cancellation must not erase accepted input");
     }
 
-    // Exercise cancellation against real SQL locks, without a fake model or quota service.
-    private async Task<BlotzTaskDbContext> LockQuotaAsync(Session session)
+    // Exercise cancellation against the real budget's SQL lock, without a fake model or budget.
+    // The session's allowance is already used up, so the check refuses once the lock is released.
+    private async Task<BlotzTaskDbContext> LockBudgetAsync(Session session)
     {
-        var seeder = new DataSeeder(session.Db);
-        var plan = await seeder.CreateSubscriptionPlanAsync($"blocked-{Guid.NewGuid():N}", 0);
-        var subscription = await seeder.CreateUserSubscriptionAsync(session.UserId, plan.Id);
         var blocker = new BlotzTaskDbContext(fixture.Options);
         await blocker.Database.BeginTransactionAsync();
-        await blocker.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE [UserSubscriptions] SET [PlanId] = [PlanId] WHERE [Id] = {subscription.Id}");
+        var lockName = $"AiCoachBudget:{session.Budget.EnvironmentName}";
+        await blocker.Database.ExecuteSqlInterpolatedAsync($"""
+            DECLARE @result int;
+            EXEC @result = sys.sp_getapplock @Resource = {lockName}, @LockMode = 'Exclusive', @LockOwner = 'Transaction';
+            IF @result < 0 THROW 51000, 'Test could not take the AI Coach budget lock.', 1;
+            """);
         return blocker;
     }
 }

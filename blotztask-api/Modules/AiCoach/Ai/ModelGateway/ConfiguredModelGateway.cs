@@ -10,7 +10,7 @@ namespace BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 /// <summary>Selects once, then owns the adapter and provider state for that turn.</summary>
 public sealed class ConfiguredModelGateway(AzureOpenAIClient azureClient, IHttpClientFactory httpClients,
     IOptions<AzureOpenAIOptions> azureOptions, IOptions<AiCoachModuleOptions> options,
-    AiCoachDailyBudget budget, ILogger<BudgetedModelGateway> budgetLogger) : IModelGateway
+    AiCoachBudget budget, ILogger<BudgetedModelGateway> budgetLogger) : IModelGateway
 {
     private readonly HttpClient _responsesClient = httpClients.CreateClient("AiCoachResponses");
     // One reservation covers one provider attempt. An automatic SDK retry after a lost response
@@ -20,7 +20,10 @@ public sealed class ConfiguredModelGateway(AzureOpenAIClient azureClient, IHttpC
             new AzureOpenAIClientOptions { RetryPolicy = new ClientRetryPolicy(0) })
         : azureClient;
 
-    public IModelGateway OpenTurn()
+    public IModelGateway OpenTurn() => Open(null);
+    public IModelGateway OpenTurn(Guid userId) => Open(userId);
+
+    private BudgetedModelGateway Open(Guid? userId)
     {
         var profile = AiCoachModelProfile.Select(options.Value);
         IModelGateway adapter = profile.Api switch
@@ -31,7 +34,7 @@ public sealed class ConfiguredModelGateway(AzureOpenAIClient azureClient, IHttpC
                 azureOptions.Value.Endpoint, azureOptions.Value.ApiKey, profile),
             _ => throw new InvalidOperationException($"Unsupported AI Coach API '{profile.Api}'."),
         };
-        return new BudgetedModelGateway(adapter, profile, budget,
+        return new BudgetedModelGateway(adapter, profile, budget, userId,
             options.Value.ContextTokenBudget, budgetLogger);
     }
 

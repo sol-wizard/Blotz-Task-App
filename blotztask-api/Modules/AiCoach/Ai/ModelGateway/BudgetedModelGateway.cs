@@ -3,20 +3,21 @@ using BlotzTask.Modules.AiCoach.Infrastructure;
 
 namespace BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 
-/// <summary>Applies the shared budget to every call, including context compression and digests.</summary>
+/// <summary>Applies the environment cap and the user's allowance to every call, including context compression and digests.</summary>
 public sealed class BudgetedModelGateway(IModelGateway inner, AiCoachModelProfile profile,
-    AiCoachDailyBudget budget, int contextTokenBudget, ILogger<BudgetedModelGateway> logger) : IModelGateway
+    AiCoachBudget budget, Guid? userId, int contextTokenBudget, ILogger<BudgetedModelGateway> logger) : IModelGateway
 {
     // Responses may replay provider reasoning items which are absent from the public transcript.
     private long _priorOutputTokens;
     public AiCoachModelProfile Profile => profile;
-    public IModelGateway OpenTurn() => new BudgetedModelGateway(inner.OpenTurn(), profile, budget, contextTokenBudget, logger);
+    public IModelGateway OpenTurn() => new BudgetedModelGateway(inner.OpenTurn(), profile, budget, userId, contextTokenBudget, logger);
+    public IModelGateway OpenTurn(Guid user) => new BudgetedModelGateway(inner.OpenTurn(), profile, budget, user, contextTokenBudget, logger);
 
     public async Task<ModelCompletionResult> CompleteAsync(ModelGatewayRequest request, CancellationToken cancellationToken)
     {
         if (!budget.Enabled) return await inner.CompleteAsync(request, cancellationToken);
         if (profile.InputTokenUsdPerMillion is not > 0 || profile.OutputTokenUsdPerMillion is not > 0)
-            throw new InvalidOperationException("AI Coach daily budget requires configured positive model prices.");
+            throw new InvalidOperationException("AI Coach budgets require configured positive model prices.");
         var outputLimit = Math.Min(request.MaxOutputTokens ?? profile.MaxOutputTokens, profile.MaxOutputTokens);
         if (outputLimit <= 0) throw new InvalidOperationException("AI Coach output limit must be positive.");
         request = request with { MaxOutputTokens = outputLimit };
@@ -29,7 +30,7 @@ public sealed class BudgetedModelGateway(IModelGateway inner, AiCoachModelProfil
             profile.CachedInputTokenUsdPerMillion ?? profile.InputTokenUsdPerMillion.Value);
         var reservedUsd = decimal.Ceiling((inputBound * inputRate
             + outputLimit * profile.OutputTokenUsdPerMillion.Value) / 1_000_000m * 10_000_000_000m) / 10_000_000_000m;
-        var reservation = await budget.ReserveAsync(profile.Name, reservedUsd, cancellationToken);
+        var reservation = await budget.ReserveAsync(userId, profile.Name, reservedUsd, cancellationToken);
         // Exceptions, cancellation and missing usage retain the reservation for this budget date.
         var result = await inner.CompleteAsync(request, cancellationToken);
         _priorOutputTokens += Math.Max(0, result.OutputTokens);

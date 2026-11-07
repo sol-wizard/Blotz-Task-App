@@ -12,7 +12,6 @@ using BlotzTask.Modules.AiCoach.Application.Queries;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
-using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -20,7 +19,6 @@ using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -61,7 +59,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         session.Clock.Now = session.Open.Messages.Last().CreatedAt.AddHours(9);
         var messageId = Guid.NewGuid();
         // Act
-        // This user has no subscription. Real quota validation fails before any model call.
+        // This user's allowance is used up. The real budget refuses before any model call.
         var snapshot = await session.Application.SendAsync(session.UserId, session.Open.Id, messageId,
             "A new topic", session.Open.Version, default);
         // Assert
@@ -254,9 +252,6 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
     {
         // Arrange
         await using var session = await Session.CreateAsync(fixture, live: true);
-        var seeder = new DataSeeder(session.Db);
-        var plan = await seeder.CreateSubscriptionPlanAsync($"segment-{Guid.NewGuid():N}", 1_000_000);
-        await seeder.CreateUserSubscriptionAsync(session.UserId, plan.Id);
         session.Clock.Now = session.Clock.Now.AddDays(emptyDays);
         var draftDate = DateOnly.FromDateTime(session.Clock.Now.DateTime).AddDays(1).ToString("yyyy-MM-dd");
         await session.AddTurnAsync(withDraft: true);
@@ -275,8 +270,8 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         next.GenerationError.Should().BeNull(because: "the new topic should complete a real model turn");
         next.Messages.Last().Text.Should().Contain(draftDate, because: "the summary written in the background reaches the first turn of the new topic");
         next.Artifacts.Should().BeEmpty(because: "the new topic carries context but not expired draft state");
-        (await session.Db.AiUsageRecords.AnyAsync(x => x.UserId == session.UserId)).Should().BeTrue(
-            because: "summary model usage is included in the user's AI accounting");
+        (await session.Db.AiCoachBudgetCharges.AnyAsync(x => x.UserId == session.UserId && x.Settled)).Should().BeTrue(
+            because: "summary model usage is charged to the user's AI Coach allowance");
     }
 
     private static Conversation NewConversation(Guid userId, DateTimeOffset now) => new()
@@ -294,7 +289,6 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
     internal sealed class Session : IAsyncDisposable
     {
         private readonly ServiceProvider _services;
-        private readonly MemoryCache _cache = new(new MemoryCacheOptions());
         private readonly ILoggerFactory _logs = LoggerFactory.Create(builder => builder.AddConsole());
         public BlotzTaskDbContext Db { get; }
         public SegmentClock Clock { get; } = new();
@@ -304,6 +298,9 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         public SegmentDigestProcessor Digest { get; }
         public ConversationApplication Application { get; }
         public IModelGateway Gateway { get; }
+        // What the runtime and digests call: Gateway behind the real SQL budget.
+        public IModelGateway BudgetedGateway { get; }
+        public TestCoachBudget Budget { get; }
         public ChatApplication Chat { get; }
         public AiCoachTraceRetentionService Retention => new(_services.GetRequiredService<IServiceScopeFactory>(), Clock,
             Options, NullLogger<AiCoachTraceRetentionService>.Instance);
@@ -318,25 +315,25 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
             _services = new ServiceCollection().AddScoped(_ => new BlotzTaskDbContext(fixture.Options)).BuildServiceProvider();
             (string Endpoint, string Key, string Deployment)? credentials = live
                 ? CoachLiveSettings.Load() ?? throw new InvalidOperationException("Live credentials missing") : null;
-            Options = Microsoft.Extensions.Options.Options.Create(new AiCoachModuleOptions { DeploymentId = credentials?.Deployment ?? "unconfigured" });
+            Options = Microsoft.Extensions.Options.Options.Create(TestCoachBudget.Options(credentials?.Deployment ?? "unconfigured"));
             Store = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, Options, NullLogger<SqlConversationStore>.Instance);
-            // Non-live users have no subscription: real quota checks stop before this gateway is called.
+            // Non-live users start with their allowance used up: the real budget stops before this gateway is called.
             Gateway = new AzureOpenAiModelGateway(new AzureOpenAIClient(new Uri(credentials?.Endpoint ?? "https://unconfigured.invalid"),
                 new AzureKeyCredential(credentials?.Key ?? "unconfigured")), Options);
-            var quota = new CheckAiQuotaService(Db, _cache);
-            var accounting = new RecordAiUsageService(Db);
+            Budget = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, Options);
+            BudgetedGateway = Budget.Wrap(Gateway);
             var usage = new AiCoachUsageTracker();
             Segments = new(Store, Clock, Options);
-            var digests = new SegmentDigestGenerator(Gateway, quota, accounting, usage, Options, _logs.CreateLogger<SegmentDigestGenerator>());
+            var digests = new SegmentDigestGenerator(BudgetedGateway, usage, Options, _logs.CreateLogger<SegmentDigestGenerator>());
             Digest = new(Db, Store, digests,
                 new RememberUserMemoryCommandHandler(Db, Clock, NullLogger<RememberUserMemoryCommandHandler>.Instance),
                 new GetUserContextQueryHandler(Db, Clock), Clock, Options, NullLogger<SegmentDigestProcessor>.Instance);
             var query = new GetTasksByDateQueryHandler(Db, new(), NullLogger<GetTasksByDateQueryHandler>.Instance);
             var checker = new DraftScheduleChecker(query, new(), Clock, NullLogger<DraftScheduleChecker>.Instance);
             Chat = new(Db, Store, Segments, checker, Clock);
-            Application = new(Store, new ModelTurnRuntime(Gateway, Options, NullLogger<ModelTurnRuntime>.Instance,
+            Application = new(Store, new ModelTurnRuntime(BudgetedGateway, Options, NullLogger<ModelTurnRuntime>.Instance,
                     new ModelContextBuilder(Options, NullLogger<ModelContextBuilder>.Instance)),
-                quota, accounting, usage, new TaskContextReader(query, Options, Clock), checker,
+                usage, new TaskContextReader(query, Options, Clock), checker,
                 Clock, NullLogger<ConversationApplication>.Instance, Segments);
         }
 
@@ -344,6 +341,7 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         {
             var session = new Session(fixture, live);
             var userId = await new DataSeeder(session.Db).CreateUserAsync();
+            if (!live) await session.Budget.UseUpAllowanceAsync(session.Db, userId);
             session.Open = await session.Segments.OpenAsync(userId, "Australia/Perth", default);
             return session;
         }
@@ -374,7 +372,6 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         {
             await Db.DisposeAsync();
             await _services.DisposeAsync();
-            _cache.Dispose();
             _logs.Dispose();
         }
     }

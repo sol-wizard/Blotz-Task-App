@@ -58,6 +58,11 @@ export const aiUsageKeys = {
   summary: () => [...aiUsageKeys.all, "summary"] as const,
 };
 
+export const aiCoachKeys = {
+  all: ["aiCoach"] as const,
+  allowance: () => [...aiCoachKeys.all, "allowance"] as const,
+};
+
 export const reviewKeys = {
   all: ["review"] as const,
   // anchorDate is normalized to the period start before use, so this is 1:1 with a period.

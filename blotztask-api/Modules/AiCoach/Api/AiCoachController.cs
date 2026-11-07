@@ -1,6 +1,7 @@
 using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
 using BlotzTask.Modules.AiCoach.Application.Projections;
+using BlotzTask.Modules.AiCoach.Application.Queries;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
@@ -20,6 +21,7 @@ public class AiCoachController(
     EditDraftCommandHandler editDraft,
     MessageFeedbackHandler messageFeedback,
     TranscribeAudioCommandHandler transcribeAudio,
+    GetAiCoachAllowanceQueryHandler getAllowance,
     IConversationStore store, ChatApplication chat, ILogger<AiCoachController> logger) : ControllerBase
 {
     [HttpGet("chat")]
@@ -28,6 +30,10 @@ public class AiCoachController(
         try { return Ok(await chat.OpenAsync(GetUserId(), timeZoneId, ct)); }
         catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
+
+    [HttpGet("allowance")]
+    public async Task<ActionResult<AiCoachAllowanceDto>> GetAllowance(CancellationToken ct) =>
+        Ok(await getAllowance.Handle(new GetAiCoachAllowanceQuery { UserId = GetUserId() }, ct));
 
     [HttpGet("chat/messages")]
     public async Task<ActionResult<ChatTimelinePage>> GetMessages([FromQuery] string? before = null,

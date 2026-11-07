@@ -29,7 +29,12 @@ import { FollowUpChips } from "./follow-up-chips";
 import { ReviewListModal } from "./review-list-modal";
 import { VoiceRecordingBar } from "./voice-recording-bar";
 import { CoachComposer } from "./coach-composer";
+import { useQueryClient } from "@tanstack/react-query";
 import { CoachHeader } from "./coach-header";
+import { AllowanceBlockedCard } from "./allowance-blocked-card";
+import { useAiCoachAllowance } from "../hooks/useAiCoachAllowance";
+import { isAllowanceBlocked } from "../models/ai-coach-allowance";
+import { aiCoachKeys } from "@/shared/constants/query-key-factory";
 import { CoachWelcome } from "./coach-welcome";
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
@@ -180,6 +185,9 @@ export function ExecutionChatPanel() {
     pendingList, pendingCount, reviewBusy, confirmationUncertain, streaming, reconnecting,
     updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
     newTopic, clearChat, loadOlder, loadingOlder, historyLoading, historyError, retryHistory } = useAiCoachChat();
+  const { allowance } = useAiCoachAllowance();
+  const allowanceBlocked = isAllowanceBlocked(allowance);
+  const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [reviewVisible, setReviewVisible] = useState(false);
   const [remindedBatches, setRemindedBatches] = useState<Set<string>>(() => new Set());
@@ -343,17 +351,29 @@ export function ExecutionChatPanel() {
     }
     prepareQuestionPosition();
     setInput("");
-    if (await send(combined)) {
+    const errorCode = await send(combined);
+    if (errorCode) {
       setInput(current => current.trim() ? current : combined);
-      Toast.show({ type: "error", text1: t("chat.sendError") });
+      showSendError(errorCode);
     }
   };
   const voice = useCoachVoiceInput(snapshot?.conversationId, (text) => void sendVoiceTranscript(text));
   const voiceBusy = voice.busy;
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
+  // Every finished turn (a refused one included) has spent or checked the allowance.
+  const wasGenerating = useRef(false);
+  useEffect(() => {
+    if (wasGenerating.current && !generating) void queryClient.invalidateQueries({ queryKey: aiCoachKeys.allowance() });
+    wasGenerating.current = generating;
+  }, [generating, queryClient]);
   const showWelcome = status === "ready" && messages.length === 0 && !historyLoading && !historyError;
-  const canSend = !voiceBusy && chatReady;
+  // Blocked: starters and follow-ups would only be refused; the card in the composer's place explains why.
+  const canSend = !voiceBusy && chatReady && !allowanceBlocked;
+  // A refused turn ("quota") is explained by the allowance card, not a generic retry toast.
+  const showSendError = (errorCode: string | null) => {
+    if (errorCode && errorCode !== "quota") Toast.show({ type: "error", text1: t("chat.sendError") });
+  };
 
   const handleSend = async () => {
     if (!canSend || !input.trim()) return;
@@ -363,21 +383,21 @@ export function ExecutionChatPanel() {
     const errorCode = await send(text);
     if (errorCode) {
       setInput(current => current.trim() ? current : text);
-      Toast.show({ type: "error", text1: t("chat.sendError") });
+      showSendError(errorCode);
     }
   };
 
   const handleStarter = async (text: string) => {
     if (!canSend) return;
     prepareQuestionPosition();
-    if (await send(text)) Toast.show({ type: "error", text1: t("chat.sendError") });
+    showSendError(await send(text));
   };
 
   // A tapped follow-up leaves any draft in the input untouched.
   const handleFollowUp = async (text: string) => {
     if (!canSend) return;
     prepareQuestionPosition();
-    if (await send(text, "followup")) Toast.show({ type: "error", text1: t("chat.sendError") });
+    showSendError(await send(text, "followup"));
   };
 
   const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
@@ -443,6 +463,8 @@ export function ExecutionChatPanel() {
   const blockedBanner = () => {
     if (snapshot?.generationStatus !== "failed") return null;
     if (snapshot.generationError === "quota") {
+      // The card in the composer's place explains it once the refreshed allowance arrives.
+      if (allowanceBlocked) return null;
       return (
         <View className="bg-white rounded-3xl p-4 my-2">
           <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
@@ -516,6 +538,7 @@ export function ExecutionChatPanel() {
         status={voiceBusy ? "listening" : generating ? "thinking" : "idle"}
         actionsDisabled={confirmationUncertain || status !== "ready" || generating
           || snapshot?.artifacts.some(card => card.status === "processing") === true}
+        allowance={allowance} onAllowancePress={() => remindBeforeLeaving(() => router.push("/settings/membership-plan"))}
         onBack={() => router.back()} onNewTopic={startNewTopic} onMenu={openMenu} />
       <View className="flex-1 relative">
         <FlatList
@@ -646,7 +669,10 @@ export function ExecutionChatPanel() {
         onConfirm={confirmAll} onRefresh={refreshReviewList} />
 
       <View className="mx-3 mt-2 mb-2">
-        {voiceBusy ? (
+        {allowanceBlocked && allowance && !voiceBusy ? (
+          <AllowanceBlockedCard allowance={allowance}
+            onCreateManually={() => remindBeforeLeaving(() => router.push("/task-create"))} />
+        ) : voiceBusy ? (
           <VoiceRecordingBar sending={voice.phase === "sending"} elapsedMs={voice.elapsedMs}
             onCancel={() => void voice.cancel()} onSend={() => void voice.stopAndSend()} />
         ) : (
