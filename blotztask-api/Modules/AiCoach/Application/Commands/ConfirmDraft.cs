@@ -363,6 +363,10 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             command.DraftId, request.CommandId, request.Action, items,
             finalResult.Status, finalResult.ErrorCode, finalResult.PersistedEntities,
         });
+        // A failed save leaves the draft pending, so only a completed draft has an outcome.
+        if (trace is not null && draft.Status == ProposalSetStatus.Completed)
+            await trace.RecordDraftOutcomeAsync(command.UserId, command.DraftId, "confirmed",
+                draft.Proposals.Count(item => item.IsSaved));
         return finalResult;
     }
 

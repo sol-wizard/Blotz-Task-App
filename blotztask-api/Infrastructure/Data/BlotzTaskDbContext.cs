@@ -47,6 +47,8 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<AiCoachFeedback> AiCoachFeedback => Set<AiCoachFeedback>();
     public DbSet<AiCoachTraceEvent> AiCoachTraceEvents => Set<AiCoachTraceEvent>();
+    public DbSet<AiCoachToolSet> AiCoachToolSets => Set<AiCoachToolSet>();
+    public DbSet<AiCoachTurnSummary> AiCoachTurnSummaries => Set<AiCoachTurnSummary>();
     public DbSet<AiCoachConversationRecord> AiCoachConversations => Set<AiCoachConversationRecord>();
     public DbSet<AiCoachMessage> AiCoachMessages => Set<AiCoachMessage>();
     public DbSet<AiCoachDraftConfirmation> AiCoachDraftConfirmations => Set<AiCoachDraftConfirmation>();

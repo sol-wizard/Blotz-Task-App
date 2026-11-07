@@ -105,6 +105,7 @@ public sealed class ChatApplication(BlotzTaskDbContext db, IConversationStore st
         }
         await db.AiCoachConversations.Where(record => record.UserId == userId).ExecuteDeleteAsync(ct);
         await db.AiCoachTraceEvents.Where(trace => trace.UserId == userId).ExecuteDeleteAsync(ct);
+        await db.AiCoachTurnSummaries.Where(summary => summary.UserId == userId).ExecuteDeleteAsync(ct);
         await transaction.CommitAsync(ct);
     }
 

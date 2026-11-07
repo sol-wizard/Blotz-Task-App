@@ -105,6 +105,8 @@ public sealed class AiCoachTraceRetentionService(
         await db.AiCoachTraceEvents.Where(trace => trace.CreatedAt < now.AddDays(-options.Value.TraceRetentionDays)
             || emptyIds.Contains(trace.ConversationId) && !db.AiCoachConversations.Any(record => record.Id == trace.ConversationId))
             .ExecuteDeleteAsync(ct);
+        // Summaries hold no conversation text, so they follow the longer message retention.
+        await db.AiCoachTurnSummaries.Where(summary => summary.CreatedAt <= cutoff).ExecuteDeleteAsync(ct);
         await transaction.CommitAsync(ct);
         logger.LogInformation("AiCoach retention checked {SegmentCount} segments and removed {EmptyCount} empty segments", ids.Count, emptyIds.Count);
     }
