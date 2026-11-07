@@ -15,6 +15,7 @@ using BlotzTask.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BlotzTask.Tests.AiCoach;
@@ -124,6 +125,47 @@ public sealed class DraftWorkflowTests(DatabaseFixture fixture) : IClassFixture<
         first.Status.Should().Be("succeeded", because: "valid reviewed data can become a task");
         replay.PersistedEntities.Select(item => item.Id).Should().Equal(first.PersistedEntities.Select(item => item.Id), because: "replay returns the original task identities");
         (await db.TaskItems.CountAsync(item => item.UserId == conversation.UserId)).Should().Be(1, because: "a lost response must not cause a duplicate task");
+    }
+
+    [Fact]
+    public async Task Handle_EditThenConfirm_RecordsOutcomeOnEveryTurnThatShapedTheDraft()
+    {
+        // Arrange
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var store = new InMemoryConversationStore(cache);
+        var conversation = await Session(store);
+        var draftId = conversation.Drafts[0].Id;
+        await using var services = new ServiceCollection()
+            .AddScoped(_ => new BlotzTaskDbContext(fixture.Options)).BuildServiceProvider();
+        var trace = new AiCoachTraceRecorder(services.GetRequiredService<IServiceScopeFactory>(), TimeProvider.System,
+            NullLogger<AiCoachTraceRecorder>.Instance);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        AiCoachTurnSummary Turn(Guid? draft) => new()
+        {
+            UserId = conversation.UserId, ConversationId = conversation.Id, TurnId = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow, DraftId = draft, DraftItemCount = 1,
+        };
+        db.AiCoachTurnSummaries.AddRange(Turn(draftId), Turn(draftId), Turn(Guid.NewGuid()));
+        await db.SaveChangesAsync();
+        var confirm = new ConfirmDraftCommandHandler(store,
+            new AddTaskCommandHandler(db, NullLogger<AddTaskCommandHandler>.Instance),
+            new CreateRecurringTaskCommandHandler(db, NullLogger<CreateRecurringTaskCommandHandler>.Instance),
+            db, new ConfirmationClock(), NullLogger<ConfirmDraftCommandHandler>.Instance, trace: trace);
+        // Act
+        await new EditDraftCommandHandler(store, trace: trace).Handle(conversation.UserId, conversation.Id, draftId,
+            new EditDraftRequest(conversation.Version, conversation.Drafts[0].Version, Edited(conversation.Drafts[0], "Edited")), default);
+        var edited = (await store.FindAsync(conversation.Id, default))!;
+        var result = await confirm.Handle(Command(edited));
+        // Assert
+        result.Status.Should().Be("succeeded", because: "the edited draft is valid");
+        var rows = await db.AiCoachTurnSummaries.AsNoTracking()
+            .Where(summary => summary.UserId == conversation.UserId).ToListAsync();
+        rows.Where(summary => summary.DraftId == draftId).Should().HaveCount(2).And.OnlyContain(summary =>
+                summary.DraftOutcome == "confirmed" && summary.DraftSavedItemCount == 1
+                && summary.DraftUserEditCount == 1 && summary.DraftOutcomeAt != null,
+            because: "every turn that shaped the draft shares the user's edit and final action");
+        rows.Single(summary => summary.DraftId != draftId).DraftOutcome.Should().BeNull(
+            because: "a different draft's turns are not affected");
     }
 
     [Fact]

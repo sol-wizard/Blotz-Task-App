@@ -38,6 +38,7 @@ public sealed class RejectDraftCommandHandler(IConversationStore store, AiCoachT
         }
         if (trace is not null) await trace.RecordAsync(command.UserId, command.ConversationId, null, "draft_rejected",
             new { command.DraftId, command.Request.CommandId, snapshot.ConversationVersion });
+        if (trace is not null) await trace.RecordDraftOutcomeAsync(command.UserId, command.DraftId, "rejected", null);
         return snapshot;
     }
 }

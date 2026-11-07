@@ -26,7 +26,7 @@ public sealed record ModelTurnRunResult(string? Text, string? Error,
     string? Summary, int SummarizedMessageCount,
     int InputTokens, int OutputTokens, int TotalTokens, int ModelCallCount,
     bool TaskContextRead = false, IReadOnlyList<string>? FollowUps = null, int CachedInputTokens = 0,
-    AiCoachModelProfile? Model = null, decimal? EstimatedUsd = null);
+    AiCoachModelProfile? Model = null, decimal? EstimatedUsd = null, IReadOnlyList<string>? ToolNames = null);
 
 public interface IModelTurnRuntime
 {
@@ -56,6 +56,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         var covered = request.SummarizedMessageCount;
         var calls = 0;
         var toolCalls = 0;
+        var toolNames = new List<string>();
         var input = 0;
         var cachedInput = 0;
         var output = 0;
@@ -141,6 +142,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 foreach (var tool in completion.ToolCalls)
                 {
                     toolCalls++;
+                    toolNames.Add(tool.Name);
                     var execution = await executor.ExecuteAsync(tool, ct);
                     if (execution.Succeeded && !execution.Replayed && tool.Name is "add_items" or "update_items" or "remove_items")
                     {
@@ -236,11 +238,15 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 modelRequest = modelRequest with { MaxOutputTokens = Math.Min(
                     modelRequest.MaxOutputTokens ?? model.MaxOutputTokens, model.MaxOutputTokens) };
             calls++;
+            // Definitions are saved once per distinct list; the request trace keeps only the hash and names.
+            var toolSet = TraceToolSet.From(modelRequest.Tools);
+            if (toolSet is not null) await Trace(TraceToolSet.Kind, toolSet);
             await Trace("model_request", new
             {
                 modelCallNumber = calls, model = model?.Name, deploymentId = model?.DeploymentId ?? limits.DeploymentId,
                 api = model?.Api ?? "ChatCompletions", model?.ReasoningEffort, modelRequest.SystemPrompt,
-                messages = Elements(modelRequest.Messages), modelRequest.Tools,
+                messages = Elements(modelRequest.Messages), toolSetHash = toolSet?.Hash,
+                toolNames = modelRequest.Tools.Select(tool => tool.Name).ToArray(),
                 modelRequest.MaxOutputTokens,
             });
             if (environment?.IsDevelopment() == true)
@@ -307,7 +313,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 logger.LogInformation("AiCoach final response for {ConversationId}: {AssistantText}",
                     request.ConversationId, text);
             return new(text, error, turn, workspace.Drafts, summary, covered, input, output, total, calls,
-                taskContextRead, followUps ?? [], cachedInput, model, estimatedUsd);
+                taskContextRead, followUps ?? [], cachedInput, model, estimatedUsd, toolNames);
         }
 
         Task Trace(string kind, object payload) => request.Trace?.Invoke(kind, payload) ?? Task.CompletedTask;
