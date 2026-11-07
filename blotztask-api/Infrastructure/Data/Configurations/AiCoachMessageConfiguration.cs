@@ -16,6 +16,8 @@ public sealed class AiCoachMessageConfiguration : IEntityTypeConfiguration<AiCoa
         builder.Property(x => x.DraftSnapshot).HasColumnType("nvarchar(max)");
         builder.HasIndex(x => new { x.UserId, x.CreatedAt, x.Id }).IsDescending(false, true, true);
         builder.HasIndex(x => x.CreatedAt);
+        // Loading a segment, the digest scan and the timeline's topic-start check all read a segment in time order.
+        builder.HasIndex(x => new { x.ConversationId, x.CreatedAt, x.Id });
         builder.HasOne<AiCoachConversationRecord>().WithMany().HasForeignKey(x => x.ConversationId)
             .OnDelete(DeleteBehavior.Cascade);
     }
