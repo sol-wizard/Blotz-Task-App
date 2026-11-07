@@ -115,7 +115,7 @@ Timeline paging uses `(CreatedAt DESC, Id DESC)` with an opaque base64url cursor
 
 ## Retention and clear
 
-`AiCoachTraceRetentionService` runs hourly. `MessageRetentionDays` defaults to 180; message timestamps determine expiry. It deletes empty ended topics and their traces, plus empty open topics older than one hour. Diagnostic traces independently default to 30 days. Retention skips segments with active work and retries them on a later run.
+`AiCoachTraceRetentionService` runs hourly. `MessageRetentionDays` defaults to 180; message timestamps determine expiry. It deletes empty ended topics and their traces, plus empty open topics older than one hour. Diagnostic traces independently default to 90 days. Retention skips segments with active work and retries them on a later run.
 
 Deleting rows also removes old working-state copies: rolling/closing summaries reset, drafts from expired messages are removed, receipts are removed or rebuilt with retained snapshots, and only bounded recent retained text rebuilds model context. Revision-conditioned cleanup updates protect concurrent sends before deleting message rows. Current pending drafts remain separately available to the model. Clear uses a transaction and refuses active work; it deletes segments before traces so late trace recording cannot reintroduce cleared content. Trace writes check segment existence in the same transaction as insertion. Account deletion uses the existing user cascades, including feedback.
 
