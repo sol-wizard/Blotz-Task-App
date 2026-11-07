@@ -268,6 +268,6 @@ public sealed record ConversationMessage(Guid Id, ConversationMessageRole Role, 
     bool TaskContextRead = false, Guid? TurnId = null, DateTimeOffset CreatedAt = default,
     IReadOnlyList<ProposalSet>? DraftSnapshot = null);
 /// <summary>Result is null while a confirmation runs and for discards, whose replay returns the current snapshot.</summary>
-public sealed record CommandReceipt(Guid DraftId, string RequestHash, ConfirmDraftResultDto? Result);
+public sealed record CommandReceipt(Guid DraftId, string RequestHash, ConfirmDraftReceiptResult? Result);
 
 public enum TurnCommitStatus { Committed, Failed, Stale, NoLongerActive }

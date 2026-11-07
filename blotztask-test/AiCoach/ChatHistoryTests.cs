@@ -214,11 +214,7 @@ public sealed class ChatHistoryTests(DatabaseFixture fixture) : IClassFixture<Da
         session.Open.BeginTurn(currentTurn, "Recent message", session.Clock.Now);
         session.Open.CompleteTurn(currentTurn, session.Open.Version, "Recent reply", null, [], [oldDraft, draft],
             "old-summary-secret", 0, completedAt: session.Clock.Now);
-        session.Open.Receipts.Add(Guid.NewGuid(), new(draft.Id, "hash", new()
-        {
-            CommandId = Guid.NewGuid(), Status = "failed", PersistedEntities = [],
-            ConversationSnapshot = ConversationSnapshotProjector.ToDto(session.Open),
-        }));
+        session.Open.Receipts.Add(Guid.NewGuid(), new(draft.Id, "hash", new(Guid.NewGuid(), "failed", null, [], null)));
         await session.Store.SaveAsync(session.Open, default);
         await using var foreign = await Session.CreateAsync(fixture);
         await foreign.AddTurnAsync();
@@ -226,7 +222,7 @@ public sealed class ChatHistoryTests(DatabaseFixture fixture) : IClassFixture<Da
         await session.Retention.CleanupAsync(default);
         // Assert
         var record = await session.Db.AiCoachConversations.AsNoTracking().SingleAsync(row => row.Id == session.Open.Id);
-        record.Payload.Should().NotContain("old-user-secret", because: "retention also scrubs cached receipt snapshots");
+        record.Payload.Should().NotContain("old-user-secret", because: "retention rebuilds history from retained messages only");
         record.Payload.Should().NotContain("old-summary-secret", because: "a rolling summary must not keep deleted content alive");
         record.Payload.Should().NotContain("old-draft-secret", because: "drafts originating in expired messages must be removed");
         record.MessageCount.Should().Be(2, because: "both messages at or beyond the 180-day boundary were deleted");

@@ -68,7 +68,7 @@ namespace BlotzTask.Migrations
                         .IsUnique()
                         .HasFilter("[EndedAt] IS NULL");
 
-                    b.HasIndex("UserId", "LastActivityAt");
+                    b.HasIndex("UserId", "EndedAt");
 
                     b.ToTable("AiCoachConversation", (string)null);
                 });
@@ -189,9 +189,9 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConversationId");
-
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("ConversationId", "CreatedAt", "Id");
 
                     b.HasIndex("UserId", "CreatedAt", "Id")
                         .IsDescending(false, true, true);

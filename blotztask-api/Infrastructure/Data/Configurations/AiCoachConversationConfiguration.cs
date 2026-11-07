@@ -12,7 +12,9 @@ public sealed class AiCoachConversationConfiguration : IEntityTypeConfiguration<
         builder.ToTable("AiCoachConversation");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
-        builder.HasIndex(x => new { x.UserId, x.LastActivityAt });
+        // Per-user reads filter on EndedAt (open segment, previous closing summary); LastActivityAt changes on
+        // every save and only the global digest scan reads it.
+        builder.HasIndex(x => new { x.UserId, x.EndedAt });
         builder.HasIndex(x => x.LastActivityAt);
         builder.HasIndex(x => x.UserId).IsUnique().HasFilter("[EndedAt] IS NULL");
         builder.Property(x => x.ClosingSummary).HasColumnType("nvarchar(max)");

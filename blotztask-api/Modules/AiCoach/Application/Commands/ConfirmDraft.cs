@@ -79,6 +79,13 @@ public class ConfirmDraftResultDto
     public required ConversationSnapshotDto ConversationSnapshot { get; init; }
 }
 
+/// <summary>
+/// The stored outcome of a confirmation. It has no conversation snapshot: a replay projects the current one,
+/// so a stored copy would only grow the payload and keep message text alive.
+/// </summary>
+public sealed record ConfirmDraftReceiptResult(Guid CommandId, string Status, string? ErrorCode,
+    IReadOnlyList<PersistedEntityDto> PersistedEntities, ClientDirectiveDto? ClientDirective);
+
 public class PersistedEntityDto
 {
     public required string Kind { get; init; }
@@ -160,8 +167,8 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             if (conversation.Receipts.TryGetValue(request.CommandId, out var receipt))
             {
                 if (receipt.RequestHash != hash) throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused with different data.");
-                if (receipt.Result is ConfirmDraftResultDto previous)
-                    return CopyResult(previous, ConversationSnapshotProjector.ToDto(conversation));
+                if (receipt.Result is { } previous)
+                    return Replay(previous, ConversationSnapshotProjector.ToDto(conversation));
                 throw new DraftConflictException("DraftConfirmationInProgress", "Confirmation is running.", ConversationSnapshotProjector.ToDto(conversation));
             }
             draft = DraftEditing.Find(conversation, command.DraftId);
@@ -205,8 +212,8 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             if (conversation.Receipts.TryGetValue(request.CommandId, out var receipt))
             {
                 if (receipt.RequestHash != hash) throw new DraftConflictException("IdempotencyKeyReused", "Command ID was reused with different data.");
-                if (receipt.Result is ConfirmDraftResultDto previous)
-                    return CopyResult(previous, ConversationSnapshotProjector.ToDto(conversation));
+                if (receipt.Result is { } previous)
+                    return Replay(previous, ConversationSnapshotProjector.ToDto(conversation));
                 throw new DraftConflictException("DraftConfirmationInProgress", "Confirmation is running.", ConversationSnapshotProjector.ToDto(conversation));
             }
             draft = DraftEditing.Find(conversation, command.DraftId);
@@ -348,7 +355,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             }
             var focusMinutes = resolved.Count == 1 ? Math.Min(15, (int)(resolved[0].End - resolved[0].Start).TotalMinutes) : 0;
             finalResult = Result(conversation, draft, request.CommandId, request.Action == "start_now" && error is null, focusMinutes);
-            conversation.Receipts[request.CommandId] = new(command.DraftId, hash, finalResult);
+            conversation.Receipts[request.CommandId] = new(command.DraftId, hash, ToReceipt(finalResult));
             await store.SaveAsync(conversation, CancellationToken.None);
         }
         if (trace is not null) await trace.RecordAsync(command.UserId, command.ConversationId, null, "draft_confirmation", new
@@ -393,7 +400,7 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
             conversation.RecordDraftEvent("saved", saved);
         }
         conversation.Receipts[confirmation.CommandId] = new(saved.Id, confirmation.RequestHash,
-            Result(conversation, saved, confirmation.CommandId, false, 0));
+            ToReceipt(Result(conversation, saved, confirmation.CommandId, false, 0)));
     }
 
     private static ConfirmDraftResultDto Result(Conversation conversation, ProposalSet draft, Guid commandId, bool startFocus, int focusMinutes)
@@ -415,7 +422,10 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
         };
     }
 
-    private static ConfirmDraftResultDto CopyResult(ConfirmDraftResultDto previous, ConversationSnapshotDto snapshot) => new()
+    private static ConfirmDraftReceiptResult ToReceipt(ConfirmDraftResultDto result) => new(result.CommandId,
+        result.Status, result.ErrorCode, result.PersistedEntities, result.ClientDirective);
+
+    private static ConfirmDraftResultDto Replay(ConfirmDraftReceiptResult previous, ConversationSnapshotDto snapshot) => new()
     {
         CommandId = previous.CommandId, Status = previous.Status, ErrorCode = previous.ErrorCode,
         PersistedEntities = previous.PersistedEntities, ClientDirective = previous.ClientDirective, ConversationSnapshot = snapshot,
