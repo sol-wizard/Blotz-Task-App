@@ -1,5 +1,5 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
@@ -19,6 +19,7 @@ export default function TaskCreateScreen() {
   }, []);
 
   const router = useRouter();
+  const { date } = useLocalSearchParams<{ date?: string }>();
   const { addTask, createRecurringTask, isAdding, isCreatingRecurringTask } = useTaskMutations();
   const { t } = useTranslation("tasks");
 
@@ -64,7 +65,7 @@ export default function TaskCreateScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-      <TaskForm mode="create" onSubmit={handleTaskSubmit} />
+      <TaskForm mode="create" startDay={date} onSubmit={handleTaskSubmit} />
     </SafeAreaView>
   );
 }
@@ -102,7 +103,7 @@ function mapTaskToRecurringTask(task: TaskUpsertDTO): RecurringTaskCreateDTO | n
     startDate: toDateOnly(task.startTime),
     endDate: task.recurrenceEndDate ?? null,
     isDeadline: task.isDeadline,
-    templateDueAt: task.isDeadline ? task.dueAt ?? task.endTime : null,
+    templateDueAt: task.isDeadline ? (task.dueAt ?? task.endTime) : null,
     deadlineTimeZoneId: task.isDeadline ? currentTimeZoneId : null,
   };
 }

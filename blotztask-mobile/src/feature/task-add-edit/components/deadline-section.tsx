@@ -81,7 +81,7 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
     ? formatLocalizedDate(deadlineDate, "abbrevMonthDayYear")
     : t("form.selectDate");
   const deadlineTimeDisplayText = deadlineTime
-    ? format(deadlineTime, "hh:mm a")
+    ? format(deadlineTime, "HH:mm")
     : t("form.selectTime");
 
   return (

@@ -11,6 +11,7 @@ export const EVENTS = {
   LOGIN_INTERRUPTED: "login_interrupted",
   APP_ENTERED: "app_entered",
   POST_LOGIN_LOAD_FAILED: "post_login_load_failed",
+  TODAY_TASKS_SHOWN: "today_tasks_shown",
   AI_TASK_GENERATION_SESSION: "ai_task_generation_session",
   AI_TASK_GENERATION_FAILED: "ai_task_generation_failed",
   AI_TASK_GENERATION_SUCCEEDED: "ai_task_generation_succeeded",
