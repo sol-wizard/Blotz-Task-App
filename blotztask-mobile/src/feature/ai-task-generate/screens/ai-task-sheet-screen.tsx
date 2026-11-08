@@ -31,7 +31,7 @@ import { ListeningIndicator } from "../component/listening-indicator";
 import { HoldToTalkPill } from "../component/hold-to-talk-pill";
 import { MicPermissionHint } from "../component/mic-permission-hint";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { useVoiceRecorder, VoiceRecordingFailure } from "../hooks/useVoiceRecorder";
 import { useMicPermission } from "../hooks/useMicPermission";
 import { AI_SHEET_SOURCE, type AiSheetSource } from "../models/ai-sheet-source";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -54,6 +54,17 @@ import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset
 // Presses shorter than this are treated as accidental taps and discarded;
 // anything longer is a real recording and gets uploaded.
 const MIN_HOLD_MS = 300;
+
+const trackVoiceFailure = (failure: VoiceRecordingFailure) =>
+  analytics.trackAiTaskGenerationFailed({ inputMode: "voice", ...failure });
+
+const trackMicRefused = () =>
+  analytics.trackAiTaskGenerationFailed({
+    inputMode: "voice",
+    stage: "permission",
+    errorCode: "PermissionDenied",
+  });
+
 // Same default reminder as the manual task form: 5 minutes before the start time.
 const DEFAULT_ALERT_SECONDS = 300;
 // Shared by the two transient captions below the sheet: the hold-longer nudge and the
@@ -122,6 +133,7 @@ export default function AiTaskSheetScreen() {
   const { labels } = useAllLabels();
   const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
+    trackVoiceFailure,
   );
   const {
     status: micStatus,
@@ -129,7 +141,7 @@ export default function AiTaskSheetScreen() {
     needsSettings,
     requestMic,
     openSettings,
-  } = useMicPermission();
+  } = useMicPermission(trackMicRefused);
   const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
     useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();

@@ -80,15 +80,21 @@
   },
   "feedback": {
     "title": "意见反馈",
-    "placeholder": "说说你的想法：遇到的问题、建议，什么都可以。",
+    "placeholder": "遇到什么问题，或者想要什么功能？",
     "addImage": "添加截图（可选）",
     "processingImage": "正在处理图片…",
     "removeImage": "移除",
-    "submit": "提交反馈",
+    "submit": "提交",
     "submitting": "提交中…",
     "accountNote": "提交时会附上你的账号，方便我们排查问题",
-    "success": "谢谢！我们收到你的反馈了。",
-    "imageError": "这张图片添加失败，请换一张试试。"
+    "success": "收到啦，谢谢你！",
+    "imageError": "这张图片添加失败，请换一张试试。",
+    "trySaying": "试试这样说",
+    "trySayingBug": "「刚才点了……没反应」",
+    "trySayingIdea": "「我希望能……」",
+    "useKeyboard": "用键盘输入",
+    "hideKeyboard": "收起键盘",
+    "transcribing": "正在把语音转成文字…"
   },
   "about": {
     "title": "关于",

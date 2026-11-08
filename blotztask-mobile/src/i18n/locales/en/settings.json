@@ -80,15 +80,21 @@
   },
   "feedback": {
     "title": "Feedback",
-    "placeholder": "Tell us what's on your mind: a bug, an idea, anything.",
+    "placeholder": "What went wrong, or what would you like to see?",
     "addImage": "Add a screenshot (optional)",
     "processingImage": "Preparing image…",
     "removeImage": "Remove",
-    "submit": "Send feedback",
+    "submit": "Send",
     "submitting": "Sending…",
     "accountNote": "Your account is attached when you send, so we can look into your case.",
-    "success": "Thanks! We got your feedback.",
-    "imageError": "Couldn't add that image. Please try another one."
+    "success": "Got it, thank you!",
+    "imageError": "Couldn't add that image. Please try another one.",
+    "trySaying": "Try saying",
+    "trySayingBug": "“I tapped … and nothing happened”",
+    "trySayingIdea": "“I wish I could …”",
+    "useKeyboard": "Type instead",
+    "hideKeyboard": "Hide keyboard",
+    "transcribing": "Turning your voice into text…"
   },
   "about": {
     "title": "About",
