@@ -11,6 +11,7 @@ namespace BlotzTask.Modules.Feedback.Controllers;
 [Authorize]
 public class FeedbackController(
     SubmitFeedbackCommandHandler submitFeedbackCommandHandler,
+    TranscribeFeedbackCommandHandler transcribeFeedbackCommandHandler,
     ILogger<FeedbackController> logger) : ControllerBase
 {
     [HttpPost]
@@ -44,5 +45,15 @@ public class FeedbackController(
             }, ct);
 
         return Ok();
+    }
+
+    [HttpPost("transcribe")]
+    [EnableRateLimiting("feedback-transcribe")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<TranscribeFeedbackResponse>> Transcribe(
+        [FromForm] IFormFile audio,
+        CancellationToken ct)
+    {
+        return Ok(await transcribeFeedbackCommandHandler.Handle(audio, ct));
     }
 }

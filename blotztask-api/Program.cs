@@ -48,6 +48,20 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         });
     });
+    // Separate from "feedback" so recording attempts don't use up the 10 submissions.
+    options.AddPolicy("feedback-transcribe", context =>
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                     ?? context.Connection.RemoteIpAddress?.ToString()
+                     ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 30,
+            Window = TimeSpan.FromHours(24),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
