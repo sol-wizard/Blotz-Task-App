@@ -48,6 +48,8 @@
     "expo-haptics": "~57.0.3",
     "expo-iap": "^5.5.0",
     "expo-image": "~57.0.5",
+    "expo-image-manipulator": "~57.0.21",
+    "expo-image-picker": "~57.0.20",
     "expo-linear-gradient": "~57.0.2",
     "expo-linking": "~57.0.13",
     "expo-localization": "~57.0.2",
