@@ -1,10 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.BreakDown.DTOs;
-using BlotzTask.Modules.Tasks.Domain.Services;
-using BlotzTask.Shared.Exceptions;
-using Microsoft.EntityFrameworkCore;
+using BlotzTask.Modules.BreakDown.Services;
 
 namespace BlotzTask.Modules.BreakDown.Commands;
 
@@ -29,8 +25,7 @@ public class BreakdownAndReplaceTaskResult : BreakdownResult
 }
 
 public class BreakdownAndReplaceTaskCommandHandler(
-    BlotzTaskDbContext db,
-    RecurringOccurrenceMaterializer materializer,
+    BreakdownTargetResolver targetResolver,
     BreakdownTaskCommandHandler breakdownTaskCommandHandler,
     ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler,
     ILogger<BreakdownAndReplaceTaskCommandHandler> logger)
@@ -39,7 +34,8 @@ public class BreakdownAndReplaceTaskCommandHandler(
         BreakdownAndReplaceTaskCommand command,
         CancellationToken ct = default)
     {
-        var taskItemId = await ResolveTaskItemId(command, ct);
+        var taskItemId = await targetResolver.ResolveTaskItemId(
+            command.TaskId, command.RecurringTaskId, command.OccurrenceDate, command.UserId, ct);
 
         var breakdownResult = await breakdownTaskCommandHandler.Handle(new BreakdownTaskCommand
         {
@@ -74,50 +70,5 @@ public class BreakdownAndReplaceTaskCommandHandler(
             Subtasks = breakdownResult.Subtasks,
             ErrorMessage = breakdownResult.ErrorMessage
         };
-    }
-
-    private async Task<int> ResolveTaskItemId(
-        BreakdownAndReplaceTaskCommand command,
-        CancellationToken ct)
-    {
-        var hasTaskId = command.TaskId.HasValue;
-        var hasRecurringIdentity = command.RecurringTaskId.HasValue || command.OccurrenceDate.HasValue;
-
-        if (hasTaskId == hasRecurringIdentity)
-        {
-            throw new ValidationException(
-                "Provide either taskId or both recurringTaskId and occurrenceDate.");
-        }
-
-        if (hasTaskId)
-        {
-            var taskId = command.TaskId.GetValueOrDefault();
-            var taskExists = await db.TaskItems.AnyAsync(
-                task => task.Id == taskId && task.UserId == command.UserId,
-                ct);
-
-            if (!taskExists)
-            {
-                throw new NotFoundException($"Task with ID {taskId} not found.");
-            }
-
-            return taskId;
-        }
-
-        if (!command.RecurringTaskId.HasValue || !command.OccurrenceDate.HasValue)
-        {
-            throw new ValidationException(
-                "recurringTaskId and occurrenceDate are both required for recurring task breakdown.");
-        }
-
-        var recurringTaskId = command.RecurringTaskId.GetValueOrDefault();
-        var occurrenceDate = command.OccurrenceDate.GetValueOrDefault();
-        var taskItem = await materializer.EnsureRecurringOccurrenceTaskItem(
-            recurringTaskId,
-            occurrenceDate,
-            command.UserId,
-            ct);
-
-        return taskItem.Id;
     }
 }
