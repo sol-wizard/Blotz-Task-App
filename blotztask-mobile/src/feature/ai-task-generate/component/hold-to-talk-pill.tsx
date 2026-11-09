@@ -5,9 +5,17 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import { useTranslation } from "react-i18next";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 
-const IDLE_BG = "rgba(255,255,255,0.25)"; // frosted over the sheet gradient
-const PRESSED_BG = "rgba(255,255,255,0.5)";
 const ACTIVE_BG = "#9AD513"; // waveform Lottie is white, needs a coloured ground
+
+// "onGradient": frosted over the AI sheet gradient. "onLight": a white pill on a light screen.
+const VARIANT_COLORS = {
+  onGradient: {
+    idleBg: "rgba(255,255,255,0.25)",
+    pressedBg: "rgba(255,255,255,0.5)",
+    content: "white",
+  },
+  onLight: { idleBg: "#FFFFFF", pressedBg: "#E5E7EB", content: "#444964" },
+} as const;
 
 const shadow = {
   shadowColor: "#000",
@@ -24,6 +32,7 @@ type Props = {
   onPressIn: () => void;
   onPressOut: () => void;
   onHeldLongEnough: () => void;
+  variant?: keyof typeof VARIANT_COLORS;
 };
 
 export function HoldToTalkPill({
@@ -33,8 +42,10 @@ export function HoldToTalkPill({
   onPressIn,
   onPressOut,
   onHeldLongEnough,
+  variant = "onGradient",
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
+  const colors = VARIANT_COLORS[variant];
 
   return (
     <Pressable
@@ -56,7 +67,7 @@ export function HoldToTalkPill({
             {
               // `pressed` lands on the touch frame, so it brightens the pill
               // while isRecording is still catching up with recorder setup.
-              backgroundColor: isRecording ? ACTIVE_BG : pressed ? PRESSED_BG : IDLE_BG,
+              backgroundColor: isRecording ? ACTIVE_BG : pressed ? colors.pressedBg : colors.idleBg,
               opacity: disabled ? 0.5 : 1,
               transform: [{ scale: pressed ? 0.97 : 1 }],
               transitionProperty: ["transform", "backgroundColor"],
@@ -74,8 +85,8 @@ export function HoldToTalkPill({
             />
           ) : (
             <>
-              <MaterialCommunityIcons name="microphone" size={24} color="white" />
-              <Text className="font-balooBold text-base text-white">
+              <MaterialCommunityIcons name="microphone" size={24} color={colors.content} />
+              <Text className="font-balooBold text-base" style={{ color: colors.content }}>
                 {t("buttons.holdToTalk")}
               </Text>
             </>

@@ -217,6 +217,16 @@ export const analytics = {
   },
 
   /**
+   * Fires once per process when today's task list first renders with data. `app_entered`
+   * stops the clock at the gate; this one stops it when the user actually sees their tasks.
+   */
+  trackTodayTasksShown(params: { msSinceLaunch: number }) {
+    posthog.capture(EVENTS.TODAY_TASKS_SHOWN, {
+      ms_since_launch: params.msSinceLaunch,
+    });
+  },
+
+  /**
    * Fires just before the delete request, so the event is queued while the user is still
    * identified — logout resets PostHog right after. Pair with `flush()`.
    * `otherText` is only sent for `other`, and is capped at 200 characters by the input.

@@ -42,7 +42,12 @@ export default {
     android: {
       package: "com.blotz.blotztask",
       permissions: ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"],
-      blockedPermissions: ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"],
+      // expo-image-picker's manifest adds CAMERA, but the app only picks from the library.
+      blockedPermissions: [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.CAMERA",
+      ],
     },
     web: {
       bundler: "metro",

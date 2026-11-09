@@ -10,26 +10,25 @@ import type { MicPermissionOutcome } from "@/shared/constants/posthog-events";
 // first rejection, so it goes straight to `blocked`.
 export type MicPermissionStatus = "checking" | "undetermined" | "granted" | "denied" | "blocked";
 
-export function useMicPermission() {
+// onRefused runs once when the user turns the mic down; callers pass a module-level function
+// so `report` keeps a stable identity.
+export function useMicPermission(onRefused?: () => void) {
   const [status, setStatus] = useState<MicPermissionStatus>("checking");
 
   // Report once per sheet open; repeated mic taps would inflate the failure funnel.
   const hasReportedOutcome = useRef(false);
 
-  const report = useCallback((outcome: MicPermissionOutcome, errorCode?: string) => {
-    if (hasReportedOutcome.current) return;
-    hasReportedOutcome.current = true;
+  const report = useCallback(
+    (outcome: MicPermissionOutcome, errorCode?: string) => {
+      if (hasReportedOutcome.current) return;
+      hasReportedOutcome.current = true;
 
-    analytics.trackMicPermissionResolved({ outcome, ...(errorCode ? { errorCode } : {}) });
+      analytics.trackMicPermissionResolved({ outcome, ...(errorCode ? { errorCode } : {}) });
 
-    if (outcome === "denied" || outcome === "blocked") {
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
-        stage: "permission",
-        errorCode: "PermissionDenied",
-      });
-    }
-  }, []);
+      if (outcome === "denied" || outcome === "blocked") onRefused?.();
+    },
+    [onRefused],
+  );
 
   // Read the current grant without prompting, so opening the sheet never shows a system alert.
   // Re-runs on foreground: the user may have just flipped the switch in Settings.
