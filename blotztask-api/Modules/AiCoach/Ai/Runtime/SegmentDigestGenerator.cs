@@ -23,7 +23,8 @@ public sealed record SegmentDigest(string? Summary, IReadOnlyList<MemoryCandidat
 /// </summary>
 public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaService quota,
     IRecordAiUsageService recordUsage, AiCoachUsageTracker usage,
-    IOptions<AiCoachModuleOptions> options, ILogger<SegmentDigestGenerator> logger)
+    IOptions<AiCoachModuleOptions> options, ILogger<SegmentDigestGenerator> logger,
+    AiCoachTraceRecorder? recorder = null)
 {
     public const string Version = "segment-digest-3";
     // New messages beyond this are dropped oldest-first; the cursor still moves past them.
@@ -103,9 +104,20 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaS
         if (ModelContextBuilder.Bytes(prompt) + ModelContextBuilder.Size(messages) + maxOutput * 4 + 512 > limits.ContextTokenBudget)
             throw new ModelContextException("digest_context_limit");
 
+        var timer = System.Diagnostics.Stopwatch.StartNew();
         var result = await turnGateway.CompleteAsync(new(prompt, messages, [SaveDigest], maxOutput), timeout.Token);
-        usage.Add(segment.Id, result.InputTokens, result.OutputTokens, result.TotalTokens, 1,
-            model?.EstimateUsd(result.InputTokens, result.CachedInputTokens, result.OutputTokens));
+        timer.Stop();
+        var estimatedUsd = model?.EstimateUsd(result.InputTokens, result.CachedInputTokens, result.OutputTokens);
+        if (recorder is not null) await recorder.RecordSummaryAsync(new AiCoachTurnSummary
+        {
+            UserId = segment.UserId, ConversationId = segment.Id, Kind = AiCoachTurnSummary.DigestKind,
+            Model = model?.Name, DeploymentId = model?.DeploymentId ?? limits.DeploymentId,
+            Api = model?.Api ?? "ChatCompletions", PromptVersion = Version, ModelCallCount = 1,
+            InputTokens = result.InputTokens, CachedInputTokens = result.CachedInputTokens,
+            OutputTokens = result.OutputTokens, TotalTokens = result.TotalTokens,
+            EstimatedUsd = estimatedUsd, DurationMs = timer.ElapsedMilliseconds,
+        });
+        usage.Add(segment.Id, result.InputTokens, result.OutputTokens, result.TotalTokens, 1, estimatedUsd);
         logger.LogInformation("AiCoach digest model {Model} deployment {DeploymentId} API {Api}: {InputTokens} input, {OutputTokens} output",
             model?.Name, model?.DeploymentId ?? limits.DeploymentId, model?.Api ?? "ChatCompletions",
             result.InputTokens, result.OutputTokens);

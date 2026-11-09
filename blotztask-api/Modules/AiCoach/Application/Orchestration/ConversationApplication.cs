@@ -113,6 +113,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         });
         ModelTurnRunResult? result = null;
         string? error = null;
+        var turnTimer = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             if (stream is not null) await stream("turn.started", new { conversationId, conversationVersion = baseVersion });
@@ -135,6 +136,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             logger.LogError(ex, "AiCoach turn failed for {ConversationId}", conversationId);
             error = "model_unavailable";
         }
+        turnTimer.Stop();
 
         if (result is not null)
         {
@@ -160,6 +162,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
         ConversationSnapshotDto snapshot;
         ConversationMessage? assistantMessage;
         TurnCommitStatus commit;
+        ProposalSet? turnDraft = null;
         using (await store.AcquireLockAsync(conversationId, CancellationToken.None))
         {
             var conversation = await LoadOwnedAsync(store, userId, conversationId, CancellationToken.None);
@@ -177,6 +180,13 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                     && message.TurnId == messageId)
                 : null;
             snapshot = ConversationSnapshotProjector.ToDto(conversation);
+            // Drafts cannot be edited by the user while the turn runs, so a new or newer pending draft came from this turn.
+            if (commit == TurnCommitStatus.Committed)
+            {
+                var before = request.Drafts.ToDictionary(draft => draft.Id, draft => draft.Version);
+                turnDraft = conversation.Drafts.LastOrDefault(draft => draft.Status == ProposalSetStatus.Pending
+                    && (!before.TryGetValue(draft.Id, out var version) || version != draft.Version));
+            }
         }
         if (assistantMessage is not null && trace is not null)
             await trace.RecordAsync(userId, conversationId, messageId, "assistant_message", new
@@ -189,6 +199,21 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             commitStatus = commit.ToString(), error, result?.InputTokens, result?.CachedInputTokens, result?.OutputTokens,
             result?.TotalTokens, result?.ModelCallCount, conversationVersion = snapshot.ConversationVersion,
         }, assistantMessage?.Id);
+        if (trace is not null) await trace.RecordSummaryAsync(new AiCoachTurnSummary
+        {
+            UserId = userId, ConversationId = conversationId, TurnId = messageId,
+            Kind = AiCoachTurnSummary.TurnKind, Source = source,
+            Model = result?.Model?.Name, DeploymentId = result?.Model?.DeploymentId, Api = result?.Model?.Api,
+            PromptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion,
+            ToolContractVersion = ToolExecutor.ContractVersion,
+            ErrorCode = error, CommitStatus = commit.ToString(),
+            ModelCallCount = result?.ModelCallCount ?? 0, ToolCallCount = result?.ToolNames?.Count ?? 0,
+            ToolNames = result?.ToolNames is { Count: > 0 } names ? string.Join(",", names) : null,
+            InputTokens = result?.InputTokens ?? 0, CachedInputTokens = result?.CachedInputTokens ?? 0,
+            OutputTokens = result?.OutputTokens ?? 0, TotalTokens = result?.TotalTokens ?? 0,
+            EstimatedUsd = result?.EstimatedUsd, DurationMs = turnTimer.ElapsedMilliseconds,
+            DraftId = turnDraft?.Id, DraftItemCount = turnDraft?.Proposals.Count,
+        });
         return snapshot;
     }
 

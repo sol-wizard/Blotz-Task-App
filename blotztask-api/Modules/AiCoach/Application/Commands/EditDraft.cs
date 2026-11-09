@@ -49,6 +49,7 @@ public sealed class EditDraftCommandHandler(IConversationStore store,
         {
             draftId, items, assessment, snapshot.ConversationVersion,
         });
+        if (trace is not null) await trace.RecordDraftEditAsync(userId, draftId);
         return snapshot;
     }
 }

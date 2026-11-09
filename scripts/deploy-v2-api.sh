@@ -7,7 +7,7 @@
 # What it does:
 #   1. fetches origin/<branch> into a separate worktree (~/.cache/blotz-v2-deploy),
 #      so it always deploys pushed commits, never your dirty working tree
-#   2. allows only the reviewed conversation, memory and daily budget migrations
+#   2. allows only the reviewed AI Coach V2 migrations listed in check-v2-migration.sh
 #   3. dotnet publish (Release), same command CI uses
 #   4. verifies required migrations on shared staging SQL; stops if pending unless
 #      --apply-migrations was explicitly supplied
@@ -70,7 +70,7 @@ AI_MIGRATIONS=()
 while IFS= read -r MIGRATION_ID; do
   [ -z "$MIGRATION_ID" ] || AI_MIGRATIONS+=("$MIGRATION_ID")
 done <<< "$ALLOWED_OUTPUT"
-[ "${#AI_MIGRATIONS[@]}" -eq 3 ] || { echo "!! Expected three allowed V2 migrations." >&2; exit 1; }
+[ "${#AI_MIGRATIONS[@]}" -gt 0 ] || { echo "!! The migration check listed no allowed V2 migrations." >&2; exit 1; }
 ALLOWED_JSON=$(printf '%s\n' "${AI_MIGRATIONS[@]}" | jq -R . | jq -s .)
 printf '   allowed migration: %s\n' "${AI_MIGRATIONS[@]}"
 
@@ -113,7 +113,7 @@ DB_CONN=$(az keyvault secret show --subscription "$SUB" --vault-name "$KEY_VAULT
   fi
   if ! jq -e --arg baseline "$PREVIOUS_MIGRATION" --argjson allowed "$ALLOWED_JSON" \
     '[.[] | select(.id > $baseline) | .id] == $allowed' <<< "$MIGRATION_STATE" >/dev/null; then
-    echo "!! Expected only the three allowed migrations after $PREVIOUS_MIGRATION; no database changes were made." >&2
+    echo "!! Expected only the allowed migrations after $PREVIOUS_MIGRATION; no database changes were made." >&2
     exit 1
   fi
   PENDING_OTHER=$(jq -r --argjson allowed "$ALLOWED_JSON" \
