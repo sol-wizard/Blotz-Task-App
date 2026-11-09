@@ -145,5 +145,13 @@
     "failed": "支付失败，请重试。",
     "unavailable": "打赏暂时不可用，请稍后再试。",
     "disclaimer": "打赏是一次性支付，用于支持开发，不会解锁任何功能。"
+  },
+  "CoachAllowance": {
+    "title": "AI 教练",
+    "subtitle": "每月免费额度",
+    "remaining": "剩余",
+    "resets": "{{date}}重置",
+    "exhausted": "本月已用完，{{date}}恢复",
+    "paused": "本月暂时不可用，{{date}}恢复"
   }
 }

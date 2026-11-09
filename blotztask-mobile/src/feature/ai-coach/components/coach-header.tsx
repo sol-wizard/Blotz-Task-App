@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { ASSETS } from "@/shared/constants/assets";
 import { GradientCircle } from "@/shared/components/gradient-circle";
+import { AiCoachAllowanceDto, formatRemainingPercent } from "../models/ai-coach-allowance";
 
 /** The coach's own mark, shared by the header and the welcome state. */
 export function CoachMark({ size = 34 }: { size?: number }) {
@@ -14,9 +15,12 @@ export function CoachMark({ size = 34 }: { size?: number }) {
 }
 
 /** Back, who you are talking to and what it is doing, then topic actions. */
-export function CoachHeader({ status, actionsDisabled, onBack, onNewTopic, onMenu }: {
+export function CoachHeader({ status, actionsDisabled, allowance, onAllowancePress, onBack, onNewTopic, onMenu }: {
   status: "idle" | "thinking" | "listening";
   actionsDisabled: boolean;
+  /** Shown only once it runs low; plenty left stays out of the way. */
+  allowance?: AiCoachAllowanceDto;
+  onAllowancePress: () => void;
   onBack: () => void;
   onNewTopic: () => void;
   onMenu: () => void;
@@ -40,6 +44,14 @@ export function CoachHeader({ status, actionsDisabled, onBack, onNewTopic, onMen
           </Text>
         </View>
       </View>
+      {allowance?.state === "low" && (
+        <Pressable onPress={onAllowancePress} accessibilityRole="button" hitSlop={6}
+          className="rounded-full bg-[#FFF7ED] px-2.5 py-1">
+          <Text className="font-balooBold text-xs text-[#C2410C]">
+            {t("chat.allowanceLow", { percent: formatRemainingPercent(allowance) })}
+          </Text>
+        </Pressable>
+      )}
       <Pressable onPress={onNewTopic} disabled={actionsDisabled} accessibilityRole="button"
         accessibilityLabel={t("chat.newTopic")} accessibilityState={{ disabled: actionsDisabled }}
         className={`w-10 h-10 rounded-full bg-white items-center justify-center ${actionsDisabled ? "opacity-40" : ""}`}>

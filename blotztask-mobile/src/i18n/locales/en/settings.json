@@ -145,5 +145,13 @@
     "failed": "Payment failed. Please try again.",
     "unavailable": "Tips aren't available right now. Please try again later.",
     "disclaimer": "Tips are one-off payments that support development. They don't unlock any features."
+  },
+  "CoachAllowance": {
+    "title": "AI Coach",
+    "subtitle": "Free monthly allowance",
+    "remaining": "Remaining",
+    "resets": "Resets on {{date}}",
+    "exhausted": "Used up for this month — back on {{date}}",
+    "paused": "Paused for everyone this month — back on {{date}}"
   }
 }

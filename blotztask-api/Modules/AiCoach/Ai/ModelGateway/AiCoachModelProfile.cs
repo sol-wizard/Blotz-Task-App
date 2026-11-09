@@ -14,6 +14,17 @@ public sealed record AiCoachModelProfile(string Name, string DeploymentId, strin
                 + output * outputRate) / 1_000_000m
             : null;
 
+    /// <summary>
+    /// What a call reserves before it runs: every input token at the dearer of the cached and
+    /// uncached rates plus the whole output limit, rounded up to 1e-10 USD. Requires prices.
+    /// </summary>
+    public decimal ReservationUsd(long inputTokens, int outputTokens)
+    {
+        var inputRate = Math.Max(InputTokenUsdPerMillion!.Value, CachedInputTokenUsdPerMillion ?? InputTokenUsdPerMillion.Value);
+        return decimal.Ceiling((inputTokens * inputRate + outputTokens * OutputTokenUsdPerMillion!.Value)
+            / 1_000_000m * 10_000_000_000m) / 10_000_000_000m;
+    }
+
     public static AiCoachModelProfile Select(AiCoachModuleOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.DefaultModel))

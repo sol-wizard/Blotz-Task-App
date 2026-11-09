@@ -8,6 +8,7 @@ using BlotzTask.Modules.AiCoach.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Xunit.Abstractions;
@@ -19,8 +20,10 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
     [CoachLiveTheory]
     [InlineData("luna", "I just want to chat. I finally have a quiet afternoon to rest. No tasks or notes, please.")]
     [InlineData("sol", "I just want to chat. I finally have a quiet afternoon to rest. No tasks or notes, please.")]
+    [InlineData("luna6", "I just want to chat. I finally have a quiet afternoon to rest. No tasks or notes, please.")]
     [InlineData("luna", "我只是想聊聊，今天终于有空休息一下了。不要创建任务或笔记。")]
     [InlineData("sol", "我只是想聊聊，今天终于有空休息一下了。不要创建任务或笔记。")]
+    [InlineData("luna6", "我只是想聊聊，今天终于有空休息一下了。不要创建任务或笔记。")]
     public async Task Handle_OrdinaryConversation_ReturnsStreamedTextWithoutDrafts(string model, string message)
     {
         // Arrange
@@ -38,7 +41,7 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
         var result = await Runtime(provider).ExecuteAsync(request, timeout.Token);
 
         // Assert
-        result.Error.Should().BeNull(because: "both model profiles must support ordinary conversation through the actual runtime");
+        result.Error.Should().BeNull(because: "all model profiles must support ordinary conversation through the actual runtime");
         result.Text.Should().NotBeNullOrWhiteSpace(because: "the user must receive a natural reply");
         result.Drafts.Should().BeEmpty(because: "conversation alone does not authorize draft creation");
         deltas.Should().NotBeEmpty(because: "the mobile app depends on streamed text events");
@@ -49,6 +52,7 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
     [CoachLiveTheory]
     [InlineData("luna")]
     [InlineData("sol")]
+    [InlineData("luna6")]
     public async Task Handle_ModelSelection_CompletesConcurrentStreamingToolRoundTrips(string model)
     {
         // Arrange
@@ -90,6 +94,10 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
     [CoachLiveTheory]
     [InlineData("luna", "sol")]
     [InlineData("sol", "luna")]
+    [InlineData("luna", "luna6")]
+    [InlineData("luna6", "luna")]
+    [InlineData("sol", "luna6")]
+    [InlineData("luna6", "sol")]
     public async Task Handle_SwitchBetweenTurns_CorrectsExistingDraft(string firstModel, string secondModel)
     {
         // Arrange
@@ -140,6 +148,12 @@ public sealed class ModelSwitchingLiveTests(ITestOutputHelper output)
         var config = new ConfigurationBuilder().AddJsonFile(Path.Combine(root, "blotztask-api", "appsettings.json"))
             .AddInMemoryCollection(new Dictionary<string, string?> { ["AiCoach:DefaultModel"] = model }).Build();
         var services = new ServiceCollection();
+        services.AddSingleton<IHostEnvironment>(new HostApplicationBuilder(new HostApplicationBuilderSettings
+        {
+            DisableDefaults = true,
+            EnvironmentName = Environments.Development,
+        }).Environment);
+        services.AddLogging();
         services.AddSingleton<IConfiguration>(config);
         services.Configure<AzureOpenAIOptions>(azure => { azure.Endpoint = credentials.Endpoint; azure.ApiKey = credentials.Key; });
         services.AddSingleton(new AzureOpenAIClient(new Uri(credentials.Endpoint), new AzureKeyCredential(credentials.Key)));

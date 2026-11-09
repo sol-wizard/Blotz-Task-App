@@ -4,7 +4,6 @@ using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
-using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.UserUnderstanding.Domain;
 using Microsoft.Extensions.Options;
 
@@ -21,8 +20,7 @@ public sealed record SegmentDigest(string? Summary, IReadOnlyList<MemoryCandidat
 /// One bounded background call per stretch of chat: the topic's closing summary when it is needed, and
 /// long-term memory candidates from the user's new messages. Prior closing summaries are never chained.
 /// </summary>
-public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaService quota,
-    IRecordAiUsageService recordUsage, AiCoachUsageTracker usage,
+public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTracker usage,
     IOptions<AiCoachModuleOptions> options, ILogger<SegmentDigestGenerator> logger,
     AiCoachTraceRecorder? recorder = null)
 {
@@ -57,11 +55,12 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaS
         DateTimeOffset now, CancellationToken ct)
     {
         var limits = options.Value;
+        // Charged to the environment cap only: users pay just for the messages they send,
+        // not for this background work after they stop chatting.
         var turnGateway = gateway.OpenTurn();
         var model = turnGateway.Profile;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(TimeSpan.FromSeconds(model?.RequestTimeoutSeconds ?? limits.ModelRequestTimeoutSeconds));
-        await quota.CheckQuotaAsync(segment.UserId, timeout.Token);
 
         var zone = TimeZoneInfo.FindSystemTimeZoneById(segment.TimeZoneId);
         var recent = Bounded(extractMemories ? newMessages : []);
@@ -121,18 +120,6 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, ICheckAiQuotaS
         logger.LogInformation("AiCoach digest model {Model} deployment {DeploymentId} API {Api}: {InputTokens} input, {OutputTokens} output",
             model?.Name, model?.DeploymentId ?? limits.DeploymentId, model?.Api ?? "ChatCompletions",
             result.InputTokens, result.OutputTokens);
-        try
-        {
-            using var accountingTimeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            accountingTimeout.CancelAfter(TimeSpan.FromSeconds(10));
-            if (result.TotalTokens > 0)
-                await recordUsage.RecordAiUsageAsync(new RecordAiUsageRequest
-                {
-                    UserId = segment.UserId, InputTokens = result.InputTokens,
-                    OutputTokens = result.OutputTokens, TotalTokens = result.TotalTokens,
-                }, accountingTimeout.Token);
-        }
-        catch (Exception error) { logger.LogError(error, "AiCoach digest usage recording failed for {ConversationId}", segment.Id); }
 
         var json = result.ToolCalls.FirstOrDefault(call => call.Name == SaveDigest.Name)?.ArgumentsJson
                    ?? result.AssistantText;

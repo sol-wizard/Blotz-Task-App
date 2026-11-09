@@ -6,7 +6,6 @@ using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.UserUnderstanding.Commands;
 using BlotzTask.Modules.UserUnderstanding.Domain;
 using BlotzTask.Modules.UserUnderstanding.Queries;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -104,10 +103,10 @@ public sealed class SegmentDigestProcessor(BlotzTaskDbContext db, IConversationS
             {
                 digest = await generator.GenerateAsync(conversation, needsSummary, newMessages, active, learn, now, ct);
             }
-            catch (Exception error) when (error is AiQuotaExceededException or NotFoundException)
+            catch (AiQuotaExceededException)
             {
-                // Background work never goes past the user's quota (or runs without a plan); it resumes when allowed.
-                logger.LogInformation("AiCoach digest skipped for {ConversationId}: no quota available", conversationId);
+                // Background work never goes past the AI Coach budget; it resumes when the month resets.
+                logger.LogInformation("AiCoach digest skipped for {ConversationId}: no budget available", conversationId);
                 return;
             }
             catch (ModelContextException error) when (error.Code is "digest_unreadable" or "digest_context_limit")

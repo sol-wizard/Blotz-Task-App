@@ -7,6 +7,8 @@ public interface IModelGateway
 {
     // Stateless adapters may reuse themselves. Responses adapters return an isolated turn session.
     IModelGateway OpenTurn() => this;
+    // Opens a turn whose spend counts towards this user's AI Coach allowance.
+    IModelGateway OpenTurn(Guid userId) => OpenTurn();
     AiCoachModelProfile? Profile => null;
 
     Task<ModelCompletionResult> CompleteAsync(
