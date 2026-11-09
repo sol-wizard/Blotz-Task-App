@@ -18,7 +18,7 @@ root = Path(__file__).resolve().parent.parent
 migration_id = '20261020112233_CreateAiCoachConversationTables'
 checked_id = subprocess.check_output(
     ['bash', str(root / 'scripts/check-v2-migration.sh'), str(root)], text=True
-).strip()
+).splitlines()[0]
 if checked_id != migration_id:
     raise SystemExit('Migration ID changed; review the reconciliation SQL before proceeding.')
 
