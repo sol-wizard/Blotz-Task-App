@@ -168,22 +168,32 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
     }
 
     [Fact]
-    public async Task Handle_UserAllowanceUsedUp_LeavesTheCursorForALaterPass()
+    public async Task Handle_UserAllowanceUsedUp_StillDigestsOnTheEnvironmentPotOnly()
     {
         // Arrange
         await using var harness = await Harness.CreateAsync(fixture, allowanceLeft: false);
         await harness.ChatAsync("From now on please keep your replies short", "Sure.");
-        harness.Clock.Now = harness.Clock.Now.AddMinutes(11);
-        var before = (await harness.Db.AiCoachConversations.AsNoTracking().SingleAsync(r => r.Id == harness.Open.Id)).MemoryProcessedAt;
+        harness.Clock.Now = harness.Clock.Now.Add(SegmentDigestProcessor.PauseBeforeLearning).AddMinutes(1);
+        harness.Gateway.Respond = _ => Digest(null, Memory("preference", "Prefers short replies", 0));
+        var userSpendBefore = await UserSpendAsync(harness);
 
         // Act
         await harness.Processor.ProcessBatchAsync(default);
 
         // Assert
-        harness.Gateway.Calls.Should().Be(0, because: "background work never runs past the user's AI Coach allowance");
-        (await harness.Db.AiCoachConversations.AsNoTracking().SingleAsync(r => r.Id == harness.Open.Id)).MemoryProcessedAt
-            .Should().Be(before, because: "skipped messages stay pending until the allowance resets");
+        harness.Gateway.Calls.Should().Be(1, because: "the digest is not charged to the user, so their used-up allowance does not stop it");
+        (await harness.Db.UserMemories.CountAsync(m => m.UserId == harness.UserId)).Should().Be(1,
+            because: "what the user said before running out is still remembered");
+        (await UserSpendAsync(harness)).Should().Be(userSpendBefore,
+            because: "users pay only for the messages they send, not for background work after they stop");
+        (await harness.Db.AiCoachBudgetCharges.CountAsync(c => c.Environment == harness.Budget.EnvironmentName && c.UserId == null))
+            .Should().Be(1, because: "the digest counts towards the environment cap");
     }
+
+    private static Task<decimal> UserSpendAsync(Harness harness) =>
+        harness.Db.AiCoachBudgetCharges.AsNoTracking()
+            .Where(c => c.Environment == harness.Budget.EnvironmentName && c.UserId == harness.UserId)
+            .SumAsync(c => c.ChargedUsd);
 
     private static object Memory(string kind, string content, int messageIndex, string? replaces = null) =>
         new { kind, content, validThrough = (string?)null, replaces, messageIndex };

@@ -219,3 +219,14 @@ module budget 'modules/budget.bicep' = {
     alertEmail: alertEmail
   }
 }
+
+module aiCoachBudgetAlert 'modules/aiCoachBudgetAlert.bicep' = {
+  name: '${namePrefix}-${environment}-ai-coach-budget-alert'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    location: location
+    appInsightsId: appInsight.outputs.id
+    alertEmail: alertEmail
+  }
+}

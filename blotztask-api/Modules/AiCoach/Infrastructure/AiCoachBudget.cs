@@ -13,6 +13,8 @@ public sealed class AiCoachBudget(IServiceScopeFactory scopes, TimeProvider cloc
     ILogger<AiCoachBudget> logger)
 {
     private static readonly TimeZoneInfo Perth = TimeZoneInfo.FindSystemTimeZoneById("Australia/Perth");
+    // Matches the "above 80%" log text that infra/modules/aiCoachBudgetAlert.bicep queries for.
+    private const decimal AlertFraction = 0.8m;
 
     public bool Enabled => options.Value.MonthlyBudgetUsd.HasValue && options.Value.UserMonthlyAllowanceUsd.HasValue;
 
@@ -68,6 +70,11 @@ public sealed class AiCoachBudget(IServiceScopeFactory scopes, TimeProvider cloc
                 model, start, environmentUsed, reservedUsd, limits.MonthlyBudgetUsd);
             throw new AiCoachBudgetExceededException(AiCoachBudgetScope.Environment, nextStart);
         }
+        // Logged on every admitted call above the threshold, not just the crossing one: App Insights
+        // samples traces, so a single line could be dropped. The alert rule de-duplicates to one email a day.
+        if (environmentUsed + reservedUsd >= limits.MonthlyBudgetUsd.Value * AlertFraction)
+            logger.LogWarning("AiCoach monthly budget above 80% in {Environment}: {UsedUsd} of {LimitUsd} charged/reserved",
+                environmentName, environmentUsed + reservedUsd, limits.MonthlyBudgetUsd);
 
         if (userId is { } id)
         {

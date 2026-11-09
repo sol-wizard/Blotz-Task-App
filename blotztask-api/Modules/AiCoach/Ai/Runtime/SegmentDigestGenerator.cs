@@ -54,7 +54,9 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
         DateTimeOffset now, CancellationToken ct)
     {
         var limits = options.Value;
-        var turnGateway = gateway.OpenTurn(segment.UserId);
+        // Charged to the environment cap only: users pay just for the messages they send,
+        // not for this background work after they stop chatting.
+        var turnGateway = gateway.OpenTurn();
         var model = turnGateway.Profile;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(TimeSpan.FromSeconds(model?.RequestTimeoutSeconds ?? limits.ModelRequestTimeoutSeconds));
