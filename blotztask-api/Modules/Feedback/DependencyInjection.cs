@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddHttpClient<ILarkTokenService, LarkTokenService>();
         services.AddHttpClient<ILarkBitableClient, LarkBitableClient>();
         services.AddScoped<SubmitFeedbackCommandHandler>();
+        services.AddScoped<TranscribeFeedbackCommandHandler>();
 
         return services;
     }
