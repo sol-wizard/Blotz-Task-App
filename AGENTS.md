@@ -48,7 +48,7 @@ working on navigation, UI, animation, data fetching or an SDK upgrade in `blotzt
 
 ## Database Migrations
 
-- Never run `dotnet ef migrations add` or `dotnet ef database update` yourself.
+- `dotnet ef migrations add` and `dotnet ef database update` are the user's to run (blocked for Claude Code in `.claude/settings.json`).
 - If entity, DbContext, or relationship changes require a migration, stop after the code change and give the user the exact command to run.
 - The user should generate and apply EF Core migrations themselves from `blotztask-api/`.
 
