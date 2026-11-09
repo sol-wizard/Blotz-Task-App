@@ -26,13 +26,20 @@ public sealed class BudgetedModelGateway(IModelGateway inner, AiCoachModelProfil
         var inputBound = Math.Max((long)contextTokenBudget,
             (long)ModelContextBuilder.Bytes(request.SystemPrompt) + ModelContextBuilder.Size(request.Messages)
             + ModelContextBuilder.Size(request.Tools) + 8192L) + _priorOutputTokens;
-        var inputRate = Math.Max(profile.InputTokenUsdPerMillion.Value,
-            profile.CachedInputTokenUsdPerMillion ?? profile.InputTokenUsdPerMillion.Value);
-        var reservedUsd = decimal.Ceiling((inputBound * inputRate
-            + outputLimit * profile.OutputTokenUsdPerMillion.Value) / 1_000_000m * 10_000_000_000m) / 10_000_000_000m;
+        var reservedUsd = profile.ReservationUsd(inputBound, outputLimit);
         var reservation = await budget.ReserveAsync(userId, profile.Name, reservedUsd, cancellationToken);
-        // Exceptions, cancellation and missing usage retain the reservation for this budget date.
-        var result = await inner.CompleteAsync(request, cancellationToken);
+        // Rejected requests are refunded; cancellation, timeouts, other exceptions and missing usage
+        // retain the reservation, since the provider may still bill them.
+        ModelCompletionResult result;
+        try
+        {
+            result = await inner.CompleteAsync(request, cancellationToken);
+        }
+        catch (Exception ex) when (IsUnbilledRejection(ex))
+        {
+            await RefundAsync(reservation);
+            throw;
+        }
         _priorOutputTokens += Math.Max(0, result.OutputTokens);
         if (result.InputTokens < 0 || result.OutputTokens < 0 || result.CachedInputTokens < 0
             || result.CachedInputTokens > result.InputTokens || result.TotalTokens <= 0
@@ -48,5 +55,30 @@ public sealed class BudgetedModelGateway(IModelGateway inner, AiCoachModelProfil
                 profile.Name, reservation, actualUsd, reservedUsd);
         await budget.SettleAsync(reservation, actualUsd);
         return result;
+    }
+
+    /// <summary>Azure does not bill a request it answers with 404, 429 or 5xx.</summary>
+    private static bool IsUnbilledRejection(Exception ex)
+    {
+        var status = ex switch
+        {
+            System.ClientModel.ClientResultException client => client.Status,
+            HttpRequestException { StatusCode: { } code } => (int)code,
+            _ => 0,
+        };
+        return status is 404 or 429 or >= 500;
+    }
+
+    private async Task RefundAsync(Guid reservation)
+    {
+        try
+        {
+            await budget.SettleAsync(reservation, 0m);
+        }
+        catch (Exception ex)
+        {
+            // Keep the provider error for the caller; a failed refund only over-counts spend.
+            logger.LogError(ex, "AiCoach could not refund rejected call reservation {ReservationId}", reservation);
+        }
     }
 }

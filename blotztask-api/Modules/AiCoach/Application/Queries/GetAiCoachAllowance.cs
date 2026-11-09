@@ -1,3 +1,4 @@
+using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using Microsoft.Extensions.Options;
 
@@ -10,7 +11,7 @@ public static class AiCoachAllowanceState
     public const string Low = "low";
     /// <summary>The user's own allowance is used up until <c>ResetsOn</c>.</summary>
     public const string Exhausted = "exhausted";
-    /// <summary>The environment-wide monthly cap is reached; AI Coach is off for everyone until <c>ResetsOn</c>.</summary>
+    /// <summary>The environment-wide monthly cap cannot fit one more call; AI Coach is off for everyone until <c>ResetsOn</c>.</summary>
     public const string Paused = "paused";
 }
 
@@ -41,9 +42,13 @@ public class GetAiCoachAllowanceQueryHandler(AiCoachBudget budget, IOptions<AiCo
         var remaining = Math.Max(0m, allowance - usage.UserUsedUsd);
         var percent = (int)Math.Floor(remaining / allowance * 100m);
 
-        // Mirrors AiCoachBudget.ReserveAsync: any allowance left still admits a call.
+        // Mirrors AiCoachBudget.ReserveAsync: any allowance left still admits a call, but the
+        // environment cap refuses a reservation that would go over it. Paused therefore starts as
+        // soon as the pot cannot fit one worst-case call, before the user types a doomed message.
+        var profile = AiCoachModelProfile.Select(options.Value);
+        var oneCallUsd = profile.ReservationUsd(options.Value.ContextTokenBudget, profile.MaxOutputTokens);
         var state = remaining <= 0m ? AiCoachAllowanceState.Exhausted
-            : usage.EnvironmentUsedUsd >= options.Value.MonthlyBudgetUsd!.Value ? AiCoachAllowanceState.Paused
+            : usage.EnvironmentUsedUsd + oneCallUsd > options.Value.MonthlyBudgetUsd!.Value ? AiCoachAllowanceState.Paused
             : percent <= LowPercent ? AiCoachAllowanceState.Low
             : AiCoachAllowanceState.Available;
         return new(percent, state, usage.ResetsOn);
