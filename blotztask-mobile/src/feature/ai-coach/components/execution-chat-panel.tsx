@@ -69,12 +69,12 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, animateIn, onRa
   const { t } = useTranslation("aiCoach");
   if (item.role === "user") {
     return (
-      <View className="my-1.5 max-w-[80%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-secondary">
-        <Text className="font-baloo text-base text-white">{item.text}</Text>
+      <View className="my-1.5 max-w-[80%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-[#E8ECEF]">
+        <Text className="font-baloo text-base text-secondary">{item.text}</Text>
       </View>
     );
   }
-  // Assistant replies run the full width: the header already says who is talking.
+  // Assistant replies run the full width with no bubble; only the user's own messages sit in one.
   return (
     <View className="my-1.5 self-stretch">
       {item.taskContextRead && (
@@ -535,7 +535,6 @@ export function ExecutionChatPanel() {
   return (
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <CoachHeader
-        status={voiceBusy ? "listening" : generating ? "thinking" : "idle"}
         actionsDisabled={confirmationUncertain || status !== "ready" || generating
           || snapshot?.artifacts.some(card => card.status === "processing") === true}
         allowance={allowance} onAllowancePress={() => remindBeforeLeaving(() => router.push("/settings/membership-plan"))}

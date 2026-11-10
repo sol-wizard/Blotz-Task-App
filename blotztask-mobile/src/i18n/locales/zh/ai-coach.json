@@ -29,9 +29,8 @@
     }
   },
   "chat": {
-    "title": "AI 教练",
     "scrollToLatest": "滚动到最新消息",
-    "inputPlaceholder": "想做什么？告诉我",
+    "inputPlaceholder": "问问我~",
     "thinking": "正在想…",
     "taskContextRead": "已查看应用内任务",
     "connecting": "正在连接…",
@@ -76,8 +75,8 @@
     "generating": "正在生成回复",
     "reconnecting": "连接中断，正在同步结果…",
     "followUps": "推荐回复",
-    "status": "能看到你的任务和日程",
-    "back": "返回",
+    "backToTasks": "返回任务",
+    "tasks": "任务",
     "newTopicStarted": "已开始新话题，之前的聊天不会再带入（AI 记住的内容除外）"
   },
   "feedback": {
