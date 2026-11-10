@@ -7,7 +7,7 @@ import { ArtifactEnvelopeDto, EditedDraftDto, EditedDraftItemDto, TaskDraftItemD
 import { ConfirmAction } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 import { CoachChip } from "./coach-chip";
-import { formatDraftWhen, formatRecurrence } from "../utils/draft-format";
+import { formatDraftWhen, formatRecurrence, scheduleUnverifiedText } from "../utils/draft-format";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { theme } from "@/shared/constants/theme";
@@ -101,7 +101,7 @@ export function TaskDraftCard({
   if (unmatchedConflicts.length > 0) notices.push({ tone: "warning",
     text: t("draft.scheduleConflict", { tasks: unmatchedConflicts.map((entry) => entry.taskTitle).join("、") }) });
   if (editable && selected.length === unsavedCount && artifact.schedule?.status === "unverified") {
-    notices.push({ tone: "warning", text: t("draft.scheduleUnverified") });
+    notices.push({ tone: "warning", text: scheduleUnverifiedText(artifact.schedule, t) });
   }
   if (editable && artifact.schedule && items.some((item) => item.recurrence != null)) {
     notices.push({ tone: "info", text: t("draft.schedulePartial") });

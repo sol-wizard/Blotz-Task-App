@@ -62,21 +62,26 @@ public sealed class DraftScheduleChecker(GetTasksByDateQueryHandler tasks,
                 }
             }
 
-            if (windows.Count > 50 || windows.SelectMany(window => Days(window.Start, window.End,
-                    TimeZoneInfo.FindSystemTimeZoneById(window.Item.TimeZoneId))).Distinct().Count() > 50)
-                return new("unverified", checkedAt, [], Scope: scope);
-            var conflicts = new List<ScheduleConflict>();
-            foreach (var group in windows.GroupBy(window => window.Item.TimeZoneId))
+            // One calendar read per (time zone, date) below; windows are only compared in memory,
+            // so reads are the cost to bound. Retrying cannot shrink the list, so name the reason.
+            var reads = windows.GroupBy(window => window.Item.TimeZoneId).Select(group =>
             {
                 var zone = TimeZoneInfo.FindSystemTimeZoneById(group.Key);
-                var dates = group.SelectMany(window => Days(window.Start, window.End, zone)).Distinct();
-                foreach (var date in dates)
+                return (ZoneId: group.Key, Windows: group.ToArray(),
+                    Dates: group.SelectMany(window => Days(window.Start, window.End, zone)).Distinct().ToArray());
+            }).ToArray();
+            if (reads.Sum(read => read.Dates.Length) > 50)
+                return new("unverified", checkedAt, [], Scope: scope, Reason: "too_many_dates");
+            var conflicts = new List<ScheduleConflict>();
+            foreach (var read in reads)
+            {
+                foreach (var date in read.Dates)
                 {
                     var entries = await tasks.Handle(new GetTasksByDateQuery
                     {
-                        UserId = userId, Date = date, TimeZoneId = group.Key,
+                        UserId = userId, Date = date, TimeZoneId = read.ZoneId,
                     }, ct);
-                    foreach (var window in group)
+                    foreach (var window in read.Windows)
                     foreach (var entry in entries)
                     {
                         if (entry.IsDone || entry.TimeType != TaskTimeType.RangeTime
@@ -93,12 +98,16 @@ public sealed class DraftScheduleChecker(GetTasksByDateQueryHandler tasks,
                     }
                 }
             }
+            // Two repeating draft items clash again on every shared day. One entry per pair (its
+            // first overlap) is enough to show it and keeps the list within the coach's context.
+            var draftPairs = new HashSet<(Guid, Guid)>();
             foreach (var left in windows)
             foreach (var right in windows)
             {
                 if (left.Item.ProposalId == right.Item.ProposalId || left.Start >= right.End
                     || right.Start >= left.End) continue;
                 if (string.CompareOrdinal(left.Item.ProposalId.ToString(), right.Item.ProposalId.ToString()) >= 0) continue;
+                if (!draftPairs.Add((left.Item.ProposalId, right.Item.ProposalId))) continue;
                 conflicts.Add(new(left.Item.ProposalId, $"draft:{right.Item.ProposalId}",
                     right.Item.Title, right.Start, right.End));
                 conflicts.Add(new(right.Item.ProposalId, $"draft:{left.Item.ProposalId}",

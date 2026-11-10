@@ -1,5 +1,11 @@
 import type { TFunction } from "i18next";
-import { DraftRecurrenceDto, TaskDraftItemDto } from "../models/ai-coach-dto";
+import { DraftRecurrenceDto, DraftScheduleAssessmentDto, TaskDraftItemDto } from "../models/ai-coach-dto";
+
+/** Warning for a calendar check that could not run: too many dates never passes on retry, a failed read may. */
+export function scheduleUnverifiedText(assessment: Pick<DraftScheduleAssessmentDto, "reason"> | null | undefined,
+  t: TFunction<"aiCoach">): string {
+  return t(assessment?.reason === "too_many_dates" ? "draft.scheduleTooManyDates" : "draft.scheduleUnverified");
+}
 
 const dayKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;

@@ -128,6 +128,7 @@
     "saveDespiteConflict": "仍要保存",
     "scheduleChanged": "排期已变化，请查看最新冲突后重试。",
     "scheduleUnverified": "暂时无法核对任务日历，请稍后重试。",
+    "scheduleTooManyDates": "一次要核对的日期太多。请先移除一些任务，其余的稍后再加。",
     "schedulePartial": "已检查开始日期起七天内的重复安排；更远的日期尚未核对。",
     "cancel": "取消",
     "editFailed": "草稿更新失败，请重试。",

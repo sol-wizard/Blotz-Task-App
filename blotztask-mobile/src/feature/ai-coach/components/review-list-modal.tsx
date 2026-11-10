@@ -24,7 +24,7 @@ import { ConfirmOutcome } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 import { ReviewNoteEditor } from "./review-note-editor";
 import { CoachChip } from "./coach-chip";
-import { formatDraftWhen, formatRecurrence } from "../utils/draft-format";
+import { formatDraftWhen, formatRecurrence, scheduleUnverifiedText } from "../utils/draft-format";
 
 export function ReviewListModal({
   visible,
@@ -148,7 +148,8 @@ export function ReviewListModal({
           },
         ],
       );
-    } else setError(message(result.errorCode));
+    } else setError(result.errorCode === "ScheduleUnverified"
+      ? scheduleUnverifiedText(result.scheduleAssessment, t) : message(result.errorCode));
   };
   const errors = list?.validationErrors ?? [];
   const tasks = list?.payload.items.filter((item) => item.kind !== "note") ?? [];
@@ -160,6 +161,8 @@ export function ReviewListModal({
   );
   const incomplete = tasks.some((item) => !item.date || !item.startTime || !item.endTime);
   const unverified = list?.schedule?.status === "unverified";
+  // Checking again cannot shrink the list, so this case gets its own text and no Check again button.
+  const tooManyDates = unverified && list?.schedule?.reason === "too_many_dates";
   const invalid = errors.some(
     (code) => !["ScheduleConflict", "ScheduleUnverified"].includes(code.split(":")[0]),
   );
@@ -182,11 +185,13 @@ export function ReviewListModal({
     : [];
   if (unmatchedConflicts.length > 0) notices.push({ tone: "warning",
     text: t("draft.scheduleConflict", { tasks: [...new Set(unmatchedConflicts.map((item) => item.taskTitle))].join(", ") }) });
-  if (unverified) notices.push({ tone: "warning", text: t("draft.scheduleUnverified") });
+  if (unverified) notices.push({ tone: "warning", text: scheduleUnverifiedText(list?.schedule, t) });
   if (list?.schedule?.status === "partial") notices.push({ tone: "info", text: t("draft.schedulePartial") });
   if (past) notices.push({ tone: "warning", text: t("draft.timePassed") });
-  if (uncertain || error) notices.push({ tone: "warning", alert: true,
-    text: uncertain ? t("review.confirmationUnknown") : error ?? "" });
+  const errorText = uncertain ? t("review.confirmationUnknown") : error;
+  // A rejected save resyncs the list, so the list's own notice may already say the same thing.
+  if (errorText && !notices.some((notice) => notice.text === errorText))
+    notices.push({ tone: "warning", alert: true, text: errorText });
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
@@ -351,7 +356,7 @@ export function ReviewListModal({
                   </Text>
                 </View>
               ))}
-              {(unverified || uncertain) && (
+              {((unverified && !tooManyDates) || uncertain) && (
                 <Pressable
                   disabled={busy || generating}
                   onPress={() => void onRefresh()}

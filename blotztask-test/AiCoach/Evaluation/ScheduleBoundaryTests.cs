@@ -75,6 +75,75 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         result.Status.Should().Be("partial", because: "a seven-day check cannot establish unlimited recurrence availability");
     }
 
+    [Theory]
+    [InlineData(8)]
+    [InlineData(12)]
+    public async Task Handle_ManyDailyRepeatingItems_StaysCheckable(int count)
+    {
+        // Arrange
+        await using var session = await CoachTestSession.CreateAsync(fixture);
+        // Each daily item is checked on its first 7 dates: 8 items are 56 time windows on only 7 dates.
+        var items = Enumerable.Range(0, count).Select(index => CoachTestSession.Item(6 + index) with
+        {
+            Date = CoachTestSession.Today.AddDays(1), Recurrence = new(RecurrenceFrequency.Daily, 1, null, null, null),
+        }).ToArray();
+        // Act
+        var result = await session.Checker.CheckAsync(session.UserId, items, false, default);
+        // Assert
+        result.Status.Should().Be("partial", because: "calendar reads grow with distinct dates, not time windows, "
+            + "and only an unverified or conflicting check blocks the save");
+    }
+
+    [Fact]
+    public async Task Handle_OverlappingDailyItems_ListsEachDraftPairOnce()
+    {
+        // Arrange
+        await using var session = await CoachTestSession.CreateAsync(fixture);
+        var items = Enumerable.Range(0, 8).Select(_ => CoachTestSession.Item(7) with
+        {
+            Date = CoachTestSession.Today.AddDays(1), Recurrence = new(RecurrenceFrequency.Daily, 1, null, null, null),
+        }).ToArray();
+        // Act
+        var result = await session.Checker.CheckAsync(session.UserId, items, false, default);
+        // Assert
+        result.Status.Should().Be("conflict", because: "items at the same time compete with each other");
+        result.Conflicts.Should().HaveCount(28 * 2, because: "each of the 28 pairs is listed once for both items, "
+            + "not again for every shared day, so the list stays within the coach's context");
+    }
+
+    [Theory]
+    [InlineData(50, "clear", null)]
+    [InlineData(51, "unverified", "too_many_dates")]
+    public async Task Handle_DistinctDateLimit_NamesTheReasonWhenExceeded(int dates, string status, string? reason)
+    {
+        // Arrange
+        await using var session = await CoachTestSession.CreateAsync(fixture);
+        var items = Enumerable.Range(1, dates)
+            .Select(offset => CoachTestSession.Item() with { Date = CoachTestSession.Today.AddDays(offset) }).ToArray();
+        // Act
+        var result = await session.Checker.CheckAsync(session.UserId, items, false, default);
+        // Assert
+        result.Status.Should().Be(status, because: "each distinct date costs a calendar read, so dates are the bounded resource");
+        result.Reason.Should().Be(reason, because: "the app must tell a list that is too big apart from a failed read");
+    }
+
+    [Fact]
+    public async Task Handle_SameDatesInTwoTimeZones_CountsEachZoneRead()
+    {
+        // Arrange
+        await using var session = await CoachTestSession.CreateAsync(fixture);
+        // Items keep their own zone after the user travels; each zone reads its dates separately.
+        var items = Enumerable.Range(1, 26).SelectMany(offset => new[]
+        {
+            CoachTestSession.Item() with { Date = CoachTestSession.Today.AddDays(offset) },
+            CoachTestSession.Item() with { Date = CoachTestSession.Today.AddDays(offset), TimeZoneId = "Australia/Sydney" },
+        }).ToArray();
+        // Act
+        var result = await session.Checker.CheckAsync(session.UserId, items, false, default);
+        // Assert
+        result.Reason.Should().Be("too_many_dates", because: "26 dates in two zones are 52 calendar reads, over the limit of 50");
+    }
+
     [Fact]
     public async Task Handle_NewConflictAfterReview_RejectsOldTokenThenAllowsReviewedSave()
     {
@@ -138,8 +207,9 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         // Act
         var attempt = () => handler.Handle(session.Confirmation(draft));
         // Assert
-        (await attempt.Should().ThrowAsync<DraftConflictException>(because: "unavailable calendar data cannot authorize a save"))
-            .Which.ErrorCode.Should().Be("ScheduleUnverified", because: "read failures must remain distinct from a clear schedule");
+        var rejected = await attempt.Should().ThrowAsync<DraftConflictException>(because: "unavailable calendar data cannot authorize a save");
+        rejected.Which.ErrorCode.Should().Be("ScheduleUnverified", because: "read failures must remain distinct from a clear schedule");
+        rejected.Which.Assessment!.Reason.Should().BeNull(because: "a failed read may pass on retry, so it keeps the try-again text");
         session.Conversation.Receipts.Should().BeEmpty(because: "an unverified confirmation must not be accepted");
     }
 
