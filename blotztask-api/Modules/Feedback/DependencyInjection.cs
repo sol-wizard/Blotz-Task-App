@@ -6,12 +6,20 @@ namespace BlotzTask.Modules.Feedback;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddFeedbackModule(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddFeedbackModule(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
-        services.AddOptions<LarkOptions>()
+        var larkOptions = services.AddOptions<LarkOptions>()
             .Bind(configuration.GetSection(LarkOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+            .ValidateDataAnnotations();
+
+        // Lark is only used to submit in-app feedback. Staging and prod still refuse to start without it,
+        // but a local dev without Lark keys can run the API: only POST /api/feedback fails, with the
+        // missing setting named in the error.
+        if (!environment.IsDevelopment())
+            larkOptions.ValidateOnStart();
 
         services.AddMemoryCache();
         services.AddHttpClient<ILarkTokenService, LarkTokenService>();
