@@ -47,6 +47,12 @@ working on navigation, UI, animation, data fetching or an SDK upgrade in `blotzt
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 - Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
 
+## Infrastructure (`infra/`)
+
+- The Bicep files in `infra/` are never deployed. They are only there to help people understand the Azure setup, and they can be out of date.
+- For the real state (App Service settings, app version policy, SKUs), check Azure itself or the live API.
+- Changing a Bicep file changes nothing in Azure: a new app setting is added by hand in staging and prod.
+
 ## Database Migrations
 
 - Never run `dotnet ef migrations add` or `dotnet ef database update` yourself.
