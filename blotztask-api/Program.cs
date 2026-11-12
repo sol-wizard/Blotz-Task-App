@@ -48,6 +48,20 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         });
     });
+    // Separate from "feedback" so recording attempts don't use up the 10 submissions.
+    options.AddPolicy("feedback-transcribe", context =>
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                     ?? context.Connection.RemoteIpAddress?.ToString()
+                     ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 30,
+            Window = TimeSpan.FromHours(24),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
@@ -64,7 +78,7 @@ builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
 builder.Services.AddReferralModule();
-builder.Services.AddFeedbackModule(builder.Configuration);
+builder.Services.AddFeedbackModule(builder.Configuration, builder.Environment);
 
 // External integrations
 builder.Services.AddAgentFrameworkServices();

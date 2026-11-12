@@ -28,6 +28,7 @@ table below to pick the right one and open it yourself.
 | `pbi` | Creating a PBI, explaining one before coding, implementing it (tests checked first, small pieces, proof at the end), or updating it — moving its card, ticking finished boxes, adding a short note |
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
 | `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |
+| `update-play-listing` | Refreshing the Google Play store listing after a production release is live: drafts both languages, checks Play's rules, opens a PR that publishes on merge |
 
 The `expo-*` skills (`expo-router`, `expo-native-ui`, `expo-animation`, `expo-data-fetching`,
 `expo-upgrade`) are vendored Expo framework reference, not Blotz-specific — consult them when

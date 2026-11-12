@@ -2,13 +2,13 @@
 
 "What PRs are waiting for me?" → a short list, **no diff reading** (it costs almost no tokens). The deep review starts only when the reviewer picks one ("review #572").
 
-1. **Who's asking:** `gh api user -q .login`. They're a tech lead if that login is in the list in `.claude/skills/pbi/review-levels.md`.
+1. **Who's asking:** `gh api user -q .login`. They're a tech lead or a tech-lead candidate if that login is in one of the two lists in `.claude/skills/pbi/review-levels.md`.
 
 2. **Open PRs:**
    ```
    gh pr list -R sol-wizard/Blotz-Task-App --state open --json number,title,author,labels,createdAt,isDraft,reviewDecision,reviewRequests
    ```
-   Keep only PRs that are not drafts, not authored by the person asking, and not by a bot (`…[bot]`, `app/…`). `L3`/`L4` PRs show **only to tech leads**; `L1`, `L2` and unlabelled PRs show to everyone.
+   Keep only PRs that are not drafts, not authored by the person asking, and not by a bot (`…[bot]`, `app/…`). `L4` PRs show **only to tech leads**, `L3` PRs to tech leads and candidates; `L1`, `L2` and unlabelled PRs show to everyone.
 
 3. **List them, oldest first**, one line each:
 
