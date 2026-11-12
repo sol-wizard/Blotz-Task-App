@@ -15,8 +15,6 @@ const PRIVACY_POLICY_URLS = {
   en: "https://www.blotztask.com/en/privacy/",
   zh: "https://www.blotztask.com/zh/privacy/",
 } as const;
-const FEEDBACK_URL =
-  "https://m3cetbcyp2d.usttp.larksuite.com/share/base/form/shrusf712jJdjDC4l6gJkXcc8Yf";
 const XIAOHONGSHU_URL =
   "https://www.xiaohongshu.com/user/profile/67bc12d6000000000e01f09a?xsec_token=ABHQISPlYoPNMi_q8P8u_etGBEND3LxYOU0pGDx_X8bT0%3D&xsec_source=pc_search";
 
@@ -43,7 +41,7 @@ export default function SettingsAboutScreen() {
   };
 
   const handleFeedback = () => {
-    Linking.openURL(FEEDBACK_URL);
+    router.push("/settings/feedback");
   };
 
   const handleXiaohongshu = () => {
@@ -82,7 +80,7 @@ export default function SettingsAboutScreen() {
               <MaterialCommunityIcons name="message-text-outline" size={22} color="#444964" />
               <Text className="text-lg font-baloo text-secondary ml-3">{t("about.feedback")}</Text>
             </View>
-            <MaterialCommunityIcons name="open-in-new" size={20} color="#444964" />
+            <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
           </Pressable>
 
           <Pressable

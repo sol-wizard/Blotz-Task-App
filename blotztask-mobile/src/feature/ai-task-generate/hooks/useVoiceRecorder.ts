@@ -8,15 +8,22 @@ import { useCallback, useEffect, useRef } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
-import { analytics } from "@/shared/services/analytics";
 import { usePeakLevelMeter } from "./usePeakLevelMeter";
 
 // Takes that never get louder than this are dropped before upload: Whisper invents text
 // ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
 const SPEECH_LEVEL_DBFS = -45;
 
+export type VoiceRecordingFailure = {
+  stage: "recording" | "send";
+  errorCode: string;
+  durationMs?: number;
+};
+
+// onFailure lets each caller report failures its own way (the AI sheet sends them to PostHog).
 export function useVoiceRecorder(
   submitAudioForTranscription: (uri: string, releasedAt: number) => Promise<void>,
+  onFailure?: (failure: VoiceRecordingFailure) => void,
 ) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
@@ -55,11 +62,7 @@ export function useVoiceRecorder(
   }, []);
 
   const trackRecordingFailure = (errorCode: string) => {
-    analytics.trackAiTaskGenerationFailed({
-      inputMode: "voice",
-      stage: "recording",
-      errorCode,
-    });
+    onFailure?.({ stage: "recording", errorCode });
   };
 
   const startListening = () => {
@@ -157,8 +160,7 @@ export function useVoiceRecorder(
       await submitAudioForTranscription(uri, releasedAt);
     } catch (error) {
       console.warn("[Mic] Error submitting audio for transcription.", error);
-      analytics.trackAiTaskGenerationFailed({
-        inputMode: "voice",
+      onFailure?.({
         stage: "send",
         errorCode: "AudioSubmitFailed",
         durationMs: Date.now() - releasedAt,

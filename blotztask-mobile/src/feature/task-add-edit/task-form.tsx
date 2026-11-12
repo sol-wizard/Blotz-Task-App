@@ -16,10 +16,7 @@ import { DeadlineSection } from "./components/deadline-section";
 import { getTaskFormDefaults } from "./util/get-task-form-defaults";
 import { getTaskNotification } from "@/shared/util/get-task-notification";
 import { RecurrenceSelect } from "./components/recurrence-select";
-import {
-  buildTaskTimePayload,
-  calculateAlertTime,
-} from "./util/time-convertion";
+import { buildTaskTimePayload, calculateAlertTime } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -39,8 +36,13 @@ export type TaskFormDirtyFields = Readonly<Partial<Record<keyof TaskFormField, b
 export type TaskFormProps = {
   onSubmit: (data: TaskUpsertDTO, dirtyFields: TaskFormDirtyFields) => void;
 } & (
-  | { mode: "create"; dto?: undefined; recurrenceEditMode?: undefined }
-  | { mode: "edit"; dto: TaskUpsertDTO; recurrenceEditMode?: "hidden" | "futureOnly" }
+  | { mode: "create"; dto?: undefined; recurrenceEditMode?: undefined; startDay?: string }
+  | {
+      mode: "edit";
+      dto: TaskUpsertDTO;
+      recurrenceEditMode?: "hidden" | "futureOnly";
+      startDay?: undefined;
+    }
 );
 
 type LoadedTaskFormProps = TaskFormProps & {
@@ -51,6 +53,7 @@ type LoadedTaskFormProps = TaskFormProps & {
 const LoadedTaskForm = ({
   mode,
   dto,
+  startDay,
   recurrenceEditMode,
   onSubmit,
   userPreferences,
@@ -62,6 +65,7 @@ const LoadedTaskForm = ({
   const { initialTab, defaultValues } = getTaskFormDefaults({
     dto,
     allowNotification: userPreferences?.upcomingNotification,
+    startDay,
   });
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
@@ -123,15 +127,14 @@ const LoadedTaskForm = ({
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
       recurrence: shouldShowRecurrence ? data.recurrence : undefined,
       recurrenceEndMode: shouldShowRecurrence ? data.recurrenceEndMode : undefined,
-      recurrenceEndDate:
-        shouldShowRecurrence
-          ? data.recurrence !== "never" &&
-            data.recurrence !== "custom" &&
-            data.recurrenceEndMode === "onDate" &&
-            data.recurrenceEndDate
-            ? format(data.recurrenceEndDate, "yyyy-MM-dd")
-            : null
-          : undefined,
+      recurrenceEndDate: shouldShowRecurrence
+        ? data.recurrence !== "never" &&
+          data.recurrence !== "custom" &&
+          data.recurrenceEndMode === "onDate" &&
+          data.recurrenceEndDate
+          ? format(data.recurrenceEndDate, "yyyy-MM-dd")
+          : null
+        : undefined,
     };
 
     onSubmit(submitTask, formState.dirtyFields);
@@ -164,106 +167,104 @@ const LoadedTaskForm = ({
 
   return (
     <FormProvider {...form}>
-    <View className="flex-1 bg-white">
-      <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Title */}
-        <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
-          <FormTextInput
-            name="title"
-            placeholder={t("form.newTask")}
-            control={control}
-            className="font-balooBold text-4xl leading-normal"
-            inputProps={{
-              multiline: false,
-              blurOnSubmit: true,
-              returnKeyType: "done",
-              placeholderTextColor: theme.colors.disabled,
-            }}
-          />
-          {formState.errors.title && (
-            <Text className="text-red-500 text-sm ml-1 font-baloo">
-              {t(formState.errors.title?.message || "")}
-            </Text>
-          )}
-        </Animated.View>
-
-        <Animated.View
-          className="py-3 bg-background rounded-2xl px-4"
-          layout={MotionAnimations.layout}
-        >
-          <FormTextInput
-            name="description"
-            placeholder={t("form.addNote")}
-            control={control}
-            className="font-baloo text-lg text-primary"
-            inputProps={{
-              placeholderTextColor: theme.colors.primary,
-            }}
-          />
-        </Animated.View>
-
-        <FormDivider />
-        <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-        {isActiveTab === SegmentButtonValue.Event && formState.errors.endTime && (
-          <Text className="text-red-500 text-sm mb-4 font-baloo">
-            {t(formState.errors.endTime.message || "")}
-          </Text>
-        )}
-        {isActiveTab === SegmentButtonValue.Reminder && (
-          <ReminderTab animateOnEnter={hasChangedTab} />
-        )}
-        {isActiveTab === SegmentButtonValue.Event && (
-          <EventTab animateOnEnter={hasChangedTab} />
-        )}
-        <FormDivider />
-        <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
-        <FormDivider />
-        {shouldShowRecurrence && (
-          <Animated.View layout={MotionAnimations.layout}>
-            <RecurrenceSelect
+      <View className="flex-1 bg-white">
+        <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Title */}
+          <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
+            <FormTextInput
+              name="title"
+              placeholder={t("form.newTask")}
               control={control}
-              onRecurrenceChange={() => {
-                setHasChangedRecurrence(true);
+              className="font-balooBold text-4xl leading-normal"
+              inputProps={{
+                multiline: false,
+                blurOnSubmit: true,
+                returnKeyType: "done",
+                placeholderTextColor: theme.colors.disabled,
               }}
             />
-            <RecurrenceEndSection control={control} />
+            {formState.errors.title && (
+              <Text className="text-red-500 text-sm ml-1 font-baloo">
+                {t(formState.errors.title?.message || "")}
+              </Text>
+            )}
           </Animated.View>
-        )}
 
-        {!isRecurringTaskForm && (
           <Animated.View
-            entering={hasChangedRecurrence ? MotionAnimations.upEntering : undefined}
-            exiting={MotionAnimations.outExiting}
+            className="py-3 bg-background rounded-2xl px-4"
             layout={MotionAnimations.layout}
           >
-            {shouldShowRecurrence && <FormDivider />}
-            <AlertSelect control={control} />
+            <FormTextInput
+              name="description"
+              placeholder={t("form.addNote")}
+              control={control}
+              className="font-baloo text-lg text-primary"
+              inputProps={{
+                placeholderTextColor: theme.colors.primary,
+              }}
+            />
           </Animated.View>
-        )}
 
-        <FormDivider animateLayout={shouldShowRecurrence} />
+          <FormDivider />
+          <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
+          {isActiveTab === SegmentButtonValue.Event && formState.errors.endTime && (
+            <Text className="text-red-500 text-sm mb-4 font-baloo">
+              {t(formState.errors.endTime.message || "")}
+            </Text>
+          )}
+          {isActiveTab === SegmentButtonValue.Reminder && (
+            <ReminderTab animateOnEnter={hasChangedTab} />
+          )}
+          {isActiveTab === SegmentButtonValue.Event && <EventTab animateOnEnter={hasChangedTab} />}
+          <FormDivider />
+          <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
+          <FormDivider />
+          {shouldShowRecurrence && (
+            <Animated.View layout={MotionAnimations.layout}>
+              <RecurrenceSelect
+                control={control}
+                onRecurrenceChange={() => {
+                  setHasChangedRecurrence(true);
+                }}
+              />
+              <RecurrenceEndSection control={control} />
+            </Animated.View>
+          )}
 
-        {/* Label Select */}
-        <Animated.View className="mb-8" layout={MotionAnimations.layout}>
-          <LabelSelect control={control} labels={labels} />
-        </Animated.View>
-      </ScrollView>
+          {!isRecurringTaskForm && (
+            <Animated.View
+              entering={hasChangedRecurrence ? MotionAnimations.upEntering : undefined}
+              exiting={MotionAnimations.outExiting}
+              layout={MotionAnimations.layout}
+            >
+              {shouldShowRecurrence && <FormDivider />}
+              <AlertSelect control={control} />
+            </Animated.View>
+          )}
 
-      {/* Submit */}
-      <View className="px-8 py-6">
-        <Pressable
-          onPress={handleSubmit(handleFormSubmit)}
-          disabled={isSubmitting}
-          className={`w-full py-4 rounded-xl items-center justify-center ${
-            isSubmitting ? "bg-gray-300" : "bg-lime-300"
-          }`}
-        >
-          <Text className="font-balooBold text-xl text-black">
-            {mode === "create" ? t("form.createTask") : t("form.updateTask")}
-          </Text>
-        </Pressable>
+          <FormDivider animateLayout={shouldShowRecurrence} />
+
+          {/* Label Select */}
+          <Animated.View className="mb-8" layout={MotionAnimations.layout}>
+            <LabelSelect control={control} labels={labels} />
+          </Animated.View>
+        </ScrollView>
+
+        {/* Submit */}
+        <View className="px-8 py-6">
+          <Pressable
+            onPress={handleSubmit(handleFormSubmit)}
+            disabled={isSubmitting}
+            className={`w-full py-4 rounded-xl items-center justify-center ${
+              isSubmitting ? "bg-gray-300" : "bg-lime-300"
+            }`}
+          >
+            <Text className="font-balooBold text-xl text-black">
+              {mode === "create" ? t("form.createTask") : t("form.updateTask")}
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
     </FormProvider>
   );
 };

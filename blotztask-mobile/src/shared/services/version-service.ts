@@ -1,6 +1,15 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import * as Application from "expo-application";
 import { Platform } from "react-native";
-import { apiClient } from "./api/client";
+import { traced } from "./api/client";
+import { API_CONFIG } from "./api/config";
+
+// `/app-version` is anonymous. The shared `apiClient` waits for a valid token before every
+// request, which can mean an Auth0 refresh round trip; this client skips that wait.
+const anonymousClient = axios.create(API_CONFIG);
+
+const SAVED_POLICY_KEY = "app_version_policy";
 
 export type UpdateCheckResult =
   | { kind: "upToDate" }
@@ -20,12 +29,42 @@ export type AppVersionResponse = {
   android: PlatformVersionPolicy;
 };
 
-export const checkForUpdate = async (): Promise<UpdateCheckResult> => {
+const isVersionCheckEnabled = () => {
   const env = process.env.EXPO_PUBLIC_APP_ENV;
-  if (env !== "production" && env !== "preview") return { kind: "upToDate" };
+  return env === "production" || env === "preview";
+};
+
+/**
+ * Fetches this platform's version policy and saves it on the phone, so the next launch can
+ * decide at the splash without waiting for the network. `null` when the check is off.
+ */
+export const fetchAndSaveVersionPolicy = async (): Promise<PlatformVersionPolicy | null> => {
+  if (!isVersionCheckEnabled()) return null;
 
   const versionInfo = await fetchAppVersion();
   const platform = Platform.OS === "ios" ? versionInfo.ios : versionInfo.android;
+  // Best effort: a failed save only means the next launch waits for this check again.
+  await AsyncStorage.setItem(SAVED_POLICY_KEY, JSON.stringify(platform)).catch(() => undefined);
+  return platform;
+};
+
+/** The policy saved by the last successful check, or `null` if there is none. */
+export const loadSavedVersionPolicy = async (): Promise<PlatformVersionPolicy | null> => {
+  try {
+    const saved = await AsyncStorage.getItem(SAVED_POLICY_KEY);
+    return saved ? (JSON.parse(saved) as PlatformVersionPolicy) : null;
+  } catch {
+    return null;
+  }
+};
+
+// Compared with the installed version each time, so a saved "forced" policy stops
+// applying as soon as the user has updated.
+export const evaluateVersionPolicy = (
+  platform: PlatformVersionPolicy | null,
+): UpdateCheckResult => {
+  if (!platform) return { kind: "upToDate" };
+
   const currentVersion = Application.nativeApplicationVersion;
 
   if (!platform.minimumSupportedVersion) {
@@ -50,7 +89,11 @@ export const checkForUpdate = async (): Promise<UpdateCheckResult> => {
 
 const fetchAppVersion = async (): Promise<AppVersionResponse> => {
   try {
-    return await apiClient.get<AppVersionResponse>("/app-version");
+    return await traced(
+      "GET",
+      "/app-version",
+      async () => (await anonymousClient.get<AppVersionResponse>("/app-version")).data,
+    );
   } catch (error) {
     console.error("Failed to fetch app version policy", error);
     throw error;

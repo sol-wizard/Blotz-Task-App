@@ -1,0 +1,87 @@
+name: Prod - Publish Play Store listing
+
+# Pushes the Google Play store listing - title, short and full description,
+# video link, images - from blotztask-mobile/store/android/metadata to Play when
+# a change to it is merged to main. The copy is drafted by the
+# update-play-listing skill and approved in the PR; see docs/play-store-listing.md.
+#
+# Text and images only. It never uploads an app bundle or "What's new" text,
+# which stay with Prod - Submit app to the stores.
+#
+# Google reviews listing changes, so the live page updates hours to days after
+# this goes green, not straight away.
+
+on:
+  # Only the listing itself. A change to the check script alone is not worth a
+  # Play edit and another Google review.
+  push:
+    branches: [main]
+    paths:
+      - "blotztask-mobile/store/android/metadata/**"
+  # PRs only get the check, so a listing that breaks Play's rules is caught
+  # before merge rather than by Google. A change to this file or the script is
+  # checked too, so it isn't first run by a live publish.
+  pull_request:
+    paths:
+      - "blotztask-mobile/store/android/**"
+      - ".github/workflows/publish-play-listing.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: blotztask-mobile/store/android
+
+jobs:
+  check:
+    name: Check the listing against Play's rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check length limits and policy words
+        run: node check-listing.mjs
+
+  publish:
+    name: Publish to Google Play
+    needs: check
+    # The "Run workflow" dropdown accepts any branch. Only main is what was
+    # approved, so anything else stops after the check.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: play-listing
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install fastlane
+        run: gem install fastlane -v 2.241.1 --no-document
+
+      # The service account behind this key can only manage the store listing,
+      # not releases, so a leaked key can't ship a build.
+      #
+      # sync_image_upload skips images Play already has, so an untouched
+      # screenshot is not uploaded again on every text change.
+      #
+      # When Play Console holds other changes not yet sent for review, Google
+      # refuses to send this one on its own. fastlane would then quietly commit
+      # it unsent and go green, so the rescue is turned off to fail loudly instead.
+      - name: Upload text and images
+        env:
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.PLAY_LISTING_SERVICE_ACCOUNT_JSON }}
+        run: |
+          fastlane supply \
+            --package_name com.blotz.blotztask \
+            --metadata_path metadata \
+            --skip_upload_aab true \
+            --skip_upload_apk true \
+            --skip_upload_changelogs true \
+            --sync_image_upload true \
+            --rescue_changes_not_sent_for_review false

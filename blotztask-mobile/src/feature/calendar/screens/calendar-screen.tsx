@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
@@ -13,7 +13,7 @@ import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
 import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 import { useTranslation } from "react-i18next";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
@@ -36,6 +36,11 @@ export default function CalendarScreen() {
       analytics.trackScreenViewed(SCREEN_NAMES.HOME_CALENDAR);
     }, []),
   );
+
+  // The tab bar's "+" reads this, so a new task starts on the day being viewed.
+  useEffect(() => {
+    router.setParams({ date: format(selectedDay, "yyyy-MM-dd") });
+  }, [selectedDay]);
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
@@ -75,6 +80,7 @@ export default function CalendarScreen() {
             exiting={MotionAnimations.outExiting}
           >
             <WeekCalendar
+              testID="week-calendar"
               theme={calendarTheme}
               allowShadow={false}
               calendarHeight={82}

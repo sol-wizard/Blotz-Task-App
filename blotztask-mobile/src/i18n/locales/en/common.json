@@ -25,8 +25,10 @@
   },
   "bottomNav": {
     "calendar": "Calendar",
-    "notes": "notes",
-    "settings": "Setting"
+    "notes": "Notes",
+    "aiAssistant": "AI assistant",
+    "newTask": "New task",
+    "settings": "Settings"
   },
   "permissions": {
     "microphone": {
@@ -55,6 +57,9 @@
     "server": "Something went wrong on our end. Please try again later.",
     "validation": "That didn't work. Please check your input.",
     "default": "Something went wrong. Please try again.",
+    "feedbackRateLimited": "You've sent a lot of feedback today. Please try again tomorrow.",
+    "feedbackNoSpeech": "We couldn't hear any speech. Please try again, or type instead.",
+    "feedbackTranscribeRateLimited": "You've used voice input a lot today. Please type instead.",
     "invite": {
       "selfCode": "You cannot use your own invite code.",
       "onboardingOnly": "Invite codes can only be redeemed during onboarding.",

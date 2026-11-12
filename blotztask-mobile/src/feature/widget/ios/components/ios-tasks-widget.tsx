@@ -24,6 +24,12 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
   const isSmallWidget = environment.widgetFamily === "systemSmall";
   const visibleTasks = props.tasks.slice(0, 3);
   const starImage = isSmallWidget ? undefined : props.starImage;
+  // A Baloo2 font name with Chinese text makes iOS measure it too narrow and truncate it
+  // ("Lecture2复习" → "Lecture2..."), so text with any non-ASCII character uses the system
+  // font. "light" matches how the Baloo2 lines already look on the widget.
+  // Defined inside the widget function: code outside it isn't available to the widget.
+  const textFont = (text: string, size: number, family: string) =>
+    /[\u0080-\uffff]/.test(text) ? font({ size, weight: "light" }) : font({ family, size });
 
   return (
     <ZStack
@@ -104,7 +110,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
                   <VStack alignment="leading" spacing={0}>
                     <Text
                       modifiers={[
-                        font({ family: "Baloo2-Regular", size: 14 }),
+                        textFont(task.title, 14, "Baloo2-Regular"),
                         foregroundStyle("#202124"),
                         lineLimit(1),
                       ]}
@@ -136,7 +142,7 @@ const TodayTasksWidgetView = (props: TasksWidgetSnapshot, environment: WidgetEnv
           >
             <Text
               modifiers={[
-                font({ size: 14, family: "Baloo2-SemiBold" }),
+                textFont(props.message, 14, "Baloo2-SemiBold"),
                 foregroundStyle("#202124"),
                 lineLimit(2),
               ]}

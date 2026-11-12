@@ -6,7 +6,7 @@ name: PR Discord Notify
 # PR opened / reopened / marked ready -> posts one message (webhook), pinging who must
 # approve:  L1 -> @Blotz-Developer (anyone)
 #           L2 / no label -> @Blotz-TechLead-candidate
-#           L3 -> @Blotz-TechLead
+#           L3 -> @Blotz-TechLead + candidate (1 lead or candidate)
 #           L4 -> @Blotz-TechLead + candidate (1 tech lead + 1 lead or candidate)
 #
 # Everything after that updates that same message, so the channel stays at
@@ -175,7 +175,7 @@ jobs:
           LEVEL=$(tr ',' '\n' <<< "$LABELS" | grep -E '^L[1-4]$' | head -1 || true)
           case "$LEVEL" in
             L1) ROLE=$DEVELOPER_ROLE; DOT="🟢" ;;
-            L3) ROLE=$TECHLEAD_ROLE; DOT="🟠" ;;
+            L3) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE"; DOT="🟠" ;;
             L4) ROLE="$TECHLEAD_ROLE $CANDIDATE_ROLE"; DOT="🔴" ;;
             L2) ROLE=$CANDIDATE_ROLE; DOT="🟡" ;;
             *)  ROLE=$CANDIDATE_ROLE; DOT="⚪" ;;
