@@ -78,7 +78,7 @@ builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddAppVersionModule();
 builder.Services.AddReferralModule();
-builder.Services.AddFeedbackModule(builder.Configuration);
+builder.Services.AddFeedbackModule(builder.Configuration, builder.Environment);
 
 // External integrations
 builder.Services.AddAgentFrameworkServices();
