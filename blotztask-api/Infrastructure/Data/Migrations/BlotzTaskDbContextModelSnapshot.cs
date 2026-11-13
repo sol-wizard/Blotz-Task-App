@@ -258,6 +258,40 @@ namespace BlotzTask.Migrations
                     b.ToTable("UserProgress", (string)null);
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.BreakDown.Domain.TaskBreakdownJob", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("TaskItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskItemId")
+                        .IsUnique();
+
+                    b.ToTable("TaskBreakdownJobs", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Property<int>("LabelId")
@@ -1117,6 +1151,15 @@ namespace BlotzTask.Migrations
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
                         .WithOne()
                         .HasForeignKey("BlotzTask.Modules.Badges.Domain.UserProgress", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.BreakDown.Domain.TaskBreakdownJob", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
