@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data.Configurations;
 using BlotzTask.Infrastructure.Data.SeedData;
 using BlotzTask.Modules.Badges.Domain;
+using BlotzTask.Modules.BreakDown.Domain;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
@@ -46,6 +47,7 @@ public class BlotzTaskDbContext : DbContext
 
     public DbSet<ReferralCode> ReferralCodes { get; set; }
     public DbSet<Referral> Referrals { get; set; }
+    public DbSet<TaskBreakdownJob> TaskBreakdownJobs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

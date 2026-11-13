@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.BreakDown.Domain;
+using BlotzTask.Modules.BreakDown.Enums;
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Modules.Tasks.Enums;
@@ -60,6 +62,8 @@ public class GetTasksByDateQueryHandler(
         logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}",
             selectedDayStart, selectedDayEnd);
 
+        var breakdownLostBefore = TaskBreakdownJob.LostBefore(DateTimeOffset.UtcNow);
+
         var queryStopwatch = Stopwatch.StartNew();
 
         // Step 1: Fetch stored TaskItems for this date (same logic as before)
@@ -103,6 +107,9 @@ public class GetTasksByDateQueryHandler(
                 AlertTime = task.AlertTime,
                 IsDeadline = task.Deadline != null,
                 DueAt = task.Deadline == null ? null : task.Deadline.DueAt,
+                IsBreakingDown = db.TaskBreakdownJobs.Any(j => j.TaskItemId == task.Id
+                                                               && j.Status == BreakdownJobStatus.Running
+                                                               && j.StartedAtUtc >= breakdownLostBefore),
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -252,4 +259,7 @@ public class TaskByDateItemDto : TaskOccurrenceDtoBase
     public DateTimeOffset? AlertTime { get; set; }
     public bool IsDeadline { get; set; }
     public DateTimeOffset? DueAt { get; set; }
+
+    // True while a background breakdown runs for this task, so the card can show 拆解中 after leaving and coming back.
+    public bool IsBreakingDown { get; set; }
 }
