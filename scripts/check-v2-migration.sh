@@ -21,6 +21,7 @@ REVIEWED=(
   '20261107110142_ReplaceAiCoachSegmentIndexes|ab1f43035e20e900ed055d717f609a2eb0da609c|b.HasIndex("UserId", "EndedAt")'
   '20261107123018_CreateAiCoachToolSetTable|8e4c862c74875acec930cc06fcaf648d389c1f9b|b.ToTable("AiCoachToolSet"'
   '20261107130706_CreateAiCoachTurnSummaryTable|4075848285747fb7f4b54354ec412e025360ae07|b.ToTable("AiCoachTurnSummary"'
+  '20261107142110_AddUserIdToAiCoachBudgetCharge|68d510b951ca597dace78288a36837cfecfaa544|b.HasIndex("UserId", "BudgetDate")'
 )
 REVIEWED_IDS=()
 for ENTRY in "${REVIEWED[@]}"; do REVIEWED_IDS+=("${ENTRY%%|*}"); done
