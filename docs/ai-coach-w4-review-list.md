@@ -71,8 +71,8 @@ Use the existing reject endpoint to discard the entire pending list.
 
 Use the existing confirm endpoint with `action: "add_all"`, a client-generated `commandId`, both
 expected versions and `editedDraft.items`. Include every item and omit `selectedItemIds`.
-Remove unwanted items through editing before confirmation. Review lists do not expose `start_now`.
-Legacy task cards retain `start_now` / `add_to_task_list` and their existing selection behavior.
+Remove unwanted items through editing before confirmation.
+Legacy task cards retain `add_to_task_list` and their existing selection behavior. `start_now` was removed: neither card type can shift a task to the current time or open focus.
 
 The batch saves ordinary tasks, recurring tasks, notes and a durable confirmation record in one
 database transaction. Recurring creation joins an existing transaction or owns one when invoked

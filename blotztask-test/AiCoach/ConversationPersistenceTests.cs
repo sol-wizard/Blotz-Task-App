@@ -105,7 +105,7 @@ public sealed class ConversationPersistenceTests
         conversation.Receipts.Add(Guid.NewGuid(), new(pending.Id, "discard-hash", null));
         conversation.Receipts.Add(Guid.NewGuid(), new(saved.Id, "confirm-hash", new ConfirmDraftReceiptResult(
             Guid.NewGuid(), "succeeded", null,
-            [new() { Kind = "recurring_task", Id = "41", SeriesId = "7" }], null)));
+            [new() { Kind = "recurring_task", Id = "41", SeriesId = "7" }])));
         return conversation;
     }
 }

@@ -34,7 +34,7 @@ export interface ChatItem {
   streaming?: boolean;
 }
 export type ChatStatus = "idle" | "connecting" | "ready" | "sending" | "startFailed";
-export type ConfirmAction = "start_now" | "add_to_task_list";
+export type ConfirmAction = "add_to_task_list";
 export interface ConfirmOutcome {
   result: ConfirmDraftResultDto | null;
   errorCode: string | null;

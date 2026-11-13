@@ -18,9 +18,9 @@
         "title": "Break a big task down",
         "prompt": "Help me break a big task into small steps"
       },
-      "focusNow": {
-        "title": "Start focusing now",
-        "prompt": "I want to start focusing on something now"
+      "brainDump": {
+        "title": "Get it all out of my head",
+        "prompt": "I have a lot on my mind. Let me get it all out, then help me turn it into tasks"
       },
       "talk": {
         "title": "Just talk it through",
@@ -104,12 +104,10 @@
     }
   },
   "draft": {
-    "startNow": "Start now",
     "addToTaskList": "Add to task list",
     "reject": "Not this one",
     "edit": "Edit",
     "saveFailed": "Saving the task failed — the card is still here, you can retry.",
-    "focusPreview": "Focus for {{minutes}} min",
     "taskCount": "{{count}} tasks",
     "removeTask": "Remove this task",
     "alreadySaved": "Saved",

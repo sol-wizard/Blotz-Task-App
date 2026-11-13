@@ -7,11 +7,10 @@ import { ArtifactEnvelopeDto, EditedDraftDto, EditedDraftItemDto, TaskDraftItemD
 import { ConfirmAction } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 import { CoachChip } from "./coach-chip";
-import { formatDraftWhen, formatRecurrence, scheduleUnverifiedText } from "../utils/draft-format";
+import { formatDraftWhen, formatRecurrence, isPastStart, scheduleUnverifiedText } from "../utils/draft-format";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { theme } from "@/shared/constants/theme";
-import { fromZonedTime } from "date-fns-tz";
 
 /** Each card has its own lifecycle. Editor changes are saved before the next chat turn. */
 export function TaskDraftCard({
@@ -45,7 +44,7 @@ export function TaskDraftCard({
     return () => clearInterval(timer);
   }, [editable]);
   const disabled = busy || !editable || !artifact.allowedActions.includes("edit_draft");
-  const can = (action: "start_now" | "add_to_task_list" | "reject_draft") =>
+  const can = (action: "add_to_task_list" | "reject_draft") =>
     artifact.allowedActions.includes(action);
   const saved = (id: string) =>
     artifact.payload.items.find((item) => item.itemId === id)?.persistedTaskId != null;
@@ -58,14 +57,10 @@ export function TaskDraftCard({
         (!item.recurrence.endDate || item.recurrence.endDate >= item.date))),
   );
   const editingItem = items.find((item) => item.itemId === editingId);
-  const isPast = (item: TaskDraftItemDto) => !!item.date && !!item.startTime &&
-    fromZonedTime(`${item.date}T${item.startTime}:00`, item.timeZoneId).getTime() < now;
+  const isPast = (item: TaskDraftItemDto) => isPastStart(item, now);
   const hasPastTime = selected.some(isPast);
-  const confirmAction = (action: ConfirmAction) => {
-    const selectedItemIds = action === "start_now" ? [items[0].itemId]
-      : selected.map((item) => item.itemId);
-    onConfirm(action, { items }, selectedItemIds);
-  };
+  const confirmAction = (action: ConfirmAction) =>
+    onConfirm(action, { items }, selected.map((item) => item.itemId));
 
   const saveEdit = async (next: EditedDraftItemDto[]) => {
     const error = await onEdit({ items: next });
@@ -108,7 +103,6 @@ export function TaskDraftCard({
   }
   if (artifact.saveError) notices.push({ tone: "warning", text: t("draft.saveFailed") });
 
-  const showStart = can("start_now");
   const addLabel = items.length > 1
     ? t("draft.addSelectedToTaskList", { count: selected.length })
     : t("draft.addToTaskList");
@@ -190,10 +184,6 @@ export function TaskDraftCard({
                 {day && <CoachChip label={day} icon="calendar-outline" />}
                 {!item.date && <CoachChip label={t("draft.datePending")} tone="info" icon="calendar-outline" />}
                 {item.recurrence && <CoachChip label={formatRecurrence(item.recurrence, t)} tone="info" icon="repeat" />}
-                {items.length === 1 && artifact.payload.focusMinutes != null && editable && (
-                  <CoachChip label={t("draft.focusPreview", { minutes: artifact.payload.focusMinutes })} tone="success"
-                    icon="flame-outline" />
-                )}
                 {editable && !isSaved && isSelected && isPast(item) && (
                   <CoachChip label={t("draft.timePassedShort")} tone="warning" icon="alert-circle-outline" />
                 )}
@@ -236,38 +226,22 @@ export function TaskDraftCard({
         editable && (
           <View className={`mt-2 gap-1 ${disabled ? "opacity-50" : ""}`}>
             <View className="flex-row items-center gap-2">
-              {!showStart && can("reject_draft") && (
+              {can("reject_draft") && (
                 <Pressable className="px-3 py-3" disabled={disabled} onPress={onReject}>
                   <Text className="font-inter font-medium text-sm text-[#6B7280]">{rejectLabel}</Text>
                 </Pressable>
               )}
               {can("add_to_task_list") && (
                 <Pressable
-                  className={`flex-1 rounded-[14px] h-11 items-center justify-center ${showStart ? "bg-[#F1F9E1]" : "bg-highlight"} ${
+                  className={`flex-1 rounded-[14px] h-11 items-center justify-center bg-highlight ${
                     !scheduled || hasPastTime ? "opacity-40" : ""}`}
                   disabled={disabled || !scheduled || hasPastTime}
                   onPress={() => confirmAction("add_to_task_list")}
                 >
-                  <Text className={`font-balooBold text-base ${showStart ? "text-[#4D7300]" : "text-[#2F3347]"}`}>{addLabel}</Text>
-                </Pressable>
-              )}
-              {showStart && (
-                <Pressable
-                  className={`flex-1 bg-highlight rounded-[14px] h-11 flex-row items-center justify-center gap-1.5 ${
-                    !scheduled ? "opacity-40" : ""}`}
-                  disabled={disabled || !scheduled}
-                  onPress={() => confirmAction("start_now")}
-                >
-                  <Ionicons name="play" size={14} color="#2F3347" />
-                  <Text className="font-balooBold text-[#2F3347] text-base">{t("draft.startNow")}</Text>
+                  <Text className="font-balooBold text-base text-[#2F3347]">{addLabel}</Text>
                 </Pressable>
               )}
             </View>
-            {showStart && can("reject_draft") && (
-              <Pressable className="items-center py-1.5" disabled={disabled} onPress={onReject}>
-                <Text className="font-inter font-medium text-sm text-[#6B7280]">{rejectLabel}</Text>
-              </Pressable>
-            )}
           </View>
         )
       )}

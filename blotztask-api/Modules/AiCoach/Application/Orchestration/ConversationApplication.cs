@@ -78,8 +78,9 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                     logger.LogWarning(contextError, "AiCoach user context capture failed for {ConversationId}", conversationId);
                 }
             }
+            var memoryEnabled = userContextQuery is null || await userContextQuery.IsMemoryEnabledAsync(userId, ct);
             var memoryTools = userContextQuery is not null && rememberMemory is not null && forgetMemory is not null
-                              && await userContextQuery.IsMemoryEnabledAsync(userId, ct)
+                              && memoryEnabled
                 ? new MemoryTools(rememberMemory, forgetMemory, userId, messageId, content, conversation.TimeZoneId)
                 : null;
             baseVersion = conversation.Version;
@@ -90,9 +91,10 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(conversation.TimeZoneId)),
                 conversation.Summary, conversation.SummarizedMessageCount,
                 (startDate, endDate, token) => taskContextReader.ReadAsync(userId, effectiveTimeZoneId, startDate, endDate, token),
-                (items, token) => scheduleChecker.CheckAsync(userId, items, false, token),
+                (items, token) => scheduleChecker.CheckAsync(userId, items, token),
                 trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
-                await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct),
+                // The previous topic's summary is remembered context, so the memory switch hides it too.
+                memoryEnabled ? await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct) : null,
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
                 conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
                 conversation.UserContext, memoryTools, userId);

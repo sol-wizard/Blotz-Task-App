@@ -3,6 +3,8 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 using BlotzTask.Modules.AiCoach.Ai.Runtime;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
+using BlotzTask.Modules.AiCoach.Application.Queries;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.Users.Domain;
@@ -77,6 +79,57 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         // Assert
         harness.Gateway.Calls.Should().Be(0,
             because: "messages sent while memory was off are never learned, even after it is switched back on");
+    }
+
+    [Fact]
+    public async Task Handle_MemorySwitchedOff_ClosesTopicWithEmptySummaryWithoutAModelCall()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        harness.Db.UserPreferences.Add(new UserPreference { UserId = harness.UserId, AiMemoryEnabled = false });
+        await harness.Db.SaveChangesAsync();
+        await harness.ChatAsync("My test codeword is BANANA-7", "Got it.");
+        harness.Open.End(harness.Clock.Now);
+        await harness.Store.SaveAsync(harness.Open, default);
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(3);
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+        var preference = await harness.Db.UserPreferences.SingleAsync(p => p.UserId == harness.UserId);
+        preference.AiMemoryEnabled = true;
+        await harness.Db.SaveChangesAsync();
+        await harness.Processor.ProcessBatchAsync(default);
+        var previous = await harness.Store.FindPreviousSummaryAsync(harness.UserId, harness.Clock.Now, default);
+
+        // Assert
+        harness.Gateway.Calls.Should().Be(0,
+            because: "a topic that ends while memory is off is not summarised, even after memory is switched back on");
+        previous.Should().BeEmpty(because: "nothing said while memory was off is carried into a later topic");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Handle_NewTopicSend_CarriesPreviousSummaryOnlyWhileMemoryIsOn(bool memoryEnabled)
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("My test codeword is BANANA-7", "Got it.");
+        harness.Open.End(harness.Clock.Now);
+        await harness.Store.SaveAsync(harness.Open, default);
+        await harness.Store.SaveClosingSummaryAsync(harness.Open, "The user's test codeword is BANANA-7.", default);
+        harness.Db.UserPreferences.Add(new UserPreference { UserId = harness.UserId, AiMemoryEnabled = memoryEnabled });
+        await harness.Db.SaveChangesAsync();
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(3);
+        var next = await harness.Segments.OpenAsync(harness.UserId, "Australia/Perth", default);
+
+        // Act
+        await harness.Application.SendAsync(harness.UserId, next.Id, Guid.NewGuid(), "What's my test codeword?", null, default);
+
+        // Assert
+        harness.Runtime.LastRequest!.PreviousClosingSummary.Should().Be(
+            memoryEnabled ? "The user's test codeword is BANANA-7." : null,
+            because: "the previous topic's summary is remembered context, so the memory switch decides whether the coach sees it");
     }
 
     [Fact]
@@ -214,6 +267,18 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         }
     }
 
+    private sealed class CapturingRuntime : IModelTurnRuntime
+    {
+        public ModelTurnRequest? LastRequest { get; private set; }
+
+        public Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
+        {
+            LastRequest = request;
+            return Task.FromResult(new ModelTurnRunResult("Ok", null, [new GatewayAssistantMessage("Ok", [])],
+                request.Drafts, null, 0, 0, 0, 0, 0));
+        }
+    }
+
     private sealed class Harness : IAsyncDisposable
     {
         private readonly ServiceProvider _services;
@@ -225,6 +290,8 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
         public SegmentDigestProcessor Processor { get; }
         public RememberUserMemoryCommandHandler Remember { get; }
         public TestCoachBudget Budget { get; }
+        public CapturingRuntime Runtime { get; } = new();
+        public ConversationApplication Application { get; }
         public Conversation Open { get; private set; } = null!;
         public Guid UserId => Open.UserId;
 
@@ -239,8 +306,13 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
             Budget = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, options);
             var generator = new SegmentDigestGenerator(Budget.Wrap(Gateway), new AiCoachUsageTracker(), options,
                 NullLogger<SegmentDigestGenerator>.Instance);
-            Processor = new(Db, Store, generator, Remember, new GetUserContextQueryHandler(Db, Clock), Clock, options,
+            var userContext = new GetUserContextQueryHandler(Db, Clock);
+            Processor = new(Db, Store, generator, Remember, userContext, Clock, options,
                 TestDbContextFactory.CreateLogger<SegmentDigestProcessor>());
+            var tasks = new GetTasksByDateQueryHandler(Db, new(), NullLogger<GetTasksByDateQueryHandler>.Instance);
+            var checker = new DraftScheduleChecker(tasks, new(), Clock, NullLogger<DraftScheduleChecker>.Instance);
+            Application = new(Store, Runtime, new AiCoachUsageTracker(), new TaskContextReader(tasks, options, Clock), checker,
+                Clock, NullLogger<ConversationApplication>.Instance, Segments, userContextQuery: userContext);
         }
 
         public static async Task<Harness> CreateAsync(DatabaseFixture fixture, bool allowanceLeft = true)

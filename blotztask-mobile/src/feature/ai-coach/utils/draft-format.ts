@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { fromZonedTime } from "date-fns-tz";
 import { DraftRecurrenceDto, DraftScheduleAssessmentDto, TaskDraftItemDto } from "../models/ai-coach-dto";
 
 /** Warning for a calendar check that could not run: too many dates never passes on retry, a failed read may. */
@@ -6,6 +7,14 @@ export function scheduleUnverifiedText(assessment: Pick<DraftScheduleAssessmentD
   t: TFunction<"aiCoach">): string {
   return t(assessment?.reason === "too_many_dates" ? "draft.scheduleTooManyDates" : "draft.scheduleUnverified");
 }
+
+/** Matches the server's grace: a start within the last 5 minutes still counts as now. */
+const PAST_START_GRACE_MS = 5 * 60 * 1000;
+
+/** True when the item's start is more than the grace period before `now`. */
+export const isPastStart = (item: Pick<TaskDraftItemDto, "date" | "startTime" | "timeZoneId">, now: number) =>
+  !!item.date && !!item.startTime &&
+  fromZonedTime(`${item.date}T${item.startTime}:00`, item.timeZoneId).getTime() < now - PAST_START_GRACE_MS;
 
 const dayKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;

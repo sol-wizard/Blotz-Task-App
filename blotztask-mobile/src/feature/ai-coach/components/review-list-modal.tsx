@@ -13,7 +13,6 @@ import {
 import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Toast from "react-native-toast-message";
-import { fromZonedTime } from "date-fns-tz";
 import {
   ArtifactEnvelopeDto,
   EditedDraftItemDto,
@@ -24,7 +23,7 @@ import { ConfirmOutcome } from "../hooks/useAiCoachChat";
 import { DraftEditModal } from "./draft-edit-modal";
 import { ReviewNoteEditor } from "./review-note-editor";
 import { CoachChip } from "./coach-chip";
-import { formatDraftWhen, formatRecurrence, scheduleUnverifiedText } from "../utils/draft-format";
+import { formatDraftWhen, formatRecurrence, isPastStart, scheduleUnverifiedText } from "../utils/draft-format";
 
 export function ReviewListModal({
   visible,
@@ -153,12 +152,7 @@ export function ReviewListModal({
   };
   const errors = list?.validationErrors ?? [];
   const tasks = list?.payload.items.filter((item) => item.kind !== "note") ?? [];
-  const past = tasks.some(
-    (item) =>
-      item.date &&
-      item.startTime &&
-      fromZonedTime(`${item.date}T${item.startTime}:00`, item.timeZoneId).getTime() < now,
-  );
+  const past = tasks.some((item) => isPastStart(item, now));
   const incomplete = tasks.some((item) => !item.date || !item.startTime || !item.endTime);
   const unverified = list?.schedule?.status === "unverified";
   // Checking again cannot shrink the list, so this case gets its own text and no Check again button.

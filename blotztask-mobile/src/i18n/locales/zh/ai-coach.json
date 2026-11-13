@@ -18,9 +18,9 @@
         "title": "把一件大事拆小",
         "prompt": "帮我把一件大事拆成小步骤"
       },
-      "focusNow": {
-        "title": "现在开始专注",
-        "prompt": "我想现在开始专注做一件事"
+      "brainDump": {
+        "title": "把脑子里的事倒出来",
+        "prompt": "我脑子里事情很多，想先全说出来，再帮我整理成任务"
       },
       "talk": {
         "title": "随便聊聊，理理思路",
@@ -104,12 +104,10 @@
     }
   },
   "draft": {
-    "startNow": "现在就开始",
     "addToTaskList": "加到任务列表",
     "reject": "不要这个",
     "edit": "编辑",
     "saveFailed": "任务保存失败了，卡片还在，可以重试。",
-    "focusPreview": "专注 {{minutes}} 分钟",
     "taskCount": "{{count}} 个任务",
     "removeTask": "移除这个任务",
     "alreadySaved": "已保存",

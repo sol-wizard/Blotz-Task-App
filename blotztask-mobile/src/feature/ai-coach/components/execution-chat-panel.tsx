@@ -405,22 +405,7 @@ export function ExecutionChatPanel() {
     selectedItemIds: string[], allowScheduleConflict = false, acceptedConflictToken?: string | null): Promise<void> => {
     const outcome = await confirm(draftId, action, edited, selectedItemIds, allowScheduleConflict, acceptedConflictToken);
 
-    if (outcome.result?.status === "succeeded") {
-      const directive = outcome.result.clientDirective;
-      const [persisted] = outcome.result.persistedEntities;
-      if (directive?.type === "start_focus" && persisted) {
-        // Focus uses the server-confirmed task and duration.
-        // Only ever issued for a single-task card, so the one persisted entity is the task.
-        router.push({
-          pathname: "/pomodoro-focus",
-          params: {
-            taskId: persisted.id,
-            focusMinutes: String(directive.focusMinutes),
-          },
-        });
-      }
-      return;
-    }
+    if (outcome.result?.status === "succeeded") return;
 
     if (outcome.errorCode === "ScheduleConflict" && outcome.scheduleAssessment?.conflictToken) {
       const assessment = outcome.scheduleAssessment;

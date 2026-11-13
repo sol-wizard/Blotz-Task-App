@@ -36,8 +36,8 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
         await using var session = await Evaluation.CoachTestSession.CreateAsync(fixture);
         // Act
         var mixed = await session.Checker.CheckAsync(session.UserId,
-            [Evaluation.CoachTestSession.Item(), NoteItem()], false, default);
-        var notes = await session.Checker.CheckAsync(session.UserId, [NoteItem()], false, default);
+            [Evaluation.CoachTestSession.Item(), NoteItem()], default);
+        var notes = await session.Checker.CheckAsync(session.UserId, [NoteItem()], default);
         // Assert
         mixed.Status.Should().Be("clear", because: "notes with no date cannot make a task schedule incomplete");
         notes.Status.Should().Be("clear", because: "a note-only list has no task intervals to check");
