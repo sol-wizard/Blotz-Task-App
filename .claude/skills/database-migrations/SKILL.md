@@ -5,9 +5,9 @@ description: Use when the developer is adding, renaming, or changing a database 
 
 # Database Migrations
 
-## Hard rule — never run migrations yourself
+## The user runs migrations
 
-Do NOT execute `dotnet ef migrations add` or `dotnet ef database update`. Always stop and hand the command to the user to run themselves.
+`dotnet ef migrations add` / `dotnet ef database update` are blocked in `.claude/settings.json` — hand the command to the user.
 
 ## After making entity / DbContext changes
 
