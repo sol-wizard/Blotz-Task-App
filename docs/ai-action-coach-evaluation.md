@@ -58,6 +58,23 @@ AICOACH_MODEL_TESTS=1 AICOACH_EVAL_RUNS=3 dotnet test blotztask-test/BlotzTask.T
 
 ### 模型成本与速度对比
 
+性能小样本可设置 `AICOACH_EVAL_STREAM=1 AICOACH_EVAL_SKIP_JUDGE=1`，仅运行 `speed-advice`（单轮建议）和 `calendar`。这样不调用语义评审，也不生成质量分数。`AICOACH_EVAL_RUNS=3` 时每模型为 6 条用户消息。
+
+流式报告的 `firstVisibleTextMs` 从应用 `SendAsync` 前计时，到第一次收到非空白 `reply.delta`；包含前置工具等待，不统计工具事件、thinking 或心跳。最终完整回复另记 `elapsedMs`。这是本地应用接收流式事件的时间，不包含线上 HTTP/SSE 中间件、手机网络或渲染，不是界面实测首字时间。没有可见文本的回合为 null，不能记为零。
+
+优先使用 `AICOACH_EVAL_PROFILE=luna|luna6|sol` 选择共享 `appsettings.json` 中的实际 profile。此模式复用生产 Chat Completions / Responses 适配器，Responses 使用 profile 的显式推理设置，并在每条用户消息创建隔离的 provider turn。它仍在本地应用与隔离数据库中运行，不经过线上 HTTP、移动端或 staging 的每日预算数据库。调用耗时统计完整回复，不是流式首字延迟。评测 decorator 只记录调用，不更改模型结果。
+
+例如测试当前 Luna 6 profile：
+
+```sh
+AICOACH_MODEL_TESTS=1 AICOACH_EVAL_PROFILE=luna6 \
+  AICOACH_EVAL_JUDGE_MODEL=gpt-5.6-luna AICOACH_EVAL_RUNS=3 \
+  dotnet test blotztask-test/BlotzTask.Tests.csproj \
+  --filter 'FullyQualifiedName~CoachScenarioTests&DisplayName~advice|FullyQualifiedName~CoachScenarioTests&DisplayName~calendar|FullyQualifiedName~CoachScenarioTests&DisplayName~edit-save'
+```
+
+记录包含所选 profile 和完整配置。输出 token 按 gateway 返回的计费总量统计，当前报告不单列内部 reasoning token。不要将未单列理解为零。显式 profile 优先于以下旧环境变量。
+
 `AICOACH_EVAL_MODEL` 显式指定被测部署；未设置时仍使用本地 TaskGeneration 部署。
 `AICOACH_EVAL_JUDGE_MODEL` 指定统一评审部署，默认使用本地 TaskGeneration 部署，
 避免切换被测模型时无意切换评审。`AICOACH_EVAL_TRANSPORT` 接受 `chat`（默认）或

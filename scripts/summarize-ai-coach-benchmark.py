@@ -27,10 +27,13 @@ def summarize(directory: Path, prices: tuple[float, float, float]) -> dict:
             inputs = sum(call["InputTokens"] for call in calls)
             cached = sum(call.get("CachedInputTokens", 0) for call in calls)
             outputs = sum(call["OutputTokens"] for call in calls)
+            first_text = turn.get("firstVisibleTextMs")
             turns.append({
                 "scenario": record["caseId"], "repetition": record["repetition"],
                 "elapsedSeconds": turn["elapsedMs"] / 1000,
                 "inputTokens": inputs, "cachedInputTokens": cached, "outputTokens": outputs,
+                "firstVisibleTextSeconds": first_text / 1000 if first_text is not None else None,
+                "textChunks": turn.get("textChunks"), "failedCalls": turn.get("failedCalls", []),
                 "modelCalls": len(calls), "hasError": "errorType" in turn or bool(turn.get("snapshot", {}).get("GenerationError")),
                 "estimatedUsd": ((inputs - cached) * input_price + cached * cache_price + outputs * output_price) / 1e6,
                 "uncachedEquivalentUsd": (inputs * input_price + outputs * output_price) / 1e6,
@@ -44,9 +47,11 @@ def summarize(directory: Path, prices: tuple[float, float, float]) -> dict:
                       "failure": record.get("failure")})
     successful = [turn for turn in turns if not turn["hasError"]]
     elapsed = sorted(turn["elapsedSeconds"] for turn in successful)
+    first_texts = sorted(turn["firstVisibleTextSeconds"] for turn in successful if turn["firstVisibleTextSeconds"] is not None)
     return {
         "deployment": records[0]["deployment"], "sourceFingerprint": records[0]["sourceFingerprint"],
         "transport": records[0].get("transport", "chat"),
+        "streaming": records[0].get("streaming", False),
         "judgeDeployment": records[0].get("judgeDeployment", "gpt-5.6-luna"),
         "runDirectory": str(directory.resolve()), "pricesInputCachedOutputUsdPerMillion": prices,
         "conversations": len(records), "userMessages": len(turns),
@@ -54,6 +59,12 @@ def summarize(directory: Path, prices: tuple[float, float, float]) -> dict:
         "meanSeconds": statistics.mean(elapsed) if elapsed else None,
         "medianSeconds": statistics.median(elapsed) if elapsed else None,
         "p95Seconds": elapsed[math.ceil(len(elapsed) * .95) - 1] if elapsed else None,
+        "successfulMessages": len(successful), "failedMessages": len(turns) - len(successful),
+        "messagesWithVisibleText": len(first_texts),
+        "meanFirstVisibleTextSeconds": statistics.mean(first_texts) if first_texts else None,
+        "medianFirstVisibleTextSeconds": statistics.median(first_texts) if first_texts else None,
+        "p95FirstVisibleTextSeconds": first_texts[math.ceil(len(first_texts) * .95) - 1] if first_texts else None,
+        "meanSecondsIncludingFailures": statistics.mean(turn["elapsedSeconds"] for turn in turns) if turns else None,
         "meanEstimatedUsd": statistics.mean(t["estimatedUsd"] for t in successful) if successful else None,
         "meanUncachedEquivalentUsd": statistics.mean(t["uncachedEquivalentUsd"] for t in successful) if successful else None,
         "totalEstimatedUsd": sum(t["estimatedUsd"] for t in turns),
@@ -66,6 +77,7 @@ def summarize(directory: Path, prices: tuple[float, float, float]) -> dict:
         "limitations": ["USD values are rate-card estimates, not billed Azure charges.",
                         "Uncached equivalent changes pricing only; it does not measure cold-cache latency.",
                         "Latency covers the application turn through full reply, excluding judge and database setup.",
+                        "First visible text starts at application SendAsync; tool events and thinking are not visible text.",
                         "Semantic judge is fixed to GPT-5.6 Luna and is not calibrated against human ratings.",
                         "Judge cost assumes uncached input because the judge report does not record cached tokens.",
                         "Failed/incomplete turns are excluded from successful-turn averages; their consumed tokens may be incomplete."],

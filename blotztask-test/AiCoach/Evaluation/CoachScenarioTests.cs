@@ -13,6 +13,7 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
     [CoachLiveTheory]
     [InlineData("listen")]
     [InlineData("advice")]
+    [InlineData("speed-advice")]
     [InlineData("accept")]
     [InlineData("invitation")]
     [InlineData("content")]
@@ -23,6 +24,11 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
     [InlineData("recurring")]
     [InlineData("calendar")]
     [InlineData("two-drafts")]
+    [InlineData("long-chat")]
+    [InlineData("note")]
+    [InlineData("review-list")]
+    [InlineData("memory")]
+    [InlineData("digest")]
     public async Task Handle_CoreScenario_RecordsActualOutcomes(string scenario)
     {
         var raw = Environment.GetEnvironmentVariable("AICOACH_EVAL_RUNS") ?? "1";
@@ -69,6 +75,9 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
                 await harness.SendAsync("最近读书很难坚持，请给我一个小建议，不要创建任务。");
                 await harness.SendAsync("这个建议我愿意试试，但先别生成草稿，也不要再问我是否生成。");
                 session.Conversation.Drafts.Should().BeEmpty(because: "accepting advice while deferring drafts is not creation consent");
+                break;
+            case "speed-advice":
+                await harness.SendAsync("最近读书很难坚持，请给我一个简短的小建议，不要创建任务，也不要查询日程。");
                 break;
             case "accept":
                 await harness.SendAsync("我想先了解，读书前把手机放到另一间房间有什么好处？暂时不要生成草稿。");
@@ -126,6 +135,33 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
                 session.Conversation.Drafts.Should().HaveCount(2, because: "a second topic must not overwrite the first draft");
                 session.Conversation.Drafts.SelectMany(draft => draft.Proposals).Should().Contain(original, because: "the first draft's fields and identity remain unchanged");
                 break;
+            case "long-chat":
+                // One topic growing to 30 user messages, mixing chat, advice, calendar reads and drafts,
+                // to measure how per-message tokens grow with history.
+                foreach (var message in LongChatMessages) await harness.SendAsync(message);
+                await harness.DigestAsync();
+                break;
+            // The four cases below measure features of the installed app; run them with AICOACH_EVAL_MOBILE=1.
+            case "note":
+                await harness.SendAsync("帮我记一下：论文要求使用 APA 第七版，参考文献按作者姓氏排序。");
+                session.Conversation.Drafts.SelectMany(draft => draft.Proposals).Should().Contain(item => item.Kind == ProposalKind.Note,
+                    because: "an explicit request to note something becomes a note item");
+                break;
+            case "review-list":
+                await harness.SendAsync("明天下午三点到四点写季度报告，再记一下报告要用公司新模板。");
+                await harness.SendAsync("季度报告那条删掉吧，我今天已经写完了，笔记留着。");
+                session.Conversation.Drafts.SelectMany(draft => draft.Proposals).Should().NotContain(item => item.Kind == ProposalKind.Task,
+                    because: "the user removed the task item from the review list");
+                break;
+            case "memory":
+                await harness.SendAsync("请记住：我每周三晚上有课，以后别在那个时间给我安排任务。");
+                await harness.SendAsync("你记得我周三晚上通常有什么安排吗？用一句话回答。");
+                await harness.SendAsync("周三晚上的课已经结束了，把这条忘掉吧。");
+                break;
+            case "digest":
+                foreach (var message in LongChatMessages.Take(8)) await harness.SendAsync(message);
+                await harness.DigestAsync();
+                break;
             case "edit-save":
                 await harness.SendAsync("请创建明天早上9点到9点半阅读第一章的草稿。");
                 var initial = OneItem(session);
@@ -165,6 +201,40 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
         session.Conversation.Drafts[0].Proposals.Should().ContainSingle(because: "the requested action is a single item");
         return session.Conversation.Drafts[0].Proposals[0];
     }
+
+    private static readonly string[] LongChatMessages =
+    [
+        "今天好累，上了一整天班。",
+        "主要是会太多了，自己的事一件都没做完。",
+        "下个月要考雅思，但最近一直没怎么复习。",
+        "我现在大概 6 分，目标 7 分，听力最弱。",
+        "有什么提高听力的办法吗？简单说说就好。",
+        "精听具体怎么做？",
+        "帮我建一个明天早上7点到7点半精听的草稿。",
+        "改到7点半到8点吧。",
+        "顺便看看我明天下午有什么安排。",
+        "好的。我口语也有点担心，一开口就紧张。",
+        "Part 2 怎么准备比较好？",
+        "那帮我建一个每天晚上9点练口语20分钟的草稿，先建一周。",
+        "时间改成晚上9点半。",
+        "其实我最近睡得也不太好，经常一两点才睡。",
+        "不是焦虑，就是习惯刷手机。",
+        "有没有什么简单的办法让我早点放下手机？",
+        "那就试试11点把手机放客厅。",
+        "帮我建一个今晚11点放手机的提醒草稿。",
+        "对了，这周五要交一个工作报告，还没开始写。",
+        "报告大概要写3页，主要是季度数据总结。",
+        "帮我把写报告拆成几步吧。",
+        "把这些步骤做成草稿，分在周三和周四晚上。",
+        "周三那部分改到周三中午12点到1点。",
+        "看一下我周三和周四都有什么安排。",
+        "好的，谢谢。说实话事情一多我就容易焦虑。",
+        "就是觉得什么都做不好。",
+        "嗯，可能是我要求太高了。",
+        "我们回到雅思，阅读有什么技巧？",
+        "先别建草稿了，我自己想想。",
+        "今天就聊到这吧，晚安。",
+    ];
 
     private static string[] Criteria(string scenario) =>
     [
