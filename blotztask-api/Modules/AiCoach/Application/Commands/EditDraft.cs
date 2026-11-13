@@ -32,7 +32,7 @@ public sealed class EditDraftCommandHandler(IConversationStore store,
             items = DraftEditing.Apply(request.EditedDraft, original);
         }
         var assessment = scheduleChecker is null ? null
-            : await scheduleChecker.CheckAsync(userId, items, false, ct);
+            : await scheduleChecker.CheckAsync(userId, items, ct);
         ConversationSnapshotDto snapshot;
         using (await store.AcquireLockAsync(conversationId, ct))
         {

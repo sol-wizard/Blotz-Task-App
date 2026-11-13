@@ -1,6 +1,5 @@
 export type ConversationActionWire =
   | "send_message"
-  | "start_now"
   | "add_to_task_list"
   | "add_all"
   | "reject_draft"
@@ -41,7 +40,6 @@ export interface TaskDraftItemDto {
 export interface TaskDraftPayloadDto {
   items: TaskDraftItemDto[];
   estimatedMinutes: number | null;
-  focusMinutes: number | null;
 }
 
 export interface DraftScheduleAssessmentDto {
@@ -49,7 +47,7 @@ export interface DraftScheduleAssessmentDto {
   checkedAt: string;
   conflicts: { itemId: string; taskIdentity: string; taskTitle: string; start: string; end: string }[];
   conflictToken: string | null;
-  scope: "scheduled" | "start_now";
+  scope: "scheduled";
   /** Why the check is "unverified". "too_many_dates" cannot pass on retry; absent for a failed read or an older server. */
   reason?: "too_many_dates" | null;
 }
@@ -130,7 +128,7 @@ export interface EditDraftRequestDto {
 }
 export interface ConfirmDraftRequestDto extends EditDraftRequestDto {
   commandId: string;
-  action: "start_now" | "add_to_task_list" | "add_all";
+  action: "add_to_task_list" | "add_all";
   selectedItemIds?: string[];
   allowScheduleConflict?: boolean;
   acceptedConflictToken?: string | null;
@@ -140,12 +138,6 @@ export interface ConfirmDraftResultDto {
   status: "succeeded" | "failed";
   errorCode: string | null;
   persistedEntities: { kind: string; id: string; seriesId: string | null }[];
-  clientDirective: {
-    type: string;
-    associationId: string;
-    focusMinutes: number;
-    returnToAi: boolean;
-  } | null;
   conversationSnapshot: ConversationSnapshotDto;
 }
 export interface ConversationConflictDto {

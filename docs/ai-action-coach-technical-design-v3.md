@@ -78,10 +78,9 @@ A conversation holds independent drafts; each has stable IDs, a version, items a
 - `update_draft(draftId, changes)` applies add/update/remove operations to unsaved items. Omitted fields are preserved; null clears optional fields. Unknown IDs and invalid times reject the whole operation. Removing all unsaved items discards the draft.
 - `discard_draft(draftId)` discards a pending draft and never deletes saved tasks.
 - App edits use a version-checked PUT and are visible to subsequent model turns.
-- Confirmation validates all reviewed data, date/time/time-zone consistency and item ownership before accepting the command. Missing schedules are reported as `ScheduleRequired`; past starts return `ScheduleInPast` before any task write. `start_now` explicitly moves the interval to now.
+- Confirmation validates all reviewed data, date/time/time-zone consistency and item ownership before accepting the command. Missing schedules are reported as `ScheduleRequired`; starts more than 5 minutes in the past return `ScheduleInPast` before any task write. The 5-minute grace (`OperationPolicy.PastStartGrace`, mirrored by the mobile `isPastStart`) keeps a task the user asked to start "now" saveable.
 - A database transaction wraps the new task batch. Failure rolls back the batch and keeps the draft editable. Previously saved item identities are not recreated.
 - A command receipt hashes the complete request content, including descriptions. Reusing an ID with different content is rejected; replay returns the original result with a fresh snapshot. Retry a failed confirmation using a new command ID.
-- `start_now` is a single-task confirmation that shifts the resolved interval to now and returns the focus-screen directive after successful persistence.
 
 Working state is serialized in `AiCoachConversation.Payload` (schema v2). Visible messages and draft snapshots live in `AiCoachMessage`; saved message IDs remain stable for feedback. `SqlConversationStore` commits state, new messages and changed snapshots together, uses update-only revision checks, and cannot resurrect a deleted segment. `EndedAt` and a filtered unique user index enforce at most one open topic. The developer generated and applied the storage migration; subsequent chat endpoints, retention and UI changes require no additional migration.
 

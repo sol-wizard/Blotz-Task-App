@@ -89,8 +89,9 @@ public sealed class SegmentDigestProcessor(BlotzTaskDbContext db, IConversationS
         var processedThrough = settled && newMessages.Count > 0 ? newMessages[^1].CreatedAt : record.MemoryProcessedAt;
         if (!needsSummary && !learn && processedThrough == record.MemoryProcessedAt) return;
 
-        string? summary = null;
-        if (needsSummary || learn)
+        // While memory is off the topic is closed with an empty summary, so nothing said now reaches a later topic.
+        string? summary = needsSummary && !enabled ? "" : null;
+        if ((needsSummary && enabled) || learn)
         {
             var active = learn
                 ? await db.UserMemories.AsNoTracking()

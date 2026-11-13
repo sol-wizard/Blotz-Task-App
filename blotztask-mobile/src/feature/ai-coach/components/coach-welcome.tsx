@@ -8,7 +8,7 @@ import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { CoachMark } from "./coach-header";
 
 type Starter = {
-  key: "planTomorrow" | "breakDown" | "focusNow" | "talk";
+  key: "planTomorrow" | "breakDown" | "brainDump" | "talk";
   icon: ComponentProps<typeof Ionicons>["name"];
   tint: string;
   color: string;
@@ -17,7 +17,7 @@ type Starter = {
 const STARTERS: Starter[] = [
   { key: "planTomorrow", icon: "calendar-outline", tint: "#EAF3FC", color: "#2563A8" },
   { key: "breakDown", icon: "list-outline", tint: "#F1F9E1", color: "#4D7300" },
-  { key: "focusNow", icon: "timer-outline", tint: "#FFF3E6", color: "#C2410C" },
+  { key: "brainDump", icon: "bulb-outline", tint: "#FFF3E6", color: "#C2410C" },
   { key: "talk", icon: "chatbubble-ellipses-outline", tint: "#F1EEFB", color: "#6D4FC2" },
 ];
 

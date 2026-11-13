@@ -17,7 +17,7 @@ public sealed record DebugUsageDto(long InputTokens, long OutputTokens, long Tot
 public sealed record ArtifactEnvelopeDto(Guid Id, int Version, string Status, string? SaveError,
     TaskDraftPayloadDto Payload, IReadOnlyList<string> AllowedActions, ScheduleAssessment? Schedule,
     bool IsReviewList = false, bool CanConfirm = false, IReadOnlyList<string>? ValidationErrors = null);
-public sealed record TaskDraftPayloadDto(IReadOnlyList<TaskDraftItemDto> Items, int? EstimatedMinutes, int? FocusMinutes);
+public sealed record TaskDraftPayloadDto(IReadOnlyList<TaskDraftItemDto> Items, int? EstimatedMinutes);
 public sealed record TaskDraftItemDto(Guid ItemId, string Title, string? Description, string? Date,
     string? StartTime, string? EndTime, string TimeZoneId, int? LabelId, int? EstimatedMinutes,
     int? PersistedTaskId, RecurrenceDraftDto? Recurrence, string Kind = "task",
@@ -64,8 +64,7 @@ public static class ConversationSnapshotProjector
         if (draft.Schedule?.Status == "unverified") errors.Add("ScheduleUnverified");
         if (draft.Schedule?.Status == "conflict") errors.Add("ScheduleConflict");
         return new(draft.Id, draft.Version, draft.Status.ToString().ToLowerInvariant(), draft.SaveError,
-            new(items, minutes, items.Length == 1 && items[0].Kind == "task" && items[0].Recurrence is null && minutes is > 0
-                ? Math.Min(15, minutes.Value) : null), actions, draft.Schedule, draft.IsReviewList,
+            new(items, minutes), actions, draft.Schedule, draft.IsReviewList,
             !busy && draft.Status == ProposalSetStatus.Pending && items.Length > 0 && errors.Count == 0, errors);
     }
 
@@ -86,7 +85,7 @@ public static class ConversationSnapshotProjector
                 var from = Application.Commands.DraftEditing.ResolveLocal(date, start, zone);
                 var until = Application.Commands.DraftEditing.ResolveLocal(date, end, zone);
                 if (until <= from) errors.Add($"InvalidDraftFields:{item.ProposalId}");
-                else if (from < DateTimeOffset.UtcNow) errors.Add($"ScheduleInPast:{item.ProposalId}");
+                else if (OperationPolicy.IsPastStart(from, DateTimeOffset.UtcNow)) errors.Add($"ScheduleInPast:{item.ProposalId}");
             }
             catch (Exception error) when (error is TimeZoneNotFoundException or InvalidTimeZoneException
                 or ArgumentException or Application.Commands.DraftFieldValidationException)

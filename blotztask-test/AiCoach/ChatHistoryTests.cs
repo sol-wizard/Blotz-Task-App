@@ -214,7 +214,7 @@ public sealed class ChatHistoryTests(DatabaseFixture fixture) : IClassFixture<Da
         session.Open.BeginTurn(currentTurn, "Recent message", session.Clock.Now);
         session.Open.CompleteTurn(currentTurn, session.Open.Version, "Recent reply", null, [], [oldDraft, draft],
             "old-summary-secret", 0, completedAt: session.Clock.Now);
-        session.Open.Receipts.Add(Guid.NewGuid(), new(draft.Id, "hash", new(Guid.NewGuid(), "failed", null, [], null)));
+        session.Open.Receipts.Add(Guid.NewGuid(), new(draft.Id, "hash", new(Guid.NewGuid(), "failed", null, [])));
         await session.Store.SaveAsync(session.Open, default);
         await using var foreign = await Session.CreateAsync(fixture);
         await foreign.AddTurnAsync();

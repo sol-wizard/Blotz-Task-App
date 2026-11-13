@@ -15,10 +15,10 @@ public sealed class DraftScheduleChecker(GetTasksByDateQueryHandler tasks,
     ILogger<DraftScheduleChecker> logger)
 {
     public async Task<ScheduleAssessment> CheckAsync(Guid userId, IReadOnlyList<TaskProposal> proposals,
-        bool startNow, CancellationToken ct)
+        CancellationToken ct)
     {
         var checkedAt = clock.GetUtcNow();
-        var scope = startNow ? "start_now" : "scheduled";
+        const string scope = "scheduled";
         var windows = new List<(TaskProposal Item, DateTimeOffset Start, DateTimeOffset End)>();
         try
         {
@@ -52,12 +52,6 @@ public sealed class DraftScheduleChecker(GetTasksByDateQueryHandler tasks,
                 {
                     var from = DraftEditing.ResolveLocal(occurrenceDate, start, zone);
                     var until = DraftEditing.ResolveLocal(occurrenceDate, end, zone);
-                    if (startNow)
-                    {
-                        var duration = until - from;
-                        from = checkedAt;
-                        until = from + duration;
-                    }
                     windows.Add((item, from, until));
                 }
             }

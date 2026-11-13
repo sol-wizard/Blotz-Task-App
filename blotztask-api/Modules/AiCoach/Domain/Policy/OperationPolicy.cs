@@ -12,15 +12,18 @@ public static class OperationPolicy
     public static bool CanEdit(ProposalSet draft) => draft.Status == ProposalSetStatus.Pending;
     public static bool CanEditItem(TaskProposal item) => !item.IsSaved;
 
+    /// <summary>A start this recent still counts as now, so a task asked for "right now" stays saveable.</summary>
+    public static readonly TimeSpan PastStartGrace = TimeSpan.FromMinutes(5);
+    public static bool IsPastStart(DateTimeOffset start, DateTimeOffset now) => start < now - PastStartGrace;
+
     public static string? DraftOperationError(ProposalSet draft) =>
         CanEdit(draft) ? null : "Draft is not editable.";
 
     public static IReadOnlyList<string> DraftActions(ProposalSet draft, bool sessionAvailable)
     {
         if (!sessionAvailable || !CanEdit(draft)) return [];
-        if (draft.IsReviewList) return ["edit_draft", "add_all", "reject_draft"];
-        return draft.Proposals.Count == 1 && draft.Proposals[0].Kind == ProposalKind.Task && draft.Proposals[0].Recurrence is null
-            ? ["edit_draft", "add_to_task_list", "reject_draft", "start_now"]
+        return draft.IsReviewList
+            ? ["edit_draft", "add_all", "reject_draft"]
             : ["edit_draft", "add_to_task_list", "reject_draft"];
     }
 }
