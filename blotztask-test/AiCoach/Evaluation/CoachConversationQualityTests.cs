@@ -117,7 +117,9 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
             if (result.Error is not null) businessFailures.Add($"modelError:{result.Error}");
             turns.Add(new(index + 1, turn.User, result.Text, outcome.FollowUps, before.Select(DraftTools.View).ToArray(),
                 drafts.Select(DraftTools.View).ToArray(), result.Error, watch.ElapsedMilliseconds,
-                result.InputTokens, result.CachedInputTokens, result.OutputTokens, tone, business, businessFailures));
+                result.InputTokens, result.CachedInputTokens, result.OutputTokens, tone, business, businessFailures,
+                result.TurnHistory.OfType<GatewayAssistantMessage>().SelectMany(message => message.ToolCalls)
+                    .Select(call => call.Name).ToArray()));
             if (result.Text is not null)
                 evidence.Add(new(evidence.Count + 1, turn.User, result.Text, before.Select(DraftTools.View).ToArray(),
                     drafts.Select(DraftTools.View).ToArray(),
@@ -157,7 +159,8 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
 
     private sealed record QualityTurnResult(int Turn, string User, string? Reply, IReadOnlyList<string> FollowUps,
         object[] DraftsBefore, object[] DraftsAfter, string? Error, long ElapsedMs, int InputTokens, int CachedInputTokens,
-        int OutputTokens, Dictionary<string, bool> Tone, Dictionary<string, bool> Business, List<string> BusinessFailures);
+        int OutputTokens, Dictionary<string, bool> Tone, Dictionary<string, bool> Business, List<string> BusinessFailures,
+        IReadOnlyList<string> ToolCalls);
 
     private sealed record QualitySuite(int Version, string TimeZone, QualityKeywords Keywords, QualityScenario[] Scenarios);
     private sealed record QualityKeywords(string[] Advice, string[] Formal, string[] StockEmpathy);

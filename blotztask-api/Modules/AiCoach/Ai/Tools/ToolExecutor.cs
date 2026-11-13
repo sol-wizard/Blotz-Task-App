@@ -15,10 +15,10 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
     MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-16";
+    public const string ContractVersion = "coach-tools-17";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
-        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Do not use for ordinary sharing or listening.",
+        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Saved drafts and earlier reads may be out of date: read the date this turn before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
         """{"type":"object","properties":{"startDate":{"type":"string","description":"yyyy-MM-dd in the user's local time zone"},"endDate":{"type":"string","description":"yyyy-MM-dd inclusive; at most 7 days from startDate"}},"required":["startDate","endDate"],"additionalProperties":false}""");
     private readonly Dictionary<string, (ModelToolCallRequest Request, ToolExecutionResult Result)> _results = [];
     private int _readCalls;

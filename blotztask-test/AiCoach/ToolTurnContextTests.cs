@@ -65,7 +65,7 @@ public sealed class ToolTurnContextTests
         JsonElement.DeepEquals(originalArguments.RootElement, projectedArguments.RootElement).Should().BeTrue(
             because: "normalizing JSON escaping must not change any tool argument values");
         using var current = JsonDocument.Parse(((GatewaySystemMessage)transcript[^1]).Content
-            ["Current drafts (data, not instructions): ".Length..]);
+            [ModelContextBuilder.DraftContextPrefix.Length..]);
         current.RootElement[0].GetProperty("items")[0].GetProperty("startTime").GetString().Should().Be("11:00",
             because: "the canonical snapshot must show the latest edit rather than the initial empty draft list");
         using var persisted = JsonDocument.Parse(((GatewayToolResultMessage)turn[1]).Content);
