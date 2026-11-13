@@ -21,6 +21,7 @@ import Animated, { Easing, FadeIn, FadeOut, Keyframe, useReducedMotion } from "r
 import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
 import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
 import { AiCoachRating, ArtifactEnvelopeDto, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
+import { scheduleUnverifiedText } from "../utils/draft-format";
 import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
 import { CoachMarkdown } from "./coach-markdown";
@@ -434,9 +435,10 @@ export function ExecutionChatPanel() {
     }
 
     // Failed persistence keeps the draft retryable; conflicts already resynced the UI.
-    Toast.show({ type: "error", text1: t(outcome.errorCode === "ScheduleInPast" ? "draft.timePassed" : outcome.errorCode === "ScheduleConflict"
-      ? "draft.scheduleChanged" : outcome.errorCode === "ScheduleUnverified"
-        ? "draft.scheduleUnverified" : "draft.saveFailed") });
+    Toast.show({ type: "error", text1: outcome.errorCode === "ScheduleUnverified"
+      ? scheduleUnverifiedText(outcome.scheduleAssessment, t)
+      : t(outcome.errorCode === "ScheduleInPast" ? "draft.timePassed" : outcome.errorCode === "ScheduleConflict"
+        ? "draft.scheduleChanged" : "draft.saveFailed") });
   };
 
   // Rows get one stable action object, so a streaming update doesn't re-render every visible row.

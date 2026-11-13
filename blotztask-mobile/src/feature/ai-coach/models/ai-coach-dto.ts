@@ -50,6 +50,8 @@ export interface DraftScheduleAssessmentDto {
   conflicts: { itemId: string; taskIdentity: string; taskTitle: string; start: string; end: string }[];
   conflictToken: string | null;
   scope: "scheduled" | "start_now";
+  /** Why the check is "unverified". "too_many_dates" cannot pass on retry; absent for a failed read or an older server. */
+  reason?: "too_many_dates" | null;
 }
 
 export interface ArtifactEnvelopeDto {

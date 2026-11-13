@@ -128,6 +128,7 @@
     "saveDespiteConflict": "Save anyway",
     "scheduleChanged": "The schedule changed. Review the latest conflict and try again.",
     "scheduleUnverified": "The task calendar could not be checked. Try again later.",
+    "scheduleTooManyDates": "Too many dates to check at once. Remove some tasks, then add the rest later.",
     "schedulePartial": "Repeats in the first seven days were checked; later dates have not been checked.",
     "cancel": "Cancel",
     "editFailed": "Could not update the draft. Please try again.",
