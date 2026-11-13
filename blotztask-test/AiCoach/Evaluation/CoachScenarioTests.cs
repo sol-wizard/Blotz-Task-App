@@ -2,8 +2,11 @@ using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Tests.Fixtures;
+using BlotzTask.Modules.Notes.Commands;
+using BlotzTask.Modules.Tasks.Commands.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit.Abstractions;
 
 namespace BlotzTask.Tests.AiCoach.Evaluation;
@@ -29,6 +32,10 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
     [InlineData("review-list")]
     [InlineData("memory")]
     [InlineData("digest")]
+    [InlineData("saved-task-deleted")]
+    [InlineData("saved-note-deleted")]
+    [InlineData("saved-advice-deleted")]
+    [InlineData("saved-task-still-there")]
     public async Task Handle_CoreScenario_RecordsActualOutcomes(string scenario)
     {
         var raw = Environment.GetEnvironmentVariable("AICOACH_EVAL_RUNS") ?? "1";
@@ -162,6 +169,44 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
                 foreach (var message in LongChatMessages.Take(8)) await harness.SendAsync(message);
                 await harness.DigestAsync();
                 break;
+            // PBI 1686: items saved from the review list, then changed outside the chat. Messages are the PBI's repro.
+            // Like the cases above, run them with AICOACH_EVAL_MOBILE=1.
+            case "saved-task-deleted":
+                await harness.SendAsync("Add buy milk tomorrow at 10am");
+                await SaveReviewListAsync(session);
+                await DeleteSavedTaskAsync(session);
+                await harness.SendAsync("I want to buy milk tomorrow at 10am");
+                UnsavedItems(session).Should().Contain(item => item.Kind == ProposalKind.Task
+                    && item.Title.Contains("milk", StringComparison.OrdinalIgnoreCase),
+                    because: "the saved task was deleted in the app, so asking again must draft it again");
+                break;
+            case "saved-note-deleted":
+                await harness.SendAsync("Save a note: my book list is Atomic Habits and Deep Work.");
+                await SaveReviewListAsync(session);
+                var noteId = await session.Db.Notes.Where(note => note.UserId == session.UserId).Select(note => note.Id).SingleAsync();
+                await new DeleteNoteCommandHandler(session.Db, NullLogger<DeleteNoteCommandHandler>.Instance)
+                    .Handle(new() { NoteId = noteId, UserId = session.UserId });
+                await harness.SendAsync("Save my book list as a note: Atomic Habits and Deep Work.");
+                UnsavedItems(session).Should().Contain(item => item.Kind == ProposalKind.Note,
+                    because: "the coach cannot read notes, so it must never refuse a note as already saved");
+                break;
+            case "saved-advice-deleted":
+                await harness.SendAsync("Add a team meeting tomorrow from 8pm to 9:30pm");
+                await SaveReviewListAsync(session);
+                await DeleteSavedTaskAsync(session);
+                await harness.SendAsync("What time should I go to the gym tomorrow evening? Just suggest a time, don't add anything.");
+                harness.CalledInLastTurn("list_tasks").Should().BeTrue(
+                    because: "advice around an existing task must check the task list in the same turn");
+                break;
+            case "saved-task-still-there":
+                await harness.SendAsync("Add buy milk tomorrow at 10am");
+                await SaveReviewListAsync(session);
+                await harness.SendAsync("I want to buy milk tomorrow at 10am");
+                harness.CalledInLastTurn("list_tasks").Should().BeTrue(
+                    because: "the coach checks the task list before saying a task already exists");
+                UnsavedItems(session).Should().NotContain(item => item.Title.Contains("milk", StringComparison.OrdinalIgnoreCase),
+                    because: "a task that is still in the app must not be added again");
+                break;
             case "edit-save":
                 await harness.SendAsync("请创建明天早上9点到9点半阅读第一章的草稿。");
                 var initial = OneItem(session);
@@ -193,6 +238,36 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
                 break;
         }
     }
+
+    private static async Task SaveReviewListAsync(CoachTestSession session)
+    {
+        session.Conversation.GenerationError.Should().BeNull(because: "generation failures are distinct from semantic failures");
+        var draft = session.Conversation.Drafts.Should().ContainSingle(draft => draft.Status == ProposalSetStatus.Pending,
+            because: "the first message asks for one item in the review list").Subject;
+        // A review-list save records its batch against the conversation's database row. The evaluation keeps the
+        // conversation in memory, so add a placeholder row for that foreign key.
+        if (!await session.Db.AiCoachConversations.AnyAsync(record => record.Id == session.Conversation.Id))
+        {
+            session.Db.AiCoachConversations.Add(new()
+            {
+                Id = session.Conversation.Id, UserId = session.UserId, Payload = "{}",
+                CreatedAt = CoachTestSession.Now, LastActivityAt = CoachTestSession.Now, MemoryProcessedAt = CoachTestSession.Now,
+            });
+            await session.Db.SaveChangesAsync();
+        }
+        var saved = await session.ConfirmHandler().Handle(session.Confirmation(draft, action: "add_all"));
+        saved.Status.Should().Be("succeeded", because: "the scenario starts from an item the user saved with Add all");
+    }
+
+    private static async Task DeleteSavedTaskAsync(CoachTestSession session)
+    {
+        var taskId = await session.Db.TaskItems.Where(task => task.UserId == session.UserId).Select(task => task.Id).SingleAsync();
+        await new DeleteTaskCommandHandler(session.Db, NullLogger<DeleteTaskCommandHandler>.Instance)
+            .Handle(new() { TaskId = taskId, UserId = session.UserId });
+    }
+
+    private static IEnumerable<TaskProposal> UnsavedItems(CoachTestSession session) => session.Conversation.Drafts
+        .Where(draft => draft.Status == ProposalSetStatus.Pending).SelectMany(draft => draft.Proposals).Where(item => !item.IsSaved);
 
     private static TaskProposal OneItem(CoachTestSession session)
     {
@@ -243,5 +318,13 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
         "No invented goals, deadlines, accepted constraints, calendar checks or availability claims.",
         "Accepted content is delivered directly without repeated offers or unnecessary probing.",
         $"Review scenario '{scenario}' in context; partial calendar checks and tentative defaults are accurately qualified.",
+        .. scenario switch
+        {
+            "saved-task-deleted" => ["The milk task was saved, then deleted in the app. Asked again, the coach drafts it again instead of saying it is already saved."],
+            "saved-note-deleted" => ["The book-list note was saved, then deleted in the app. The coach cannot read notes, so it drafts it again instead of refusing a duplicate."],
+            "saved-advice-deleted" => ["The team meeting was saved, then deleted in the app. The gym advice does not plan around that meeting."],
+            "saved-task-still-there" => ["The milk task is still saved in the app. The coach checks and says it is already there instead of adding a copy."],
+            _ => Array.Empty<string>(),
+        },
     ];
 }

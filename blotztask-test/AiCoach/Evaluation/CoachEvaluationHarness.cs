@@ -34,6 +34,7 @@ internal sealed class CoachEvaluationHarness
     private readonly AiCoachModuleOptions _limits;
     private readonly string? _profileName;
     private readonly bool _streaming = Environment.GetEnvironmentVariable("AICOACH_EVAL_STREAM") == "1";
+    private int _lastTurnCallOffset;
     // Matches the installed app: protocol 6 (review list) with memory tools and user context.
     private readonly bool _mobile = Environment.GetEnvironmentVariable("AICOACH_EVAL_MOBILE") == "1";
     private readonly SegmentDigestGenerator _digests;
@@ -99,6 +100,7 @@ internal sealed class CoachEvaluationHarness
     {
         var before = _session.Conversation.Drafts.Select(draft => draft.Copy()).ToArray();
         var callOffset = _gateway.Calls.Count;
+        _lastTurnCallOffset = callOffset;
         var failureOffset = _gateway.Failures.Count;
         var previousMessageIds = _session.Conversation.Messages.Select(message => message.Id).ToHashSet();
         var watch = Stopwatch.StartNew();
@@ -123,7 +125,7 @@ internal sealed class CoachEvaluationHarness
         {
             var snapshot = await _application.SendAsync(_session.UserId, _session.Conversation.Id,
                 Guid.NewGuid(), message, _session.Conversation.Version, default,
-                stream: _streaming ? OnStream : null);
+                reviewListEnabled: _mobile, stream: _streaming ? OnStream : null);
             var calls = _gateway.Calls.Skip(callOffset).ToArray();
             _turns.Add(new { message, elapsedMs = watch.ElapsedMilliseconds, firstVisibleTextMs, textChunks,
                 streamedText = streamedText.ToString(), before, snapshot, calls,
@@ -165,6 +167,9 @@ internal sealed class CoachEvaluationHarness
 
     public bool Called(string name) => _gateway.Calls.Any(call => call.Response.ToolCalls.Any(tool => tool.Name == name));
 
+    public bool CalledInLastTurn(string name) => _gateway.Calls.Skip(_lastTurnCallOffset)
+        .Any(call => call.Response.ToolCalls.Any(tool => tool.Name == name));
+
     private static object ParseToolResult(string content)
     {
         try { return JsonSerializer.Deserialize<JsonElement>(content); }
@@ -183,7 +188,7 @@ internal sealed class CoachEvaluationHarness
             schemaVersion = 1, caseId, repetition, recordedAt = DateTimeOffset.UtcNow,
             commit = Git(root, "rev-parse", "HEAD"),
             sourceFingerprint = SourceFingerprint(root),
-            promptVersion = CoachPrompt.PromptVersion, mobile = _mobile, toolContractVersion = ToolExecutor.ContractVersion,
+            promptVersion = _mobile ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion, mobile = _mobile, toolContractVersion = ToolExecutor.ContractVersion,
             deployment = _deployment, transport = _transport, profile = _profileName, streaming = _streaming,
             judgeDeployment = _judgeDeployment,
             limits = _limits, localNow = CoachTestSession.Now,

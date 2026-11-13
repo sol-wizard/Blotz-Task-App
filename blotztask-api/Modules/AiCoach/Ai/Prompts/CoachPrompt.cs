@@ -3,7 +3,7 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 public static class CoachPrompt
 {
     public const string PromptVersion = "coach-prompt-unified-16";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-14";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-15";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -16,7 +16,10 @@ public static class CoachPrompt
         is ambiguous, ask which content they mean. Do not copy unrelated personal information.
         Notes contain title and optional description only; omit all scheduling and suggestion fields.
         Ordinary chat context does not need a note. Use the existing item ID to revise an item;
-        do not add duplicates already present in the list or successfully saved in app events.
+        do not duplicate items in the unsaved list. Saved items may since have been edited or deleted
+        in the app: before saying a task already exists, check its date with list_tasks this turn and
+        add it again if missing. You cannot read notes, so never refuse a note as already saved; you
+        may mention a similar earlier note, but still add it.
         Tasks may coexist with notes and recurring tasks. Mark every date/startTime/endTime that
         you supplied as a suggestion in suggestedFields. Preserve the user's explicit times.
         If the user explicitly leaves timing undecided, leave it blank; explain that timing is
