@@ -24,7 +24,8 @@ export default function ProtectedLayout() {
       // useAuth0().user is null on app restart even when a valid session exists.
       // getCredentials() restores the Auth0 session into context, which repopulates `user`
       // and triggers this effect to re-run with the real user data.
-      void getCredentials();
+      // A failure here must not sign the user out: the API's 401 path decides that.
+      getCredentials().catch(() => {});
     }
   }, [user?.sub]);
 
