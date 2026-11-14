@@ -8,6 +8,7 @@ import {
   AiCoachRating,
   MessageFeedbackDto,
   ChatTimelinePageDto,
+  SetDraftItemAddedResultDto,
 } from "../models/ai-coach-dto";
 import { AiCoachAllowanceDto } from "../models/ai-coach-allowance";
 
@@ -115,6 +116,19 @@ export async function editDraft(
   request: EditDraftRequestDto,
 ): Promise<ConversationSnapshotDto> {
   return coachClient.put(`/ai-coach/conversations/${conversationId}/drafts/${draftId}`, request);
+}
+
+/** Tick (true) saves one review item right away; untick (false) deletes what it saved. Repeating a call changes nothing. */
+export async function setDraftItemAdded(
+  conversationId: string,
+  draftId: string,
+  itemId: string,
+  added: boolean,
+): Promise<SetDraftItemAddedResultDto> {
+  return coachClient.put(
+    `/ai-coach/conversations/${conversationId}/drafts/${draftId}/items/${itemId}/added`,
+    { added },
+  );
 }
 
 export async function getAllowance(): Promise<AiCoachAllowanceDto> {

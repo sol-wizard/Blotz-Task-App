@@ -5,6 +5,7 @@ import {
   Keyboard,
   CellRendererProps,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   FlatList,
@@ -13,21 +14,31 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { router, useFocusEffect, useNavigation } from "expo-router";
-import { usePreventRemove } from "expo-router/react-navigation";
+import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Animated, { Easing, FadeIn, FadeOut, Keyframe, useReducedMotion } from "react-native-reanimated";
 import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
-import { useAiCoachChat, ConfirmAction, ChatItem } from "../hooks/useAiCoachChat";
-import { AiCoachRating, ArtifactEnvelopeDto, EditedDraftDto, MessageFeedbackDto } from "../models/ai-coach-dto";
-import { scheduleUnverifiedText } from "../utils/draft-format";
+import { useAiCoachChat, ConfirmAction, ChatItem, isItemSaved } from "../hooks/useAiCoachChat";
+import {
+  AiCoachRating,
+  ArtifactEnvelopeDto,
+  EditedDraftDto,
+  EditedDraftItemDto,
+  EditedNoteDraftItemDto,
+  MessageFeedbackDto,
+  TaskDraftItemDto,
+} from "../models/ai-coach-dto";
+import { ReviewItem, toReviewItem } from "../models/review-list";
+import { isPastStart, scheduleUnverifiedText } from "../utils/draft-format";
+import { TASK_DETAIL_ROUTE_MODE } from "@/feature/task-details/util/task-detail-route-mode";
 import { TaskDraftCard } from "./task-draft-card";
 import { MessageFeedbackActions } from "./message-feedback-actions";
 import { CoachMarkdown } from "./coach-markdown";
-import { ReviewListBar } from "./review-list-bar";
 import { FollowUpChips } from "./follow-up-chips";
-import { ReviewListModal } from "./review-list-modal";
+import { ReviewItemCard } from "./review-item-card";
+import { DraftEditModal } from "./draft-edit-modal";
+import { ReviewNoteEditor } from "./review-note-editor";
 import { VoiceRecordingBar } from "./voice-recording-bar";
 import { CoachComposer } from "./coach-composer";
 import { useQueryClient } from "@tanstack/react-query";
@@ -129,6 +140,17 @@ interface RowActions {
     allowScheduleConflict?: boolean, acceptedConflictToken?: string | null) => void;
   edit: (draftId: string, edited: EditedDraftDto) => Promise<string | null>;
   reject: (draftId: string) => void;
+  tick: (list: ArtifactEnvelopeDto, item: TaskDraftItemDto, added: boolean) => void;
+  editCard: (list: ArtifactEnvelopeDto, item: TaskDraftItemDto) => void;
+}
+
+/** A suggested item shown under the reply that suggested it; `added` already includes a tap still saving. */
+interface ReviewCard {
+  list: ArtifactEnvelopeDto;
+  item: TaskDraftItemDto;
+  added: boolean;
+  /** History: an ended list, or a copy from an older topic. */
+  readOnly: boolean;
 }
 
 interface ChatRowProps {
@@ -136,12 +158,18 @@ interface ChatRowProps {
   dateText: string | null;
   active: boolean;
   liveArtifacts: ArtifactEnvelopeDto[] | undefined;
+  reviewCards: ReviewCard[] | undefined;
   feedback: MessageFeedbackDto | undefined;
   feedbackBusy: boolean;
   cardsBusy: boolean;
   animateIn: boolean;
   actions: RowActions;
 }
+
+// Card groups are rebuilt on every tap, so a row compares its own cards rather than the array object.
+const sameCards = (left: ReviewCard[] | undefined, right: ReviewCard[] | undefined) => left === right
+  || (!!left && !!right && left.length === right.length && left.every((card, index) => card.list === right[index].list
+    && card.item === right[index].item && card.added === right[index].added && card.readOnly === right[index].readOnly));
 
 // The hook rebuilds message objects every render, so rows compare by content instead of identity.
 const sameItem = (left: ChatItem, right: ChatItem) => left.id === right.id && left.text === right.text
@@ -150,8 +178,8 @@ const sameItem = (left: ChatItem, right: ChatItem) => left.id === right.id && le
   && left.draftSnapshot === right.draftSnapshot;
 
 /** One timeline row; while a reply streams only its own row re-renders. */
-const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, feedback, feedbackBusy, cardsBusy,
-  animateIn, actions }: ChatRowProps) {
+const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, reviewCards, feedback, feedbackBusy,
+  cardsBusy, animateIn, actions }: ChatRowProps) {
   return <View>
     {dateText && <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
       <Text className="font-baloo text-xs text-[#6B7280]">{dateText}</Text>
@@ -172,9 +200,17 @@ const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, f
           onReject={() => actions.reject(artifact.id)} />
       </Animated.View>;
     })}
+    {!!reviewCards?.length && <Animated.View entering={animateIn ? fadeIn : undefined} className="mb-1">
+      {reviewCards.map(({ list, item: card, added, readOnly }) => (
+        <ReviewItemCard key={card.itemId} item={card} added={added} readOnly={readOnly}
+          busy={cardsBusy || !list.allowedActions.includes("set_item_added")}
+          onToggle={() => actions.tick(list, card, !added)} onEdit={() => actions.editCard(list, card)} />
+      ))}
+    </Animated.View>}
   </View>;
 }, (previous, next) => sameItem(previous.item, next.item) && previous.dateText === next.dateText
   && previous.active === next.active && previous.liveArtifacts === next.liveArtifacts
+  && sameCards(previous.reviewCards, next.reviewCards)
   && previous.feedback === next.feedback && previous.feedbackBusy === next.feedbackBusy
   && previous.cardsBusy === next.cardsBusy && previous.animateIn === next.animateIn && previous.actions === next.actions);
 
@@ -182,34 +218,35 @@ const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, f
 export function ExecutionChatPanel() {
   const { t, i18n } = useTranslation("aiCoach");
   const { snapshot, messages, keyFor, status, start, send, confirm, edit, reject,
-    feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
-    pendingList, pendingCount, reviewBusy, confirmationUncertain, streaming, reconnecting,
-    updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
+    feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail, reconnecting,
+    reviewLists, wantedAdded, tickItem, tickBusy, updateReviewItem,
     newTopic, clearChat, loadOlder, loadingOlder, historyLoading, historyError, retryHistory } = useAiCoachChat();
   const { allowance } = useAiCoachAllowance();
   const allowanceBlocked = isAllowanceBlocked(allowance);
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
-  const [reviewVisible, setReviewVisible] = useState(false);
-  const [remindedBatches, setRemindedBatches] = useState<Set<string>>(() => new Set());
-  // Only lists the user has edited earn a leave reminder; untouched AI captures may be ignored freely.
-  const [touchedBatches, setTouchedBatches] = useState<Set<string>>(() => new Set());
-  const markTouched = (listId: string) => setTouchedBatches(previous => new Set(previous).add(listId));
-  const navigation = useNavigation();
-  useFocusEffect(useCallback(() => { setRemindedBatches(new Set()); }, []));
-  const needsLeaveReminder = !!pendingList && pendingCount > 0 && touchedBatches.has(pendingList.id)
-    && !remindedBatches.has(pendingList.id);
-  const remindBeforeLeaving = (leave: () => void) => {
-    if (!needsLeaveReminder || !pendingList) { leave(); return; }
-    setRemindedBatches(previous => new Set(previous).add(pendingList.id));
-    Alert.alert(t("review.leaveTitle"), t("review.leaveDescription", { count: pendingCount }), [
-      { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
-      { text: t("review.leave"), onPress: leave },
-    ]);
+  // Each card sits under the reply that suggested it; older items without one sit under their list's reply.
+  const cardsByMessage = useMemo(() => {
+    const groups = new Map<string, ReviewCard[]>();
+    for (const { list, containerMessageId, live } of reviewLists) for (const item of list.payload.items) {
+      const messageId = item.suggestedInMessageId ?? containerMessageId;
+      if (!messageId) continue;
+      const cards = groups.get(messageId) ?? [];
+      cards.push({ list, item, added: wantedAdded[item.itemId] ?? isItemSaved(item),
+        readOnly: !live || list.status !== "pending" });
+      groups.set(messageId, cards);
+    }
+    return groups;
+  }, [reviewLists, wantedAdded]);
+  const [tickNotice, setTickNotice] = useState<{ id: number; text: string; clash: boolean } | null>(null);
+  const tickNoticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(tickNoticeTimer.current), []);
+  const showTickNotice = (text: string, clash: boolean) => {
+    clearTimeout(tickNoticeTimer.current);
+    setTickNotice({ id: Date.now(), text, clash });
+    tickNoticeTimer.current = setTimeout(() => setTickNotice(null), clash ? 3500 : 2200);
   };
-  usePreventRemove(needsLeaveReminder && !reviewVisible, ({ data }) => {
-    remindBeforeLeaving(() => navigation.dispatch(data.action));
-  });
+  const [editingCard, setEditingCard] = useState<{ list: ArtifactEnvelopeDto; item: ReviewItem; version: number } | null>(null);
   const [calendarNow, setCalendarNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setCalendarNow(new Date()), 60000);
@@ -336,7 +373,7 @@ export function ExecutionChatPanel() {
     return () => cancelAnimationFrame(frame);
   }, [status]);
 
-  const chatReady = status === "ready" && !confirmationUncertain && snapshot?.allowedActions.includes("send_message") === true;
+  const chatReady = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
 
   // A finished take is sent straight away, along with anything already typed.
   const sendVoiceTranscript = async (text: string) => {
@@ -370,7 +407,8 @@ export function ExecutionChatPanel() {
   }, [generating, queryClient]);
   const showWelcome = status === "ready" && messages.length === 0 && !historyLoading && !historyError;
   // Blocked: starters and follow-ups would only be refused; the card in the composer's place explains why.
-  const canSend = !voiceBusy && chatReady && !allowanceBlocked;
+  // A message waits for ticks still saving: each one changes the conversation version the message is sent against.
+  const canSend = !voiceBusy && chatReady && !allowanceBlocked && !tickBusy;
   // A refused turn ("quota") is explained by the allowance card, not a generic retry toast.
   const showSendError = (errorCode: string | null) => {
     if (errorCode && errorCode !== "quota") Toast.show({ type: "error", text1: t("chat.sendError") });
@@ -426,6 +464,71 @@ export function ExecutionChatPanel() {
         ? "draft.scheduleChanged" : "draft.saveFailed") });
   };
 
+  const tickErrorText = (code: string, added: boolean) => {
+    switch (code) {
+      case "ScheduleInPast": return t("card.timePassed");
+      case "ScheduleRequired": return t("card.needsTime");
+      case "ConversationBusy": return t("chat.busy");
+      case "DraftItemNotFound":
+      case "DraftNotEditable":
+      case "StaleConversationVersion": return t("card.listChanged");
+      default: return t(added ? "card.addFailed" : "card.removeFailed");
+    }
+  };
+
+  const handleTick = async (list: ArtifactEnvelopeDto, item: TaskDraftItemDto, added: boolean) => {
+    // A refusal the phone can already see needs no request, and the circle never flips for it.
+    if (added && item.kind !== "note") {
+      const code = !item.date || !item.startTime || !item.endTime ? "ScheduleRequired"
+        : isPastStart(item, Date.now()) ? "ScheduleInPast" : null;
+      if (code) {
+        Toast.show({ type: "error", text1: tickErrorText(code, added) });
+        return;
+      }
+    }
+    const outcome = await tickItem(list.id, item.itemId, added);
+    if (!outcome) return;
+    if (outcome.errorCode) {
+      Toast.show({ type: "error", text1: tickErrorText(outcome.errorCode, outcome.added) });
+      return;
+    }
+    const note = item.kind === "note";
+    if (!outcome.added) showTickNotice(t(note ? "card.removedNote" : "card.removedTask"), false);
+    else if (outcome.conflicts.length) showTickNotice(t("card.addedWithClash", { tasks: outcome.conflicts.join(", ") }), true);
+    else showTickNotice(t(note ? "card.addedNote" : "card.addedTask"), false);
+  };
+
+  const handleEditCard = (list: ArtifactEnvelopeDto, item: TaskDraftItemDto) => {
+    // Still saving: the card is about to become a task (or stop being one), so wait for it to settle.
+    if (wantedAdded[item.itemId] !== undefined) return;
+    if (!isItemSaved(item)) {
+      setEditingCard({ list, item: toReviewItem(item), version: snapshot?.conversationVersion ?? 0 });
+      return;
+    }
+    // A saved item is an ordinary task or note now, so it opens in that editor.
+    if (item.kind === "note" && item.persistedNoteId) {
+      router.push({ pathname: "/(protected)/note-editor", params: {
+        noteId: item.persistedNoteId,
+        noteText: [item.title.trim(), item.description?.trim()].filter(Boolean).join("\n"),
+        isPersistent: "false",
+      } });
+    } else if (!item.recurrence && item.persistedTaskId != null) {
+      router.push({ pathname: "/(protected)/task-edit",
+        params: { mode: TASK_DETAIL_ROUTE_MODE.Persisted, taskId: item.persistedTaskId } });
+    } else Toast.show({ type: "info", text1: t("card.editRepeating") });
+  };
+
+  const saveCardEdit = async (fields: EditedDraftItemDto | EditedNoteDraftItemDto) => {
+    if (!editingCard) return;
+    const error = await updateReviewItem(editingCard.list, editingCard.version, fields);
+    if (!error) {
+      setEditingCard(null);
+      return;
+    }
+    Toast.show({ type: "error", text1: t(error === "InvalidDraftFields" ? "review.invalidFields"
+      : error.startsWith("Stale") ? "review.changed" : "draft.editFailed") });
+  };
+
   // Rows get one stable action object, so a streaming update doesn't re-render every visible row.
   const latestRowActions = useRef<RowActions | null>(null);
   useEffect(() => {
@@ -437,6 +540,8 @@ export function ExecutionChatPanel() {
       reject: (draftId) => void reject(draftId).then(error => {
         if (error) Toast.show({ type: "error", text1: t("draft.editFailed") });
       }),
+      tick: (list, item, added) => void handleTick(list, item, added),
+      editCard: handleEditCard,
     };
   });
   const rowActions = useMemo<RowActions>(() => ({
@@ -445,6 +550,8 @@ export function ExecutionChatPanel() {
     confirm: (...args) => latestRowActions.current?.confirm(...args),
     edit: (...args) => latestRowActions.current?.edit(...args) ?? Promise.resolve("NotReady"),
     reject: (draftId) => latestRowActions.current?.reject(draftId),
+    tick: (...args) => latestRowActions.current?.tick(...args),
+    editCard: (...args) => latestRowActions.current?.editCard(...args),
   }), []);
 
   const blockedBanner = () => {
@@ -457,7 +564,7 @@ export function ExecutionChatPanel() {
           <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
           <Pressable
             className="bg-highlight rounded-2xl py-3 items-center mt-3"
-            onPress={() => remindBeforeLeaving(() => router.push("/task-create"))}
+            onPress={() => router.push("/task-create")}
           >
             <Text className="font-balooBold text-white text-sm">{t("chat.createManually")}</Text>
           </Pressable>
@@ -489,13 +596,8 @@ export function ExecutionChatPanel() {
       scrollRef.current?.scrollToEnd({ animated: false });
     }
   };
-  const startNewTopic = () => {
-    if (!pendingCount) { void runMenuAction(newTopic, t("chat.newTopicStarted")); return; }
-    Alert.alert(t("review.newTopicTitle"), t("review.newTopicDescription", { count: pendingCount }), [
-      { text: t("review.keepReviewing"), style: "cancel", onPress: () => setReviewVisible(true) },
-      { text: t("chat.newTopic"), style: "destructive", onPress: () => void runMenuAction(newTopic, t("chat.newTopicStarted")) },
-    ]);
-  };
+  // Nothing waits to be saved any more (each tick saves at once), so a new topic needs no warning.
+  const startNewTopic = () => void runMenuAction(newTopic, t("chat.newTopicStarted"));
   const openMenu = () => Alert.alert(t("chat.menu"), undefined, [
     { text: t("chat.clearHistory"), style: "destructive", onPress: () =>
       Alert.alert(t("chat.clearTitle"), t("chat.clearDescription"), [
@@ -523,9 +625,9 @@ export function ExecutionChatPanel() {
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <CoachHeader
         status={voiceBusy ? "listening" : generating ? "thinking" : "idle"}
-        actionsDisabled={confirmationUncertain || status !== "ready" || generating
+        actionsDisabled={tickBusy || status !== "ready" || generating
           || snapshot?.artifacts.some(card => card.status === "processing") === true}
-        allowance={allowance} onAllowancePress={() => remindBeforeLeaving(() => router.push("/settings/membership-plan"))}
+        allowance={allowance} onAllowancePress={() => router.push("/settings/membership-plan")}
         onBack={() => router.back()} onNewTopic={startNewTopic} onMenu={openMenu} />
       <View className="flex-1 relative">
         <FlatList
@@ -597,6 +699,7 @@ export function ExecutionChatPanel() {
             const older = chronologicalMessages[index - 1];
             const active = item.conversationId === snapshot?.conversationId;
             return <ChatRow item={item} active={active} liveArtifacts={active ? snapshot?.artifacts : undefined}
+              reviewCards={cardsByMessage.get(item.id)}
               dateText={!older || dayKey(older.createdAt) !== dayKey(item.createdAt) ? dateLabel(item.createdAt) : null}
               feedback={feedbackByMessage[item.id]} feedbackBusy={feedbackSaving[item.id] === true}
               cardsBusy={generating} animateIn={keyFor(item) !== item.id} actions={rowActions} />;
@@ -622,6 +725,15 @@ export function ExecutionChatPanel() {
             <Ionicons name="arrow-down" size={21} color="#444964" />
           </Pressable>
         </Animated.View>}
+        {tickNotice && <Animated.View key={tickNotice.id} entering={popIn} exiting={popOut} pointerEvents="none"
+          className="absolute bottom-3 self-center max-w-[86%] flex-row items-center gap-2 rounded-full bg-white px-4 py-2.5"
+          style={{ boxShadow: "0 2px 10px rgba(68, 73, 100, 0.14)" }}>
+          <Ionicons name={tickNotice.clash ? "alert-circle" : "star"} size={16}
+            color={tickNotice.clash ? "#F59E0B" : "#9AD513"} />
+          <Text accessibilityLiveRegion="polite" className="font-inter font-semibold text-sm text-secondary">
+            {tickNotice.text}
+          </Text>
+        </Animated.View>}
       </View>
 
       {/* TEMPORARY debug line (2026-08-24): session token usage — remove with snapshot.debugUsage. */}
@@ -633,32 +745,25 @@ export function ExecutionChatPanel() {
         </Text>
       )}
 
-      <ReviewListBar count={pendingCount} saving={pendingList?.status === "processing"}
-        generating={streaming || snapshot?.generationStatus === "running"}
-        onOpen={() => setReviewVisible(true)} />
-      {confirmationUncertain && !pendingCount && <Pressable className="px-4 py-2" onPress={() => setReviewVisible(true)}>
-        <Text className="font-baloo text-warning text-sm">{t("review.confirmationUnknown")}</Text>
-      </Pressable>}
-      <ReviewListModal visible={reviewVisible} list={pendingList} conversationVersion={snapshot?.conversationVersion ?? 0}
-        busy={reviewBusy} generating={streaming || snapshot?.generationStatus === "running"}
-        uncertain={confirmationUncertain} onClose={() => setReviewVisible(false)}
-        onEdit={async (list, version, item) => {
-          const error = await updateReviewItem(list, version, item);
-          if (!error) markTouched(list.id);
-          return error;
-        }}
-        onRemove={async (itemId) => {
-          const listId = pendingList?.id;
-          const error = await removeReviewItem(itemId);
-          if (!error && listId) markTouched(listId);
-          return error;
-        }}
-        onConfirm={confirmAll} onRefresh={refreshReviewList} />
+      {/* ✎ on a card not yet saved edits the suggestion itself. */}
+      {editingCard?.item.kind === "task" && (
+        <DraftEditModal key={editingCard.item.fields.itemId} visible initial={editingCard.item.fields}
+          busy={generating} onCancel={() => setEditingCard(null)} onSave={(fields) => void saveCardEdit(fields)} />
+      )}
+      {editingCard?.item.kind === "note" && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setEditingCard(null)}>
+          <KeyboardAvoidingView className="flex-1 bg-black/40 justify-center px-5"
+            behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <ReviewNoteEditor key={editingCard.item.fields.itemId} initial={editingCard.item.fields} busy={generating}
+              onCancel={() => setEditingCard(null)} onSave={(fields) => void saveCardEdit(fields)} />
+          </KeyboardAvoidingView>
+        </Modal>
+      )}
 
       <View className="mx-3 mt-2 mb-2">
         {allowanceBlocked && allowance && !voiceBusy ? (
           <AllowanceBlockedCard allowance={allowance}
-            onCreateManually={() => remindBeforeLeaving(() => router.push("/task-create"))} />
+            onCreateManually={() => router.push("/task-create")} />
         ) : voiceBusy ? (
           <VoiceRecordingBar sending={voice.phase === "sending"} elapsedMs={voice.elapsedMs}
             onCancel={() => void voice.cancel()} onSend={() => void voice.stopAndSend()} />

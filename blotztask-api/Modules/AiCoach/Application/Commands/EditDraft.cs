@@ -150,6 +150,20 @@ internal static class DraftEditing
         return result;
     }
 
+    /// <summary>A task item's exact start and end. Refuses a missing schedule or a start that has already passed.</summary>
+    public static (DateTimeOffset Start, DateTimeOffset End) ResolveSchedule(TaskProposal item, DateTimeOffset now)
+    {
+        if (item.Date is not { } date || item.StartTime is not { } start || item.EndTime is not { } end)
+            throw new DraftFieldValidationException("ScheduleRequired", "Set a date, start time and end time before saving.");
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(item.TimeZoneId);
+        var startUtc = ResolveLocal(date, start, zone);
+        var endUtc = ResolveLocal(date, end, zone);
+        if (endUtc <= startUtc) throw new DraftFieldValidationException("InvalidDraftFields", "End must be after start.");
+        if (OperationPolicy.IsPastStart(startUtc, now))
+            throw new DraftFieldValidationException("ScheduleInPast", "This time has passed. Edit the draft before saving.");
+        return (startUtc, endUtc);
+    }
+
     public static DateTimeOffset ResolveLocal(DateOnly date, TimeOnly time, TimeZoneInfo zone)
     {
         var local = date.ToDateTime(time, DateTimeKind.Unspecified);

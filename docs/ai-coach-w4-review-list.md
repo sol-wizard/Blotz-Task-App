@@ -51,7 +51,9 @@ Protocol 6 exposes `add_items`, `update_items`, `remove_items`, plus the existin
 ```
 
 Update with `items: [{itemId, fields: {...}}]`; omitted fields are unchanged and null clears
-optional fields. Kind cannot change. Remove with `itemIds: [...]`. Operations validate the whole
+optional fields. Kind cannot change. Items the user already saved with a tick stay on the list,
+and `update_items`/`remove_items` refuse them. Each item records the reply that first suggested it
+(`suggestedInMessageId`), so the app can show its card under that reply. Remove with `itemIds: [...]`. Operations validate the whole
 batch before mutation, with at most 100 entries per call/list. Existing pending task cards are
 consolidated on the first successful review mutation, retaining item IDs. Completed/rejected/expired
 batches remain historical. Removing the final item rejects the empty batch; the next capture
@@ -69,8 +71,25 @@ title/description and omit task fields; `timeZoneId` may be omitted. Task zones 
 User changes to individual date/time fields clear only the corresponding suggestion flags.
 Use the existing reject endpoint to discard the entire pending list.
 
-Use the existing confirm endpoint with `action: "add_all"`, a client-generated `commandId`, both
-expected versions and `editedDraft.items`. Include every item and omit `selectedItemIds`.
+### Ticking single items
+
+The current app saves items one at a time with
+`PUT /api/ai-coach/conversations/{id}/drafts/{draftId}/items/{itemId}/added` and
+`{ "added": true | false }`. It sets a wanted state, so repeating a call changes nothing.
+
+- A tick runs the schedule check for that item. A missing or past time returns 422
+  (`ScheduleRequired`, `ScheduleInPast`) and saves nothing; a clash is saved and returned in
+  `conflicts`. The item is saved with the same handlers as Add all and its ID is recorded on the
+  item. If recording fails, the new entity is deleted again.
+- An untick deletes the saved task, repeating series ("this and future" from its first day) or
+  note, then clears the ID. Something already deleted elsewhere only clears.
+- Both are refused while a reply runs (`ConversationBusy`) and once the list has ended.
+- Single ticks have no durable receipt: a process stop between the entity commit and the
+  conversation save can leave one entity the card does not know about.
+
+Older V2 builds use the confirm endpoint with `action: "add_all"`, a client-generated `commandId`, both
+expected versions and `editedDraft.items`. Include every item and omit `selectedItemIds`. Add all
+saves only the items not ticked yet.
 Remove unwanted items through editing before confirmation.
 Legacy task cards retain `add_to_task_list` and their existing selection behavior. `start_now` was removed: neither card type can shift a task to the current time or open focus.
 

@@ -23,7 +23,8 @@ public sealed record TaskProposal(
     int? PersistedSeriesId = null,
     ProposalKind Kind = ProposalKind.Task,
     Guid? PersistedNoteId = null,
-    IReadOnlyList<string>? SuggestedFields = null)
+    IReadOnlyList<string>? SuggestedFields = null,
+    Guid? SuggestedInMessageId = null)
 {
     [JsonIgnore] public bool IsSaved => PersistedTaskId.HasValue || PersistedNoteId.HasValue;
     [JsonIgnore] public string NoteText => string.IsNullOrWhiteSpace(Description)
@@ -124,6 +125,46 @@ public sealed class ProposalSet
             ? item with { PersistedNoteId = noteId } : item).ToArray();
         Version++;
     }
+
+    /// <summary>Record one item saved by its own tick. The list stays open, so other items can still be ticked.</summary>
+    public void RecordItemSaved(Guid itemId, int? taskId, int? seriesId, Guid? noteId)
+    {
+        if (Status != ProposalSetStatus.Pending)
+            throw new InvalidOperationException("Only open lists can save single items.");
+        var existing = Proposals.SingleOrDefault(item => item.ProposalId == itemId)
+            ?? throw new InvalidOperationException("Unknown saved item.");
+        if (existing.IsSaved) throw new InvalidOperationException("The item is already saved.");
+        var saved = existing.Kind == ProposalKind.Note
+            ? existing with { PersistedNoteId = noteId ?? throw new ArgumentException("A saved note needs its note ID.") }
+            : existing with
+            {
+                PersistedTaskId = taskId ?? throw new ArgumentException("A saved task needs its task ID."),
+                PersistedSeriesId = seriesId,
+            };
+        Proposals = Proposals.Select(item => item.ProposalId == itemId ? saved : item).ToArray();
+        Version++;
+    }
+
+    /// <summary>Forget the saved entity after an untick deleted it, so the item can be ticked again.</summary>
+    public void ClearItemSaved(Guid itemId)
+    {
+        if (Status != ProposalSetStatus.Pending)
+            throw new InvalidOperationException("Only open lists can unsave single items.");
+        var existing = Proposals.SingleOrDefault(item => item.ProposalId == itemId)
+            ?? throw new InvalidOperationException("Unknown saved item.");
+        if (!existing.IsSaved) throw new InvalidOperationException("The item is not saved.");
+        Proposals = Proposals.Select(item => item.ProposalId == itemId
+            ? item with { PersistedTaskId = null, PersistedSeriesId = null, PersistedNoteId = null } : item).ToArray();
+        Version++;
+    }
+
+    /// <summary>
+    /// Stamp items that first appear in this reply, so the app can show each card under the reply that
+    /// suggested it. A list is stored on only the reply that created it, so later items need their own stamp.
+    /// </summary>
+    public void MarkSuggestedIn(Guid messageId, IReadOnlySet<Guid> earlierItemIds) =>
+        Proposals = Proposals.Select(item => item.SuggestedInMessageId is null && !earlierItemIds.Contains(item.ProposalId)
+            ? item with { SuggestedInMessageId = messageId } : item).ToArray();
 
     public void FinishSaving(string? error)
     {

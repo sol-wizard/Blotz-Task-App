@@ -23,7 +23,7 @@ public static class OperationPolicy
     {
         if (!sessionAvailable || !CanEdit(draft)) return [];
         return draft.IsReviewList
-            ? ["edit_draft", "add_all", "reject_draft"]
+            ? ["edit_draft", "set_item_added", "add_all", "reject_draft"]
             : ["edit_draft", "add_to_task_list", "reject_draft"];
     }
 }

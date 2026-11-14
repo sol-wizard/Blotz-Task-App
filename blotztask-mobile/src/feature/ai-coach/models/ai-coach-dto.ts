@@ -2,6 +2,7 @@ export type ConversationActionWire =
   | "send_message"
   | "add_to_task_list"
   | "add_all"
+  | "set_item_added"
   | "reject_draft"
   | "edit_draft";
 export type AiCoachRating = "up" | "down";
@@ -35,6 +36,8 @@ export interface TaskDraftItemDto {
   estimatedMinutes: number | null;
   persistedTaskId: number | null;
   recurrence: DraftRecurrenceDto | null;
+  /** The reply that first suggested this item, so its card sits under it; absent on older items. */
+  suggestedInMessageId?: string | null;
 }
 
 export interface TaskDraftPayloadDto {
@@ -139,6 +142,11 @@ export interface ConfirmDraftResultDto {
   errorCode: string | null;
   persistedEntities: { kind: string; id: string; seriesId: string | null }[];
   conversationSnapshot: ConversationSnapshotDto;
+}
+/** Conflicts are existing tasks that a newly saved task overlaps. */
+export interface SetDraftItemAddedResultDto {
+  conversationSnapshot: ConversationSnapshotDto;
+  conflicts: DraftScheduleAssessmentDto["conflicts"];
 }
 export interface ConversationConflictDto {
   errorCode: string;

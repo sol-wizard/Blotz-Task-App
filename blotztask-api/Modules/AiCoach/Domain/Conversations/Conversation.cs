@@ -164,9 +164,12 @@ public sealed class Conversation
         if (summarizedCount < 0 || summarizedCount > History.Count)
             throw new InvalidOperationException("Invalid summarized history cursor.");
         var previousDraftIds = Messages.SelectMany(message => message.DraftSnapshot ?? []).Select(draft => draft.Id).ToHashSet();
+        var replyId = Guid.NewGuid();
+        var earlierItemIds = Drafts.SelectMany(draft => draft.Proposals).Select(item => item.ProposalId).ToHashSet();
+        foreach (var draft in drafts.Where(draft => draft.IsReviewList)) draft.MarkSuggestedIn(replyId, earlierItemIds);
         foreach (var draft in drafts) UpdateDraftSnapshots(draft);
         var newDrafts = drafts.Where(draft => !previousDraftIds.Contains(draft.Id)).Select(draft => draft.Copy()).ToArray();
-        Messages.Add(new(Guid.NewGuid(), ConversationMessageRole.Assistant, text, taskContextRead, turnId,
+        Messages.Add(new(replyId, ConversationMessageRole.Assistant, text, taskContextRead, turnId,
             MessageTime(completedAt), newDrafts.Length == 0 ? null : newDrafts));
         History.AddRange(turnHistory);
         Drafts.Clear();

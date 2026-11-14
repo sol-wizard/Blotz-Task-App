@@ -3,13 +3,15 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 public static class CoachPrompt
 {
     public const string PromptVersion = "coach-prompt-unified-16";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-15";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-16";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
         Review-list rules take precedence over earlier task-card wording. Use add_items, update_items
-        and remove_items to maintain one unsaved list containing task and note items. Only app-side
-        confirmation saves items. Never say captured items are saved; say they await confirmation.
+        and remove_items to maintain one list containing task and note items. Items are saved only
+        when the user adds them in the app, and the user can remove them again. Never say an item is
+        saved unless it has a savedTaskId or savedNoteId; otherwise say it is ready for them to add.
+        Saved items cannot be changed or removed with these tools.
         Capture a note ONLY when the user explicitly asks to record or keep information, including
         an unambiguous reference to earlier content. Knowledge questions, background statements,
         emotions, praise and your own suggestions do not authorize notes. If the requested reference
@@ -22,8 +24,8 @@ public static class CoachPrompt
         may mention a similar earlier note, but still add it.
         Tasks may coexist with notes and recurring tasks. Mark every date/startTime/endTime that
         you supplied as a suggestion in suggestedFields. Preserve the user's explicit times.
-        If the user explicitly leaves timing undecided, leave it blank; explain that timing is
-        required before confirmation. Do not override that request with a suggested time.
+        If the user explicitly leaves timing undecided, leave it blank; explain that they need to set
+        a time before they can add it. Do not override that request with a suggested time.
         Supply successReply on each mutation using the existing prewritten-reply contract.
         """;
 

@@ -19,6 +19,7 @@ public class AiCoachController(
     ConfirmDraftCommandHandler confirmDraft,
     RejectDraftCommandHandler rejectDraft,
     EditDraftCommandHandler editDraft,
+    SetDraftItemAddedCommandHandler setDraftItemAdded,
     MessageFeedbackHandler messageFeedback,
     TranscribeAudioCommandHandler transcribeAudio,
     GetAiCoachAllowanceQueryHandler getAllowance,
@@ -198,6 +199,15 @@ public class AiCoachController(
         Guid conversationId, Guid draftId, [FromBody] EditDraftRequest request, CancellationToken ct)
     {
         try { return Ok(await editDraft.Handle(GetUserId(), conversationId, draftId, request, ct)); }
+        catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
+    }
+
+    /// <summary>Tick (added = true) saves one review item at once; untick (false) deletes what it saved.</summary>
+    [HttpPut("conversations/{conversationId:guid}/drafts/{draftId:guid}/items/{itemId:guid}/added")]
+    public async Task<ActionResult<SetDraftItemAddedResultDto>> SetDraftItemAdded(Guid conversationId, Guid draftId,
+        Guid itemId, [FromBody] SetDraftItemAddedRequest request, CancellationToken ct)
+    {
+        try { return Ok(await setDraftItemAdded.Handle(GetUserId(), conversationId, draftId, itemId, request, ct)); }
         catch (Exception ex) when (TryMapConversationError(ex, out var mapped)) { return mapped; }
     }
 
