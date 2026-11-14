@@ -24,7 +24,7 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
     IOptions<AiCoachModuleOptions> options, ILogger<SegmentDigestGenerator> logger,
     AiCoachTraceRecorder? recorder = null)
 {
-    public const string Version = "segment-digest-3";
+    public const string Version = "segment-digest-4";
     // New messages beyond this are dropped oldest-first; the cursor still moves past them.
     private const int MaxNewMessageBytes = 12000;
 
@@ -48,6 +48,7 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
         "When the user says a listed item is no longer true or has changed for good, set replaces to its ref and state the current fact. " +
         "Never extract moods or how today is going, past events, suggestions the user did not take on, unsaved drafts, questions, " +
         "hypotheticals, or details about health, money, religion, sexuality or other people. Skip anything already listed. " +
+        "A user message marked alreadyRemembered was saved during the chat; extract nothing more from it unless it corrects a listed item. " +
         "When unsure, extract nothing; an empty list is a good answer. ";
 
     public async Task<SegmentDigest> GenerateAsync(Conversation segment, bool includeSummary,
@@ -64,6 +65,7 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
 
         var zone = TimeZoneInfo.FindSystemTimeZoneById(segment.TimeZoneId);
         var recent = Bounded(extractMemories ? newMessages : []);
+        var remembered = RememberedMessageIds(activeMemories);
         var prompt = "You maintain a planning app's long-term context after a stretch of chat. " +
                      (includeSummary ? SummaryRules : "Return summary as null. ") +
                      (extractMemories ? MemoryRules : "Return an empty memories list. ") +
@@ -88,6 +90,7 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
             newMessages = recent.Select((message, index) => new
             {
                 index, role = message.Role == ConversationMessageRole.User ? "user" : "assistant", text = message.Content,
+                alreadyRemembered = remembered.Contains(message.Id) ? true : (bool?)null,
                 at = TimeZoneInfo.ConvertTime(message.CreatedAt, zone).ToString("yyyy-MM-dd HH:mm"),
             }),
             existingMemories = extractMemories
@@ -159,6 +162,10 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
             throw new ModelContextException("digest_unreadable");
         }
     }
+
+    /// <summary>User messages that already produced a memory in chat, so the digest does not save them again in other words.</summary>
+    public static HashSet<Guid> RememberedMessageIds(IEnumerable<UserMemory> activeMemories) =>
+        activeMemories.Where(memory => memory.SourceMessageId.HasValue).Select(memory => memory.SourceMessageId!.Value).ToHashSet();
 
     private static IReadOnlyList<DigestMessage> Bounded(IReadOnlyList<DigestMessage> messages)
     {
