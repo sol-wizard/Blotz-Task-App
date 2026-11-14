@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/react-native";
 import { Platform } from "react-native";
 import { auth0 } from "@/shared/services/api/auth0-client";
 import { analytics } from "@/shared/services/analytics";
+import { rememberLogin } from "@/shared/services/api/last-login";
 
 /**
  * Marks a login as open while the user is in the Auth0 browser, so the next cold start can
@@ -67,6 +68,7 @@ export async function recoverInterruptedLogin() {
       if (credentials) {
         // The class API, unlike the `useAuth0()` hook, does not store what it recovers.
         await auth0.credentialsManager.saveCredentials(credentials);
+        rememberLogin();
         analytics.trackLoginResumed({ msSinceLoginStarted });
         analytics.flush();
         return;
