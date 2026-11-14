@@ -58,7 +58,7 @@ public sealed class AzureResponsesModelGateway(HttpClient client, string endpoin
             ["max_output_tokens"] = request.MaxOutputTokens ?? profile.MaxOutputTokens,
             ["include"] = new JsonArray("reasoning.encrypted_content") };
         if (profile.ReasoningEffort is { } effort)
-            body["reasoning"] = new JsonObject { ["effort"] = effort };
+            body["reasoning"] = new JsonObject { ["effort"] = request.ReasoningEffort ?? effort };
         using var http = new HttpRequestMessage(HttpMethod.Post, endpoint.TrimEnd('/') + "/openai/v1/responses");
         http.Headers.Add("api-key", apiKey);
         http.Content = JsonContent.Create(body);

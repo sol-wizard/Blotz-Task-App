@@ -469,7 +469,9 @@ export function ExecutionChatPanel() {
         ? "chat.contentFiltered"
         : snapshot.generationError === "model_unavailable"
           ? "chat.modelUnavailable"
-          : "chat.generationFailed";
+          : snapshot.generationError === "output_limit" || snapshot.generationError === "context_limit"
+            ? "chat.tooMuchAtOnce"
+            : "chat.generationFailed";
     return (
       <View className="bg-[#FFF7ED] rounded-2xl px-3 py-2.5 my-2">
         <Text className="font-baloo text-sm text-[#C2410C]">{t(key)}</Text>

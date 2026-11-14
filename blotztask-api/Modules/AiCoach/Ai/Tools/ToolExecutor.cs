@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
@@ -15,10 +16,10 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
     MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-17";
+    public const string ContractVersion = "coach-tools-18";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
-        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Saved drafts and earlier reads may be out of date: read the date this turn before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
+        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. You can read at most twice per turn, so cover the whole range you need in one call instead of one call per day; if a result is truncated, use the second read for the dates its note names. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Saved drafts and earlier reads may be out of date: read the date this turn before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
         """{"type":"object","properties":{"startDate":{"type":"string","description":"yyyy-MM-dd in the user's local time zone"},"endDate":{"type":"string","description":"yyyy-MM-dd inclusive; at most 7 days from startDate"}},"required":["startDate","endDate"],"additionalProperties":false}""");
     private readonly Dictionary<string, (ModelToolCallRequest Request, ToolExecutionResult Result)> _results = [];
     private int _readCalls;
@@ -46,7 +47,8 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             if (draft.Proposals.All(item => item.Kind == ProposalKind.Note)) return mutation;
             var assessment = await checkSchedule(draft.Proposals, ct);
             draft.SetSchedule(assessment);
-            var content = JsonSerializer.Serialize(new { success = true, draft = DraftTools.View(draft), schedule = assessment });
+            var content = JsonSerializer.Serialize(new { success = true, draft = DraftTools.View(draft), schedule = assessment },
+                ModelContextBuilder.ContextJson);
             var checkedMutation = mutation with
             {
                 Content = content,

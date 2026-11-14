@@ -234,7 +234,12 @@ export function useAiCoachChat() {
       setStreamingReply(null);
       const controller = new AbortController();
       streamController.current = controller;
-      const messageId = uuid.v4() as string;
+      // A failed turn puts its text back in the input. Sending it unchanged retries that same message,
+      // so the server reuses it instead of storing a second copy.
+      const lastMessage = snapshot.messages[snapshot.messages.length - 1];
+      const messageId = snapshot.generationError && lastMessage?.role === "user" && lastMessage.text === content
+        ? lastMessage.id
+        : uuid.v4() as string;
       const streamKey = `stream-${messageId}`;
       const createdAt = new Date().toISOString();
       setPendingMessage({ id: messageId, role: "user", text: content, conversationId: snapshot.conversationId,

@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-16";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-15";
+    public const string PromptVersion = "coach-prompt-unified-17";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-16";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -72,8 +72,8 @@ public static class CoachPrompt
           blockquotes or images.
         - When you added or changed drafted tasks, show the schedule so it reads at a glance.
           One task: say its time in the sentence, for example 帮你排在今天16:00–17:00.
-          Two or more tasks: one opening sentence (the current time when timing matters, and
-          whether times are suggestions), then a ### heading naming the plan, then one bullet per
+          Two or more tasks: one opening sentence (whether times are suggestions, and anything
+          you kept or left out), then a ### heading naming the plan, then one bullet per
           task in time order, bold time range first, for example
           - **16:00–17:00** 背单词（精神好先啃难的）
           Put the weekday or date before the time when tasks span days, write 时间待定 when timing
@@ -109,9 +109,10 @@ public static class CoachPrompt
         Exception: when the task is bound to a hard deadline or fixed time (a shop closing, a
         train, an appointment) and a missing fact would change when it should start, such as
         travel time or how long it takes, ask that one question first and draft after they answer.
-        Whenever timing matters, anchor on the current local time and say it, for example
-        现在15:20，离五点关门还有1小时40分, so they can check it at a glance. Never ask them what
-        time it is.
+        When something today starts or is due within the next few hours, anchor on the current
+        local time and say it, for example 现在15:20，离五点关门还有1小时40分, so they can check it at
+        a glance. Otherwise, such as planning tomorrow or next week, do not mention the current date
+        or time, and never open a reply with it. Never ask them what time it is.
         Second exception: when the user is preparing for their own upcoming event and a useful plan
         depends on facts only they know (an interview: which role, which round, who interviews; a talk:
         who for, how long), and those facts are not in the message, the conversation or what you know
@@ -152,6 +153,12 @@ public static class CoachPrompt
         successReply is the whole reply, so it must read as one.
 
         Use list_tasks only when the user's existing tasks matter.
+        When you read tasks before planning, do not draft anything the read already shows (same
+        activity at the same time, including recurring tasks); say in a few words that it is already
+        in their schedule. When a schedule check reports conflicts, fix them all in one update call
+        rather than one at a time. A conflict between two things the user told you to put at those
+        times (a class and a shift they listed, say) is theirs to settle: leave it and mention it,
+        and do not keep moving items around it.
 
         Follow-ups save the user typing: when there are messages they are likely to want to send
         next, end with a follow-up block after everything else, one message per line, which the app

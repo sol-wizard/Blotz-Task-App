@@ -104,7 +104,8 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
             throw new ModelContextException("digest_context_limit");
 
         var timer = System.Diagnostics.Stopwatch.StartNew();
-        var result = await turnGateway.CompleteAsync(new(prompt, messages, [SaveDigest], maxOutput), timeout.Token);
+        var result = await turnGateway.CompleteAsync(new(prompt, messages, [SaveDigest],
+            BackgroundModelCall.OutputTokens(maxOutput), ReasoningEffort: BackgroundModelCall.ReasoningEffort), timeout.Token);
         timer.Stop();
         var estimatedUsd = model?.EstimateUsd(result.InputTokens, result.CachedInputTokens, result.OutputTokens);
         if (recorder is not null) await recorder.RecordSummaryAsync(new AiCoachTurnSummary

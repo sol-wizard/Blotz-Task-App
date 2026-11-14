@@ -39,6 +39,15 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
     ILogger<ModelTurnRuntime> logger, ModelContextBuilder contextBuilder,
     IHostEnvironment? environment = null) : IModelTurnRuntime
 {
+    // Plain words on purpose: the coach should simply do less per step, not talk about limits or tokens.
+    private static readonly GatewaySystemMessage OutputCutOffNote = new(
+        "Your last answer was too long to finish, so none of it reached the user or the list. Try again in smaller " +
+        "steps: add at most 10 items per add_items call and call it again for the rest, plan briefly, and keep your " +
+        "message to the user short and friendly. Don't mention that anything was cut off; just help as usual.");
+    private static readonly GatewaySystemMessage CloseAfterCutOffNote = new(
+        "You can't add or change items any more in this reply. In two or three short, friendly sentences, tell the " +
+        "user what is now in their list waiting for confirmation (the current drafts above), what is still missing, " +
+        "and that they can just say \"continue\" to have you add the rest. Don't mention limits or anything technical.");
 
     public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
     {
@@ -71,36 +80,62 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             var transcript = context.Transcript;
             summary = context.Summary;
             covered = context.SummarizedMessageCount;
+            // Set once a reply is cut off; the note then stays for the rest of the turn so later calls also stay short.
+            var outputCutOff = false;
+            // Set when a reply is cut off again after this turn already changed the list: one short closing reply
+            // without tools keeps that work instead of failing the whole turn.
+            var closeWithoutTools = false;
 
             while (calls < limits.MaxModelCallsPerTurn)
             {
                 // Tool execution mutates only the workspace. Rebuild the model projection with one
                 // current draft snapshot while leaving raw turn results intact for commit and traces.
                 transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                var contextFull = false;
                 if (liveTurn.Count > 0 && !contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
                 {
                     var projectedTurn = contextBuilder.BuildTurnTranscript(context with { Transcript = [] },
                         liveTurn, workspace.Drafts).Take(liveTurn.Count);
                     var turnBytes = Size(projectedTurn);
-                    context = await contextBuilder.BuildAsync(request with
+                    try
                     {
-                        Drafts = workspace.Drafts, Summary = summary, SummarizedMessageCount = covered,
-                    }, executor.AvailableTools, Call, turnBytes);
-                    system = context.SystemPrompt;
-                    summary = context.Summary;
-                    covered = context.SummarizedMessageCount;
-                    transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                        context = await contextBuilder.BuildAsync(request with
+                        {
+                            Drafts = workspace.Drafts, Summary = summary, SummarizedMessageCount = covered,
+                        }, executor.AvailableTools, Call, turnBytes);
+                        system = context.SystemPrompt;
+                        summary = context.Summary;
+                        covered = context.SummarizedMessageCount;
+                        transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                    }
+                    catch (ModelContextException ex) when (ex.Code == "context_limit")
+                    {
+                        // This turn's tool results alone no longer fit; the previous context is still usable.
+                        contextFull = true;
+                    }
                 }
-                if (!contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
+                if (contextFull || !contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
                 {
-                    logger.LogWarning("AiCoach context limit reached for {ConversationId} before model call {ModelCallNumber}",
-                        request.ConversationId, calls + 1);
-                    return Result(null, "context_limit");
+                    // Work already done this turn lives in the drafts, so the coach can still say what it did.
+                    var wrapUp = liveTurn.Count == 0 ? null : WrapUpTranscript(context);
+                    if (wrapUp is null || !contextBuilder.FitsBudget(system, wrapUp, []))
+                    {
+                        logger.LogWarning("AiCoach context limit reached for {ConversationId} before model call {ModelCallNumber}",
+                            request.ConversationId, calls + 1);
+                        return Result(null, "context_limit");
+                    }
+                    logger.LogWarning("AiCoach context full for {ConversationId} after {ToolCallCount} tool calls; asking for a closing reply without tools",
+                        request.ConversationId, toolCalls);
+                    transcript = wrapUp;
+                    contextFull = true;
                 }
-                var lastCall = calls == limits.MaxModelCallsPerTurn - 1 || executor.BudgetExhausted;
+                var lastCall = contextFull || closeWithoutTools || calls == limits.MaxModelCallsPerTurn - 1
+                    || executor.BudgetExhausted;
                 await Emit("reply.reset", new { });
                 var filter = request.Stream is null ? null : new FollowUpStreamFilter(text => Emit("reply.delta", new { text }));
-                var completion = await Call(new ModelGatewayRequest(system, transcript,
+                var completion = await Call(new ModelGatewayRequest(system,
+                    closeWithoutTools ? [.. transcript, CloseAfterCutOffNote]
+                        : outputCutOff ? [.. transcript, OutputCutOffNote] : transcript,
                     lastCall ? [] : executor.AvailableTools, MaxOutputTokens: model?.MaxOutputTokens ?? limits.MaxOutputTokens,
                     OnTextDelta: filter is null ? null : filter.WriteAsync));
                 if (filter is not null) await filter.FlushAsync();
@@ -111,6 +146,21 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                 }
                 if (completion.FinishReason == ModelFinishReason.Length)
                 {
+                    // A cut-off reply is dropped whole: its tool calls never ran and its text is reset on the next call.
+                    if (!outputCutOff && calls < limits.MaxModelCallsPerTurn)
+                    {
+                        logger.LogWarning("AiCoach output cut off for {ConversationId} at model call {ModelCallNumber}; retrying once in smaller steps",
+                            request.ConversationId, calls);
+                        outputCutOff = true;
+                        continue;
+                    }
+                    if (!closeWithoutTools && liveTurn.Count > 0 && calls < limits.MaxModelCallsPerTurn)
+                    {
+                        logger.LogWarning("AiCoach output cut off again for {ConversationId}; closing with a reply without tools",
+                            request.ConversationId);
+                        closeWithoutTools = true;
+                        continue;
+                    }
                     logger.LogWarning("AiCoach output limit reached for {ConversationId}", request.ConversationId);
                     return Result(null, "output_limit");
                 }
@@ -304,6 +354,22 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                     calls, request.ConversationId, completion.AssistantText,
                     JsonSerializer.Serialize(completion.ToolCalls, ContextJson));
             return completion;
+        }
+
+        // The turn's tool calls and results are left out (they no longer fit); the current drafts at the tail
+        // carry their effect.
+        List<GatewayMessage> WrapUpTranscript(ModelContext current)
+        {
+            var wrapUp = contextBuilder.BuildTurnTranscript(current, [], workspace.Drafts);
+            wrapUp.Add(new GatewaySystemMessage(
+                "This turn already used these tools: " + string.Join(", ", toolNames.Distinct()) + ". " +
+                "Their results are left out because the conversation is too long to show them, and tools are no longer " +
+                "available in this turn. The current drafts above already include their effect. Reply to the user now: " +
+                "say briefly what was done, and if the request is not finished, say what is left and suggest continuing " +
+                "in a smaller step (for example one week or one part at a time) in their next message. You can read " +
+                "their tasks again next turn, so never ask them to send task data. Do not claim anything was done that " +
+                "the drafts do not show."));
+            return wrapUp;
         }
 
         ModelTurnRunResult Result(string? text, string? error, IReadOnlyList<string>? followUps = null)

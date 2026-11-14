@@ -62,6 +62,7 @@
     "cancel": "Cancel",
     "micReady": "Microphone ready. Tap again to speak.",
     "generationFailed": "This reply could not be completed. Please try again or start a new conversation.",
+    "tooMuchAtOnce": "That was a bit much to handle at once. Try splitting it up, like one week at a time, or start a new topic.",
     "menu": "Chat options",
     "newTopic": "New topic",
     "clearHistory": "Clear chat history",
