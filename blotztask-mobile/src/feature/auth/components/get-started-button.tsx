@@ -13,6 +13,7 @@ import {
   consumeInterruptedLoginNotice,
   markLoginInProgress,
 } from "@/shared/services/api/pending-login";
+import { rememberLogin } from "@/shared/services/api/last-login";
 import { analytics } from "@/shared/services/analytics";
 import { toLoginErrorCode, toLoginFailureReason } from "@/feature/auth/utils/login-error-code";
 import type { LoginConnection, LoginErrorCode } from "@/shared/constants/posthog-events";
@@ -264,6 +265,7 @@ export default function GetStartedButton() {
         afterStall: attempt.stalled,
       });
       analytics.flush();
+      rememberLogin();
 
       // `authorize()` saved the credentials a moment ago, so the auth state is known.
       // Write it directly instead of invalidating the query and racing the `/(protected)`
