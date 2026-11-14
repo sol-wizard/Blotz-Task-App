@@ -3,6 +3,7 @@ import { useBadgeQueueStore } from "@/feature/badge/hooks/useBadgeQueueStore";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { FireworkOverlays } from "@/feature/firework-animation/components/firework-overlay";
 import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
+import { ScreenshotFeedbackCard } from "@/feature/settings/components/screenshot-feedback-card";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { useRecordAppOpen } from "@/shared/hooks/useRecordAppOpen";
@@ -95,10 +96,12 @@ export default function ProtectedLayout() {
           <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
           <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
           <Stack.Screen name="badge-details" options={{ headerShown: false }} />
+          <Stack.Screen name="feedback" options={{ headerShown: false }} />
         </Stack>
 
         <FireworkOverlays />
         <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
+        <ScreenshotFeedbackCard />
       </View>
     </FireworkProvider>
   );

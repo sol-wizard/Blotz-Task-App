@@ -45,6 +45,8 @@ export const EVENTS = {
   ABOUT_YOU_ANSWERED: "about_you_answered",
   ABOUT_YOU_SKIPPED: "about_you_skipped",
   ACCOUNT_DELETED: "account_deleted",
+  SCREENSHOT_FEEDBACK_SHOWN: "screenshot_feedback_shown",
+  SCREENSHOT_FEEDBACK_TAPPED: "screenshot_feedback_tapped",
 } as const;
 
 export const SCREEN_NAMES = {
