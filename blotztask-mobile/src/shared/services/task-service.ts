@@ -39,10 +39,14 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
   return await apiClient.get(url);
 }
 
-export async function toggleTaskCompletion(taskId: number): Promise<void> {
+export async function toggleTaskCompletion(
+  taskId: number,
+  isDone?: boolean,
+): Promise<void> {
   const url = `/Task/task-completion-status/${taskId}`;
 
-  await apiClient.put(url);
+  // When isDone is set, the API sets that state; older callers omit it and still toggle.
+  await apiClient.put(url, isDone === undefined ? undefined : { isDone });
 }
 
 export const addTaskItem = async (addTaskForm: TaskUpsertDTO): Promise<number> => {
