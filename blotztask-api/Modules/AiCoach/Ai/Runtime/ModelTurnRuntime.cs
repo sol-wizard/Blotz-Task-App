@@ -85,17 +85,28 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             // Set when a reply is cut off again after this turn already changed the list: one short closing reply
             // without tools keeps that work instead of failing the whole turn.
             var closeWithoutTools = false;
+            // Set once this turn's projection no longer fits; see BuildTurnTranscript.
+            var compactTurn = false;
 
             while (calls < limits.MaxModelCallsPerTurn)
             {
                 // Tool execution mutates only the workspace. Rebuild the model projection with one
                 // current draft snapshot while leaving raw turn results intact for commit and traces.
-                transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts, compactTurn);
                 var contextFull = false;
+                if (!compactTurn && liveTurn.Count > 0 && !contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
+                {
+                    // Dropping results later ones replaced is cheaper than summarizing history. It stays on for the rest
+                    // of the turn so the prompt prefix stops changing.
+                    compactTurn = true;
+                    transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts, compactTurn);
+                    logger.LogInformation("AiCoach compacted superseded tool results for {ConversationId} before model call {ModelCallNumber}",
+                        request.ConversationId, calls + 1);
+                }
                 if (liveTurn.Count > 0 && !contextBuilder.FitsBudget(system, transcript, executor.AvailableTools))
                 {
                     var projectedTurn = contextBuilder.BuildTurnTranscript(context with { Transcript = [] },
-                        liveTurn, workspace.Drafts).Take(liveTurn.Count);
+                        liveTurn, workspace.Drafts, compactTurn).Take(liveTurn.Count);
                     var turnBytes = Size(projectedTurn);
                     try
                     {
@@ -106,7 +117,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                         system = context.SystemPrompt;
                         summary = context.Summary;
                         covered = context.SummarizedMessageCount;
-                        transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts);
+                        transcript = contextBuilder.BuildTurnTranscript(context, liveTurn, workspace.Drafts, compactTurn);
                     }
                     catch (ModelContextException ex) when (ex.Code == "context_limit")
                     {
