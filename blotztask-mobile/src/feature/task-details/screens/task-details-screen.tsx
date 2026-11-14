@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { createEventInCalendarAsync } from "expo-calendar/legacy";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import DetailsView from "@/feature/task-details/components/details-view";
 import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
@@ -189,10 +190,7 @@ export default function TaskDetailsScreen() {
         });
       }
     } catch {
-      Toast.show({
-        type: "error",
-        text1: t("tasks:details.calendarExportFailed"),
-      });
+      showErrorToast(t("tasks:details.calendarExportFailed"));
     } finally {
       setIsExportingToCalendar(false);
     }

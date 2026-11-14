@@ -17,6 +17,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useTranslation } from "react-i18next";
 import { useDebouncedCallback } from "use-debounce";
@@ -43,17 +44,32 @@ type FeedbackFormField = {
   text: string;
 };
 
-// Set when the screen opens from the screenshot card, so that page is already attached.
+// Set when the screen opens with something already attached: from the screenshot card (the page),
+// or from 「反馈」 on an error toast (route `error-feedback`: the page plus the error).
 type FeedbackRouteParams = {
   imageUri?: string;
   imageWidth?: string;
   imageHeight?: string;
+  errorMessage?: string;
+  errorEventId?: string;
 };
 
-export default function SettingsFeedbackScreen() {
+type SettingsFeedbackScreenProps = {
+  // Under Settings the tab bar covers the home indicator; as a modal the screen pads it itself.
+  hasTabBar?: boolean;
+};
+
+export default function SettingsFeedbackScreen({ hasTabBar = true }: SettingsFeedbackScreenProps) {
   const router = useRouter();
-  const { imageUri, imageWidth, imageHeight } = useLocalSearchParams<FeedbackRouteParams>();
+  const { imageUri, imageWidth, imageHeight, errorMessage, errorEventId } =
+    useLocalSearchParams<FeedbackRouteParams>();
   const { t } = useTranslation("settings");
+  // Sent as the first line of the text, so the Lark row says which error this is about.
+  const errorLine = errorMessage ? t("feedback.aboutError", { message: errorMessage }) : null;
+  // Leaves room for the error line and its line break inside the backend's 500-character limit.
+  const maxTextLength = errorLine
+    ? Math.max(0, MAX_TEXT_LENGTH - errorLine.length - 1)
+    : MAX_TEXT_LENGTH;
   const { t: tVoice } = useTranslation("aiTaskGenerate");
   const { control, handleSubmit, getValues, setValue } = useForm<FeedbackFormField>({
     defaultValues: { text: "" },
@@ -71,7 +87,7 @@ export default function SettingsFeedbackScreen() {
   // The transcript is added after what is already typed; errors are toasted by the global handler.
   const addSpokenText = async (uri: string) => {
     const transcript = await transcribeFeedback(uri);
-    const combined = appendTranscript(getValues("text"), transcript, MAX_TEXT_LENGTH);
+    const combined = appendTranscript(getValues("text"), transcript, maxTextLength);
     setValue("text", combined, { shouldDirty: true });
   };
 
@@ -97,7 +113,9 @@ export default function SettingsFeedbackScreen() {
   const isSendingRef = useRef(false);
 
   const isVoiceBusy = isRecording || isTranscribing;
-  const canSubmit = text.trim().length > 0 && !isSubmitting && !isProcessingImage && !isVoiceBusy;
+  // With an error attached, the error line alone is enough to send.
+  const hasContent = text.trim().length > 0 || errorLine !== null;
+  const canSubmit = hasContent && !isSubmitting && !isProcessingImage && !isVoiceBusy;
   const canEditImage = !isSubmitting && !isProcessingImage;
 
   const handlePickImage = async () => {
@@ -109,7 +127,7 @@ export default function SettingsFeedbackScreen() {
 
       setImage(await compressFeedbackImage(picked.uri, picked.width, picked.height));
     } catch {
-      Toast.show({ type: "error", text1: t("feedback.imageError") });
+      showErrorToast(t("feedback.imageError"));
     } finally {
       setIsProcessingImage(false);
     }
@@ -119,15 +137,19 @@ export default function SettingsFeedbackScreen() {
     if (!canSubmit || isSendingRef.current) return;
     isSendingRef.current = true;
     try {
-      await submitFeedback({ text: data.text.trim(), image });
+      const typed = data.text.trim();
+      const fullText = errorLine ? [errorLine, typed].filter(Boolean).join("\n") : typed;
+      await submitFeedback({ text: fullText, image, errorEventId: errorEventId ?? null });
     } catch {
       // The global mutation toast shows the error; the text stays so the user can retry.
       return;
     } finally {
       isSendingRef.current = false;
     }
-    Toast.show({ type: "success", text1: t("feedback.success") });
     router.back();
+    // Shown after closing, like the AI sheet does: as a modal this screen has its own toast,
+    // which closes with it.
+    requestIdleCallback(() => Toast.show({ type: "success", text1: t("feedback.success") }));
   };
 
   // Built on press, not during render, because handleFormSubmit reads a ref.
@@ -179,7 +201,7 @@ export default function SettingsFeedbackScreen() {
       className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <SafeAreaView className="flex-1" edges={["top"]}>
+      <SafeAreaView className="flex-1" edges={hasTabBar ? ["top"] : ["top", "bottom"]}>
         <View className="flex-row items-center px-5 py-4">
           <Pressable onPress={() => router.back()} className="mr-4">
             <MaterialCommunityIcons name="arrow-left" size={24} color="#444964" />
@@ -199,6 +221,10 @@ export default function SettingsFeedbackScreen() {
         </View>
 
         <ScrollView className="flex-1 px-5" keyboardShouldPersistTaps="handled">
+          {errorLine && (
+            <Text className="text-sm font-baloo text-secondary/50 mt-4 px-1">{errorLine}</Text>
+          )}
+
           <View className="bg-white rounded-2xl px-4 py-3 mt-4">
             <FormTextInput
               name="text"
@@ -206,10 +232,10 @@ export default function SettingsFeedbackScreen() {
               control={control}
               inputRef={textInputRef}
               className="font-baloo text-lg text-secondary min-h-40"
-              inputProps={{ maxLength: MAX_TEXT_LENGTH, textAlignVertical: "top" }}
+              inputProps={{ maxLength: maxTextLength, textAlignVertical: "top" }}
             />
             <Text className="text-sm font-baloo text-secondary/50 text-right">
-              {text.length} / {MAX_TEXT_LENGTH}
+              {text.length} / {maxTextLength}
             </Text>
           </View>
 
@@ -274,7 +300,7 @@ export default function SettingsFeedbackScreen() {
           />
         )}
 
-        {/* The tab bar stays visible under Settings pages and already covers the home indicator. */}
+        {/* Under Settings the tab bar covers the home indicator; the modal pads it via SafeAreaView. */}
         <View className="flex-row items-center gap-3 px-5 py-3">
           <Pressable
             onPress={handleToggleKeyboard}

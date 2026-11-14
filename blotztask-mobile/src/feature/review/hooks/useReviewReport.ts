@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import { useTranslation } from "react-i18next";
 import { reviewKeys } from "@/shared/constants/query-key-factory";
 import { fetchReview, generateReview } from "@/feature/review/services/review-service";
@@ -29,10 +29,7 @@ export function useReview(periodType: ReviewPeriodType, anchorDate: string, enab
     },
     onError: (error) => {
       const quotaExceeded = isAxiosError(error) && error.response?.status === 429;
-      Toast.show({
-        type: "error",
-        text1: t(quotaExceeded ? "review.quotaError" : "review.generateError"),
-      });
+      showErrorToast(t(quotaExceeded ? "review.quotaError" : "review.generateError"));
     },
   });
 

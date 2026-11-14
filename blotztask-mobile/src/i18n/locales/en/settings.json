@@ -79,6 +79,7 @@
     "editProfile": "Edit Profile"
   },
   "feedback": {
+    "aboutError": "About this error: {{message}}",
     "title": "Feedback",
     "placeholder": "What went wrong, or what would you like to see?",
     "addImage": "Add a screenshot (optional)",

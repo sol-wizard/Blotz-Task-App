@@ -7,7 +7,7 @@ import {
 import { useCallback, useEffect, useRef } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import { usePeakLevelMeter } from "./usePeakLevelMeter";
 
 // Takes that never get louder than this are dropped before upload: Whisper invents text
@@ -83,7 +83,7 @@ export function useVoiceRecorder(
       recorder.record();
       meter.start();
     } catch (error) {
-      Toast.show({ type: "error", text1: t("errors.recordingFailed") });
+      showErrorToast(t("errors.recordingFailed"));
       console.warn("[Mic] Error starting recording.", error);
       trackRecordingFailure("RecordingStartFailed");
     }
@@ -124,7 +124,7 @@ export function useVoiceRecorder(
     await startPromiseRef.current;
 
     if (!recorder.isRecording) {
-      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
+      showErrorToast(t("errors.emptyAudio"));
       console.warn("[Mic] stopAndUpload called but recorder is not recording.");
       trackRecordingFailure("NotRecording");
       return false;
@@ -149,7 +149,7 @@ export function useVoiceRecorder(
 
     const peakDbfs = meter.peakDbfs();
     if (peakDbfs < SPEECH_LEVEL_DBFS) {
-      Toast.show({ type: "error", text1: t("errors.emptyAudio") });
+      showErrorToast(t("errors.emptyAudio"));
       console.warn(`[Mic] No speech detected (peak ${peakDbfs.toFixed(1)} dBFS); take discarded.`);
       trackRecordingFailure("NoSpeechDetected");
       discardRecordingFile(uri);

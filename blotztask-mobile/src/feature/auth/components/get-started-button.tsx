@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react-native";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import i18n from "@/i18n";
 import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
 import { updateUserProfile } from "@/shared/services/user-service";
@@ -117,7 +117,7 @@ function showLoginFailureToast(errorCode: LoginErrorCode) {
           ? "errors.loginStalled"
           : "errors.loginFailed";
 
-  Toast.show({ type: "error", text1: i18n.t(key) });
+  showErrorToast(i18n.t(key), { showFeedback: false });
 }
 
 export default function GetStartedButton() {
@@ -134,7 +134,7 @@ export default function GetStartedButton() {
 
   useEffect(() => {
     if (consumeInterruptedLoginNotice()) {
-      Toast.show({ type: "error", text1: i18n.t("errors.loginInterrupted") });
+      showErrorToast(i18n.t("errors.loginInterrupted"), { showFeedback: false });
     }
   }, []);
 

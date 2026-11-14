@@ -1,6 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import * as Sentry from "@sentry/react-native";
 import i18n from "@/i18n";
 
@@ -13,13 +13,11 @@ export const queryClient = new QueryClient({
       if (query.meta?.silent) return;
 
       if (__DEV__) console.error("[Query Error]", error);
-      Sentry.captureException(error, { tags: { source: "query" } });
+      const sentryEventId = Sentry.captureException(error, { tags: { source: "query" } });
 
-      const msg = getErrorMessage(error);
-
-      Toast.show({
-        type: "error",
-        text1: msg,
+      showErrorToast(getErrorMessage(error), {
+        sentryEventId,
+        showFeedback: !isNoConnection(error),
       });
     },
   }),
@@ -31,13 +29,11 @@ export const queryClient = new QueryClient({
       if (mutation.meta?.silent) return;
 
       if (__DEV__) console.error("[Mutation Error]", error);
-      Sentry.captureException(error, { tags: { source: "mutation" } });
+      const sentryEventId = Sentry.captureException(error, { tags: { source: "mutation" } });
 
-      const msg = getErrorMessage(error, mutation.meta);
-
-      Toast.show({
-        type: "error",
-        text1: msg,
+      showErrorToast(getErrorMessage(error, mutation.meta), {
+        sentryEventId,
+        showFeedback: !isNoConnection(error),
       });
     },
   }),
@@ -63,6 +59,11 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// No response at all: the phone is offline, so 「反馈」 is left out (it could not be sent either).
+function isNoConnection(error: unknown): boolean {
+  return isAxiosError(error) && !error.response;
+}
 
 function getErrorMessage(error: unknown, meta?: Record<string, unknown>): string {
   if (isAxiosError(error)) {

@@ -5,8 +5,15 @@ import { FeedbackImage } from "../modals/feedback-image";
 export function useSubmitFeedbackMutation() {
   const mutation = useMutation({
     mutationKey: ["submitFeedback"],
-    mutationFn: ({ text, image }: { text: string; image: FeedbackImage | null }) =>
-      submitFeedback(text, image),
+    mutationFn: ({
+      text,
+      image,
+      errorEventId,
+    }: {
+      text: string;
+      image: FeedbackImage | null;
+      errorEventId: string | null;
+    }) => submitFeedback(text, image, errorEventId),
     meta: {
       errorMap: {
         429: "errors.feedbackRateLimited",

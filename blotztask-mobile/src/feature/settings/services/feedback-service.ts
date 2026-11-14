@@ -5,7 +5,11 @@ import { apiClient } from "@/shared/services/api/client";
 import { FeedbackImage } from "../modals/feedback-image";
 
 // The backend takes the user id from the login, so only the device details are sent here.
-export const submitFeedback = async (text: string, image: FeedbackImage | null): Promise<void> => {
+export const submitFeedback = async (
+  text: string,
+  image: FeedbackImage | null,
+  errorEventId: string | null,
+): Promise<void> => {
   const formData = new FormData();
   formData.append("text", text);
   formData.append("platform", Platform.OS);
@@ -15,6 +19,10 @@ export const submitFeedback = async (text: string, image: FeedbackImage | null):
   }
   if (Device.modelName) {
     formData.append("deviceModel", Device.modelName);
+  }
+  // Only when the user came from an error toast; Settings feedback leaves the Lark cell empty.
+  if (errorEventId) {
+    formData.append("errorEventId", errorEventId);
   }
 
   if (image) {

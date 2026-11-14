@@ -97,6 +97,10 @@ export default function ProtectedLayout() {
           <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
           <Stack.Screen name="badge-details" options={{ headerShown: false }} />
           <Stack.Screen name="feedback" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="error-feedback"
+            options={{ headerShown: false, presentation: "modal" }}
+          />
         </Stack>
 
         <FireworkOverlays />

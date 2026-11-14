@@ -12,6 +12,8 @@ public class SubmitFeedbackCommand
     public string? AppVersion { get; init; }
     public string? Platform { get; init; }
     public string? DeviceModel { get; init; }
+    // Sentry event ID of the error the user is reporting, when they came from an error toast.
+    public string? ErrorEventId { get; init; }
 }
 
 public class SubmitFeedbackCommandHandler(
@@ -42,7 +44,7 @@ public class SubmitFeedbackCommandHandler(
         }
 
         var fields = BuildFields(command.Text, command.UserId, submitTime, hostEnvironment.EnvironmentName,
-            command.AppVersion, command.Platform, command.DeviceModel, fileToken);
+            command.AppVersion, command.Platform, command.DeviceModel, command.ErrorEventId, fileToken);
         await bitableClient.CreateRecordAsync(opts.FeedbackBaseToken, opts.FeedbackTableId, fields, ct);
 
         logger.LogInformation("Feedback submitted, hasImage={HasImage}", fileToken is not null);
@@ -65,6 +67,7 @@ public class SubmitFeedbackCommandHandler(
         string? appVersion,
         string? platform,
         string? deviceModel,
+        string? errorEventId,
         string? fileToken)
     {
         var fields = new Dictionary<string, object>
@@ -79,6 +82,8 @@ public class SubmitFeedbackCommandHandler(
         if (appVersion is not null) fields["应用版本"] = appVersion;
         if (platform is not null) fields["平台"] = platform;
         if (deviceModel is not null) fields["设备型号"] = deviceModel;
+        // Blank counts as absent, so a stray empty form value never writes an empty 错误编号 cell.
+        if (!string.IsNullOrWhiteSpace(errorEventId)) fields["错误编号"] = errorEventId.Trim();
         if (fileToken is not null) fields["图片"] = new[] { new { file_token = fileToken } };
 
         return fields;

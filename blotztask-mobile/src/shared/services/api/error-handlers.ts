@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { queryClient } from "@/shared/util/queryClient";
 import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
 import * as Sentry from "@sentry/react-native";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import i18n from "@/i18n";
 
 export function handleAuthError(
@@ -42,7 +42,8 @@ export function handleAuthError(
               refreshError: String(refreshError),
             },
           });
-          Toast.show({ type: "error", text1: i18n.t("errors.sessionExpired") });
+          // No 「反馈」: the user is sent to sign-in next, where the feedback screen can't open.
+          showErrorToast(i18n.t("errors.sessionExpired"), { showFeedback: false });
         }
 
         clearTokens();

@@ -51,6 +51,9 @@
     "message": "Sorry about that! The app ran into an unexpected issue. Reloading usually fixes it.",
     "button": "Reload App"
   },
+  "errorToast": {
+    "feedback": "Feedback"
+  },
   "errors": {
     "network": "No internet connection.",
     "aiQuotaExceeded": "You've used all AI for this period.",

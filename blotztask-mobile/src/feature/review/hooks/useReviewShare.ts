@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { captureRef, releaseCapture } from "react-native-view-shot";
 import { shareAsync } from "expo-sharing";
 import { useTranslation } from "react-i18next";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import { EVENTS, type ShareContentType, type ShareSource } from "@/shared/constants/posthog-events";
 import { analytics } from "@/shared/services/analytics";
 
@@ -37,7 +37,7 @@ export function useReviewShare({ captureTargetRef, source, contentType }: Params
         error: "capture_failed",
       });
 
-      Toast.show({ type: "error", text1: t("review.shareError") });
+      showErrorToast(t("review.shareError"));
       return;
     }
 
@@ -79,7 +79,7 @@ export function useReviewShare({ captureTargetRef, source, contentType }: Params
         error: failureStage === "capture" ? "capture_failed" : "share_failed",
       });
 
-      Toast.show({ type: "error", text1: t("review.shareError") });
+      showErrorToast(t("review.shareError"));
     } finally {
       setIsSharingImage(false);
 
