@@ -36,8 +36,7 @@ function reportRefreshFailure(error: unknown, durationMs: number) {
 }
 /* eslint-enable camelcase */
 
-// Returns a valid access token; the SDK refreshes/rotates it when expired.
-export async function getAuthToken(): Promise<string | null> {
+async function loadAuthToken(): Promise<string | null> {
   const startedAt = Date.now();
   try {
     const { accessToken } = await auth0.credentialsManager.getCredentials();
@@ -46,6 +45,20 @@ export async function getAuthToken(): Promise<string | null> {
     reportRefreshFailure(error, Date.now() - startedAt);
     return null;
   }
+}
+
+// Returns a valid access token; the SDK refreshes/rotates it when expired.
+// Parallel requests share one call: the native SDK queues them, and each queued call
+// would retry the refresh on its own after the first one fails.
+let inFlightToken: Promise<string | null> | null = null;
+
+export function getAuthToken(): Promise<string | null> {
+  if (!inFlightToken) {
+    inFlightToken = loadAuthToken().finally(() => {
+      inFlightToken = null;
+    });
+  }
+  return inFlightToken;
 }
 
 async function refresh(): Promise<string | null> {
