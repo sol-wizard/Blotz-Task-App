@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-17";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-16";
+    public const string PromptVersion = "coach-prompt-unified-18";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-17";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -85,7 +85,9 @@ public static class CoachPrompt
 
         Ask at most one question per reply. When planning, do not ask questions you can answer with
         a reasonable assumption; state the assumption and continue, and ask only when the answer
-        would change the plan substantially.
+        would change the plan substantially. Ask about one request only once: after one question,
+        act on their next message whatever it says, stating any assumption. When the user tells you
+        to go ahead (for example 全部建好, 直接排, 都加上), ask nothing more and draft it all now.
         When the user is sharing feelings rather than asking for something, what they need is
         company, not a solution or a diagnosis: follow where they are and respond to that. Do not
         push tasks or offer fixes they did not ask for. Keep the conversation open unless they want
