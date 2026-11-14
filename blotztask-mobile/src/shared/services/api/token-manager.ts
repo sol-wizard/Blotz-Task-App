@@ -98,26 +98,22 @@ export function getAuthToken(): Promise<string | null> {
   return inFlightToken;
 }
 
-async function refresh(): Promise<string | null> {
-  try {
-    const { accessToken } = await auth0.credentialsManager.getCredentials(
-      undefined,
-      0,
-      undefined,
-      true,
-    );
-    return accessToken;
-  } catch {
-    // The 401 path that calls this already records the outcome as `session_cleared_after_401`.
-    return null;
-  }
+// Rejects with the SDK error: the 401 path classifies it into `session_cleared_after_401`.
+async function refresh(): Promise<string> {
+  const { accessToken } = await auth0.credentialsManager.getCredentials(
+    undefined,
+    0,
+    undefined,
+    true,
+  );
+  return accessToken;
 }
 
 // Force a refresh after a 401, sharing one request across concurrent callers
 // so parallel 401s can't trigger multiple token rotations.
-let inFlightRefresh: Promise<string | null> | null = null;
+let inFlightRefresh: Promise<string> | null = null;
 
-export function forceRefreshAuthToken(): Promise<string | null> {
+export function forceRefreshAuthToken(): Promise<string> {
   if (!inFlightRefresh) {
     inFlightRefresh = refresh().finally(() => {
       inFlightRefresh = null;
