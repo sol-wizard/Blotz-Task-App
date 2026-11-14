@@ -51,6 +51,9 @@
     "message": "出了点小问题，重启App试试看！",
     "button": "重启应用"
   },
+  "errorToast": {
+    "feedback": "反馈"
+  },
   "errors": {
     "network": "网络好像断开了",
     "aiQuotaExceeded": "本周期 AI 用量已达上限。",

@@ -11,7 +11,7 @@ import {
   ExtractedTaskDTO,
 } from "../models/ai-result-message-dto";
 import { useTranslation } from "react-i18next";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import type { AiTaskGenerationTurn, AiTaskInputMode } from "@/shared/constants/posthog-events";
 import { analytics } from "@/shared/services/analytics";
 
@@ -78,7 +78,7 @@ export function useAiTaskGenerator({
         errorCode: "NetworkError",
         durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
-      Toast.show({ type: "error", text1: t("errors.default") });
+      showErrorToast(t("errors.default"));
     }
   };
 
@@ -110,7 +110,7 @@ export function useAiTaskGenerator({
         errorCode: "NetworkError",
         durationMs: startedAt !== null ? Date.now() - startedAt : undefined,
       });
-      Toast.show({ type: "error", text1: t("errors.default") });
+      showErrorToast(t("errors.default"));
     }
   };
 
@@ -135,7 +135,7 @@ export function useAiTaskGenerator({
         next.splice(index, 0, removed);
         return next;
       });
-      Toast.show({ type: "error", text1: t("errors.default") });
+      showErrorToast(t("errors.default"));
     }
   };
 
@@ -157,7 +157,7 @@ export function useAiTaskGenerator({
         next.splice(index, 0, removed);
         return next;
       });
-      Toast.show({ type: "error", text1: t("errors.default") });
+      showErrorToast(t("errors.default"));
     }
   };
 
@@ -179,7 +179,7 @@ export function useAiTaskGenerator({
         next.splice(index, 0, removed);
         return next;
       });
-      Toast.show({ type: "error", text1: t("errors.default") });
+      showErrorToast(t("errors.default"));
     }
   };
 
@@ -239,7 +239,7 @@ export function useAiTaskGenerator({
     });
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
-    Toast.show({ type: "error", text1: t(i18nKey) });
+    showErrorToast(t(i18nKey));
   };
 
   useEffect(() => {

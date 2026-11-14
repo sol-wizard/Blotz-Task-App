@@ -79,6 +79,7 @@
     "editProfile": "编辑个人资料"
   },
   "feedback": {
+    "aboutError": "关于这个错误：{{message}}",
     "title": "意见反馈",
     "placeholder": "遇到什么问题，或者想要什么功能？",
     "addImage": "添加截图（可选）",

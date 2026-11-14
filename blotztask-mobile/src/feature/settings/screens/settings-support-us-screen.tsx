@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorCode, useIAP } from "expo-iap";
 import * as Haptics from "expo-haptics";
 import LottieView from "lottie-react-native";
-import Toast from "react-native-toast-message";
+import { showErrorToast } from "@/shared/util/show-error-toast";
 import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import LoadingScreen from "@/shared/components/loading-screen";
@@ -41,7 +41,7 @@ export default function SettingsSupportUsScreen() {
       setPendingSku(null);
       // Backing out of the StoreKit sheet is not an error worth surfacing.
       if (error.code === ErrorCode.UserCancelled) return;
-      Toast.show({ type: "error", text1: t("supportUs.failed") });
+      showErrorToast(t("supportUs.failed"));
     },
     onError: () => setStatus("unavailable"),
   });
@@ -60,7 +60,7 @@ export default function SettingsSupportUsScreen() {
       await requestPurchase({ request: { apple: { sku } }, type: "in-app" });
     } catch {
       setPendingSku(null);
-      Toast.show({ type: "error", text1: t("supportUs.failed") });
+      showErrorToast(t("supportUs.failed"));
     }
   };
 
@@ -83,9 +83,7 @@ export default function SettingsSupportUsScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-base font-baloo text-gray-500 leading-6">
-          {t("supportUs.blurb")}
-        </Text>
+        <Text className="text-base font-baloo text-gray-500 leading-6">{t("supportUs.blurb")}</Text>
 
         {isUnavailable ? (
           <View className="bg-white rounded-2xl px-6 py-8 mt-6">

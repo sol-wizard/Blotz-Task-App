@@ -23,6 +23,7 @@ public class FeedbackController(
         [FromForm] string? appVersion,
         [FromForm] string? platform,
         [FromForm] string? deviceModel,
+        [FromForm][MaxLength(64)] string? errorEventId,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 500)
@@ -41,7 +42,8 @@ public class FeedbackController(
                 Image = image,
                 AppVersion = appVersion,
                 Platform = platform,
-                DeviceModel = deviceModel
+                DeviceModel = deviceModel,
+                ErrorEventId = errorEventId
             }, ct);
 
         return Ok();
