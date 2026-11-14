@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.ClientModel;
 using Azure.AI.Projects;
 using BlotzTask.Extension.Options;
+using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
@@ -134,6 +135,11 @@ public class AiChatService(
         {
             logger.LogWarning(ex, "Request blocked by content filter.");
             throw new AiContentFilterException();
+        }
+        catch (AiQuotaExceededException)
+        {
+            // Let AiHubFilter map this to QuotaExceeded — do not wrap as Unknown.
+            throw;
         }
         catch (Exception ex)
         {

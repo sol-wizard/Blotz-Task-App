@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
+public class TaskStatusUpdateRequest
+{
+    public bool? IsDone { get; init; }
+}
+
 public class TaskStatusUpdateCommand
 {
     [Required] public int TaskId { get; init; }
