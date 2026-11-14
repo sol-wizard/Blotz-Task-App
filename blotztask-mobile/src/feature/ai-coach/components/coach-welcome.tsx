@@ -5,7 +5,17 @@ import { useTranslation } from "react-i18next";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import { format } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
-import { CoachMark } from "./coach-header";
+import { ASSETS } from "@/shared/constants/assets";
+import { GradientCircle } from "@/shared/components/gradient-circle";
+
+/** The coach's own mark at the top of the empty chat. */
+function CoachMark({ size }: { size: number }) {
+  return (
+    <GradientCircle size={size}>
+      <ASSETS.whiteBun width={size * 0.58} height={size * 0.58} style={{ position: "absolute" } as const} />
+    </GradientCircle>
+  );
+}
 
 type Starter = {
   key: "planTomorrow" | "breakDown" | "brainDump" | "talk";

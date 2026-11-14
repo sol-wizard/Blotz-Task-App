@@ -29,9 +29,8 @@
     }
   },
   "chat": {
-    "title": "AI Coach",
     "scrollToLatest": "Scroll to latest message",
-    "inputPlaceholder": "What do you want to do?",
+    "inputPlaceholder": "Ask Me~",
     "thinking": "Thinking…",
     "taskContextRead": "Checked tasks in the app",
     "connecting": "Connecting…",
@@ -76,8 +75,8 @@
     "generating": "Generating reply",
     "reconnecting": "Connection interrupted. Syncing the result…",
     "followUps": "Suggested replies",
-    "status": "Sees your tasks and schedule",
-    "back": "Back",
+    "backToTasks": "Back to Tasks",
+    "tasks": "Tasks",
     "newTopicStarted": "New topic started — earlier messages won't carry over (except what AI remembers)"
   },
   "feedback": {
