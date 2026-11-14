@@ -19,7 +19,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
         item["properties"]!["suggestedFields"] = JsonNode.Parse("""{"type":"array","uniqueItems":true,"items":{"type":"string","enum":["date","startTime","endTime"]},"description":"Only task date/time fields supplied as AI suggestions. Preserve unchanged flags on updates."}""");
         item["required"] = JsonNode.Parse("""["kind","title"]""");
         var reply = legacy["properties"]!["successReply"]!.DeepClone();
-        reply["description"] = "Success reply, often the entire reply, rendered as Markdown. Write in the user's register, like a friend helping out (in Chinese, spoken Mandarin), not a system notice. If the user's message carried feeling, open with a few words responding to it. If they changed their mind or voiced a worry, say in a few words whether their reasoning holds and why. For one task, one or two sentences that include its time range. For two or more tasks, use the schedule format from the instructions: one opening sentence, a ### heading, one bullet per task in time order with the bold time range first. Mention notes by count only. Say that items await their confirmation in the list, not saved; mention suggested times when applicable.";
+        reply["description"] = "Success reply, often the entire reply, rendered as Markdown. Write in the user's register, like a friend helping out (in Chinese, spoken Mandarin), not a system notice. If the user's message carried feeling, open with a few words responding to it. If they changed their mind or voiced a worry, say in a few words whether their reasoning holds and why. For one task, one or two sentences that include its time range. For two or more tasks, use the schedule format from the instructions: one opening sentence, a ### heading, one bullet per task in time order with the bold time range first. Mention notes by count only. Say the items are ready for them to add in the app; nothing is saved until they add it. Mention suggested times when applicable.";
         var updateFields = item.DeepClone();
         updateFields.AsObject().Remove("required");
         updateFields["properties"]!.AsObject().Remove("kind");
@@ -71,8 +71,11 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
             if (!DraftTools.IsValidSuccessReply(reply))
                 throw new ArgumentException($"Provide a successReply of at most {DraftTools.SuccessReplyMaxLength} characters without control characters other than line breaks.");
             var pending = drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).ToArray();
-            // Consolidate older task cards only after the complete operation has validated.
-            var proposals = pending.SelectMany(draft => draft.Proposals).Where(item => !item.IsSaved).ToList();
+            var current = pending.SingleOrDefault(draft => draft.IsReviewList);
+            // Consolidate older task cards only after the complete operation has validated. Items the user saved
+            // with a tick stay on the current list so their cards can still be unticked; the tools can't change them.
+            var proposals = pending.SelectMany(draft => draft.Proposals
+                .Where(item => draft == current || !item.IsSaved)).ToList();
             switch (call.Name)
             {
                 case "add_items":
@@ -86,21 +89,23 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
                         CheckFields(update, "itemId", "fields");
                         var id = update.GetProperty("itemId").GetGuid();
                         if (!updatedIds.Add(id)) throw new ArgumentException("Duplicate item IDs.");
-                        var index = proposals.FindIndex(item => item.ProposalId == id);
+                        var index = proposals.FindIndex(item => item.ProposalId == id && !item.IsSaved);
                         if (index < 0) throw new ArgumentException("Unknown unsaved review item.");
                         proposals[index] = ReadItem(update.GetProperty("fields"), proposals[index]);
                     }
                     break;
                 case "remove_items":
                     var ids = Array(args, "itemIds").Select(value => value.GetGuid()).ToArray();
-                    if (ids.Distinct().Count() != ids.Length || ids.Any(id => proposals.All(item => item.ProposalId != id)))
+                    if (ids.Distinct().Count() != ids.Length
+                        || ids.Any(id => !proposals.Any(item => item.ProposalId == id && !item.IsSaved)))
                         throw new ArgumentException("Unknown or duplicate unsaved review item.");
                     proposals.RemoveAll(item => ids.Contains(item.ProposalId));
                     break;
                 default: throw new ArgumentException("Unknown review tool.");
             }
-            if (proposals.Count > 100) throw new ArgumentException("The review list can contain at most 100 items.");
-            var current = pending.SingleOrDefault(draft => draft.IsReviewList);
+            // Saved items don't count: they no longer need reviewing, and the tools can't remove them to make room.
+            if (proposals.Count(item => !item.IsSaved) > 100)
+                throw new ArgumentException("The review list can contain at most 100 unsaved items.");
             var draft = current ?? new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
             draft.Replace(proposals);
             if (proposals.Count == 0) draft.Discard();
@@ -144,6 +149,8 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
                 : original?.SuggestedFields ?? [];
             item = item with { SuggestedFields = suggested };
         }
+        // An edited item keeps its card under the reply that first suggested it.
+        item = item with { SuggestedInMessageId = original?.SuggestedInMessageId };
         item.Validate();
         return item;
 

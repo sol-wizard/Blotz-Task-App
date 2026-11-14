@@ -213,5 +213,19 @@
     "generating": "正在整理…",
     "generatingDescription": "AI 正在整理清单，完成后可编辑和添加。",
     "toggleDetails": "展开或收起详情"
+  },
+  "card": {
+    "add": "加入{{title}}",
+    "addedTask": "已加入你的任务",
+    "addedNote": "已加入你的笔记",
+    "addedWithClash": "已加入，和{{tasks}}时间重叠",
+    "removedTask": "已从你的任务中移除",
+    "removedNote": "已从你的笔记中移除",
+    "addFailed": "没加上，请重试。",
+    "removeFailed": "没移除成功，请重试。",
+    "timePassed": "这个时间已经过去，点铅笔改一下时间。",
+    "needsTime": "请先点铅笔设置日期和时间。",
+    "listChanged": "清单已更新，请再试一次。",
+    "editRepeating": "重复任务请在任务列表里编辑。"
   }
 }

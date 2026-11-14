@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AxiosError } from "axios";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
@@ -17,8 +17,9 @@ import {
   MessageFeedbackDto,
   EditedDraftItemDto,
   EditedNoteDraftItemDto,
+  TaskDraftItemDto,
 } from "../models/ai-coach-dto";
-import { reviewedItems, prepareReviewConfirmation, reviewConfirmationSaved, isDefiniteConfirmationRejection, ReviewConfirmation } from "../models/review-list";
+import { reviewedItems } from "../models/review-list";
 import * as aiCoachService from "../services/ai-coach-service";
 import { MessageSource, streamCoachMessage } from "../services/coach-stream-service";
 
@@ -40,6 +41,22 @@ export interface ConfirmOutcome {
   errorCode: string | null;
   scheduleAssessment?: DraftScheduleAssessmentDto | null;
 }
+
+/** A review list with the reply whose stored copy holds it; cards without their own reply sit under that reply. */
+export interface ReviewListSource {
+  list: ArtifactEnvelopeDto;
+  containerMessageId: string | null;
+  /** The open topic's list from the snapshot; stored copies on replies are history and never tappable. */
+  live: boolean;
+}
+export interface TickOutcome {
+  added: boolean;
+  /** Titles of existing tasks that a newly saved task overlaps. */
+  conflicts: string[];
+  errorCode: string | null;
+}
+
+export const isItemSaved = (item: TaskDraftItemDto) => item.persistedTaskId != null || item.persistedNoteId != null;
 
 export const chatMessagesKey = ["aiCoach", "chat", "messages"] as const;
 
@@ -66,8 +83,6 @@ export function useAiCoachChat() {
   const reducedMotion = useReducedMotion();
   const reducedMotionRef = useRef(reducedMotion);
   useEffect(() => { reducedMotionRef.current = reducedMotion; }, [reducedMotion]);
-  // undefined means no preview event yet; null means the tool removed the last item.
-  const [reviewPreview, setReviewPreview] = useState<ArtifactEnvelopeDto | null | undefined>(undefined);
   const [streaming, setStreaming] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const streamController = useRef<AbortController | null>(null);
@@ -81,12 +96,11 @@ export function useAiCoachChat() {
     streamController.current?.abort();
   }, []);
   const snapshotRef = useRef<ConversationSnapshotDto | null>(null);
-  const [pendingConfirmation, setPendingConfirmation] = useState<ReviewConfirmation | null>(null);
-  const pendingConfirmationRef = useRef(pendingConfirmation);
-  const setConfirmation = useCallback((value: typeof pendingConfirmation) => {
-    pendingConfirmationRef.current = value;
-    setPendingConfirmation(value);
-  }, []);
+  // The circle the user wants per item while its requests run; once they settle, the saved IDs decide.
+  const [wantedAdded, setWantedAdded] = useState<Record<string, boolean>>({});
+  const wantedRef = useRef<Record<string, boolean>>({});
+  const ticking = useRef(new Set<string>());
+  const [tickBusy, setTickBusy] = useState(false);
   const invalidateSavedItems = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: taskKeys.all });
     void queryClient.invalidateQueries({ queryKey: ddlKeys.all });
@@ -108,13 +122,7 @@ export function useAiCoachChat() {
     snapshotRef.current = next;
     setSnapshot(next);
     if (next.generationStatus !== "running") setReconnecting(false);
-    const operation = pendingConfirmationRef.current;
-    if (operation && reviewConfirmationSaved(operation, next)) {
-      setConfirmation(null);
-      invalidateSavedItems();
-      refreshHistory();
-    }
-  }, [setConfirmation, invalidateSavedItems, refreshHistory]);
+  }, []);
 
   const applyOpenSnapshot = useCallback(async (next: ConversationSnapshotDto, isCurrent: () => boolean) => {
     if (!isCurrent()) return;
@@ -195,7 +203,7 @@ export function useAiCoachChat() {
     return () => { cancelled = true; };
   }, [conversationId]);
   useEffect(() => {
-    if (streaming || (!serverBusy && !pendingConfirmation) || !conversationId) return;
+    if (streaming || !serverBusy || !conversationId) return;
     const id = conversationId;
     let cancelled = false;
     const timer = setInterval(() => {
@@ -218,11 +226,12 @@ export function useAiCoachChat() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, pendingConfirmation, streaming]);
+  }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, streaming]);
 
   const send = useCallback(
     async (text: string, source?: MessageSource): Promise<string | null> => {
-      if (!snapshot || busy.current || pendingConfirmation || snapshot.generationStatus === "running") return "NotReady";
+      // A tick changes the conversation version, so a message waits until every tick has settled.
+      if (!snapshot || busy.current || ticking.current.size > 0 || snapshot.generationStatus === "running") return "NotReady";
       const content = text.trim();
       if (!content) return null;
       busy.current = true;
@@ -230,7 +239,6 @@ export function useAiCoachChat() {
       setStatus("sending");
       setStreaming(true);
       setReconnecting(false);
-      setReviewPreview(undefined);
       setStreamingReply(null);
       const controller = new AbortController();
       streamController.current = controller;
@@ -296,9 +304,6 @@ export function useAiCoachChat() {
                 shown = 0;
                 stopReveal();
                 break;
-              case "review.preview":
-                setReviewPreview(event.payload.pendingList);
-                break;
             }
           },
           controller.signal,
@@ -335,13 +340,12 @@ export function useAiCoachChat() {
         if (epoch === lifecycle.current) {
           setPendingMessage(null);
           setStreamingReply(null);
-          setReviewPreview(undefined);
           setStreaming(false);
           setStatus("ready");
         }
       }
     },
-    [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
+    [snapshot, applySnapshot, resync, refreshHistory],
   );
 
   const confirm = useCallback(
@@ -397,7 +401,7 @@ export function useAiCoachChat() {
   const edit = useCallback(
     async (draftId: string, edited: EditedDraftDto): Promise<string | null> => {
       const draft = snapshot?.artifacts.find((item) => item.id === draftId);
-      if (!snapshot || !draft || busy.current || pendingConfirmation) return "NotReady";
+      if (!snapshot || !draft || busy.current || ticking.current.size > 0) return "NotReady";
       busy.current = true;
       lifecycle.current += 1;
       setStatus("sending");
@@ -418,12 +422,12 @@ export function useAiCoachChat() {
         setStatus("ready");
       }
     },
-    [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
+    [snapshot, applySnapshot, resync, refreshHistory],
   );
 
   const reject = useCallback(
     async (draftId: string): Promise<string | null> => {
-      if (!snapshot || busy.current || pendingConfirmation) return "NotReady";
+      if (!snapshot || busy.current || ticking.current.size > 0) return "NotReady";
       busy.current = true;
       lifecycle.current += 1;
       setStatus("sending");
@@ -445,11 +449,84 @@ export function useAiCoachChat() {
         setStatus("ready");
       }
     },
-    [snapshot, applySnapshot, resync, refreshHistory, pendingConfirmation],
+    [snapshot, applySnapshot, resync, refreshHistory],
   );
 
-  const pendingList = streaming && reviewPreview !== undefined ? reviewPreview : snapshot?.pendingList ?? null;
-  const reviewBusy = status === "connecting" || status === "sending" || !!serverBusy;
+  const setWanted = useCallback((itemId: string, added: boolean | undefined) => {
+    const next = { ...wantedRef.current };
+    if (added === undefined) delete next[itemId];
+    else next[itemId] = added;
+    wantedRef.current = next;
+    setWantedAdded(next);
+  }, []);
+
+  /**
+   * Tick or untick one card. Its circle flips at once; one request per item runs at a time, and taps made
+   * meanwhile only change the wanted state, which one last request sends. Resolves with the final result for
+   * the tap that started the requests, and with null for taps made while they run.
+   */
+  const tickItem = useCallback(async (draftId: string, itemId: string, added: boolean): Promise<TickOutcome | null> => {
+    // An edit, topic change or task-card save is running; its version check would fail if a tick slipped in.
+    if (busy.current) return { added, conflicts: [], errorCode: "ConversationBusy" };
+    setWanted(itemId, added);
+    if (ticking.current.has(itemId)) return null;
+    ticking.current.add(itemId);
+    setTickBusy(true);
+    let outcome: TickOutcome | null = null;
+    try {
+      for (;;) {
+        const current = snapshotRef.current;
+        const item = current?.artifacts.find(list => list.id === draftId)?.payload.items
+          .find(value => value.itemId === itemId);
+        const wanted = wantedRef.current[itemId];
+        if (wanted === undefined) break;
+        if (!current || !item) {
+          // The coach or another device changed the list before this tap was sent.
+          outcome ??= { added: wanted, conflicts: [], errorCode: "DraftItemNotFound" };
+          break;
+        }
+        if (wanted === isItemSaved(item)) break;
+        try {
+          const result = await aiCoachService.setDraftItemAdded(current.conversationId, draftId, itemId, wanted);
+          applySnapshot(result.conversationSnapshot);
+          invalidateSavedItems();
+          outcome = { added: wanted, conflicts: [...new Set(result.conflicts.map(entry => entry.taskTitle))], errorCode: null };
+        } catch (error) {
+          const response = (error as AxiosError<ConversationConflictDto>).response;
+          // A refused tick (422) changed nothing on the server, so the visible chat needs no reload.
+          const errorCode = response?.status === 422 ? response.data?.errorCode ?? "RequestFailed" : await resync(error);
+          outcome = { added: wanted, conflicts: [], errorCode };
+          break;
+        }
+      }
+    } finally {
+      ticking.current.delete(itemId);
+      setWanted(itemId, undefined);
+      setTickBusy(ticking.current.size > 0);
+    }
+    return outcome;
+  }, [applySnapshot, invalidateSavedItems, resync, setWanted]);
+
+  // Every review list the timeline knows, newest copy first: the open topic's live list, then the copies
+  // stored on replies (older topics included), so each card can be placed under its reply.
+  const reviewLists = useMemo(() => {
+    const byId = new Map<string, ReviewListSource>();
+    const consider = (list: ArtifactEnvelopeDto, containerMessageId: string | null, live: boolean) => {
+      if (!list.isReviewList) return;
+      const known = byId.get(list.id);
+      if (!known) byId.set(list.id, { list, containerMessageId, live });
+      else byId.set(list.id, {
+        list: known.live || known.list.version >= list.version ? known.list : list,
+        containerMessageId: known.containerMessageId ?? containerMessageId,
+        live: known.live || live,
+      });
+    };
+    for (const list of snapshot?.artifacts ?? []) consider(list, null, true);
+    for (const message of snapshot?.messages ?? []) for (const list of message.draftSnapshot) consider(list, message.id, false);
+    for (const page of snapshot ? history.data?.pages ?? [] : []) for (const item of page.items)
+      for (const list of item.draftSnapshot) consider(list, item.messageId, false);
+    return [...byId.values()];
+  }, [snapshot, history.data]);
 
   const updateReviewItem = useCallback(async (list: ArtifactEnvelopeDto, version: number,
     item: EditedDraftItemDto | EditedNoteDraftItemDto): Promise<string | null> => {
@@ -457,63 +534,6 @@ export function useAiCoachChat() {
       return "StaleDraftVersion";
     return edit(list.id, { items: reviewedItems(list).items.map(value => value.itemId === item.itemId ? item : value) });
   }, [edit]);
-
-  const removeReviewItem = useCallback(async (itemId: string): Promise<string | null> => {
-    const list = snapshotRef.current?.pendingList;
-    if (!list || !list.payload.items.some(item => item.itemId === itemId)) return "StaleDraftVersion";
-    const remaining = reviewedItems(list).items.filter(item => item.itemId !== itemId);
-    return remaining.length ? edit(list.id, { items: remaining }) : reject(list.id);
-  }, [edit, reject]);
-
-  const refreshReviewList = useCallback(async (): Promise<void> => {
-    if (busy.current) return;
-    await start();
-  }, [start]);
-
-  const confirmAll = useCallback(async (allowScheduleConflict = false, acceptedConflictToken?: string | null): Promise<ConfirmOutcome> => {
-    const current = snapshotRef.current;
-    const list = current?.pendingList;
-    if (!current || busy.current || serverBusy || (!list && !pendingConfirmation))
-      return { result: null, errorCode: "NotReady" };
-    const operation = prepareReviewConfirmation(current, uuid.v4() as string,
-      pendingConfirmation, allowScheduleConflict, acceptedConflictToken);
-    if (!operation) return { result: null, errorCode: "NotReady" };
-    busy.current = true;
-    lifecycle.current += 1;
-    setStatus("sending");
-    setConfirmation(operation);
-    try {
-      const result = await aiCoachService.confirmDraft(operation.conversationId, operation.draftId, operation.request);
-      applySnapshot(result.conversationSnapshot);
-      setConfirmation(null);
-      refreshHistory();
-      if (result.status === "succeeded") invalidateSavedItems();
-      return { result, errorCode: result.errorCode };
-    } catch (error) {
-      const response = (error as AxiosError<ConfirmDraftResultDto | ConversationConflictDto>).response;
-      const body = response?.data;
-      if (body && "status" in body) {
-        applySnapshot(body.conversationSnapshot);
-        setConfirmation(null);
-        return { result: body, errorCode: body.errorCode };
-      }
-      // Only validation/conflict responses prove the command did not commit. Network/5xx
-      // failures remain uncertain: preserve the complete request and its command ID.
-      const rejected = isDefiniteConfirmationRejection(response?.status);
-      if (rejected) setConfirmation(null);
-      const code = await resync(error);
-      if (snapshotRef.current && reviewConfirmationSaved(operation, snapshotRef.current)) {
-        setConfirmation(null);
-        invalidateSavedItems();
-        return { result: null, errorCode: null };
-      }
-      return { result: null, errorCode: rejected ? code : "ConfirmationUnknown",
-        scheduleAssessment: body && "scheduleAssessment" in body ? body.scheduleAssessment : null };
-    } finally {
-      busy.current = false;
-      setStatus("ready");
-    }
-  }, [pendingConfirmation, serverBusy, applySnapshot, refreshHistory, invalidateSavedItems, resync, setConfirmation]);
 
   const rateMessage = useCallback(async (messageId: string, rating: AiCoachRating): Promise<boolean> => {
     if (!conversationId || feedbackPending.current.has(messageId)) return false;
@@ -575,7 +595,7 @@ export function useAiCoachChat() {
   }, [conversationId, feedbackByMessage]);
 
   const changeTopic = useCallback(async (clear: boolean): Promise<string | null> => {
-    if (!snapshotRef.current || busy.current || pendingConfirmation) return "NotReady";
+    if (!snapshotRef.current || busy.current || ticking.current.size > 0) return "NotReady";
     busy.current = true;
     lifecycle.current += 1;
     setStatus("sending");
@@ -598,7 +618,7 @@ export function useAiCoachChat() {
       busy.current = false;
       if (snapshotRef.current) setStatus("ready");
     }
-  }, [applySnapshot, queryClient, refreshHistory, resync, pendingConfirmation]);
+  }, [applySnapshot, queryClient, refreshHistory, resync]);
 
   // Snapshot data wins over cached timeline rows, so recent card statuses never regress.
   const merged = new Map<string, ChatItem>();
@@ -616,9 +636,7 @@ export function useAiCoachChat() {
   const messages = [...merged.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
   const keyFor = useCallback((item: ChatItem) => rowKeys[item.id] ?? item.id, [rowKeys]);
   return { snapshot, messages, keyFor, status, start, send, confirm, edit, reject, streaming, reconnecting,
-    pendingList, pendingCount: pendingList?.payload.items.length ?? 0,
-    reviewBusy, confirmationUncertain: pendingConfirmation !== null,
-    updateReviewItem, removeReviewItem, confirmAll, refreshReviewList,
+    reviewLists, wantedAdded, tickItem, tickBusy, updateReviewItem,
     feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail,
     newTopic: () => changeTopic(false), clearChat: () => changeTopic(true),
     loadOlder: () => { if (history.hasNextPage && !history.isFetchingNextPage) void history.fetchNextPage(); },

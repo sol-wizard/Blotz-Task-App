@@ -21,7 +21,7 @@ const dayKey = (date: Date) =>
 
 /** "Today 09:00–11:00", "Tomorrow", "Mon, Oct 20 15:00–16:00"; null when the item has no date yet. */
 export function formatDraftWhen(item: Pick<TaskDraftItemDto, "date" | "startTime" | "endTime">,
-  t: TFunction<"aiCoach">, language: string): string | null {
+  t: TFunction<"aiCoach">, language: string, separator = " "): string | null {
   if (!item.date) return null;
   const today = new Date();
   const offset = (days: number) => {
@@ -38,7 +38,7 @@ export function formatDraftWhen(item: Pick<TaskDraftItemDto, "date" | "startTime
       ...(year !== today.getFullYear() ? { year: "numeric" } : {}),
     });
   if (!item.startTime) return day0;
-  return `${day0} ${item.startTime}–${item.endTime ?? "—"}`;
+  return `${day0}${separator}${item.startTime}–${item.endTime ?? "—"}`;
 }
 
 export function formatRecurrence(recurrence: DraftRecurrenceDto, t: TFunction<"aiCoach">): string {
