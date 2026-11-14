@@ -26,10 +26,17 @@ export function handleAuthError(
         return api(originalRequest);
       })
       .catch((refreshError: unknown) => {
+        const authState = queryClient.getQueryData(AUTH_QUERY_KEY);
+        // Parallel requests all land here after one failed refresh. The first one signs the
+        // user out; the rest find the session already gone and only fail their request.
+        if (authState === false) {
+          return Promise.reject(error);
+        }
+
         // A voluntary logout also produces a burst of 401s: `useLogout` clears the cache and
         // credentials before the screens unmount, and their queries refetch without a token.
         // Only an *unexpected* loss of session deserves a toast and a Sentry record.
-        if (queryClient.getQueryData(AUTH_QUERY_KEY) === true) {
+        if (authState === true) {
           // Record why before the evidence is gone: the API's 401 body says whether the
           // token was rejected or the user is unknown, and the refresh error says whether
           // Auth0 could be reached at all.
@@ -45,7 +52,7 @@ export function handleAuthError(
           Toast.show({ type: "error", text1: i18n.t("errors.sessionExpired") });
         }
 
-        clearTokens();
+        clearTokens().catch(() => {});
         // Ensure auth state flips immediately for guards + redirects.
         queryClient.setQueryData(AUTH_QUERY_KEY, false);
         router.replace("/(auth)/signin");
