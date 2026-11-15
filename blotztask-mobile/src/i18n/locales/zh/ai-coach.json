@@ -61,6 +61,7 @@
     "cancel": "取消",
     "micReady": "麦克风已就绪，再点一下开始说话。",
     "generationFailed": "这次回复未能完成。请重试，或开始新的对话。",
+    "tooMuchAtOnce": "这次一下子要处理的内容有点多，没能完成。试试分几次说，比如先排这一周，或者开个新话题再试。",
     "menu": "聊天选项",
     "newTopic": "新话题",
     "clearHistory": "清空聊天记录",

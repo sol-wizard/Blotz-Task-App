@@ -77,10 +77,12 @@ public sealed class ToolTurnContextTests
     public async Task Handle_ExtraTurnContext_ReservesSpaceWhenCompressingOldHistory()
     {
         // Arrange
-        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions { ContextTokenBudget = 32000 }),
+        // The module default: the review-list prompt and tools alone now take about half of it, so a smaller
+        // budget leaves no room for history at all.
+        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions { ContextTokenBudget = 48000 }),
             NullLogger<ModelContextBuilder>.Instance);
         var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage("旧请求"),
-            new GatewayAssistantMessage(new string('旧', 3000), []), new GatewayUserMessage("最新请求")], [],
+            new GatewayAssistantMessage(new string('旧', 5000), []), new GatewayUserMessage("最新请求")], [],
             "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true);
         var tools = new DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
         var summaries = 0;
@@ -134,5 +136,50 @@ public sealed class ToolTurnContextTests
         results[2].Content.Should().Be(error, because: "failed operation details must stay verbatim");
         results[3].Content.Should().Be(((GatewayToolResultMessage)turn[3]).Content,
             because: "task reads are evidence rather than duplicate draft snapshots");
+    }
+
+    [Fact]
+    public void Handle_CompactSuperseded_ShrinksReplacedResultsAndKeepsUncoveredReads()
+    {
+        // Arrange: a week read, a read of only part of it, a read of the next week, then two list edits.
+        var draft = new ProposalSet { Id = Guid.NewGuid() };
+        string Read(string start, string end) => JsonSerializer.Serialize(new { success = true, startDate = start, endDate = end,
+            items = new[] { new { title = "existing " + start } } });
+        string Edit(string title) => JsonSerializer.Serialize(new { success = true,
+            draft = new { draftId = draft.Id, status = "pending", items = new[] { new { itemId = Guid.NewGuid(), title } } },
+            schedule = new { status = "conflict", conflicts = new[] { title + " overlaps" } } });
+        ModelToolCallRequest Call(string id, string name) => new(id, name, "{}");
+        List<GatewayMessage> turn =
+        [
+            new GatewayAssistantMessage(null, [Call("partial", "list_tasks"), Call("next", "list_tasks")]),
+            new GatewayToolResultMessage("partial", Read("2026-11-17", "2026-11-18")),
+            new GatewayToolResultMessage("next", Read("2026-11-23", "2026-11-29")),
+            new GatewayAssistantMessage(null, [Call("week", "list_tasks")]),
+            new GatewayToolResultMessage("week", Read("2026-11-16", "2026-11-22")),
+            new GatewayAssistantMessage(null, [Call("first", "add_items")]),
+            new GatewayToolResultMessage("first", Edit("first")),
+            new GatewayAssistantMessage(null, [Call("second", "update_items")]),
+            new GatewayToolResultMessage("second", Edit("second")),
+        ];
+        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
+            NullLogger<ModelContextBuilder>.Instance);
+        var context = new ModelContext("prompt", [new GatewayUserMessage("排下两周")], null, 0);
+
+        // Act
+        var compact = builder.BuildTurnTranscript(context, turn, [draft], compactSuperseded: true);
+        var full = builder.BuildTurnTranscript(context, turn, [draft]);
+
+        // Assert
+        var results = compact.OfType<GatewayToolResultMessage>().ToDictionary(result => result.ToolCallId, result => result.Content);
+        results.Should().HaveCount(5, because: "every tool call keeps a result so calls and results stay paired");
+        results["partial"].Should().Contain("superseded").And.NotContain("existing",
+            because: "a later read this turn covers all of its dates");
+        results["next"].Should().Contain("existing 2026-11-23", because: "no later read covers the next week");
+        results["week"].Should().Contain("existing 2026-11-16", because: "the latest read is never dropped");
+        results["first"].Should().Contain("superseded").And.NotContain("first overlaps",
+            because: "a later edit replaced this draft result, so its schedule check is stale");
+        results["second"].Should().Contain("second overlaps", because: "the latest edit keeps its schedule evidence");
+        full.OfType<GatewayToolResultMessage>().Single(result => result.ToolCallId == "partial").Content
+            .Should().Contain("existing", because: "without compaction earlier results stay as they were, keeping the prompt cache");
     }
 }

@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
+using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 
@@ -15,12 +17,13 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
     MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-17";
+    public const string ContractVersion = "coach-tools-21";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
-        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Saved drafts and earlier reads may be out of date: read the date this turn before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
+        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. You can read at most twice per turn, so cover the whole range you need in one call instead of one call per day; if a result is truncated, use the second read for the dates its note names. Results list each date's tasks as lines like \"09:00-11:00 title\", flagged [recurring], [done], [overdue] or [due ...] when set; \"(reminder)\" marks a single-time task. \"free\" lists each date's gaps of 30 minutes or more between 07:00 and 22:00 that no unfinished timed task covers; pick suggested times from it (the user's routines and wishes still apply) instead of guessing from the lines. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Every item counts, including one with a single time (a timed reminder) or an unfamiliar title: before saying when the user is free, check all of them. Saved drafts and earlier reads may be out of date: read the date this turn before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
         """{"type":"object","properties":{"startDate":{"type":"string","description":"yyyy-MM-dd in the user's local time zone"},"endDate":{"type":"string","description":"yyyy-MM-dd inclusive; at most 7 days from startDate"}},"required":["startDate","endDate"],"additionalProperties":false}""");
     private readonly Dictionary<string, (ModelToolCallRequest Request, ToolExecutionResult Result)> _results = [];
+    private readonly HashSet<(Guid ItemId, string TaskIdentity)> _reportedConflicts = [];
     private int _readCalls;
     public int ExecutedCalls { get; private set; }
     public bool BudgetExhausted => ExecutedCalls >= limits.MaxToolCallsPerTurn;
@@ -36,6 +39,8 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
         if (memory is not null && MemoryTools.Handles(call.Name)) return await ExecuteMemoryAsync(call, ct);
         if (call.Name != ReadTasksDefinition.Name)
         {
+            var before = workspace.Drafts.Where(value => value.Status == ProposalSetStatus.Pending)
+                .SelectMany(value => value.Proposals).Select(item => item.ProposalId).ToHashSet();
             var mutation = Execute(call, ct);
             if (!mutation.Succeeded || mutation.Replayed || checkSchedule is null
                 || call.Name is not ("create_draft" or "update_draft" or "add_items" or "update_items" or "remove_items")) return mutation;
@@ -46,17 +51,53 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             if (draft.Proposals.All(item => item.Kind == ProposalKind.Note)) return mutation;
             var assessment = await checkSchedule(draft.Proposals, ct);
             draft.SetSchedule(assessment);
-            var content = JsonSerializer.Serialize(new { success = true, draft = DraftTools.View(draft), schedule = assessment });
+            // The draft card keeps every overlap; the coach hears only those of the items this call changed, plus
+            // items that repeat a saved task. Shown the old drafts' overlaps on every edit, it spent a model call
+            // moving or removing items the user had not asked about.
+            var touched = Touched(call, draft, before);
+            var items = draft.Proposals.ToDictionary(item => item.ProposalId);
+            var shown = assessment.Conflicts
+                .Select(conflict => (Conflict: conflict, Duplicate: items.TryGetValue(conflict.ItemId, out var item) && IsLikelyDuplicate(item, conflict)))
+                .Where(value => touched is null || touched.Contains(value.Conflict.ItemId) || value.Duplicate)
+                .ToArray();
+            var status = shown.Length > 0 || assessment.Status != "conflict" ? assessment.Status
+                : draft.Proposals.Any(item => item.Recurrence is not null) ? "partial" : "clear";
+            // Every check repeats the overlaps still there; without saying which are old news, the coach kept
+            // moving the same items around them, one model call per move.
+            var fresh = shown.Count(value => _reportedConflicts.Add((value.Conflict.ItemId, value.Conflict.TaskIdentity)));
+            var guidance = shown.Length == 0 ? null
+                : fresh == 0
+                    ? "No new overlaps: these were already reported this turn and changing items has not removed them. " +
+                      "Stop changing items for them; reply now, naming each overlap once and offering to move one as a follow-up."
+                    : "Overlaps with a time the user gave are theirs to settle: keep the item and name the overlap in your reply. " +
+                      "Move only items whose time you suggested, all in one update_items call, then reply." +
+                      (shown.Any(value => value.Duplicate)
+                          ? " An overlap marked likelyDuplicate is the same task already saved: remove that item rather than move it."
+                          : "");
+            var schedule = new
+            {
+                status,
+                assessment.Reason,
+                conflicts = shown.Select(value => new
+                {
+                    value.Conflict.ItemId, value.Conflict.TaskTitle, value.Conflict.Start, value.Conflict.End,
+                    likelyDuplicate = value.Duplicate ? true : (bool?)null,
+                }),
+                // Left on the card for the user to see; not a reason to change those items now.
+                otherOverlaps = assessment.Conflicts.Count - shown.Length is > 0 and var other ? other : (int?)null,
+            };
+            var content = JsonSerializer.Serialize(new { success = true, draft = DraftTools.View(draft), schedule, guidance },
+                ModelContextBuilder.ContextJson);
             var checkedMutation = mutation with
             {
                 Content = content,
-                SuccessReply = assessment.Status switch
+                SuccessReply = status switch
                 {
                     "clear" => ReadSuccessReply(call.Name, call.ArgumentsJson, allowMultiple: true),
                     "incomplete" or "partial" => mutation.SuccessReply,
                     _ => null,
                 },
-                ScheduleChecked = assessment.Status is "clear" or "conflict" or "partial",
+                ScheduleChecked = status is "clear" or "conflict" or "partial",
             };
             _results[call.Id] = (call, checkedMutation);
             return checkedMutation;
@@ -147,6 +188,47 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
         }
         _results.Add(call.Id, (call, result));
         return result;
+    }
+
+    /// <summary>Items this call added or edited; null when every item counts (the older whole-draft tools).</summary>
+    private static HashSet<Guid>? Touched(ModelToolCallRequest call, ProposalSet draft, HashSet<Guid> before)
+    {
+        switch (call.Name)
+        {
+            case "add_items":
+                return draft.Proposals.Select(item => item.ProposalId).Where(id => !before.Contains(id)).ToHashSet();
+            case "update_items":
+                using (var payload = JsonDocument.Parse(call.ArgumentsJson))
+                    return payload.RootElement.GetProperty("items").EnumerateArray()
+                        .Select(update => update.GetProperty("itemId").GetGuid()).ToHashSet();
+            case "remove_items":
+                return [];
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>Same start and end as the saved task and a near-identical title: the task already exists.</summary>
+    internal static bool IsLikelyDuplicate(TaskProposal item, ScheduleConflict conflict)
+    {
+        if (conflict.TaskIdentity.StartsWith("draft:", StringComparison.Ordinal)
+            || item.Date is not { } date || item.StartTime is not { } start || item.EndTime is not { } end) return false;
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(item.TimeZoneId);
+        if (DraftEditing.ResolveLocal(date, start, zone) != conflict.Start
+            || DraftEditing.ResolveLocal(date, end, zone) != conflict.End) return false;
+        var left = Normalize(item.Title);
+        var right = Normalize(conflict.TaskTitle);
+        if (left.Length == 0 || right.Length == 0) return false;
+        if (left.Contains(right, StringComparison.Ordinal) || right.Contains(left, StringComparison.Ordinal)) return true;
+        // Character-pair overlap (Dice), so "3.6 结果分析" and "3.6结果分析整理" still match.
+        var pairs = Pairs(left);
+        var other = Pairs(right);
+        return pairs.Count + other.Count > 0 && 2.0 * pairs.Intersect(other).Count() / (pairs.Count + other.Count) >= 0.6;
+
+        static string Normalize(string value) =>
+            new(value.Where(character => char.IsLetterOrDigit(character)).Select(char.ToLowerInvariant).ToArray());
+        static HashSet<string> Pairs(string value) =>
+            Enumerable.Range(0, Math.Max(0, value.Length - 1)).Select(index => value.Substring(index, 2)).ToHashSet();
     }
 
     private static ToolExecutionResult Failure(string code, string message) =>

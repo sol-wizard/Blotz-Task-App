@@ -117,8 +117,16 @@ public sealed class SegmentDigestProcessor(BlotzTaskDbContext db, IConversationS
                 digest = new("", []);
             }
             summary = needsSummary ? digest.Summary ?? "" : null;
+            var remembered = SegmentDigestGenerator.RememberedMessageIds(active);
             foreach (var candidate in digest.Memories)
             {
+                // Already saved from this message during the chat; a reworded copy would be a duplicate.
+                if (candidate.Replaces is null && remembered.Contains(candidate.Source.Id))
+                {
+                    logger.LogInformation("AiCoach digest candidate skipped for {ConversationId}: message already remembered",
+                        conversationId);
+                    continue;
+                }
                 var stored = await remember.Handle(new RememberUserMemoryCommand
                 {
                     UserId = conversation.UserId,

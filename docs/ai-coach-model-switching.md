@@ -12,7 +12,7 @@ The staging deployments use Global Standard. The Luna/Sol prices above are publi
 
 ## Configuration
 
-Profiles live under `AiCoach:Models` in `blotztask-api/appsettings.json`. Each declares `DeploymentId`, `Api`, `MaxOutputTokens`, `RequestTimeoutSeconds`, optional `ReasoningEffort`, and per-million token prices. Endpoint and credentials continue to come from `AzureOpenAI`; never put secrets in a profile or an operations log.
+Profiles live under `AiCoach:Models` in `blotztask-api/appsettings.json`. Each declares `DeploymentId`, `Api`, `MaxOutputTokens`, `RequestTimeoutSeconds`, optional `ReasoningEffort`, optional `ContextTokenBudget`, and per-million token prices. A profile's `ContextTokenBudget` replaces `AiCoach:ContextTokenBudget` (UTF-8 bytes of context, 48000 by default) while that profile is the default model; Luna 6 sets 120000 because 48000 bytes held only about 9k tokens of Chinese conversation and cut long chats short. Luna 6 also sets `MaxOutputTokens` to 12000: its reasoning tokens count toward that cap, and at 4096 a week of tasks in one `add_items` call was cut off mid-reply. Only tokens actually produced are billed; the budget reserves the cap per call (about $0.006 at Luna 6 rates). Endpoint and credentials continue to come from `AzureOpenAI`; never put secrets in a profile or an operations log.
 
 Set `AiCoach__DefaultModel` to `luna`, `luna6`, or `sol` in the target App Service. This selects a profile; changing only the old `AiCoach__DeploymentId` does not select the Responses adapter. Sol and Luna 6 use Responses for reasoning with tool calls. All profiles are validated at startup, including when inactive.
 
@@ -45,7 +45,7 @@ az webapp config appsettings set \
   --output none
 ```
 
-Use `luna` or `sol` in that same command to select the other profiles. The V2 settings intentionally duplicate the new shared JSON profile so it is available before the next backend release; update both when changing Luna 6's limits or estimated prices.
+Use `luna` or `sol` in that same command to select the other profiles. The V2 settings intentionally duplicate the new shared JSON profile so it is available before the next backend release; update both when changing Luna 6's limits or estimated prices (including `AiCoach__Models__luna6__MaxOutputTokens=12000` and `AiCoach__Models__luna6__ContextTokenBudget=120000`).
 
 App Service restarts when settings change. Active replies can be interrupted. Wait for `/health` to recover before testing. This release does not provide uninterrupted switching, an admin endpoint, or automatic fallback. Reverting the backend code still uses the retained legacy deployment settings.
 
