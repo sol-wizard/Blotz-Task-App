@@ -8,6 +8,11 @@ namespace BlotzTask.Modules.AiCoach.Ai.Tools;
 /// <summary>Mutates only the turn-local workspace; formal writes require app confirmation.</summary>
 internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneId)
 {
+    // Each tool call costs a full model call; a planning turn that added, edited and removed the same items one call
+    // at a time used up the turn's model calls.
+    private const string BatchRule = "Work out the final list before calling: put all changes of one kind in a single call, " +
+        "and do not add, then edit, then remove the same items in later calls.";
+
     public static IReadOnlyList<GatewayToolDefinition> Definitions { get; } = BuildDefinitions();
 
     private static IReadOnlyList<GatewayToolDefinition> BuildDefinitions()
@@ -25,9 +30,9 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
         updateFields["properties"]!.AsObject().Remove("kind");
         return
         [
-            Definition("add_items", "Append tasks and notes to the current unsaved review list. Capture notes ONLY when the user explicitly asks to record information, including a clear reference to prior content. Ordinary questions, background statements, emotions and unadopted assistant advice are not note requests. Tasks need scheduling suggestions unless the user explicitly leaves timing undecided. Notes have title/description only: omit all task fields. Reuse existing item IDs with update_items rather than duplicating items.",
+            Definition("add_items", "Append tasks and notes to the current unsaved review list. Capture notes ONLY when the user explicitly asks to record information, including a clear reference to prior content. Ordinary questions, background statements, emotions and unadopted assistant advice are not note requests. Tasks need scheduling suggestions unless the user explicitly leaves timing undecided. Notes have title/description only: omit all task fields. Reuse existing item IDs with update_items rather than duplicating items. Add at most 10 items per call; for more, call add_items again with the rest. " + BatchRule,
                 JsonNode.Parse("""{"items":{"type":"array","minItems":1,"maxItems":100,"items":{"$ref":"#/$defs/item"}}}""")!.AsObject(), ["items"]),
-            Definition("update_items", "Edit unsaved review items by itemId. Each entry has itemId and fields. Omitted fields stay unchanged; null clears optional fields. Kind cannot change. Existing task time zones are retained. Supply the complete suggestedFields array if changing suggestion provenance.",
+            Definition("update_items", "Edit unsaved review items by itemId. Each entry has itemId and fields. Omitted fields stay unchanged; null clears optional fields. Kind cannot change. Existing task time zones are retained. Supply the complete suggestedFields array if changing suggestion provenance. To move or rename an item, update it; never remove and re-add it. " + BatchRule,
                 new JsonObject { ["items"] = new JsonObject
                 {
                     ["type"] = "array", ["minItems"] = 1, ["maxItems"] = 100,
@@ -42,7 +47,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
                         },
                     },
                 } }, ["items"]),
-            Definition("remove_items", "Remove unsaved items by itemIds from the current review list. This never deletes saved tasks or notes.",
+            Definition("remove_items", "Remove unsaved items by itemIds from the current review list. This never deletes saved tasks or notes. " + BatchRule,
                 JsonNode.Parse("""{"itemIds":{"type":"array","minItems":1,"maxItems":100,"uniqueItems":true,"items":{"type":"string"}}}""")!.AsObject(), ["itemIds"]),
         ];
 
@@ -67,7 +72,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
             using var document = JsonDocument.Parse(call.ArgumentsJson);
             var args = document.RootElement;
             CheckFields(args, call.Name == "remove_items" ? ["itemIds", "successReply"] : ["items", "successReply"]);
-            var reply = args.GetProperty("successReply").GetString();
+            var reply = Required(args, "successReply").GetString();
             if (!DraftTools.IsValidSuccessReply(reply))
                 throw new ArgumentException($"Provide a successReply of at most {DraftTools.SuccessReplyMaxLength} characters without control characters other than line breaks.");
             var pending = drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).ToArray();
@@ -87,11 +92,11 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
                     foreach (var update in updates)
                     {
                         CheckFields(update, "itemId", "fields");
-                        var id = update.GetProperty("itemId").GetGuid();
+                        var id = Required(update, "itemId").GetGuid();
                         if (!updatedIds.Add(id)) throw new ArgumentException("Duplicate item IDs.");
                         var index = proposals.FindIndex(item => item.ProposalId == id && !item.IsSaved);
                         if (index < 0) throw new ArgumentException("Unknown unsaved review item.");
-                        proposals[index] = ReadItem(update.GetProperty("fields"), proposals[index]);
+                        proposals[index] = ReadItem(Required(update, "fields"), proposals[index]);
                     }
                     break;
                 case "remove_items":
@@ -124,7 +129,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
         CheckFields(fields, original is null
             ? ["kind", "title", "description", "date", "startTime", "endTime", "recurrence", "suggestedFields"]
             : ["title", "description", "date", "startTime", "endTime", "recurrence", "suggestedFields"]);
-        var kind = original?.Kind ?? (fields.GetProperty("kind").GetString() switch
+        var kind = original?.Kind ?? (Required(fields, "kind").GetString() switch
         {
             "task" => ProposalKind.Task,
             "note" => ProposalKind.Note,
@@ -159,10 +164,12 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
 
     private static JsonElement[] Array(JsonElement args, string name)
     {
-        var items = args.GetProperty(name).EnumerateArray().ToArray();
+        var items = Required(args, name).EnumerateArray().ToArray();
         if (items.Length is < 1 or > 100) throw new ArgumentException("Provide between 1 and 100 items.");
         return items;
     }
+
+    private static JsonElement Required(JsonElement value, string name) => DraftTools.Required(value, name);
 
     private static void CheckFields(JsonElement value, params string[] allowed)
     {

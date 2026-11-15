@@ -20,6 +20,10 @@ public static class DependencyInjection
             {
                 if (string.IsNullOrWhiteSpace(options.DeploymentId))
                     options.DeploymentId = azure.Value.AiModels.TaskGeneration.DeploymentId;
+                // Every context, digest and allowance limit reads the module budget, so the selected
+                // profile's budget is applied there once.
+                if (options.Models.TryGetValue(options.DefaultModel, out var model) && model.ContextTokenBudget is { } budget)
+                    options.ContextTokenBudget = budget;
             })
             .Validate(options => options.MaxModelCallsPerTurn >= 2 && options.MaxToolCallsPerTurn > 0 && options.MaxToolArgumentBytes > 0
                 && options.ContextTokenBudget >= 8000 && options.MaxOutputTokens > 0

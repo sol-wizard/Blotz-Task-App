@@ -21,7 +21,21 @@ public sealed record ModelGatewayRequest(
     IReadOnlyList<GatewayMessage> Messages,
     IReadOnlyList<GatewayToolDefinition> Tools,
     int? MaxOutputTokens = null,
-    Func<string, Task>? OnTextDelta = null);
+    Func<string, Task>? OnTextDelta = null,
+    // Replaces the profile's reasoning effort for this call; ignored by profiles that do not reason.
+    string? ReasoningEffort = null);
+
+/// <summary>Limits for the coach's own background calls: context summaries and topic digests.</summary>
+public static class BackgroundModelCall
+{
+    // Reasoning tokens count against max_output_tokens. At the profile's effort they used up the
+    // whole limit of a short summary and the call was cut off, so these calls reason less.
+    public const string ReasoningEffort = "low";
+    // Room for that reasoning on top of the visible text the caller sized its limit for.
+    public const int ReasoningTokens = 1024;
+
+    public static int OutputTokens(int textTokens) => textTokens + ReasoningTokens;
+}
 
 public sealed record GatewayToolDefinition(
     string Name,

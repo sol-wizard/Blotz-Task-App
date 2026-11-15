@@ -71,7 +71,7 @@ public sealed class ContextCompressionTests
     }
 
     [Fact]
-    public async Task Handle_SummaryNeverShrinks_StopsAfterTwoRecompressionAttempts()
+    public async Task Handle_SummaryNeverShrinks_TrimsSummaryAfterTwoRecompressionAttempts()
     {
         // Arrange
         var builder = new ModelContextBuilder(Options.Create(CompressionLimits()),
@@ -83,7 +83,7 @@ public sealed class ContextCompressionTests
         var summaries = 0;
 
         // Act
-        var action = () => builder.BuildAsync(request, tools, _ =>
+        var context = await builder.BuildAsync(request, tools, _ =>
         {
             summaries++;
             return Task.FromResult(new ModelCompletionResult(new string('长', 5000), [],
@@ -91,10 +91,65 @@ public sealed class ContextCompressionTests
         });
 
         // Assert
-        (await action.Should().ThrowAsync<ModelContextException>(
-            because: "oversized summaries must not trigger an unbounded model loop"))
-            .Which.Code.Should().Be("context_summary_failed", because: "the summary failed its size contract");
-        summaries.Should().Be(2, because: "at most two summary recompression calls are allowed");
+        summaries.Should().Be(2, because: "oversized summaries must not trigger an unbounded model loop");
+        builder.FitsBudget(context.SystemPrompt, context.Transcript, tools).Should().BeTrue(
+            because: "failing here would fail every later turn the same way, so the summary is trimmed to fit instead");
+        context.Summary.Should().StartWith("长", because: "the trimmed summary keeps the start of the last model output");
+    }
+
+    [Fact]
+    public async Task Handle_MergeSummaryCutOff_RetriesThenKeepsPartialSummaryInsteadOfLockingTopic()
+    {
+        // Arrange
+        var builder = new ModelContextBuilder(Options.Create(CompressionLimits()),
+            NullLogger<ModelContextBuilder>.Instance);
+        var request = new ModelTurnRequest(Guid.NewGuid(),
+            [new GatewayUserMessage("旧问题"), new GatewayAssistantMessage("旧回复", []),
+                new GatewayUserMessage("现在继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
+            new string('旧', 4000), 0,
+            ReadTasks: (_, _, _) => throw new InvalidOperationException("Context building must not read tasks."),
+            ReviewListEnabled: true);
+        var tools = new BlotzTask.Modules.AiCoach.Ai.Tools.DraftTools([], request.TimeZoneId, true).AvailableDefinitions;
+        var prompts = new List<string>();
+
+        // Act
+        var context = await builder.BuildAsync(request, tools, summaryRequest =>
+        {
+            prompts.Add(summaryRequest.SystemPrompt);
+            return Task.FromResult(new ModelCompletionResult("用户在调整家庭清洁计划", [],
+                ModelFinishReason.Length, 0, 0, 0));
+        });
+
+        // Assert
+        prompts.Should().HaveCount(2, because: "a cut-off merge is retried once and then accepted, not retried every turn");
+        prompts[1].Should().Contain("takes priority over retaining details",
+            because: "the retry must put the length limit first");
+        context.SummarizedMessageCount.Should().BePositive(because: "the partial summary still covers the messages it merged");
+        context.Summary.Should().Be("用户在调整家庭清洁计划", because: "a partial summary beats locking the topic");
+    }
+
+    [Fact]
+    public async Task Handle_LargeContextBudget_GivesMergeRoomForAFullSizeSummary()
+    {
+        // Arrange
+        var limits = new AiCoachModuleOptions { ContextTokenBudget = 120000, MaxOutputTokens = 12000 };
+        var builder = new ModelContextBuilder(Options.Create(limits), NullLogger<ModelContextBuilder>.Instance);
+        var request = new ModelTurnRequest(Guid.NewGuid(),
+            [new GatewayUserMessage("旧问题"), new GatewayAssistantMessage("旧回复", []),
+                new GatewayUserMessage("现在继续")], [], "Australia/Perth", DateTimeOffset.UtcNow,
+            new string('旧', 20000), 0, ReviewListEnabled: true);
+        int? mergeOutput = null;
+
+        // Act
+        await builder.BuildAsync(request, [], summaryRequest =>
+        {
+            mergeOutput ??= summaryRequest.MaxOutputTokens;
+            return Task.FromResult(new ModelCompletionResult("家庭清洁计划仍待调整。", [], ModelFinishReason.Stop, 0, 0, 0));
+        });
+
+        // Assert
+        mergeOutput.Should().BeGreaterThan(BackgroundModelCall.OutputTokens(1200),
+            because: "a fixed 1200-token cap is shorter than the 10000-byte summary this budget allows, so long merges were cut off");
     }
 
     [Fact]

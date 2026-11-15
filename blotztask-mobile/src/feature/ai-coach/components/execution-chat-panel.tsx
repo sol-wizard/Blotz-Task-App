@@ -81,12 +81,12 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, animateIn, onRa
   const { t } = useTranslation("aiCoach");
   if (item.role === "user") {
     return (
-      <View className="my-1.5 max-w-[80%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-secondary">
-        <Text className="font-baloo text-base text-white">{item.text}</Text>
+      <View className="my-1.5 max-w-[80%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-[#E8ECEF]">
+        <Text className="font-baloo text-base text-secondary">{item.text}</Text>
       </View>
     );
   }
-  // Assistant replies run the full width: the header already says who is talking.
+  // Assistant replies run the full width with no bubble; only the user's own messages sit in one.
   return (
     <View className="my-1.5 self-stretch">
       {item.taskContextRead && (
@@ -576,7 +576,9 @@ export function ExecutionChatPanel() {
         ? "chat.contentFiltered"
         : snapshot.generationError === "model_unavailable"
           ? "chat.modelUnavailable"
-          : "chat.generationFailed";
+          : snapshot.generationError === "output_limit" || snapshot.generationError === "context_limit"
+            ? "chat.tooMuchAtOnce"
+            : "chat.generationFailed";
     return (
       <View className="bg-[#FFF7ED] rounded-2xl px-3 py-2.5 my-2">
         <Text className="font-baloo text-sm text-[#C2410C]">{t(key)}</Text>
@@ -624,7 +626,6 @@ export function ExecutionChatPanel() {
   return (
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <CoachHeader
-        status={voiceBusy ? "listening" : generating ? "thinking" : "idle"}
         actionsDisabled={tickBusy || status !== "ready" || generating
           || snapshot?.artifacts.some(card => card.status === "processing") === true}
         allowance={allowance} onAllowancePress={() => router.push("/settings/membership-plan")}

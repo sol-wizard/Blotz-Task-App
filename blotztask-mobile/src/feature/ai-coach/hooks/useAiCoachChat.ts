@@ -113,8 +113,30 @@ export function useAiCoachChat() {
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     enabled: snapshot !== null,
   });
+  // Refetching every loaded page re-reads the same number of pages from the newest message, so each new
+  // message pushed the oldest loaded one out and the list jumped. Re-read only the newest page and merge it.
   const refreshHistory = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: chatMessagesKey });
+    const invalidate = () => void queryClient.invalidateQueries({ queryKey: chatMessagesKey });
+    if (!queryClient.getQueryData<InfiniteData<ChatTimelinePageDto, string | null>>(chatMessagesKey)?.pages.length) {
+      invalidate();
+      return;
+    }
+    void aiCoachService.fetchMessages(null).then(fresh => {
+      const current = queryClient.getQueryData<InfiniteData<ChatTimelinePageDto, string | null>>(chatMessagesKey);
+      // Cleared or restarted meanwhile: that path loads its own first page.
+      if (!current?.pages.length) return;
+      const [first, ...older] = current.pages;
+      const freshIds = new Set(fresh.items.map(item => item.messageId));
+      // No overlap means messages may be missing between the two pages; reload the chain instead.
+      if (first.items.length > 0 && !first.items.some(item => freshIds.has(item.messageId))) {
+        invalidate();
+        return;
+      }
+      const merged = { items: [...fresh.items, ...first.items.filter(item => !freshIds.has(item.messageId))],
+        nextCursor: first.items.length > 0 ? first.nextCursor : fresh.nextCursor };
+      queryClient.setQueryData<InfiniteData<ChatTimelinePageDto, string | null>>(chatMessagesKey,
+        { ...current, pages: [merged, ...older] });
+    }, invalidate);
   }, [queryClient]);
   const applySnapshot = useCallback((next: ConversationSnapshotDto) => {
     const previous = snapshotRef.current;
@@ -242,7 +264,12 @@ export function useAiCoachChat() {
       setStreamingReply(null);
       const controller = new AbortController();
       streamController.current = controller;
-      const messageId = uuid.v4() as string;
+      // A failed turn puts its text back in the input. Sending it unchanged retries that same message,
+      // so the server reuses it instead of storing a second copy.
+      const lastMessage = snapshot.messages[snapshot.messages.length - 1];
+      const messageId = snapshot.generationError && lastMessage?.role === "user" && lastMessage.text === content
+        ? lastMessage.id
+        : uuid.v4() as string;
       const streamKey = `stream-${messageId}`;
       const createdAt = new Date().toISOString();
       setPendingMessage({ id: messageId, role: "user", text: content, conversationId: snapshot.conversationId,

@@ -81,11 +81,13 @@ public sealed class Conversation
         if (RunningTurnId.HasValue) throw new InvalidOperationException("A turn is already running.");
         if (Drafts.Any(draft => draft.Status == ProposalSetStatus.Processing))
             throw new InvalidOperationException("A draft is being saved.");
+        var isNewMessage = Messages.All(message => message.Id != messageId);
+        if (isNewMessage) DropUnansweredMessage();
         RunningTurnId = messageId;
         RunningTurnStartedAt = startedAt;
         GenerationError = null;
         FollowUps = [];
-        if (Messages.All(message => message.Id != messageId))
+        if (isNewMessage)
         {
             InitialTimeZoneId ??= TimeZoneId;
             RecordDateChange(startedAt);
@@ -93,6 +95,19 @@ public sealed class Conversation
             History.Add(new GatewayUserMessage(content));
         }
         Touch();
+    }
+
+    // A failed turn leaves its user message without a reply, and the app puts that text back in the input.
+    // Whatever is sent next replaces it as model context, so retries do not stack copies of one request.
+    // The shown message stays: message rows are append-only.
+    private void DropUnansweredMessage()
+    {
+        if (GenerationError is null || Messages.LastOrDefault() is not { Role: ConversationMessageRole.User } last
+            || CompletedMessages.Contains(last.Id)) return;
+        var index = History.FindLastIndex(message => message is GatewayUserMessage);
+        if (index < SummarizedMessageCount || History[index] is not GatewayUserMessage user || user.Content != last.Content)
+            return;
+        History.RemoveAt(index);
     }
 
     /// <summary>Apply a whole turn once; stale or cancelled results never commit draft changes.</summary>
