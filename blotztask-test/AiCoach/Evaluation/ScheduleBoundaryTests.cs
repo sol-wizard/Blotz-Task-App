@@ -1,3 +1,4 @@
+using BlotzTask.Modules.AiCoach.Application.Queries;
 using System.Text.Json;
 using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
@@ -172,13 +173,14 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
     {
         // Arrange
         await using var session = await CoachTestSession.CreateAsync(fixture);
-        for (var index = 0; index < 51; index++)
+        for (var index = 0; index < TaskContextReader.MaxItems + 1; index++)
             await session.Seeder.CreateTaskAsync(session.UserId, $"Task {index}", CoachTestSession.Now.AddHours(1), CoachTestSession.Now.AddHours(2));
         // Act
         using var result = JsonDocument.Parse(await session.Reader.ReadAsync(session.UserId, "Australia/Perth", CoachTestSession.Today, CoachTestSession.Today, default));
         // Assert
         result.RootElement.GetProperty("truncated").GetBoolean().Should().BeTrue(because: "partial task context must not imply complete availability");
-        result.RootElement.GetProperty("items").GetArrayLength().Should().BeLessThanOrEqualTo(50, because: "task reads have a bounded item budget");
+        result.RootElement.GetProperty("days").EnumerateObject().Sum(day => day.Value.GetArrayLength())
+            .Should().BeLessThanOrEqualTo(TaskContextReader.MaxItems, because: "task reads have a bounded item budget");
     }
 
     [Fact]
