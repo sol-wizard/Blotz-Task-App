@@ -157,8 +157,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
         return items;
     }
 
-    private static JsonElement Required(JsonElement value, string name) =>
-        value.TryGetProperty(name, out var field) ? field : throw new ArgumentException($"Missing required field: {name}.");
+    private static JsonElement Required(JsonElement value, string name) => DraftTools.Required(value, name);
 
     private static void CheckFields(JsonElement value, params string[] allowed)
     {

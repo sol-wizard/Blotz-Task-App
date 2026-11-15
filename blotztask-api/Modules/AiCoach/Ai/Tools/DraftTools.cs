@@ -10,7 +10,7 @@ namespace BlotzTask.Modules.AiCoach.Ai.Tools;
 /// <summary>Turn-local draft workspace. A failed turn never commits a partial tool operation.</summary>
 public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneId, bool reviewListEnabled = false)
 {
-    public const string ContractVersion = "draft-tools-10";
+    public const string ContractVersion = "draft-tools-11";
     public const int SuccessReplyMaxLength = 600;
 
     private readonly List<ProposalSet> _drafts = drafts.Select(draft => draft.Copy()).ToList();
@@ -61,19 +61,19 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
                     foreach (var change in changes)
                     {
                         CheckFields(change, "operation", "itemId", "fields");
-                        var operation = change.GetProperty("operation").GetString();
+                        var operation = Required(change, "operation").GetString();
                         if (operation == "add")
                         {
-                            updated.Add(ReadItem(change.GetProperty("fields"), null));
+                            updated.Add(ReadItem(Required(change, "fields"), null));
                             continue;
                         }
-                        var itemId = change.GetProperty("itemId").GetGuid();
+                        var itemId = Required(change, "itemId").GetGuid();
                         var index = updated.FindIndex(item => item.ProposalId == itemId);
                         if (index < 0) throw new ArgumentException("Item does not belong to this draft.");
                         if (!OperationPolicy.CanEditItem(updated[index]))
                             throw new ArgumentException("Already saved items cannot be changed or removed.");
                         if (operation == "remove") updated.RemoveAt(index);
-                        else if (operation == "update") updated[index] = ReadItem(change.GetProperty("fields"), updated[index]);
+                        else if (operation == "update") updated[index] = ReadItem(Required(change, "fields"), updated[index]);
                         else throw new ArgumentException("Unknown operation.");
                     }
                     if (updated.Count == 0) draft.Discard();
@@ -115,7 +115,7 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
 
     private ProposalSet Find(JsonElement args)
     {
-        var id = args.GetProperty("draftId").GetGuid();
+        var id = Required(args, "draftId").GetGuid();
         var draft = _drafts.SingleOrDefault(value => value.Id == id)
             ?? throw new ArgumentException("Draft does not belong to this conversation.");
         if (OperationPolicy.DraftOperationError(draft) is { } error) throw new ArgumentException(error);
@@ -144,11 +144,11 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
     {
         if (value.ValueKind == JsonValueKind.Null) return null;
         CheckFields(value, "frequency", "interval", "daysOfWeek", "dayOfMonth", "endDate");
-        if (!Enum.TryParse<RecurrenceFrequency>(value.GetProperty("frequency").GetString(), false, out var frequency)
+        if (!Enum.TryParse<RecurrenceFrequency>(Required(value, "frequency").GetString(), false, out var frequency)
             || !Enum.IsDefined(frequency)) throw new ArgumentException("Invalid recurrence frequency.");
         int? OptionalInt(string name) => value.TryGetProperty(name, out var field) && field.ValueKind != JsonValueKind.Null
             ? field.GetInt32() : null;
-        return new(frequency, value.GetProperty("interval").GetInt32(), WeekdayFlags(value),
+        return new(frequency, Required(value, "interval").GetInt32(), WeekdayFlags(value),
             OptionalInt("dayOfMonth"), ParseDate(String(value, "endDate", null)));
     }
 
@@ -203,7 +203,11 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
         DateOnly.ParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture);
     private static TimeOnly? ParseTime(string? value) => value is null ? null :
         TimeOnly.ParseExact(value, "HH:mm", CultureInfo.InvariantCulture);
-    private static JsonElement[] Array(JsonElement args, string name) => args.GetProperty(name).EnumerateArray().ToArray();
+    private static JsonElement[] Array(JsonElement args, string name) => Required(args, name).EnumerateArray().ToArray();
+
+    // A bare GetProperty throws KeyNotFoundException with no field name, so the model could not tell what to add.
+    internal static JsonElement Required(JsonElement value, string name) =>
+        value.TryGetProperty(name, out var field) ? field : throw new ArgumentException($"Missing required field: {name}.");
     private static void CheckFields(JsonElement args, params string[] allowed)
     {
         foreach (var field in args.EnumerateObject())

@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-20";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-19";
+    public const string PromptVersion = "coach-prompt-unified-21";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-20";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -80,6 +80,9 @@ public static class CoachPrompt
           is blank, and add a reason of a few words only when it helps. End with one short line
           saying they are waiting for confirmation below. Mention notes by count only. The
           schedule counts as one of the allowed sections.
+        - When you name a day other than today or tomorrow, add its date, for example
+          下周三（11月18日）, so it cannot be misread; weeks run Monday to Sunday, so on a Sunday the
+          coming Wednesday is 下周三, not 这周三.
         - If you ask a question, put the single question last in its own paragraph.
         - Draft and note titles and descriptions are plain text without Markdown.
 
