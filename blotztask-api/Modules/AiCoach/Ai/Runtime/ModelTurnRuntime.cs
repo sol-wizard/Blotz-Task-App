@@ -49,6 +49,31 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         "user what is now in their list waiting for confirmation (the current drafts above), what is still missing, " +
         "and that they can just say \"continue\" to have you add the rest. Don't mention limits or anything technical.");
 
+    // A provider asking for a longer wait is better answered by an error the user can retry than a silent stall.
+    private static readonly TimeSpan MaxRetryWait = TimeSpan.FromSeconds(20);
+
+    /// <summary>How long to wait before the one retry, or null when the provider asked for longer than is worth it.</summary>
+    private static TimeSpan? RetryWait(Exception ex)
+    {
+        if (ex.Data[AzureResponsesModelGateway.RetryAfterKey] is TimeSpan asked)
+            return asked > MaxRetryWait ? null : asked < TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : asked;
+        // A rate limit with no hint: a few seconds lets part of the per-minute window pass.
+        var rateLimited = ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.TooManyRequests }
+            or System.ClientModel.ClientResultException { Status: 429 };
+        return TimeSpan.FromSeconds(rateLimited ? 10 : 1);
+    }
+
+    /// <summary>Failures worth one more try: timeouts of a single call, dropped streams, 408, 429 and 5xx.</summary>
+    private static bool IsTransient(Exception ex, CancellationToken ct) => ex switch
+    {
+        // Only this call's own timeout; the user leaving cancels the turn instead.
+        OperationCanceledException => !ct.IsCancellationRequested,
+        HttpRequestException http => (int?)http.StatusCode is null or 408 or 429 or >= 500,
+        System.ClientModel.ClientResultException client => client.Status is 0 or 408 or 429 or >= 500,
+        IOException => true,
+        _ => false,
+    };
+
     public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
     {
         var limits = options.Value;
@@ -300,6 +325,36 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             if (model is not null)
                 modelRequest = modelRequest with { MaxOutputTokens = Math.Min(
                     modelRequest.MaxOutputTokens ?? model.MaxOutputTokens, model.MaxOutputTokens) };
+            // A provider hiccup (stream error, 429/5xx, a call that hangs past its timeout) otherwise throws away
+            // every call the turn already made. One retry counts as a model call, so the turn's time bound holds.
+            for (var attempt = 1; ; attempt++)
+            {
+                var streamed = false;
+                var attemptRequest = modelRequest.OnTextDelta is { } onText
+                    ? modelRequest with { OnTextDelta = text => { streamed = true; return onText(text); } }
+                    : modelRequest;
+                try
+                {
+                    return await CallOnce(attemptRequest);
+                }
+                // Text already shown to the user cannot be taken back, so a retry would repeat it.
+                catch (Exception ex) when (attempt == 1 && !streamed && calls < limits.MaxModelCallsPerTurn
+                                           && IsTransient(ex, ct) && RetryWait(ex) is { } wait)
+                {
+                    logger.LogWarning("AiCoach retrying model call {ModelCallNumber} for {ConversationId} in {WaitSeconds}s after {ErrorType}",
+                        calls, request.ConversationId, wait.TotalSeconds, ex.GetType().Name);
+                    await Trace("model_retry", new { modelCallNumber = calls, errorType = ex.GetType().Name, waitMs = (int)wait.TotalMilliseconds });
+                    await Task.Delay(wait, ct);
+                    // The loop keeps the turn's last call free of tools so it always ends with a reply. A retry that
+                    // lands on that call must be that reply too, or the turn fails with model_call_limit and loses its drafts.
+                    if (calls == limits.MaxModelCallsPerTurn - 1 && modelRequest.Tools.Count > 0)
+                        modelRequest = modelRequest with { Tools = [] };
+                }
+            }
+        }
+
+        async Task<ModelCompletionResult> CallOnce(ModelGatewayRequest modelRequest)
+        {
             calls++;
             // Definitions are saved once per distinct list; the request trace keeps only the hash and names.
             var toolSet = TraceToolSet.From(modelRequest.Tools);

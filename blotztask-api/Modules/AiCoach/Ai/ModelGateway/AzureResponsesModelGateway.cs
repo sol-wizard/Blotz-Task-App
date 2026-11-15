@@ -1,14 +1,23 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace BlotzTask.Modules.AiCoach.Ai.ModelGateway;
 
 /// <summary>A turn-scoped, stateless Responses adapter. No response IDs or state are shared between turns.</summary>
-public sealed class AzureResponsesModelGateway(HttpClient client, string endpoint, string apiKey,
+public sealed partial class AzureResponsesModelGateway(HttpClient client, string endpoint, string apiKey,
     AiCoachModelProfile profile) : IModelGateway
 {
+    /// <summary>Exception data key: how long the provider asked to wait before retrying, as a <see cref="TimeSpan"/>.</summary>
+    public const string RetryAfterKey = "RetryAfter";
+
+    // Azure rate-limit messages end with "Please retry after N seconds."
+    [GeneratedRegex(@"retry after (\d+) second", RegexOptions.IgnoreCase)]
+    private static partial Regex RetryAfterHint();
+
     // Full output preserves reasoning items, message phases and provider tool IDs for tool continuation.
     private readonly Dictionary<string, JsonArray> _outputBeforeTool = [];
     public AiCoachModelProfile Profile => profile;
@@ -64,8 +73,12 @@ public sealed class AzureResponsesModelGateway(HttpClient client, string endpoin
         http.Content = JsonContent.Create(body);
         using var response = await client.SendAsync(http, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (!response.IsSuccessStatusCode)
+        {
             // Provider bodies may echo user content; keep them out of application logs.
-            throw new HttpRequestException($"Azure Responses returned HTTP {(int)response.StatusCode}.", null, response.StatusCode);
+            var exception = new HttpRequestException($"Azure Responses returned HTTP {(int)response.StatusCode}.", null, response.StatusCode);
+            if (response.Headers.RetryAfter?.Delta is { } delay) exception.Data[RetryAfterKey] = delay;
+            throw exception;
+        }
         using var document = streaming
             ? await ReadStreamAsync(response, request.OnTextDelta!, cancellationToken)
             : await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
@@ -166,7 +179,24 @@ public sealed class AzureResponsesModelGateway(HttpClient client, string endpoin
                     break;
                 case "error":
                 case "response.failed":
-                    throw new HttpRequestException("Azure Responses streaming request failed.");
+                    // Code, type and param name the failure without its message, which may echo user content.
+                    var error = root.TryGetProperty("response", out var failed) && failed.ValueKind == JsonValueKind.Object
+                                && failed.TryGetProperty("error", out var nested) && nested.ValueKind == JsonValueKind.Object ? nested
+                        : root.TryGetProperty("error", out var inner) && inner.ValueKind == JsonValueKind.Object ? inner
+                        : root;
+                    string? Field(string name) => error.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+                        ? value.GetString() : null;
+                    // The stream already answered 200, so a rate limit only shows here; tagging it 429 lets the
+                    // budget refund it and the runtime wait it out.
+                    var rateLimited = Field("code") == "rate_limit_exceeded" || Field("type") == "too_many_requests";
+                    var exception = new HttpRequestException(
+                        $"Azure Responses streaming request failed (code {Field("code") ?? "none"}, type {Field("type") ?? "none"}, param {Field("param") ?? "none"}).",
+                        null, rateLimited ? HttpStatusCode.TooManyRequests : null);
+                    // Only the number is taken from the message.
+                    if (Field("message") is { } message
+                        && RetryAfterHint().Match(message) is { Success: true } hint && int.TryParse(hint.Groups[1].Value, out var seconds))
+                        exception.Data[RetryAfterKey] = TimeSpan.FromSeconds(seconds);
+                    throw exception;
             }
         }
     }
