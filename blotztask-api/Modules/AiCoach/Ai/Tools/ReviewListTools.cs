@@ -67,7 +67,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
             using var document = JsonDocument.Parse(call.ArgumentsJson);
             var args = document.RootElement;
             CheckFields(args, call.Name == "remove_items" ? ["itemIds", "successReply"] : ["items", "successReply"]);
-            var reply = args.GetProperty("successReply").GetString();
+            var reply = Required(args, "successReply").GetString();
             if (!DraftTools.IsValidSuccessReply(reply))
                 throw new ArgumentException($"Provide a successReply of at most {DraftTools.SuccessReplyMaxLength} characters without control characters other than line breaks.");
             var pending = drafts.Where(draft => draft.Status == ProposalSetStatus.Pending).ToArray();
@@ -84,11 +84,11 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
                     foreach (var update in updates)
                     {
                         CheckFields(update, "itemId", "fields");
-                        var id = update.GetProperty("itemId").GetGuid();
+                        var id = Required(update, "itemId").GetGuid();
                         if (!updatedIds.Add(id)) throw new ArgumentException("Duplicate item IDs.");
                         var index = proposals.FindIndex(item => item.ProposalId == id);
                         if (index < 0) throw new ArgumentException("Unknown unsaved review item.");
-                        proposals[index] = ReadItem(update.GetProperty("fields"), proposals[index]);
+                        proposals[index] = ReadItem(Required(update, "fields"), proposals[index]);
                     }
                     break;
                 case "remove_items":
@@ -119,7 +119,7 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
         CheckFields(fields, original is null
             ? ["kind", "title", "description", "date", "startTime", "endTime", "recurrence", "suggestedFields"]
             : ["title", "description", "date", "startTime", "endTime", "recurrence", "suggestedFields"]);
-        var kind = original?.Kind ?? (fields.GetProperty("kind").GetString() switch
+        var kind = original?.Kind ?? (Required(fields, "kind").GetString() switch
         {
             "task" => ProposalKind.Task,
             "note" => ProposalKind.Note,
@@ -152,10 +152,13 @@ internal sealed class ReviewListTools(List<ProposalSet> drafts, string timeZoneI
 
     private static JsonElement[] Array(JsonElement args, string name)
     {
-        var items = args.GetProperty(name).EnumerateArray().ToArray();
+        var items = Required(args, name).EnumerateArray().ToArray();
         if (items.Length is < 1 or > 100) throw new ArgumentException("Provide between 1 and 100 items.");
         return items;
     }
+
+    private static JsonElement Required(JsonElement value, string name) =>
+        value.TryGetProperty(name, out var field) ? field : throw new ArgumentException($"Missing required field: {name}.");
 
     private static void CheckFields(JsonElement value, params string[] allowed)
     {
