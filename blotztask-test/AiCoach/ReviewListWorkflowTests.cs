@@ -6,12 +6,15 @@ using BlotzTask.Modules.AiCoach.Ai.Tools;
 using BlotzTask.Modules.AiCoach.Api;
 using BlotzTask.Modules.AiCoach.Application.Commands;
 using BlotzTask.Modules.AiCoach.Application.Projections;
+using BlotzTask.Modules.AiCoach.Application.Queries;
 using BlotzTask.Modules.AiCoach.Domain.Conversations;
 using BlotzTask.Modules.AiCoach.Domain.Proposals;
 using BlotzTask.Modules.AiCoach.Infrastructure;
+using BlotzTask.Modules.Notes.Commands;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Domain.Services;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
@@ -398,6 +401,260 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
         json["artifacts"]!.AsArray().Should().BeEmpty(because: "an old task-card client cannot render mixed entries");
         json.AsObject().ContainsKey("pendingList").Should().BeFalse(because: "legacy clients retain their existing response shape");
     }
+
+    [Fact]
+    public async Task Handle_TickTwice_SavesTheTaskOnce()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var conversation = await Session(store, [TaskItem()]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        var (draftId, itemId) = (conversation.Drafts[0].Id, conversation.Drafts[0].Proposals[0].ProposalId);
+        // Act
+        var first = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(true), default);
+        var repeat = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(true), default);
+        // Assert
+        (await db.TaskItems.CountAsync(task => task.UserId == conversation.UserId)).Should().Be(1,
+            because: "a repeated tick finds the item saved and creates nothing new");
+        var saved = repeat.ConversationSnapshot.PendingList!.Payload.Items.Single();
+        saved.PersistedTaskId.Should().NotBeNull(because: "the saved task ID is what an untick deletes later");
+        saved.PersistedTaskId.Should().Be(first.ConversationSnapshot.PendingList!.Payload.Items.Single().PersistedTaskId,
+            because: "the card keeps pointing at the task the first tick created");
+        repeat.ConversationSnapshot.PendingList.Status.Should().Be("pending",
+            because: "the list stays open so the other items can still be ticked");
+    }
+
+    [Fact]
+    public async Task Handle_Untick_DeletesTheSavedTaskAndAllowsTickingAgain()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var conversation = await Session(store, [TaskItem()]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        var (draftId, itemId) = (conversation.Drafts[0].Id, conversation.Drafts[0].Proposals[0].ProposalId);
+        await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(true), default);
+        // Act
+        var unticked = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(false), default);
+        var tasksAfterUntick = await db.TaskItems.CountAsync(task => task.UserId == conversation.UserId);
+        var repeat = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(false), default);
+        var ticked = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(true), default);
+        // Assert
+        tasksAfterUntick.Should().Be(0, because: "an untick deletes the task its tick created");
+        unticked.ConversationSnapshot.PendingList!.Payload.Items.Single().PersistedTaskId.Should().BeNull(
+            because: "the card forgets the deleted task");
+        repeat.ConversationSnapshot.PendingList!.Payload.Items.Single().PersistedTaskId.Should().BeNull(
+            because: "a repeated untick changes nothing");
+        ticked.ConversationSnapshot.PendingList!.Payload.Items.Single().PersistedTaskId.Should().NotBeNull(
+            because: "an unticked item can be ticked again");
+        (await db.TaskItems.CountAsync(task => task.UserId == conversation.UserId)).Should().Be(1,
+            because: "the second tick saves exactly one new task");
+    }
+
+    [Fact]
+    public async Task Handle_TickNoteAndRepeatingTask_SavesThemAndUntickDeletesThem()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        // Wednesdays only, starting on Tuesday 20 October: the start date is not itself an occurrence.
+        var weekly = TaskItem() with { Title = "Swim", Recurrence = new(RecurrenceFrequency.Weekly, 1, 4, null, null) };
+        var conversation = await Session(store, [NoteItem(), weekly]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        var draft = conversation.Drafts[0];
+        foreach (var item in draft.Proposals)
+            await handler.Handle(conversation.UserId, conversation.Id, draft.Id, item.ProposalId, new(true), default);
+        var notesAfterTick = await db.Notes.CountAsync(note => note.UserId == conversation.UserId);
+        // Act
+        foreach (var item in draft.Proposals)
+            await handler.Handle(conversation.UserId, conversation.Id, draft.Id, item.ProposalId, new(false), default);
+        // Assert
+        notesAfterTick.Should().Be(1, because: "a ticked note is saved to Notes");
+        (await db.Notes.CountAsync(note => note.UserId == conversation.UserId)).Should().Be(0,
+            because: "an untick deletes the note again");
+        (await db.RecurringTasks.SingleAsync(task => task.UserId == conversation.UserId)).IsActive.Should().BeFalse(
+            because: "an untick turns the whole series off, even when it starts on a day it doesn't repeat on");
+    }
+
+    [Fact]
+    public async Task Handle_UntickSplitSeries_TurnsOffEveryPart()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var weekly = TaskItem() with { Title = "Swim", Recurrence = new(RecurrenceFrequency.Weekly, 1, 4, null, null) };
+        var conversation = await Session(store, [weekly]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        var (draftId, itemId) = (conversation.Drafts[0].Id, conversation.Drafts[0].Proposals[0].ProposalId);
+        await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(true), default);
+        var original = await db.RecurringTasks.SingleAsync(task => task.UserId == conversation.UserId);
+        // A "this and future" edit in the task list leaves a second part running on the same series.
+        var split = await new CreateRecurringTaskCommandHandler(db, NullLogger<CreateRecurringTaskCommandHandler>.Instance)
+            .Handle(new CreateRecurringTaskCommand
+            {
+                UserId = conversation.UserId,
+                TaskDetails = new CreateRecurringTaskRequest
+                {
+                    Title = "Swim", Description = "", TimeType = TaskTimeType.RangeTime,
+                    TemplateStartTime = new DateTimeOffset(2026, 10, 28, 11, 0, 0, TimeSpan.FromHours(8)),
+                    TemplateEndTime = new DateTimeOffset(2026, 10, 28, 12, 0, 0, TimeSpan.FromHours(8)),
+                    ScheduleTimeZoneId = "Australia/Perth", Frequency = RecurrenceFrequency.Weekly, Interval = 1,
+                    DaysOfWeek = 4, StartDate = new DateOnly(2026, 10, 28),
+                },
+            });
+        (await db.RecurringTasks.SingleAsync(task => task.Id == split.RecurringTaskId)).SeriesId = original.SeriesId;
+        await db.SaveChangesAsync();
+        // Act
+        var unticked = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(false), default);
+        // Assert
+        (await db.RecurringTasks.Where(task => task.UserId == conversation.UserId).ToListAsync())
+            .Should().OnlyContain(task => !task.IsActive, because: "an untick turns off every part of the series it saved");
+        unticked.ConversationSnapshot.PendingList!.Payload.Items.Single().PersistedTaskId.Should().BeNull(
+            because: "the card forgets the series only after every part is off");
+    }
+
+    [Fact]
+    public async Task Handle_TickPastTask_RefusesWithoutSaving()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var past = TaskItem() with { Date = new(2026, 10, 18), StartTime = new(6, 0), EndTime = new(7, 0) };
+        var conversation = await Session(store, [past]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        // Act
+        var act = () => handler.Handle(conversation.UserId, conversation.Id, conversation.Drafts[0].Id,
+            conversation.Drafts[0].Proposals[0].ProposalId, new(true), default);
+        // Assert
+        (await act.Should().ThrowAsync<DraftFieldValidationException>(because: "a start that has passed can't be saved"))
+            .Which.ErrorCode.Should().Be("ScheduleInPast", because: "the app uses the code to say why and point to editing");
+        (await db.TaskItems.CountAsync(task => task.UserId == conversation.UserId)).Should().Be(0,
+            because: "a refused tick saves nothing");
+    }
+
+    [Fact]
+    public async Task Handle_TickWhileCoachReplies_Refuses()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var conversation = await Session(store, [TaskItem()]);
+        var running = await store.FindAsync(conversation.Id, default);
+        running!.BeginTurn(Guid.NewGuid(), "Plan my Tuesday", FixedClock.Now);
+        await store.SaveAsync(running, default);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        // Act
+        var act = () => handler.Handle(conversation.UserId, conversation.Id, conversation.Drafts[0].Id,
+            conversation.Drafts[0].Proposals[0].ProposalId, new(true), default);
+        // Assert
+        (await act.Should().ThrowAsync<DraftConflictException>(because: "the coach may still be changing the list"))
+            .Which.ErrorCode.Should().Be("ConversationBusy", because: "edits are refused the same way while a reply runs");
+        (await db.TaskItems.CountAsync(task => task.UserId == conversation.UserId)).Should().Be(0,
+            because: "a refused tick saves nothing");
+    }
+
+    [Fact]
+    public async Task Handle_TickClashingTask_SavesAndNamesTheClash()
+    {
+        // Arrange
+        await using var session = await Evaluation.CoachTestSession.CreateAsync(fixture);
+        await new AddTaskCommandHandler(session.Db, NullLogger<AddTaskCommandHandler>.Instance).Handle(new AddTaskCommand
+        {
+            UserId = session.UserId,
+            TaskDetails = new AddTaskItemDto
+            {
+                Title = "Gym", Description = "", TimeType = TaskTimeType.RangeTime,
+                StartTime = new DateTimeOffset(2026, 10, 1, 9, 15, 0, TimeSpan.FromHours(8)),
+                EndTime = new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.FromHours(8)),
+            },
+        });
+        var list = new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
+        list.Replace([Evaluation.CoachTestSession.Item(9)]);
+        session.Conversation.Drafts.Add(list);
+        await session.Store.SaveAsync(session.Conversation, default);
+        var handler = TickHandler(session.Store, session.Db, session.Clock, session.Checker);
+        // Act
+        var result = await handler.Handle(session.UserId, session.Conversation.Id, list.Id,
+            list.Proposals[0].ProposalId, new(true), default);
+        // Assert
+        result.Conflicts.Should().ContainSingle(conflict => conflict.TaskTitle == "Gym",
+            because: "the app names the clash in its message");
+        (await session.Db.TaskItems.CountAsync(task => task.UserId == session.UserId)).Should().Be(2,
+            because: "a clash is saved anyway, and an untick is the undo");
+    }
+
+    [Fact]
+    public void Handle_ReviewToolsAfterTick_KeepSavedItemsUnchangeable()
+    {
+        // Arrange
+        var list = new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
+        list.Replace([TaskItem()]);
+        var savedId = list.Proposals[0].ProposalId;
+        list.RecordItemSaved(savedId, 42, null, null);
+        var tools = new DraftTools([list], "Australia/Perth", reviewListEnabled: true);
+        // Act
+        var added = Call(tools, "add_items", new { items = new[] { new { kind = "note", title = "Charger" } }, successReply = "加好了" });
+        var changed = Call(tools, "update_items", new
+        {
+            items = new[] { new { itemId = savedId, fields = new { title = "Renamed" } } }, successReply = "改好了",
+        });
+        // Assert
+        added.GetProperty("success").GetBoolean().Should().BeTrue(because: "the coach can still add to a list with saved items");
+        var current = tools.Drafts.Single(draft => draft.Status == ProposalSetStatus.Pending);
+        current.Proposals.Should().HaveCount(2, because: "a saved item stays on the list so its card can still be unticked");
+        current.Proposals.Single(item => item.ProposalId == savedId).PersistedTaskId.Should().Be(42,
+            because: "the coach's change keeps the saved task's ID");
+        changed.GetProperty("success").GetBoolean().Should().BeFalse(
+            because: "the coach can't change an item the user already saved");
+    }
+
+    [Fact]
+    public void Handle_LaterReplyAddsItem_MarksEachItemWithItsReply()
+    {
+        // Arrange
+        var conversation = new Conversation
+        {
+            Id = Guid.NewGuid(), UserId = Guid.NewGuid(), CreatedAt = FixedClock.Now, TimeZoneId = "Australia/Perth",
+        };
+        var firstTurn = Guid.NewGuid();
+        conversation.BeginTurn(firstTurn, "Plan Tuesday", FixedClock.Now);
+        var list = new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
+        list.Replace([TaskItem()]);
+        conversation.CompleteTurn(firstTurn, conversation.Version, "Here is one task", null, [], [list], null, 0,
+            completedAt: FixedClock.Now.AddSeconds(5));
+        var secondTurn = Guid.NewGuid();
+        conversation.BeginTurn(secondTurn, "Add the gym", FixedClock.Now.AddMinutes(1));
+        var changed = conversation.Drafts.Single().Copy();
+        changed.Replace([.. changed.Proposals, TaskItem() with { Title = "Gym" }]);
+        // Act
+        conversation.CompleteTurn(secondTurn, conversation.Version, "Added the gym", null, [], [changed], null, 0,
+            completedAt: FixedClock.Now.AddMinutes(1).AddSeconds(5));
+        // Assert
+        var replies = conversation.Messages.Where(message => message.Role == ConversationMessageRole.Assistant).ToArray();
+        var items = conversation.Drafts.Single().Proposals;
+        items.Single(item => item.Title == "Read").SuggestedInMessageId.Should().Be(replies[0].Id,
+            because: "the first reply suggested it");
+        items.Single(item => item.Title == "Gym").SuggestedInMessageId.Should().Be(replies[1].Id,
+            because: "a later item sits under its own reply, though only the first reply stores the list");
+    }
+
+    private static SetDraftItemAddedCommandHandler TickHandler(IConversationStore store, BlotzTaskDbContext db,
+        TimeProvider? clock = null, DraftScheduleChecker? checker = null) => new(store,
+        new AddTaskCommandHandler(db, NullLogger<AddTaskCommandHandler>.Instance),
+        new CreateRecurringTaskCommandHandler(db, NullLogger<CreateRecurringTaskCommandHandler>.Instance),
+        new CreateNoteCommandHandler(db, NullLogger<CreateNoteCommandHandler>.Instance),
+        new DeleteTaskCommandHandler(db, NullLogger<DeleteTaskCommandHandler>.Instance),
+        new DeleteRecurringOccurrenceCommandHandler(db, new RecurringTaskGeneratorService(),
+            NullLogger<DeleteRecurringOccurrenceCommandHandler>.Instance),
+        new DeleteNoteCommandHandler(db, NullLogger<DeleteNoteCommandHandler>.Instance),
+        db, clock ?? new FixedClock(), NullLogger<SetDraftItemAddedCommandHandler>.Instance, checker);
 
     private ServiceProvider Services() => new ServiceCollection()
         .AddScoped(_ => new BlotzTaskDbContext(fixture.Options)).BuildServiceProvider();

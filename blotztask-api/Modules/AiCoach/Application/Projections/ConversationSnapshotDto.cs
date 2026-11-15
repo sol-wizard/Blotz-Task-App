@@ -21,7 +21,7 @@ public sealed record TaskDraftPayloadDto(IReadOnlyList<TaskDraftItemDto> Items, 
 public sealed record TaskDraftItemDto(Guid ItemId, string Title, string? Description, string? Date,
     string? StartTime, string? EndTime, string TimeZoneId, int? LabelId, int? EstimatedMinutes,
     int? PersistedTaskId, RecurrenceDraftDto? Recurrence, string Kind = "task",
-    Guid? PersistedNoteId = null, IReadOnlyList<string>? SuggestedFields = null);
+    Guid? PersistedNoteId = null, IReadOnlyList<string>? SuggestedFields = null, Guid? SuggestedInMessageId = null);
 public sealed record RecurrenceDraftDto(string Frequency, int Interval, int? DaysOfWeek, int? DayOfMonth, string? EndDate);
 
 public static class ConversationSnapshotProjector
@@ -57,7 +57,8 @@ public static class ConversationSnapshotProjector
             item.PersistedTaskId, item.Recurrence is { } recurrence
                 ? new RecurrenceDraftDto(recurrence.Frequency.ToString(), recurrence.Interval,
                     recurrence.DaysOfWeek, recurrence.DayOfMonth, recurrence.EndDate?.ToString("yyyy-MM-dd")) : null,
-            item.Kind.ToString().ToLowerInvariant(), item.PersistedNoteId, item.SuggestedFields ?? [])).ToArray();
+            item.Kind.ToString().ToLowerInvariant(), item.PersistedNoteId, item.SuggestedFields ?? [],
+            item.SuggestedInMessageId)).ToArray();
         int? minutes = items.All(item => item.EstimatedMinutes.HasValue) ? items.Sum(item => item.EstimatedMinutes!.Value) : null;
         var actions = OperationPolicy.DraftActions(draft, !busy);
         var errors = ConfirmationErrors(draft);

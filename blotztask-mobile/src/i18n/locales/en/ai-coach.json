@@ -215,5 +215,19 @@
     "generating": "Organizing…",
     "generatingDescription": "AI is organizing the list. You can edit and add items when it finishes.",
     "toggleDetails": "Expand or collapse details"
+  },
+  "card": {
+    "add": "Add {{title}}",
+    "addedTask": "Added to your tasks",
+    "addedNote": "Added to your notes",
+    "addedWithClash": "Added. It overlaps with {{tasks}}",
+    "removedTask": "Removed from your tasks",
+    "removedNote": "Removed from your notes",
+    "addFailed": "Couldn't add it. Please try again.",
+    "removeFailed": "Couldn't remove it. Please try again.",
+    "timePassed": "This time has passed. Tap the pencil to change it.",
+    "needsTime": "Set a date and time first. Tap the pencil.",
+    "listChanged": "The list changed. Please try again.",
+    "editRepeating": "Edit repeating tasks from your task list."
   }
 }

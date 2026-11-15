@@ -41,7 +41,10 @@ public class DeleteRecurringOccurrenceCommandHandler(
 
         ValidateOccurrence(template, command.OccurrenceDate);
 
-        if (!generatorService.IsOccurrenceOn(template, command.OccurrenceDate))
+        // "This and future" from the series' own start date removes the whole series, even when that date is not
+        // an occurrence itself (a weekly series can start on a day it doesn't repeat on).
+        var wholeSeries = command.DeleteFuture && command.OccurrenceDate == template.StartDate;
+        if (!wholeSeries && !generatorService.IsOccurrenceOn(template, command.OccurrenceDate))
         {
             throw new ValidationException("OccurrenceDate must be a valid occurrence date for this recurring task.");
         }

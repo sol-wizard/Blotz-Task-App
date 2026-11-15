@@ -15,7 +15,7 @@ export function ReviewNoteEditor({
   busy: boolean;
   onCancel: () => void;
   onSave: (value: EditedNoteDraftItemDto) => void;
-  onDirtyChange: (dirty: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { t } = useTranslation("aiCoach");
   const [title, setTitle] = useState(initial.title);
@@ -24,7 +24,7 @@ export function ReviewNoteEditor({
   const length = noteTextLength(title, description);
   const dirty = title !== initial.title || description !== (initial.description ?? "");
   useEffect(() => {
-    onDirtyChange(dirty);
+    onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
   const cancel = () => {
     if (busy) return;

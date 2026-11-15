@@ -258,44 +258,20 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
                 if (proposal.Kind == ProposalKind.Note)
                 {
                     var note = await (createNote ?? new CreateNoteCommandHandler(db,
-                        NullLogger<CreateNoteCommandHandler>.Instance)).Handle(new CreateNoteCommand
-                    {
-                        UserId = command.UserId, Text = proposal.NoteText, IsPersistent = false,
-                    }, ct);
+                        NullLogger<CreateNoteCommandHandler>.Instance)).Handle(DraftItemCommands.Note(command.UserId, proposal), ct);
                     savedNotes.Add((proposal.ProposalId, note.Id));
                     continue;
                 }
                 var item = resolvedById[proposal.ProposalId];
                 if (item.Item.Recurrence is { } recurrence)
                 {
-                    var result = await createRecurringTask.Handle(new CreateRecurringTaskCommand
-                    {
-                        UserId = command.UserId,
-                        TaskDetails = new CreateRecurringTaskRequest
-                        {
-                            Title = item.Item.Title, Description = item.Item.Description ?? "",
-                            TemplateStartTime = item.Start, TemplateEndTime = item.End,
-                            TimeType = TaskTimeType.RangeTime, LabelId = item.Item.LabelId,
-                            ScheduleTimeZoneId = item.Item.TimeZoneId,
-                            Frequency = recurrence.Frequency, Interval = recurrence.Interval,
-                            DaysOfWeek = recurrence.DaysOfWeek, DayOfMonth = recurrence.DayOfMonth,
-                            StartDate = item.Item.Date!.Value, EndDate = recurrence.EndDate,
-                        },
-                    }, ct);
+                    var result = await createRecurringTask.Handle(
+                        DraftItemCommands.Recurring(command.UserId, item.Item, recurrence, item.Start, item.End), ct);
                     saved.Add((item.Item.ProposalId, result.RecurringTaskId, result.SeriesId));
                 }
                 else
                 {
-                    var taskId = await addTask.Handle(new AddTaskCommand
-                    {
-                        UserId = command.UserId,
-                        TaskDetails = new AddTaskItemDto
-                        {
-                            Title = item.Item.Title, Description = item.Item.Description ?? "",
-                            StartTime = item.Start, EndTime = item.End,
-                            TimeType = TaskTimeType.RangeTime, LabelId = item.Item.LabelId,
-                        },
-                    }, ct);
+                    var taskId = await addTask.Handle(DraftItemCommands.Task(command.UserId, item.Item, item.Start, item.End), ct);
                     saved.Add((item.Item.ProposalId, taskId, null));
                 }
             }
@@ -360,15 +336,8 @@ public sealed class ConfirmDraftCommandHandler(IConversationStore store, AddTask
 
     private ResolvedDraftItem Resolve(TaskProposal item)
     {
-        if (item.Date is not { } date || item.StartTime is not { } start || item.EndTime is not { } end)
-            throw new DraftFieldValidationException("ScheduleRequired", "Set a date, start time and end time before saving.");
-        var zone = TimeZoneInfo.FindSystemTimeZoneById(item.TimeZoneId);
-        var startUtc = DraftEditing.ResolveLocal(date, start, zone);
-        var endUtc = DraftEditing.ResolveLocal(date, end, zone);
-        if (endUtc <= startUtc) throw new DraftFieldValidationException("InvalidDraftFields", "End must be after start.");
-        if (OperationPolicy.IsPastStart(startUtc, clock.GetUtcNow()))
-            throw new DraftFieldValidationException("ScheduleInPast", "This time has passed. Edit the draft before saving.");
-        return new(item, startUtc, endUtc);
+        var (start, end) = DraftEditing.ResolveSchedule(item, clock.GetUtcNow());
+        return new(item, start, end);
     }
 
     internal static void ApplyCommitted(Conversation conversation, AiCoachDraftConfirmation confirmation)
