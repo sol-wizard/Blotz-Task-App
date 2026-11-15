@@ -52,8 +52,10 @@ public sealed class TaskContextReader(GetTasksByDateQueryHandler tasks, IOptions
                 var item = new Dictionary<string, object> { ["title"] = task.Title };
                 var start = task.StartTime is { } startTime ? TimeZoneInfo.ConvertTime(startTime, zone) : (DateTimeOffset?)null;
                 var finish = task.EndTime is { } endTime ? TimeZoneInfo.ConvertTime(endTime, zone) : (DateTimeOffset?)null;
+                // A task that starts and ends at the same minute is a timed reminder; "20:58-20:58" read as
+                // an empty range, and the coach left such tasks out when saying when the user is free.
                 if (start is { } from)
-                    item["time"] = finish is not { } to ? from.ToString("yyyy-MM-dd HH:mm")
+                    item["time"] = finish is not { } to || to == from ? from.ToString("yyyy-MM-dd HH:mm")
                         : from.Date == to.Date ? $"{from:yyyy-MM-dd HH:mm}-{to:HH:mm}"
                         : $"{from:yyyy-MM-dd HH:mm} to {to:yyyy-MM-dd HH:mm}";
                 else if (finish is { } until) item["time"] = "until " + until.ToString("yyyy-MM-dd HH:mm");
@@ -84,7 +86,8 @@ public sealed class TaskContextReader(GetTasksByDateQueryHandler tasks, IOptions
                 omittedCount = truncated ? all.Length - selected.Count : (int?)null,
                 note = lastShown is { } shownDate
                     ? $"Not everything fits. Shown items run through {shownDate:yyyy-MM-dd}, and that day may be incomplete; " +
-                      $"read {shownDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd} to see the rest."
+                      $"read {shownDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd} to see the rest. Once you have, the two " +
+                      "results together are complete: do not tell the user that anything was left out."
                     : null,
                 items = selected,
             }, ResultJson);

@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-19";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-18";
+    public const string PromptVersion = "coach-prompt-unified-20";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-19";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -163,7 +163,10 @@ public static class CoachPrompt
         in their schedule. When a schedule check reports conflicts, fix them all in one update call
         rather than one at a time. A conflict between two things the user told you to put at those
         times (a class and a shift they listed, say) is theirs to settle: leave it and mention it,
-        and do not keep moving items around it.
+        and do not keep moving items around it. The same holds when a time the user gave overlaps an
+        existing task or draft: never ask first; draft it at their time, name every overlap in one
+        sentence (the app also warns before saving), and offer moving one of them as follow-ups.
+        The tasks a schedule check reports are already saved in the app, not awaiting confirmation.
 
         Follow-ups save the user typing: when there are messages they are likely to want to send
         next, end with a follow-up block after everything else, one message per line, which the app
