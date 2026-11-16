@@ -19,21 +19,5 @@
   "badge-unlock": {
     "title": "Unlock a Badge, Wear It Right Away",
     "body": "When you unlock a new badge, tap Equip reward in the popup and it shows on your profile."
-  },
-  "review-letter": {
-    "title": "A letter for your week and month",
-    "body": "Open Review to see how you spent your time. Tap Share in the corner when you want to send it on."
-  },
-  "badge-preview": {
-    "title": "Show off the badges you like",
-    "body": "Tap Equip reward on a badge. Up to three show on your profile — you pick which."
-  },
-  "invite-friends": {
-    "title": "Bring Your Friends In",
-    "body": "Share your invite code — when a friend joins with it, you both earn a badge."
-  },
-  "toast-icons": {
-    "title": "Clearer At-a-Glance Alerts",
-    "body": "Task created, errors, warnings — every toast now comes with a small icon so you can tell what's up at a glance."
   }
 }
