@@ -21,7 +21,9 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     bool ReviewListEnabled = false,
     Func<string, object, Task>? Stream = null, string? UserContext = null, MemoryTools? MemoryTools = null,
     // Every model call in the turn, compression included, is charged to this user's allowance.
-    Guid? UserId = null);
+    Guid? UserId = null,
+    // Saved tasks for today and the next six days, read once at the start of the turn; set by the runtime.
+    string? UpcomingSchedule = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -48,6 +50,9 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         "You can't add or change items any more in this reply. In two or three short, friendly sentences, tell the " +
         "user what is now in their list waiting for confirmation (the current drafts above), what is still missing, " +
         "and that they can just say \"continue\" to have you add the rest. Don't mention limits or anything technical.");
+
+    // Matches the longest list_tasks range, so "this week" and "next Monday" need no read of their own.
+    private const int UpcomingScheduleDays = 7;
 
     // A provider asking for a longer wait is better answered by an error the user can retry than a silent stall.
     private static readonly TimeSpan MaxRetryWait = TimeSpan.FromSeconds(20);
@@ -98,8 +103,12 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         var output = 0;
         var total = 0;
         var taskContextRead = false;
+        // When text first reaches the user, per streamed segment (a reset starts a new one): the wait a user feels.
+        var turnStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+        var segmentHasText = false;
         try
         {
+            request = request with { UpcomingSchedule = await ReadUpcomingScheduleAsync() };
             var context = await contextBuilder.BuildAsync(request, executor.AvailableTools, Call);
             var system = context.SystemPrompt;
             var transcript = context.Transcript;
@@ -266,16 +275,21 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
                             "Task schedule was read for this turn. Re-read for current task details.")
                         : message);
                 }
-                if (toolCalls == 1 && completion.ToolCalls.Count == 1
+                // Schedule reads before this call only informed the reply the model has just written, so they
+                // do not need another model call (about a third of the turn's tokens) to restate it.
+                if (completion.ToolCalls.Count == 1
+                    && toolNames.Take(toolNames.Count - 1).All(name => name == "list_tasks")
                     && string.IsNullOrWhiteSpace(completion.AssistantText)
                     && singleExecution is { Succeeded: true, Replayed: false, SuccessReply: { } reply })
                 {
                     ct.ThrowIfCancellationRequested();
-                    await Emit("reply.delta", new { text = reply });
-                    turn.Add(new GatewayAssistantMessage(reply, []));
-                    logger.LogInformation("AiCoach completed {ConversationId} with a prewritten draft reply after one successful tool call",
-                        request.ConversationId);
-                    return Result(reply, null);
+                    // A conflict reply carries its own follow-ups (move it / keep it).
+                    var (text, followUps) = FollowUps.Extract(reply);
+                    await Emit("reply.delta", new { text });
+                    turn.Add(new GatewayAssistantMessage(text, []));
+                    logger.LogInformation("AiCoach completed {ConversationId} with a prewritten draft reply after {ToolCallCount} tool calls",
+                        request.ConversationId, toolCalls);
+                    return Result(text, null, followUps);
                 }
                 logger.LogInformation(
                     "AiCoach continuing model loop for {ConversationId} after tool calls: {TurnToolCallCount} calls, lastToolSucceeded={LastToolSucceeded}, hasPrewrittenReply={HasPrewrittenReply}",
@@ -451,7 +465,48 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
         }
 
         Task Trace(string kind, object payload) => request.Trace?.Invoke(kind, payload) ?? Task.CompletedTask;
-        Task Emit(string kind, object payload) => request.Stream?.Invoke(kind, payload) ?? Task.CompletedTask;
+
+        // Seven of ten turns used to open with a list_tasks call (1-3 s plus a model round trip) before the coach
+        // could say anything; reading the coming week up front lets the first call answer. A failed read is not
+        // fatal: list_tasks is still offered.
+        async Task<string?> ReadUpcomingScheduleAsync()
+        {
+            if (request.ReadTasks is null) return request.UpcomingSchedule;
+            var today = DateOnly.FromDateTime(request.LocalNow.DateTime);
+            var endDate = today.AddDays(UpcomingScheduleDays - 1);
+            var started = System.Diagnostics.Stopwatch.GetTimestamp();
+            try
+            {
+                var schedule = await request.ReadTasks(today, endDate, ct);
+                await Trace("schedule_preloaded", new
+                {
+                    startDate = today.ToString("yyyy-MM-dd"), endDate = endDate.ToString("yyyy-MM-dd"),
+                    bytes = System.Text.Encoding.UTF8.GetByteCount(schedule),
+                    elapsedMs = (int)System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                });
+                return schedule;
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "AiCoach could not preload the schedule for {ConversationId}; list_tasks remains available",
+                    request.ConversationId);
+                return null;
+            }
+        }
+        async Task Emit(string kind, object payload)
+        {
+            if (kind == "reply.reset") segmentHasText = false;
+            else if (kind == "reply.delta" && !segmentHasText)
+            {
+                segmentHasText = true;
+                await Trace("reply_text_started", new
+                {
+                    modelCallNumber = calls,
+                    elapsedMs = (int)System.Diagnostics.Stopwatch.GetElapsedTime(turnStarted).TotalMilliseconds,
+                });
+            }
+            if (request.Stream is not null) await request.Stream(kind, payload);
+        }
     }
 
 }
