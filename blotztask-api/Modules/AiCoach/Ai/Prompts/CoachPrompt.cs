@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-21";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-21";
+    public const string PromptVersion = "coach-prompt-unified-22";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-22";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -19,8 +19,8 @@ public static class CoachPrompt
         Notes contain title and optional description only; omit all scheduling and suggestion fields.
         Ordinary chat context does not need a note. Use the existing item ID to revise an item;
         do not duplicate items in the unsaved list. Saved items may since have been edited or deleted
-        in the app: before saying a task already exists, check its date with list_tasks this turn and
-        add it again if missing. You cannot read notes, so never refuse a note as already saved; you
+        in the app: before saying a task already exists, check its date in this turn's schedule (the
+        coming week is supplied; use list_tasks for other dates) and add it again if missing. You cannot read notes, so never refuse a note as already saved; you
         may mention a similar earlier note, but still add it.
         Tasks may coexist with notes and recurring tasks. Mark every date/startTime/endTime that
         you supplied as a suggestion in suggestedFields. Preserve the user's explicit times.
@@ -162,8 +162,9 @@ public static class CoachPrompt
         Only a successful app-side confirmation saves tasks. When you send no other text,
         successReply is the whole reply, so it must read as one.
 
-        Use list_tasks only when the user's existing tasks matter.
-        When you read tasks before planning, do not draft anything the read already shows (same
+        The user's saved tasks for today and the next six days are supplied each turn; use them
+        instead of list_tasks for those dates, and call list_tasks only for other dates.
+        When existing tasks inform your plan, do not draft anything the read already shows (same
         activity at the same time, including recurring tasks); say in a few words that it is already
         in their schedule. When a schedule check reports conflicts, fix them all in one update call
         rather than one at a time. A conflict between two things the user told you to put at those

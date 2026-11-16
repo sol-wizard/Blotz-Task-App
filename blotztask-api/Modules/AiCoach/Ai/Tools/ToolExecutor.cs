@@ -17,10 +17,10 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
     MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-21";
+    public const string ContractVersion = "coach-tools-23";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
-        "Read the signed-in user's task-app schedule only when the current request needs existing tasks or availability. Dates are inclusive, at most 7 days. You can read at most twice per turn, so cover the whole range you need in one call instead of one call per day; if a result is truncated, use the second read for the dates its note names. Results list each date's tasks as lines like \"09:00-11:00 title\", flagged [recurring], [done], [overdue] or [due ...] when set; \"(reminder)\" marks a single-time task. \"free\" lists each date's gaps of 30 minutes or more between 07:00 and 22:00 that no unfinished timed task covers; pick suggested times from it (the user's routines and wishes still apply) instead of guessing from the lines. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Every item counts, including one with a single time (a timed reminder) or an unfamiliar title: before saying when the user is free, check all of them. Saved drafts and earlier reads may be out of date: read the date this turn before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
+        "Read the signed-in user's task-app schedule for dates outside today and the next six days, which are already supplied this turn; only when the current request needs existing tasks or availability on those dates. Dates are inclusive, at most 7 days. You can read at most twice per turn, so cover the whole range you need in one call instead of one call per day; if a result is truncated, use the second read for the dates its note names. Results list each date's tasks as lines like \"09:00-11:00 title\", flagged [recurring], [done], [overdue] or [due ...] when set; \"(reminder)\" marks a single-time task. \"free\" lists each date's gaps of 30 minutes or more between 07:00 and 22:00 that no unfinished timed task covers; pick suggested times from it (the user's routines and wishes still apply) instead of guessing from the lines. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Every item counts, including one with a single time (a timed reminder) or an unfamiliar title: before saying when the user is free, check all of them. Saved drafts and earlier reads may be out of date: check the date in this turn's schedule before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
         """{"type":"object","properties":{"startDate":{"type":"string","description":"yyyy-MM-dd in the user's local time zone"},"endDate":{"type":"string","description":"yyyy-MM-dd inclusive; at most 7 days from startDate"}},"required":["startDate","endDate"],"additionalProperties":false}""");
     private readonly Dictionary<string, (ModelToolCallRequest Request, ToolExecutionResult Result)> _results = [];
     private readonly HashSet<(Guid ItemId, string TaskIdentity)> _reportedConflicts = [];
@@ -95,6 +95,9 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
                 {
                     "clear" => ReadSuccessReply(call.Name, call.ArgumentsJson, allowMultiple: true),
                     "incomplete" or "partial" => mutation.SuccessReply,
+                    "conflict" => ReadSuccessReply(call.Name, call.ArgumentsJson, allowMultiple: true) is { } reply
+                        ? ConflictReply(reply, shown.Select(value => value.Conflict).ToArray(), shown.Any(value => value.Duplicate), items)
+                        : null,
                     _ => null,
                 },
                 ScheduleChecked = status is "clear" or "conflict" or "partial",
@@ -233,6 +236,63 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
 
     private static ToolExecutionResult Failure(string code, string message) =>
         new(JsonSerializer.Serialize(new { success = false, errorCode = code, error = message }), false, code);
+
+    private static readonly string[] OverlapWords = ["重叠", "冲突", "撞", "overlap", "conflict", "clash"];
+    private static readonly string[] ChineseWeekdays =["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+    /// <summary>
+    /// The model's prewritten reply plus one sentence naming each overlap, or null when the model still has work to do.
+    /// An overlap with a time the user gave is theirs to settle (keep it, name it, offer a move), so a model call that
+    /// only restated the overlaps cost 1.4-2.4 s. An item at a time the coach suggested should move instead, and a
+    /// likely duplicate should go, so those still get the model call.
+    /// </summary>
+    internal static string? ConflictReply(string successReply, IReadOnlyList<ScheduleConflict> conflicts, bool anyDuplicate,
+        IReadOnlyDictionary<Guid, TaskProposal> items)
+    {
+        if (conflicts.Count == 0 || anyDuplicate) return null;
+        if (conflicts.Any(conflict => !items.TryGetValue(conflict.ItemId, out var item)
+            || item.SuggestedFields?.Any(field => field is "date" or "startTime" or "endTime") == true)) return null;
+        var chinese = successReply.Any(character => character is >= '\u4e00' and <= '\u9fff');
+        // Two drafts at the same time are reported once for each of them; name the pair once.
+        var named = new HashSet<(Guid, string)>();
+        var overlaps = conflicts.Where(conflict => !(conflict.TaskIdentity.StartsWith("draft:", StringComparison.Ordinal)
+                && named.Contains((Guid.Parse(conflict.TaskIdentity["draft:".Length..]), "draft:" + conflict.ItemId))))
+            .Where(conflict => named.Add((conflict.ItemId, conflict.TaskIdentity)))
+            .GroupBy(conflict => conflict.ItemId)
+            .Select(group =>
+            {
+                var item = items[group.Key];
+                var zone = TimeZoneInfo.FindSystemTimeZoneById(item.TimeZoneId);
+                var others = group.Take(3).Select(conflict =>
+                {
+                    var start = TimeZoneInfo.ConvertTime(conflict.Start, zone);
+                    var end = TimeZoneInfo.ConvertTime(conflict.End, zone);
+                    var day = chinese ? ChineseWeekdays[(int)start.DayOfWeek] : start.ToString("ddd", System.Globalization.CultureInfo.InvariantCulture);
+                    var endDay = end.Date == start.Date ? ""
+                        : (chinese ? ChineseWeekdays[(int)end.DayOfWeek] : end.ToString("ddd", System.Globalization.CultureInfo.InvariantCulture)) + " ";
+                    var draft = conflict.TaskIdentity.StartsWith("draft:", StringComparison.Ordinal);
+                    return chinese
+                        ? $"{(draft ? "待确认的" : "已有的")}「{conflict.TaskTitle}」（{day} {start:HH:mm}–{endDay}{end:HH:mm}）"
+                        : $"{(draft ? "the unsaved" : "your")} \"{conflict.TaskTitle}\" ({day} {start:HH:mm}–{endDay}{end:HH:mm})";
+                }).ToList();
+                var more = group.Count() - others.Count;
+                return chinese
+                    ? $"「{item.Title}」和{string.Join("、", others)}{(more > 0 ? $"等 {group.Count()} 项" : "")}时间重叠"
+                    : $"\"{item.Title}\" overlaps {string.Join(", ", others)}{(more > 0 ? $" and {more} more" : "")}";
+            }).ToList();
+        var first = items[conflicts[0].ItemId].Title;
+        var shortTitle = first.Length > 8 ? first[..8] : first;
+        // With the week's schedule in context the model usually names the overlap itself, often with a shortened title
+        // or only some of them; a second note then read as the same warning twice.
+        var alreadyNamed = OverlapWords.Any(word => successReply.Contains(word, StringComparison.OrdinalIgnoreCase));
+        var note = alreadyNamed ? ""
+            : chinese
+                ? $"\n\n提醒一下：{string.Join("；", overlaps)}，确认保存前 App 也会提示。需要的话可以挪开其中一个。"
+                : $"\n\nHeads up: {string.Join("; ", overlaps)}. The app will flag this before you save; I can move one if you like.";
+        return successReply + note + (chinese
+            ? $"\n<followups>\n帮我把「{shortTitle}」挪个时间\n就这样，不用改\n</followups>"
+            : $"\n<followups>\nMove {shortTitle} to another time\nKeep it as is\n</followups>");
+    }
 
     private static string? ReadSuccessReply(string toolName, string argumentsJson, bool allowMultiple = false)
     {
