@@ -5,19 +5,27 @@
     "finish": "Let's go!"
   },
   "intro": {
-    "title": "Guess what we've been up to.",
-    "body": "Swipe to find out!"
+    "title": "This one's a big update",
+    "body": "Swipe to meet the new AI Coach and a few changes you'll run into."
+  },
+  "ai-coach": {
+    "title": "Meet Your New AI Coach",
+    "body": "Tap the middle button to chat. The coach plans around what you already have, and one tick adds a suggestion. Long-press it for quick add."
+  },
+  "ai-memory": {
+    "title": "Your Coach Remembers What Matters",
+    "body": "Tell it about your habits once and it keeps them in mind next time. To turn this off, go to Settings → AI Memory."
+  },
+  "add-review": {
+    "title": "Add Has Moved to the Top Right",
+    "body": "Tap + at the top right of Home to add a task. Its old spot is now Review, with a red dot when a new letter arrives."
+  },
+  "feedback": {
+    "title": "Say Your Feedback Out Loud",
+    "body": "In Settings → Share Feedback, hold to talk instead of typing. We read every message."
   },
   "widget": {
     "title": "Today's Tasks, Right on Your Home Screen",
     "body": "Add the home-screen widget to see today's date and how many tasks you have at a glance. Chinese task names no longer get cut off."
-  },
-  "invite-progress": {
-    "title": "Bring Your Friends In",
-    "body": "Share your invite code — now you can see how many friends have joined, and how many more you need for the badge."
-  },
-  "badge-unlock": {
-    "title": "Unlock a Badge, Wear It Right Away",
-    "body": "When you unlock a new badge, tap Equip reward in the popup and it shows on your profile."
   }
 }
