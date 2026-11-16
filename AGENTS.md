@@ -28,6 +28,7 @@ table below to pick the right one and open it yourself.
 | `pbi` | Creating a PBI, explaining one before coding, implementing it (tests checked first, small pieces, proof at the end), or updating it — moving its card, ticking finished boxes, adding a short note |
 | `private-context` | Starting feature work, or needing the rationale and history behind a feature (checks the private companion repo) |
 | `generate-whatsnew` | Building the monthly "What's New" page for an upcoming release |
+| `update-play-listing` | Refreshing the Google Play store listing after a production release is live: drafts both languages, checks Play's rules, opens a PR that publishes on merge |
 
 The `expo-*` skills (`expo-router`, `expo-native-ui`, `expo-animation`, `expo-data-fetching`,
 `expo-upgrade`) are vendored Expo framework reference, not Blotz-specific — consult them when
@@ -46,9 +47,15 @@ working on navigation, UI, animation, data fetching or an SDK upgrade in `blotzt
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 - Do not run code-generation, schema-generation, or migration commands unless the relevant project-local skill explicitly allows it.
 
+## Infrastructure (`infra/`)
+
+- The Bicep files in `infra/` are never deployed. They are only there to help people understand the Azure setup, and they can be out of date.
+- For the real state (App Service settings, app version policy, SKUs), check Azure itself or the live API.
+- Changing a Bicep file changes nothing in Azure: a new app setting is added by hand in staging and prod.
+
 ## Database Migrations
 
-- Never run `dotnet ef migrations add` or `dotnet ef database update` yourself.
+- `dotnet ef migrations add` and `dotnet ef database update` are the user's to run (blocked for Claude Code in `.claude/settings.json`).
 - If entity, DbContext, or relationship changes require a migration, stop after the code change and give the user the exact command to run.
 - The user should generate and apply EF Core migrations themselves from `blotztask-api/`.
 

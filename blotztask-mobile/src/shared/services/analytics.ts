@@ -22,6 +22,7 @@ import {
   type ShareContentType,
   type OnboardingOutcome,
   type OnboardingSection,
+  type AboutYouAudience,
   type DeleteAccountReason,
 } from "@/shared/constants/posthog-events";
 
@@ -155,6 +156,29 @@ export const analytics = {
   },
 
   /**
+   * Fires at cold start when a login that was still open when the app was killed (Android
+   * killing the process while the user is in the browser) is recovered by `resumeSession()`.
+   * Without it these logins showed no outcome at all: `login_started`, then nothing.
+   */
+  trackLoginResumed(params: { msSinceLoginStarted: number }) {
+    posthog.capture(EVENTS.LOGIN_RESUMED, {
+      auth_domain: AUTH_CONFIG.domain,
+      ms_since_login_started: params.msSinceLoginStarted,
+    });
+  },
+
+  /**
+   * Fires at cold start when a login was still open when the app was killed and could not be
+   * recovered — the in-progress login state died with the app, so the user must log in again.
+   */
+  trackLoginInterrupted(params: { msSinceLoginStarted: number }) {
+    posthog.capture(EVENTS.LOGIN_INTERRUPTED, {
+      auth_domain: AUTH_CONFIG.domain,
+      ms_since_login_started: params.msSinceLoginStarted,
+    });
+  },
+
+  /**
    * Fires once per process when the post-login gate has both its requests and routes the
    * user into the app. Closes the funnel: `login_started` → `login_succeeded` → `app_entered`.
    * `source` separates a fresh login from a session restored at launch, so the two chains
@@ -188,6 +212,16 @@ export const analytics = {
       source: params.source,
       profile_failed: params.profileFailed,
       preferences_failed: params.preferencesFailed,
+      ms_since_launch: params.msSinceLaunch,
+    });
+  },
+
+  /**
+   * Fires once per process when today's task list first renders with data. `app_entered`
+   * stops the clock at the gate; this one stops it when the user actually sees their tasks.
+   */
+  trackTodayTasksShown(params: { msSinceLaunch: number }) {
+    posthog.capture(EVENTS.TODAY_TASKS_SHOWN, {
       ms_since_launch: params.msSinceLaunch,
     });
   },
@@ -271,6 +305,33 @@ export const analytics = {
   },
 
   /**
+   * Fires when the user answers one "About you" question, and saves the answer on their
+   * person profile (`$set`) so every other event can be broken down by it.
+   * Multi-select answers are saved as an array of option keys.
+   */
+  trackAboutYouAnswered(params: {
+    question: string;
+    property: string;
+    answer: string | string[];
+    audience: AboutYouAudience;
+  }) {
+    posthog.capture(EVENTS.ABOUT_YOU_ANSWERED, {
+      question: params.question,
+      answer: params.answer,
+      audience: params.audience,
+      $set: { [params.property]: params.answer },
+    });
+  },
+
+  /** Fires when the user skips one "About you" question. Nothing is saved on the person. */
+  trackAboutYouSkipped(params: { question: string; audience: AboutYouAudience }) {
+    posthog.capture(EVENTS.ABOUT_YOU_SKIPPED, {
+      question: params.question,
+      audience: params.audience,
+    });
+  },
+
+  /**
    * We treat a user as "active" if they stay on the app for more than 5 seconds.
    * Fires once per calendar day. Used to calculate Daily Active Users (DAU) and retention.
    */
@@ -313,6 +374,8 @@ export const analytics = {
    * Fires whenever an AI task generation attempt fails — covers client-side issues
    * (mic permission, recording, send) and backend errors (transcription, generation).
    * Use this to monitor reliability and slice by input mode, stage, and error code.
+   * `duration_ms`, when present, is timed from mic release (voice) or the send tap (text),
+   * the same clock as `ai_task_generation_succeeded`.
    */
   trackAiTaskGenerationFailed(params: {
     inputMode: AiTaskInputMode | "unknown";
@@ -357,6 +420,29 @@ export const analytics = {
       outcome: params.outcome,
       ...(params.errorCode ? { error_code: params.errorCode } : {}),
     });
+  },
+
+  /**
+   * Fires once per AI task generation turn that returns a result: the wait the user felt,
+   * timed on the phone from mic release (voice) or the send tap (text) to the final result.
+   * Shares its clock with `ai_task_generation_failed.duration_ms`, so the two are comparable.
+   * `transcript_ms` (voice only) is the time until the transcript arrived, which separates slow
+   * transcription from slow generation. `task_count` counts every draft shown after the turn
+   * (tasks, recurring tasks and notes), including drafts kept from earlier turns.
+   */
+  trackAiTaskGenerationSucceeded(params: {
+    inputMode: AiTaskInputMode;
+    durationMs: number;
+    transcriptMs?: number;
+    taskCount: number;
+  }) {
+    const properties: Record<string, string | number> = {
+      input_mode: params.inputMode,
+      duration_ms: params.durationMs,
+      task_count: params.taskCount,
+    };
+    if (params.transcriptMs !== undefined) properties.transcript_ms = params.transcriptMs;
+    posthog.capture(EVENTS.AI_TASK_GENERATION_SUCCEEDED, properties);
   },
 
   /**
@@ -478,6 +564,16 @@ export const analytics = {
 
   trackReviewGenerated(params: { period: ReviewPeriodType }) {
     posthog.capture(EVENTS.REVIEW_GENERATED, { period: params.period });
+  },
+
+  /** Fires when the "report this page" card appears after a system screenshot. `path` is the page it was taken on. */
+  trackScreenshotFeedbackShown(params: { path: string }) {
+    posthog.capture(EVENTS.SCREENSHOT_FEEDBACK_SHOWN, { path: params.path });
+  },
+
+  /** Fires when the user taps that card and the feedback screen opens. */
+  trackScreenshotFeedbackTapped(params: { path: string }) {
+    posthog.capture(EVENTS.SCREENSHOT_FEEDBACK_TAPPED, { path: params.path });
   },
 
   // sharing

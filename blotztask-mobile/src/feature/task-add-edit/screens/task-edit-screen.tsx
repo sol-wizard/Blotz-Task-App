@@ -29,6 +29,8 @@ import { ActionChoiceSheet } from "@/shared/components/action-choice-sheet";
 import { labelKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import { LabelDTO } from "@/shared/models/label-dto";
 import { getWeeklyDayFlag } from "@/feature/task-add-edit/util/get-weekly-day-flag";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 function selectTaskByRouteMode({
   mode,
@@ -106,6 +108,10 @@ export default function TaskEditScreen() {
 
   const router = useRouter();
   const { t } = useTranslation("tasks");
+
+  React.useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.TASK_EDIT);
+  }, []);
 
   if (
     (mode === TASK_DETAIL_ROUTE_MODE.Persisted && isLoading) ||

@@ -15,7 +15,7 @@ export const SummaryBar = ({
         <StatCard
           label="Total Cases"
           value={scorecard ? scorecard.totalCases.toString() : "—"}
-          tooltip="Total number of test cases in quality-check-cases.json."
+          tooltip="Number of cases in this run (the ones selected in the case list)."
         />
         <StatCard
           label={isReliabilityMode ? "Stable" : "Correct"}

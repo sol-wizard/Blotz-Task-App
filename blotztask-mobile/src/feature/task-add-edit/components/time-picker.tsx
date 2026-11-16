@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { View, Text } from "react-native";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 
-type Meridiem = "AM" | "PM";
-
 type Props = {
   value?: Date;
   onChange?: (v: Date) => void;
@@ -16,33 +14,19 @@ const pad2 = (n: number) => n.toString().padStart(2, "0");
 const PICKER_CYCLES = 3;
 const PICKER_MIDDLE_CYCLE = Math.floor(PICKER_CYCLES / 2);
 
-const HOURS: PickerItem<number>[] = Array.from({ length: 12 * PICKER_CYCLES }, (_, i) => ({
+const HOURS: PickerItem<number>[] = Array.from({ length: 24 * PICKER_CYCLES }, (_, i) => ({
   value: i,
-  label: pad2((i % 12) + 1), //01..12
+  label: pad2(i % 24), //00..23
 }));
 
 const MINUTES: PickerItem<number>[] = Array.from({ length: 60 * PICKER_CYCLES }, (_, i) => ({
   value: i,
   label: pad2(i % 60), //00...59
 }));
-const MERIDIEMS: PickerItem<Meridiem>[] = [
-  { value: "AM", label: "AM" },
-  { value: "PM", label: "PM" },
-];
 
-function splitTo12h(date: Date) {
-  const h24 = date.getHours();
-  const minute = date.getMinutes();
-  const meridiem: Meridiem = h24 >= 12 ? "PM" : "AM";
-  let hour12 = h24 % 12;
-  if (hour12 === 0) hour12 = 12;
-  return { hour12, minute, meridiem };
-}
-
-function mergeToDate(base: Date, hour12: number, minute: number, meridiem: Meridiem) {
-  const h24 = (hour12 % 12) + (meridiem === "PM" ? 12 : 0);
+function mergeToDate(base: Date, hour: number, minute: number) {
   const next = new Date(base);
-  next.setHours(h24, minute, base.getSeconds(), base.getMilliseconds());
+  next.setHours(hour, minute, base.getSeconds(), base.getMilliseconds());
   return next;
 }
 
@@ -54,28 +38,24 @@ export default function TimePicker({
 }: Props) {
   const initial = value ?? new Date();
 
-  const [hour12Index, setHour12Index] = useState<number>(
-    PICKER_MIDDLE_CYCLE * 12 + splitTo12h(initial).hour12 - 1,
+  const [hourIndex, setHourIndex] = useState<number>(
+    PICKER_MIDDLE_CYCLE * 24 + initial.getHours(),
   );
   const [minuteIndex, setMinuteIndex] = useState<number>(
-    PICKER_MIDDLE_CYCLE * 60 + splitTo12h(initial).minute,
+    PICKER_MIDDLE_CYCLE * 60 + initial.getMinutes(),
   );
-  const [meridiem, setMeridiem] = useState<Meridiem>(splitTo12h(initial).meridiem);
 
-  const combineWheelValue = (
-    next: Partial<{ hour12Index: number; minuteIndex: number; meridiem: Meridiem }>,
-  ) => {
-    const h = next.hour12Index ?? hour12Index;
+  const combineWheelValue = (next: Partial<{ hourIndex: number; minuteIndex: number }>) => {
+    const h = next.hourIndex ?? hourIndex;
     const m = next.minuteIndex ?? minuteIndex;
-    const md = next.meridiem ?? meridiem;
 
     const base = value ?? new Date();
 
     // Convert indexes to actual hours/minutes
-    const selectedHour = (h % 12) + 1;
+    const selectedHour = h % 24;
     const selectedMinute = m % 60;
 
-    const out = mergeToDate(base, selectedHour, selectedMinute, md);
+    const out = mergeToDate(base, selectedHour, selectedMinute);
     onChange?.(out);
   };
 
@@ -87,15 +67,15 @@ export default function TimePicker({
       <View className="flex-1 flex-row items-center justify-center">
         <WheelPicker
           data={HOURS}
-          value={hour12Index}
+          value={hourIndex}
           width={96}
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
           onValueChanged={({ item }) => {
             const h = item.value as number;
-            setHour12Index(h);
-            combineWheelValue({ hour12Index: h });
+            setHourIndex(h);
+            combineWheelValue({ hourIndex: h });
           }}
         />
 
@@ -112,20 +92,6 @@ export default function TimePicker({
             const m = item.value as number;
             setMinuteIndex(m);
             combineWheelValue({ minuteIndex: m });
-          }}
-        />
-
-        <WheelPicker
-          data={MERIDIEMS}
-          value={meridiem}
-          width={84}
-          itemHeight={itemHeight}
-          visibleItemCount={visibleItemCount}
-          enableScrollByTapOnItem
-          onValueChanged={({ item }) => {
-            const md = item.value as Meridiem;
-            setMeridiem(md);
-            combineWheelValue({ meridiem: md });
           }}
         />
       </View>

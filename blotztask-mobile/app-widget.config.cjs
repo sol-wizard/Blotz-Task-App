@@ -5,6 +5,8 @@ const iosWidgetConfig = {
       displayName: "Today's Tasks",
       description: "Shows a lightweight summary of today's BlotzTask tasks.",
       supportedFamilies: ["systemSmall", "systemMedium"],
+      // Lets the star art run into the card corner; the view adds its own padding.
+      contentMarginsDisabled: true,
     },
   ],
 };

@@ -11,6 +11,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="update-user-name" options={{ headerShown: false }} />
       <Stack.Screen name="avatar" options={{ headerShown: false }} />
       <Stack.Screen name="membership-plan" options={{ headerShown: false }} />
+      <Stack.Screen name="feedback" options={{ headerShown: false }} />
       <Stack.Screen name="support-us" options={{ headerShown: false }} />
     </Stack>
   );

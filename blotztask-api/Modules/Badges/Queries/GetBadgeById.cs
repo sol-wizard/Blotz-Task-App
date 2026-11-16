@@ -27,6 +27,8 @@ public class GetBadgeByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetBadgeByI
                 ub => ub.BadgeId,
                 badge => badge.Id,
                 (ub, badge) => new { Badge = badge, ub.EarnedAtUtc, EquippedSlot = ub.DisplayOrder })
+            // A repeatable badge has one record per award; the detail shows its first award.
+            .OrderBy(b => b.EarnedAtUtc)
             .FirstOrDefaultAsync(ct);
 
         if (earnedBadge == null)

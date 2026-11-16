@@ -1,0 +1,40 @@
+name: Skill Paths Check
+
+# Fails a PR when AGENTS.md or one of our .claude/skills points at a file that
+# no longer exists (e.g. a class was renamed but the skill still names the old
+# file), so the AI is never sent to read something that isn't there.
+# Runs on every PR, not just skill edits: the rename usually happens in a code PR.
+# Vendored expo-* skills are skipped — they reference upstream files, not ours.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify every `path.ext` in skills still exists
+        run: |
+          FILES=$(git ls-files)
+          FAIL=0
+          for md in AGENTS.md $(git ls-files '.claude/skills/*.md' | grep -v '^\.claude/skills/expo-'); do
+            for p in $(grep -oE '`[A-Za-z0-9_./-]+\.(cs|ts|tsx|md|json|sh|yml)`' "$md" | tr -d '`' | sort -u); do
+              case "$p" in
+                ../*) continue ;;                          # outside this repo (private companion repo)
+                INDEX.md | google-services.json) continue ;; # named on purpose but never committed here
+              esac
+              git check-ignore -q --no-index "$p" && continue # gitignored local file, e.g. appsettings.Development.json
+              # A reference can be a bare file name or a path relative to any folder, so match the end of a tracked path.
+              if ! awk -v p="$p" '$0 == p || substr($0, length($0) - length(p)) == "/" p { found = 1 } END { exit !found }' <<< "$FILES"; then
+                echo "::error file=$md::\`$p\` does not exist — update the reference or the file name."
+                FAIL=1
+              fi
+            done
+          done
+          [ "$FAIL" = "0" ] && echo "All skill file references exist. ✅"
+          exit $FAIL

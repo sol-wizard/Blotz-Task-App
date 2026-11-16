@@ -44,7 +44,14 @@ export default {
     android: {
       package: "com.blotz.blotztask",
       permissions: ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"],
-      blockedPermissions: ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"],
+      // expo-image-picker's manifest adds CAMERA, but the app only picks from the library.
+      // expo-screen-capture's adds READ_MEDIA_IMAGES for Android 13 screenshot detection; the app only listens on Android 14+.
+      blockedPermissions: [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+      ],
     },
     web: {
       bundler: "metro",
@@ -77,7 +84,7 @@ export default {
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
       "expo-asset",
-      "expo-build-properties",
+      ["expo-build-properties", { ios: { enableSceneSupport: true } }],
       "@react-native-vector-icons/ionicons",
       "@react-native-vector-icons/feather",
       "@react-native-vector-icons/material-design-icons",

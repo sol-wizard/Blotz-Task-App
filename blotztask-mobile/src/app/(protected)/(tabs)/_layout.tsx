@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Tabs, router } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
@@ -82,6 +83,7 @@ function ReviewTabIcon({ focused }: { focused: boolean }) {
 }
 
 export default function ProtectedTabsLayout() {
+  const { t } = useTranslation("common");
   const insets = useSafeAreaInsets();
   const aiButtonRef = useRef<View>(null);
   const [aiButtonFrame, setAiButtonFrame] = useState<ButtonFrame | null>(null);
@@ -118,12 +120,14 @@ export default function ProtectedTabsLayout() {
           name="index"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("calendar", focused),
+            tabBarAccessibilityLabel: t("bottomNav.calendar"),
           }}
         />
         <Tabs.Screen
           name="notes"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("notes", focused),
+            tabBarAccessibilityLabel: t("bottomNav.notes"),
           }}
         />
         <Tabs.Screen
@@ -134,6 +138,8 @@ export default function ProtectedTabsLayout() {
                 ref={aiButtonRef}
                 onLayout={reportAiButtonFrame}
                 className="flex-1 items-center justify-center"
+                accessibilityRole="button"
+                accessibilityLabel={t("bottomNav.aiAssistant")}
                 onPress={() => router.push("/ai-home")}
                 onLongPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -150,12 +156,14 @@ export default function ProtectedTabsLayout() {
           name="review"
           options={{
             tabBarIcon: ({ focused }) => <ReviewTabIcon focused={focused} />,
+            tabBarAccessibilityLabel: t("bottomNav.review"),
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("settings", focused),
+            tabBarAccessibilityLabel: t("bottomNav.settings"),
             // Coming back to Settings shows its home, not the sub-page the user left on.
             popToTopOnBlur: true,
           }}

@@ -32,6 +32,12 @@ export interface QualityCheckCaseResult {
   totalTokens: number;
 }
 
+export interface QualityCheckCaseSummary {
+  id: string;
+  input: string;
+  turns: number;
+}
+
 export interface QualityCheckScorecard {
   modelId: string;
   totalCases: number;

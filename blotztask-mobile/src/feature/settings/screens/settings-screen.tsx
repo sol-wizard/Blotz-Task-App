@@ -3,6 +3,8 @@ import { View, Text, Pressable, Platform, ScrollView, Linking, Image } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import { useFocusEffect, useRouter } from "expo-router";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { useQueryClient } from "@tanstack/react-query";
 import * as WebBrowser from "expo-web-browser";
 import * as Application from "expo-application";
@@ -26,8 +28,6 @@ const PRIVACY_POLICY_URLS = {
   en: "https://www.blotztask.com/en/privacy/",
   zh: "https://www.blotztask.com/zh/privacy/",
 } as const;
-const FEEDBACK_URL =
-  "https://m3cetbcyp2d.usttp.larksuite.com/share/base/form/shrusf712jJdjDC4l6gJkXcc8Yf";
 const XIAOHONGSHU_URL =
   "https://www.xiaohongshu.com/user/profile/67bc12d6000000000e01f09a?xsec_token=ABHQISPlYoPNMi_q8P8u_etGBEND3LxYOU0pGDx_X8bT0%3D&xsec_source=pc_search";
 
@@ -46,8 +46,10 @@ export default function SettingsScreen() {
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
   const queryClient = useQueryClient();
 
+  // Tab screens stay mounted, so record a view on every focus, not only on mount.
   useFocusEffect(
     useCallback(() => {
+      analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS);
       queryClient.invalidateQueries({ queryKey: badgeKeys.all });
     }, [queryClient]),
   );
@@ -202,8 +204,8 @@ export default function SettingsScreen() {
         <SettingsSection title={t("menu.aboutBlotz")}>
           <SettingsRow
             label={t("menu.feedback")}
-            trailing="external"
-            onPress={() => Linking.openURL(FEEDBACK_URL)}
+            trailing="chevron"
+            onPress={() => router.push("/settings/feedback")}
           />
           <SettingsRow
             label={t("menu.website")}

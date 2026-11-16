@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { FloatingAddButton } from "@/feature/calendar/components/floating-add-button";
+import { AboutYouSheet } from "@/feature/onboarding/components/about-you-sheet";
 
 export default function CalendarTab() {
   return (
@@ -8,6 +9,7 @@ export default function CalendarTab() {
       <CalendarScreen />
       {/* Only on Home: on Notes a + that makes a task (not a note) would confuse, and covers its add bar. */}
       <FloatingAddButton />
+      <AboutYouSheet />
     </View>
   );
 }

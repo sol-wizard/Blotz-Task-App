@@ -67,7 +67,7 @@ export function ActionChoiceSheet({
                     </View>
                   ) : null}
 
-                  <View className="flex-1 pr-3">
+                  <View className="flex-1">
                     <Text className="font-inter font-bold text-base" style={{ color }}>
                       {action.title}
                     </Text>
@@ -77,8 +77,6 @@ export function ActionChoiceSheet({
                       </Text>
                     ) : null}
                   </View>
-
-                  <MaterialCommunityIcons name="chevron-right" size={22} color="#C7C9D6" />
                 </Pressable>
               );
             })}

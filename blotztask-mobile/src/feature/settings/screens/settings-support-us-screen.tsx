@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import { ReturnButton } from "@/shared/components/return-button";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { ASSETS } from "@/shared/constants/assets";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 // Must match the Consumable product IDs created in App Store Connect.
 // Array order is the display order — the store returns products unordered.
@@ -22,6 +24,10 @@ export default function SettingsSupportUsScreen() {
   const [status, setStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const [pendingSku, setPendingSku] = useState<string | null>(null);
   const [showThanks, setShowThanks] = useState(false);
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_SUPPORT_US);
+  }, []);
 
   const { connected, products, fetchProducts, requestPurchase, finishTransaction } = useIAP({
     onPurchaseSuccess: async (purchase) => {
@@ -67,17 +73,17 @@ export default function SettingsSupportUsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-row px-6 pt-6">
+      <View className="flex-row items-center px-5 py-4">
         <ReturnButton />
+        <Text className="text-2xl font-balooBold text-secondary ml-3">{t("supportUs.title")}</Text>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-balooExtraBold text-secondary">{t("supportUs.title")}</Text>
-        <Text className="text-base font-baloo text-gray-500 mt-2 leading-6">
+        <Text className="text-base font-baloo text-gray-500 leading-6">
           {t("supportUs.blurb")}
         </Text>
 

@@ -4,7 +4,7 @@ import { API_CONFIG } from "./config";
 import { setupRequestInterceptor, setupResponseInterceptor } from "./interceptors";
 
 // Trace axios requests with a Sentry span to record request time.
-function traced<T>(method: string, url: string, run: () => Promise<T>): Promise<T> {
+export function traced<T>(method: string, url: string, run: () => Promise<T>): Promise<T> {
   return Sentry.startSpan(
     {
       // create fix path name

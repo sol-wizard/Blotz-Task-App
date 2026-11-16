@@ -31,7 +31,7 @@ import { ListeningIndicator } from "../component/listening-indicator";
 import { HoldToTalkPill } from "../component/hold-to-talk-pill";
 import { MicPermissionHint } from "../component/mic-permission-hint";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { useVoiceRecorder, VoiceRecordingFailure } from "../hooks/useVoiceRecorder";
 import { useMicPermission } from "../hooks/useMicPermission";
 import { AI_SHEET_SOURCE, type AiSheetSource } from "../models/ai-sheet-source";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -45,10 +45,28 @@ import Toast from "react-native-toast-message";
 import { useDebouncedCallback } from "use-debounce";
 import { analytics } from "@/shared/services/analytics";
 import { toastConfig } from "@/shared/components/toast-config";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { calculateAlertTime } from "@/feature/task-add-edit/util/time-convertion";
+import { getTaskNotification } from "@/shared/util/get-task-notification";
+import { cancelNotification } from "@/shared/util/cancel-notification";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 // Presses shorter than this are treated as accidental taps and discarded;
 // anything longer is a real recording and gets uploaded.
 const MIN_HOLD_MS = 300;
+
+const trackVoiceFailure = (failure: VoiceRecordingFailure) =>
+  analytics.trackAiTaskGenerationFailed({ inputMode: "voice", ...failure });
+
+const trackMicRefused = () =>
+  analytics.trackAiTaskGenerationFailed({
+    inputMode: "voice",
+    stage: "permission",
+    errorCode: "PermissionDenied",
+  });
+
+// Same default reminder as the manual task form: 5 minutes before the start time.
+const DEFAULT_ALERT_SECONDS = 300;
 // Shared by the two transient captions below the sheet: the hold-longer nudge and the
 // "mic is off" answer to a tap the OS will not prompt for.
 const HINT_AUTO_HIDE_MS = 2500;
@@ -115,6 +133,7 @@ export default function AiTaskSheetScreen() {
   const { labels } = useAllLabels();
   const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
+    trackVoiceFailure,
   );
   const {
     status: micStatus,
@@ -122,10 +141,12 @@ export default function AiTaskSheetScreen() {
     needsSettings,
     requestMic,
     openSettings,
-  } = useMicPermission();
+  } = useMicPermission(trackMicRefused);
   const { addTaskAsync, isAdding, createRecurringTaskAsync, isCreatingRecurringTask } =
     useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
+  // Usually already cached by the home screen; if not loaded yet, tasks are saved without a reminder.
+  const { userPreferences } = useUserPreferencesQuery();
 
   useEffect(() => {
     analytics.trackAiTaskSheetOpened();
@@ -200,9 +221,30 @@ export default function AiTaskSheetScreen() {
 
     const results = await Promise.allSettled([
       ...displayTasks.map(async (task) => {
+        const dto = convertAiTaskToTaskUpsertDTO(task);
+        const alertTime = calculateAlertTime(new Date(dto.startTime), DEFAULT_ALERT_SECONDS);
+        // Null when reminders are off in Settings or the alert time has already passed.
+        const notificationId = await getTaskNotification({
+          mode: "create",
+          upcomingNotification: userPreferences?.upcomingNotification,
+          newAlertTime: alertTime,
+          newTaskTitle: dto.title,
+        });
+
+        let taskId: number;
+        try {
+          taskId = await addTaskAsync({
+            ...dto,
+            notificationId,
+            alertTime: notificationId && alertTime ? convertToDateTimeOffset(alertTime) : undefined,
+          });
+        } catch (error) {
+          // Don't leave a reminder behind for a task that was never saved.
+          await cancelNotification({ notificationId });
+          throw error;
+        }
         // Fire per successful task, not behind the all-succeed gate below, so a partial
         // failure still records the tasks that did land.
-        const taskId = await addTaskAsync(convertAiTaskToTaskUpsertDTO(task));
         analytics.trackTaskCreated({
           taskId,
           source: taskSource,
@@ -331,7 +373,17 @@ export default function AiTaskSheetScreen() {
               <View className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}>
                 <VoiceHintText
                   label={isFromOnboarding ? tOnboarding("voice-coach.sheetLabel") : undefined}
-                  hint={isFromOnboarding ? tOnboarding("voice-coach.sheetHint") : undefined}
+                  hint={
+                    isFromOnboarding
+                      ? tOnboarding(
+                          // Keep the voice hint while the mic check runs: the sheet starts in
+                          // text mode and flips to voice once the grant is known.
+                          inputMode === "text" && micStatus !== "checking"
+                            ? "voice-coach.sheetHintTyping"
+                            : "voice-coach.sheetHint",
+                        )
+                      : undefined
+                  }
                 />
               </View>
             )}
@@ -430,9 +482,12 @@ export default function AiTaskSheetScreen() {
                         placeholder={t("input.placeholder")}
                         placeholderTextColor="rgba(255,255,255,0.6)"
                         returnKeyType="send"
-                        multiline={false}
+                        // Wraps long sentences so they can be read back; return still sends.
+                        multiline
+                        submitBehavior="blurAndSubmit"
+                        textAlignVertical="top"
                         editable={!isAiGenerating}
-                        className={`w-full text-white font-baloo text-base px-4 bg-white/25 rounded-full h-14 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
+                        className={`w-full text-white font-baloo text-base px-4 py-4 bg-white/25 rounded-[28px] min-h-14 max-h-32 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
                       />
                     )}
                   </Animated.View>

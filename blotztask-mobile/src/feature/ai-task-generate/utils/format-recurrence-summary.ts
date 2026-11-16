@@ -22,7 +22,7 @@ function decodeDays(mask: number): string {
 
 function formatTimeOfDay(templateStartTime: string): string {
   try {
-    return format(parseISO(templateStartTime), "h:mm a");
+    return format(parseISO(templateStartTime), "HH:mm");
   } catch {
     return "";
   }

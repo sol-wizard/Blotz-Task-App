@@ -23,7 +23,8 @@ export function TodayTaskRow({ task, isSmallWidget }: TodayTaskRowProps) {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "flex-start",
-        height: rowHeight,
+        // The 4×2 row grows to fit the time under the title.
+        height: isSmallWidget ? rowHeight : undefined,
       }}
     >
       <FlexWidget
@@ -41,30 +42,21 @@ export function TodayTaskRow({ task, isSmallWidget }: TodayTaskRowProps) {
       <FlexWidget
         style={{
           flex: 1,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-start",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          justifyContent: "center",
         }}
       >
-        <FlexWidget
+        <TextWidget
+          text={task.title}
+          maxLines={1}
+          truncate="END"
           style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "flex-start",
+            color: "#202124",
+            fontSize: isSmallWidget ? 17 : 18,
+            fontWeight: "500",
           }}
-        >
-          <TextWidget
-            text={task.title}
-            maxLines={1}
-            truncate="END"
-            style={{
-              color: "#202124",
-              fontSize: isSmallWidget ? 17 : 18,
-              fontWeight: "500",
-            }}
-          />
-        </FlexWidget>
+        />
 
         {!isSmallWidget ? (
           <TextWidget
@@ -75,8 +67,6 @@ export function TodayTaskRow({ task, isSmallWidget }: TodayTaskRowProps) {
               color: "#64748B",
               fontSize: 13,
               fontWeight: "500",
-              textAlign: "right",
-              marginLeft: 8,
             }}
           />
         ) : null}

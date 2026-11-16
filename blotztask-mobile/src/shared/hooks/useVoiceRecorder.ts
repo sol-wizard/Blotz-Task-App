@@ -12,15 +12,20 @@ import { usePeakLevelMeter } from "./usePeakLevelMeter";
 // ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
 const SPEECH_LEVEL_DBFS = -45;
 
-export type VoiceRecordingFailure = { stage: "recording" | "send"; errorCode: string };
+export type VoiceRecordingFailure = {
+  stage: "recording" | "send";
+  errorCode: string;
+  durationMs?: number;
+};
 
+// onFailure lets each caller report failures its own way (the AI sheet sends them to PostHog).
 type VoiceRecorderOptions = {
   onError: (error: "recordingFailed" | "emptyAudio") => void;
-  onFailure: (failure: VoiceRecordingFailure) => void;
+  onFailure?: (failure: VoiceRecordingFailure) => void;
 };
 
 export function useVoiceRecorder(
-  submitAudioForTranscription: (uri: string) => Promise<void>,
+  submitAudioForTranscription: (uri: string, releasedAt: number) => Promise<void>,
   { onError, onFailure }: VoiceRecorderOptions,
 ) {
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
@@ -59,7 +64,7 @@ export function useVoiceRecorder(
   }, []);
 
   const trackRecordingFailure = (errorCode: string) => {
-    onFailure({ stage: "recording", errorCode });
+    onFailure?.({ stage: "recording", errorCode });
   };
 
   const startListening = () => {
@@ -117,6 +122,8 @@ export function useVoiceRecorder(
   };
 
   const stopAndUpload = async (): Promise<boolean> => {
+    // The user's wait starts at mic release; stopping the recorder and reading the file count too.
+    const releasedAt = Date.now();
     await startPromiseRef.current;
 
     if (!recorder.isRecording) {
@@ -155,10 +162,14 @@ export function useVoiceRecorder(
     }
 
     try {
-      await submitAudioForTranscription(uri);
+      await submitAudioForTranscription(uri, releasedAt);
     } catch (error) {
       console.warn("[Mic] Error submitting audio for transcription.", error);
-      onFailure({ stage: "send", errorCode: "AudioSubmitFailed" });
+      onFailure?.({
+        stage: "send",
+        errorCode: "AudioSubmitFailed",
+        durationMs: Date.now() - releasedAt,
+      });
       return false;
     } finally {
       discardRecordingFile(uri);

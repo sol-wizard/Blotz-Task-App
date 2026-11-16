@@ -1,4 +1,6 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -24,6 +26,10 @@ type Props = {
 };
 
 export default function ReviewScreen({ initialTab = ReviewPeriodType.Weekly }: Props) {
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_REVIEW);
+  }, []);
+
   // — Hooks ——————————————————————————————————————————————————————
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();

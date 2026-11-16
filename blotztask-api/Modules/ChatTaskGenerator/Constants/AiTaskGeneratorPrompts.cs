@@ -4,8 +4,10 @@ public static class AiTaskGeneratorPrompts
 {
     public static string GetSystemMessage(string preferredLanguage, DateTime userLocalTime)
     {
+        // The language and time line stays last: it changes every minute, and Azure only bills the
+        // prompt at the cached rate up to the first difference. Everything above it is identical
+        // for every user, so it caches.
         return $"""
-                Respond in {preferredLanguage}. The user's current local time is {userLocalTime:yyyy-MM-dd HH:mm}.
                 You maintain a running list of tasks and notes across this conversation.
                 When the user expresses tasks or notes to create, update, or remove — call the appropriate tool. Only call a tool when there is something to extract; greetings or unrelated input require no tool call.
 
@@ -76,6 +78,8 @@ public static class AiTaskGeneratorPrompts
 
                 "Go running regularly"
                 → CreateNote("Go running regularly")
+
+                Respond in {preferredLanguage}. The user's current local time is {userLocalTime:yyyy-MM-dd HH:mm}.
                 """;
     }
 }

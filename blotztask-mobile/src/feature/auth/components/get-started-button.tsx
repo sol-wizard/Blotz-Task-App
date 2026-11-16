@@ -8,6 +8,11 @@ import Toast from "react-native-toast-message";
 import i18n from "@/i18n";
 import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
 import { updateUserProfile } from "@/shared/services/user-service";
+import {
+  clearLoginInProgress,
+  consumeInterruptedLoginNotice,
+  markLoginInProgress,
+} from "@/shared/services/api/pending-login";
 import { analytics } from "@/shared/services/analytics";
 import { toLoginErrorCode, toLoginFailureReason } from "@/feature/auth/utils/login-error-code";
 import type { LoginConnection, LoginErrorCode } from "@/shared/constants/posthog-events";
@@ -127,6 +132,12 @@ export default function GetStartedButton() {
   const attemptCounter = useRef(0);
   const stallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    if (consumeInterruptedLoginNotice()) {
+      Toast.show({ type: "error", text1: i18n.t("errors.loginInterrupted") });
+    }
+  }, []);
+
   const clearStallTimer = () => {
     if (stallTimer.current) {
       clearTimeout(stallTimer.current);
@@ -212,6 +223,8 @@ export default function GetStartedButton() {
     setIsSigningIn(true);
 
     analytics.trackLoginStarted({ connection: attempt.connection });
+    // Awaited so the flag is on disk before the browser opens and the app can be killed.
+    await markLoginInProgress(attempt.startedAt);
 
     try {
       // ephemeralSession skips the iOS "Wants to Use auth0.com to Sign In" alert, where most
@@ -284,6 +297,10 @@ export default function GetStartedButton() {
       analytics.flush();
       showLoginFailureToast(errorCode);
     } finally {
+      // A stalled attempt that settles late must not clear the flag of the retry after it.
+      if (!inFlight.current || inFlight.current.id === attempt.id) {
+        void clearLoginInProgress();
+      }
       finishAttempt(attempt);
     }
   };

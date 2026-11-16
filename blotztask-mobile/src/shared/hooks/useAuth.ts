@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { auth0 } from "@/shared/services/api/auth0-client";
+import { recoverInterruptedLogin } from "@/shared/services/api/pending-login";
 
 /**
  * Authentication state hook that provides a single source of truth for auth status.
@@ -23,6 +24,8 @@ import { auth0 } from "@/shared/services/api/auth0-client";
 const AUTH_QUERY_KEY = ["auth", "status"] as const;
 
 async function checkAuthStatus(): Promise<boolean> {
+  // Must finish first: a recovered login is only visible to `hasValidCredentials` once saved.
+  await recoverInterruptedLogin();
   try {
     return await auth0.credentialsManager.hasValidCredentials();
   } catch (error) {

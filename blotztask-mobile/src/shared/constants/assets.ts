@@ -4,6 +4,7 @@ import DashedSettings from "../../../assets/images-svg/settings-dashed.svg";
 import DashedEnvelope from "../../../assets/images-svg/envelope-dashed.svg";
 import BunWhite from "../../../assets/images-svg/bun-white";
 import EditIcon from "../../../assets/images-svg/edit-icon.svg";
+import BadgeModalDecoration from "../../../assets/images-svg/badge-modal-decoration.svg";
 import ToastFail from "../../../assets/toast/toast1.svg";
 import ToastSuccess from "../../../assets/toast/toast2.svg";
 import ToastWarning from "../../../assets/toast/toast3.svg";
@@ -52,11 +53,11 @@ export const PNGIMAGES = {
   onboardingNoteBackground: require("../../../assets/images-png/onboarding-note-background.png"),
   onboardingVoiceBackground: require("../../../assets/images-png/onboarding-voice-background.png"),
   xhsLogo: require("../../../assets/images-png/xhs.jpg"),
-  pomodoroImgStreamWhisper: require("../../../assets/images-png/pomodoro-img-streamWhisper.png"),
-  pomodoroImgPineFocus: require("../../../assets/images-png/pomodoro-img-pineFocus.png"),
-  pomodoroImgNightGlow: require("../../../assets/images-png/pomodoro-img-nightGlow.png"),
-  pomodoroImgSilentMind: require("../../../assets/images-png/pomodoro-img-silentMind.png"),
-  pomodoroImgCafeNook: require("../../../assets/images-png/pomodoro-img-cafeNook.png"),
+  pomodoroImgStreamWhisper: require("../../../assets/images-png/pomodoro-img-streamWhisper.jpg"),
+  pomodoroImgPineFocus: require("../../../assets/images-png/pomodoro-img-pineFocus.jpg"),
+  pomodoroImgNightGlow: require("../../../assets/images-png/pomodoro-img-nightGlow.jpg"),
+  pomodoroImgSilentMind: require("../../../assets/images-png/pomodoro-img-silentMind.jpg"),
+  pomodoroImgCafeNook: require("../../../assets/images-png/pomodoro-img-cafeNook.jpg"),
   pomodoroImgChoose: require("../../../assets/images-png/pomodoro-img-choose.png"),
   pomodoroImgNoSound: require("../../../assets/images-png/pomodoro-img-noSound.png"),
   letterEnvelope: require("../../../assets/images-png/letter-envelope.png"),
@@ -72,6 +73,7 @@ export const SVGIMAGES = {
   dashedEnvelope: DashedEnvelope,
   whiteBun: BunWhite,
   editIcon: EditIcon,
+  badgeModalDecoration: BadgeModalDecoration,
   toastFail: ToastFail,
   toastSuccess: ToastSuccess,
   toastWarning: ToastWarning,

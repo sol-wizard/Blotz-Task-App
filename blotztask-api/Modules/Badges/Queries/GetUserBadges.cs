@@ -32,11 +32,14 @@ public class GetUserBadgesQueryHandler(BlotzTaskDbContext db, ILogger<GetUserBad
                     ub.EarnedAtUtc,
                     EquippedSlot = ub.DisplayOrder
                 })
-            // Clients render badges in the order returned here, so this ordering is part of the contract.
-            .OrderBy(b => b.EarnedAtUtc)
             .ToListAsync(ct);
 
         var badges = earnedBadges
+            // A repeatable badge has one record per award; the wall shows it once, at its first award.
+            .GroupBy(b => b.Id)
+            .Select(copies => copies.MinBy(b => b.EarnedAtUtc)!)
+            // Clients render badges in the order returned here, so this ordering is part of the contract.
+            .OrderBy(b => b.EarnedAtUtc)
             .Select(badge => new BadgeDto
             {
                 Id = badge.Id,

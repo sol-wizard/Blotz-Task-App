@@ -2,14 +2,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "@/i18n"; // Initialize i18n
 /* eslint-disable camelcase */
-import {
-  Baloo2_400Regular,
-  Baloo2_600SemiBold,
-  Baloo2_700Bold,
-  Baloo2_800ExtraBold,
-  useFonts,
-} from "@expo-google-fonts/baloo-2";
-import { Inter_300Light, Inter_700Bold } from "@expo-google-fonts/inter";
+import { useFonts } from "@expo-google-fonts/baloo-2/useFonts";
+import { Baloo2_400Regular } from "@expo-google-fonts/baloo-2/400Regular";
+import { Baloo2_600SemiBold } from "@expo-google-fonts/baloo-2/600SemiBold";
+import { Baloo2_700Bold } from "@expo-google-fonts/baloo-2/700Bold";
+import { Baloo2_800ExtraBold } from "@expo-google-fonts/baloo-2/800ExtraBold";
+import { Inter_300Light } from "@expo-google-fonts/inter/300Light";
+import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 /* eslint-enable camelcase */
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -23,6 +22,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { prefetchVersionPolicy, useForcedUpdateRedirect } from "@/shared/hooks/useUpdateCheck";
 import posthog from "@/shared/constants/posthog-client";
 import { analytics } from "@/shared/services/analytics";
 import "@/shared/util/typography";
@@ -41,6 +41,7 @@ Sentry.init({
 });
 
 analytics.syncSentryIdentityOnLaunch();
+prefetchVersionPolicy(queryClient);
 
 function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -83,6 +84,7 @@ export default Sentry.wrap(RootLayout);
 
 function RootStack() {
   const { isAuthenticated } = useAuth();
+  useForcedUpdateRedirect();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

@@ -1,4 +1,4 @@
-import { addHours } from "date-fns";
+import { addHours, isSameDay, isValid, parse, set } from "date-fns";
 import type { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { SegmentButtonValue } from "../models/segment-button-value";
 import type { TaskFormField } from "../models/task-form-schema";
@@ -8,6 +8,8 @@ import { TaskTimeType } from "@/shared/models/base-task-dto";
 type GetTaskFormDefaultsParams = {
   dto?: TaskUpsertDTO;
   allowNotification?: boolean;
+  /** "yyyy-MM-dd" day to start a new task on (the day the calendar shows). */
+  startDay?: string;
 };
 
 type TaskFormDefaults = {
@@ -18,10 +20,18 @@ type TaskFormDefaults = {
 export const getTaskFormDefaults = ({
   dto,
   allowNotification,
+  startDay,
 }: GetTaskFormDefaultsParams): TaskFormDefaults => {
   const now = new Date();
   const oneHourLater = addHours(now, 1);
-  const twoHoursLater = addHours(now, 2);
+  // parse() reads the day in local time, so it never shifts a day across time zones.
+  const day = startDay ? parse(startDay, "yyyy-MM-dd", now) : null;
+  // Today keeps "now + 1 hour" as is, so at 23:30 the task still lands after midnight.
+  const startAt =
+    day && isValid(day) && !isSameDay(day, now)
+      ? set(oneHourLater, { year: day.getFullYear(), month: day.getMonth(), date: day.getDate() })
+      : oneHourLater;
+  const endAt = addHours(startAt, 1);
 
   // default values for creating a new task
   if (!dto) {
@@ -31,10 +41,10 @@ export const getTaskFormDefaults = ({
         title: "",
         description: "",
         labelId: null,
-        startDate: oneHourLater,
-        startTime: oneHourLater,
-        endDate: twoHoursLater,
-        endTime: twoHoursLater,
+        startDate: startAt,
+        startTime: startAt,
+        endDate: endAt,
+        endTime: endAt,
         alert: allowNotification ? 300 : null,
         recurrence: "never",
         recurrenceEndMode: "never",

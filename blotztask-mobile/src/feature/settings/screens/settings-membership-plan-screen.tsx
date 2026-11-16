@@ -4,14 +4,20 @@ import { ReturnButton } from "@/shared/components/return-button";
 import { useAiUsageSummaryQuery } from "@/feature/settings/hooks/useAiUsageSummaryQuery";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
 import { AiCoachAllowanceCard } from "@/feature/settings/components/ai-coach-allowance-card";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
 export default function AiUsageScreen() {
   const { aiUsageSummary, isAiUsageSummaryLoading } = useAiUsageSummaryQuery();
   const [showProgress, setShowProgress] = useState(false);
   const { t, i18n } = useTranslation("settings");
+
+  useEffect(() => {
+    analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_MEMBERSHIP_PLAN);
+  }, []);
 
   const formatPeriodLabel = (start: string, end: string) => {
     const startDate = new Date(start);

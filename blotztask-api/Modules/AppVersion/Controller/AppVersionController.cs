@@ -22,5 +22,5 @@ public sealed class AppVersionController(IOptions<AppVersionOptions> options) : 
     }
 
     private static PlatformVersionPolicyResponse Map(PlatformVersionPolicy p) =>
-        new(p.LatestVersion, p.MinimumSupportedVersion, p.StoreUrl);
+        new(p.LatestVersion, p.MinimumSupportedVersion, p.StoreUrl, p.ApkDownloadUrl);
 }

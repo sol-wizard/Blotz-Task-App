@@ -8,6 +8,18 @@
     "title": "Guess what we've been up to.",
     "body": "Swipe to find out!"
   },
+  "widget": {
+    "title": "Today's Tasks, Right on Your Home Screen",
+    "body": "Add the home-screen widget to see today's date and how many tasks you have at a glance. Chinese task names no longer get cut off."
+  },
+  "invite-progress": {
+    "title": "Bring Your Friends In",
+    "body": "Share your invite code — now you can see how many friends have joined, and how many more you need for the badge."
+  },
+  "badge-unlock": {
+    "title": "Unlock a Badge, Wear It Right Away",
+    "body": "When you unlock a new badge, tap Equip reward in the popup and it shows on your profile."
+  },
   "review-letter": {
     "title": "A letter for your week and month",
     "body": "Open Review to see how you spent your time. Tap Share in the corner when you want to send it on."

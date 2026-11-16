@@ -3,7 +3,9 @@ import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isToday } from "date-fns";
+import { analytics } from "@/shared/services/analytics";
 import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
@@ -13,6 +15,9 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
 import { getRecurringOccurrenceIdentity } from "@/shared/util/task-occurrence-identity";
 import { useSwipeableManager } from "@/feature/notes/hooks/useSwipeableManager";
+
+// Module scope: `today_tasks_shown` is once per process, not once per mount of this list.
+let hasTrackedTodayTasksShown = false;
 
 export const FilteredTaskList = ({
   selectedDay,
@@ -25,7 +30,13 @@ export const FilteredTaskList = ({
 
   const { deleteTask, isDeleting } = useTaskMutations();
 
-  const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
+  const { selectedDayTasks, isLoading, isSuccess } = useSelectedDayTasks({ selectedDay });
+
+  useEffect(() => {
+    if (hasTrackedTodayTasksShown || !isSuccess || !isToday(selectedDay)) return;
+    hasTrackedTodayTasksShown = true;
+    analytics.trackTodayTasksShown({ msSinceLaunch: analytics.msSinceLaunch() });
+  }, [isSuccess, selectedDay]);
 
   const { onRowOpen, closeAllRows } = useSwipeableManager();
 

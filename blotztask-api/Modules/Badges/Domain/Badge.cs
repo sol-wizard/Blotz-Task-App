@@ -14,6 +14,7 @@ public class Badge
     public required string IconUrl { get; set; }
     public BadgeCategory Category { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsRepeatable { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 
     public ICollection<BadgeCriteria> Criteria { get; set; } = [];

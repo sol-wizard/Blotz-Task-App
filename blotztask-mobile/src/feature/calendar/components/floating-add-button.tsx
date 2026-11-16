@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { router, useGlobalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -30,6 +30,8 @@ type Area = { width: number; height: number };
  */
 export function FloatingAddButton() {
   const { t } = useTranslation("tasks");
+  // The Calendar sets `date` when a day is picked, so the new task starts on that day.
+  const { date: calendarDate } = useGlobalSearchParams<{ date?: string }>();
   const insets = useSafeAreaInsets();
   const [area, setArea] = useState<Area | null>(null);
   // Read once when the screen opens; undefined while loading, null when nothing is saved yet.
@@ -78,7 +80,10 @@ export function FloatingAddButton() {
     );
   };
 
-  const openTaskCreate = () => router.push("/task-create");
+  const openTaskCreate = () =>
+    router.push(
+      calendarDate ? { pathname: "/task-create", params: { date: calendarDate } } : "/task-create",
+    );
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;

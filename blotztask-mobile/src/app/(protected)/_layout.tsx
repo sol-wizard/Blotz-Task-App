@@ -1,12 +1,15 @@
 import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
+import { useBadgeQueueStore } from "@/feature/badge/hooks/useBadgeQueueStore";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { FireworkOverlays } from "@/feature/firework-animation/components/firework-overlay";
 import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
+import { ScreenshotFeedbackCard } from "@/feature/settings/components/screenshot-feedback-card";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { useReviewReminderSync } from "@/feature/review/hooks/useReviewReminderSync";
 import { useRecordAppOpen } from "@/shared/hooks/useRecordAppOpen";
 import { useSyncTodayTasksWidget } from "@/feature/widget/hooks/useSyncTodayTasksWidget";
+import { usePrefetchTodayScreen } from "@/feature/calendar/hooks/usePrefetchTodayScreen";
 import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
 import { useAuth0 } from "react-native-auth0";
@@ -30,8 +33,11 @@ export default function ProtectedLayout() {
   useLanguageInit();
   useTrackActiveUser5s();
   useRecordAppOpen();
+  usePrefetchTodayScreen();
   useSyncTodayTasksWidget();
-  const { badgeQueue, dismissBadge } = usePushNotificationSetup();
+  usePushNotificationSetup();
+  const badgeQueue = useBadgeQueueStore((state) => state.queue);
+  const dismissBadge = useBadgeQueueStore((state) => state.dismiss);
   useReviewReminderSync();
 
   return (
@@ -93,10 +99,12 @@ export default function ProtectedLayout() {
           <Stack.Screen name="ai-home" options={{ headerShown: false }} />
           <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
           <Stack.Screen name="badge-details" options={{ headerShown: false }} />
+          <Stack.Screen name="feedback" options={{ headerShown: false }} />
         </Stack>
 
         <FireworkOverlays />
         <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
+        <ScreenshotFeedbackCard />
       </View>
     </FireworkProvider>
   );

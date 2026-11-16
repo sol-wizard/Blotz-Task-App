@@ -1,12 +1,10 @@
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
-using Microsoft.AspNetCore.Authorization;
+using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
-[ApiController]
-[Authorize]
 [Route("api/[controller]")]
 public class SubTaskController(
     GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler,
@@ -14,7 +12,7 @@ public class SubTaskController(
     UpdateSubtaskCommandHandler updateSubtaskCommandHandler,
     UpdateSubtaskStatusCommandHandler updateSubtaskStatusCommandHandler,
     ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler,
-    DeleteSubtaskCommandHandler deleteSubtaskCommandHandler) : ControllerBase
+    DeleteSubtaskCommandHandler deleteSubtaskCommandHandler) : AuthorizedControllerBase
 {
     [HttpGet("tasks/{id}")]
     public async Task<IActionResult> GetSubtasksById(int id, CancellationToken ct)
@@ -40,8 +38,7 @@ public class SubTaskController(
     [HttpPut("subtask-completion-status/{id}")]
     public async Task<IActionResult> UpdateSubtaskStatus(int id, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var message = await updateSubtaskStatusCommandHandler.Handle(
             new UpdateSubtaskStatusCommand { SubtaskId = id, UserId = userId }, ct);
@@ -74,8 +71,7 @@ public class SubTaskController(
     [HttpDelete("subtasks/{subtaskId}")]
     public async Task<IActionResult> DeleteSubtask(int subtaskId, CancellationToken ct)
     {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var userId = UserId;
 
         var command = new DeleteSubtaskCommand { SubtaskId = subtaskId, UserId = userId };
         var result = await deleteSubtaskCommandHandler.Handle(command, ct);

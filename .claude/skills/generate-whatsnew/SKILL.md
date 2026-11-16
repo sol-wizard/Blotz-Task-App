@@ -25,7 +25,7 @@ Content comes from the **`Next release (unreleased)` draft** in GitHub Releases 
 gh api repos/sol-wizard/Blotz-Task-App/releases --jq '.[] | select(.draft==true) | .body'
 ```
 
-The GitHub account must be `sol-wizard` (check with `gh api user -q .login`). The other account, `Ben0189`, lacks the `project` scope and can't even resolve the private repo — the error looks like the repo is gone rather than like an auth problem. **Wrong account, or any gh auth problem: stop and tell Ben, stating which account is currently active. Never run `gh auth switch` yourself** — it changes his global gh state.
+The GitHub account must be `sol-wizard` (check with `gh api user -q .login`). The other account, `Ben0189`, lacks the `project` scope and can't even resolve the private repo — the error looks like the repo is gone rather than like an auth problem. **Wrong account, or any gh auth problem: stop and tell Ben, stating which account is currently active.** `gh auth switch` is blocked in `.claude/settings.json` — it changes his global gh state.
 
 ### ② Pick features + decide image or text
 

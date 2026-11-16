@@ -21,7 +21,6 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 import { analytics } from "../services/analytics";
@@ -278,14 +277,14 @@ export function invalidateSelectedDayTask(
   const end = startOfDay(new Date(endTime));
   if (isSameDay(start, end)) {
     queryClient.invalidateQueries({
-      queryKey: taskKeys.selectedDay(convertToDateTimeOffset(start)),
+      queryKey: taskKeys.selectedDay(format(start, "yyyy-MM-dd")),
     });
     return;
   } else {
     let cursorDay = startOfDay(start);
     while (cursorDay <= end) {
       queryClient.invalidateQueries({
-        queryKey: taskKeys.selectedDay(convertToDateTimeOffset(cursorDay)),
+        queryKey: taskKeys.selectedDay(format(cursorDay, "yyyy-MM-dd")),
       });
       cursorDay = addDays(cursorDay, 1);
     }
@@ -320,7 +319,7 @@ function invalidateTaskAvailability(
 
 function invalidateSelectedDayByDateOnly(queryClient: QueryClient, dateOnly: string) {
   return queryClient.invalidateQueries({
-    queryKey: taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(parseISO(dateOnly)))),
+    queryKey: taskKeys.selectedDay(format(parseISO(dateOnly), "yyyy-MM-dd")),
   });
 }
 

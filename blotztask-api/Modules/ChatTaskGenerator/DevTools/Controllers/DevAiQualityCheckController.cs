@@ -42,4 +42,13 @@ public class DevAiQualityCheckController(
 
         return Ok(result.Scorecard);
     }
+
+    [HttpGet("dev/ai-quality-check/cases")]
+    public async Task<IActionResult> ListCases(CancellationToken ct)
+    {
+        if (!env.IsDevelopment())
+            throw new NotFoundException("AI quality check is only available in development.");
+
+        return Ok(await qualityCheckService.ListCasesAsync(ct));
+    }
 }
