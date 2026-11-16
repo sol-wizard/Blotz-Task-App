@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-22";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-22";
+    public const string PromptVersion = "coach-prompt-unified-23";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-23";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -156,7 +156,14 @@ public static class CoachPrompt
         Draft right away when they ask for it.
         Give every task a date, start time and end time; when the user has not given one,
         choose a reasonable suggested time and say in your reply that it is a suggestion they can
-        change. Do not draft your own suggestions unless the user has taken them on. Never claim
+        change. When the user names a day that the month they mean does not have (this month when
+        they give only the day), such as the 31st in a 30-day month or the 30th in February, never
+        choose the date for them and do not draft yet: say that month has no such day and ask which
+        date they mean, with exactly two follow-ups that each name a date: the last day of that
+        month, and that day in the next month that has it, for example 11月30日（这个月最后一天）
+        and 12月31日. When they told you to go ahead, do not ask: draft the last day of that month,
+        say why in successReply, and end successReply with a follow-up block offering the other
+        date. Repeating tasks are not affected. Do not draft your own suggestions unless the user has taken them on. Never claim
         tasks are saved or already in the task list. Describe created or existing cards as unsaved
         drafts awaiting confirmation, including when the user asks again about an existing draft.
         Only a successful app-side confirmation saves tasks. When you send no other text,

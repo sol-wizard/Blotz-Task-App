@@ -216,7 +216,7 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Handle_DraftToolScheduleCheck_OnlyClearResultKeepsQuickReply(bool conflict)
+    public async Task Handle_DraftToolScheduleCheck_QuickReplyNamesOverlapOnlyWhenOneExists(bool conflict)
     {
         // Arrange
         await using var session = await CoachTestSession.CreateAsync(fixture);
@@ -232,7 +232,12 @@ public sealed class ScheduleBoundaryTests(DatabaseFixture fixture) : IClassFixtu
         var result = await executor.ExecuteAsync(call, default);
         // Assert
         result.Succeeded.Should().BeTrue(because: "a scheduling conflict does not erase a valid draft");
-        result.SuccessReply.Should().Be(conflict ? null : "Draft ready for review.", because: "conflicts require a model continuation instead of an unchecked quick reply");
+        if (conflict)
+            result.SuccessReply.Should().StartWith("Draft ready for review.", because: "the model's own reply still opens the answer")
+                .And.Contain("\"Read\" overlaps your \"Meeting\"",
+                    because: "an overlap at a time the user gave is named in the quick reply instead of costing another model call");
+        else
+            result.SuccessReply.Should().Be("Draft ready for review.", because: "a clear schedule keeps the model's reply unchanged");
         workspace.Drafts.Single().Schedule!.Status.Should().Be(conflict ? "conflict" : "clear", because: "the card must expose the real calendar assessment");
     }
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using Azure;
 using Azure.AI.OpenAI;
@@ -150,8 +151,18 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
                 != JsonSerializer.Serialize(turn.DraftsAfter.Select(DraftTools.View)),
             "mentionsCurrentTime" => turn.Reply.Contains(turn.LocalTime.ToString("HH:mm")),
             "repliesInEnglish" => turn.Reply.Length > 0 && !turn.Reply.Any(ch => ch is >= '一' and <= '鿿'),
+            // draftOn:yyyy-MM-dd: this turn added at least one item, and every added item is on that date.
+            _ when check.StartsWith("draftOn:", StringComparison.Ordinal) => DraftOn(turn,
+                DateOnly.ParseExact(check["draftOn:".Length..], "yyyy-MM-dd", CultureInfo.InvariantCulture)),
             _ => throw new InvalidOperationException($"Unknown conversation-quality check '{check}'."),
         };
+    }
+
+    private static bool DraftOn(TurnOutcome turn, DateOnly date)
+    {
+        var before = turn.DraftsBefore.SelectMany(draft => draft.Proposals).Select(item => item.ProposalId).ToHashSet();
+        var added = turn.DraftsAfter.SelectMany(draft => draft.Proposals).Where(item => !before.Contains(item.ProposalId)).ToList();
+        return added.Count > 0 && added.All(item => item.Date == date);
     }
 
     private sealed record TurnOutcome(string User, string Reply, IReadOnlyList<string> FollowUps,
