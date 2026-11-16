@@ -5,9 +5,11 @@ param organizationName = 'blotz'
 param projectName = 'task'
 param location = 'australiaeast'
 
-param taskGenerationDeploymentName = 'gpt-5.4-mini'
-param taskGenerationModelName = 'gpt-5.4-mini'
-param taskGenerationModelVersion = '2026-03-17'
+// Prod switched from gpt-5.4-mini to gpt-5.6-luna on 17 Nov 2026. The gpt-5.4-mini deployment
+// (same capacity) is still there for rollback; it is not modelled here.
+param taskGenerationDeploymentName = 'gpt-5.6-luna'
+param taskGenerationModelName = 'gpt-5.6-luna'
+param taskGenerationModelVersion = '2026-07-09'
 param taskGenerationDeploymentCapacity = 130
 
 param githubRepo = 'sol-wizard/Blotz-Task-App'
