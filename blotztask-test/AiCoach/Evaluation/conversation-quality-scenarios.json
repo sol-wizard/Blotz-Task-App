@@ -295,6 +295,88 @@
         { "user": "I'm so stressed. I have three deadlines this week and haven't started any of them.", "tone": ["noStockEmpathy"], "business": ["repliesInEnglish", "noNewDraft"] }
       ],
       "criteria": [ "用英文回复；先回应压力，再给能马上开始的小步骤；不说套话共情。" ]
+    },
+    {
+      "id": "day-31-en",
+      "category": "business",
+      "source": "PBI 1689 真机 11-05：11 月说 the 31st，教练悄悄排到 12 月 31 日",
+      "runs": 3,
+      "localTime": "2026-11-16T10:00:00+08:00",
+      "turns": [
+        { "user": "Remind me to pay rent on the 31st at 9am", "tone": ["asksQuestion"], "business": ["noNewDraft", "hasFollowUps", "repliesInEnglish"] },
+        { "user": "November 30th", "tone": ["noQuestion", "repliesInEnglish"], "business": ["draftCreated", "draftOn:2026-11-30"] }
+      ],
+      "criteria": [
+        "第一轮：十一月没有 31 号，回复要说明这一点，并且只问一个问题：用户要哪一天。不能自己挑一个日期建草稿。",
+        "第一轮的快捷按钮是两个带日期的选项：11 月 30 日（本月最后一天）和 12 月 31 日。",
+        "第二轮：按用户选的 11 月 30 日早上 9 点建草稿，不再追问。"
+      ]
+    },
+    {
+      "id": "day-31-zh",
+      "category": "business",
+      "source": "PBI 1689：同一个问题的中文版（31号交房租）",
+      "runs": 3,
+      "localTime": "2026-11-16T10:00:00+08:00",
+      "turns": [
+        { "user": "31号早上9点提醒我交房租", "tone": ["noFormalChinese", "asksQuestion"], "business": ["noNewDraft", "hasFollowUps"] },
+        { "user": "12月31日", "tone": ["noQuestion"], "business": ["draftCreated", "draftOn:2026-12-31"] }
+      ],
+      "criteria": [
+        "第一轮：十一月没有 31 号，用口语说明这一点，只问一个问题：要哪一天。不能自己挑日期建草稿。",
+        "第一轮的快捷按钮是两个带日期的选项，例如「11月30日（这个月最后一天）」和「12月31日」。",
+        "第二轮：按用户选的 12 月 31 日早上 9 点建草稿，不再追问。"
+      ]
+    },
+    {
+      "id": "day-30-feb",
+      "category": "business",
+      "source": "PBI 1689：二月说 the 30th",
+      "runs": 2,
+      "localTime": "2027-02-10T10:00:00+08:00",
+      "turns": [
+        { "user": "Remind me to submit the report on the 30th at 3pm", "tone": ["asksQuestion"], "business": ["noNewDraft", "hasFollowUps", "repliesInEnglish"] }
+      ],
+      "criteria": [
+        "2027 年二月没有 30 号：先说明，只问一个问题，不建草稿。",
+        "快捷按钮是两个带日期的选项：2 月 28 日（本月最后一天）和 3 月 30 日。"
+      ]
+    },
+    {
+      "id": "day-30-nov",
+      "category": "business",
+      "source": "PBI 1689：这个月有的日期照常直接建",
+      "runs": 2,
+      "localTime": "2026-11-16T10:00:00+08:00",
+      "turns": [
+        { "user": "Remind me to pay rent on the 30th at 9am", "tone": ["noQuestion", "repliesInEnglish"], "business": ["draftCreated", "draftOn:2026-11-30"] }
+      ],
+      "criteria": [ "十一月有 30 号：直接在 11 月 30 日早上 9 点建草稿，不提问。" ]
+    },
+    {
+      "id": "day-31-go-ahead",
+      "category": "business",
+      "source": "PBI 1689：用户说直接加时，不问，排在本月最后一天并说清楚",
+      "runs": 2,
+      "localTime": "2026-11-16T10:00:00+08:00",
+      "turns": [
+        { "user": "直接加，不用问我：31号早上9点交房租", "tone": ["noQuestion", "hasFollowUps"], "business": ["draftCreated", "draftOn:2026-11-30"] }
+      ],
+      "criteria": [
+        "用户说了直接加：不提问，排在 11 月 30 日（本月最后一天）早上 9 点。",
+        "回复里说清楚十一月没有 31 号、所以排在 30 号，并用按钮提供改到 12 月 31 日。"
+      ]
+    },
+    {
+      "id": "day-31-monthly",
+      "category": "business",
+      "source": "PBI 1689：每月重复不在这条规则内，照常建",
+      "runs": 2,
+      "localTime": "2026-11-16T10:00:00+08:00",
+      "turns": [
+        { "user": "Remind me to pay rent on the 31st of every month at 9am", "tone": ["noQuestion", "repliesInEnglish"], "business": ["draftCreated"] }
+      ],
+      "criteria": [ "每月重复的任务：直接建每月 31 号的重复草稿，不因为这个月没有 31 号而提问。" ]
     }
   ]
 }
