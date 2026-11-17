@@ -34,4 +34,6 @@ export interface TaskDetailDTO extends BaseTaskDTO {
   isDone: boolean;
   label?: LabelDTO;
   subtasks?: SubtaskDTO[];
+  // From the tasks-by-date list: a background breakdown is running for this task.
+  isBreakingDown?: boolean;
 }

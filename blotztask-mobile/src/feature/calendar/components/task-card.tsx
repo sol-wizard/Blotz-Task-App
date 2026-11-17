@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
@@ -13,7 +13,11 @@ import { queryClient } from "@/shared/util/queryClient";
 import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
-import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
+import { useStartTaskBreakdown } from "@/feature/task-details/hooks/useStartTaskBreakdown";
+import {
+  useBreakdownJobsStore,
+  useIsBreakingDown,
+} from "@/feature/task-details/hooks/useBreakdownJobsStore";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatTaskCardTimeRange } from "../util/format-task-card-time-range";
 import { formatTaskEndTime } from "../util/format-task-end-time";
@@ -74,7 +78,6 @@ const TaskCard = ({
   const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [showRecurringDeleteSheet, setShowRecurringDeleteSheet] = useState(false);
-  const [isBreakdownPending, setIsBreakdownPending] = useState(false);
   const [pendingFocusTaskId, setPendingFocusTaskId] = useState<number | null>(null);
 
   // Mutations
@@ -85,7 +88,16 @@ const TaskCard = ({
     materializeOccurrenceAsync,
     isPending: isRecurringTaskPending,
   } = useRecurringTaskMutations();
-  const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
+  const { startBreakdown, isStartingBreakdown } = useStartTaskBreakdown();
+  const trackBreakdown = useBreakdownJobsStore((state) => state.track);
+  const isBreakingDown = useIsBreakingDown(task.id) || isStartingBreakdown;
+
+  // A breakdown the server reports as running (started earlier, or on another device): follow it too.
+  useEffect(() => {
+    if (task.isBreakingDown && hasTaskItemId(task)) {
+      trackBreakdown(task.id, { title: task.title, target: { taskId: task.id }, startedAt: null });
+    }
+  }, [task, trackBreakdown]);
 
   // Derived values
   const hasSubtasks = !!task.subtasks?.length;
@@ -98,8 +110,6 @@ const TaskCard = ({
     isToggling ||
     isDeleting ||
     isDeletingRecurringOccurrence ||
-    isBreakdownPending ||
-    isBreakingDownAndReplacingSubtasks ||
     isRecurringTaskPending;
 
   const { t: tPomodoro } = useTranslation("pomodoro");
@@ -146,31 +156,21 @@ const TaskCard = ({
     });
   };
 
+  // Starts the breakdown and returns at once; the BreakdownJobsWatcher shows the result when it's ready.
   const handleBreakdown = async () => {
-    if (isLoading) return;
+    if (isLoading || isBreakingDown) return;
 
-    setIsBreakdownPending(true);
-
-    try {
-      const result = hasTaskItemId(task)
-        ? await breakDownAndReplaceSubtasks({ taskId: task.id })
-        : await breakDownRecurringTaskOccurrence();
-
-      if (result?.subtasks?.length) {
-        setIsExpanded(true);
-        swipeRef.current?.close();
-      }
-    } finally {
-      setIsBreakdownPending(false);
+    if (hasTaskItemId(task)) {
+      await startBreakdown({ target: { taskId: task.id }, title: task.title });
+    } else {
+      const recurringTaskId = getRecurringTaskId(task);
+      const occurrenceDate = getRecurringOccurrenceDate(task);
+      if (recurringTaskId == null || !occurrenceDate) return;
+      await startBreakdown({ target: { recurringTaskId, occurrenceDate }, title: task.title });
+      // The occurrence is now a saved task: reload the day so the card has its id.
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     }
-  };
-
-  const breakDownRecurringTaskOccurrence = async () => {
-    const recurringTaskId = getRecurringTaskId(task);
-    const occurrenceDate = getRecurringOccurrenceDate(task);
-    if (recurringTaskId == null || !occurrenceDate) return;
-
-    return await breakDownAndReplaceSubtasks({ recurringTaskId, occurrenceDate });
+    swipeRef.current?.close();
   };
 
   const handleDelete = async () => {
@@ -286,7 +286,7 @@ const TaskCard = ({
             onBreakdown={handleBreakdown}
             onDelete={handleDelete}
             isDeleting={isDeleting || isDeletingRecurringOccurrence}
-            isRefreshingSubtasks={isBreakdownPending || isBreakingDownAndReplacingSubtasks}
+            isRefreshingSubtasks={isBreakingDown}
           />
         )}
         rightThreshold={12}
@@ -371,6 +371,9 @@ const TaskCard = ({
                   )}
                 </View>
                 {timePeriod && <Text className="font-balooThin text-gray-400">{timePeriod}</Text>}
+                {isBreakingDown && (
+                  <Text className="font-baloo text-info">{tTasks("details.breakingDown")}</Text>
+                )}
               </Pressable>
 
               <View className="flex-row items-center">

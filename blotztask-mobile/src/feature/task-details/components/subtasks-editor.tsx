@@ -77,7 +77,7 @@ const SubtasksEditor = ({
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-primary">
-          {t("tasks:details.loadingSubtasks")}
+          {t(isRefreshingSubtasks ? "tasks:details.breakingDown" : "tasks:details.loadingSubtasks")}
         </Text>
       </View>
     );

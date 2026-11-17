@@ -1,7 +1,7 @@
 import { SubtaskDTO } from "../models/subtask-dto";
 import { apiClient } from "@/shared/services/api/client";
-import { BreakdownAndReplaceTaskResultDTO } from "../models/breakdown-result-dto";
 import { AddNewSubtaskDTO } from "../models/add-new-subtask-dto";
+import { TaskBreakdownStatusDTO } from "../models/task-breakdown-status-dto";
 
 export type BreakdownTaskTarget =
   | {
@@ -15,10 +15,17 @@ export type BreakdownTaskTarget =
       occurrenceDate: string;
     };
 
-export const breakDownAndReplaceTaskSubtasks = async (
+// Starts the breakdown in the background and returns at once; poll getTaskBreakdownStatus for the result.
+export const startTaskBreakdown = async (
   target: BreakdownTaskTarget,
-): Promise<BreakdownAndReplaceTaskResultDTO> => {
-  return await apiClient.post("/TaskBreakdown", target);
+): Promise<TaskBreakdownStatusDTO> => {
+  return await apiClient.post("/TaskBreakdown/start", target);
+};
+
+export const getTaskBreakdownStatus = async (
+  taskItemId: number,
+): Promise<TaskBreakdownStatusDTO> => {
+  return await apiClient.get(`/TaskBreakdown/${taskItemId}/status`);
 };
 
 export async function addSubtask(newSubtask: AddNewSubtaskDTO): Promise<number> {
