@@ -10,10 +10,7 @@ export type RefreshFailure = {
   /** iOS: Auth0's raw code (`invalid_grant`, `a0.sdk.internal_error.plain`). Android: same as `type`. */
   code: string;
   name: string;
-  status: number;
   nsurlCode: number | null;
-  oauthError: string | null;
-  oauthDescription: string | null;
   message: string;
 };
 
@@ -61,22 +58,22 @@ function pickReason(failure: Omit<RefreshFailure, "reason" | "action">): {
   reason: string;
   action: RefreshFailureAction;
 } {
-  const { type, code, status, nsurlCode, oauthError } = failure;
+  const { type, code, nsurlCode } = failure;
 
   const signOutReason = SIGN_OUT_REASONS[type];
   if (signOutReason) return { reason: signOutReason, action: "sign_out" };
 
   if (nsurlCode !== null) return { reason: networkReason(nsurlCode), action: "keep" };
-  if (code === "temporarily_unavailable" || oauthError === "temporarily_unavailable") {
+  if (code === "temporarily_unavailable") {
     return { reason: "server_unavailable", action: "keep" };
   }
   if (type === CredentialsManagerErrorCodes.NO_NETWORK) {
     return { reason: "network", action: "keep" };
   }
-  if (status === 429 || code === "too_many_requests" || oauthError === "too_many_requests") {
+  if (code === "too_many_requests") {
     return { reason: "rate_limited", action: "keep" };
   }
-  if (type === CredentialsManagerErrorCodes.API_ERROR || status >= 500) {
+  if (type === CredentialsManagerErrorCodes.API_ERROR) {
     return { reason: "server_error", action: "keep" };
   }
   if (type === CredentialsManagerErrorCodes.STORE_FAILED) {
@@ -87,23 +84,22 @@ function pickReason(failure: Omit<RefreshFailure, "reason" | "action">): {
   return { reason: "unknown", action: "keep" };
 }
 
-/** Works on anything thrown by `credentialsManager.getCredentials()`. */
+/**
+ * Works on anything thrown by `credentialsManager.getCredentials()`.
+ *
+ * The SDK error's `status` and `json.error` are not read: the native bridge never sets
+ * them (`status` is always 0, `json` is the raw native error), so only `type`, `code`,
+ * `name` and `message` carry information.
+ */
 export function classifyRefreshFailure(error: unknown): RefreshFailure {
   const e = (typeof error === "object" && error !== null ? error : {}) as Record<string, unknown>;
-  const json = (typeof e.json === "object" && e.json !== null ? e.json : {}) as Record<
-    string,
-    unknown
-  >;
   const message = readString(e.message) ?? String(error);
 
   const details = {
     type: readString(e.type) ?? "UNKNOWN",
     code: readString(e.code) ?? "unknown",
     name: readString(e.name) ?? "unknown",
-    status: typeof e.status === "number" ? e.status : 0,
     nsurlCode: readNsurlCode(message),
-    oauthError: readString(json.error),
-    oauthDescription: readString(json.error_description),
     message,
   };
 

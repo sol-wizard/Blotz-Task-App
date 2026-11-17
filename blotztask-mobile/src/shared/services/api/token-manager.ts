@@ -27,9 +27,7 @@ export async function describeRefreshFailure(
       failure_action: failure.action,
       failure_code: failure.code,
       failure_name: failure.name,
-      http_status: String(failure.status),
       nsurl_code: failure.nsurlCode === null ? "none" : String(failure.nsurlCode),
-      idp_error: failure.oauthError ?? "none",
       entry_point: entryPoint,
       platform: Platform.OS,
       days_since_login:
@@ -37,7 +35,6 @@ export async function describeRefreshFailure(
     },
     extra: {
       message: failure.message,
-      idp_description: failure.oauthDescription,
       last_login_at: lastLoginAt === null ? null : new Date(lastLoginAt).toISOString(),
     },
   };
