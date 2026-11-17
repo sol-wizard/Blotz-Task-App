@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useKeyboardState } from "react-native-keyboard-controller";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useForm, useWatch } from "react-hook-form";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -43,15 +43,25 @@ type FeedbackFormField = {
   text: string;
 };
 
+// Set when the screen opens from the screenshot card, so that page is already attached.
+type FeedbackRouteParams = {
+  imageUri?: string;
+  imageWidth?: string;
+  imageHeight?: string;
+};
+
 export default function SettingsFeedbackScreen() {
   const router = useRouter();
+  const { imageUri, imageWidth, imageHeight } = useLocalSearchParams<FeedbackRouteParams>();
   const { t } = useTranslation("settings");
   const { t: tVoice } = useTranslation("aiTaskGenerate");
   const { control, handleSubmit, getValues, setValue } = useForm<FeedbackFormField>({
     defaultValues: { text: "" },
   });
   const text = useWatch({ control, name: "text" });
-  const [image, setImage] = useState<FeedbackImage | null>(null);
+  const [image, setImage] = useState<FeedbackImage | null>(() =>
+    imageUri ? { uri: imageUri, width: Number(imageWidth), height: Number(imageHeight) } : null,
+  );
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const { submitFeedback, isSubmitting } = useSubmitFeedbackMutation();
   const textInputRef = useRef<TextInput>(null);

@@ -94,7 +94,9 @@
     "trySayingIdea": "「我希望能……」",
     "useKeyboard": "用键盘输入",
     "hideKeyboard": "收起键盘",
-    "transcribing": "正在把语音转成文字…"
+    "transcribing": "正在把语音转成文字…",
+    "screenshotCard": "反馈这个页面",
+    "screenshotCardClose": "关闭"
   },
   "about": {
     "title": "关于",

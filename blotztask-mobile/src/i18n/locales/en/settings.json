@@ -94,7 +94,9 @@
     "trySayingIdea": "“I wish I could …”",
     "useKeyboard": "Type instead",
     "hideKeyboard": "Hide keyboard",
-    "transcribing": "Turning your voice into text…"
+    "transcribing": "Turning your voice into text…",
+    "screenshotCard": "Report this page",
+    "screenshotCardClose": "Close"
   },
   "about": {
     "title": "About",

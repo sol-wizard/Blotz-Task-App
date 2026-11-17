@@ -556,6 +556,16 @@ export const analytics = {
     posthog.capture(EVENTS.REVIEW_GENERATED, { period: params.period });
   },
 
+  /** Fires when the "report this page" card appears after a system screenshot. `path` is the page it was taken on. */
+  trackScreenshotFeedbackShown(params: { path: string }) {
+    posthog.capture(EVENTS.SCREENSHOT_FEEDBACK_SHOWN, { path: params.path });
+  },
+
+  /** Fires when the user taps that card and the feedback screen opens. */
+  trackScreenshotFeedbackTapped(params: { path: string }) {
+    posthog.capture(EVENTS.SCREENSHOT_FEEDBACK_TAPPED, { path: params.path });
+  },
+
   // sharing
   trackShare(
     event: ShareEvent,
