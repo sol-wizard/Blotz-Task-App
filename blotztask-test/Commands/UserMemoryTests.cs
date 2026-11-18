@@ -95,6 +95,30 @@ public class UserMemoryTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    public async Task Handle_FullOfLearnedItems_ExplicitRequestEvictsATemporaryLearnedItemFirst()
+    {
+        // Arrange: the list is full of learned items; the temporary one was confirmed most recently.
+        var userId = await _seeder.CreateUserAsync();
+        Task<RememberUserMemoryResult> Learn(string content, DateTimeOffset? validUntil = null) =>
+            _remember.Handle(new RememberUserMemoryCommand
+            {
+                UserId = userId, Kind = UserMemoryKind.Goal, Content = content, ValidUntil = validUntil,
+                Source = UserMemorySource.Extracted,
+            });
+        for (var i = 0; i < UserMemory.MaxActivePerUser - 1; i++) await Learn($"Lasting {i}");
+        var temporary = (await Learn("Gym on 23 Nov at 19:00", Now.AddDays(10))).Memory!;
+
+        // Act
+        var result = await RememberAsync(userId, "Night owl: nothing before 08:00");
+
+        // Assert
+        result.Success.Should().BeTrue(because: "what the user asks to remember outranks anything learned from chat");
+        var evicted = await _context.UserMemories.AsNoTracking().SingleAsync(m => m.Id == temporary.Id);
+        evicted.Status.Should().Be(UserMemoryStatus.Superseded,
+            because: "a temporary learned item is dropped before lasting ones, even if confirmed more recently");
+    }
+
+    [Fact]
     public async Task Handle_MemorySwitchedOff_RejectsAndHidesMemoriesFromContext()
     {
         // Arrange

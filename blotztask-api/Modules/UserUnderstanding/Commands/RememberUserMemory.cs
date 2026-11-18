@@ -77,11 +77,13 @@ public class RememberUserMemoryCommandHandler(BlotzTaskDbContext db, TimeProvide
         UserMemory? evicted = null;
         if (active.Count - (replaced is null ? 0 : 1) >= UserMemory.MaxActivePerUser)
         {
-            // Only learned items make room for other learned items; explicit ones are never dropped silently.
-            evicted = extracted
-                ? active.Where(m => m.Source == UserMemorySource.Extracted && m != replaced)
-                    .OrderBy(m => m.LastConfirmedAt).FirstOrDefault()
-                : null;
+            // Only learned items make room; ones the user asked for are never dropped silently. Something the user
+            // asks to remember outranks anything learned, so it may evict too. Temporary items (with an end date) go
+            // first, then the one confirmed longest ago.
+            evicted = active.Where(m => m.Source == UserMemorySource.Extracted && m != replaced)
+                .OrderBy(m => m.ValidUntil is null)
+                .ThenBy(m => m.LastConfirmedAt)
+                .FirstOrDefault();
             if (evicted is null) return new(false, "memory_full", null);
         }
 

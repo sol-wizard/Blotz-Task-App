@@ -59,8 +59,9 @@ public sealed class CoachLiveTests(ITestOutputHelper output) : IDisposable
     public async Task Handle_LongHistory_SummarizesWithoutLosingEarlierPreference()
     {
         // Arrange
-        // Keep enough room for the current prompt/tools; history itself forces compression.
-        var runtime = Runtime();
+        // Keep enough room for the current prompt/tools; history itself forces compression. The default budget grew
+        // past this history, so a fixed smaller one keeps the test about compression.
+        var runtime = Runtime(new AiCoachModuleOptions { ContextTokenBudget = 32000 });
         var history = new List<GatewayMessage> { new GatewayUserMessage("这次对话里，我给计划起的代号是蓝鲸。请记住。"),
             new GatewayAssistantMessage("好的，计划代号是蓝鲸。", []) };
         for (var index = 0; index < 32; index++)

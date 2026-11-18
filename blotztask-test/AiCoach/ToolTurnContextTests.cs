@@ -13,6 +13,48 @@ namespace BlotzTask.Tests.AiCoach;
 public sealed class ToolTurnContextTests
 {
     [Fact]
+    public async Task Handle_LongTopicDrafts_ListsSavedItemsApartAndShowsOldSuggestionsBriefly()
+    {
+        // Arrange: the shape of a long topic — many early suggestions never added, a few items the user saved,
+        // and one fresh suggestion from the latest reply.
+        var builder = new ModelContextBuilder(Options.Create(new AiCoachModuleOptions()),
+            NullLogger<ModelContextBuilder>.Instance);
+        var oldReply = Guid.NewGuid();
+        var latestReply = Guid.NewGuid();
+        TaskProposal Item(string title, Guid reply, int? savedTaskId = null) => new(Guid.NewGuid(), title,
+            "说明" + new string('细', 60), new DateOnly(2026, 11, 24), new TimeOnly(9, 0), new TimeOnly(10, 30),
+            "Australia/Perth", null, savedTaskId, SuggestedFields: ["date", "startTime", "endTime"],
+            SuggestedInMessageId: reply);
+        var draft = new ProposalSet { Id = Guid.NewGuid(), IsReviewList = true };
+        draft.Replace([
+            .. Enumerable.Range(1, 14).Select(i => Item($"早期建议{i}", oldReply)),
+            Item("去健身房", oldReply, savedTaskId: 15091),
+            Item("新的建议", latestReply),
+        ]);
+        var request = new ModelTurnRequest(Guid.NewGuid(), [new GatewayUserMessage("回顾一下今天的计划")], [draft],
+            "Australia/Perth", DateTimeOffset.UtcNow, null, 0, ReviewListEnabled: true,
+            RecentReplyIds: new HashSet<Guid> { latestReply });
+        var full = ((GatewaySystemMessage)(await builder.BuildAsync(request with { RecentReplyIds = null }, [],
+            _ => throw new InvalidOperationException("No summary is needed."))).Transcript[^1]).Content;
+
+        // Act
+        var context = await builder.BuildAsync(request, [], _ => throw new InvalidOperationException("No summary is needed."));
+
+        // Assert
+        var content = ((GatewaySystemMessage)context.Transcript[^1]).Content;
+        using var drafts = JsonDocument.Parse(content[ModelContextBuilder.DraftContextPrefix.Length..]);
+        var view = drafts.RootElement[0];
+        view.GetProperty("savedItems").EnumerateArray().Select(item => item.GetProperty("title").GetString())
+            .Should().Equal(["去健身房"], because: "what the user added must stand apart so a recap includes it");
+        view.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("title").GetString())
+            .Should().Equal(["新的建议"], because: "only suggestions from recent replies are shown in full");
+        view.GetProperty("olderUnsavedItems").GetArrayLength().Should().Be(14,
+            because: "old suggestions stay addressable by itemId, just without their full detail");
+        System.Text.Encoding.UTF8.GetByteCount(content).Should().BeLessThan(System.Text.Encoding.UTF8.GetByteCount(full) / 2,
+            because: "a long topic must not carry every early suggestion in full on every call");
+    }
+
+    [Fact]
     public async Task Handle_AddThenUpdateLargeList_KeepsOneCurrentDraftAndFitsBudget()
     {
         // Arrange: execute the real tools; only model selection is outside this context test.

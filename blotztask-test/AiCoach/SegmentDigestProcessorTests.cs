@@ -45,6 +45,34 @@ public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClas
     }
 
     [Fact]
+    public async Task Handle_LongChatWithLongReplies_StillSendsTheUsersEarliestMessage()
+    {
+        // Arrange: a long chat with no pause, so it is read once at the end, and long coach replies.
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("我12月15号有数据结构期末考试", new string('答', 1500));
+        for (var i = 0; i < 25; i++) await harness.ChatAsync($"第{i}个问题", new string('答', 1500));
+        harness.Clock.Now = harness.Clock.Now.Add(SegmentDigestProcessor.PauseBeforeLearning).AddMinutes(1);
+        string? sent = null;
+        harness.Gateway.Respond = request =>
+        {
+            sent = ((GatewayUserMessage)request.Messages.Single()).Content;
+            return Digest(null);
+        };
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        using var payload = JsonDocument.Parse(sent!);
+        var newMessages = payload.RootElement.GetProperty("newMessages").EnumerateArray().ToArray();
+        newMessages.First().GetProperty("text").GetString().Should().Be("我12月15号有数据结构期末考试",
+            because: "memories come from what the user said, so long coach replies must not push the user's early messages out");
+        newMessages.Where(m => m.GetProperty("role").GetString() == "assistant")
+            .Should().OnlyContain(m => m.GetProperty("text").GetString()!.Length <= 301,
+                because: "coach replies are only context, so a short excerpt is enough");
+    }
+
+    [Fact]
     public async Task Handle_ChatStillActive_WaitsForAPause()
     {
         // Arrange

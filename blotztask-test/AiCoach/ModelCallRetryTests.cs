@@ -78,9 +78,47 @@ public sealed class ModelCallRetryTests
             because: "only the retry on the last call drops the tools; the failed attempt still offered them");
     }
 
-    private static ModelTurnRuntime Runtime(IModelGateway gateway, int maxModelCalls = 12)
+    [Fact]
+    public async Task Handle_CallKeepsWritingPastFirstOutputLimit_IsNotCutOff()
     {
-        var options = Options.Create(new AiCoachModuleOptions { MaxModelCallsPerTurn = maxModelCalls });
+        // Arrange: one second to start writing, then the call streams for two seconds without a long gap.
+        var gateway = new PacedGateway(progressSteps: 8, gapMs: 250, stallFirstCall: false);
+        var runtime = Runtime(gateway, firstOutputSeconds: 1, idleSeconds: 1, callMaxSeconds: 5);
+
+        // Act
+        var result = await runtime.ExecuteAsync(Request(), default);
+
+        // Assert
+        result.Error.Should().BeNull(because: "a call still writing its output is slow, not stuck");
+        gateway.Calls.Should().Be(1, because: "only a stalled or over-long call is cancelled and retried");
+    }
+
+    [Fact]
+    public async Task Handle_StreamStallsAfterStarting_IsRetriedAfterTheIdleLimit()
+    {
+        // Arrange: the first call writes once and then goes silent; the retry replies.
+        var gateway = new PacedGateway(progressSteps: 1, gapMs: 0, stallFirstCall: true);
+        var runtime = Runtime(gateway, firstOutputSeconds: 1, idleSeconds: 1, callMaxSeconds: 30);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        // Act
+        var result = await runtime.ExecuteAsync(Request(), default);
+
+        // Assert
+        result.Error.Should().BeNull(because: "a stalled stream that showed no text is retried like a dropped one");
+        gateway.Calls.Should().Be(2, because: "the stall cancels the first call and the retry answers");
+        stopwatch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(10),
+            because: "the idle limit ends the stall long before the call's overall limit");
+    }
+
+    private static ModelTurnRuntime Runtime(IModelGateway gateway, int maxModelCalls = 12,
+        int firstOutputSeconds = 60, int idleSeconds = 20, int callMaxSeconds = 120)
+    {
+        var options = Options.Create(new AiCoachModuleOptions
+        {
+            MaxModelCallsPerTurn = maxModelCalls, ModelRequestTimeoutSeconds = firstOutputSeconds,
+            StreamIdleTimeoutSeconds = idleSeconds, ModelCallMaxSeconds = callMaxSeconds,
+        });
         return new ModelTurnRuntime(gateway, options, NullLogger<ModelTurnRuntime>.Instance,
             new ModelContextBuilder(options, NullLogger<ModelContextBuilder>.Instance));
     }
@@ -118,6 +156,24 @@ public sealed class ModelCallRetryTests
                 if (streamTextBeforeFailing && request.OnTextDelta is not null) await request.OnTextDelta("好的，");
                 throw failure ?? new HttpRequestException("Azure Responses streaming request failed (server_error).");
             }
+            return new ModelCompletionResult("好的，明天没有安排。", [], ModelFinishReason.Stop, 10, 10, 20);
+        }
+    }
+
+    /// <summary>Streams tool arguments (progress without reply text) in steps, optionally going silent on the first call.</summary>
+    private sealed class PacedGateway(int progressSteps, int gapMs, bool stallFirstCall) : IModelGateway
+    {
+        public int Calls { get; private set; }
+
+        public async Task<ModelCompletionResult> CompleteAsync(ModelGatewayRequest request, CancellationToken cancellationToken)
+        {
+            Calls++;
+            for (var step = 0; step < progressSteps; step++)
+            {
+                await Task.Delay(gapMs, cancellationToken);
+                request.OnOutputProgress?.Invoke();
+            }
+            if (stallFirstCall && Calls == 1) await Task.Delay(Timeout.Infinite, cancellationToken);
             return new ModelCompletionResult("好的，明天没有安排。", [], ModelFinishReason.Stop, 10, 10, 20);
         }
     }

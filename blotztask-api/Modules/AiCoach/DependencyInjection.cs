@@ -27,7 +27,7 @@ public static class DependencyInjection
             })
             .Validate(options => options.MaxModelCallsPerTurn >= 2 && options.MaxToolCallsPerTurn > 0 && options.MaxToolArgumentBytes > 0
                 && options.ContextTokenBudget >= 8000 && options.MaxOutputTokens > 0
-                && options.ModelRequestTimeoutSeconds > 0
+                && options.ModelRequestTimeoutSeconds > 0 && options.StreamIdleTimeoutSeconds > 0 && options.ModelCallMaxSeconds > 0
                 && options.TopicIdleHours > 0 && options.MessageRetentionDays > 0
                 && options.TraceRetentionDays > 0,
                 "AiCoach resource limits must be positive and context budget at least 8000.")

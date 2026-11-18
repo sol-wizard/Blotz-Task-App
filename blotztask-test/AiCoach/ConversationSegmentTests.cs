@@ -238,8 +238,9 @@ public sealed class ConversationSegmentTests(DatabaseFixture fixture) : IClassFi
         // Act
         var context = await builder.BuildAsync(request, [], call => session.Gateway.CompleteAsync(call, default));
         // Assert
-        context.Transcript[0].Should().BeOfType<GatewaySystemMessage>(because: "the closing summary enters as historical data");
-        ((GatewaySystemMessage)context.Transcript[0]).Content.Should().Contain(request.PreviousClosingSummary,
+        context.Transcript[0].Should().BeOfType<GatewayContextDataMessage>(
+            because: "the closing summary enters as app data, outside the system block whose changes drop the prompt cache");
+        ((GatewayContextDataMessage)context.Transcript[0]).Content.Should().Contain(request.PreviousClosingSummary,
             because: "the immediately previous topic gives continuity to the next turn");
         request.Drafts.Should().BeEmpty(because: "historical summaries do not transfer expired draft cards into the live workspace");
         request.History.Should().ContainSingle(because: "previous summaries are not appended to the segment's own history for chaining");

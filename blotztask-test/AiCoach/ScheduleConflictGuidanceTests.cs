@@ -93,6 +93,46 @@ public sealed class ScheduleConflictGuidanceTests
             because: "a duplicate is removed, not moved to another slot");
     }
 
+    [Fact]
+    public async Task Handle_MovedItemHitsAnotherTask_TellsCoachNotToMoveAgainAndEndsTheTurn()
+    {
+        // Arrange: a suggested 21:00 slot overlaps yoga; wherever it moves, it lands on another task.
+        var tools = new DraftTools([], "Australia/Perth", reviewListEnabled: true);
+        var executor = new ToolExecutor(tools, new AiCoachModuleOptions(), checkSchedule: (items, _) =>
+        {
+            var item = items.Single();
+            var (identity, title) = item.StartTime == new TimeOnly(21, 0) ? ("task:1", "Yoga") : ("task:2", "Cleaning");
+            return Task.FromResult(new ScheduleAssessment("conflict", DateTimeOffset.UtcNow,
+                [new ScheduleConflict(item.ProposalId, identity, title, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1))]));
+        });
+        var added = await executor.ExecuteAsync(new ModelToolCallRequest("add", "add_items", JsonSerializer.Serialize(new
+        {
+            items = new object[]
+            {
+                new { kind = "task", title = "冲刺复习", date = "2026-12-08", startTime = "21:00", endTime = "22:00",
+                    suggestedFields = new[] { "startTime", "endTime" } },
+            },
+            successReply = "已放进待确认清单。",
+        })), default);
+        var itemId = tools.Drafts.Single().Proposals.Single().ProposalId;
+
+        // Act
+        var moved = await executor.ExecuteAsync(new ModelToolCallRequest("move", "update_items", JsonSerializer.Serialize(new
+        {
+            items = new object[] { new { itemId, fields = new { startTime = "19:30", endTime = "20:30" } } },
+            successReply = "改到了19:30。",
+        })), default);
+
+        // Assert
+        Guidance(added).Should().Contain("Move only items whose time you suggested",
+            because: "the first overlap of a suggested time is worth one move");
+        added.SuccessReply.Should().BeNull(because: "the coach still has to move the item it placed");
+        Guidance(moved).Should().StartWith("You already moved items",
+            because: "a new overlap after the one move would otherwise start another move, one model call each");
+        moved.SuccessReply.Should().Contain("Cleaning",
+            because: "the turn ends on the prewritten reply naming the remaining overlap instead of moving again");
+    }
+
     private static ModelToolCallRequest Add(string id, string title, string start, string end) =>
         new(id, "add_items", JsonSerializer.Serialize(new
         {

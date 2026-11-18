@@ -33,6 +33,9 @@ public sealed partial class AzureResponsesModelGateway(HttpClient client, string
                 case GatewayUserMessage user:
                     input.Add(new JsonObject { ["role"] = "user", ["content"] = user.Content });
                     break;
+                case GatewayContextDataMessage data:
+                    input.Add(new JsonObject { ["role"] = "user", ["content"] = data.Content });
+                    break;
                 case GatewaySystemMessage system:
                     input.Add(new JsonObject { ["role"] = "system", ["content"] = system.Content });
                     break;
@@ -80,7 +83,7 @@ public sealed partial class AzureResponsesModelGateway(HttpClient client, string
             throw exception;
         }
         using var document = streaming
-            ? await ReadStreamAsync(response, request.OnTextDelta!, cancellationToken)
+            ? await ReadStreamAsync(response, request.OnTextDelta!, request.OnOutputProgress, cancellationToken)
             : await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
         return ParseCompletion(document.RootElement);
     }
@@ -135,7 +138,7 @@ public sealed partial class AzureResponsesModelGateway(HttpClient client, string
         && filters.EnumerateArray().Any(filter => filter.TryGetProperty("blocked", out var blocked) && blocked.ValueKind == JsonValueKind.True);
 
     private static async Task<JsonDocument> ReadStreamAsync(HttpResponseMessage response, Func<string, Task> onText,
-        CancellationToken ct)
+        Action? onProgress, CancellationToken ct)
     {
         using var reader = new StreamReader(await response.Content.ReadAsStreamAsync(ct));
         var data = new StringBuilder();
@@ -166,7 +169,10 @@ public sealed partial class AzureResponsesModelGateway(HttpClient client, string
             if (payload == "[DONE]") return;
             using var doc = JsonDocument.Parse(payload);
             var root = doc.RootElement;
-            switch (root.GetProperty("type").GetString())
+            var type = root.GetProperty("type").GetString();
+            // Text and tool-argument deltas; reasoning streams nothing, so a call that is still thinking reports none.
+            if (type is "response.output_text.delta" or "response.function_call_arguments.delta") onProgress?.Invoke();
+            switch (type)
             {
                 case "response.output_text.delta":
                     var delta = root.GetProperty("delta").GetString();

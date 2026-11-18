@@ -20,7 +20,16 @@ public sealed class AiCoachModuleOptions
     // Size cap of one list_tasks result. 3000 bytes at the 48000 default; grows with a larger budget so a
     // busy week fits in one read, and never exceeds an eighth of the budget.
     public int TaskReadBytes => Math.Min(ContextTokenBudget / 8, Math.Max(3000, ContextTokenBudget / 16));
+    // A model call gets its profile's RequestTimeoutSeconds to start writing. Once it streams output, it runs on
+    // while no gap between pieces exceeds StreamIdleTimeoutSeconds, up to ModelCallMaxSeconds in all: a long
+    // plan written steadily is not cut off at the first-output limit, and a stalled stream is retried early.
     public int ModelRequestTimeoutSeconds { get; set; } = 60;
+    public int StreamIdleTimeoutSeconds { get; set; } = 20;
+    public int ModelCallMaxSeconds { get; set; } = 120;
+    // Longest a turn can run, for releasing a turn whose process stopped. Retry waits are not counted.
+    public TimeSpan TurnTimeLimit => TimeSpan.FromSeconds(
+        Math.Max(Math.Max(ModelRequestTimeoutSeconds, ModelCallMaxSeconds),
+            Models.Values.Select(model => model.RequestTimeoutSeconds).DefaultIfEmpty(0).Max()) * MaxModelCallsPerTurn);
     public int TopicIdleHours { get; set; } = 8;
     public int MessageRetentionDays { get; set; } = 180;
     public int TraceRetentionDays { get; set; } = 90;

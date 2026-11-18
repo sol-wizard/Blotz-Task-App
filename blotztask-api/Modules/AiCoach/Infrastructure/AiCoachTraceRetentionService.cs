@@ -56,7 +56,7 @@ public sealed class AiCoachTraceRetentionService(
             var conversation = ConversationSerializer.Deserialize(record.Payload);
             // Do not race task persistence or a model turn; the next hourly run retries busy segments.
             conversation.ReleaseInterruptedWork(now,
-                TimeSpan.FromSeconds(options.Value.ModelRequestTimeoutSeconds * options.Value.MaxModelCallsPerTurn) + TimeSpan.FromMinutes(2),
+                options.Value.TurnTimeLimit + TimeSpan.FromMinutes(2),
                 TimeSpan.FromMinutes(5));
             if (conversation.RunningTurnId.HasValue || conversation.Drafts.Any(draft => draft.Status == ProposalSetStatus.Processing)) continue;
             var rows = await db.AiCoachMessages.AsNoTracking().Where(message => message.ConversationId == id)

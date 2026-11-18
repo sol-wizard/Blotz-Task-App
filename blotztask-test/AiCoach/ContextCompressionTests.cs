@@ -153,6 +153,37 @@ public sealed class ContextCompressionTests
     }
 
     [Fact]
+    public async Task Handle_HistoryOverBudget_SummarizesEnoughThatTheNextLongExchangesFitWithoutAnotherSummary()
+    {
+        // Arrange: long replies, as in a real Chinese conversation, push history over its budget.
+        var builder = new ModelContextBuilder(Options.Create(CompressionLimits()),
+            NullLogger<ModelContextBuilder>.Instance);
+        static IEnumerable<GatewayMessage> Exchange(int number) =>
+            [new GatewayUserMessage($"第{number}个问题"), new GatewayAssistantMessage(new string('答', 1000), [])];
+        List<GatewayMessage> history = [.. Enumerable.Range(1, 7).SelectMany(Exchange), new GatewayUserMessage("继续")];
+        var first = new ModelTurnRequest(Guid.NewGuid(), history, [], "Australia/Perth", DateTimeOffset.UtcNow,
+            null, 0, ReviewListEnabled: true);
+        var summaries = 0;
+        Task<ModelCompletionResult> Summarize(ModelGatewayRequest _)
+        {
+            summaries++;
+            return Task.FromResult(new ModelCompletionResult("用户在连续问问题。", [], ModelFinishReason.Stop, 0, 0, 0));
+        }
+        var afterFirst = await builder.BuildAsync(first, [], Summarize);
+        summaries.Should().Be(1, because: "the starting history is over budget");
+
+        // Act: two more long exchanges arrive after the compacted history.
+        List<GatewayMessage> later = [.. history.Skip(afterFirst.SummarizedMessageCount),
+            new GatewayAssistantMessage(new string('答', 1000), []), .. Exchange(8), new GatewayUserMessage("再继续")];
+        await builder.BuildAsync(first with { History = later, Summary = afterFirst.Summary, SummarizedMessageCount = 0 },
+            [], Summarize);
+
+        // Assert
+        summaries.Should().Be(1, because: "compaction must leave room for further turns instead of stopping just under " +
+            "the budget, which blocked the reply with another summary call every two or three turns");
+    }
+
+    [Fact]
     public async Task Handle_LargeToolExchange_SummarizesWholeExchangeAndPreservesCurrentState()
     {
         // Arrange: a complete tool exchange exceeds the preferred 32,000 / 3 byte batch.
