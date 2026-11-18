@@ -152,6 +152,18 @@
       "criteria": [ "接住“努力像被浪费”的挫败感，不急着给一整套方法；不说教。" ]
     },
     {
+      "id": "exam",
+      "category": "emotional",
+      "source": "真机截图：今天好烦 → 考试没考好（回复停在陈述上，对话聊死）",
+      "runs": 3,
+      "localTime": "2026-11-18T11:05:00+08:00",
+      "turns": [
+        { "user": "今天好烦", "tone": ["asksOrOffersButtons", "noStockEmpathy"], "business": ["noNewDraft"] },
+        { "user": "考试没考好", "tone": ["asksOrOffersButtons", "noAdvice"], "business": ["noNewDraft"] }
+      ],
+      "criteria": [ "先接住情绪，回应具体的事，不说教，不给没要求的建议。", "不要把对话聊死：留一个关于这件事本身、容易回答的问题或按钮，而不是问用户想要哪种帮助。" ]
+    },
+    {
       "id": "anxious-night",
       "category": "emotional",
       "source": "语气测试",
