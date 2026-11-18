@@ -20,12 +20,13 @@ public sealed class ConfiguredModelGateway(AzureOpenAIClient azureClient, IHttpC
             new AzureOpenAIClientOptions { RetryPolicy = new ClientRetryPolicy(0) })
         : azureClient;
 
-    public IModelGateway OpenTurn() => Open(null);
-    public IModelGateway OpenTurn(Guid userId) => Open(userId);
+    public IModelGateway OpenTurn() => Open(null, null);
+    public IModelGateway OpenTurn(Guid userId) => Open(userId, null);
+    public IModelGateway OpenTurn(Guid userId, string? model) => Open(userId, model);
 
-    private BudgetedModelGateway Open(Guid? userId)
+    private BudgetedModelGateway Open(Guid? userId, string? model)
     {
-        var profile = AiCoachModelProfile.Select(options.Value);
+        var profile = AiCoachModelProfile.Select(options.Value, model);
         IModelGateway adapter = profile.Api switch
         {
             "ChatCompletions" => new AzureOpenAiModelGateway(_coachClient,

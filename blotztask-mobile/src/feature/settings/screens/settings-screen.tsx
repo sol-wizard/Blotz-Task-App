@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, Platform, ScrollView, Linking, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -22,6 +22,12 @@ import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPref
 import { useTranslation } from "react-i18next";
 import { useBadgesQuery } from "@/feature/badge/hooks/useBadgesQuery";
 import LoadingScreen from "@/shared/components/loading-screen";
+import {
+  CoachModel,
+  getCoachModel,
+  isCoachModelSwitchEnabled,
+  setCoachModel,
+} from "@/feature/ai-coach/services/coach-model-override";
 
 const WEBSITE_URL = "https://www.blotztask.com/";
 const PRIVACY_POLICY_URLS = {
@@ -35,6 +41,12 @@ const XIAOHONGSHU_URL =
 const LANGUAGE_OPTIONS: DropdownOption<Language>[] = [
   { label: "中文", value: Language.Zh },
   { label: "English", value: Language.En },
+];
+
+// Model names stay untranslated: testers compare them against the API config and traces.
+const COACH_MODEL_OPTIONS: DropdownOption<CoachModel>[] = [
+  { label: "GPT-6 Luna", value: "luna6" },
+  { label: "GPT-6.1 Sol", value: "sol" },
 ];
 
 export default function SettingsScreen() {
@@ -235,6 +247,8 @@ export default function SettingsScreen() {
           />
         </SettingsSection>
 
+        {isCoachModelSwitchEnabled && <CoachModelSection />}
+
         <SettingsSection>
           <SettingsRow
             label={t("menu.betaFeatures")}
@@ -248,5 +262,41 @@ export default function SettingsScreen() {
         </Text>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/** Dev and staging builds only; see coach-model-override. */
+function CoachModelSection() {
+  const { t } = useTranslation("settings");
+  const [model, setModel] = useState<CoachModel | null>(null);
+
+  useEffect(() => {
+    getCoachModel().then(setModel);
+  }, []);
+
+  const handleChange = (next: CoachModel) => {
+    setModel(next);
+    setCoachModel(next).catch(() => getCoachModel().then(setModel));
+  };
+
+  return (
+    <SettingsSection title={t("menu.developer")}>
+      <SettingsRow
+        label={t("menu.aiCoachModel")}
+        trailing={
+          model && (
+            <View className="bg-background rounded-full px-3 py-1">
+              <AnimatedDropdown
+                value={model}
+                options={COACH_MODEL_OPTIONS}
+                onChange={handleChange}
+                minWidth={0}
+                panelMinWidth={160}
+              />
+            </View>
+          )
+        }
+      />
+    </SettingsSection>
   );
 }

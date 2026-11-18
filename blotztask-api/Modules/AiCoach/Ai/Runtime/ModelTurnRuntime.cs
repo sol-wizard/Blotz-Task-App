@@ -25,7 +25,9 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     // Saved tasks for today and the next six days, read once at the start of the turn; set by the runtime.
     string? UpcomingSchedule = null,
     // The topic's latest replies: unsaved items suggested before them are shown briefly in the draft context.
-    IReadOnlySet<Guid>? RecentReplyIds = null);
+    IReadOnlySet<Guid>? RecentReplyIds = null,
+    // Model profile the client asked for; honoured only where AiCoach:AllowModelOverride is on.
+    string? Model = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -84,7 +86,7 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
     public async Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
     {
         var limits = options.Value;
-        var turnGateway = request.UserId is { } userId ? gateway.OpenTurn(userId) : gateway.OpenTurn();
+        var turnGateway = request.UserId is { } userId ? gateway.OpenTurn(userId, request.Model) : gateway.OpenTurn();
         var model = turnGateway.Profile;
         decimal? estimatedUsd = 0;
         logger.LogInformation(

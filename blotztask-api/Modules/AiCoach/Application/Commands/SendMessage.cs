@@ -21,6 +21,12 @@ public class SendMessageRequest
     /// <summary>"followup" when the user tapped a suggested next message; used for usage metrics only.</summary>
     [RegularExpression("^followup$")]
     public string? Source { get; init; }
+    /// <summary>
+    /// AI Coach model profile to use for this message, e.g. "luna6" or "sol". Dev and staging only
+    /// (AiCoach:AllowModelOverride); ignored elsewhere and when it names no configured profile.
+    /// </summary>
+    [StringLength(64)]
+    public string? Model { get; init; }
 }
 
 public class SendMessageCommand
@@ -34,6 +40,12 @@ public class SendMessageCommand
     public int? ExpectedVersion { get; init; }
     public string? TimeZoneId { get; init; }
     public string? Source { get; init; }
+    /// <summary>
+    /// AI Coach model profile to use for this message, e.g. "luna6" or "sol". Dev and staging only
+    /// (AiCoach:AllowModelOverride); ignored elsewhere and when it names no configured profile.
+    /// </summary>
+    [StringLength(64)]
+    public string? Model { get; init; }
 }
 
 public class SendMessageCommandHandler(ConversationApplication application)
@@ -44,6 +56,6 @@ public class SendMessageCommandHandler(ConversationApplication application)
             throw new ValidationException("Message must not be empty.");
         return application.SendAsync(command.UserId, command.ConversationId, command.MessageId,
             command.Content.Trim(), command.ExpectedVersion, ct, command.TimeZoneId, command.ReviewListEnabled, command.Stream,
-            command.Source);
+            command.Source, command.Model);
     }
 }

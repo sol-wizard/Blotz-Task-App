@@ -5,6 +5,9 @@ public sealed class AiCoachModuleOptions
     public const string SectionName = "AiCoach";
     public string DefaultModel { get; set; } = "";
     public Dictionary<string, AiCoachModelOptions> Models { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    // Dev and staging only: lets a client choose one of Models per message (SendMessageRequest.Model) to
+    // compare models. Production leaves it off, so the field is ignored and every turn uses DefaultModel.
+    public bool AllowModelOverride { get; set; }
     // Perth-calendar-month spend limits, enforced together in every environment that sets both:
     // a cap for the whole environment and a free allowance per user. No top-ups.
     public decimal? MonthlyBudgetUsd { get; set; }

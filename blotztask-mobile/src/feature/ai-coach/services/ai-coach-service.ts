@@ -11,6 +11,7 @@ import {
   SetDraftItemAddedResultDto,
 } from "../models/ai-coach-dto";
 import { AiCoachAllowanceDto } from "../models/ai-coach-allowance";
+import { coachModelForRequest } from "./coach-model-override";
 
 // Keep protocol negotiation local to AI Coach, including reads and history pagination.
 const protocol = { headers: { "X-Ai-Coach-Protocol": "6" } };
@@ -69,6 +70,7 @@ export async function sendMessage(
     content,
     expectedVersion,
     timeZoneId: deviceTimeZoneId(),
+    model: await coachModelForRequest(),
   });
 }
 

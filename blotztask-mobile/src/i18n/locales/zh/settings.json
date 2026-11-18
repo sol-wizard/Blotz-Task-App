@@ -18,6 +18,8 @@
     "xiaohongshu": "关注我们 · 小红书",
     "privacyPolicy": "隐私声明",
     "betaFeatures": "测试功能",
+    "developer": "开发者",
+    "aiCoachModel": "AI Coach 模型",
     "version": "版本 {{version}}（{{buildNumber}}）"
   },
   "betaFeatures": {
