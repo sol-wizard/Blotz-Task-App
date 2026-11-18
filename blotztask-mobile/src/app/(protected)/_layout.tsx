@@ -6,6 +6,7 @@ import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework
 import { ScreenshotFeedbackCard } from "@/feature/settings/components/screenshot-feedback-card";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { useReviewReminderSync } from "@/feature/review/hooks/useReviewReminderSync";
 import { useRecordAppOpen } from "@/shared/hooks/useRecordAppOpen";
 import { useSyncTodayTasksWidget } from "@/feature/widget/hooks/useSyncTodayTasksWidget";
 import { usePrefetchTodayScreen } from "@/feature/calendar/hooks/usePrefetchTodayScreen";
@@ -38,6 +39,7 @@ export default function ProtectedLayout() {
   usePushNotificationSetup();
   const badgeQueue = useBadgeQueueStore((state) => state.queue);
   const dismissBadge = useBadgeQueueStore((state) => state.dismiss);
+  useReviewReminderSync();
 
   return (
     <FireworkProvider>
@@ -95,6 +97,7 @@ export default function ProtectedLayout() {
             options={{ headerShown: false, gestureEnabled: false }}
           />
           <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
+          <Stack.Screen name="ai-home" options={{ headerShown: false }} />
           <Stack.Screen name="badge-wall" options={{ headerShown: false }} />
           <Stack.Screen name="badge-details" options={{ headerShown: false }} />
           <Stack.Screen name="feedback" options={{ headerShown: false }} />

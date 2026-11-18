@@ -96,6 +96,13 @@ export function handleOtherErrors(error: AxiosError) {
     // You could show a toast: "Check your internet connection"
   } else {
     switch (status) {
+      case 400:
+      case 404:
+      case 409:
+      case 422:
+        // Expected outcomes the caller handles (validation, missing item, conflicts such as the AI Coach's
+        // ScheduleConflict). console.error here opened the red dev error overlay for a normal result.
+        break;
       case 403:
         console.warn("Access forbidden");
         // maybe router.replace or show "you don't have permissions" UI

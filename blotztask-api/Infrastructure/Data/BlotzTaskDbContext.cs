@@ -1,3 +1,4 @@
+using BlotzTask.Modules.UserUnderstanding.Domain;
 using BlotzTask.Infrastructure.Data.Configurations;
 using BlotzTask.Infrastructure.Data.SeedData;
 using BlotzTask.Modules.Badges.Domain;
@@ -10,6 +11,8 @@ using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Reviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.Referrals.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,7 +46,16 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
     public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
+    public DbSet<AiCoachFeedback> AiCoachFeedback => Set<AiCoachFeedback>();
+    public DbSet<AiCoachTraceEvent> AiCoachTraceEvents => Set<AiCoachTraceEvent>();
+    public DbSet<AiCoachToolSet> AiCoachToolSets => Set<AiCoachToolSet>();
+    public DbSet<AiCoachTurnSummary> AiCoachTurnSummaries => Set<AiCoachTurnSummary>();
+    public DbSet<AiCoachConversationRecord> AiCoachConversations => Set<AiCoachConversationRecord>();
+    public DbSet<AiCoachMessage> AiCoachMessages => Set<AiCoachMessage>();
+    public DbSet<AiCoachDraftConfirmation> AiCoachDraftConfirmations => Set<AiCoachDraftConfirmation>();
+    public DbSet<AiCoachBudgetCharge> AiCoachBudgetCharges => Set<AiCoachBudgetCharge>();
     public DbSet<UserActivityDay> UserActivityDays { get; set; }
+    public DbSet<UserMemory> UserMemories => Set<UserMemory>();
 
     public DbSet<ReferralCode> ReferralCodes { get; set; }
     public DbSet<Referral> Referrals { get; set; }

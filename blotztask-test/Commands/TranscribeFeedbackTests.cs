@@ -1,5 +1,6 @@
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Feedback.Commands;
+using BlotzTask.Shared.Speech;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,8 +13,9 @@ public class TranscribeFeedbackTests
     // Every case here is rejected before Groq is called, so a placeholder key never leaves the machine.
     private readonly TranscribeFeedbackCommandHandler _handler = new(
         new SpeechTranscriptionService(
-            new AudioClient("whisper-large-v3-turbo", "test-key"),
-            NullLogger<SpeechTranscriptionService>.Instance),
+            new AudioTranscriptionService(
+                new AudioClient("whisper-large-v3-turbo", "test-key"),
+                NullLogger<AudioTranscriptionService>.Instance)),
         NullLogger<TranscribeFeedbackCommandHandler>.Instance);
 
     private static FormFile CreateFile(long length, string contentType) =>

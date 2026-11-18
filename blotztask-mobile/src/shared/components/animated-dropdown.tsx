@@ -21,6 +21,8 @@ type Props<T> = {
 
   // UI
   minWidth?: number;
+  // Lets a small trigger open a wider panel; defaults to minWidth.
+  panelMinWidth?: number;
   maxVisibleItems?: number;
   itemHeight?: number;
 
@@ -39,6 +41,7 @@ export function AnimatedDropdown<T>({
   placeholder = "Select",
 
   minWidth = 230,
+  panelMinWidth = minWidth,
   maxVisibleItems = 6,
   itemHeight = 44,
 
@@ -47,7 +50,7 @@ export function AnimatedDropdown<T>({
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   // animation progress: 0 -> closed, 1 -> open
   const animationProgress = useSharedValue(0);
@@ -93,9 +96,11 @@ export function AnimatedDropdown<T>({
   // Flip above the trigger when the panel would run past the bottom of the screen.
   const dropUp = panelTopBelow + panelHeight > windowHeight - 8;
 
-  const panelLeft = anchor?.x ?? 0;
   const panelTop = dropUp ? anchorTop - 6 - panelHeight : panelTopBelow;
-  const panelWidth = Math.max(minWidth, anchor?.w ?? minWidth);
+  const panelWidth = Math.max(panelMinWidth, anchor?.w ?? panelMinWidth);
+  // A panel wider than a trigger near the right edge would run off screen, so pull it back in
+  // (but never past the left edge).
+  const panelLeft = Math.max(16, Math.min(anchor?.x ?? 0, windowWidth - panelWidth - 16));
 
   return (
     <>

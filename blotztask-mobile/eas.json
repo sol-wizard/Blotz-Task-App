@@ -71,6 +71,27 @@
         "simulator": true
       }
     },
+    "v2-preview": {
+      "extends": "preview",
+      "channel": "v2-preview",
+      "ios": {
+        "env": {
+          "APP_VERSION": "2.0.0"
+        }
+      },
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "APP_VERSION": "2.0.0"
+        }
+      },
+      "env": {
+        "APP_DISPLAY_NAME": "Blotz V2",
+        "EXPO_PUBLIC_URL": "https://app-blotz-task-api-v2.azurewebsites.net/",
+        "EXPO_PUBLIC_URL_WITH_API": "https://app-blotz-task-api-v2.azurewebsites.net/api",
+        "EXPO_PUBLIC_APP_ENV": "v2-preview"
+      }
+    },
     "preview-apk": {
       "extends": "preview",
       "android": {
@@ -124,6 +145,11 @@
       },
       "android": {
         "track": "internal"
+      }
+    },
+    "v2-preview": {
+      "ios": {
+        "ascAppId": "6761295231"
       }
     },
     "production": {

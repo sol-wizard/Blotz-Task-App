@@ -1,3 +1,4 @@
+using BlotzTask.Shared.Speech;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
@@ -56,6 +57,8 @@ public static class AgentFrameworkServiceExtensions
                 new OpenAIClientOptions { Endpoint = new Uri(options.Endpoint) });
             return groqClient.GetAudioClient(options.SpeechModel);
         });
+
+        services.AddScoped<AudioTranscriptionService>();
 
         return services;
     }

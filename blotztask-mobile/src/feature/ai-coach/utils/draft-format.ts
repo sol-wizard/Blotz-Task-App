@@ -1,0 +1,57 @@
+import type { TFunction } from "i18next";
+import { fromZonedTime } from "date-fns-tz";
+import { DraftRecurrenceDto, DraftScheduleAssessmentDto, TaskDraftItemDto } from "../models/ai-coach-dto";
+
+/** Warning for a calendar check that could not run: too many dates never passes on retry, a failed read may. */
+export function scheduleUnverifiedText(assessment: Pick<DraftScheduleAssessmentDto, "reason"> | null | undefined,
+  t: TFunction<"aiCoach">): string {
+  return t(assessment?.reason === "too_many_dates" ? "draft.scheduleTooManyDates" : "draft.scheduleUnverified");
+}
+
+/** Matches the server's grace: a start within the last 5 minutes still counts as now. */
+const PAST_START_GRACE_MS = 5 * 60 * 1000;
+
+/** True when the item's start is more than the grace period before `now`. */
+export const isPastStart = (item: Pick<TaskDraftItemDto, "date" | "startTime" | "timeZoneId">, now: number) =>
+  !!item.date && !!item.startTime &&
+  fromZonedTime(`${item.date}T${item.startTime}:00`, item.timeZoneId).getTime() < now - PAST_START_GRACE_MS;
+
+const dayKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+/** "Today 09:00–11:00", "Tomorrow", "Mon, Oct 20 15:00–16:00"; null when the item has no date yet. */
+export function formatDraftWhen(item: Pick<TaskDraftItemDto, "date" | "startTime" | "endTime">,
+  t: TFunction<"aiCoach">, language: string, separator = " "): string | null {
+  if (!item.date) return null;
+  const today = new Date();
+  const offset = (days: number) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() + days);
+    return dayKey(date);
+  };
+  const [year, month, day] = item.date.split("-").map(Number);
+  const day0 = item.date === offset(0) ? t("chat.today")
+    : item.date === offset(1) ? t("draft.tomorrow")
+    : item.date === offset(-1) ? t("chat.yesterday")
+    : new Date(year, month - 1, day).toLocaleDateString(language, {
+      weekday: "short", month: "short", day: "numeric",
+      ...(year !== today.getFullYear() ? { year: "numeric" } : {}),
+    });
+  if (!item.startTime) return day0;
+  return `${day0}${separator}${item.startTime}–${item.endTime ?? "—"}`;
+}
+
+export function formatRecurrence(recurrence: DraftRecurrenceDto, t: TFunction<"aiCoach">): string {
+  const parts = [t(`editModal.frequency.${recurrence.frequency}`) +
+    (recurrence.interval > 1 ? ` × ${recurrence.interval}` : "")];
+  if (recurrence.frequency === "Weekly" && recurrence.daysOfWeek != null) {
+    parts.push([1, 2, 4, 8, 16, 32, 64]
+      .map((flag, index) => ((recurrence.daysOfWeek ?? 0) & flag ? t(`editModal.weekday.${index}`) : null))
+      .filter(Boolean).join("、"));
+  }
+  if (recurrence.frequency === "Monthly" && recurrence.dayOfMonth != null) {
+    parts.push(`${t("editModal.dayOfMonth")} ${recurrence.dayOfMonth}`);
+  }
+  if (recurrence.endDate) parts.push(`${t("editModal.endDate")}: ${recurrence.endDate}`);
+  return parts.join(" · ");
+}

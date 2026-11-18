@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Text } from "react-native";
 import { Controller, Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
@@ -36,14 +36,7 @@ export const RecurrenceSelect = ({
           className="flex-row items-center justify-between"
           layout={MotionAnimations.layout}
         >
-          <View className="flex-row items-center mt-1">
-            <Text className="font-baloo text-secondary text-xl">{t("form.repeat")}</Text>
-            <View className="ml-2 rounded-full bg-lime-100 px-2 py-0.5">
-              <Text className="font-balooBold text-[11px] uppercase text-highlight">
-                {t("form.repeatBeta")}
-              </Text>
-            </View>
-          </View>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.repeat")}</Text>
           <AnimatedDropdown
             value={value}
             onChange={(nextValue) => {

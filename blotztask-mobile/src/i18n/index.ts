@@ -27,6 +27,8 @@ import enWidget from "./locales/en/widget.json";
 import zhWidget from "./locales/zh/widget.json";
 import enWhatsNew from "./locales/en/whats-new.json";
 import zhWhatsNew from "./locales/zh/whats-new.json";
+import enAiCoach from "./locales/en/ai-coach.json";
+import zhAiCoach from "./locales/zh/ai-coach.json";
 
 // Get device language code (e.g., 'en', 'zh')
 const getDeviceLanguage = (): string => {
@@ -58,6 +60,7 @@ i18n.use(initReactI18next).init({
       badge: enBadge,
       widget: enWidget,
       whatsNew: enWhatsNew,
+      aiCoach: enAiCoach,
     },
     zh: {
       common: zhCommon,
@@ -72,6 +75,7 @@ i18n.use(initReactI18next).init({
       badge: zhBadge,
       widget: zhWidget,
       whatsNew: zhWhatsNew,
+      aiCoach: zhAiCoach,
     },
   },
   lng: getDeviceLanguage(), // Will be overridden by user preference from backend

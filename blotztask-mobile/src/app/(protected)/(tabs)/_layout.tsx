@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Tabs, router, useGlobalSearchParams, usePathname } from "expo-router";
+import { Tabs, router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,6 +8,8 @@ import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/bottom-nav-image";
 import { AiTabButtonIcon } from "@/shared/components/ai-tab-button-icon";
 import { theme } from "@/shared/constants/theme";
+import { useOpenReviewFromReminder } from "@/feature/review/hooks/useOpenReviewFromReminder";
+import { useHasUnreadLetter } from "@/feature/review/hooks/useHasUnreadLetter";
 import {
   VoiceCoachOverlay,
   type ButtonFrame,
@@ -23,7 +26,7 @@ function UnfocusedTabIcon({ children }: { children: React.ReactNode }) {
 function getTabIcon(routeKey: string, focused: boolean) {
   const DashedStar = ASSETS.dashedStar;
   const DashedHouse = ASSETS.dashedHouse;
-  const DashedPlus = ASSETS.dashedPlus;
+  const DashedEnvelope = ASSETS.dashedEnvelope;
   const DashedSettings = ASSETS.dashedSettings;
 
   switch (routeKey) {
@@ -43,10 +46,13 @@ function getTabIcon(routeKey: string, focused: boolean) {
           <DashedStar width={24} height={24} />
         </UnfocusedTabIcon>
       );
-    case "createTask":
-      return (
+    case "review":
+      // TODO: swap in the design team's selected envelope (same style as greenHouse) when it arrives.
+      return focused ? (
+        <BottomNavImage source={ASSETS.letterEnvelope} imageClassName="w-8 h-[26px]" />
+      ) : (
         <UnfocusedTabIcon>
-          <DashedPlus width={24} height={24} />
+          <DashedEnvelope width={24} height={24} />
         </UnfocusedTabIcon>
       );
     case "settings":
@@ -62,14 +68,26 @@ function getTabIcon(routeKey: string, focused: boolean) {
   }
 }
 
+// The Review tab icon, with a red dot while the latest weekly or monthly letter is unread.
+function ReviewTabIcon({ focused }: { focused: boolean }) {
+  const hasUnreadLetter = useHasUnreadLetter();
+
+  return (
+    <View>
+      {getTabIcon("review", focused)}
+      {hasUnreadLetter && (
+        <View className="absolute top-0 right-0 w-3 h-3 rounded-full bg-red-500 border-2 border-background" />
+      )}
+    </View>
+  );
+}
+
 export default function ProtectedTabsLayout() {
   const { t } = useTranslation("common");
   const insets = useSafeAreaInsets();
-  const pathname = usePathname();
-  // Only the Calendar tab sets `date`, so "+" from any other tab opens the form on today.
-  const { date: calendarDate } = useGlobalSearchParams<{ date?: string }>();
   const aiButtonRef = useRef<View>(null);
   const [aiButtonFrame, setAiButtonFrame] = useState<ButtonFrame | null>(null);
+  useOpenReviewFromReminder();
 
   // The voice coach puts its spotlight exactly where this button is drawn.
   const reportAiButtonFrame = () => {
@@ -122,7 +140,12 @@ export default function ProtectedTabsLayout() {
                 className="flex-1 items-center justify-center"
                 accessibilityRole="button"
                 accessibilityLabel={t("bottomNav.aiAssistant")}
-                onPress={() => router.push("/ai-task-sheet")}
+                onPress={() => router.push("/ai-home")}
+                onLongPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/ai-task-sheet");
+                }}
+                delayLongPress={350}
               >
                 <AiTabButtonIcon />
               </Pressable>
@@ -130,24 +153,10 @@ export default function ProtectedTabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="create-task"
+          name="review"
           options={{
-            tabBarButton: () => (
-              <Pressable
-                className="flex-1 items-center justify-center"
-                accessibilityRole="button"
-                accessibilityLabel={t("bottomNav.newTask")}
-                onPress={() =>
-                  router.push(
-                    pathname === "/" && calendarDate
-                      ? { pathname: "/task-create", params: { date: calendarDate } }
-                      : "/task-create",
-                  )
-                }
-              >
-                {getTabIcon("createTask", true)}
-              </Pressable>
-            ),
+            tabBarIcon: ({ focused }) => <ReviewTabIcon focused={focused} />,
+            tabBarAccessibilityLabel: t("bottomNav.review"),
           }}
         />
         <Tabs.Screen
@@ -155,6 +164,8 @@ export default function ProtectedTabsLayout() {
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("settings", focused),
             tabBarAccessibilityLabel: t("bottomNav.settings"),
+            // Coming back to Settings shows its home, not the sub-page the user left on.
+            popToTopOnBlur: true,
           }}
         />
       </Tabs>
