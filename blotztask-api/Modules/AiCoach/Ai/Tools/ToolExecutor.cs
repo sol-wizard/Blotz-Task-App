@@ -17,13 +17,14 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
     MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-23";
+    public const string ContractVersion = "coach-tools-24";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
         "Read the signed-in user's task-app schedule for dates outside today and the next six days, which are already supplied this turn; only when the current request needs existing tasks or availability on those dates. Dates are inclusive, at most 7 days. You can read at most twice per turn, so cover the whole range you need in one call instead of one call per day; if a result is truncated, use the second read for the dates its note names. Results list each date's tasks as lines like \"09:00-11:00 title\", flagged [recurring], [done], [overdue] or [due ...] when set; \"(reminder)\" marks a single-time task. \"free\" lists each date's gaps of 30 minutes or more between 07:00 and 22:00 that no unfinished timed task covers; pick suggested times from it (the user's routines and wishes still apply) instead of guessing from the lines. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Every item counts, including one with a single time (a timed reminder) or an unfamiliar title: before saying when the user is free, check all of them. Saved drafts and earlier reads may be out of date: check the date in this turn's schedule before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
         """{"type":"object","properties":{"startDate":{"type":"string","description":"yyyy-MM-dd in the user's local time zone"},"endDate":{"type":"string","description":"yyyy-MM-dd inclusive; at most 7 days from startDate"}},"required":["startDate","endDate"],"additionalProperties":false}""");
     private readonly Dictionary<string, (ModelToolCallRequest Request, ToolExecutionResult Result)> _results = [];
     private readonly HashSet<(Guid ItemId, string TaskIdentity)> _reportedConflicts = [];
+    private bool _moveRequested;
     private int _readCalls;
     public int ExecutedCalls { get; private set; }
     public bool BudgetExhausted => ExecutedCalls >= limits.MaxToolCallsPerTurn;
@@ -65,15 +66,24 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
             // Every check repeats the overlaps still there; without saying which are old news, the coach kept
             // moving the same items around them, one model call per move.
             var fresh = shown.Count(value => _reportedConflicts.Add((value.Conflict.ItemId, value.Conflict.TaskIdentity)));
+            // One move per turn: in a packed week each move could land on another task, and the coach kept moving
+            // items one model call at a time (six calls and a timeout for one sprint plan).
+            var moveSpent = _moveRequested && shown.Length > 0;
             var guidance = shown.Length == 0 ? null
                 : fresh == 0
                     ? "No new overlaps: these were already reported this turn and changing items has not removed them. " +
                       "Stop changing items for them; reply now, naming each overlap once and offering to move one as a follow-up."
+                : moveSpent
+                    ? "You already moved items for overlaps once this turn. Do not move them again; reply now, naming each " +
+                      "overlap once and offering to move one as a follow-up."
                     : "Overlaps with a time the user gave are theirs to settle: keep the item and name the overlap in your reply. " +
                       "Move only items whose time you suggested, all in one update_items call, then reply." +
                       (shown.Any(value => value.Duplicate)
                           ? " An overlap marked likelyDuplicate is the same task already saved: remove that item rather than move it."
                           : "");
+            if (fresh > 0 && !moveSpent && shown.Any(value => items.TryGetValue(value.Conflict.ItemId, out var item)
+                    && item.SuggestedFields?.Any(field => field is "date" or "startTime" or "endTime") == true))
+                _moveRequested = true;
             var schedule = new
             {
                 status,
@@ -96,7 +106,8 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
                     "clear" => ReadSuccessReply(call.Name, call.ArgumentsJson, allowMultiple: true),
                     "incomplete" or "partial" => mutation.SuccessReply,
                     "conflict" => ReadSuccessReply(call.Name, call.ArgumentsJson, allowMultiple: true) is { } reply
-                        ? ConflictReply(reply, shown.Select(value => value.Conflict).ToArray(), shown.Any(value => value.Duplicate), items)
+                        ? ConflictReply(reply, shown.Select(value => value.Conflict).ToArray(), shown.Any(value => value.Duplicate), items,
+                            keepSuggestedTimes: moveSpent)
                         : null,
                     _ => null,
                 },
@@ -246,12 +257,13 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     /// only restated the overlaps cost 1.4-2.4 s. An item at a time the coach suggested should move instead, and a
     /// likely duplicate should go, so those still get the model call.
     /// </summary>
+    /// <param name="keepSuggestedTimes">True once the turn's one move is spent: suggested times stay where they are too.</param>
     internal static string? ConflictReply(string successReply, IReadOnlyList<ScheduleConflict> conflicts, bool anyDuplicate,
-        IReadOnlyDictionary<Guid, TaskProposal> items)
+        IReadOnlyDictionary<Guid, TaskProposal> items, bool keepSuggestedTimes = false)
     {
         if (conflicts.Count == 0 || anyDuplicate) return null;
         if (conflicts.Any(conflict => !items.TryGetValue(conflict.ItemId, out var item)
-            || item.SuggestedFields?.Any(field => field is "date" or "startTime" or "endTime") == true)) return null;
+            || (!keepSuggestedTimes && item.SuggestedFields?.Any(field => field is "date" or "startTime" or "endTime") == true))) return null;
         var chinese = successReply.Any(character => character is >= '\u4e00' and <= '\u9fff');
         // Two drafts at the same time are reported once for each of them; name the pair once.
         var named = new HashSet<(Guid, string)>();

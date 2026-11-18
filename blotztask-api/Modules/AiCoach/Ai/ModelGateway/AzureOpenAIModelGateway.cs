@@ -27,6 +27,7 @@ public sealed class AzureOpenAiModelGateway(
             messages.Add(message switch
             {
                 GatewayUserMessage user => new UserChatMessage(user.Content),
+                GatewayContextDataMessage data => new UserChatMessage(data.Content),
                 GatewaySystemMessage system => new SystemChatMessage(system.Content),
                 GatewayAssistantMessage assistant => ToAssistantMessage(assistant),
                 GatewayToolResultMessage tool => new ToolChatMessage(tool.ToolCallId, tool.Content),
@@ -62,6 +63,7 @@ public sealed class AzureOpenAiModelGateway(
             {
                 reason = update.FinishReason ?? reason;
                 usage = update.Usage ?? usage;
+                if (update.ContentUpdate.Count > 0 || update.ToolCallUpdates.Count > 0) request.OnOutputProgress?.Invoke();
                 foreach (var part in update.ContentUpdate)
                 {
                     if (string.IsNullOrEmpty(part.Text)) continue;

@@ -197,8 +197,7 @@ public sealed class SqlConversationStore(IServiceScopeFactory scopes, TimeProvid
         _revisions.AddOrUpdate(conversation, new(record.Revision, conversation.Messages));
         // Past every model budget, a running turn belongs to a stopped process. The release is saved with
         // the next write; until then each load repeats it identically.
-        var turnLimit = TimeSpan.FromSeconds(options.Value.ModelRequestTimeoutSeconds * options.Value.MaxModelCallsPerTurn)
-            + TimeSpan.FromMinutes(2);
+        var turnLimit = options.Value.TurnTimeLimit + TimeSpan.FromMinutes(2);
         if (conversation.ReleaseInterruptedWork(clock.GetUtcNow(), turnLimit, InterruptedSaveAfter))
         {
             foreach (var draft in conversation.Drafts) conversation.UpdateDraftSnapshots(draft);

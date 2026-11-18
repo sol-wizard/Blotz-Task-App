@@ -23,7 +23,9 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     // Every model call in the turn, compression included, is charged to this user's allowance.
     Guid? UserId = null,
     // Saved tasks for today and the next six days, read once at the start of the turn; set by the runtime.
-    string? UpcomingSchedule = null);
+    string? UpcomingSchedule = null,
+    // The topic's latest replies: unsaved items suggested before them are shown briefly in the draft context.
+    IReadOnlySet<Guid>? RecentReplyIds = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,
@@ -395,11 +397,21 @@ public sealed class ModelTurnRuntime(IModelGateway gateway, IOptions<AiCoachModu
             }
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeout.CancelAfter(TimeSpan.FromSeconds(model?.RequestTimeoutSeconds ?? limits.ModelRequestTimeoutSeconds));
+            var firstOutput = TimeSpan.FromSeconds(model?.RequestTimeoutSeconds ?? limits.ModelRequestTimeoutSeconds);
+            var callLimit = TimeSpan.FromSeconds(Math.Max(limits.ModelCallMaxSeconds, firstOutput.TotalSeconds));
+            var idle = TimeSpan.FromSeconds(limits.StreamIdleTimeoutSeconds);
+            timeout.CancelAfter(firstOutput);
+            // The first-output limit alone cut off a long plan the model was still writing. Each streamed piece
+            // now restarts a short idle clock instead, never past the call's overall limit.
+            void OnProgress()
+            {
+                var left = callLimit - stopwatch.Elapsed;
+                if (left > TimeSpan.Zero) timeout.CancelAfter(left < idle ? left : idle);
+            }
             ModelCompletionResult completion;
             try
             {
-                completion = await turnGateway.CompleteAsync(modelRequest, timeout.Token);
+                completion = await turnGateway.CompleteAsync(modelRequest with { OnOutputProgress = OnProgress }, timeout.Token);
             }
             catch (Exception ex)
             {

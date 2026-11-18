@@ -23,7 +23,10 @@ public sealed record ModelGatewayRequest(
     int? MaxOutputTokens = null,
     Func<string, Task>? OnTextDelta = null,
     // Replaces the profile's reasoning effort for this call; ignored by profiles that do not reason.
-    string? ReasoningEffort = null);
+    string? ReasoningEffort = null,
+    // Called for each streamed piece of output (reply text or tool arguments), so the caller can tell a slow
+    // call that is still writing from one that has stalled.
+    Action? OnOutputProgress = null);
 
 /// <summary>Limits for the coach's own background calls: context summaries and topic digests.</summary>
 public static class BackgroundModelCall
@@ -48,11 +51,20 @@ public sealed record GatewayToolDefinition(
 [JsonDerivedType(typeof(GatewaySystemMessage), "system")]
 [JsonDerivedType(typeof(GatewayAssistantMessage), "assistant")]
 [JsonDerivedType(typeof(GatewayToolResultMessage), "tool")]
+[JsonDerivedType(typeof(GatewayContextDataMessage), "context")]
 public abstract record GatewayMessage;
 
 public sealed record GatewayUserMessage(string Content) : GatewayMessage;
 
 public sealed record GatewaySystemMessage(string Content) : GatewayMessage;
+
+/// <summary>
+/// App-supplied data that changes within a topic (the history summary, the previous topic's summary), sent in the
+/// user role. On the Responses API a change to any system message before the first user message drops the whole
+/// prompt-cache hit, including the unchanged prompt and tools; a user-role message keeps that prefix cached.
+/// Its content must say it is data from the app, not the user's words.
+/// </summary>
+public sealed record GatewayContextDataMessage(string Content) : GatewayMessage;
 
 public sealed record GatewayAssistantMessage(
     string? Content,

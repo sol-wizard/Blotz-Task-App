@@ -100,17 +100,23 @@ public sealed class DraftTools(IEnumerable<ProposalSet> drafts, string timeZoneI
         draftId = draft.Id,
         status = draft.Status.ToString().ToLowerInvariant(),
         draft.IsReviewList,
-        items = draft.Proposals.Select(item => new
-        {
-            itemId = item.ProposalId, kind = item.Kind.ToString().ToLowerInvariant(), title = item.Title, description = item.Description,
-            date = item.Date?.ToString("yyyy-MM-dd"), startTime = item.StartTime?.ToString("HH:mm"),
-            endTime = item.EndTime?.ToString("HH:mm"), timeZoneId = item.TimeZoneId, savedTaskId = item.PersistedTaskId,
-            savedNoteId = item.PersistedNoteId, suggestedFields = item.SuggestedFields ?? [],
-            recurrence = item.Recurrence is { } recurrence ? new {
-                frequency = recurrence.Frequency.ToString(), interval = recurrence.Interval,
-                daysOfWeek = WeekdayNames(recurrence.DaysOfWeek), dayOfMonth = recurrence.DayOfMonth,
-                endDate = recurrence.EndDate?.ToString("yyyy-MM-dd") } : null,
-        }),
+        items = draft.Proposals.Select(ItemView),
+    };
+
+    public static object ItemView(TaskProposal item) => new
+    {
+        itemId = item.ProposalId, kind = item.Kind.ToString().ToLowerInvariant(), title = item.Title, description = item.Description,
+        date = item.Date?.ToString("yyyy-MM-dd"), startTime = item.StartTime?.ToString("HH:mm"),
+        endTime = item.EndTime?.ToString("HH:mm"), timeZoneId = item.TimeZoneId, savedTaskId = item.PersistedTaskId,
+        savedNoteId = item.PersistedNoteId, suggestedFields = item.SuggestedFields ?? [],
+        recurrence = RecurrenceView(item.Recurrence),
+    };
+
+    public static object? RecurrenceView(RecurrenceProposal? recurrence) => recurrence is null ? null : new
+    {
+        frequency = recurrence.Frequency.ToString(), interval = recurrence.Interval,
+        daysOfWeek = WeekdayNames(recurrence.DaysOfWeek), dayOfMonth = recurrence.DayOfMonth,
+        endDate = recurrence.EndDate?.ToString("yyyy-MM-dd"),
     };
 
     private ProposalSet Find(JsonElement args)

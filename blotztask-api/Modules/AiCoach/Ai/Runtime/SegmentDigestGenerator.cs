@@ -24,9 +24,11 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
     IOptions<AiCoachModuleOptions> options, ILogger<SegmentDigestGenerator> logger,
     AiCoachTraceRecorder? recorder = null)
 {
-    public const string Version = "segment-digest-4";
+    public const string Version = "segment-digest-5";
     // New messages beyond this are dropped oldest-first; the cursor still moves past them.
     private const int MaxNewMessageBytes = 12000;
+    // Coach replies are context for what the user said, so a short opening is enough.
+    private const int AssistantExcerptChars = 300;
 
     private static readonly GatewayToolDefinition SaveDigest = new("save_digest",
         "Save the result. Call exactly once.",
@@ -46,6 +48,11 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
         "If yes it is lasting: validThrough null. If no it is temporary: validThrough is its end date, or 14 days after currentLocalDate when no end was said. " +
         "A one-off exception to a lasting item (for example one cancelled class) is a separate temporary item; it does not replace the lasting one. " +
         "When the user says a listed item is no longer true or has changed for good, set replaces to its ref and state the current fact. " +
+        "The same applies when the user states a lasting routine, preference or constraint that contradicts a listed item without " +
+        "saying it changed (a listed morning run against \"I'm a night owl, nothing before 8\"): the user's latest words hold, so " +
+        "replace that item rather than keeping both. " +
+        "Never extract a scheduled occurrence the task list holds (an activity, reminder or appointment at a given date or time); " +
+        "extract the goal or deadline behind it instead, such as the exam and its date, not each study session. " +
         "Never extract moods or how today is going, past events, suggestions the user did not take on, unsaved drafts, questions, " +
         "hypotheticals, or details about health, money, religion, sexuality or other people. Skip anything already listed. " +
         "A user message marked alreadyRemembered was saved during the chat; extract nothing more from it unless it corrects a listed item. " +
@@ -167,16 +174,47 @@ public sealed class SegmentDigestGenerator(IModelGateway gateway, AiCoachUsageTr
     public static HashSet<Guid> RememberedMessageIds(IEnumerable<UserMemory> activeMemories) =>
         activeMemories.Where(memory => memory.SourceMessageId.HasValue).Select(memory => memory.SourceMessageId!.Value).ToHashSet();
 
+    /// <summary>
+    /// Memories come only from user messages, so they get the budget first (newest first). Coach replies are context
+    /// only: shortened, and given what is left, newest first. Long replies used to fill the budget, so a long chat
+    /// read only at its end lost everything the user said early on.
+    /// </summary>
     private static IReadOnlyList<DigestMessage> Bounded(IReadOnlyList<DigestMessage> messages)
     {
-        var kept = new List<DigestMessage>();
+        static int Size(DigestMessage message) => Encoding.UTF8.GetByteCount(message.Content) + 64;
         var bytes = 0;
-        foreach (var message in messages.Reverse())
+        var firstKept = messages.Count;
+        for (var index = messages.Count - 1; index >= 0; index--)
         {
-            bytes += Encoding.UTF8.GetByteCount(message.Content) + 64;
-            if (bytes > MaxNewMessageBytes) break;
-            kept.Insert(0, message);
+            if (messages[index].Role != ConversationMessageRole.User) continue;
+            if (bytes + Size(messages[index]) > MaxNewMessageBytes) break;
+            bytes += Size(messages[index]);
+            firstKept = index;
         }
-        return kept;
+        var kept = new SortedDictionary<int, DigestMessage>();
+        var contextFull = false;
+        for (var index = messages.Count - 1; index >= firstKept; index--)
+        {
+            var message = messages[index];
+            if (message.Role == ConversationMessageRole.User)
+            {
+                kept[index] = message;
+                continue;
+            }
+            if (contextFull) continue;
+            var excerpt = message with { Content = Excerpt(message.Content) };
+            // Older replies are dropped once the budget is used; the user messages around them stay.
+            if (bytes + Size(excerpt) > MaxNewMessageBytes) { contextFull = true; continue; }
+            bytes += Size(excerpt);
+            kept[index] = excerpt;
+        }
+        return kept.Values.ToList();
+    }
+
+    private static string Excerpt(string text)
+    {
+        if (text.Length <= AssistantExcerptChars) return text;
+        var length = char.IsHighSurrogate(text[AssistantExcerptChars - 1]) ? AssistantExcerptChars - 1 : AssistantExcerptChars;
+        return text[..length] + "…";
     }
 }

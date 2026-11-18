@@ -97,7 +97,9 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 memoryEnabled ? await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct) : null,
                 conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
                 conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
-                conversation.UserContext, memoryTools, userId);
+                conversation.UserContext, memoryTools, userId,
+                RecentReplyIds: conversation.Messages.Where(message => message.Role == ConversationMessageRole.Assistant)
+                    .TakeLast(ModelContextBuilder.RecentSuggestionReplies).Select(message => message.Id).ToHashSet());
             await store.SaveAsync(conversation, ct);
         }
 

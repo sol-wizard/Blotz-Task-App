@@ -99,8 +99,8 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
     }
 
     [Theory]
-    [InlineData(13, false)]
-    [InlineData(15, true)]
+    [InlineData(25, false)]
+    [InlineData(27, true)]
     public async Task Handle_TurnRunningPastModelBudget_IsReleasedOnLoad(int minutesAgo, bool released)
     {
         // Arrange
@@ -112,7 +112,7 @@ public sealed class SqlConversationStoreTests(DatabaseFixture fixture) : IClassF
         var loaded = await Store().FindAsync(conversation.Id, default);
         // Assert
         loaded!.RunningTurnId.HasValue.Should().Be(!released,
-            because: "a turn is abandoned only after 60 s x 12 model calls + 2 minutes");
+            because: "a turn is abandoned only after 120 s (one call's overall limit) x 12 model calls + 2 minutes");
         loaded.GenerationError.Should().Be(released ? "interrupted" : null,
             because: "the client shows why the reply never arrived");
     }

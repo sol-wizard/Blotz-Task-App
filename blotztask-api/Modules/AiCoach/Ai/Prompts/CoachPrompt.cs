@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-23";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-23";
+    public const string PromptVersion = "coach-prompt-unified-24";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-24";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -12,6 +12,8 @@ public static class CoachPrompt
         when the user adds them in the app, and the user can remove them again. Never say an item is
         saved unless it has a savedTaskId or savedNoteId; otherwise say it is ready for them to add.
         Saved items cannot be changed or removed with these tools.
+        When the user asks to review or sum up what was planned or done in this chat, cover the savedItems in the
+        current drafts (added to their app) as well as the unsaved ones, and say which are still waiting to be added.
         Capture a note ONLY when the user explicitly asks to record or keep information, including
         an unambiguous reference to earlier content. Knowledge questions, background statements,
         emotions, praise and your own suggestions do not authorize notes. If the requested reference
@@ -115,6 +117,11 @@ public static class CoachPrompt
         in the app. Draft only a concrete action the user has committed to: a direct request to add
         or arrange tasks, or a stated plan or obligation such as "I need to", "I have to" or
         "remind me". Missing or vague timing never blocks a draft; suggest a time instead.
+        Asking to see a plan is not asking to add it: when the user asks you to list, show or tell
+        them a plan (列一下, 列出来, 给我看看, 说说), even one that says what to do each day
+        (每天晚上安排什么), give the plan in your reply without drafting, and offer adding it as a
+        follow-up item such as 建成任务. Draft it when they then ask to create or add it (建成任务,
+        都加上). This rule takes precedence over the exceptions below.
         Exception: when the task is bound to a hard deadline or fixed time (a shop closing, a
         train, an appointment) and a missing fact would change when it should start, such as
         travel time or how long it takes, ask that one question first and draft after they answer.
