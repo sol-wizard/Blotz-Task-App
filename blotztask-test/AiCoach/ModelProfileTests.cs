@@ -66,6 +66,44 @@ public sealed class ModelProfileTests
         selected.Api.Should().Be("ChatCompletions", because: "legacy environments retain their transport");
     }
 
+    [Theory]
+    [InlineData(null, "sol", "luna6")]
+    [InlineData("false", "sol", "luna6")]
+    [InlineData("true", "sol", "sol")]
+    [InlineData("true", "missing", "luna6")]
+    [InlineData("true", null, "luna6")]
+    public void Handle_RequestedModel_UsesItOnlyWhereOverrideIsAllowed(string? allow, string? requested, string expected)
+    {
+        // Arrange
+        using var provider = Provider("luna6", "AiCoach:AllowModelOverride", allow);
+        var options = provider.GetRequiredService<IOptions<AiCoachModuleOptions>>().Value;
+
+        // Act
+        var selected = AiCoachModelProfile.Select(options, requested);
+
+        // Assert
+        selected.Name.Should().Be(expected,
+            because: "a client may pick a model only where AllowModelOverride is on, and only a configured one");
+    }
+
+    [Fact]
+    public void Handle_ProductionSettings_KeepModelOverrideOff()
+    {
+        // Arrange
+        var root = Evaluation.CoachEvaluationHarness.FindRepository();
+        var options = new AiCoachModuleOptions();
+
+        // Act
+        new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(root, "blotztask-api", "appsettings.json"))
+            .AddJsonFile(Path.Combine(root, "blotztask-api", "appsettings.Production.json"))
+            .Build().GetSection(AiCoachModuleOptions.SectionName).Bind(options);
+
+        // Assert
+        options.AllowModelOverride.Should().BeFalse(
+            because: "the model switch is for dev and staging; production users must always get DefaultModel");
+    }
+
     [Fact]
     public void Handle_MixedModelUsage_AccumulatesCostsAtOriginalRates()
     {

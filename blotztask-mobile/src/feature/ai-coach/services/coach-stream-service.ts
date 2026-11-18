@@ -6,6 +6,7 @@ import { queryClient } from "@/shared/util/queryClient";
 import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
 import { ConversationSnapshotDto } from "../models/ai-coach-dto";
 import { CoachStreamEvent, createCoachStreamParser } from "../models/coach-stream";
+import { coachModelForRequest } from "./coach-model-override";
 
 /** "followup" marks a tapped suggestion; the server records it for usage metrics. */
 export type MessageSource = "followup";
@@ -39,7 +40,7 @@ export async function streamCoachMessage(
     touch();
     if (!API_CONFIG.baseURL) throw new Error("API base URL is missing");
     const url = `${API_CONFIG.baseURL.replace(/\/$/, "")}/ai-coach/conversations/${conversationId}/messages/stream`;
-    const body = JSON.stringify({ messageId, content, expectedVersion, source,
+    const body = JSON.stringify({ messageId, content, expectedVersion, source, model: await coachModelForRequest(),
       timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone });
     const request = (token: string | null) => fetch(url, {
       method: "POST", body, signal: controller.signal,

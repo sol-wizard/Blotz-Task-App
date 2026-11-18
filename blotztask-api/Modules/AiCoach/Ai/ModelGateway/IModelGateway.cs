@@ -9,6 +9,8 @@ public interface IModelGateway
     IModelGateway OpenTurn() => this;
     // Opens a turn whose spend counts towards this user's AI Coach allowance.
     IModelGateway OpenTurn(Guid userId) => OpenTurn();
+    // As OpenTurn(userId), on the named model profile when the environment allows a per-message choice.
+    IModelGateway OpenTurn(Guid userId, string? model) => OpenTurn(userId);
     AiCoachModelProfile? Profile => null;
 
     Task<ModelCompletionResult> CompleteAsync(

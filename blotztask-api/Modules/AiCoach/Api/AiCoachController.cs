@@ -123,7 +123,7 @@ public class AiCoachController(
                 MessageId = request.MessageId ?? Guid.NewGuid(),
                 Content = request.Content,
                 ExpectedVersion = request.ExpectedVersion,
-                TimeZoneId = request.TimeZoneId, Source = request.Source,
+                TimeZoneId = request.TimeZoneId, Source = request.Source, Model = request.Model,
                 ReviewListEnabled = Request.Headers[ReviewListProtocolFilter.HeaderName] == "6",
             }, ct);
             return Ok(dto);
@@ -151,7 +151,7 @@ public class AiCoachController(
             {
                 UserId = GetUserId(), ConversationId = conversationId, MessageId = messageId,
                 Content = request.Content, ExpectedVersion = request.ExpectedVersion,
-                TimeZoneId = request.TimeZoneId, Source = request.Source, ReviewListEnabled = true, Stream = stream.SendAsync,
+                TimeZoneId = request.TimeZoneId, Source = request.Source, Model = request.Model, ReviewListEnabled = true, Stream = stream.SendAsync,
             }, lifetime.ApplicationStopping);
             await stream.SendAsync(snapshot.GenerationError is null ? "turn.completed" : "turn.failed",
                 new { conversationSnapshot = snapshot, errorCode = snapshot.GenerationError });

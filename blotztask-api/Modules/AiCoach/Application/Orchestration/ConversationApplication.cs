@@ -32,7 +32,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
-        bool reviewListEnabled = false, Func<string, object, Task>? stream = null, string? source = null)
+        bool reviewListEnabled = false, Func<string, object, Task>? stream = null, string? source = null,
+        string? model = null)
     {
         if (timeZoneId is not null)
         {
@@ -99,7 +100,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
                 conversation.UserContext, memoryTools, userId,
                 RecentReplyIds: conversation.Messages.Where(message => message.Role == ConversationMessageRole.Assistant)
-                    .TakeLast(ModelContextBuilder.RecentSuggestionReplies).Select(message => message.Id).ToHashSet());
+                    .TakeLast(ModelContextBuilder.RecentSuggestionReplies).Select(message => message.Id).ToHashSet(),
+                Model: model);
             await store.SaveAsync(conversation, ct);
         }
 

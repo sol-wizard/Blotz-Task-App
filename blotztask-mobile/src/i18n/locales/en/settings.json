@@ -18,6 +18,8 @@
     "xiaohongshu": "Follow Us · Xiaohongshu",
     "privacyPolicy": "Privacy Policy",
     "betaFeatures": "Beta Features",
+    "developer": "Developer",
+    "aiCoachModel": "AI Coach Model",
     "version": "Version {{version}} ({{buildNumber}})"
   },
   "betaFeatures": {

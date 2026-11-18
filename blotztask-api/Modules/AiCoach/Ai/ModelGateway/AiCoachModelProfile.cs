@@ -25,8 +25,15 @@ public sealed record AiCoachModelProfile(string Name, string DeploymentId, strin
             / 1_000_000m * 10_000_000_000m) / 10_000_000_000m;
     }
 
-    public static AiCoachModelProfile Select(AiCoachModuleOptions options)
+    /// <summary>
+    /// The DefaultModel profile, or <paramref name="requestedModel"/> when AllowModelOverride is on and it names a
+    /// configured profile. An unknown or disallowed request falls back to the default.
+    /// </summary>
+    public static AiCoachModelProfile Select(AiCoachModuleOptions options, string? requestedModel = null)
     {
+        if (options.AllowModelOverride && !string.IsNullOrWhiteSpace(requestedModel)
+            && options.Models.TryGetValue(requestedModel, out var requested))
+            return FromProfile(requestedModel, requested);
         if (string.IsNullOrWhiteSpace(options.DefaultModel))
         {
             if (!string.IsNullOrWhiteSpace(options.DeploymentId))
@@ -37,10 +44,13 @@ public sealed record AiCoachModelProfile(string Name, string DeploymentId, strin
         }
         if (!options.Models.TryGetValue(options.DefaultModel, out var model))
             throw Invalid($"AiCoach:DefaultModel '{options.DefaultModel}' does not name a configured profile.");
-        return new(options.DefaultModel, model.DeploymentId, model.Api, model.ReasoningEffort,
+        return FromProfile(options.DefaultModel, model);
+    }
+
+    private static AiCoachModelProfile FromProfile(string name, AiCoachModelOptions model) =>
+        new(name, model.DeploymentId, model.Api, model.ReasoningEffort,
             model.MaxOutputTokens, model.RequestTimeoutSeconds, model.InputTokenUsdPerMillion,
             model.CachedInputTokenUsdPerMillion, model.OutputTokenUsdPerMillion);
-    }
 
     public static bool IsValid(AiCoachModuleOptions options)
     {
