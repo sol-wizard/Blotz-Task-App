@@ -3,9 +3,8 @@ import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { addMonths, format, isAfter, isSameMonth, startOfMonth, subMonths } from "date-fns";
+import { addMonths, format, isAfter, isSameMonth, startOfMonth } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { formatLocalizedDate } from "@/shared/util/localized-date-format";
 import { LetterCardContent } from "../components/letter-card-content";
@@ -18,19 +17,24 @@ import { ReviewTabs } from "../components/review-tabs";
 import { WeeklyReviewView } from "../components/weekly-review-view";
 import { useReview } from "../hooks/useReviewReport";
 import { useReviewShare } from "../hooks/useReviewShare";
+import { useMarkLetterRead } from "../hooks/useReadLettersStore";
+import { getLatestReviewableMonth } from "../utils/week-utils";
 import { ReviewPeriodType } from "../models/review-dto";
 
-export default function ReviewScreen() {
+type Props = {
+  initialTab?: ReviewPeriodType;
+};
+
+export default function ReviewScreen({ initialTab = ReviewPeriodType.Weekly }: Props) {
   useEffect(() => {
     analytics.trackScreenViewed(SCREEN_NAMES.SETTINGS_REVIEW);
   }, []);
 
   // — Hooks ——————————————————————————————————————————————————————
-  const router = useRouter();
   const { t } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  const [activeTab, setActiveTab] = useState<ReviewPeriodType>(ReviewPeriodType.Weekly);
-  const latestReviewableMonth = startOfMonth(subMonths(new Date(), 1));
+  const [activeTab, setActiveTab] = useState<ReviewPeriodType>(initialTab);
+  const latestReviewableMonth = getLatestReviewableMonth();
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => latestReviewableMonth);
   const [isTipDismissed, setIsTipDismissed] = useState(false);
   const [isWeeklyShareAvailable, setIsWeeklyShareAvailable] = useState(false);
@@ -64,6 +68,7 @@ export default function ReviewScreen() {
   );
 
   const isCurrentMonth = isSameMonth(selectedMonth, new Date());
+  const isAtLatestMonth = isSameMonth(selectedMonth, latestReviewableMonth);
   const isAtEarliestMonth =
     earliestReviewableMonth !== null && isSameMonth(selectedMonth, earliestReviewableMonth);
   const displayMonth = formatLocalizedDate(selectedMonth, "yearMonth");
@@ -73,6 +78,13 @@ export default function ReviewScreen() {
     ? report !== null && !hasNoReviewableMonth
     : isWeeklyShareAvailable;
   const showLowActivityTip = report?.isLowActivity === true && !isTipDismissed;
+
+  // The tab is checked too: the monthly report stays cached while Weekly is on screen.
+  useMarkLetterRead(
+    ReviewPeriodType.Monthly,
+    anchorDate,
+    isMonthlyTab && report !== null && isAtLatestMonth,
+  );
 
   // — Handlers ———————————————————————————————————————————————————
   const handleShareReview = () => {
@@ -92,7 +104,6 @@ export default function ReviewScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ReviewHeader
         title={t("review.title")}
-        onBack={() => router.back()}
         showShare={showShareButton}
         isSharing={isSharingImage}
         onShare={handleShareReview}

@@ -392,6 +392,36 @@ export const analytics = {
     posthog.capture(EVENTS.AI_TASK_GENERATION_FAILED, properties);
   },
 
+  trackAiCoachVoiceFailed(params: { stage: "permission" | "recording" | "send"; errorCode: string }) {
+    posthog.capture(EVENTS.AI_COACH_VOICE_FAILED, { stage: params.stage, error_code: params.errorCode });
+  },
+
+  trackAiCoachMicPermissionResolved(outcome: MicPermissionOutcome, errorCode?: string) {
+    posthog.capture(EVENTS.AI_COACH_MIC_PERMISSION_RESOLVED, {
+      outcome, ...(errorCode ? { error_code: errorCode } : {}),
+    });
+  },
+
+  /**
+   * Fires when the AI sheet mounts. The denominator for AI attempts: the session event fires
+   * only on exit and drops itself when no turn was recorded, so opens were previously invisible.
+   */
+  trackAiTaskSheetOpened() {
+    posthog.capture(EVENTS.AI_TASK_SHEET_OPENED);
+  },
+
+  /**
+   * Fires once per AI sheet open, when the mic permission question has an answer.
+   * `outcome` is classified from the state read *before* asking; that is the only way to
+   * separate a fresh rejection (`denied`) from one the OS will not re-prompt for (`blocked`).
+   */
+  trackMicPermissionResolved(params: { outcome: MicPermissionOutcome; errorCode?: string }) {
+    posthog.capture(EVENTS.MIC_PERMISSION_RESOLVED, {
+      outcome: params.outcome,
+      ...(params.errorCode ? { error_code: params.errorCode } : {}),
+    });
+  },
+
   /**
    * Fires once per AI task generation turn that returns a result: the wait the user felt,
    * timed on the phone from mic release (voice) or the send tap (text) to the final result.
@@ -413,26 +443,6 @@ export const analytics = {
     };
     if (params.transcriptMs !== undefined) properties.transcript_ms = params.transcriptMs;
     posthog.capture(EVENTS.AI_TASK_GENERATION_SUCCEEDED, properties);
-  },
-
-  /**
-   * Fires when the AI sheet mounts. The denominator for AI attempts: the session event fires
-   * only on exit and drops itself when no turn was recorded, so opens were previously invisible.
-   */
-  trackAiTaskSheetOpened() {
-    posthog.capture(EVENTS.AI_TASK_SHEET_OPENED);
-  },
-
-  /**
-   * Fires once per AI sheet open, when the mic permission question has an answer.
-   * `outcome` is classified from the state read *before* asking; that is the only way to
-   * separate a fresh rejection (`denied`) from one the OS will not re-prompt for (`blocked`).
-   */
-  trackMicPermissionResolved(params: { outcome: MicPermissionOutcome; errorCode?: string }) {
-    posthog.capture(EVENTS.MIC_PERMISSION_RESOLVED, {
-      outcome: params.outcome,
-      ...(params.errorCode ? { error_code: params.errorCode } : {}),
-    });
   },
 
   /**

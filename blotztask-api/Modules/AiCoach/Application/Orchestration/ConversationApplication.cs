@@ -1,0 +1,233 @@
+using BlotzTask.Modules.AiCoach.Domain.Policy;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
+using BlotzTask.Modules.AiCoach.Application.Projections;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.AiCoach.Infrastructure;
+using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.AiCoach.Ai.Prompts;
+using BlotzTask.Modules.AiCoach.Ai.Tools;
+using BlotzTask.Modules.AiCoach.Application.Queries;
+using BlotzTask.Modules.UserUnderstanding.Commands;
+using BlotzTask.Modules.UserUnderstanding.Queries;
+
+namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
+
+public sealed class ConversationNotFoundException() : Exception("Conversation not found.");
+public sealed class ConversationEndedException(Conversation conversation) : Exception("The topic has ended.")
+{
+    public Conversation Conversation { get; } = conversation;
+}
+public sealed class ConversationVersionConflictException(Conversation conversation)
+    : Exception("Conversation version conflict.")
+{
+    public Conversation Conversation { get; } = conversation;
+}
+
+public sealed class ConversationApplication(IConversationStore store, IModelTurnRuntime runtime,
+    AiCoachUsageTracker usageTracker, TaskContextReader taskContextReader, DraftScheduleChecker scheduleChecker,
+    TimeProvider clock, ILogger<ConversationApplication> logger, ConversationSegments segments,
+    AiCoachTraceRecorder? trace = null, GetUserContextQueryHandler? userContextQuery = null,
+    RememberUserMemoryCommandHandler? rememberMemory = null, ForgetUserMemoryCommandHandler? forgetMemory = null)
+{
+    public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
+        Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
+        bool reviewListEnabled = false, Func<string, object, Task>? stream = null, string? source = null,
+        string? model = null)
+    {
+        if (timeZoneId is not null)
+        {
+            try { _ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); }
+            catch (Exception zoneError) when (zoneError is TimeZoneNotFoundException or InvalidTimeZoneException or ArgumentException)
+            { throw new System.ComponentModel.DataAnnotations.ValidationException("A valid IANA time zone is required."); }
+        }
+        var prepared = await segments.PrepareSendAsync(userId, conversationId, messageId, expectedVersion, ct, timeZoneId);
+        (conversationId, expectedVersion) = (prepared.ConversationId, prepared.ExpectedVersion);
+        ModelTurnRequest request;
+        int baseVersion;
+        DateTimeOffset segmentCreatedAt;
+        using (await store.AcquireLockAsync(conversationId, ct))
+        {
+            var conversation = await LoadOwnedAsync(store, userId, conversationId, ct);
+            RequireOpen(conversation);
+            if (!reviewListEnabled && conversation.Drafts.Any(draft => draft.IsReviewList
+                && draft.Status is ProposalSetStatus.Pending or ProposalSetStatus.Processing))
+                throw new Commands.DraftConflictException("ReviewListRequiresProtocol6", "Use a review-list capable client for the pending list.");
+            var existing = conversation.Messages.FirstOrDefault(message => message.Id == messageId);
+            if (existing is not null && (existing.Role != ConversationMessageRole.User || existing.Content != content))
+                throw Conflict("MessageIdReused", conversation);
+            if (conversation.CompletedMessages.Contains(messageId))
+                return ConversationSnapshotProjector.ToDto(conversation);
+            RequireIdle(conversation);
+            if (expectedVersion.HasValue && conversation.Version != expectedVersion)
+                throw new ConversationVersionConflictException(conversation);
+            if (existing is not null && conversation.Messages.LastOrDefault()?.Id != messageId)
+                throw Conflict("MessageSuperseded", conversation);
+            if (timeZoneId is not null) conversation.ChangeTimeZone(timeZoneId, clock.GetUtcNow());
+            conversation.BeginTurn(messageId, content, clock.GetUtcNow());
+            if (userContextQuery is not null)
+            {
+                try
+                {
+                    var stamp = await userContextQuery.GetMemoryStampAsync(userId, ct);
+                    if (conversation.NeedsUserContext(stamp))
+                        conversation.CaptureUserContext(await userContextQuery.Handle(new() { UserId = userId }, ct), stamp);
+                }
+                catch (Exception contextError) when (contextError is not OperationCanceledException)
+                {
+                    // Optional context: the turn continues without it and the next turn tries again.
+                    logger.LogWarning(contextError, "AiCoach user context capture failed for {ConversationId}", conversationId);
+                }
+            }
+            var memoryEnabled = userContextQuery is null || await userContextQuery.IsMemoryEnabledAsync(userId, ct);
+            var memoryTools = userContextQuery is not null && rememberMemory is not null && forgetMemory is not null
+                              && memoryEnabled
+                ? new MemoryTools(rememberMemory, forgetMemory, userId, messageId, content, conversation.TimeZoneId)
+                : null;
+            baseVersion = conversation.Version;
+            segmentCreatedAt = conversation.CreatedAt;
+            var effectiveTimeZoneId = conversation.TimeZoneId;
+            request = new(conversation.Id, conversation.History.ToArray(),
+                conversation.Drafts.Select(draft => draft.Copy()).ToArray(), conversation.TimeZoneId,
+                TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(conversation.TimeZoneId)),
+                conversation.Summary, conversation.SummarizedMessageCount,
+                (startDate, endDate, token) => taskContextReader.ReadAsync(userId, effectiveTimeZoneId, startDate, endDate, token),
+                (items, token) => scheduleChecker.CheckAsync(userId, items, token),
+                trace is null ? null : (kind, payload) => trace.RecordAsync(userId, conversationId, messageId, kind, payload),
+                // The previous topic's summary is remembered context, so the memory switch hides it too.
+                memoryEnabled ? await store.FindPreviousSummaryAsync(userId, conversation.CreatedAt, ct) : null,
+                conversation.Messages.FirstOrDefault()?.CreatedAt ?? conversation.CreatedAt,
+                conversation.InitialTimeZoneId ?? conversation.TimeZoneId, reviewListEnabled, stream,
+                conversation.UserContext, memoryTools, userId,
+                RecentReplyIds: conversation.Messages.Where(message => message.Role == ConversationMessageRole.Assistant)
+                    .TakeLast(ModelContextBuilder.RecentSuggestionReplies).Select(message => message.Id).ToHashSet(),
+                Model: model);
+            await store.SaveAsync(conversation, ct);
+        }
+
+        logger.LogInformation("AiCoach message accepted for {ConversationId} at version {ConversationVersion}",
+            conversationId, baseVersion);
+        if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "user_message", new
+        {
+            messageId, content, conversationVersion = baseVersion, source,
+            promptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion,
+            toolContractVersion = ToolExecutor.ContractVersion,
+            userContextVersion = request.UserContext is null ? null : GetUserContextQueryHandler.Version,
+            userContextBytes = System.Text.Encoding.UTF8.GetByteCount(request.UserContext ?? ""),
+        });
+        ModelTurnRunResult? result = null;
+        string? error = null;
+        var turnTimer = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            if (stream is not null) await stream("turn.started", new { conversationId, conversationVersion = baseVersion });
+            result = await runtime.ExecuteAsync(request, ct);
+            error = result.Error;
+        }
+        catch (AiQuotaExceededException)
+        {
+            logger.LogWarning("AiCoach turn rejected by quota for {ConversationId}", conversationId);
+            error = "quota";
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogWarning("AiCoach turn cancelled before completion for {ConversationId}", conversationId);
+            error = "cancelled";
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "AiCoach turn failed for {ConversationId}", conversationId);
+            error = "model_unavailable";
+        }
+        turnTimer.Stop();
+
+        if (result is not null)
+        {
+            usageTracker.Add(conversationId, result.InputTokens, result.OutputTokens, result.TotalTokens, result.ModelCallCount,
+                result.EstimatedUsd);
+            logger.LogInformation("AiCoach usage {ConversationId}: {InputTokens} input ({CachedInputTokens} cached), {OutputTokens} output, {Calls} model calls, {Error}, prompt {PromptVersion}, tools {ToolContractVersion}",
+                conversationId, result.InputTokens, result.CachedInputTokens, result.OutputTokens, result.ModelCallCount, error,
+                request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion, ToolExecutor.ContractVersion);
+        }
+
+        // Complete even after client cancellation, so an abandoned HTTP request cannot leave a busy session.
+        ConversationSnapshotDto snapshot;
+        ConversationMessage? assistantMessage;
+        TurnCommitStatus commit;
+        ProposalSet? turnDraft = null;
+        using (await store.AcquireLockAsync(conversationId, CancellationToken.None))
+        {
+            var conversation = await LoadOwnedAsync(store, userId, conversationId, CancellationToken.None);
+            RequireOpen(conversation);
+            if (ct.IsCancellationRequested) error = "cancelled";
+            commit = conversation.CompleteTurn(messageId, baseVersion, result?.Text, error,
+                result?.TurnHistory ?? [], result?.Drafts ?? [], result?.Summary, result?.SummarizedMessageCount ?? 0,
+                result?.TaskContextRead ?? false, clock.GetUtcNow(), result?.FollowUps);
+            logger.LogInformation("AiCoach turn commit for {ConversationId}: {CommitStatus}", conversationId, commit);
+            await store.SaveAsync(conversation, CancellationToken.None);
+            logger.LogInformation("AiCoach conversation state saved for {ConversationId} with result {TurnResult} at version {ConversationVersion}",
+                conversationId, error ?? "success", conversation.Version);
+            assistantMessage = commit == TurnCommitStatus.Committed
+                ? conversation.Messages.LastOrDefault(message => message.Role == ConversationMessageRole.Assistant
+                    && message.TurnId == messageId)
+                : null;
+            snapshot = ConversationSnapshotProjector.ToDto(conversation);
+            // Drafts cannot be edited by the user while the turn runs, so a new or newer pending draft came from this turn.
+            if (commit == TurnCommitStatus.Committed)
+            {
+                var before = request.Drafts.ToDictionary(draft => draft.Id, draft => draft.Version);
+                turnDraft = conversation.Drafts.LastOrDefault(draft => draft.Status == ProposalSetStatus.Pending
+                    && (!before.TryGetValue(draft.Id, out var version) || version != draft.Version));
+            }
+        }
+        if (assistantMessage is not null && trace is not null)
+            await trace.RecordAsync(userId, conversationId, messageId, "assistant_message", new
+            {
+                assistantMessage.Id, assistantMessage.Content, assistantMessage.TaskContextRead,
+                followUps = result?.FollowUps ?? [],
+            }, assistantMessage.Id);
+        if (trace is not null) await trace.RecordAsync(userId, conversationId, messageId, "turn_result", new
+        {
+            commitStatus = commit.ToString(), error, result?.InputTokens, result?.CachedInputTokens, result?.OutputTokens,
+            result?.TotalTokens, result?.ModelCallCount, conversationVersion = snapshot.ConversationVersion,
+        }, assistantMessage?.Id);
+        if (trace is not null) await trace.RecordSummaryAsync(new AiCoachTurnSummary
+        {
+            UserId = userId, ConversationId = conversationId, TurnId = messageId,
+            Kind = AiCoachTurnSummary.TurnKind, Source = source,
+            Model = result?.Model?.Name, DeploymentId = result?.Model?.DeploymentId, Api = result?.Model?.Api,
+            PromptVersion = request.ReviewListEnabled ? CoachPrompt.ReviewListPromptVersion : CoachPrompt.PromptVersion,
+            ToolContractVersion = ToolExecutor.ContractVersion,
+            ErrorCode = error, CommitStatus = commit.ToString(),
+            ModelCallCount = result?.ModelCallCount ?? 0, ToolCallCount = result?.ToolNames?.Count ?? 0,
+            ToolNames = result?.ToolNames is { Count: > 0 } names ? string.Join(",", names) : null,
+            InputTokens = result?.InputTokens ?? 0, CachedInputTokens = result?.CachedInputTokens ?? 0,
+            OutputTokens = result?.OutputTokens ?? 0, TotalTokens = result?.TotalTokens ?? 0,
+            EstimatedUsd = result?.EstimatedUsd, DurationMs = turnTimer.ElapsedMilliseconds,
+            DraftId = turnDraft?.Id, DraftItemCount = turnDraft?.Proposals.Count,
+        });
+        return snapshot;
+    }
+
+    public static async Task<Conversation> LoadOwnedAsync(IConversationStore store, Guid userId, Guid id, CancellationToken ct)
+    {
+        var conversation = await store.FindAsync(id, ct);
+        if (conversation is null || conversation.UserId != userId) throw new ConversationNotFoundException();
+        return conversation;
+    }
+
+    public static void RequireIdle(Conversation conversation)
+    {
+        RequireOpen(conversation);
+        if (!OperationPolicy.CanStartOperation(conversation))
+            throw Conflict("ConversationBusy", conversation);
+    }
+
+    public static void RequireOpen(Conversation conversation)
+    {
+        if (conversation.EndedAt.HasValue) throw new ConversationEndedException(conversation);
+    }
+
+    private static Commands.DraftConflictException Conflict(string code, Conversation conversation) =>
+        new(code, code, ConversationSnapshotProjector.ToDto(conversation));
+}

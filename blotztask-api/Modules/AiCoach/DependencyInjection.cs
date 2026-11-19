@@ -1,0 +1,79 @@
+using BlotzTask.Extension.Options;
+using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
+using BlotzTask.Modules.AiCoach.Application.Commands;
+using BlotzTask.Modules.AiCoach.Application.Orchestration;
+using BlotzTask.Modules.AiCoach.Application.Projections;
+using BlotzTask.Modules.AiCoach.Application.Queries;
+using BlotzTask.Modules.AiCoach.Infrastructure;
+using Microsoft.Extensions.Options;
+
+namespace BlotzTask.Modules.AiCoach;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddAiCoachModule(this IServiceCollection services)
+    {
+        services.AddOptions<AiCoachModuleOptions>()
+            .BindConfiguration(AiCoachModuleOptions.SectionName)
+            .PostConfigure<IOptions<AzureOpenAIOptions>>((options, azure) =>
+            {
+                if (string.IsNullOrWhiteSpace(options.DeploymentId))
+                    options.DeploymentId = azure.Value.AiModels.TaskGeneration.DeploymentId;
+                // Every context, digest and allowance limit reads the module budget, so the selected
+                // profile's budget is applied there once.
+                if (options.Models.TryGetValue(options.DefaultModel, out var model) && model.ContextTokenBudget is { } budget)
+                    options.ContextTokenBudget = budget;
+            })
+            .Validate(options => options.MaxModelCallsPerTurn >= 2 && options.MaxToolCallsPerTurn > 0 && options.MaxToolArgumentBytes > 0
+                && options.ContextTokenBudget >= 8000 && options.MaxOutputTokens > 0
+                && options.ModelRequestTimeoutSeconds > 0 && options.StreamIdleTimeoutSeconds > 0 && options.ModelCallMaxSeconds > 0
+                && options.TopicIdleHours > 0 && options.MessageRetentionDays > 0
+                && options.TraceRetentionDays > 0,
+                "AiCoach resource limits must be positive and context budget at least 8000.")
+            .Validate(AiCoachModelProfile.IsValid,
+                "AiCoach requires a valid DefaultModel/profile or legacy DeploymentId. Profiles require a deployment, supported API, positive limits and valid pricing/reasoning settings; Sol requires Responses.")
+            .Validate(options => options.MonthlyBudgetUsd.HasValue == options.UserMonthlyAllowanceUsd.HasValue
+                    && options.MonthlyBudgetUsd is null or > 0 && options.UserMonthlyAllowanceUsd is null or > 0,
+                "AiCoach:MonthlyBudgetUsd and AiCoach:UserMonthlyAllowanceUsd must be set together and be positive.")
+            // A model without prices would be reserved at zero cost, i.e. free and unlimited.
+            .Validate(options => options.MonthlyBudgetUsd is null || !AiCoachModelProfile.IsValid(options)
+                    || AiCoachModelProfile.Select(options) is { InputTokenUsdPerMillion: > 0, OutputTokenUsdPerMillion: > 0 },
+                "AiCoach budgets require positive input and output prices on the selected model (AiCoach:DefaultModel).")
+            .ValidateOnStart();
+        if (services.All(service => service.ServiceType != typeof(TimeProvider)))
+            services.AddSingleton(TimeProvider.System);
+        services.AddHttpClient("AiCoachResponses", client => client.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddSingleton<IModelGateway, ConfiguredModelGateway>();
+        services.AddSingleton<AiCoachBudget>();
+        services.AddSingleton<ModelContextBuilder>();
+        services.AddSingleton<IModelTurnRuntime, ModelTurnRuntime>();
+        services.AddSingleton<IConversationStore, SqlConversationStore>();
+        services.AddSingleton<AiCoachUsageTracker>(provider =>
+        {
+            var tracker = new AiCoachUsageTracker();
+            ConversationSnapshotProjector.UsageTracker = tracker;
+            return tracker;
+        });
+        services.AddScoped<ConversationApplication>();
+        services.AddScoped<ChatApplication>();
+        services.AddScoped<ConversationSegments>();
+        services.AddScoped<SegmentDigestGenerator>();
+        services.AddScoped<SegmentDigestProcessor>();
+        services.AddHostedService<SegmentDigestService>();
+        services.AddScoped<AiCoachTraceRecorder>();
+        services.AddHostedService<AiCoachTraceRetentionService>();
+        services.AddScoped<MessageFeedbackHandler>();
+        services.AddScoped<TaskContextReader>();
+        services.AddScoped<GetAiCoachAllowanceQueryHandler>();
+        services.AddScoped<DraftScheduleChecker>();
+        services.AddScoped<SendMessageCommandHandler>();
+        services.AddScoped<EditDraftCommandHandler>();
+        services.AddScoped<ConfirmDraftCommandHandler>();
+        services.AddScoped<SetDraftItemAddedCommandHandler>();
+        services.AddScoped<Api.ReviewListProtocolFilter>();
+        services.AddScoped<RejectDraftCommandHandler>();
+        services.AddScoped<TranscribeAudioCommandHandler>();
+        return services;
+    }
+}

@@ -6,6 +6,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useMemo } from "react";
 import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
+import { AiCoachAllowanceCard } from "@/feature/settings/components/ai-coach-allowance-card";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 
@@ -48,7 +49,16 @@ export default function AiUsageScreen() {
     return <LoadingScreen />;
   }
 
-  if (!aiUsageSummary) return null;
+  if (!aiUsageSummary) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-row px-6 pt-6">
+          <ReturnButton />
+        </View>
+        <AiCoachAllowanceCard />
+      </SafeAreaView>
+    );
+  }
 
   const percent =
     aiUsageSummary.totalLimit > 0
@@ -149,6 +159,8 @@ export default function AiUsageScreen() {
           </View>
         )}
       </View>
+
+      <AiCoachAllowanceCard />
     </SafeAreaView>
   );
 }
