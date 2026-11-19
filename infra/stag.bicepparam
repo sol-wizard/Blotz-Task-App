@@ -7,10 +7,12 @@ param location = 'australiaeast'
 
 // Staging also carries a gpt-5-mini deployment (capacity 500) left over from earlier testing.
 // Nothing in the API references it - it is not modelled here.
-param taskGenerationDeploymentName = 'gpt-5.4-mini'
-param taskGenerationModelName = 'gpt-5.4-mini'
-param taskGenerationModelVersion = '2026-03-17'
-param taskGenerationDeploymentCapacity = 150
+// Staging runs gpt-5.6-luna, the same model as prod (capacity differs: 50 vs 130).
+// The gpt-5.4-mini deployment (capacity 150) is still there but no longer used.
+param taskGenerationDeploymentName = 'gpt-5.6-luna'
+param taskGenerationModelName = 'gpt-5.6-luna'
+param taskGenerationModelVersion = '2026-07-09'
+param taskGenerationDeploymentCapacity = 50
 
 param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 30
