@@ -15,7 +15,8 @@ namespace BlotzTask.Modules.AiCoach.Application.Orchestration;
 
 public sealed record ChatTopicRequest([Required] string TimeZoneId);
 public sealed record ChatTimelineItem(Guid MessageId, Guid ConversationId, string Role, string Content,
-    DateTimeOffset CreatedAt, bool TopicStart, IReadOnlyList<ArtifactEnvelopeDto> DraftSnapshot);
+    DateTimeOffset CreatedAt, bool TopicStart, IReadOnlyList<ArtifactEnvelopeDto> DraftSnapshot,
+    MessageFeedbackDto? Feedback = null);
 public sealed record ChatTimelinePage(IReadOnlyList<ChatTimelineItem> Items, string? NextCursor);
 
 public sealed class ChatApplication(BlotzTaskDbContext db, IConversationStore store,
@@ -82,11 +83,19 @@ public sealed class ChatApplication(BlotzTaskDbContext db, IConversationStore st
                     && (older.CreatedAt < message.CreatedAt
                         || older.CreatedAt == message.CreatedAt && older.Id.CompareTo(message.Id) < 0)),
             }).Take(limit + 1).ToListAsync(ct);
+        // Ratings ride along so replies in ended topics show what the user already chose.
+        var assistantIds = rows.Take(limit).Where(row => row.Message.Role == ConversationMessageRole.Assistant)
+            .Select(row => row.Message.Id).ToArray();
+        var feedback = await db.AiCoachFeedback.AsNoTracking()
+            .Where(x => x.UserId == userId && assistantIds.Contains(x.AssistantMessageId))
+            .Select(x => new MessageFeedbackDto(x.AssistantMessageId, x.Rating, x.Reason, x.Detail))
+            .ToDictionaryAsync(x => x.AssistantMessageId, ct);
         var items = rows.Take(limit).Select(row => new ChatTimelineItem(row.Message.Id, row.Message.ConversationId,
             row.Message.Role == ConversationMessageRole.User ? "user" : "assistant", row.Message.Content,
             row.Message.CreatedAt, row.TopicStart,
             (ConversationSerializer.DeserializeDrafts(row.Message.DraftSnapshot) ?? [])
-                .Select(draft => ConversationSnapshotProjector.ToDto(draft, true)).ToArray())).ToArray();
+                .Select(draft => ConversationSnapshotProjector.ToDto(draft, true)).ToArray(),
+            feedback.GetValueOrDefault(row.Message.Id))).ToArray();
         var last = items.LastOrDefault();
         return new(items, rows.Count > limit && last is not null
             ? WebEncoders.Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(new Cursor(last.CreatedAt, last.MessageId))) : null);
