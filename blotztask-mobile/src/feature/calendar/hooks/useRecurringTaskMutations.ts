@@ -1,6 +1,6 @@
 import { QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth, startOfWeek } from "date-fns";
-import { taskKeys } from "@/shared/constants/query-key-factory";
+import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import {
   materializeRecurringOccurrence,
   saveRecurringOccurrence,
@@ -92,4 +92,6 @@ function invalidateRecurringOccurrenceQueries(queryClient: QueryClient, occurren
   queryClient.invalidateQueries({ queryKey: [...taskKeys.all, "selectedDay"] });
   queryClient.invalidateQueries({ queryKey: taskKeys.weekAvailability(mondayKey) });
   queryClient.invalidateQueries({ queryKey: taskKeys.monthAvailability(monthKey) });
+  // Same as toggleTask: Deadlines uses ddlKeys, so keep it in sync after Today ticks.
+  queryClient.invalidateQueries({ queryKey: ddlKeys.all });
 }
