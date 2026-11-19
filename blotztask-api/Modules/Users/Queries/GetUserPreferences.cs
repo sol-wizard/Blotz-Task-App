@@ -32,7 +32,9 @@ public class GetUserPreferencesQueryHandler(BlotzTaskDbContext db, ILogger<GetUs
             OverdueNotification = preference.OverdueNotification,
             DailyPlanningNotification = preference.DailyPlanningNotification,
             EveningWrapUpNotification = preference.EveningWrapUpNotification,
-            PreferredLanguage = preference.PreferredLanguage
+            PreferredLanguage = preference.PreferredLanguage,
+            AiMemoryEnabled = preference.AiMemoryEnabled,
+            ReviewNotification = preference.ReviewNotification
         };
     }
 
@@ -46,4 +48,6 @@ public class GetUserPreferencesDTO
     public bool DailyPlanningNotification { get; set; }
     public bool EveningWrapUpNotification { get; set; }
     public Language PreferredLanguage { get; set; }
+    public bool AiMemoryEnabled { get; set; }
+    public bool ReviewNotification { get; set; }
 }

@@ -1,0 +1,778 @@
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Keyboard,
+  CellRendererProps,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  FlatList,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { useTranslation } from "react-i18next";
+import { router } from "expo-router";
+import Toast from "react-native-toast-message";
+import Ionicons from "@react-native-vector-icons/ionicons/static";
+import Animated, { Easing, FadeIn, FadeOut, Keyframe, useReducedMotion } from "react-native-reanimated";
+import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
+import { useAiCoachChat, ConfirmAction, ChatItem, isItemSaved } from "../hooks/useAiCoachChat";
+import {
+  AiCoachRating,
+  ArtifactEnvelopeDto,
+  EditedDraftDto,
+  EditedDraftItemDto,
+  EditedNoteDraftItemDto,
+  MessageFeedbackDto,
+  TaskDraftItemDto,
+} from "../models/ai-coach-dto";
+import { ReviewItem, toReviewItem } from "../models/review-list";
+import { isPastStart, scheduleUnverifiedText } from "../utils/draft-format";
+import { TASK_DETAIL_ROUTE_MODE } from "@/feature/task-details/util/task-detail-route-mode";
+import { TaskDraftCard } from "./task-draft-card";
+import { MessageFeedbackActions } from "./message-feedback-actions";
+import { CoachMarkdown } from "./coach-markdown";
+import { FollowUpChips } from "./follow-up-chips";
+import { ReviewItemCard } from "./review-item-card";
+import { DraftEditModal } from "./draft-edit-modal";
+import { ReviewNoteEditor } from "./review-note-editor";
+import { VoiceRecordingBar } from "./voice-recording-bar";
+import { CoachComposer } from "./coach-composer";
+import { useQueryClient } from "@tanstack/react-query";
+import { CoachHeader } from "./coach-header";
+import { AllowanceBlockedCard } from "./allowance-blocked-card";
+import { useAiCoachAllowance } from "../hooks/useAiCoachAllowance";
+import { isAllowanceBlocked } from "../models/ai-coach-allowance";
+import { aiCoachKeys } from "@/shared/constants/query-key-factory";
+import { CoachWelcome } from "./coach-welcome";
+
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const fadeIn = FadeIn.duration(180).easing(EASE_OUT);
+const fadeOut = FadeOut.duration(120);
+const popIn = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.95 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: EASE_OUT },
+}).duration(150);
+const popOut = new Keyframe({
+  0: { opacity: 1, transform: [{ scale: 1 }] },
+  100: { opacity: 0, transform: [{ scale: 0.95 }], easing: EASE_OUT },
+}).duration(150);
+
+function StreamingCursor() {
+  const { t } = useTranslation("aiCoach");
+  return <Animated.Text accessibilityLabel={t("chat.generating")} exiting={fadeOut} style={{
+    animationName: { from: { opacity: 1 }, to: { opacity: 0.25 } },
+    animationDuration: "500ms", animationIterationCount: "infinite", animationDirection: "alternate",
+  }} className="font-baloo text-primary">▍</Animated.Text>;
+}
+
+function MessageBubble({ item, rateable, feedback, feedbackBusy, animateIn, onRate, onSaveDetail }: {
+  item: ChatItem;
+  animateIn: boolean;
+  rateable: boolean;
+  feedback: MessageFeedbackDto | undefined;
+  feedbackBusy: boolean;
+  onRate: (rating: AiCoachRating) => Promise<boolean>;
+  onSaveDetail: (reason: string | null, detail: string | null) => Promise<boolean>;
+}) {
+  const { t } = useTranslation("aiCoach");
+  if (item.role === "user") {
+    return (
+      <View className="my-1.5 max-w-[80%] self-end rounded-[20px] rounded-br-md px-4 py-2.5 bg-[#E8ECEF]">
+        <Text className="font-baloo text-base text-secondary">{item.text}</Text>
+      </View>
+    );
+  }
+  // Assistant replies run the full width with no bubble; only the user's own messages sit in one.
+  return (
+    <View className="my-1.5 self-stretch">
+      {item.taskContextRead && (
+        <View className="flex-row items-center gap-1.5 mb-1">
+          <Ionicons name="search" size={12} color="#6B7280" />
+          <Text className="font-inter text-xs text-[#6B7280]">{t("chat.taskContextRead")}</Text>
+        </View>
+      )}
+      <CoachMarkdown text={item.text} streaming={item.streaming} />
+      {item.streaming && <StreamingCursor />}
+      {!item.streaming && <Animated.View entering={animateIn ? fadeIn : undefined}>
+        <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
+          busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />
+      </Animated.View>}
+    </View>
+  );
+}
+
+function TopicDivider() {
+  const { t } = useTranslation("aiCoach");
+  return (
+    <View className="flex-row items-center gap-3 mt-3 mb-2">
+      <View className="flex-1 h-px bg-gray-200" />
+      <Text className="font-baloo text-xs text-[#6B7280]">{t("chat.topicStart")}</Text>
+      <View className="flex-1 h-px bg-gray-200" />
+    </View>
+  );
+}
+
+/** Three pulsing dots while the first token is pending. */
+function TypingIndicator({ label }: { label: string }) {
+  return (
+    <Animated.View entering={fadeIn} exiting={fadeOut} className="my-1.5 flex-row" accessibilityLabel={label}
+      accessibilityLiveRegion="polite">
+      <View className="flex-row items-center gap-1 rounded-[20px] rounded-tl-md bg-white px-4 py-3">
+        {[0, 1, 2].map(index => (
+          <Animated.View key={index} className="w-1.5 h-1.5 rounded-full bg-primary" style={{
+            animationName: { from: { opacity: 0.3 }, to: { opacity: 1 } }, animationDuration: "320ms",
+            animationDelay: `${index * 160}ms`, animationIterationCount: "infinite", animationDirection: "alternate",
+          }} />
+        ))}
+      </View>
+    </Animated.View>
+  );
+}
+
+interface RowActions {
+  rate: (messageId: string, rating: AiCoachRating) => Promise<boolean>;
+  saveDetail: (messageId: string, reason: string | null, detail: string | null) => Promise<boolean>;
+  confirm: (draftId: string, action: ConfirmAction, edited: EditedDraftDto, selectedItemIds: string[],
+    allowScheduleConflict?: boolean, acceptedConflictToken?: string | null) => void;
+  edit: (draftId: string, edited: EditedDraftDto) => Promise<string | null>;
+  reject: (draftId: string) => void;
+  tick: (list: ArtifactEnvelopeDto, item: TaskDraftItemDto, added: boolean) => void;
+  editCard: (list: ArtifactEnvelopeDto, item: TaskDraftItemDto) => void;
+}
+
+/** A suggested item shown under the reply that suggested it; `added` already includes a tap still saving. */
+interface ReviewCard {
+  list: ArtifactEnvelopeDto;
+  item: TaskDraftItemDto;
+  added: boolean;
+  /** History: an ended list, or a copy from an older topic. */
+  readOnly: boolean;
+}
+
+interface ChatRowProps {
+  item: ChatItem;
+  dateText: string | null;
+  active: boolean;
+  liveArtifacts: ArtifactEnvelopeDto[] | undefined;
+  reviewCards: ReviewCard[] | undefined;
+  feedback: MessageFeedbackDto | undefined;
+  feedbackBusy: boolean;
+  cardsBusy: boolean;
+  animateIn: boolean;
+  actions: RowActions;
+}
+
+// Card groups are rebuilt on every tap, so a row compares its own cards rather than the array object.
+const sameCards = (left: ReviewCard[] | undefined, right: ReviewCard[] | undefined) => left === right
+  || (!!left && !!right && left.length === right.length && left.every((card, index) => card.list === right[index].list
+    && card.item === right[index].item && card.added === right[index].added && card.readOnly === right[index].readOnly));
+
+// The hook rebuilds message objects every render, so rows compare by content instead of identity.
+const sameItem = (left: ChatItem, right: ChatItem) => left.id === right.id && left.text === right.text
+  && left.streaming === right.streaming && left.topicStart === right.topicStart && left.createdAt === right.createdAt
+  && left.conversationId === right.conversationId && left.taskContextRead === right.taskContextRead
+  && left.draftSnapshot === right.draftSnapshot;
+
+/** One timeline row; while a reply streams only its own row re-renders. */
+const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, reviewCards, feedback, feedbackBusy,
+  cardsBusy, animateIn, actions }: ChatRowProps) {
+  return <View>
+    {dateText && <View className="self-center rounded-full bg-white px-3 py-0.5 my-3">
+      <Text className="font-baloo text-xs text-[#6B7280]">{dateText}</Text>
+    </View>}
+    {item.topicStart && <TopicDivider />}
+    <MessageBubble item={item} rateable={active} feedback={feedback} feedbackBusy={feedbackBusy} animateIn={animateIn}
+      onRate={(rating) => actions.rate(item.id, rating)}
+      onSaveDetail={(reason, detail) => actions.saveDetail(item.id, reason, detail)} />
+    {item.draftSnapshot.map((historical) => {
+      const live = active ? liveArtifacts?.find(card => card.id === historical.id) : undefined;
+      const artifact = live ?? (!active && historical.status === "pending" ? { ...historical, status: "expired" as const } : historical);
+      if (artifact.isReviewList) return null;
+      return <Animated.View key={artifact.id} entering={animateIn ? fadeIn : undefined}>
+        <TaskDraftCard artifact={artifact} readOnly={!live} busy={cardsBusy}
+          onConfirm={(action, edited, selectedIds, allowConflict, token) =>
+            actions.confirm(artifact.id, action, edited, selectedIds, allowConflict, token)}
+          onEdit={(edited) => actions.edit(artifact.id, edited)}
+          onReject={() => actions.reject(artifact.id)} />
+      </Animated.View>;
+    })}
+    {!!reviewCards?.length && <Animated.View entering={animateIn ? fadeIn : undefined} className="mb-1">
+      {reviewCards.map(({ list, item: card, added, readOnly }) => (
+        <ReviewItemCard key={card.itemId} item={card} added={added} readOnly={readOnly}
+          busy={cardsBusy || !list.allowedActions.includes("set_item_added")}
+          onToggle={() => actions.tick(list, card, !added)} onEdit={() => actions.editCard(list, card)} />
+      ))}
+    </Animated.View>}
+  </View>;
+}, (previous, next) => sameItem(previous.item, next.item) && previous.dateText === next.dateText
+  && previous.active === next.active && previous.liveArtifacts === next.liveArtifacts
+  && sameCards(previous.reviewCards, next.reviewCards)
+  && previous.feedback === next.feedback && previous.feedbackBusy === next.feedbackBusy
+  && previous.cardsBusy === next.cardsBusy && previous.animateIn === next.animateIn && previous.actions === next.actions);
+
+/** Chronological timeline; growing replies leave the reading position in place. */
+export function ExecutionChatPanel() {
+  const { t, i18n } = useTranslation("aiCoach");
+  const { snapshot, messages, keyFor, status, start, send, confirm, edit, reject,
+    feedbackByMessage, feedbackSaving, rateMessage, saveFeedbackDetail, reconnecting,
+    reviewLists, wantedAdded, tickItem, tickBusy, updateReviewItem,
+    newTopic, clearChat, loadOlder, loadingOlder, historyLoading, historyError, retryHistory } = useAiCoachChat();
+  const { allowance } = useAiCoachAllowance();
+  const allowanceBlocked = isAllowanceBlocked(allowance);
+  const queryClient = useQueryClient();
+  const [input, setInput] = useState("");
+  // Each card sits under the reply that suggested it; older items without one sit under their list's reply.
+  const cardsByMessage = useMemo(() => {
+    const groups = new Map<string, ReviewCard[]>();
+    for (const { list, containerMessageId, live } of reviewLists) for (const item of list.payload.items) {
+      const messageId = item.suggestedInMessageId ?? containerMessageId;
+      if (!messageId) continue;
+      const cards = groups.get(messageId) ?? [];
+      cards.push({ list, item, added: wantedAdded[item.itemId] ?? isItemSaved(item),
+        readOnly: !live || list.status !== "pending" });
+      groups.set(messageId, cards);
+    }
+    return groups;
+  }, [reviewLists, wantedAdded]);
+  const [tickNotice, setTickNotice] = useState<{ id: number; text: string; clash: boolean } | null>(null);
+  const tickNoticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(tickNoticeTimer.current), []);
+  const showTickNotice = (text: string, clash: boolean) => {
+    clearTimeout(tickNoticeTimer.current);
+    setTickNotice({ id: Date.now(), text, clash });
+    tickNoticeTimer.current = setTimeout(() => setTickNotice(null), clash ? 3500 : 2200);
+  };
+  const [editingCard, setEditingCard] = useState<{ list: ArtifactEnvelopeDto; item: ReviewItem; version: number } | null>(null);
+  const [calendarNow, setCalendarNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCalendarNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+  const scrollRef = useRef<FlatList<ChatItem>>(null);
+  const initialScrollPending = useRef(true);
+  const chronologicalMessages = useMemo(() => [...messages].reverse(), [messages]);
+  const timelineRef = useRef(chronologicalMessages);
+  useLayoutEffect(() => { timelineRef.current = chronologicalMessages; }, [chronologicalMessages]);
+  const cellLayouts = useRef(new Map<string, { y: number; height: number }>());
+  const questionIdRef = useRef<string | null>(null);
+  const questionToPosition = useRef(false);
+  const previousQuestion = useRef<{ id: string | undefined } | null>(null);
+  const contentHeight = useRef(0);
+  const scrollMetrics = useRef({ offset: 0, viewport: 0, spacer: 0 });
+  const [showScrollToLatest, setShowScrollToLatest] = useState(false);
+  // Sending closes the keyboard; the question only glides up once the viewport stops resizing.
+  const [keyboardSettling, setKeyboardSettling] = useState(false);
+  const keyboardWait = useRef<{ remove: () => void } | null>(null);
+  useEffect(() => () => keyboardWait.current?.remove(), []);
+  const reducedMotion = useReducedMotion();
+  const updateScrollToLatest = useCallback(() => {
+    const { offset, viewport, spacer } = scrollMetrics.current;
+    const distance = contentHeight.current - spacer - viewport - offset;
+    setShowScrollToLatest(visible => {
+      if (initialScrollPending.current || questionToPosition.current || viewport <= 0) return false;
+      return visible ? distance > 40 : distance > 80;
+    });
+  }, []);
+  const scrollToLatest = () => {
+    initialScrollPending.current = false;
+    questionToPosition.current = false;
+    previousQuestion.current = null;
+    const { viewport, spacer } = scrollMetrics.current;
+    scrollRef.current?.scrollToOffset({
+      offset: Math.max(0, contentHeight.current - spacer - viewport),
+      animated: !reducedMotion,
+    });
+  };
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const [questionLayout, setQuestionLayout] = useState<{ y: number | null; turnHeight: number } | null>(null);
+  const updateQuestionLayout = useCallback(() => {
+    const id = questionIdRef.current;
+    if (!id) return;
+    const timeline = timelineRef.current;
+    const index = timeline.findIndex(item => item.id === id);
+    const question = cellLayouts.current.get(id);
+    if (index < 0 || !question) return;
+    const turnHeight = timeline.slice(index).reduce((height, item) => height + (cellLayouts.current.get(item.id)?.height ?? 0), 0);
+    setQuestionLayout(previous => previous?.y === question.y && previous.turnHeight === turnHeight
+      ? previous : { y: question.y, turnHeight });
+  }, []);
+  // Keep cell measurements in list coordinates, including virtualized history above the question.
+  const QuestionCell = useCallback(({ item, onLayout, children, style, onFocusCapture }: CellRendererProps<ChatItem>) => (
+    <View {...{ style, onFocusCapture }} onLayout={event => {
+      onLayout?.(event);
+      const { y, height } = event.nativeEvent.layout;
+      cellLayouts.current.set(item.id, { y, height });
+      updateQuestionLayout();
+    }}>{children}</View>
+  ), [updateQuestionLayout]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const waiting = previousQuestion.current;
+      if (waiting) {
+        const latest = [...chronologicalMessages].reverse().find(item => item.role === "user");
+        if (latest && latest.id !== waiting.id) {
+          previousQuestion.current = null;
+          questionIdRef.current = latest.id;
+          questionToPosition.current = true;
+          setQuestionLayout({ y: null, turnHeight: 0 });
+          // Bring an unmounted new question into the render window before measuring it.
+          const { offset, viewport, spacer } = scrollMetrics.current;
+          const farFromEnd = contentHeight.current - spacer - viewport - offset > viewport * 5;
+          if (!cellLayouts.current.has(latest.id) && farFromEnd) scrollRef.current?.scrollToEnd({ animated: false });
+        }
+      }
+      if (questionIdRef.current && !chronologicalMessages.some(item => item.id === questionIdRef.current)) {
+        questionIdRef.current = null;
+        questionToPosition.current = false;
+        setQuestionLayout(null);
+      } else updateQuestionLayout();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [chronologicalMessages, updateQuestionLayout]);
+  const prepareQuestionPosition = () => {
+    initialScrollPending.current = false;
+    previousQuestion.current = { id: [...chronologicalMessages].reverse().find(item => item.role === "user")?.id };
+    if (Keyboard.isVisible()) {
+      keyboardWait.current?.remove();
+      setKeyboardSettling(true);
+      const subscription = Keyboard.addListener("keyboardDidHide", () => settle());
+      // Some Android keyboards never report hiding; don't hold the question back for long.
+      const fallback = setTimeout(() => settle(), 600);
+      const settle = () => {
+        subscription.remove();
+        clearTimeout(fallback);
+        keyboardWait.current = null;
+        setKeyboardSettling(false);
+      };
+      keyboardWait.current = { remove: settle };
+    }
+    Keyboard.dismiss();
+  };
+  // Shrink only the spare space as the reply grows, keeping the question's offset reachable.
+  const replySpace = questionLayout
+    ? Math.max(0, viewportHeight - questionLayout.turnHeight - footerHeight - 12) : 0;
+  const positionQuestion = useCallback(() => {
+    if (!questionToPosition.current || keyboardSettling || questionLayout?.y == null || viewportHeight <= 0
+      || contentHeight.current < questionLayout.y + viewportHeight - 1) return;
+    questionToPosition.current = false;
+    scrollRef.current?.scrollToOffset({ offset: questionLayout.y, animated: !reducedMotion });
+  }, [questionLayout, viewportHeight, keyboardSettling, reducedMotion]);
+  useEffect(() => { positionQuestion(); }, [positionQuestion]);
+  useEffect(() => {
+    if (status !== "connecting") return;
+    initialScrollPending.current = true;
+    questionIdRef.current = null;
+    questionToPosition.current = false;
+    previousQuestion.current = null;
+    const frame = requestAnimationFrame(() => setQuestionLayout(null));
+    return () => cancelAnimationFrame(frame);
+  }, [status]);
+
+  const chatReady = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
+
+  // A finished take is sent straight away, along with anything already typed.
+  const sendVoiceTranscript = async (text: string) => {
+    if (!text.trim()) {
+      Toast.show({ type: "info", text1: t("chat.emptyAudio") });
+      return;
+    }
+    const combined = [input.trim(), text].filter(Boolean).join(" ");
+    if (!chatReady) {
+      setInput(combined);
+      Toast.show({ type: "info", text1: t("chat.voiceSendLater") });
+      return;
+    }
+    prepareQuestionPosition();
+    setInput("");
+    const errorCode = await send(combined);
+    if (errorCode) {
+      setInput(current => current.trim() ? current : combined);
+      showSendError(errorCode);
+    }
+  };
+  const voice = useCoachVoiceInput(snapshot?.conversationId, (text) => void sendVoiceTranscript(text));
+  const voiceBusy = voice.busy;
+
+  const generating = status === "sending" || snapshot?.generationStatus === "running";
+  // Every finished turn (a refused one included) has spent or checked the allowance.
+  const wasGenerating = useRef(false);
+  useEffect(() => {
+    if (wasGenerating.current && !generating) void queryClient.invalidateQueries({ queryKey: aiCoachKeys.allowance() });
+    wasGenerating.current = generating;
+  }, [generating, queryClient]);
+  const showWelcome = status === "ready" && messages.length === 0 && !historyLoading && !historyError;
+  // Blocked: starters and follow-ups would only be refused; the card in the composer's place explains why.
+  // A message waits for ticks still saving: each one changes the conversation version the message is sent against.
+  const canSend = !voiceBusy && chatReady && !allowanceBlocked && !tickBusy;
+  // A refused turn ("quota") is explained by the allowance card, not a generic retry toast.
+  const showSendError = (errorCode: string | null) => {
+    if (errorCode && errorCode !== "quota") Toast.show({ type: "error", text1: t("chat.sendError") });
+  };
+
+  const handleSend = async () => {
+    if (!canSend || !input.trim()) return;
+    const text = input;
+    prepareQuestionPosition();
+    setInput("");
+    const errorCode = await send(text);
+    if (errorCode) {
+      setInput(current => current.trim() ? current : text);
+      showSendError(errorCode);
+    }
+  };
+
+  const handleStarter = async (text: string) => {
+    if (!canSend) return;
+    prepareQuestionPosition();
+    showSendError(await send(text));
+  };
+
+  // A tapped follow-up leaves any draft in the input untouched.
+  const handleFollowUp = async (text: string) => {
+    if (!canSend) return;
+    prepareQuestionPosition();
+    showSendError(await send(text, "followup"));
+  };
+
+  const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
+    selectedItemIds: string[], allowScheduleConflict = false, acceptedConflictToken?: string | null): Promise<void> => {
+    const outcome = await confirm(draftId, action, edited, selectedItemIds, allowScheduleConflict, acceptedConflictToken);
+
+    if (outcome.result?.status === "succeeded") return;
+
+    if (outcome.errorCode === "ScheduleConflict" && outcome.scheduleAssessment?.conflictToken) {
+      const assessment = outcome.scheduleAssessment;
+      Alert.alert(t("draft.scheduleConflictTitle"),
+        t("draft.scheduleConflictConfirm") + "\n" +
+          t("draft.scheduleConflict", { tasks: [...new Set(assessment.conflicts.map((entry) => entry.taskTitle))].join("、") }), [
+          { text: t("draft.cancel"), style: "cancel" },
+          { text: t("draft.saveDespiteConflict"), onPress: () =>
+            void handleConfirm(draftId, action, edited, selectedItemIds, true, assessment.conflictToken) },
+        ]);
+      return;
+    }
+
+    // Failed persistence keeps the draft retryable; conflicts already resynced the UI.
+    Toast.show({ type: "error", text1: outcome.errorCode === "ScheduleUnverified"
+      ? scheduleUnverifiedText(outcome.scheduleAssessment, t)
+      : t(outcome.errorCode === "ScheduleInPast" ? "draft.timePassed" : outcome.errorCode === "ScheduleConflict"
+        ? "draft.scheduleChanged" : "draft.saveFailed") });
+  };
+
+  const tickErrorText = (code: string, added: boolean) => {
+    switch (code) {
+      case "ScheduleInPast": return t("card.timePassed");
+      case "ScheduleRequired": return t("card.needsTime");
+      case "ConversationBusy": return t("chat.busy");
+      case "DraftItemNotFound":
+      case "DraftNotEditable":
+      case "StaleConversationVersion": return t("card.listChanged");
+      default: return t(added ? "card.addFailed" : "card.removeFailed");
+    }
+  };
+
+  const handleTick = async (list: ArtifactEnvelopeDto, item: TaskDraftItemDto, added: boolean) => {
+    // A refusal the phone can already see needs no request, and the circle never flips for it.
+    if (added && item.kind !== "note") {
+      const code = !item.date || !item.startTime || !item.endTime ? "ScheduleRequired"
+        : isPastStart(item, Date.now()) ? "ScheduleInPast" : null;
+      if (code) {
+        Toast.show({ type: "error", text1: tickErrorText(code, added) });
+        return;
+      }
+    }
+    const outcome = await tickItem(list.id, item.itemId, added);
+    if (!outcome) return;
+    if (outcome.errorCode) {
+      Toast.show({ type: "error", text1: tickErrorText(outcome.errorCode, outcome.added) });
+      return;
+    }
+    const note = item.kind === "note";
+    if (!outcome.added) showTickNotice(t(note ? "card.removedNote" : "card.removedTask"), false);
+    else if (outcome.conflicts.length) showTickNotice(t("card.addedWithClash", { tasks: outcome.conflicts.join(", ") }), true);
+    else showTickNotice(t(note ? "card.addedNote" : "card.addedTask"), false);
+  };
+
+  const handleEditCard = (list: ArtifactEnvelopeDto, item: TaskDraftItemDto) => {
+    // Still saving: the card is about to become a task (or stop being one), so wait for it to settle.
+    if (wantedAdded[item.itemId] !== undefined) return;
+    if (!isItemSaved(item)) {
+      setEditingCard({ list, item: toReviewItem(item), version: snapshot?.conversationVersion ?? 0 });
+      return;
+    }
+    // A saved item is an ordinary task or note now, so it opens in that editor.
+    if (item.kind === "note" && item.persistedNoteId) {
+      router.push({ pathname: "/(protected)/note-editor", params: {
+        noteId: item.persistedNoteId,
+        noteText: [item.title.trim(), item.description?.trim()].filter(Boolean).join("\n"),
+        isPersistent: "false",
+      } });
+    } else if (!item.recurrence && item.persistedTaskId != null) {
+      router.push({ pathname: "/(protected)/task-edit",
+        params: { mode: TASK_DETAIL_ROUTE_MODE.Persisted, taskId: item.persistedTaskId } });
+    } else Toast.show({ type: "info", text1: t("card.editRepeating") });
+  };
+
+  const saveCardEdit = async (fields: EditedDraftItemDto | EditedNoteDraftItemDto) => {
+    if (!editingCard) return;
+    const error = await updateReviewItem(editingCard.list, editingCard.version, fields);
+    if (!error) {
+      setEditingCard(null);
+      return;
+    }
+    Toast.show({ type: "error", text1: t(error === "InvalidDraftFields" ? "review.invalidFields"
+      : error.startsWith("Stale") ? "review.changed" : "draft.editFailed") });
+  };
+
+  // Rows get one stable action object, so a streaming update doesn't re-render every visible row.
+  const latestRowActions = useRef<RowActions | null>(null);
+  useEffect(() => {
+    latestRowActions.current = {
+      rate: rateMessage,
+      saveDetail: saveFeedbackDetail,
+      confirm: (...args) => void handleConfirm(...args),
+      edit,
+      reject: (draftId) => void reject(draftId).then(error => {
+        if (error) Toast.show({ type: "error", text1: t("draft.editFailed") });
+      }),
+      tick: (list, item, added) => void handleTick(list, item, added),
+      editCard: handleEditCard,
+    };
+  });
+  const rowActions = useMemo<RowActions>(() => ({
+    rate: (...args) => latestRowActions.current?.rate(...args) ?? Promise.resolve(false),
+    saveDetail: (...args) => latestRowActions.current?.saveDetail(...args) ?? Promise.resolve(false),
+    confirm: (...args) => latestRowActions.current?.confirm(...args),
+    edit: (...args) => latestRowActions.current?.edit(...args) ?? Promise.resolve("NotReady"),
+    reject: (draftId) => latestRowActions.current?.reject(draftId),
+    tick: (...args) => latestRowActions.current?.tick(...args),
+    editCard: (...args) => latestRowActions.current?.editCard(...args),
+  }), []);
+
+  const blockedBanner = () => {
+    if (snapshot?.generationStatus !== "failed") return null;
+    if (snapshot.generationError === "quota") {
+      // The card in the composer's place explains it once the refreshed allowance arrives.
+      if (allowanceBlocked) return null;
+      return (
+        <View className="bg-white rounded-3xl p-4 my-2">
+          <Text className="font-baloo text-sm text-secondary">{t("chat.quotaBlocked")}</Text>
+          <Pressable
+            className="bg-highlight rounded-2xl py-3 items-center mt-3"
+            onPress={() => router.push("/task-create")}
+          >
+            <Text className="font-balooBold text-white text-sm">{t("chat.createManually")}</Text>
+          </Pressable>
+        </View>
+      );
+    }
+    const key =
+      snapshot.generationError === "content_filtered"
+        ? "chat.contentFiltered"
+        : snapshot.generationError === "model_unavailable"
+          ? "chat.modelUnavailable"
+          : snapshot.generationError === "output_limit" || snapshot.generationError === "context_limit"
+            ? "chat.tooMuchAtOnce"
+            : "chat.generationFailed";
+    return (
+      <View className="bg-[#FFF7ED] rounded-2xl px-3 py-2.5 my-2">
+        <Text className="font-baloo text-sm text-[#C2410C]">{t(key)}</Text>
+      </View>
+    );
+  };
+
+  const runMenuAction = async (action: () => Promise<string | null>, successText?: string) => {
+    if (voiceBusy) {
+      Toast.show({ type: "info", text1: t("chat.busy") });
+      return;
+    }
+    const error = await action();
+    if (error) Toast.show({ type: "error", text1: t(error === "ConversationBusy" ? "chat.busy" : "chat.actionFailed") });
+    else {
+      if (successText) Toast.show({ type: "success", text1: successText });
+      scrollRef.current?.scrollToEnd({ animated: false });
+    }
+  };
+  // Nothing waits to be saved any more (each tick saves at once), so a new topic needs no warning.
+  const startNewTopic = () => void runMenuAction(newTopic, t("chat.newTopicStarted"));
+  const openMenu = () => Alert.alert(t("chat.menu"), undefined, [
+    { text: t("chat.clearHistory"), style: "destructive", onPress: () =>
+      Alert.alert(t("chat.clearTitle"), t("chat.clearDescription"), [
+        { text: t("draft.cancel"), style: "cancel" },
+        { text: t("chat.clearHistory"), style: "destructive", onPress: () => void runMenuAction(clearChat) },
+      ]) },
+    { text: t("draft.cancel"), style: "cancel" },
+  ]);
+  const dayKey = (value: string) => {
+    const date = new Date(value);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
+  const dateLabel = (value: string) => {
+    const today = new Date(calendarNow);
+    if (dayKey(value) === dayKey(today.toISOString())) return t("chat.today");
+    today.setDate(today.getDate() - 1);
+    if (dayKey(value) === dayKey(today.toISOString())) return t("chat.yesterday");
+    const date = new Date(value);
+    return date.toLocaleDateString(i18n.resolvedLanguage ?? i18n.language, {
+      day: "numeric", month: "short", ...(date.getFullYear() !== calendarNow.getFullYear() ? { year: "numeric" } : {}),
+    });
+  };
+
+  return (
+    <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <CoachHeader
+        actionsDisabled={tickBusy || status !== "ready" || generating
+          || snapshot?.artifacts.some(card => card.status === "processing") === true}
+        allowance={allowance} onAllowancePress={() => router.push("/settings/membership-plan")}
+        onBack={() => router.back()} onNewTopic={startNewTopic} onMenu={openMenu} />
+      <View className="flex-1 relative">
+        <FlatList
+          ref={scrollRef}
+          data={chronologicalMessages}
+          CellRendererComponent={QuestionCell}
+          keyExtractor={keyFor}
+          className="flex-1 px-4"
+          contentContainerStyle={{ paddingVertical: 12 }}
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+          keyboardShouldPersistTaps="handled"
+          onStartReached={() => { if (!initialScrollPending.current) loadOlder(); }}
+          onStartReachedThreshold={0.3}
+          onLayout={event => {
+            const height = event.nativeEvent.layout.height;
+            setViewportHeight(height);
+            scrollMetrics.current.viewport = height;
+            updateScrollToLatest();
+          }}
+          onScroll={event => {
+            scrollMetrics.current.offset = event.nativeEvent.contentOffset.y;
+            updateScrollToLatest();
+          }}
+          scrollEventThrottle={32}
+          onScrollBeginDrag={() => {
+            initialScrollPending.current = false;
+            questionToPosition.current = false;
+            previousQuestion.current = null;
+          }}
+          onContentSizeChange={(_width, height) => {
+            contentHeight.current = height;
+            updateScrollToLatest();
+            if (questionToPosition.current) {
+              positionQuestion();
+              return;
+            }
+            if (!initialScrollPending.current || status !== "ready" || messages.length === 0) return;
+            // Rows render in batches and re-measure late, so stay pinned to the end until the user scrolls or sends.
+            // scrollToEnd reads row metrics that aren't measured yet here; the reported height is already real.
+            const { viewport, spacer } = scrollMetrics.current;
+            scrollRef.current?.scrollToOffset({ offset: Math.max(0, height - spacer - viewport), animated: false });
+          }}
+          ListHeaderComponent={<View>
+            {loadingOlder && <ActivityIndicator />}
+            {historyError && <Pressable onPress={retryHistory}><Text className="font-baloo text-primary text-center py-3">{t("chat.historyError")}</Text></Pressable>}
+          </View>}
+          ListFooterComponent={<View>
+            <View onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}>
+              {/* An empty new topic still marks where it starts; its first message takes the divider over. */}
+              {status === "ready" && snapshot?.messages.length === 0 && messages.length > 0 && <TopicDivider />}
+              {status === "connecting" && <ActivityIndicator />}
+              {status === "startFailed" && <Pressable onPress={() => void start()}>
+                <Text className="font-baloo text-warning p-3">{t("chat.startError")}</Text>
+              </Pressable>}
+              {reconnecting ? <Text className="font-baloo text-primary p-3">{t("chat.reconnecting")}</Text>
+                : generating && !messages.some(item => item.streaming) && <TypingIndicator label={t("chat.thinking")} />}
+              {!generating && !!snapshot?.followUps?.length && <Animated.View entering={fadeIn}>
+                <FollowUpChips items={snapshot.followUps} disabled={!canSend} onSend={(text) => void handleFollowUp(text)} />
+              </Animated.View>}
+              {blockedBanner()}
+            </View>
+            <View style={{ height: replySpace }} onLayout={event => {
+              scrollMetrics.current.spacer = event.nativeEvent.layout.height;
+              updateScrollToLatest();
+            }} />
+          </View>}
+          renderItem={({ item, index }) => {
+            const older = chronologicalMessages[index - 1];
+            const active = item.conversationId === snapshot?.conversationId;
+            return <ChatRow item={item} active={active} liveArtifacts={active ? snapshot?.artifacts : undefined}
+              reviewCards={cardsByMessage.get(item.id)}
+              dateText={!older || dayKey(older.createdAt) !== dayKey(item.createdAt) ? dateLabel(item.createdAt) : null}
+              feedback={feedbackByMessage[item.id]} feedbackBusy={feedbackSaving[item.id] === true}
+              cardsBusy={generating} animateIn={keyFor(item) !== item.id} actions={rowActions} />;
+          }}
+        />
+        {/* Outside the list: after a clear, the list keeps its old offset and would hide a header welcome. */}
+        {showWelcome && <Animated.View exiting={FadeOut.duration(200)} className="absolute inset-0 bg-background">
+          <ScrollView className="flex-1" contentContainerClassName="px-4" keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}>
+            <CoachWelcome disabled={!canSend} onStart={(text) => void handleStarter(text)} />
+          </ScrollView>
+        </Animated.View>}
+        {showScrollToLatest && status !== "connecting" && <Animated.View entering={popIn} exiting={popOut}
+          className="absolute right-4 bottom-3">
+          <Pressable
+            onPress={scrollToLatest}
+            accessibilityRole="button"
+            accessibilityLabel={t("chat.scrollToLatest")}
+            hitSlop={4}
+            className="w-10 h-10 rounded-full bg-white items-center justify-center"
+            style={{ boxShadow: "0 2px 8px rgba(68, 73, 100, 0.16)" }}
+          >
+            <Ionicons name="arrow-down" size={21} color="#444964" />
+          </Pressable>
+        </Animated.View>}
+        {tickNotice && <Animated.View key={tickNotice.id} entering={popIn} exiting={popOut} pointerEvents="none"
+          className="absolute bottom-3 self-center max-w-[86%] flex-row items-center gap-2 rounded-full bg-white px-4 py-2.5"
+          style={{ boxShadow: "0 2px 10px rgba(68, 73, 100, 0.14)" }}>
+          <Ionicons name={tickNotice.clash ? "alert-circle" : "star"} size={16}
+            color={tickNotice.clash ? "#F59E0B" : "#9AD513"} />
+          <Text accessibilityLiveRegion="polite" className="font-inter font-semibold text-sm text-secondary">
+            {tickNotice.text}
+          </Text>
+        </Animated.View>}
+      </View>
+
+      {/* TEMPORARY debug line (2026-08-24): session token usage — remove with snapshot.debugUsage. */}
+      {__DEV__ && snapshot?.debugUsage && (
+        <Text className="font-baloo text-[11px] text-primary text-center pb-0.5 opacity-60">
+          {`${snapshot.debugUsage.totalTokens.toLocaleString()} tokens (in ${snapshot.debugUsage.inputTokens.toLocaleString()} / out ${snapshot.debugUsage.outputTokens.toLocaleString()})${
+            snapshot.debugUsage.estUsd != null ? ` · $${snapshot.debugUsage.estUsd.toFixed(4)}` : ""
+          }`}
+        </Text>
+      )}
+
+      {/* ✎ on a card not yet saved edits the suggestion itself. */}
+      {editingCard?.item.kind === "task" && (
+        <DraftEditModal key={editingCard.item.fields.itemId} visible initial={editingCard.item.fields}
+          busy={generating} onCancel={() => setEditingCard(null)} onSave={(fields) => void saveCardEdit(fields)} />
+      )}
+      {editingCard?.item.kind === "note" && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setEditingCard(null)}>
+          <KeyboardAvoidingView className="flex-1 bg-black/40 justify-center px-5"
+            behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <ReviewNoteEditor key={editingCard.item.fields.itemId} initial={editingCard.item.fields} busy={generating}
+              onCancel={() => setEditingCard(null)} onSave={(fields) => void saveCardEdit(fields)} />
+          </KeyboardAvoidingView>
+        </Modal>
+      )}
+
+      <View className="mx-3 mt-2 mb-2">
+        {allowanceBlocked && allowance && !voiceBusy ? (
+          <AllowanceBlockedCard allowance={allowance}
+            onCreateManually={() => router.push("/task-create")} />
+        ) : voiceBusy ? (
+          <VoiceRecordingBar sending={voice.phase === "sending"} elapsedMs={voice.elapsedMs}
+            onCancel={() => void voice.cancel()} onSend={() => void voice.stopAndSend()} />
+        ) : (
+          <CoachComposer value={input} onChangeText={setInput} editable={snapshot !== null} canSend={canSend}
+            onSend={() => void handleSend()} onStartVoice={voice.start} />
+        )}
+      </View>
+    </KeyboardAvoidingView>
+  );
+}

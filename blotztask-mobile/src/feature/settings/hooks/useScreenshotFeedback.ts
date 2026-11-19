@@ -19,7 +19,7 @@ const canDetectScreenshots =
 const SKIPPED_PATHS = new Set([
   "/feedback",
   "/settings/feedback",
-  "/settings/review",
+  "/review",
   "/badge-wall",
   "/badge-details",
   // A native modal that would cover the card, so it could never be seen or tapped.

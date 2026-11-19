@@ -2,6 +2,7 @@ import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-l
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { useWhatsNewSeen } from "@/feature/whats-new/hooks/useWhatsNewSeen";
+import { takeLaunchReviewHref } from "@/feature/review/hooks/useOpenReviewFromReminder";
 import WhatsNewScreen from "@/feature/whats-new/screens/whats-new-screen";
 import { LoadErrorScreen } from "@/shared/components/load-error-screen";
 import LoadingScreen from "@/shared/components/loading-screen";
@@ -78,7 +79,8 @@ export default function ProtectedGate() {
     }
 
     if (hasSeenWhatsNew) {
-      router.replace("/(protected)/(tabs)");
+      // A letter reminder that started the app opens the Review tab instead of Home.
+      router.replace(takeLaunchReviewHref() ?? "/(protected)/(tabs)");
     }
   }, [
     isLoading,
@@ -109,7 +111,7 @@ export default function ProtectedGate() {
 
   const handleWhatsNewFinish = async () => {
     await markAsSeen();
-    router.replace("/(protected)/(tabs)");
+    router.replace(takeLaunchReviewHref() ?? "/(protected)/(tabs)");
   };
 
   const handleRetry = () => {

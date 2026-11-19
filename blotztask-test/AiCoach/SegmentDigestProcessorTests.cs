@@ -1,0 +1,371 @@
+using System.Text.Json;
+using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.AiCoach.Ai.ModelGateway;
+using BlotzTask.Modules.AiCoach.Ai.Runtime;
+using BlotzTask.Modules.AiCoach.Application.Orchestration;
+using BlotzTask.Modules.AiCoach.Application.Queries;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.AiCoach.Domain.Conversations;
+using BlotzTask.Modules.AiCoach.Infrastructure;
+using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.UserUnderstanding.Commands;
+using BlotzTask.Modules.UserUnderstanding.Domain;
+using BlotzTask.Modules.UserUnderstanding.Queries;
+using BlotzTask.Tests.Fixtures;
+using BlotzTask.Tests.Helpers;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+
+namespace BlotzTask.Tests.AiCoach;
+
+public sealed class SegmentDigestProcessorTests(DatabaseFixture fixture) : IClassFixture<DatabaseFixture>
+{
+    [Fact]
+    public async Task Handle_PausedChatWithLastingPreference_StoresExtractedMemoryOnce()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("From now on please keep your replies short", "Sure, I will keep them short.");
+        harness.Clock.Now = harness.Clock.Now.Add(SegmentDigestProcessor.PauseBeforeLearning).AddMinutes(1);
+        harness.Gateway.Respond = _ => Digest(null, Memory("preference", "Prefers short replies", 0));
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        var memory = await harness.Db.UserMemories.AsNoTracking().SingleAsync(m => m.UserId == harness.UserId);
+        memory.Source.Should().Be(UserMemorySource.Extracted, because: "it was learned from chat, not asked for");
+        memory.EvidenceExcerpt.Should().Be("From now on please keep your replies short",
+            because: "the user's own words explain where the memory came from");
+        harness.Gateway.Calls.Should().Be(1, because: "the cursor moves past processed messages so they are read once");
+    }
+
+    [Fact]
+    public async Task Handle_LongChatWithLongReplies_StillSendsTheUsersEarliestMessage()
+    {
+        // Arrange: a long chat with no pause, so it is read once at the end, and long coach replies.
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("我12月15号有数据结构期末考试", new string('答', 1500));
+        for (var i = 0; i < 25; i++) await harness.ChatAsync($"第{i}个问题", new string('答', 1500));
+        harness.Clock.Now = harness.Clock.Now.Add(SegmentDigestProcessor.PauseBeforeLearning).AddMinutes(1);
+        string? sent = null;
+        harness.Gateway.Respond = request =>
+        {
+            sent = ((GatewayUserMessage)request.Messages.Single()).Content;
+            return Digest(null);
+        };
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        using var payload = JsonDocument.Parse(sent!);
+        var newMessages = payload.RootElement.GetProperty("newMessages").EnumerateArray().ToArray();
+        newMessages.First().GetProperty("text").GetString().Should().Be("我12月15号有数据结构期末考试",
+            because: "memories come from what the user said, so long coach replies must not push the user's early messages out");
+        newMessages.Where(m => m.GetProperty("role").GetString() == "assistant")
+            .Should().OnlyContain(m => m.GetProperty("text").GetString()!.Length <= 301,
+                because: "coach replies are only context, so a short excerpt is enough");
+    }
+
+    [Fact]
+    public async Task Handle_ChatStillActive_WaitsForAPause()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("From now on please keep your replies short", "Sure.");
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(3);
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        harness.Gateway.Calls.Should().Be(0, because: "learning waits until the exchange has settled");
+    }
+
+    [Fact]
+    public async Task Handle_MemorySwitchedOff_PassesMessagesOverWithoutAModelCall()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        harness.Db.UserPreferences.Add(new UserPreference { UserId = harness.UserId, AiMemoryEnabled = false });
+        await harness.Db.SaveChangesAsync();
+        await harness.ChatAsync("Remember that I work night shifts these days", "Noted.");
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(11);
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+        var preference = await harness.Db.UserPreferences.SingleAsync(p => p.UserId == harness.UserId);
+        preference.AiMemoryEnabled = true;
+        await harness.Db.SaveChangesAsync();
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        harness.Gateway.Calls.Should().Be(0,
+            because: "messages sent while memory was off are never learned, even after it is switched back on");
+    }
+
+    [Fact]
+    public async Task Handle_MemorySwitchedOff_ClosesTopicWithEmptySummaryWithoutAModelCall()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        harness.Db.UserPreferences.Add(new UserPreference { UserId = harness.UserId, AiMemoryEnabled = false });
+        await harness.Db.SaveChangesAsync();
+        await harness.ChatAsync("My test codeword is BANANA-7", "Got it.");
+        harness.Open.End(harness.Clock.Now);
+        await harness.Store.SaveAsync(harness.Open, default);
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(3);
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+        var preference = await harness.Db.UserPreferences.SingleAsync(p => p.UserId == harness.UserId);
+        preference.AiMemoryEnabled = true;
+        await harness.Db.SaveChangesAsync();
+        await harness.Processor.ProcessBatchAsync(default);
+        var previous = await harness.Store.FindPreviousSummaryAsync(harness.UserId, harness.Clock.Now, default);
+
+        // Assert
+        harness.Gateway.Calls.Should().Be(0,
+            because: "a topic that ends while memory is off is not summarised, even after memory is switched back on");
+        previous.Should().BeEmpty(because: "nothing said while memory was off is carried into a later topic");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Handle_NewTopicSend_CarriesPreviousSummaryOnlyWhileMemoryIsOn(bool memoryEnabled)
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("My test codeword is BANANA-7", "Got it.");
+        harness.Open.End(harness.Clock.Now);
+        await harness.Store.SaveAsync(harness.Open, default);
+        await harness.Store.SaveClosingSummaryAsync(harness.Open, "The user's test codeword is BANANA-7.", default);
+        harness.Db.UserPreferences.Add(new UserPreference { UserId = harness.UserId, AiMemoryEnabled = memoryEnabled });
+        await harness.Db.SaveChangesAsync();
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(3);
+        var next = await harness.Segments.OpenAsync(harness.UserId, "Australia/Perth", default);
+
+        // Act
+        await harness.Application.SendAsync(harness.UserId, next.Id, Guid.NewGuid(), "What's my test codeword?", null, default);
+
+        // Assert
+        harness.Runtime.LastRequest!.PreviousClosingSummary.Should().Be(
+            memoryEnabled ? "The user's test codeword is BANANA-7." : null,
+            because: "the previous topic's summary is remembered context, so the memory switch decides whether the coach sees it");
+    }
+
+    [Fact]
+    public async Task Handle_IdlePastTopicBoundary_SummaryIsReadyForTheNextTopic()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("Plan my exam revision for next week", "Here is a plan.");
+        harness.Clock.Now = harness.Clock.Now.AddHours(9);
+        harness.Gateway.Respond = request =>
+        {
+            request.SystemPrompt.Should().Contain("Closing summary", because: "an idle topic needs its closing summary");
+            return Digest("Planned exam revision for 2026-10-23.");
+        };
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+        var prepared = await harness.Segments.PrepareSendAsync(harness.UserId, harness.Open.Id, Guid.NewGuid(),
+            null, default);
+        var previous = await harness.Store.FindPreviousSummaryAsync(harness.UserId, harness.Clock.Now, default);
+
+        // Assert
+        prepared.ConversationId.Should().NotBe(harness.Open.Id, because: "a send after the idle boundary starts a new topic");
+        previous.Should().Be("Planned exam revision for 2026-10-23.",
+            because: "the summary written while idle is what the new topic's first turn reads, with no wait");
+    }
+
+    [Fact]
+    public async Task Handle_CandidateMatchingADeletedMemory_IsNotLearnedAgain()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        var remembered = await harness.Remember.Handle(new RememberUserMemoryCommand
+        {
+            UserId = harness.UserId, Kind = UserMemoryKind.Routine, Content = "Goes to the gym on Mondays",
+        });
+        await new ForgetUserMemoryCommandHandler(harness.Db, harness.Clock, NullLogger<ForgetUserMemoryCommandHandler>.Instance)
+            .Handle(new ForgetUserMemoryCommand { UserId = harness.UserId, MemoryId = remembered.Memory!.Id });
+        await harness.ChatAsync("Like I said, I go to the gym on Mondays", "Got it.");
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(11);
+        harness.Gateway.Respond = _ => Digest(null, Memory("routine", "goes to the gym on mondays", 0));
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        (await harness.Db.UserMemories.CountAsync(m => m.UserId == harness.UserId && m.Status == UserMemoryStatus.Active))
+            .Should().Be(0, because: "a memory the user deleted is never re-learned from chat");
+    }
+
+    [Fact]
+    public async Task Handle_UsersLaterCorrection_ReplacesEvenAnExplicitMemory()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        var explicitMemory = (await harness.Remember.Handle(new RememberUserMemoryCommand
+        {
+            UserId = harness.UserId, Kind = UserMemoryKind.Routine, Content = "Has class on Wednesday evenings",
+        })).Memory!;
+        await harness.ChatAsync("My classes finished for good, Wednesday evenings are free now", "Good to know.");
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(11);
+        harness.Gateway.Respond = _ => Digest(null,
+            Memory("routine", "Wednesday evenings are free", 0, replaces: explicitMemory.Ref));
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        var stored = await harness.Db.UserMemories.AsNoTracking().SingleAsync(m => m.Id == explicitMemory.Id);
+        stored.Status.Should().Be(UserMemoryStatus.Superseded,
+            because: "users rarely say 'forget'; their own later words are how a stale memory is corrected");
+    }
+
+    [Fact]
+    public async Task Handle_CandidateFromAnAssistantMessage_IsIgnored()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture);
+        await harness.ChatAsync("Any tips for studying better at home?", "You could study every morning at 7.");
+        harness.Clock.Now = harness.Clock.Now.AddMinutes(11);
+        harness.Gateway.Respond = _ => Digest(null, Memory("routine", "Studies every morning at 7", 1));
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        (await harness.Db.UserMemories.CountAsync(m => m.UserId == harness.UserId)).Should().Be(0,
+            because: "the assistant's own suggestion is not a fact about the user");
+    }
+
+    [Fact]
+    public async Task Handle_UserAllowanceUsedUp_StillDigestsOnTheEnvironmentPotOnly()
+    {
+        // Arrange
+        await using var harness = await Harness.CreateAsync(fixture, allowanceLeft: false);
+        await harness.ChatAsync("From now on please keep your replies short", "Sure.");
+        harness.Clock.Now = harness.Clock.Now.Add(SegmentDigestProcessor.PauseBeforeLearning).AddMinutes(1);
+        harness.Gateway.Respond = _ => Digest(null, Memory("preference", "Prefers short replies", 0));
+        var userSpendBefore = await UserSpendAsync(harness);
+
+        // Act
+        await harness.Processor.ProcessBatchAsync(default);
+
+        // Assert
+        harness.Gateway.Calls.Should().Be(1, because: "the digest is not charged to the user, so their used-up allowance does not stop it");
+        (await harness.Db.UserMemories.CountAsync(m => m.UserId == harness.UserId)).Should().Be(1,
+            because: "what the user said before running out is still remembered");
+        (await UserSpendAsync(harness)).Should().Be(userSpendBefore,
+            because: "users pay only for the messages they send, not for background work after they stop");
+        (await harness.Db.AiCoachBudgetCharges.CountAsync(c => c.Environment == harness.Budget.EnvironmentName && c.UserId == null))
+            .Should().Be(1, because: "the digest counts towards the environment cap");
+    }
+
+    private static Task<decimal> UserSpendAsync(Harness harness) =>
+        harness.Db.AiCoachBudgetCharges.AsNoTracking()
+            .Where(c => c.Environment == harness.Budget.EnvironmentName && c.UserId == harness.UserId)
+            .SumAsync(c => c.ChargedUsd);
+
+    private static object Memory(string kind, string content, int messageIndex, string? replaces = null) =>
+        new { kind, content, validThrough = (string?)null, replaces, messageIndex };
+
+    private static ModelCompletionResult Digest(string? summary, params object[] memories) =>
+        new(null, [new ModelToolCallRequest("call-1", "save_digest", JsonSerializer.Serialize(new { summary, memories }))],
+            ModelFinishReason.ToolCalls, 10, 10, 20);
+
+    private sealed class ScriptedGateway : IModelGateway
+    {
+        public Func<ModelGatewayRequest, ModelCompletionResult> Respond { get; set; } = _ => Digest(null);
+        public int Calls { get; private set; }
+
+        public Task<ModelCompletionResult> CompleteAsync(ModelGatewayRequest request, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(Respond(request));
+        }
+    }
+
+    private sealed class CapturingRuntime : IModelTurnRuntime
+    {
+        public ModelTurnRequest? LastRequest { get; private set; }
+
+        public Task<ModelTurnRunResult> ExecuteAsync(ModelTurnRequest request, CancellationToken ct)
+        {
+            LastRequest = request;
+            return Task.FromResult(new ModelTurnRunResult("Ok", null, [new GatewayAssistantMessage("Ok", [])],
+                request.Drafts, null, 0, 0, 0, 0, 0));
+        }
+    }
+
+    private sealed class Harness : IAsyncDisposable
+    {
+        private readonly ServiceProvider _services;
+        public BlotzTaskDbContext Db { get; }
+        public ConversationSegmentTests.SegmentClock Clock { get; } = new();
+        public ScriptedGateway Gateway { get; } = new();
+        public SqlConversationStore Store { get; }
+        public ConversationSegments Segments { get; }
+        public SegmentDigestProcessor Processor { get; }
+        public RememberUserMemoryCommandHandler Remember { get; }
+        public TestCoachBudget Budget { get; }
+        public CapturingRuntime Runtime { get; } = new();
+        public ConversationApplication Application { get; }
+        public Conversation Open { get; private set; } = null!;
+        public Guid UserId => Open.UserId;
+
+        private Harness(DatabaseFixture fixture)
+        {
+            Db = new(fixture.Options);
+            _services = new ServiceCollection().AddScoped(_ => new BlotzTaskDbContext(fixture.Options)).BuildServiceProvider();
+            var options = Options.Create(TestCoachBudget.Options("scripted"));
+            Store = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, options, NullLogger<SqlConversationStore>.Instance);
+            Segments = new(Store, Clock, options);
+            Remember = new(Db, Clock, NullLogger<RememberUserMemoryCommandHandler>.Instance);
+            Budget = new(_services.GetRequiredService<IServiceScopeFactory>(), Clock, options);
+            var generator = new SegmentDigestGenerator(Budget.Wrap(Gateway), new AiCoachUsageTracker(), options,
+                NullLogger<SegmentDigestGenerator>.Instance);
+            var userContext = new GetUserContextQueryHandler(Db, Clock);
+            Processor = new(Db, Store, generator, Remember, userContext, Clock, options,
+                TestDbContextFactory.CreateLogger<SegmentDigestProcessor>());
+            var tasks = new GetTasksByDateQueryHandler(Db, new(), NullLogger<GetTasksByDateQueryHandler>.Instance);
+            var checker = new DraftScheduleChecker(tasks, new(), Clock, NullLogger<DraftScheduleChecker>.Instance);
+            Application = new(Store, Runtime, new AiCoachUsageTracker(), new TaskContextReader(tasks, options, Clock), checker,
+                Clock, NullLogger<ConversationApplication>.Instance, Segments, userContextQuery: userContext);
+        }
+
+        public static async Task<Harness> CreateAsync(DatabaseFixture fixture, bool allowanceLeft = true)
+        {
+            var harness = new Harness(fixture);
+            var userId = await new DataSeeder(harness.Db).CreateUserAsync();
+            if (!allowanceLeft) await harness.Budget.UseUpAllowanceAsync(harness.Db, userId);
+            harness.Open = await harness.Segments.OpenAsync(userId, "Australia/Perth", default);
+            return harness;
+        }
+
+        public async Task ChatAsync(string userText, string assistantText)
+        {
+            var turn = Guid.NewGuid();
+            Open.BeginTurn(turn, userText, Clock.Now);
+            Clock.Now = Clock.Now.AddSeconds(5);
+            Open.CompleteTurn(turn, Open.Version, assistantText, null,
+                [new GatewayAssistantMessage(assistantText, [])], [], null, 0, completedAt: Clock.Now);
+            await Store.SaveAsync(Open, default);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await Db.DisposeAsync();
+            await _services.DisposeAsync();
+        }
+    }
+}

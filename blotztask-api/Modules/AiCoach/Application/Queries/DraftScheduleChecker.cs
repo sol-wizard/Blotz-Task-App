@@ -1,0 +1,131 @@
+using BlotzTask.Modules.AiCoach.Application.Commands;
+using BlotzTask.Modules.AiCoach.Domain.Proposals;
+using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Domain.Services;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace BlotzTask.Modules.AiCoach.Application.Queries;
+
+/// <summary>Checks complete calendar query results. This is advisory: another write may happen after the check.</summary>
+public sealed class DraftScheduleChecker(GetTasksByDateQueryHandler tasks,
+    RecurringTaskGeneratorService recurrenceGenerator, TimeProvider clock,
+    ILogger<DraftScheduleChecker> logger)
+{
+    public async Task<ScheduleAssessment> CheckAsync(Guid userId, IReadOnlyList<TaskProposal> proposals,
+        CancellationToken ct)
+    {
+        var checkedAt = clock.GetUtcNow();
+        const string scope = "scheduled";
+        var windows = new List<(TaskProposal Item, DateTimeOffset Start, DateTimeOffset End)>();
+        try
+        {
+            foreach (var item in proposals.Where(item => item.Kind == ProposalKind.Task && !item.IsSaved))
+            {
+                if (item.Date is not { } date || item.StartTime is not { } start || item.EndTime is not { } end)
+                    return new("incomplete", checkedAt, [], Scope: scope);
+                var dates = new List<DateOnly>();
+                if (item.Recurrence is { } recurrence)
+                {
+                    var template = new RecurringTask
+                    {
+                        SeriesId = 0, UserId = userId, Title = item.Title,
+                        TimeType = TaskTimeType.RangeTime, TemplateStartTime = checkedAt,
+                        ScheduleTimeZoneId = item.TimeZoneId, StartDate = date, EndDate = recurrence.EndDate,
+                        Pattern = new RecurrencePattern
+                        {
+                            Frequency = recurrence.Frequency, Interval = recurrence.Interval,
+                            DaysOfWeek = recurrence.DaysOfWeek, DayOfMonth = recurrence.DayOfMonth,
+                        },
+                    };
+                    for (var offset = 0; offset < 7; offset++)
+                    {
+                        var candidate = date.AddDays(offset);
+                        if (recurrenceGenerator.IsOccurrenceOn(template, candidate)) dates.Add(candidate);
+                    }
+                }
+                else dates.Add(date);
+                var zone = TimeZoneInfo.FindSystemTimeZoneById(item.TimeZoneId);
+                foreach (var occurrenceDate in dates)
+                {
+                    var from = DraftEditing.ResolveLocal(occurrenceDate, start, zone);
+                    var until = DraftEditing.ResolveLocal(occurrenceDate, end, zone);
+                    windows.Add((item, from, until));
+                }
+            }
+
+            // One calendar read per (time zone, date) below; windows are only compared in memory,
+            // so reads are the cost to bound. Retrying cannot shrink the list, so name the reason.
+            var reads = windows.GroupBy(window => window.Item.TimeZoneId).Select(group =>
+            {
+                var zone = TimeZoneInfo.FindSystemTimeZoneById(group.Key);
+                return (ZoneId: group.Key, Windows: group.ToArray(),
+                    Dates: group.SelectMany(window => Days(window.Start, window.End, zone)).Distinct().ToArray());
+            }).ToArray();
+            if (reads.Sum(read => read.Dates.Length) > 50)
+                return new("unverified", checkedAt, [], Scope: scope, Reason: "too_many_dates");
+            var conflicts = new List<ScheduleConflict>();
+            foreach (var read in reads)
+            {
+                foreach (var date in read.Dates)
+                {
+                    var entries = await tasks.Handle(new GetTasksByDateQuery
+                    {
+                        UserId = userId, Date = date, TimeZoneId = read.ZoneId,
+                    }, ct);
+                    foreach (var window in read.Windows)
+                    foreach (var entry in entries)
+                    {
+                        if (entry.IsDone || entry.TimeType != TaskTimeType.RangeTime
+                            || entry.StartTime is not { } existingStart || entry.EndTime is not { } existingEnd
+                            || window.Start >= existingEnd || existingStart >= window.End) continue;
+                        var identity = entry.Id?.ToString() ??
+                            $"{entry.RecurringOccurrence?.RecurringTaskId}:{entry.RecurringOccurrence?.OccurrenceDate}";
+                        if (conflicts.Any(conflict => conflict.ItemId == window.Item.ProposalId
+                            && conflict.TaskIdentity == identity && conflict.Start == existingStart
+                            && conflict.End == existingEnd)) continue;
+                        conflicts.Add(new(window.Item.ProposalId, identity, entry.Title, existingStart, existingEnd));
+                        logger.LogInformation("AiCoach schedule conflict for item {ItemId} with task {TaskIdentity}",
+                            window.Item.ProposalId, identity);
+                    }
+                }
+            }
+            // Two repeating draft items clash again on every shared day. One entry per pair (its
+            // first overlap) is enough to show it and keeps the list within the coach's context.
+            var draftPairs = new HashSet<(Guid, Guid)>();
+            foreach (var left in windows)
+            foreach (var right in windows)
+            {
+                if (left.Item.ProposalId == right.Item.ProposalId || left.Start >= right.End
+                    || right.Start >= left.End) continue;
+                if (string.CompareOrdinal(left.Item.ProposalId.ToString(), right.Item.ProposalId.ToString()) >= 0) continue;
+                if (!draftPairs.Add((left.Item.ProposalId, right.Item.ProposalId))) continue;
+                conflicts.Add(new(left.Item.ProposalId, $"draft:{right.Item.ProposalId}",
+                    right.Item.Title, right.Start, right.End));
+                conflicts.Add(new(right.Item.ProposalId, $"draft:{left.Item.ProposalId}",
+                    left.Item.Title, left.Start, left.End));
+            }
+            var token = conflicts.Count == 0 ? null : Convert.ToHexString(SHA256.HashData(
+                Encoding.UTF8.GetBytes(scope + "|" + string.Join("|", conflicts
+                    .Select(value => $"{value.ItemId}:{value.TaskIdentity}:{value.Start:O}:{value.End:O}")
+                    .Order(StringComparer.Ordinal)))));
+            return new(conflicts.Count > 0 ? "conflict" : proposals.Any(item => item.Recurrence is not null)
+                ? "partial" : "clear", checkedAt, conflicts, token, scope);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "AiCoach schedule check unavailable for user {UserId}", userId);
+            return new("unverified", checkedAt, [], Scope: scope);
+        }
+    }
+
+    private static IEnumerable<DateOnly> Days(DateTimeOffset start, DateTimeOffset end, TimeZoneInfo zone)
+    {
+        var first = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(start, zone).DateTime);
+        var last = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(end.AddTicks(-1), zone).DateTime);
+        for (var date = first; date <= last; date = date.AddDays(1)) yield return date;
+    }
+}
