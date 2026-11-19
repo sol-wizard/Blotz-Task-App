@@ -6,6 +6,7 @@ using BlotzTask.Shared.BackgroundTasks;
 using BlotzTask.Shared.Events;
 using BlotzTask.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
@@ -156,11 +157,20 @@ public class TaskController(
     }
 
     [HttpPut("task-completion-status/{id}")]
-    public async Task<TaskStatusResultDto> TaskStatusUpdate(int id, CancellationToken ct)
+    public async Task<TaskStatusResultDto> TaskStatusUpdate(
+        int id,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] TaskStatusUpdateRequest? request,
+        CancellationToken ct)
     {
         var userId = UserId;
 
-        var command = new TaskStatusUpdateCommand { TaskId = id, UserId = userId };
+        // IsDone is optional so older app versions that send no body still toggle.
+        var command = new TaskStatusUpdateCommand
+        {
+            TaskId = id,
+            UserId = userId,
+            IsDone = request?.IsDone
+        };
         var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
 
         if (result == null)
