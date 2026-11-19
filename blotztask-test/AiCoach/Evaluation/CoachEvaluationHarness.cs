@@ -7,6 +7,7 @@ using BlotzTask.Modules.AiCoach.Ai.Prompts;
 using BlotzTask.Modules.AiCoach.Ai.Runtime;
 using BlotzTask.Modules.AiCoach.Ai.Tools;
 using BlotzTask.Modules.AiCoach.Application.Orchestration;
+using BlotzTask.Modules.AiCoach.Application.Queries;
 using BlotzTask.Modules.AiCoach.Infrastructure;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.UserUnderstanding.Commands;
@@ -34,7 +35,6 @@ internal sealed class CoachEvaluationHarness
     private readonly AiCoachModuleOptions _limits;
     private readonly string? _profileName;
     private readonly bool _streaming = Environment.GetEnvironmentVariable("AICOACH_EVAL_STREAM") == "1";
-    private int _lastTurnCallOffset;
     // Matches the installed app: protocol 6 (review list) with memory tools and user context.
     private readonly bool _mobile = Environment.GetEnvironmentVariable("AICOACH_EVAL_MOBILE") == "1";
     private readonly SegmentDigestGenerator _digests;
@@ -86,7 +86,8 @@ internal sealed class CoachEvaluationHarness
             new ConversationSegments(session.Store, session.Clock, options), trace: null,
             _mobile ? new GetUserContextQueryHandler(session.Db, session.Clock) : null,
             _mobile ? new RememberUserMemoryCommandHandler(session.Db, session.Clock, NullLogger<RememberUserMemoryCommandHandler>.Instance) : null,
-            _mobile ? new ForgetUserMemoryCommandHandler(session.Db, session.Clock, NullLogger<ForgetUserMemoryCommandHandler>.Instance) : null);
+            _mobile ? new ForgetUserMemoryCommandHandler(session.Db, session.Clock, NullLogger<ForgetUserMemoryCommandHandler>.Instance) : null,
+            new FindDeletedSavedItemsQueryHandler(session.Db));
         _digests = new(_gateway, _usage, options, NullLogger<SegmentDigestGenerator>.Instance);
         var root = FindRepository();
         var directory = Path.Combine(root, "blotztask-test", "TestResults", "ai-coach-evals", RunId);
@@ -100,7 +101,6 @@ internal sealed class CoachEvaluationHarness
     {
         var before = _session.Conversation.Drafts.Select(draft => draft.Copy()).ToArray();
         var callOffset = _gateway.Calls.Count;
-        _lastTurnCallOffset = callOffset;
         var failureOffset = _gateway.Failures.Count;
         var previousMessageIds = _session.Conversation.Messages.Select(message => message.Id).ToHashSet();
         var watch = Stopwatch.StartNew();
@@ -166,9 +166,6 @@ internal sealed class CoachEvaluationHarness
     }
 
     public bool Called(string name) => _gateway.Calls.Any(call => call.Response.ToolCalls.Any(tool => tool.Name == name));
-
-    public bool CalledInLastTurn(string name) => _gateway.Calls.Skip(_lastTurnCallOffset)
-        .Any(call => call.Response.ToolCalls.Any(tool => tool.Name == name));
 
     private static object ParseToolResult(string content)
     {

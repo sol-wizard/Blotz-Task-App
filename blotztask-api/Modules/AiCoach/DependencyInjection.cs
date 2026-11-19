@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddHostedService<AiCoachTraceRetentionService>();
         services.AddScoped<MessageFeedbackHandler>();
         services.AddScoped<TaskContextReader>();
+        services.AddScoped<FindDeletedSavedItemsQueryHandler>();
         services.AddScoped<GetAiCoachAllowanceQueryHandler>();
         services.AddScoped<DraftScheduleChecker>();
         services.AddScoped<SendMessageCommandHandler>();
