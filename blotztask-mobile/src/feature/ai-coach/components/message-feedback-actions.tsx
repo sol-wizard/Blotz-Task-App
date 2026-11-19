@@ -37,8 +37,11 @@ export function MessageFeedbackActions({ text, feedback, busy, onRate, onSaveDet
   };
 
   const saveDetail = async () => {
-    if (await onSaveDetail(reason, detail.trim() || null)) setOpen(false);
-    else Toast.show({ type: "error", text1: t("feedback.saveFailed") });
+    // The reason isn't visible once the sheet closes, so confirm it was saved.
+    if (await onSaveDetail(reason, detail.trim() || null)) {
+      setOpen(false);
+      Toast.show({ type: "success", text1: t("feedback.thanks") });
+    } else Toast.show({ type: "error", text1: t("feedback.saveFailed") });
   };
 
   const copy = async () => {
