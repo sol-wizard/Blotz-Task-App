@@ -239,7 +239,8 @@ export function useAiTaskGenerator({
     });
 
     const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
-    showErrorToast(t(i18nKey));
+    // Hitting a usage limit is not a bug, so no 「反馈」 button.
+    showErrorToast(t(i18nKey), { showFeedback: error.errorCode !== "QuotaExceeded" });
   };
 
   useEffect(() => {

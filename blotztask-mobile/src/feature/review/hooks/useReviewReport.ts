@@ -29,7 +29,10 @@ export function useReview(periodType: ReviewPeriodType, anchorDate: string, enab
     },
     onError: (error) => {
       const quotaExceeded = isAxiosError(error) && error.response?.status === 429;
-      showErrorToast(t(quotaExceeded ? "review.quotaError" : "review.generateError"));
+      // Hitting a usage limit is not a bug, so no 「反馈」 button.
+      showErrorToast(t(quotaExceeded ? "review.quotaError" : "review.generateError"), {
+        showFeedback: !quotaExceeded,
+      });
     },
   });
 
