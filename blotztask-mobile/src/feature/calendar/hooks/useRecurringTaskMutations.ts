@@ -1,6 +1,7 @@
 import { QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
+import { toDayKey } from "@/shared/util/to-day-key";
 import {
   materializeRecurringOccurrence,
   saveRecurringOccurrence,
@@ -33,7 +34,7 @@ export function useRecurringTaskMutations() {
       saveRecurringOccurrence({ recurringTaskId, occurrenceDate }),
     onMutate: (data) => {
       if (!data?.selectedDay) return;
-      const dayKey = format(data.selectedDay, "yyyy-MM-dd");
+      const dayKey = toDayKey(data.selectedDay);
       const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
         taskKeys.selectedDay(dayKey),
       );
