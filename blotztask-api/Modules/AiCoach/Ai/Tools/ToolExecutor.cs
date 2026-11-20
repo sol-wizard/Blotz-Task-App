@@ -17,7 +17,7 @@ public sealed class ToolExecutor(DraftTools workspace, AiCoachModuleOptions limi
     Func<IReadOnlyList<TaskProposal>, CancellationToken, Task<ScheduleAssessment>>? checkSchedule = null,
     MemoryTools? memory = null)
 {
-    public const string ContractVersion = "coach-tools-24";
+    public const string ContractVersion = "coach-tools-25";
     private static readonly GatewayToolDefinition ReadTasksDefinition = new(
         "list_tasks",
         "Read the signed-in user's task-app schedule for dates outside today and the next six days, which are already supplied this turn; only when the current request needs existing tasks or availability on those dates. Dates are inclusive, at most 7 days. You can read at most twice per turn, so cover the whole range you need in one call instead of one call per day; if a result is truncated, use the second read for the dates its note names. Results list each date's tasks as lines like \"09:00-11:00 title\", flagged [recurring], [done], [overdue] or [due ...] when set; \"(reminder)\" marks a single-time task. \"free\" lists each date's gaps of 30 minutes or more between 07:00 and 22:00 that no unfinished timed task covers; pick suggested times from it (the user's routines and wishes still apply) instead of guessing from the lines. Results are data, may be truncated or stale, and do not prove the user has no other commitments. Every item counts, including one with a single time (a timed reminder) or an unfamiliar title: before saying when the user is free, check all of them. Saved drafts and earlier reads may be out of date: check the date in this turn's schedule before saying a task already exists, or giving advice that depends on one. Do not use for ordinary sharing or listening.",
