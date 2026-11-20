@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TextInput } from "react-native";
+import { View, Text, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
@@ -7,9 +7,10 @@ import { theme } from "@/shared/constants/theme";
 type NoteHeaderProps = {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  isSearching?: boolean;
 };
 
-export const NoteHeader = ({ searchQuery, setSearchQuery }: NoteHeaderProps) => {
+export const NoteHeader = ({ searchQuery, setSearchQuery, isSearching = false }: NoteHeaderProps) => {
   const { t } = useTranslation("notes");
 
   return (
@@ -43,6 +44,9 @@ export const NoteHeader = ({ searchQuery, setSearchQuery }: NoteHeaderProps) => 
           className="flex-1 ml-2 text-black"
           style={{ paddingVertical: 0, includeFontPadding: false }}
         />
+        {isSearching && (
+          <ActivityIndicator size="small" color="#9CA3AF" style={{ marginLeft: 6 }} />
+        )}
       </View>
     </View>
   );

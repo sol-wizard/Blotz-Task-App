@@ -1,5 +1,7 @@
 import {
-  RecordingPresets,
+  AudioQuality,
+  IOSOutputFormat,
+  RecordingOptions,
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
@@ -11,6 +13,26 @@ import { usePeakLevelMeter } from "./usePeakLevelMeter";
 // Takes that never get louder than this are dropped before upload: Whisper invents text
 // ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
 const SPEECH_LEVEL_DBFS = -45;
+
+const VOICE_RECORDING_OPTIONS: RecordingOptions = {
+  extension: ".m4a",
+  sampleRate: 16000,
+  numberOfChannels: 1,
+  bitRate: 32000,
+  isMeteringEnabled: true,
+  android: {
+    outputFormat: "mpeg4",
+    audioEncoder: "aac",
+  },
+  ios: {
+    outputFormat: IOSOutputFormat.MPEG4AAC,
+    audioQuality: AudioQuality.MEDIUM,
+  },
+  web: {
+    mimeType: "audio/webm",
+    bitsPerSecond: 32000,
+  },
+};
 
 export type VoiceRecordingFailure = {
   stage: "recording" | "send";
@@ -28,7 +50,7 @@ export function useVoiceRecorder(
   submitAudioForTranscription: (uri: string, releasedAt: number) => Promise<void>,
   { onError, onFailure }: VoiceRecorderOptions,
 ) {
-  const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
+  const recorder = useAudioRecorder(VOICE_RECORDING_OPTIONS);
   const { isRecording } = useAudioRecorderState(recorder);
   const meter = usePeakLevelMeter(recorder);
 

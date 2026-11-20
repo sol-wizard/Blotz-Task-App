@@ -1,5 +1,6 @@
 import { addDays, format, startOfMonth, startOfWeek, subMonths, subWeeks } from "date-fns";
-import { enUS, zhCN } from "date-fns/locale";
+import { enUS } from "date-fns/locale/en-US";
+import { zhCN } from "date-fns/locale/zh-CN";
 
 // Weekly periods run Monday–Sunday (see review-tasks.md product decisions).
 const WEEK_OPTIONS = { weekStartsOn: 1 } as const;

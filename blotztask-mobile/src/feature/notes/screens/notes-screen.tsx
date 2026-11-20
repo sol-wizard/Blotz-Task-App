@@ -48,7 +48,7 @@ export default function NotesScreen() {
     }, []),
   );
 
-  const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
+  const { notesSearchResult, isInitialLoading, isSearching } = useNotesSearch({ searchQuery });
   const successfulCreateMutations = useMutationState({
     filters: { mutationKey: noteMutationKeys.create, status: "success" },
     select: (mutation) => ({
@@ -128,9 +128,13 @@ export default function NotesScreen() {
         accessible={false}
       >
         <View className="flex-1">
-          <NoteHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <NoteHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            isSearching={isSearching}
+          />
 
-          {!showLoading && notesSearchResult.length === 0 ? (
+          {!isInitialLoading && notesSearchResult.length === 0 ? (
             <View className="flex-1 items-center justify-center">
               <Text className="text-center text-black font-balooBold text-2xl">
                 {t("emptyNoteMessage.encouragingTitle")}
@@ -143,7 +147,7 @@ export default function NotesScreen() {
             <View className="px-6 flex-1">
               <View className={`rounded-3xl  bg-white`}>
                 <FlatList
-                  data={showLoading ? [] : notesSearchResult}
+                  data={notesSearchResult}
                   keyExtractor={(item) => String(item.id)}
                   renderItem={({ item }) => (
                     <NoteRow
@@ -188,7 +192,7 @@ export default function NotesScreen() {
             </View>
           </Pressable>
 
-          {showLoading && <LoadingScreen />}
+          {isInitialLoading && <LoadingScreen />}
         </View>
       </TouchableWithoutFeedback>
 

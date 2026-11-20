@@ -35,6 +35,18 @@ module.exports = defineConfig([
       // incorrectly treats it as frozen in some patterns despite ReanimatedSharedValueId
       // being in the mutable types list.
       "react-hooks/immutability": "off",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "date-fns/locale",
+              message:
+                "Import single locales from date-fns/locale/<locale> instead to avoid bundling all locales.",
+            },
+          ],
+        },
+      ],
     },
   },
   prettier,

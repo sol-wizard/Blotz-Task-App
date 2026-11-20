@@ -12,6 +12,7 @@ import {
   updateTaskItem,
 } from "../services/task-service";
 import { ddlKeys, taskKeys } from "../constants/query-key-factory";
+import { toDayKey } from "../util/to-day-key";
 import {
   addDays,
   format,
@@ -101,7 +102,7 @@ const useTaskMutations = () => {
       toggleTaskCompletion(taskId, !wasDone),
     onMutate: (data) => {
       if (!data?.selectedDay) return;
-      const dayKey = format(data.selectedDay, "yyyy-MM-dd");
+      const dayKey = toDayKey(data.selectedDay);
       const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
         taskKeys.selectedDay(dayKey),
       );
@@ -280,14 +281,14 @@ export function invalidateSelectedDayTask(
   const end = startOfDay(new Date(endTime));
   if (isSameDay(start, end)) {
     queryClient.invalidateQueries({
-      queryKey: taskKeys.selectedDay(format(start, "yyyy-MM-dd")),
+      queryKey: taskKeys.selectedDay(toDayKey(start)),
     });
     return;
   } else {
     let cursorDay = startOfDay(start);
     while (cursorDay <= end) {
       queryClient.invalidateQueries({
-        queryKey: taskKeys.selectedDay(format(cursorDay, "yyyy-MM-dd")),
+        queryKey: taskKeys.selectedDay(toDayKey(cursorDay)),
       });
       cursorDay = addDays(cursorDay, 1);
     }
@@ -322,7 +323,7 @@ function invalidateTaskAvailability(
 
 function invalidateSelectedDayByDateOnly(queryClient: QueryClient, dateOnly: string) {
   return queryClient.invalidateQueries({
-    queryKey: taskKeys.selectedDay(format(parseISO(dateOnly), "yyyy-MM-dd")),
+    queryKey: taskKeys.selectedDay(toDayKey(parseISO(dateOnly))),
   });
 }
 
