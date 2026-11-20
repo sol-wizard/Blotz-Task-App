@@ -1,5 +1,6 @@
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
+import { zhCN } from "date-fns/locale/zh-CN";
+import { enUS } from "date-fns/locale/en-US";
 import i18n from "@/i18n";
 
 export function formatTaskTime(utcString: string): string {
