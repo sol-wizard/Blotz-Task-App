@@ -86,7 +86,8 @@ export function useAiCoachChat() {
   const [streaming, setStreaming] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const streamController = useRef<AbortController | null>(null);
-  const [feedbackByMessage, setFeedbackByMessage] = useState<Record<string, MessageFeedbackDto>>({});
+  // Ratings read or set this session; null means the user removed one. They win over the timeline's copy.
+  const [localFeedback, setLocalFeedback] = useState<Record<string, MessageFeedbackDto | null>>({});
   const [feedbackSaving, setFeedbackSaving] = useState<Record<string, boolean>>({});
   const feedbackPending = useRef(new Set<string>());
   const busy = useRef(false);
@@ -218,12 +219,26 @@ export function useAiCoachChat() {
     let cancelled = false;
     void aiCoachService.getMessageFeedback(conversationId).then(
       (items) => {
-        if (!cancelled) setFeedbackByMessage(Object.fromEntries(items.map((item) => [item.assistantMessageId, item])));
+        if (!cancelled) setLocalFeedback((state) => ({
+          ...state, ...Object.fromEntries(items.map((item) => [item.assistantMessageId, item])),
+        }));
       },
       () => undefined,
     );
     return () => { cancelled = true; };
   }, [conversationId]);
+  // Replies from ended topics get their ratings from the timeline pages.
+  const feedbackByMessage = useMemo(() => {
+    const merged: Record<string, MessageFeedbackDto> = {};
+    for (const page of history.data?.pages ?? []) for (const item of page.items) {
+      if (item.feedback) merged[item.messageId] = item.feedback;
+    }
+    for (const [id, feedback] of Object.entries(localFeedback)) {
+      if (feedback) merged[id] = feedback;
+      else delete merged[id];
+    }
+    return merged;
+  }, [history.data, localFeedback]);
   useEffect(() => {
     if (streaming || !serverBusy || !conversationId) return;
     const id = conversationId;
@@ -562,64 +577,56 @@ export function useAiCoachChat() {
     return edit(list.id, { items: reviewedItems(list).items.map(value => value.itemId === item.itemId ? item : value) });
   }, [edit]);
 
-  const rateMessage = useCallback(async (messageId: string, rating: AiCoachRating): Promise<boolean> => {
-    if (!conversationId || feedbackPending.current.has(messageId)) return false;
+  // A reply is rated in its own topic, which may have ended since.
+  const rateMessage = useCallback(async (messageId: string, conversationId: string,
+    rating: AiCoachRating): Promise<boolean> => {
+    if (feedbackPending.current.has(messageId)) return false;
     feedbackPending.current.add(messageId);
     setFeedbackSaving((state) => ({ ...state, [messageId]: true }));
     const previous = feedbackByMessage[messageId];
     const next = previous?.rating === rating ? null : {
       assistantMessageId: messageId, rating, reason: null, detail: null,
     };
-    setFeedbackByMessage((state) => {
-      const updated = { ...state };
-      if (next) updated[messageId] = next;
-      else delete updated[messageId];
-      return updated;
-    });
+    setLocalFeedback((state) => ({ ...state, [messageId]: next }));
     try {
       if (next) {
         const saved = await aiCoachService.putMessageFeedback(conversationId, messageId, rating);
-        setFeedbackByMessage((state) => ({ ...state, [messageId]: saved }));
+        setLocalFeedback((state) => ({ ...state, [messageId]: saved }));
       } else {
         await aiCoachService.deleteMessageFeedback(conversationId, messageId);
       }
       return true;
     } catch {
-      setFeedbackByMessage((state) => {
-        const updated = { ...state };
-        if (previous) updated[messageId] = previous;
-        else delete updated[messageId];
-        return updated;
-      });
+      setLocalFeedback((state) => ({ ...state, [messageId]: previous ?? null }));
       return false;
     } finally {
       feedbackPending.current.delete(messageId);
       setFeedbackSaving((state) => ({ ...state, [messageId]: false }));
     }
-  }, [conversationId, feedbackByMessage]);
+  }, [feedbackByMessage]);
 
-  const saveFeedbackDetail = useCallback(async (messageId: string, reason: string | null,
+  const saveFeedbackDetail = useCallback(async (messageId: string, conversationId: string, reason: string | null,
     detail: string | null): Promise<boolean> => {
-    if (!conversationId || feedbackPending.current.has(messageId)
+    if (feedbackPending.current.has(messageId)
       || feedbackByMessage[messageId]?.rating !== "down") return false;
     feedbackPending.current.add(messageId);
     setFeedbackSaving((state) => ({ ...state, [messageId]: true }));
     const previous = feedbackByMessage[messageId];
-    setFeedbackByMessage((state) => ({ ...state, [messageId]: {
+    setLocalFeedback((state) => ({ ...state, [messageId]: {
       ...previous, reason, detail,
     } }));
     try {
       const saved = await aiCoachService.putMessageFeedback(conversationId, messageId, "down", reason, detail);
-      setFeedbackByMessage((state) => ({ ...state, [messageId]: saved }));
+      setLocalFeedback((state) => ({ ...state, [messageId]: saved }));
       return true;
     } catch {
-      setFeedbackByMessage((state) => ({ ...state, [messageId]: previous }));
+      setLocalFeedback((state) => ({ ...state, [messageId]: previous }));
       return false;
     } finally {
       feedbackPending.current.delete(messageId);
       setFeedbackSaving((state) => ({ ...state, [messageId]: false }));
     }
-  }, [conversationId, feedbackByMessage]);
+  }, [feedbackByMessage]);
 
   const changeTopic = useCallback(async (clear: boolean): Promise<string | null> => {
     if (!snapshotRef.current || busy.current || ticking.current.size > 0) return "NotReady";
@@ -635,7 +642,8 @@ export function useAiCoachChat() {
         setSnapshot(null);
       }
       applySnapshot(clear ? await aiCoachService.openChat() : await aiCoachService.newTopic());
-      setFeedbackByMessage({});
+      // Ratings belong to replies, not topics, so a new topic keeps them; clearing removes the replies.
+      if (clear) setLocalFeedback({});
       refreshHistory();
       return null;
     } catch (error) {

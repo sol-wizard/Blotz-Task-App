@@ -69,10 +69,9 @@ function StreamingCursor() {
   }} className="font-baloo text-primary">▍</Animated.Text>;
 }
 
-function MessageBubble({ item, rateable, feedback, feedbackBusy, animateIn, onRate, onSaveDetail }: {
+function MessageBubble({ item, feedback, feedbackBusy, animateIn, onRate, onSaveDetail }: {
   item: ChatItem;
   animateIn: boolean;
-  rateable: boolean;
   feedback: MessageFeedbackDto | undefined;
   feedbackBusy: boolean;
   onRate: (rating: AiCoachRating) => Promise<boolean>;
@@ -98,7 +97,7 @@ function MessageBubble({ item, rateable, feedback, feedbackBusy, animateIn, onRa
       <CoachMarkdown text={item.text} streaming={item.streaming} />
       {item.streaming && <StreamingCursor />}
       {!item.streaming && <Animated.View entering={animateIn ? fadeIn : undefined}>
-        <MessageFeedbackActions text={item.text} rateable={rateable} feedback={feedback}
+        <MessageFeedbackActions text={item.text} feedback={feedback}
           busy={feedbackBusy} onRate={onRate} onSaveDetail={onSaveDetail} />
       </Animated.View>}
     </View>
@@ -134,8 +133,8 @@ function TypingIndicator({ label }: { label: string }) {
 }
 
 interface RowActions {
-  rate: (messageId: string, rating: AiCoachRating) => Promise<boolean>;
-  saveDetail: (messageId: string, reason: string | null, detail: string | null) => Promise<boolean>;
+  rate: (messageId: string, conversationId: string, rating: AiCoachRating) => Promise<boolean>;
+  saveDetail: (messageId: string, conversationId: string, reason: string | null, detail: string | null) => Promise<boolean>;
   confirm: (draftId: string, action: ConfirmAction, edited: EditedDraftDto, selectedItemIds: string[],
     allowScheduleConflict?: boolean, acceptedConflictToken?: string | null) => void;
   edit: (draftId: string, edited: EditedDraftDto) => Promise<string | null>;
@@ -185,9 +184,10 @@ const ChatRow = memo(function ChatRow({ item, dateText, active, liveArtifacts, r
       <Text className="font-baloo text-xs text-[#6B7280]">{dateText}</Text>
     </View>}
     {item.topicStart && <TopicDivider />}
-    <MessageBubble item={item} rateable={active} feedback={feedback} feedbackBusy={feedbackBusy} animateIn={animateIn}
-      onRate={(rating) => actions.rate(item.id, rating)}
-      onSaveDetail={(reason, detail) => actions.saveDetail(item.id, reason, detail)} />
+    {/* Every reply stays rateable, including ones in ended topics. */}
+    <MessageBubble item={item} feedback={feedback} feedbackBusy={feedbackBusy} animateIn={animateIn}
+      onRate={(rating) => actions.rate(item.id, item.conversationId, rating)}
+      onSaveDetail={(reason, detail) => actions.saveDetail(item.id, item.conversationId, reason, detail)} />
     {item.draftSnapshot.map((historical) => {
       const live = active ? liveArtifacts?.find(card => card.id === historical.id) : undefined;
       const artifact = live ?? (!active && historical.status === "pending" ? { ...historical, status: "expired" as const } : historical);

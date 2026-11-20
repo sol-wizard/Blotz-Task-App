@@ -91,6 +91,7 @@
     "noteSavedTruncated": "已存到随手记（内容较长，已截取前 2000 字）",
     "noteSaveFailed": "随手记保存失败，请重试",
     "saveFailed": "反馈保存失败，请重试",
+    "thanks": "感谢反馈，我们会继续改进",
     "title": "哪里需要改进？（可选）",
     "detailPlaceholder": "补充说明（可选）",
     "skip": "跳过",

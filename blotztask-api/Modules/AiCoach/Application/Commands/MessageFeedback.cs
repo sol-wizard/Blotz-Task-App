@@ -68,7 +68,8 @@ public sealed class MessageFeedbackHandler(IConversationStore store, BlotzTaskDb
     private async Task EnsureOwnedAsync(Guid userId, Guid conversationId, CancellationToken ct)
     {
         using var held = await store.AcquireLockAsync(conversationId, ct);
-        ConversationApplication.RequireOpen(await ConversationApplication.LoadOwnedAsync(store, userId, conversationId, ct));
+        // Ended topics stay rateable: a rating is kept apart from the conversation and changes nothing in it.
+        await ConversationApplication.LoadOwnedAsync(store, userId, conversationId, ct);
     }
 
     private async Task<ConversationMessage> FindAssistantAsync(Guid userId, Guid conversationId,
@@ -76,7 +77,6 @@ public sealed class MessageFeedbackHandler(IConversationStore store, BlotzTaskDb
     {
         using var held = await store.AcquireLockAsync(conversationId, ct);
         var conversation = await ConversationApplication.LoadOwnedAsync(store, userId, conversationId, ct);
-        ConversationApplication.RequireOpen(conversation);
         var target = conversation.Messages.FirstOrDefault(x => x.Id == assistantMessageId
             && x.Role == ConversationMessageRole.Assistant && x.TurnId.HasValue);
         return target ?? throw new ConversationNotFoundException();

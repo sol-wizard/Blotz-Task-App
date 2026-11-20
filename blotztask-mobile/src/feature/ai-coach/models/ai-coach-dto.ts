@@ -97,6 +97,8 @@ export interface ChatTimelineItemDto {
   createdAt: string;
   topicStart: boolean;
   draftSnapshot: ArtifactEnvelopeDto[];
+  /** The user's rating of this reply; missing from older APIs. */
+  feedback?: MessageFeedbackDto | null;
 }
 export interface ChatTimelinePageDto {
   items: ChatTimelineItemDto[];
