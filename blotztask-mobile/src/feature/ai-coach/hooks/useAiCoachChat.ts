@@ -20,7 +20,10 @@ import {
   TaskDraftItemDto,
 } from "../models/ai-coach-dto";
 import { reviewedItems } from "../models/review-list";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { cancelNotification } from "@/shared/util/cancel-notification";
 import * as aiCoachService from "../services/ai-coach-service";
+import { scheduleCoachTaskReminder } from "../utils/coach-task-reminder";
 import { MessageSource, streamCoachMessage } from "../services/coach-stream-service";
 
 export interface ChatItem {
@@ -102,6 +105,12 @@ export function useAiCoachChat() {
   const wantedRef = useRef<Record<string, boolean>>({});
   const ticking = useRef(new Set<string>());
   const [tickBusy, setTickBusy] = useState(false);
+  // Read when a tick runs, so a reminder follows the Settings switch without rebuilding tickItem.
+  const { userPreferences } = useUserPreferencesQuery();
+  const upcomingNotificationRef = useRef(userPreferences?.upcomingNotification);
+  useEffect(() => {
+    upcomingNotificationRef.current = userPreferences?.upcomingNotification;
+  }, [userPreferences?.upcomingNotification]);
   const invalidateSavedItems = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: taskKeys.all });
     void queryClient.invalidateQueries({ queryKey: ddlKeys.all });
@@ -528,12 +537,21 @@ export function useAiCoachChat() {
           break;
         }
         if (wanted === isItemSaved(item)) break;
+        // Scheduled before the save so the task stores it, as the task form does.
+        const reminder = wanted ? await scheduleCoachTaskReminder(item, upcomingNotificationRef.current) : null;
         try {
-          const result = await aiCoachService.setDraftItemAdded(current.conversationId, draftId, itemId, wanted);
+          const result = await aiCoachService.setDraftItemAdded(current.conversationId, draftId, itemId, wanted,
+            reminder ?? undefined);
+          // A reminder the task didn't store (say it was already saved) would fire for nothing.
+          if (reminder && result.savedNotificationId !== reminder.notificationId)
+            void cancelNotification({ notificationId: reminder.notificationId });
+          if (!wanted) void cancelNotification({ notificationId: result.removedNotificationId });
           applySnapshot(result.conversationSnapshot);
           invalidateSavedItems();
           outcome = { added: wanted, conflicts: [...new Set(result.conflicts.map(entry => entry.taskTitle))], errorCode: null };
         } catch (error) {
+          // Nothing was saved with it, so it must not stay scheduled.
+          if (reminder) void cancelNotification({ notificationId: reminder.notificationId });
           const response = (error as AxiosError<ConversationConflictDto>).response;
           // A refused tick (422) changed nothing on the server, so the visible chat needs no reload.
           const errorCode = response?.status === 422 ? response.data?.errorCode ?? "RequestFailed" : await resync(error);
