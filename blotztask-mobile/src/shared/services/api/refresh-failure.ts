@@ -2,9 +2,30 @@ import { CredentialsManagerErrorCodes } from "react-native-auth0";
 
 export type RefreshFailureAction = "sign_out" | "keep";
 
+/**
+ * `code` of the error a request is rejected with when its token refresh failed and the
+ * session was kept. It has no `response`, so it reads as a network error to the user, but
+ * it is already reported as `token_refresh_failed` and retrying it only repeats the refresh.
+ */
+export const SESSION_KEPT_ERROR_CODE = "ERR_SESSION_KEPT";
+
+export function isSessionKeptError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === SESSION_KEPT_ERROR_CODE
+  );
+}
+
+/** `failure_reason` → action, from the PostHog flag. Wins over the built-in rules. */
+export type RefreshFailureOverrides = Record<string, RefreshFailureAction>;
+
 export type RefreshFailure = {
   reason: string;
   action: RefreshFailureAction;
+  /** `remote` when the PostHog override decided the action instead of the built-in rules. */
+  actionSource: "builtin" | "remote";
   /** Normalised by the RN SDK; `UNKNOWN_ERROR` when it has no mapping for `code`. */
   type: string;
   /** iOS: Auth0's raw code (`invalid_grant`, `a0.sdk.internal_error.plain`). Android: same as `type`. */
@@ -54,7 +75,7 @@ function networkReason(nsurlCode: number): string {
   return "network_other";
 }
 
-function pickReason(failure: Omit<RefreshFailure, "reason" | "action">): {
+function pickReason(failure: Omit<RefreshFailure, "reason" | "action" | "actionSource">): {
   reason: string;
   action: RefreshFailureAction;
 } {
@@ -91,7 +112,10 @@ function pickReason(failure: Omit<RefreshFailure, "reason" | "action">): {
  * them (`status` is always 0, `json` is the raw native error), so only `type`, `code`,
  * `name` and `message` carry information.
  */
-export function classifyRefreshFailure(error: unknown): RefreshFailure {
+export function classifyRefreshFailure(
+  error: unknown,
+  overrides: RefreshFailureOverrides = {},
+): RefreshFailure {
   const e = (typeof error === "object" && error !== null ? error : {}) as Record<string, unknown>;
   const message = readString(e.message) ?? String(error);
 
@@ -103,5 +127,10 @@ export function classifyRefreshFailure(error: unknown): RefreshFailure {
     message,
   };
 
-  return { ...details, ...pickReason(details) };
+  const { reason, action } = pickReason(details);
+  const override = overrides[reason];
+
+  return override === "sign_out" || override === "keep"
+    ? { ...details, reason, action: override, actionSource: "remote" }
+    : { ...details, reason, action, actionSource: "builtin" };
 }

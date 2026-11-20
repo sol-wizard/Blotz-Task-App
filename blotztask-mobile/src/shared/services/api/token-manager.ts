@@ -2,7 +2,8 @@ import * as Sentry from "@sentry/react-native";
 import { Platform } from "react-native";
 import { CredentialsManagerErrorCodes } from "react-native-auth0";
 import { auth0 } from "./auth0-client";
-import { classifyRefreshFailure, type RefreshFailure } from "./refresh-failure";
+import { type RefreshFailure } from "./refresh-failure";
+import { resolveRefreshFailure } from "./refresh-failure-overrides";
 import { readLastLoginAt } from "./last-login";
 
 export type RefreshEntryPoint = "request" | "retry_401";
@@ -25,6 +26,7 @@ export async function describeRefreshFailure(
       error_code: failure.type,
       failure_reason: failure.reason,
       failure_action: failure.action,
+      failure_action_source: failure.actionSource,
       failure_code: failure.code,
       failure_name: failure.name,
       nsurl_code: failure.nsurlCode === null ? "none" : String(failure.nsurlCode),
@@ -44,24 +46,30 @@ export async function describeRefreshFailure(
  * Silent refresh failures were the blind spot of the "returning user" chain: every request
  * goes through `getAuthToken()`, and when the SDK cannot renew the token the error was
  * swallowed and the request simply went out without a header. Parallel requests already
- * share one refresh; the window per reason stops an offline user from reporting every
- * screen they open, without letting a network blip hide a real token failure.
+ * share one refresh; the window per entry point and reason stops an offline user from
+ * reporting every screen they open, without letting a network blip hide a real token failure.
+ *
+ * `retry_401` is a forced refresh that failed but kept the session (a sign-out is reported
+ * as `session_cleared_after_401` instead).
  */
 const REPORT_WINDOW_MS = 5 * 60 * 1000;
 const lastReportedAt = new Map<string, number>();
 
-async function reportRefreshFailure(error: unknown, durationMs: number) {
-  const failure = classifyRefreshFailure(error);
-
+export async function reportRefreshFailure(
+  failure: RefreshFailure,
+  entryPoint: RefreshEntryPoint,
+  durationMs?: number,
+) {
   // No stored credentials at all: a logged-out user (or a fresh install) hitting an
   // endpoint that does not need a token. Not a failure.
   if (failure.type === CredentialsManagerErrorCodes.NO_CREDENTIALS) return;
 
+  const windowKey = `${entryPoint}:${failure.reason}`;
   const now = Date.now();
-  if (now - (lastReportedAt.get(failure.reason) ?? 0) < REPORT_WINDOW_MS) return;
-  lastReportedAt.set(failure.reason, now);
+  if (now - (lastReportedAt.get(windowKey) ?? 0) < REPORT_WINDOW_MS) return;
+  lastReportedAt.set(windowKey, now);
 
-  const { tags, extra } = await describeRefreshFailure(failure, "request");
+  const { tags, extra } = await describeRefreshFailure(failure, entryPoint);
   Sentry.captureMessage("token_refresh_failed", {
     level: "warning",
     tags,
@@ -76,7 +84,9 @@ async function loadAuthToken(): Promise<string | null> {
     const { accessToken } = await auth0.credentialsManager.getCredentials();
     return accessToken;
   } catch (error) {
-    reportRefreshFailure(error, Date.now() - startedAt).catch(() => {});
+    reportRefreshFailure(resolveRefreshFailure(error), "request", Date.now() - startedAt).catch(
+      () => {},
+    );
     return null;
   }
 }
@@ -95,7 +105,8 @@ export function getAuthToken(): Promise<string | null> {
   return inFlightToken;
 }
 
-// Rejects with the SDK error: the 401 path classifies it into `session_cleared_after_401`.
+// Rejects with the SDK error: the 401 path classifies it to decide between signing out and
+// keeping the session.
 async function refresh(): Promise<string> {
   const { accessToken } = await auth0.credentialsManager.getCredentials(
     undefined,

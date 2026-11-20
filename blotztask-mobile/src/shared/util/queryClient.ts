@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import * as Sentry from "@sentry/react-native";
 import i18n from "@/i18n";
+import { isSessionKeptError } from "@/shared/services/api/refresh-failure";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -13,7 +14,7 @@ export const queryClient = new QueryClient({
       if (query.meta?.silent) return;
 
       if (__DEV__) console.error("[Query Error]", error);
-      Sentry.captureException(error, { tags: { source: "query" } });
+      reportToSentry(error, "query");
 
       const msg = getErrorMessage(error);
 
@@ -31,7 +32,7 @@ export const queryClient = new QueryClient({
       if (mutation.meta?.silent) return;
 
       if (__DEV__) console.error("[Mutation Error]", error);
-      Sentry.captureException(error, { tags: { source: "mutation" } });
+      reportToSentry(error, "mutation");
 
       const msg = getErrorMessage(error, mutation.meta);
 
@@ -46,6 +47,8 @@ export const queryClient = new QueryClient({
       staleTime: Infinity,
       gcTime: 5 * 60 * 1000,
       retry: (failureCount, error) => {
+        // Each retry would force another token refresh against a server that just failed.
+        if (isSessionKeptError(error)) return false;
         const status = isAxiosError(error) ? error.response?.status : undefined;
         if (status && status < 500) {
           return false;
@@ -63,6 +66,13 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// A kept-session failure is already reported once as `token_refresh_failed`; reporting it
+// again here would add one event per failed request.
+function reportToSentry(error: unknown, source: "query" | "mutation") {
+  if (isSessionKeptError(error)) return;
+  Sentry.captureException(error, { tags: { source } });
+}
 
 function getErrorMessage(error: unknown, meta?: Record<string, unknown>): string {
   if (isAxiosError(error)) {
