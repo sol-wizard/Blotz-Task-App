@@ -16,10 +16,10 @@ const canDetectScreenshots =
   Platform.OS === "ios" || (Platform.OS === "android" && Platform.Version >= ANDROID_14_API_LEVEL);
 
 // Screens where a screenshot is for sharing or already is feedback, so the card would only get in the way.
+// The review letter is not one: it has its own share button, so a screenshot there is more likely a problem.
 const SKIPPED_PATHS = new Set([
   "/feedback",
   "/settings/feedback",
-  "/review",
   "/badge-wall",
   "/badge-details",
   // A native modal that would cover the card, so it could never be seen or tapped.

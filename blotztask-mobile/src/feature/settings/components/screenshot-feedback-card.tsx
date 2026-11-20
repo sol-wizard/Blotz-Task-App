@@ -7,19 +7,31 @@ import MaterialCommunityIcons from "@react-native-vector-icons/material-design-i
 import { useTranslation } from "react-i18next";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { analytics } from "@/shared/services/analytics";
-import { useScreenshotFeedback } from "../hooks/useScreenshotFeedback";
+import { ScreenshotFeedback, useScreenshotFeedback } from "../hooks/useScreenshotFeedback";
 
 const THUMBNAIL_WIDTH = 64;
 
 // Small card on the right edge after a system screenshot; tapping it opens feedback with that page attached.
 export function ScreenshotFeedbackCard() {
-  const router = useRouter();
-  const { t } = useTranslation("settings");
   const { screenshot, dismiss } = useScreenshotFeedback();
-  // A ref, not state, so a fast double tap can't open feedback twice before the re-render.
-  const isOpeningRef = useRef(false);
 
   if (!screenshot) return null;
+
+  // Keyed by image, so each screenshot gets a fresh card: its tap guard starts unset, and a newer
+  // screenshot slides in again instead of swapping silently.
+  return <ScreenshotCard key={screenshot.image.uri} screenshot={screenshot} dismiss={dismiss} />;
+}
+
+type ScreenshotCardProps = {
+  screenshot: ScreenshotFeedback;
+  dismiss: () => void;
+};
+
+function ScreenshotCard({ screenshot, dismiss }: ScreenshotCardProps) {
+  const router = useRouter();
+  const { t } = useTranslation("settings");
+  // A ref, not state, so a fast double tap can't open feedback twice before the re-render.
+  const isOpeningRef = useRef(false);
 
   const { image, path } = screenshot;
   const thumbnailHeight = (THUMBNAIL_WIDTH * image.height) / image.width;
@@ -41,9 +53,7 @@ export function ScreenshotFeedbackCard() {
 
   return (
     // The animated view is the root, so its slide-out runs when the card is removed.
-    // Keyed by image, so a newer screenshot slides in again instead of swapping silently.
     <Animated.View
-      key={image.uri}
       entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.rightExiting}
       className="absolute right-3 bg-white rounded-2xl p-2 items-center"
