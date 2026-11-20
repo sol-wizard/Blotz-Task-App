@@ -48,7 +48,7 @@ export function usePushNotificationSetup() {
 
         if (response.actionIdentifier === "MARK_DONE") {
           if (taskId) {
-            await toggleTaskCompletion(Number(taskId));
+            await toggleTaskCompletion(Number(taskId), true);
           }
         }
       },

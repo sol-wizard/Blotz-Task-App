@@ -49,7 +49,7 @@ const useDdlMutation = () => {
   const markAsDoneMutation = useMutation({
     mutationFn: async (task: DeadlineTaskDTO) => {
       if (task.id != null) {
-        await toggleTaskCompletion(task.id);
+        await toggleTaskCompletion(task.id, !task.isDone);
         return;
       }
 
