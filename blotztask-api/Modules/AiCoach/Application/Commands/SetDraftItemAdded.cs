@@ -16,11 +16,22 @@ using Microsoft.EntityFrameworkCore;
 namespace BlotzTask.Modules.AiCoach.Application.Commands;
 
 /// <summary>The wanted state of one review item: true saves it, false deletes what it saved.</summary>
-public sealed record SetDraftItemAddedRequest(bool Added);
+/// <param name="Reminder">
+/// The phone reminder the app scheduled for this task before ticking, stored on the task the way the task form
+/// does it. Only used when saving a one-off task; older apps send none.
+/// </param>
+public sealed record SetDraftItemAddedRequest(bool Added, TaskReminderDto? Reminder = null);
+
+public sealed record TaskReminderDto(string NotificationId, DateTimeOffset AlertTime);
 
 /// <summary>Conflicts are existing tasks that a newly saved task overlaps, so the app can name them.</summary>
+/// <param name="SavedNotificationId">
+/// The reminder now stored on the saved task. Null when this call saved nothing with it (say the item was already
+/// saved), so the app cancels the reminder it scheduled for the call.
+/// </param>
+/// <param name="RemovedNotificationId">The reminder of the task an untick deleted, for the app to cancel.</param>
 public sealed record SetDraftItemAddedResultDto(ConversationSnapshotDto ConversationSnapshot,
-    IReadOnlyList<ScheduleConflict> Conflicts);
+    IReadOnlyList<ScheduleConflict> Conflicts, string? SavedNotificationId = null, string? RemovedNotificationId = null);
 
 /// <summary>
 /// Tick and untick on a review card. Each call saves or deletes one item right away with the owning module's
@@ -35,11 +46,11 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
 {
     public Task<SetDraftItemAddedResultDto> Handle(Guid userId, Guid conversationId, Guid draftId, Guid itemId,
         SetDraftItemAddedRequest request, CancellationToken ct) => request.Added
-        ? AddAsync(userId, conversationId, draftId, itemId, ct)
+        ? AddAsync(userId, conversationId, draftId, itemId, request.Reminder, ct)
         : RemoveAsync(userId, conversationId, draftId, itemId, ct);
 
     private async Task<SetDraftItemAddedResultDto> AddAsync(Guid userId, Guid conversationId, Guid draftId,
-        Guid itemId, CancellationToken ct)
+        Guid itemId, TaskReminderDto? reminder, CancellationToken ct)
     {
         TaskProposal checkedItem;
         using (await store.AcquireLockAsync(conversationId, ct))
@@ -58,7 +69,9 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
             var item = FindOpenItem(conversation, draftId, itemId);
             if (item.IsSaved) return Unchanged(conversation);
             // A single insert, so the lock stays held across it: a second tick on this item waits, then finds it saved.
-            var saved = await CreateAsync(userId, item, ct);
+            // Notes and repeating tasks get no reminder, the same as in the task form.
+            var taskReminder = item.Kind == ProposalKind.Task && item.Recurrence is null ? reminder : null;
+            var saved = await CreateAsync(userId, item, taskReminder, ct);
             try
             {
                 var draft = DraftEditing.Find(conversation, draftId);
@@ -80,8 +93,8 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
             IReadOnlyList<ScheduleConflict> conflicts = assessment?.Status == "conflict" && sameSchedule
                 ? assessment.Conflicts : [];
             if (trace is not null) await trace.RecordAsync(userId, conversationId, null, "draft_item_saved",
-                new { draftId, itemId, conflicts });
-            return new(ConversationSnapshotProjector.ToDto(conversation), conflicts);
+                new { draftId, itemId, conflicts, reminder = taskReminder is not null });
+            return new(ConversationSnapshotProjector.ToDto(conversation), conflicts, taskReminder?.NotificationId);
         }
     }
 
@@ -93,6 +106,12 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
             var conversation = await ConversationApplication.LoadOwnedAsync(store, userId, conversationId, ct);
             var item = FindOpenItem(conversation, draftId, itemId);
             if (!item.IsSaved) return Unchanged(conversation);
+            // Read before the delete, so the app can cancel the phone reminder of a task that no longer exists.
+            var notificationId = item.Kind == ProposalKind.Task && item.Recurrence is null
+                ? await db.TaskItems.AsNoTracking()
+                    .Where(task => task.Id == item.PersistedTaskId && task.UserId == userId)
+                    .Select(task => task.NotificationId).FirstOrDefaultAsync(ct)
+                : null;
             // If the conversation save below fails, the item still shows saved. The next untick finds nothing left
             // to delete and only clears it.
             await DeleteAsync(userId, item, ct);
@@ -102,7 +121,7 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
             await store.SaveAsync(conversation, ct);
             if (trace is not null) await trace.RecordAsync(userId, conversationId, null, "draft_item_deleted",
                 new { draftId, itemId });
-            return Unchanged(conversation);
+            return new(ConversationSnapshotProjector.ToDto(conversation), [], RemovedNotificationId: notificationId);
         }
     }
 
@@ -120,7 +139,8 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
                 ConversationSnapshotProjector.ToDto(conversation));
     }
 
-    private async Task<TaskProposal> CreateAsync(Guid userId, TaskProposal item, CancellationToken ct)
+    private async Task<TaskProposal> CreateAsync(Guid userId, TaskProposal item, TaskReminderDto? reminder,
+        CancellationToken ct)
     {
         if (item.Kind == ProposalKind.Note)
         {
@@ -134,7 +154,7 @@ public sealed class SetDraftItemAddedCommandHandler(IConversationStore store, Ad
                 DraftItemCommands.Recurring(userId, item, recurrence, start, end), ct);
             return item with { PersistedTaskId = result.RecurringTaskId, PersistedSeriesId = result.SeriesId };
         }
-        var taskId = await addTask.Handle(DraftItemCommands.Task(userId, item, start, end), ct);
+        var taskId = await addTask.Handle(DraftItemCommands.Task(userId, item, start, end, reminder), ct);
         return item with { PersistedTaskId = taskId };
     }
 
@@ -188,7 +208,8 @@ internal static class DraftItemCommands
         UserId = userId, Text = item.NoteText, IsPersistent = false,
     };
 
-    public static AddTaskCommand Task(Guid userId, TaskProposal item, DateTimeOffset start, DateTimeOffset end) => new()
+    public static AddTaskCommand Task(Guid userId, TaskProposal item, DateTimeOffset start, DateTimeOffset end,
+        TaskReminderDto? reminder = null) => new()
     {
         UserId = userId,
         TaskDetails = new AddTaskItemDto
@@ -196,6 +217,7 @@ internal static class DraftItemCommands
             Title = item.Title, Description = item.Description ?? "",
             StartTime = start, EndTime = end,
             TimeType = TaskTimeType.RangeTime, LabelId = item.LabelId,
+            NotificationId = reminder?.NotificationId, AlertTime = reminder?.AlertTime,
         },
     };
 

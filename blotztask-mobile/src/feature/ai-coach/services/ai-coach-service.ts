@@ -9,6 +9,7 @@ import {
   MessageFeedbackDto,
   ChatTimelinePageDto,
   SetDraftItemAddedResultDto,
+  TaskReminderDto,
 } from "../models/ai-coach-dto";
 import { AiCoachAllowanceDto } from "../models/ai-coach-allowance";
 import { coachModelForRequest } from "./coach-model-override";
@@ -120,16 +121,20 @@ export async function editDraft(
   return coachClient.put(`/ai-coach/conversations/${conversationId}/drafts/${draftId}`, request);
 }
 
-/** Tick (true) saves one review item right away; untick (false) deletes what it saved. Repeating a call changes nothing. */
+/**
+ * Tick (true) saves one review item right away; untick (false) deletes what it saved. Repeating a call changes
+ * nothing. A reminder scheduled for a ticked one-off task is stored on the saved task.
+ */
 export async function setDraftItemAdded(
   conversationId: string,
   draftId: string,
   itemId: string,
   added: boolean,
+  reminder?: TaskReminderDto,
 ): Promise<SetDraftItemAddedResultDto> {
   return coachClient.put(
     `/ai-coach/conversations/${conversationId}/drafts/${draftId}/items/${itemId}/added`,
-    { added },
+    { added, reminder },
   );
 }
 
