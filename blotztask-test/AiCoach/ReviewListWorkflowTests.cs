@@ -455,6 +455,54 @@ public sealed class ReviewListWorkflowTests(DatabaseFixture fixture) : IClassFix
     }
 
     [Fact]
+    public async Task Handle_TickWithReminder_StoresItOnTheTaskAndUntickHandsItBack()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var conversation = await Session(store, [TaskItem()]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        var (draftId, itemId) = (conversation.Drafts[0].Id, conversation.Drafts[0].Proposals[0].ProposalId);
+        var reminder = new TaskReminderDto("notification-1", new DateTimeOffset(2026, 10, 20, 8, 55, 0, TimeSpan.FromHours(8)));
+        // Act
+        var ticked = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(true, reminder), default);
+        var task = await db.TaskItems.AsNoTracking().SingleAsync(value => value.UserId == conversation.UserId);
+        var unticked = await handler.Handle(conversation.UserId, conversation.Id, draftId, itemId, new(false), default);
+        // Assert
+        task.NotificationId.Should().Be("notification-1",
+            because: "the task keeps its reminder ID, so deleting or editing it in the task list replaces the reminder");
+        task.AlertTime.Should().Be(reminder.AlertTime, because: "the edit screen shows the reminder that was really set");
+        ticked.SavedNotificationId.Should().Be("notification-1", because: "the app keeps a reminder only once it is stored");
+        unticked.RemovedNotificationId.Should().Be("notification-1",
+            because: "the app must cancel the reminder of the task the untick deleted");
+    }
+
+    [Fact]
+    public async Task Handle_TickWithReminderThatSavesNoTask_ReturnsNoSavedReminder()
+    {
+        // Arrange
+        using var services = Services();
+        var store = Store(services);
+        var conversation = await Session(store, [TaskItem(), NoteItem()]);
+        await using var db = new BlotzTaskDbContext(fixture.Options);
+        var handler = TickHandler(store, db);
+        var draft = conversation.Drafts[0];
+        var (taskId, noteId) = (draft.Proposals[0].ProposalId, draft.Proposals[1].ProposalId);
+        var reminder = new TaskReminderDto("notification-2", new DateTimeOffset(2026, 10, 20, 8, 55, 0, TimeSpan.FromHours(8)));
+        await handler.Handle(conversation.UserId, conversation.Id, draft.Id, taskId, new(true), default);
+        // Act
+        var repeat = await handler.Handle(conversation.UserId, conversation.Id, draft.Id, taskId, new(true, reminder), default);
+        var note = await handler.Handle(conversation.UserId, conversation.Id, draft.Id, noteId, new(true, reminder), default);
+        // Assert
+        repeat.SavedNotificationId.Should().BeNull(
+            because: "the task was already saved, so the app must cancel the reminder it scheduled for this tap");
+        note.SavedNotificationId.Should().BeNull(because: "notes get no reminder, the same as in the task form");
+        (await db.TaskItems.AsNoTracking().SingleAsync(value => value.UserId == conversation.UserId)).NotificationId
+            .Should().BeNull(because: "a repeated tick does not attach a reminder to the task saved earlier");
+    }
+
+    [Fact]
     public async Task Handle_TickNoteAndRepeatingTask_SavesThemAndUntickDeletesThem()
     {
         // Arrange

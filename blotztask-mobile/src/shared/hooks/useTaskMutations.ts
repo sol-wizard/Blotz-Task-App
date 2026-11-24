@@ -97,7 +97,8 @@ const useTaskMutations = () => {
   });
 
   const toggleTaskMutation = useMutation({
-    mutationFn: ({ taskId }: ToggleTaskVariables) => toggleTaskCompletion(taskId),
+    mutationFn: ({ taskId, wasDone }: ToggleTaskVariables) =>
+      toggleTaskCompletion(taskId, !wasDone),
     onMutate: (data) => {
       if (!data?.selectedDay) return;
       const dayKey = format(data.selectedDay, "yyyy-MM-dd");
@@ -128,6 +129,8 @@ const useTaskMutations = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      // Keep the deadline page in sync — it uses a separate query key.
+      queryClient.invalidateQueries({ queryKey: ddlKeys.all });
     },
   });
 

@@ -58,9 +58,9 @@ public sealed class ToolTurnContextTests
     public async Task Handle_AddThenUpdateLargeList_KeepsOneCurrentDraftAndFitsBudget()
     {
         // Arrange: execute the real tools; only model selection is outside this context test.
-        // Accumulated snapshots measure about 55k bytes and the projection about 40k (Nov 2026; both grow with the
-        // prompt), so 47k separates them with room either side, regardless of the default budget.
-        var limits = new AiCoachModuleOptions { ContextTokenBudget = 47000 };
+        // With the system prompt, accumulated snapshots measure about 57k bytes and the projection about 42k,
+        // so 48k separates them regardless of the default budget. Re-measure if the prompt grows a lot.
+        var limits = new AiCoachModuleOptions { ContextTokenBudget = 48000 };
         var builder = new ModelContextBuilder(Options.Create(limits), NullLogger<ModelContextBuilder>.Instance);
         var workspace = new DraftTools([], "Australia/Perth", true);
         var executor = new ToolExecutor(workspace, limits);

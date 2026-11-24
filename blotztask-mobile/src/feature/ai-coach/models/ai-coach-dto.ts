@@ -97,6 +97,8 @@ export interface ChatTimelineItemDto {
   createdAt: string;
   topicStart: boolean;
   draftSnapshot: ArtifactEnvelopeDto[];
+  /** The user's rating of this reply; missing from older APIs. */
+  feedback?: MessageFeedbackDto | null;
 }
 export interface ChatTimelinePageDto {
   items: ChatTimelineItemDto[];
@@ -143,10 +145,21 @@ export interface ConfirmDraftResultDto {
   persistedEntities: { kind: string; id: string; seriesId: string | null }[];
   conversationSnapshot: ConversationSnapshotDto;
 }
+/** The phone reminder scheduled for a task card before it is added; stored on the saved task. */
+export interface TaskReminderDto {
+  notificationId: string;
+  /** ISO date-time with offset, as the task form sends it. */
+  alertTime: string;
+}
+
 /** Conflicts are existing tasks that a newly saved task overlaps. */
 export interface SetDraftItemAddedResultDto {
   conversationSnapshot: ConversationSnapshotDto;
   conflicts: DraftScheduleAssessmentDto["conflicts"];
+  /** The reminder now stored on the saved task; null when this call stored none, so the app cancels its own. */
+  savedNotificationId?: string | null;
+  /** The reminder of the task an untick deleted, for the app to cancel. */
+  removedNotificationId?: string | null;
 }
 export interface ConversationConflictDto {
   errorCode: string;

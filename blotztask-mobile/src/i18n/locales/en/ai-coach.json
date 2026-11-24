@@ -91,6 +91,7 @@
     "noteSavedTruncated": "Saved to notes (long reply, first 2,000 characters kept)",
     "noteSaveFailed": "Couldn't save the note. Try again.",
     "saveFailed": "Couldn't save feedback. Try again.",
+    "thanks": "Thanks for the feedback",
     "title": "What could be better? (optional)",
     "detailPlaceholder": "Add details (optional)",
     "skip": "Skip",
