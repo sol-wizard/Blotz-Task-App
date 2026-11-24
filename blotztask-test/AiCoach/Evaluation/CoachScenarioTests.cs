@@ -195,15 +195,15 @@ public sealed class CoachScenarioTests(DatabaseFixture fixture, ITestOutputHelpe
                 await SaveReviewListAsync(session);
                 await DeleteSavedTaskAsync(session);
                 await harness.SendAsync("What time should I go to the gym tomorrow evening? Just suggest a time, don't add anything.");
-                harness.CalledInLastTurn("list_tasks").Should().BeTrue(
-                    because: "advice around an existing task must check the task list in the same turn");
+                // This week's schedule is preloaded each turn (#662), so the check is the advice itself, not a list_tasks call.
+                var advice = session.Conversation.Messages.Last(message => message.Role == ConversationMessageRole.Assistant).Content;
+                advice.Should().NotContainEquivalentOf("meeting", because: "the gym advice must not plan around the deleted meeting")
+                    .And.NotContain("会议", because: "the same holds when the coach answers in Chinese");
                 break;
             case "saved-task-still-there":
                 await harness.SendAsync("Add buy milk tomorrow at 10am");
                 await SaveReviewListAsync(session);
                 await harness.SendAsync("I want to buy milk tomorrow at 10am");
-                harness.CalledInLastTurn("list_tasks").Should().BeTrue(
-                    because: "the coach checks the task list before saying a task already exists");
                 UnsavedItems(session).Should().NotContain(item => item.Title.Contains("milk", StringComparison.OrdinalIgnoreCase),
                     because: "a task that is still in the app must not be added again");
                 break;
