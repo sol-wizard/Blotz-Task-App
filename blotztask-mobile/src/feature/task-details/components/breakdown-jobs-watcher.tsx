@@ -47,6 +47,8 @@ const BreakdownJobPoller = ({ taskItemId, breakdown, isAppActive, isViewingTask 
     finished.current = true;
     untrack(taskItemId);
     queryClient.removeQueries({ queryKey: breakdownKeys.status(taskItemId) });
+    // Refresh the list for every finished status, so no card keeps isBreakingDown and tracks it again.
+    void queryClient.invalidateQueries({ queryKey: taskKeys.all });
 
     if (data.status === "Succeeded") {
       void onSucceeded();
@@ -63,7 +65,6 @@ const BreakdownJobPoller = ({ taskItemId, breakdown, isAppActive, isViewingTask 
       queryFn: () => getSubtasksByParentId(taskItemId),
       staleTime: 0,
     });
-    await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     trackResult(true, subtasks.length);
 
     if (isViewingTask) return;
