@@ -5,6 +5,14 @@ name: Prod - Build and deploy WebApi to Azure Web App
 
 on:
   workflow_call:
+    inputs:
+      # The prod release passes its staging/<version> tag, so the API ships the
+      # code that was tested on staging. Blank = the caller's commit.
+      ref:
+        description: "Commit or tag to build and deploy. Blank = the caller's commit."
+        type: string
+        required: false
+        default: ""
   workflow_dispatch:
 
 permissions:
@@ -14,6 +22,8 @@ permissions:
 jobs:
   build:
     uses: ./.github/workflows/build-api.yml
+    with:
+      ref: ${{ inputs.ref }}
 
   deploy:
     runs-on: ubuntu-latest
