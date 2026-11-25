@@ -79,6 +79,17 @@ jobs:
             exit 1
           fi
 
+          # A bump must end above the version now in the stores, or prod would refuse it
+          # only after the whole run (and its EAS builds) is done. "none" is not checked:
+          # it rebuilds the current version, e.g. for a resubmit.
+          PROD=$(jq -r '.build.production.ios.env.APP_VERSION' eas.json)
+          HIGHEST=$(printf '%s\n%s\n' "$PROD" "$NEW" | sort -V | tail -n 1)
+          if [ "${{ inputs.version_bump }}" != "none" ] \
+             && { [ "$NEW" = "$PROD" ] || [ "$HIGHEST" != "$NEW" ]; }; then
+            echo "::error::$NEW is not higher than production $PROD, so prod would refuse it. Pick a bigger bump (major for the first run after this change)."
+            exit 1
+          fi
+
           jq --arg v "$NEW" '
               .build.preview.ios.env.APP_VERSION = $v
             | .build.preview.android.env.APP_VERSION = $v
