@@ -7,12 +7,15 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import { useCallback, useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import { File as ExpoFile } from "expo-file-system";
 import { usePeakLevelMeter } from "./usePeakLevelMeter";
 
 // Takes that never get louder than this are dropped before upload: Whisper invents text
-// ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
-const SPEECH_LEVEL_DBFS = -45;
+// ("Thank you.") for silence. Metering scales differ per platform.
+// iPhone: quiet room -51, quiet speech -42, close speech -15 → -45.
+// Android (Xiaomi, 16 kHz mono): quiet room -34..-36, quiet speech ~-29, speech -11..-13 → -30.
+const SPEECH_LEVEL_DBFS = Platform.OS === "android" ? -30 : -45;
 
 const VOICE_RECORDING_OPTIONS: RecordingOptions = {
   extension: ".m4a",
