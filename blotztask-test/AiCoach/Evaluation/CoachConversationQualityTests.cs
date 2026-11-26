@@ -145,6 +145,10 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
             "noAdvice" => !keywords.Advice.Any(turn.Reply.Contains),
             "noFormalChinese" => !keywords.Formal.Any(turn.Reply.Contains),
             "noStockEmpathy" => !keywords.StockEmpathy.Any(phrase => turn.Reply.Contains(phrase, StringComparison.OrdinalIgnoreCase)),
+            // Reply and tap-to-send follow-ups must stay text-only; the app cannot send photos or files.
+            "noImageRequest" => !keywords.ImageRequest.Any(word =>
+                turn.Reply.Contains(word, StringComparison.OrdinalIgnoreCase)
+                || turn.FollowUps.Any(item => item.Contains(word, StringComparison.OrdinalIgnoreCase))),
             "noNewDraft" => itemsAfter <= itemsBefore,
             "draftCreated" => itemsAfter > itemsBefore,
             "draftChanged" => JsonSerializer.Serialize(turn.DraftsBefore.Select(DraftTools.View))
@@ -174,7 +178,7 @@ public sealed class CoachConversationQualityTests(ITestOutputHelper output)
         IReadOnlyList<string> ToolCalls);
 
     private sealed record QualitySuite(int Version, string TimeZone, QualityKeywords Keywords, QualityScenario[] Scenarios);
-    private sealed record QualityKeywords(string[] Advice, string[] Formal, string[] StockEmpathy);
+    private sealed record QualityKeywords(string[] Advice, string[] Formal, string[] StockEmpathy, string[] ImageRequest);
     private sealed record QualityScenario(string Id, string Category, string Source, int Runs, DateTimeOffset LocalTime,
         string? UserContext, QualityTurn[] Turns, string[] Criteria);
     private sealed record QualityTurn(string User, string[] Tone, string[] Business);

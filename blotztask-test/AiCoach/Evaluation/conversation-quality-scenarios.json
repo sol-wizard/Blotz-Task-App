@@ -4,7 +4,8 @@
   "keywords": {
     "advice": ["喝点水", "喝几口水", "喝水", "坐一会", "休息吧", "好好休息", "好好享受", "好好歇", "享受这段", "安安静静", "不用处理", "放空一下"],
     "formal": ["您", "建议您", "综上所述"],
-    "stockEmpathy": ["我理解你的感受", "我能理解你", "I understand how you feel"]
+    "stockEmpathy": ["我理解你的感受", "我能理解你", "I understand how you feel"],
+    "imageRequest": ["拍照", "拍张", "照片", "图片", "截图", "上传", "photo", "picture", "screenshot", "upload"]
   },
   "scenarios": [
     {
@@ -389,6 +390,35 @@
         { "user": "Remind me to pay rent on the 31st of every month at 9am", "tone": ["noQuestion", "repliesInEnglish"], "business": ["draftCreated"] }
       ],
       "criteria": [ "每月重复的任务：直接建每月 31 号的重复草稿，不因为这个月没有 31 号而提问。" ]
+    },
+    {
+      "id": "ingredients-zh",
+      "category": "capability",
+      "source": "PBI 1708：用家里食材时不要要照片",
+      "runs": 5,
+      "localTime": "2026-11-14T12:00:00+08:00",
+      "turns": [
+        { "user": "我等会儿午饭吃什么", "tone": ["noImageRequest"], "business": [] },
+        { "user": "用家里现有的食材做", "tone": ["noImageRequest"], "business": [] }
+      ],
+      "criteria": [
+        "用户只能发文字：回复和可点按钮都不要求、提议或暗示拍照、照片、截图、上传或文件。",
+        "用户选「用家里现有的食材做」后，请用户用几句话说有什么食材，或先假设几种，并在本轮或下一轮仍给出可做的饭。"
+      ]
+    },
+    {
+      "id": "ingredients-en",
+      "category": "capability",
+      "source": "PBI 1708：fridge ingredients must stay text-only",
+      "runs": 5,
+      "localTime": "2026-11-14T18:00:00+08:00",
+      "turns": [
+        { "user": "What can I cook tonight with what's in my fridge?", "tone": ["noImageRequest", "repliesInEnglish"], "business": [] }
+      ],
+      "criteria": [
+        "Reply and follow-up buttons never ask for or offer a photo, picture, screenshot, upload or file.",
+        "Ask the user to list a few fridge items, or assume some, and still suggest meals in that reply or the next."
+      ]
     }
   ]
 }
