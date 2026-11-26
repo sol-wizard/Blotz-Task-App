@@ -18,6 +18,7 @@ export const EVENTS = {
   AI_TASK_SHEET_OPENED: "ai_task_sheet_opened",
   AI_COACH_VOICE_FAILED: "ai_coach_voice_failed",
   AI_COACH_MIC_PERMISSION_RESOLVED: "ai_coach_mic_permission_resolved",
+  AI_COACH_TURN_SUCCEEDED: "ai_coach_turn_succeeded",
   MIC_PERMISSION_RESOLVED: "mic_permission_resolved",
   ACTIVE_USER_5S: "active_user_5s",
   BREAKDOWN_TASK: "breakdown_task",
@@ -125,6 +126,8 @@ export type TaskSource = "manual" | "ai" | "onboarding_ai";
 
 export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";
 export type AiTaskInputMode = "voice" | "text";
+/** How an AI Coach turn was sent: voice, typed, a suggested follow-up, or a welcome-screen starter prompt. */
+export type AiCoachInputMode = AiTaskInputMode | "followup" | "starter";
 export type AiTaskFailureStage =
   | "permission"
   | "recording"

@@ -24,7 +24,9 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import * as aiCoachService from "../services/ai-coach-service";
 import { scheduleCoachTaskReminder } from "../utils/coach-task-reminder";
-import { MessageSource, streamCoachMessage } from "../services/coach-stream-service";
+import { streamCoachMessage } from "../services/coach-stream-service";
+import { analytics } from "@/shared/services/analytics";
+import type { AiCoachInputMode } from "@/shared/constants/posthog-events";
 
 export interface ChatItem {
   id: string;
@@ -38,6 +40,15 @@ export interface ChatItem {
   streaming?: boolean;
 }
 export type ChatStatus = "idle" | "connecting" | "ready" | "sending" | "startFailed";
+/**
+ * How and when the user sent a turn, for the reply timing event. `startedAt` is the tap that sent it; for voice,
+ * the stop-and-send tap (or the recording's auto-stop). `transcriptAt` (voice only) is when the transcript arrived.
+ */
+export interface CoachTurnStart {
+  inputMode: AiCoachInputMode;
+  startedAt: number;
+  transcriptAt?: number;
+}
 export type ConfirmAction = "add_to_task_list";
 export interface ConfirmOutcome {
   result: ConfirmDraftResultDto | null;
@@ -275,11 +286,12 @@ export function useAiCoachChat() {
   }, [serverBusy, conversationId, applySnapshot, applyOpenSnapshot, streaming]);
 
   const send = useCallback(
-    async (text: string, source?: MessageSource): Promise<string | null> => {
+    async (text: string, turn: CoachTurnStart): Promise<string | null> => {
       // A tick changes the conversation version, so a message waits until every tick has settled.
       if (!snapshot || busy.current || ticking.current.size > 0 || snapshot.generationStatus === "running") return "NotReady";
       const content = text.trim();
       if (!content) return null;
+      const itemsBefore = new Set(snapshot.pendingList?.payload.items.map(item => item.itemId));
       busy.current = true;
       const epoch = ++lifecycle.current;
       setStatus("sending");
@@ -302,6 +314,8 @@ export function useAiCoachChat() {
       let shown = 0;
       let finishing = false;
       let streamed = false;
+      // When the first reply words reached the screen; a reply.reset doesn't restart it.
+      let firstTextAt: number | undefined;
       let activeConversationId = snapshot.conversationId;
       let revealTimer: ReturnType<typeof setInterval> | undefined;
       let drained: (() => void) | undefined;
@@ -315,7 +329,10 @@ export function useAiCoachChat() {
         if (epoch !== lifecycle.current) { stopReveal(); return; }
         shown = reducedMotionRef.current ? replyText.length : nextRevealLength(replyText, shown, finishing);
         // An empty reset round keeps the previous bubble until its first delta, instead of flashing away.
-        if (shown > 0) streamed = true;
+        if (shown > 0) {
+          streamed = true;
+          firstTextAt ??= Date.now();
+        }
         if (shown > 0) setStreamingReply({ id: streamKey, role: "assistant", text: replyText.slice(0, shown),
           conversationId: activeConversationId, createdAt: new Date(Date.parse(createdAt) + 1).toISOString(),
           topicStart: false, draftSnapshot: [], streaming: true });
@@ -358,7 +375,7 @@ export function useAiCoachChat() {
             }
           },
           controller.signal,
-          source,
+          turn.inputMode === "followup" ? "followup" : undefined,
         );
         if (epoch !== lifecycle.current) return null;
         await finishReveal();
@@ -369,6 +386,18 @@ export function useAiCoachChat() {
         if (savedReply && streamed) setRowKeys(previous => ({ ...previous, [savedReply.id]: streamKey }));
         applySnapshot(next);
         refreshHistory();
+        // A turn recovered by polling below isn't timed: its end is when the poll noticed, not when the reply was ready.
+        if (next.generationError === null) {
+          const items = next.pendingList?.payload.items ?? [];
+          analytics.trackAiCoachTurnSucceeded({
+            inputMode: turn.inputMode,
+            durationMs: Date.now() - turn.startedAt,
+            firstTextMs: firstTextAt === undefined ? undefined : firstTextAt - turn.startedAt,
+            transcriptMs: turn.transcriptAt === undefined ? undefined : turn.transcriptAt - turn.startedAt,
+            itemsAdded: items.filter(item => !itemsBefore.has(item.itemId)).length,
+            itemCount: items.length,
+          });
+        }
         return next.generationError;
       } catch (error) {
         if (epoch !== lifecycle.current) return null;

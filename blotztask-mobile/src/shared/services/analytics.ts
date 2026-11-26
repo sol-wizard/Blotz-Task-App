@@ -8,6 +8,7 @@ import {
   SCREEN_NAMES,
   type AppEntryDestination,
   type AppEntrySource,
+  type AiCoachInputMode,
   type AiTaskFailureStage,
   type AiTaskGenerationTurn,
   type AiTaskInputMode,
@@ -394,6 +395,33 @@ export const analytics = {
 
   trackAiCoachVoiceFailed(params: { stage: "permission" | "recording" | "send"; errorCode: string }) {
     posthog.capture(EVENTS.AI_COACH_VOICE_FAILED, { stage: params.stage, error_code: params.errorCode });
+  },
+
+  /**
+   * Fires once per AI Coach turn whose stream ends with a reply: the wait the user felt, timed on the phone
+   * from the tap that sent the message (for voice, the stop-and-send tap or the auto-stop) until the final
+   * reply and its cards are applied. Failed turns and turns recovered by polling after a lost stream send nothing.
+   * `first_text_ms` is when the first reply words appeared (left out when nothing streamed);
+   * `transcript_ms` (voice only) is when the transcript arrived. `items_added` counts review-list items
+   * new after the turn (0 for a chat-only reply); `item_count` is the list's size after it.
+   */
+  trackAiCoachTurnSucceeded(params: {
+    inputMode: AiCoachInputMode;
+    durationMs: number;
+    firstTextMs?: number;
+    transcriptMs?: number;
+    itemsAdded: number;
+    itemCount: number;
+  }) {
+    const properties: Record<string, string | number> = {
+      input_mode: params.inputMode,
+      duration_ms: params.durationMs,
+      items_added: params.itemsAdded,
+      item_count: params.itemCount,
+    };
+    if (params.firstTextMs !== undefined) properties.first_text_ms = params.firstTextMs;
+    if (params.transcriptMs !== undefined) properties.transcript_ms = params.transcriptMs;
+    posthog.capture(EVENTS.AI_COACH_TURN_SUCCEEDED, properties);
   },
 
   trackAiCoachMicPermissionResolved(outcome: MicPermissionOutcome, errorCode?: string) {
