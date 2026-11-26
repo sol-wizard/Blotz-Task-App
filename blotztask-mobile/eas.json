@@ -40,13 +40,13 @@
         "buildType": "app-bundle",
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.4.0"
+          "APP_VERSION": "2.0.0"
         }
       },
       "ios": {
         "credentialsSource": "remote",
         "env": {
-          "APP_VERSION": "1.4.0"
+          "APP_VERSION": "2.0.0"
         }
       },
       "env": {
