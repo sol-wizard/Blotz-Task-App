@@ -14,8 +14,9 @@ import { usePeakLevelMeter } from "./usePeakLevelMeter";
 // Takes that never get louder than this are dropped before upload: Whisper invents text
 // ("Thank you.") for silence. Metering scales differ per platform.
 // iPhone: quiet room -51, quiet speech -42, close speech -15 → -45.
-// Android (Xiaomi, 16 kHz mono): quiet room -34..-36, quiet speech ~-29, speech -11..-13 → -30.
-const SPEECH_LEVEL_DBFS = Platform.OS === "android" ? -30 : -45;
+// Android (Xiaomi, 16 kHz mono): quiet room -34..-37, quiet speech ~-28..-29, speech -11..-13 → -32
+// (more headroom than -30 so soft speech on other phones is less likely to be dropped).
+const SPEECH_LEVEL_DBFS = Platform.OS === "android" ? -32 : -45;
 
 const VOICE_RECORDING_OPTIONS: RecordingOptions = {
   extension: ".m4a",
