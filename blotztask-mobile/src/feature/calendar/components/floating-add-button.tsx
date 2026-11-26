@@ -27,8 +27,9 @@ type Side = "left" | "right";
 type SavedPosition = { side: Side; ratio: number };
 type Area = { width: number; height: number };
 
-// Until the + is first dragged: halfway down the right side.
-const DEFAULT_POSITION: SavedPosition = { side: "right", ratio: 0.5 };
+// Until the + is first dragged: bottom-right, where people expect it and where the task list leaves
+// room for it. Higher up it would cover the cards being read.
+const DEFAULT_POSITION: SavedPosition = { side: "right", ratio: 1 };
 
 const savedPositionSchema = z.object({
   side: z.enum(["left", "right"]),
