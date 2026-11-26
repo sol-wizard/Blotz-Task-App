@@ -8,6 +8,7 @@ import { analytics } from "@/shared/services/analytics";
 import { useMicPermission } from "@/shared/hooks/useMicPermission";
 import { useVoiceRecorder } from "@/shared/hooks/useVoiceRecorder";
 import { transcribeAudio } from "../services/ai-coach-service";
+import type { CoachTurnStart } from "./useAiCoachChat";
 
 // A take stops and sends itself here, keeping uploads small and transcription quick.
 export const MAX_RECORDING_MS = 60_000;
@@ -16,7 +17,8 @@ export type CoachVoicePhase = "idle" | "recording" | "sending";
 
 export function useCoachVoiceInput(
   conversationId: string | undefined,
-  onTranscript: (text: string) => void,
+  /** `turn` times the turn from the stop-and-send tap (or the auto-stop), with the moment the transcript arrived. */
+  onTranscript: (text: string, turn: CoachTurnStart) => void,
 ) {
   const { t } = useTranslation("aiCoach");
   const [phase, setPhase] = useState<CoachVoicePhase>("idle");
@@ -59,12 +61,13 @@ export function useCoachVoiceInput(
     }
   });
   const { startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
-    async (uri) => {
+    async (uri, releasedAt) => {
       const expectedGeneration = recordingGeneration.current;
       if (!active.current || generation.current !== expectedGeneration) return;
       try {
         const text = await transcribeAudio(uri);
-        if (active.current && generation.current === expectedGeneration) onTranscriptRef.current(text);
+        const turn: CoachTurnStart = { inputMode: "voice", startedAt: releasedAt, transcriptAt: Date.now() };
+        if (active.current && generation.current === expectedGeneration) onTranscriptRef.current(text, turn);
       } catch (error) {
         if (active.current) Toast.show({ type: "error", text1: t("chat.transcribeFailed") });
         throw error;

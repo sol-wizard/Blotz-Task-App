@@ -19,7 +19,7 @@ import Toast from "react-native-toast-message";
 import Ionicons from "@react-native-vector-icons/ionicons/static";
 import Animated, { Easing, FadeIn, FadeOut, Keyframe, useReducedMotion } from "react-native-reanimated";
 import { useCoachVoiceInput } from "../hooks/useCoachVoiceInput";
-import { useAiCoachChat, ConfirmAction, ChatItem, isItemSaved } from "../hooks/useAiCoachChat";
+import { useAiCoachChat, ConfirmAction, ChatItem, CoachTurnStart, isItemSaved } from "../hooks/useAiCoachChat";
 import {
   AiCoachRating,
   ArtifactEnvelopeDto,
@@ -376,12 +376,13 @@ export function ExecutionChatPanel() {
   const chatReady = status === "ready" && snapshot?.allowedActions.includes("send_message") === true;
 
   // A finished take is sent straight away, along with anything already typed.
-  const sendVoiceTranscript = async (text: string) => {
+  const sendVoiceTranscript = async (text: string, turn: CoachTurnStart) => {
     if (!text.trim()) {
       Toast.show({ type: "info", text1: t("chat.emptyAudio") });
       return;
     }
     const combined = [input.trim(), text].filter(Boolean).join(" ");
+    // Sent later from the input, it is timed as a typed message.
     if (!chatReady) {
       setInput(combined);
       Toast.show({ type: "info", text1: t("chat.voiceSendLater") });
@@ -389,13 +390,13 @@ export function ExecutionChatPanel() {
     }
     prepareQuestionPosition();
     setInput("");
-    const errorCode = await send(combined);
+    const errorCode = await send(combined, turn);
     if (errorCode) {
       setInput(current => current.trim() ? current : combined);
       showSendError(errorCode);
     }
   };
-  const voice = useCoachVoiceInput(snapshot?.conversationId, (text) => void sendVoiceTranscript(text));
+  const voice = useCoachVoiceInput(snapshot?.conversationId, (text, turn) => void sendVoiceTranscript(text, turn));
   const voiceBusy = voice.busy;
 
   const generating = status === "sending" || snapshot?.generationStatus === "running";
@@ -417,9 +418,10 @@ export function ExecutionChatPanel() {
   const handleSend = async () => {
     if (!canSend || !input.trim()) return;
     const text = input;
+    const turn: CoachTurnStart = { inputMode: "text", startedAt: Date.now() };
     prepareQuestionPosition();
     setInput("");
-    const errorCode = await send(text);
+    const errorCode = await send(text, turn);
     if (errorCode) {
       setInput(current => current.trim() ? current : text);
       showSendError(errorCode);
@@ -428,15 +430,17 @@ export function ExecutionChatPanel() {
 
   const handleStarter = async (text: string) => {
     if (!canSend) return;
+    const turn: CoachTurnStart = { inputMode: "starter", startedAt: Date.now() };
     prepareQuestionPosition();
-    showSendError(await send(text));
+    showSendError(await send(text, turn));
   };
 
   // A tapped follow-up leaves any draft in the input untouched.
   const handleFollowUp = async (text: string) => {
     if (!canSend) return;
+    const turn: CoachTurnStart = { inputMode: "followup", startedAt: Date.now() };
     prepareQuestionPosition();
-    showSendError(await send(text, "followup"));
+    showSendError(await send(text, turn));
   };
 
   const handleConfirm = async (draftId: string, action: ConfirmAction, edited: EditedDraftDto,
