@@ -2,9 +2,15 @@ name: Prod - Submit app to the stores
 
 # Production release.
 #
-# Builds the production iOS + Android apps from main and uploads them - the iOS
-# build to App Store Connect, the Android bundle to the Play production track -
-# then tags the built commit `submitted/<version>`.
+# Ships what was tested on staging. There is no version choice: the version only
+# goes up in a staging release, which tags its commit `staging/<version>` once it
+# passes. This workflow takes the highest `staging/*` tag, ships that version, and
+# builds everything below from that tag's commit, even if main has moved on since.
+# A hotfix therefore goes through staging first (patch -> test -> prod).
+#
+# Builds the production iOS + Android apps and uploads them - the iOS build to App
+# Store Connect, the Android bundle to the Play production track - then tags the
+# built commit `submitted/<version>`.
 #
 # Uploading is not submitting. Attaching the build to a version and sending it
 # for App Store review is still done by hand in App Store Connect, and the Play
@@ -27,17 +33,6 @@ name: Prod - Submit app to the stores
 
 on:
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: "How to bump the version"
-        required: true
-        default: patch
-        type: choice
-        options:
-          - none
-          - major
-          - minor
-          - patch
 
 permissions:
   contents: write
@@ -56,58 +51,91 @@ jobs:
     name: Work out the new version
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.bump.outputs.new_version }}
+      new_version: ${{ steps.pick.outputs.new_version }}
+      # The commit, not the tag name: a "none" staging re-run can move the tag while
+      # this release runs, and every job below must build the same code.
+      sha: ${{ steps.pick.outputs.sha }}
     steps:
+      # The full history brings the staging/* tags with it.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # The "Run workflow" dropdown accepts any branch. Without this, a dispatch
-      # from a feature branch would build that branch's code and submit it to the
-      # stores as a production release.
+      # The "Run workflow" dropdown accepts any branch. The code comes from the tag
+      # either way, but this workflow file and the version PR must be main's.
       - name: Refuse to release from anything but main
         if: github.ref != 'refs/heads/main'
         run: |
           echo "::error::Production releases must run from main, not ${{ github.ref_name }}."
           exit 1
 
-      - name: Bump the production version
-        id: bump
+      - name: Pick the latest staging release
+        id: pick
         run: |
           set -euo pipefail
+          TAG=$(git tag -l 'staging/*' | sort -V | tail -n 1)
+          if [ -z "$TAG" ]; then
+            echo "::error::No staging/<version> tag found. Run a staging release first; prod ships what staging tested."
+            exit 1
+          fi
+          NEW="${TAG#staging/}"
+          SHA=$(git rev-list -n 1 "$TAG")
+
+          # main's eas.json holds the version now in the stores (the record PR of the
+          # last prod release writes it there).
           IOS_CURRENT=$(jq -r '.build.production.ios.env.APP_VERSION' eas.json)
           ANDROID_CURRENT=$(jq -r '.build.production.android.env.APP_VERSION' eas.json)
-
-          # Both platforms ship from one button, so they must share a base version -
-          # otherwise a single "patch" choice would mean two different results.
           if [ "$IOS_CURRENT" != "$ANDROID_CURRENT" ]; then
             echo "::error::production versions are out of sync (iOS $IOS_CURRENT, Android $ANDROID_CURRENT). Align them in eas.json first."
             exit 1
           fi
 
-          IFS=. read -r MAJOR MINOR PATCH <<< "$IOS_CURRENT"
-          case "${{ inputs.version_bump }}" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
-            none)  ;;
-            *) echo "::error::unknown version_bump"; exit 1 ;;
-          esac
+          # Never go backwards. The same version is fine: that is a resubmit after a
+          # rejected review, and EAS still gives it a new build number.
+          LOWEST=$(printf '%s\n%s\n' "$IOS_CURRENT" "$NEW" | sort -V | head -n 1)
+          if [ "$NEW" != "$IOS_CURRENT" ] && [ "$LOWEST" = "$NEW" ]; then
+            echo "::error::The latest staging release is $NEW, lower than production $IOS_CURRENT. Release a higher version to staging first."
+            exit 1
+          fi
 
-          NEW="$MAJOR.$MINOR.$PATCH"
+          # Shipping the same version again is only for a resubmit before it goes live.
+          # Once live, the App Store refuses it, but Google Play, the China APK and the
+          # API would quietly take different code under the same number. The live iOS
+          # version is the LatestVersion setting, raised by hand once the store is live.
+          LIVE=$(curl -fsS --retry 3 --retry-all-errors \
+                   https://app-blotz-task-api-prod.azurewebsites.net/api/app-version \
+                 | jq -r '.ios.latestVersion') || LIVE=""
+          if [ -z "$LIVE" ] || [ "$LIVE" = "null" ]; then
+            echo "::error::Could not read the live iOS version from the production API, so the release stops here."
+            exit 1
+          fi
+          HIGHEST=$(printf '%s\n%s\n' "$LIVE" "$NEW" | sort -V | tail -n 1)
+          if [ "$NEW" = "$LIVE" ] || [ "$HIGHEST" = "$LIVE" ]; then
+            echo "::error::$NEW is already live in the App Store (live: $LIVE). Release a patch to staging first."
+            exit 1
+          fi
 
-          # "none" resubmits the same store version with a fresh build number, which
-          # is what a rejected review or a late fix needs. It rewrites eas.json with
-          # the value already in it, so the pull request below finds nothing to open.
-          jq --arg v "$NEW" '
-              .build.production.ios.env.APP_VERSION = $v
-            | .build.production.android.env.APP_VERSION = $v
-          ' eas.json > eas.json.tmp && mv eas.json.tmp eas.json
+          # The tagged commit still carries the production version from before, since
+          # the staging release only bumps the preview profile. Write the new version
+          # into that commit's eas.json, which the builds below use.
+          git show "$SHA:blotztask-mobile/eas.json" \
+            | jq --arg v "$NEW" '
+                  .build.production.ios.env.APP_VERSION = $v
+                | .build.production.android.env.APP_VERSION = $v
+              ' > eas.json
 
-          echo "new_version=$NEW" >> "$GITHUB_OUTPUT"
-          echo "### Production release \`$IOS_CURRENT\` -> \`$NEW\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Build numbers come from EAS (\`appVersionSource: remote\`), so a \`none\` bump still produces a new build." >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "new_version=$NEW"
+            echo "sha=$SHA"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Production release \`$IOS_CURRENT\` -> \`$NEW\`"
+            echo "Building \`$TAG\` (\`$SHA\`), the commit tested on staging."
+            echo "Build numbers come from EAS (\`appVersionSource: remote\`), so shipping the same version again still produces a new build."
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      # The bumped eas.json travels as an artifact so the version is written once
-      # here and simply reused by the jobs below, which run on other machines.
+      # This eas.json travels as an artifact so the version is written once here and
+      # simply reused by the jobs below, which run on other machines.
       - uses: actions/upload-artifact@v4
         with:
           name: eas-json
@@ -125,6 +153,8 @@ jobs:
         platform: [ios, android]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -173,6 +203,8 @@ jobs:
       apk_url: ${{ steps.build.outputs.apk_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -229,21 +261,29 @@ jobs:
       # Forced because a rejected review is resubmitted under the same version, and
       # the tag should follow the code that was actually submitted last.
       - name: Tag the built commit as submitted
+        env:
+          SHA: ${{ needs.version.outputs.sha }}
         run: |
           set -euo pipefail
           TAG="submitted/${{ needs.version.outputs.new_version }}"
-          git tag -f "$TAG" "$GITHUB_SHA"
+          git tag -f "$TAG" "$SHA"
           git push --force origin "refs/tags/$TAG"
-          echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Tagged \`$TAG\` at \`$SHA\`" >> "$GITHUB_STEP_SUMMARY"
           echo "Next: approve the API deploy below. Once it is healthy, log in once with the prod build on TestFlight and check the task list loads, then submit for review. Once each store is live, set that platform's \`AppVersion__<Ios|Android>__LatestVersion\` in Azure to the new version, and its \`MinimumSupportedVersion\` too if this release forces the update. Once both are live, run **Tag Release** with commit \`$TAG\`." >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: eas-json
-          path: blotztask-mobile
+      # Only the two version lines change, on main's own eas.json. Copying the tagged
+      # commit's eas.json over main would undo any eas.json change merged since the tag.
+      - name: Write the submitted version into main's eas.json
+        run: |
+          set -euo pipefail
+          jq --arg v "${{ needs.version.outputs.new_version }}" '
+              .build.production.ios.env.APP_VERSION = $v
+            | .build.production.android.env.APP_VERSION = $v
+          ' eas.json > eas.json.tmp && mv eas.json.tmp eas.json
 
       # main is protected and the bot cannot push to it, so this opens a PR to merge
-      # by hand. A "none" bump leaves eas.json untouched and this quietly no-ops.
+      # by hand. Resubmitting the same version leaves eas.json untouched and this
+      # quietly no-ops.
       - name: Open a PR with the submitted version
         uses: peter-evans/create-pull-request@v7
         with:
@@ -261,8 +301,10 @@ jobs:
 
   deploy-api:
     name: Deploy the API from the submitted commit
-    needs: tag-and-record
+    needs: [version, tag-and-record]
     uses: ./.github/workflows/deploy-prod-api.yml
+    with:
+      ref: ${{ needs.version.outputs.sha }}
     secrets: inherit
     permissions:
       id-token: write
@@ -320,7 +362,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # History copy first, then the fixed name the website links to. --overwrite on both:
-      # a "none" bump resubmits the same version. no-cache on latest so phones and proxies
+      # a re-run resubmits the same version. no-cache on latest so phones and proxies
       # never hand out last release's file; the APK content type makes Android install it.
       - name: Upload the APK
         run: |

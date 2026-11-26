@@ -5,6 +5,14 @@ name: Build .NET API
 
 on:
   workflow_call:
+    inputs:
+      # Inside a called workflow, github.sha is the caller's commit, so without this
+      # the API is always built from whatever main was when the release was started.
+      ref:
+        description: "Commit, branch or tag to build. Blank = the caller's commit."
+        type: string
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -12,6 +20,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4

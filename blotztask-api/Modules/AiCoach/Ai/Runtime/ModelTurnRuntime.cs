@@ -27,7 +27,9 @@ public sealed record ModelTurnRequest(Guid ConversationId, IReadOnlyList<Gateway
     // The topic's latest replies: unsaved items suggested before them are shown briefly in the draft context.
     IReadOnlySet<Guid>? RecentReplyIds = null,
     // Model profile the client asked for; honoured only where AiCoach:AllowModelOverride is on.
-    string? Model = null);
+    string? Model = null,
+    // Saved review items whose task or note was deleted in the app since; listed apart in the drafts context.
+    IReadOnlySet<Guid>? DeletedSavedItemIds = null);
 
 public sealed record ModelTurnRunResult(string? Text, string? Error,
     IReadOnlyList<GatewayMessage> TurnHistory, IReadOnlyList<ProposalSet> Drafts,

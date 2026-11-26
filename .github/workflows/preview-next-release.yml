@@ -7,10 +7,14 @@ name: Preview Next Release
 # section each PR author fills in (see .github/pull_request_template.md) — and
 # uses Azure OpenAI to draft friendly "What's New" copy: it omits work marked
 # internal or hidden-in-production, and tags beta features as "(beta)".
+#
+# Runs when a release is published, at the end of every staging release
+# (release-staging.yml), or by hand.
 
 on:
   release:
     types: [published]
+  workflow_call:
   workflow_dispatch:
 
 permissions:

@@ -112,11 +112,14 @@ Pick the one that fits the task. POC (🔍) takes priority when the work is an i
 3. Decide whether staging verification applies (ask if unclear), then confirm the review level (`L1`–`L4`), the priority (`P1`–`P3`), other labels, and estimate.
 4. Title = the PBI title.
 5. Body in this order, keeping the user's wording. **Keep it short and concise** — write the minimum a dev needs to pick this up, favour tight bullets over prose, and cut any sentence that doesn't change what someone would do:
-   - `## 为什么做` — **first, and in Chinese** (the rest of the body stays in English). Three short bullets anyone on the team can read in 10 seconds, so they see the problem and its cause before any detail:
-     - `**问题：**` what the user (or the team) runs into
-     - `**现在 App 怎么做：**` how the app or system handles it today, which is why the problem happens
-     - `**改成：**` what this PBI changes
-     Plain words, no code, file names or jargon.
+   - `## 为什么做` — **first, and in Chinese** (the rest of the body stays in English). Anyone on the team, technical or not, should get it in 10 seconds:
+     - **One problem:** three bullets — `**问题：**`, `**原因：**`, `**改成：**`.
+     - **Several problems:** never chain them with semicolons inside the three bullets. Number them; each gets a short bold name, then its own 问题 / 原因 / 改成 lines underneath.
+     - **问题** = what the user sees or feels (e.g. 点明天要先看一会儿转圈). If users can't feel it, write the effect (安装包变大), not the technical fact.
+     - **原因** = why it happens, in words a non-developer understands. Don't translate tech terms into Chinese word-for-word (✗ 同一天的任务用两个名字存了两份 → ✓ App 已经拿到那天的任务了，但存的地方不对，列表找不到，只好重新下载).
+     - **改成** = what the user will notice after the change (✗ 同一天只用一个名字 → ✓ 一点就出来).
+     - **Keep it short:** each line is one short sentence (aim for about 20 字), no extra detail — the details belong in the English sections below. Plain words must not make it longer.
+     No code, file names or jargon.
    - `## Description` — first bullet is `**Where:** <feature> — <how to reach it>` (see the readiness gate), then requirements (what & why)
    - `## Suggested Solution` — proposed approach (POC: replace with `## Investigation Goal` — questions to answer + what success looks like)
    - `## Scope / Tasks` — checkboxes (`- [ ]`), `###` subheadings if grouped

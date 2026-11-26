@@ -28,7 +28,8 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
     AiCoachUsageTracker usageTracker, TaskContextReader taskContextReader, DraftScheduleChecker scheduleChecker,
     TimeProvider clock, ILogger<ConversationApplication> logger, ConversationSegments segments,
     AiCoachTraceRecorder? trace = null, GetUserContextQueryHandler? userContextQuery = null,
-    RememberUserMemoryCommandHandler? rememberMemory = null, ForgetUserMemoryCommandHandler? forgetMemory = null)
+    RememberUserMemoryCommandHandler? rememberMemory = null, ForgetUserMemoryCommandHandler? forgetMemory = null,
+    FindDeletedSavedItemsQueryHandler? deletedSavedItems = null)
 {
     public async Task<ConversationSnapshotDto> SendAsync(Guid userId, Guid conversationId,
         Guid messageId, string content, int? expectedVersion, CancellationToken ct, string? timeZoneId = null,
@@ -87,8 +88,22 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
             baseVersion = conversation.Version;
             segmentCreatedAt = conversation.CreatedAt;
             var effectiveTimeZoneId = conversation.TimeZoneId;
+            var drafts = conversation.Drafts.Select(draft => draft.Copy()).ToArray();
+            IReadOnlySet<Guid>? deletedItemIds = null;
+            if (deletedSavedItems is not null)
+            {
+                try
+                {
+                    deletedItemIds = await deletedSavedItems.Handle(new() { UserId = userId, Drafts = drafts }, ct);
+                }
+                catch (Exception lookupError) when (lookupError is not OperationCanceledException)
+                {
+                    // Optional context: without it the coach falls back to reading the task list itself.
+                    logger.LogWarning(lookupError, "AiCoach deleted-item lookup failed for {ConversationId}", conversationId);
+                }
+            }
             request = new(conversation.Id, conversation.History.ToArray(),
-                conversation.Drafts.Select(draft => draft.Copy()).ToArray(), conversation.TimeZoneId,
+                drafts, conversation.TimeZoneId,
                 TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById(conversation.TimeZoneId)),
                 conversation.Summary, conversation.SummarizedMessageCount,
                 (startDate, endDate, token) => taskContextReader.ReadAsync(userId, effectiveTimeZoneId, startDate, endDate, token),
@@ -101,7 +116,7 @@ public sealed class ConversationApplication(IConversationStore store, IModelTurn
                 conversation.UserContext, memoryTools, userId,
                 RecentReplyIds: conversation.Messages.Where(message => message.Role == ConversationMessageRole.Assistant)
                     .TakeLast(ModelContextBuilder.RecentSuggestionReplies).Select(message => message.Id).ToHashSet(),
-                Model: model);
+                Model: model, DeletedSavedItemIds: deletedItemIds);
             await store.SaveAsync(conversation, ct);
         }
 
