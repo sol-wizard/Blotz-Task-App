@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text } from "react-native";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 
@@ -7,6 +7,12 @@ type Props = {
   onChange?: (v: Date) => void;
   itemHeight?: number;
   visibleItemCount?: 3 | 5 | 7;
+  /** Minutes between wheel items: 1 shows every minute, 5 shows 00, 05, 10… A value off the step shows the step below it. */
+  minuteStep?: 1 | 5 | 10 | 15 | 30;
+  /** Total width of the picker. */
+  width?: number;
+  /** Width of each of the two wheels. */
+  wheelWidth?: number;
 };
 
 const pad2 = (n: number) => n.toString().padStart(2, "0");
@@ -19,10 +25,11 @@ const HOURS: PickerItem<number>[] = Array.from({ length: 24 * PICKER_CYCLES }, (
   label: pad2(i % 24), //00..23
 }));
 
-const MINUTES: PickerItem<number>[] = Array.from({ length: 60 * PICKER_CYCLES }, (_, i) => ({
-  value: i,
-  label: pad2(i % 60), //00...59
-}));
+const buildMinutes = (step: number): PickerItem<number>[] =>
+  Array.from({ length: (60 / step) * PICKER_CYCLES }, (_, i) => ({
+    value: i,
+    label: pad2((i % (60 / step)) * step), //00...59, or 00, 05...55 for a step of 5
+  }));
 
 function mergeToDate(base: Date, hour: number, minute: number) {
   const next = new Date(base);
@@ -35,14 +42,19 @@ export default function TimePicker({
   onChange,
   itemHeight = 44,
   visibleItemCount = 5,
+  minuteStep = 1,
+  width = 320,
+  wheelWidth = 96,
 }: Props) {
   const initial = value ?? new Date();
+  const minutesPerCycle = 60 / minuteStep;
+  const minutes = useMemo(() => buildMinutes(minuteStep), [minuteStep]);
 
   const [hourIndex, setHourIndex] = useState<number>(
     PICKER_MIDDLE_CYCLE * 24 + initial.getHours(),
   );
   const [minuteIndex, setMinuteIndex] = useState<number>(
-    PICKER_MIDDLE_CYCLE * 60 + initial.getMinutes(),
+    PICKER_MIDDLE_CYCLE * minutesPerCycle + Math.floor(initial.getMinutes() / minuteStep),
   );
 
   const combineWheelValue = (next: Partial<{ hourIndex: number; minuteIndex: number }>) => {
@@ -53,7 +65,7 @@ export default function TimePicker({
 
     // Convert indexes to actual hours/minutes
     const selectedHour = h % 24;
-    const selectedMinute = m % 60;
+    const selectedMinute = (m % minutesPerCycle) * minuteStep;
 
     const out = mergeToDate(base, selectedHour, selectedMinute);
     onChange?.(out);
@@ -61,14 +73,14 @@ export default function TimePicker({
 
   return (
     <View
-      className="mx-auto w-[320px] rounded-xl overflow-hidden"
-      style={{ height: itemHeight * visibleItemCount }}
+      className="mx-auto rounded-xl overflow-hidden"
+      style={{ width, height: itemHeight * visibleItemCount }}
     >
       <View className="flex-1 flex-row items-center justify-center">
         <WheelPicker
           data={HOURS}
           value={hourIndex}
-          width={96}
+          width={wheelWidth}
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
@@ -82,9 +94,9 @@ export default function TimePicker({
         <Text className="text-[22px] font-semibold text-[#2e3654] w-6 text-center">:</Text>
 
         <WheelPicker
-          data={MINUTES}
+          data={minutes}
           value={minuteIndex}
-          width={96}
+          width={wheelWidth}
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
