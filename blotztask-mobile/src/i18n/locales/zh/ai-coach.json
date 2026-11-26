@@ -140,8 +140,14 @@
     "tomorrow": "明天"
   },
   "editModal": {
-    "title": "编辑任务",
+    "title": "新任务",
     "taskTitle": "标题",
+    "notes": "备注",
+    "dateAndTime": "日期和时间",
+    "time": "时间",
+    "durationHours": "{{hours}}小时",
+    "durationMinutes": "{{minutes}}分钟",
+    "durationHoursMinutes": "{{hours}}小时{{minutes}}分钟",
     "date": "日期",
     "startTime": "开始时间",
     "endTime": "结束时间",

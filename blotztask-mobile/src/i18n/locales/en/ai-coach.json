@@ -140,8 +140,14 @@
     "tomorrow": "Tomorrow"
   },
   "editModal": {
-    "title": "Edit task",
+    "title": "New Task",
     "taskTitle": "Title",
+    "notes": "Notes",
+    "dateAndTime": "Date & Time",
+    "time": "Time",
+    "durationHours": "{{hours}}h",
+    "durationMinutes": "{{minutes}}m",
+    "durationHoursMinutes": "{{hours}}h {{minutes}}m",
     "date": "Date",
     "startTime": "Start time",
     "endTime": "End time",
