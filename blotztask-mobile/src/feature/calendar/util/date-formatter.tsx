@@ -1,5 +1,5 @@
 import { isSameDay, format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS } from "date-fns/locale/en-US";
 import i18n from "@/i18n";
 import { Text } from "react-native";
 import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";

@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
 import { NoteTimeEstimationResult } from "../models/note-time-estimation-result";
 import { formatDuration } from "date-fns";
-import { enUS, zhCN } from "date-fns/locale";
+import { enUS } from "date-fns/locale/en-US";
+import { zhCN } from "date-fns/locale/zh-CN";
 
 interface Props {
   visible: boolean;

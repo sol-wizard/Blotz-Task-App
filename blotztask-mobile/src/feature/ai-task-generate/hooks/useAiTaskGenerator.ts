@@ -50,8 +50,7 @@ export function useAiTaskGenerator({
       throw new Error("Cannot submit audio: not connected.");
     }
 
-    const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
-    const base64 = arrayBufferToBase64(arrayBuffer);
+    const base64 = await new ExpoFile(uri).base64();
 
     setTranscript(undefined);
     setIsAiGenerating(true);
@@ -331,13 +330,4 @@ function buildTurn(
       task_label: recurring.task_label,
     })),
   };
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }

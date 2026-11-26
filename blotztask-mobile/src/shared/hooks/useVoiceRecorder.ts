@@ -1,16 +1,42 @@
 import {
-  RecordingPresets,
+  AudioQuality,
+  IOSOutputFormat,
+  RecordingOptions,
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
 import { useCallback, useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import { File as ExpoFile } from "expo-file-system";
 import { usePeakLevelMeter } from "./usePeakLevelMeter";
 
 // Takes that never get louder than this are dropped before upload: Whisper invents text
-// ("Thank you.") for silence. iPhone readings: quiet room -51, quiet speech -42, close speech -15.
-const SPEECH_LEVEL_DBFS = -45;
+// ("Thank you.") for silence. Metering scales differ per platform.
+// iPhone: quiet room -51, quiet speech -42, close speech -15 → -45.
+// Android (Xiaomi, 16 kHz mono): quiet room -34..-37, quiet speech ~-28..-29, speech -11..-13 → -32
+// (more headroom than -30 so soft speech on other phones is less likely to be dropped).
+const SPEECH_LEVEL_DBFS = Platform.OS === "android" ? -32 : -45;
+
+const VOICE_RECORDING_OPTIONS: RecordingOptions = {
+  extension: ".m4a",
+  sampleRate: 16000,
+  numberOfChannels: 1,
+  bitRate: 32000,
+  isMeteringEnabled: true,
+  android: {
+    outputFormat: "mpeg4",
+    audioEncoder: "aac",
+  },
+  ios: {
+    outputFormat: IOSOutputFormat.MPEG4AAC,
+    audioQuality: AudioQuality.MEDIUM,
+  },
+  web: {
+    mimeType: "audio/webm",
+    bitsPerSecond: 32000,
+  },
+};
 
 export type VoiceRecordingFailure = {
   stage: "recording" | "send";
@@ -28,7 +54,7 @@ export function useVoiceRecorder(
   submitAudioForTranscription: (uri: string, releasedAt: number) => Promise<void>,
   { onError, onFailure }: VoiceRecorderOptions,
 ) {
-  const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
+  const recorder = useAudioRecorder(VOICE_RECORDING_OPTIONS);
   const { isRecording } = useAudioRecorderState(recorder);
   const meter = usePeakLevelMeter(recorder);
 
