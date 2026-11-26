@@ -37,6 +37,16 @@ const PRIVACY_POLICY_URLS = {
 const XIAOHONGSHU_URL =
   "https://www.xiaohongshu.com/user/profile/67bc12d6000000000e01f09a?xsec_token=ABHQISPlYoPNMi_q8P8u_etGBEND3LxYOU0pGDx_X8bT0%3D&xsec_source=pc_search";
 
+// Outline icons match App Store 1.5.0 Settings rows (size 22, #444964).
+const ROW_ICON_COLOR = "#444964";
+function RowIcon({
+  name,
+}: {
+  name: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+}) {
+  return <MaterialCommunityIcons name={name} size={22} color={ROW_ICON_COLOR} />;
+}
+
 // Each language is named in its own language, so the list reads the same whichever is active.
 const LANGUAGE_OPTIONS: DropdownOption<Language>[] = [
   { label: "中文", value: Language.Zh },
@@ -111,10 +121,10 @@ export default function SettingsScreen() {
 
       <ScrollView
         className="flex-1 mt-2"
-        contentContainerStyle={{ paddingHorizontal: 20, alignItems: "center", paddingBottom: 24 }}
+        contentContainerStyle={{ paddingHorizontal: 32, alignItems: "center", paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="bg-white w-full rounded-2xl items-center py-6 mt-2">
+        <View className="w-full items-center py-6 mt-2">
           <Pressable onPress={() => router.push("/settings/avatar")}>
             <UserAvatar pictureValue={userProfile?.pictureUrl} size={84} />
             <View className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border border-gray-200 items-center justify-center">
@@ -139,6 +149,7 @@ export default function SettingsScreen() {
         <SettingsSection title={t("menu.preferences")}>
           <SettingsRow
             label={t("menu.upcomingReminder")}
+            icon={<RowIcon name="bell-outline" />}
             trailing={
               <ToggleSwitch
                 value={userPreferences?.upcomingNotification ?? true}
@@ -153,6 +164,7 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             label={t("menu.autoRollover")}
+            icon={<RowIcon name="calendar-arrow-right" />}
             trailing={
               <ToggleSwitch
                 value={userPreferences?.autoRollover ?? false}
@@ -163,6 +175,7 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             label={t("menu.reviewReminder")}
+            icon={<RowIcon name="email-outline" />}
             badge={t("menu.newBadge")}
             trailing={
               <ToggleSwitch
@@ -178,6 +191,7 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             label={t("menu.language")}
+            icon={<RowIcon name="translate" />}
             trailing={
               <View className="bg-background rounded-full px-3 py-1">
                 <AnimatedDropdown
@@ -192,6 +206,7 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             label={t("menu.aiMemory")}
+            icon={<RowIcon name="head-lightbulb-outline" />}
             trailing="chevron"
             onPress={() => router.push("/settings/ai-memory")}
           />
@@ -200,6 +215,7 @@ export default function SettingsScreen() {
         <SettingsSection title={t("menu.withBlotz")}>
           <SettingsRow
             label={t("menu.invite")}
+            icon={<RowIcon name="account-plus-outline" />}
             trailing="chevron"
             onPress={() => router.push("/settings/invite")}
           />
@@ -207,6 +223,7 @@ export default function SettingsScreen() {
           {Platform.OS === "ios" && (
             <SettingsRow
               label={t("menu.supportUs")}
+              icon={<RowIcon name="heart-outline" />}
               trailing="chevron"
               onPress={() => router.push("/settings/support-us")}
             />
@@ -216,6 +233,7 @@ export default function SettingsScreen() {
         <SettingsSection title={t("menu.aboutBlotz")}>
           <SettingsRow
             label={t("menu.feedback")}
+            icon={<RowIcon name="message-text-outline" />}
             trailing="chevron"
             onPress={() => router.push("/settings/feedback")}
           />
@@ -242,6 +260,7 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             label={t("menu.privacyPolicy")}
+            icon={<RowIcon name="shield-check-outline" />}
             trailing="external"
             onPress={handlePrivacyPolicy}
           />
@@ -252,6 +271,7 @@ export default function SettingsScreen() {
         <SettingsSection>
           <SettingsRow
             label={t("menu.betaFeatures")}
+            icon={<RowIcon name="flask-outline" />}
             trailing="chevron"
             onPress={() => router.push("/settings/beta-features")}
           />
@@ -283,6 +303,7 @@ function CoachModelSection() {
     <SettingsSection title={t("menu.developer")}>
       <SettingsRow
         label={t("menu.aiCoachModel")}
+        icon={<RowIcon name="robot-outline" />}
         trailing={
           model && (
             <View className="bg-background rounded-full px-3 py-1">
