@@ -15,6 +15,8 @@ public static class DependencyInjection
         services.AddScoped<GetTaskBreakdownStatusQueryHandler>();
         services.AddScoped<BreakdownTargetResolver>();
         services.AddSingleton<BreakdownJobQueue>();
+        // One per server, so every breakdown feeds and reads the same recent run times.
+        services.AddSingleton<BreakdownHedgePolicy>();
         services.AddHostedService<BreakdownJobRunner>();
 
         return services;

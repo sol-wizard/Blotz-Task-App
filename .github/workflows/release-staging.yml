@@ -69,6 +69,27 @@ jobs:
           esac
 
           NEW="$MAJOR.$MINOR.$PATCH"
+
+          # main's eas.json only moves when the last version PR is merged. If it wasn't,
+          # this bump works out the same number again and the tag step below would move
+          # the existing staging/<version> tag, the one prod ships, to newer code.
+          if [ "${{ inputs.version_bump }}" != "none" ] \
+             && git ls-remote --exit-code --tags origin "refs/tags/staging/$NEW" > /dev/null; then
+            echo "::error::staging/$NEW already exists. Merge the last 'chore: staging release' PR, then run again."
+            exit 1
+          fi
+
+          # A bump must end above the version now in the stores, or prod would refuse it
+          # only after the whole run (and its EAS builds) is done. "none" is not checked:
+          # it rebuilds the current version, e.g. for a resubmit.
+          PROD=$(jq -r '.build.production.ios.env.APP_VERSION' eas.json)
+          HIGHEST=$(printf '%s\n%s\n' "$PROD" "$NEW" | sort -V | tail -n 1)
+          if [ "${{ inputs.version_bump }}" != "none" ] \
+             && { [ "$NEW" = "$PROD" ] || [ "$HIGHEST" != "$NEW" ]; }; then
+            echo "::error::$NEW is not higher than production $PROD, so prod would refuse it. Pick a bigger bump (major for the first run after this change)."
+            exit 1
+          fi
+
           jq --arg v "$NEW" '
               .build.preview.ios.env.APP_VERSION = $v
             | .build.preview.android.env.APP_VERSION = $v
@@ -184,3 +205,38 @@ jobs:
             echo "::error::staging API is not healthy"
             exit 1
           fi
+
+  # The prod release builds the apps and the API from this tag, so only a release that
+  # fully passed (both builds, the API deploy and the health check) gets one.
+  #
+  # Its own job, not a step above: that job checks out main for the version PR, and
+  # main may have moved on. A plain checkout here is the exact commit that was built.
+  #
+  # Forced because a "none" re-run keeps the version, and the tag should follow the
+  # code that was built and tested last.
+  tag:
+    name: Tag the tested commit for prod
+    needs: [version, record-and-verify]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag the built commit as staging/<version>
+        run: |
+          set -euo pipefail
+          TAG="staging/${{ needs.version.outputs.new_version }}"
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push --force origin "refs/tags/$TAG"
+          echo "### Tagged \`$TAG\` at \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "The next prod release ships this commit as \`${{ needs.version.outputs.new_version }}\`." >> "$GITHUB_STEP_SUMMARY"
+
+  # Rewrites the "Next release (unreleased)" draft from every PR merged into main up to
+  # now, which may include a few merged during this run that are not in the tag. A
+  # failure here does not affect the release: re-run Preview Next Release by hand.
+  refresh-release-draft:
+    name: Refresh the next-release draft
+    needs: tag
+    uses: ./.github/workflows/preview-next-release.yml
+    secrets: inherit
+    permissions:
+      contents: write

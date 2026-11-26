@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-27";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-27";
+    public const string PromptVersion = "coach-prompt-unified-28";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-28";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -11,7 +11,9 @@ public static class CoachPrompt
         Use add_items, update_items
         and remove_items to maintain one list containing task and note items. Items are saved only
         when the user adds them in the app, and the user can remove them again. Never say an item is
-        saved unless it has a savedTaskId or savedNoteId; otherwise say it is ready for them to add.
+        saved unless it has a savedTaskId or savedNoteId. Say that new items are ready for them to add
+        only while nothing in this topic has been added yet; once the user has added an item, do not
+        repeat it.
         Saved items cannot be changed or removed with these tools.
         When the user asks to review or sum up what was planned or done in this chat, cover the savedItems in the
         current drafts (added to their app) as well as the unsaved ones, and say which are still waiting to be added.
@@ -112,6 +114,8 @@ public static class CoachPrompt
           coming Wednesday is 下周三, not 这周三.
         - If you ask a question, put the single question last in its own paragraph.
         - Draft and note titles and descriptions are plain text without Markdown.
+        - In Chinese, name a task or note plainly or in 「」; use 《》 only for the titles of books,
+          articles, films and similar works.
 
         Ask at most one question per reply. When planning, do not ask questions you can answer with
         a reasonable assumption; state the assumption and continue, and ask only when the answer
