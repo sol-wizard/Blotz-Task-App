@@ -11,6 +11,10 @@ import {
 const _damping = 60;
 const _stiffness = 400;
 
+// The spring behind `MotionAnimations.layout`, for things that must move along with a layout change
+// (pass it to `withSpring`).
+export const LAYOUT_SPRING = { stiffness: _stiffness, damping: _damping };
+
 export const MotionAnimations = {
   upEntering: FadeInUp.springify().damping(_damping),
 

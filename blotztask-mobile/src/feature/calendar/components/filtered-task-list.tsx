@@ -1,9 +1,9 @@
-import { FlatList, Pressable } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isToday } from "date-fns";
 import { analytics } from "@/shared/services/analytics";
 import { TaskStatusType } from "../models/task-status-type";
@@ -22,11 +22,16 @@ let hasTrackedTodayTasksShown = false;
 export const FilteredTaskList = ({
   selectedDay,
   onOpenMode,
+  onListAreaLayout,
 }: {
   selectedDay: Date;
   onOpenMode: () => void;
+  // Called with the area below the status tabs whenever its size changes (e.g. the week calendar
+  // opening or closing), so the screen can keep the floating + inside it.
+  onListAreaLayout?: (listArea: View) => void;
 }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("To Do");
+  const listAreaRef = useRef<View>(null);
 
   const { deleteTask, isDeleting } = useTaskMutations();
 
@@ -84,36 +89,44 @@ export const FilteredTaskList = ({
         />
       </Animated.View>
 
-      {isLoading ? (
-        <LoadingScreen />
-      ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
-        <FlatList
-          className="flex-1"
-          data={tasksOfSelectedStatus}
-          // paddingBottom lets the last task scroll up from under the floating + on Home.
-          contentContainerStyle={{
-            paddingHorizontal: 22,
-            paddingTop: 8,
-            paddingBottom: 88,
-            gap: 12,
-            flexGrow: 1,
-          }}
-          renderItem={renderTask}
-          keyExtractor={(task, index) => {
-            const recurringOccurrence = getRecurringOccurrenceIdentity(task);
-            if (recurringOccurrence) {
-              return `virtual-${recurringOccurrence.recurringTaskId}-${recurringOccurrence.occurrenceDate}`;
-            }
-            if (task.id != null) return `task-${task.id}`;
-            return `task-fallback-${index}`;
-          }}
-          onScrollBeginDrag={closeAllRows}
-          keyboardShouldPersistTaps="handled"
-          ListFooterComponent={<Pressable className="flex-1 min-h-96" onPress={closeAllRows} />}
-        />
-      ) : (
-        <TaskListPlaceholder selectedStatus={selectedStatus} />
-      )}
+      <View
+        ref={listAreaRef}
+        className="flex-1"
+        onLayout={() => {
+          if (listAreaRef.current) onListAreaLayout?.(listAreaRef.current);
+        }}
+      >
+        {isLoading ? (
+          <LoadingScreen />
+        ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
+          <FlatList
+            className="flex-1"
+            data={tasksOfSelectedStatus}
+            // paddingBottom lets the last task scroll up from under the floating + on Home.
+            contentContainerStyle={{
+              paddingHorizontal: 22,
+              paddingTop: 8,
+              paddingBottom: 88,
+              gap: 12,
+              flexGrow: 1,
+            }}
+            renderItem={renderTask}
+            keyExtractor={(task, index) => {
+              const recurringOccurrence = getRecurringOccurrenceIdentity(task);
+              if (recurringOccurrence) {
+                return `virtual-${recurringOccurrence.recurringTaskId}-${recurringOccurrence.occurrenceDate}`;
+              }
+              if (task.id != null) return `task-${task.id}`;
+              return `task-fallback-${index}`;
+            }}
+            onScrollBeginDrag={closeAllRows}
+            keyboardShouldPersistTaps="handled"
+            ListFooterComponent={<Pressable className="flex-1 min-h-96" onPress={closeAllRows} />}
+          />
+        ) : (
+          <TaskListPlaceholder selectedStatus={selectedStatus} />
+        )}
+      </View>
     </Animated.View>
   );
 };
