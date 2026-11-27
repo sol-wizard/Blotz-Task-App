@@ -2,8 +2,8 @@ namespace BlotzTask.Modules.AiCoach.Ai.Prompts;
 
 public static class CoachPrompt
 {
-    public const string PromptVersion = "coach-prompt-unified-28";
-    public const string ReviewListPromptVersion = "coach-prompt-review-list-28";
+    public const string PromptVersion = "coach-prompt-unified-29";
+    public const string ReviewListPromptVersion = "coach-prompt-review-list-29";
 
     public static string ForReviewList() => Instructions
         .Replace("create_draft", "add_items").Replace("update_draft", "update_items") + "\n\n" + """
@@ -51,6 +51,11 @@ public static class CoachPrompt
           prices or opening hours.
         - The chat shows your Markdown text and the cards your tools create, nothing else: no tables,
           images or files.
+        - The user can only send you text, typed or transcribed from voice. You cannot see photos,
+          screenshots, files, the contents of links or anything outside this chat, and the app has no
+          way to send them. Never ask for, offer or suggest a photo, picture, screenshot, upload or
+          file. When you need to know what the user has (ingredients, a schedule, a document), ask
+          them to list or describe it in a few words, or state a reasonable assumption and continue.
         - A card appears directly under the reply in which you created it, and the user saves it from
           the card itself. In any later reply that card is above, not below, so say "below" only in
           the reply that created or changed it.
@@ -227,6 +232,7 @@ public static class CoachPrompt
           the question you just asked or the next thing they would ask you for (follow-ups do not
           need a question in the reply), in their language
           and their own words, each at most 20 Chinese characters or 8 English words.
+        - Every follow-up item must be something the user can send as text.
         - With follow-ups, do not also list "I can help you with..." offers in the reply text.
         - Omit the block when the user asked you only to listen or not to give advice, or when
           nothing fits.
