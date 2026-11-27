@@ -2,8 +2,9 @@ import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
-import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
+import { useStartTaskBreakdown } from "../hooks/useStartTaskBreakdown";
+import { useIsBreakingDown } from "../hooks/useBreakdownJobsStore";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
@@ -22,8 +23,10 @@ const SubtasksView = ({
   onBreakdownComplete,
 }: SubtaskViewProps) => {
   const { t } = useTranslation("tasks");
-  const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
+  const { startBreakdown, isStartingBreakdown } = useStartTaskBreakdown();
   const parentTaskId = hasTaskItemId(parentTask) ? parentTask.id : null;
+  // While it runs, subtasks can't be edited: the finished breakdown replaces them all.
+  const isBreakingDown = useIsBreakingDown(parentTaskId) || isStartingBreakdown;
   const canBreakDown = breakdownTarget != null;
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
     parentTaskId,
@@ -33,15 +36,14 @@ const SubtasksView = ({
   const hasSubtasks = displaySubtasks.length > 0;
 
   const handleBreakDown = async () => {
-    if (!breakdownTarget || isBreakingDownAndReplacingSubtasks) return;
+    if (!breakdownTarget || isBreakingDown) return;
 
-    const result = await breakDownAndReplaceSubtasks(breakdownTarget);
-    if (result?.taskItemId != null) {
-      onBreakdownComplete?.(result.taskItemId);
-    }
+    // Returns at once with the task's id; the BreakdownJobsWatcher refreshes the subtasks when done.
+    const status = await startBreakdown({ target: breakdownTarget, title: parentTask.title });
+    onBreakdownComplete?.(status.taskItemId);
   };
 
-  const isLoading = isBreakingDownAndReplacingSubtasks || isLoadingSubtasks;
+  const isLoading = isBreakingDown || isLoadingSubtasks;
 
   const fallbackBg = "#EBF0FE";
   const labelId = parentTask.label?.labelId;
@@ -65,7 +67,7 @@ const SubtasksView = ({
       <SubtasksEditor
         parentTask={parentTask}
         onRefreshSubtasks={handleBreakDown}
-        isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+        isRefreshingSubtasks={isBreakingDown}
       />
     );
   }
@@ -79,7 +81,14 @@ const SubtasksView = ({
         style={{ backgroundColor: isLoading || !canBreakDown ? "#D1D5DB" : bgColor }}
         className="flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full"
       >
-        {isLoading ? (
+        {isBreakingDown ? (
+          <>
+            <ActivityIndicator size="small" color={textColor} />
+            <Text style={{ color: textColor }} className="ml-2 text-xl font-balooBold">
+              {t("details.breakingDown")}
+            </Text>
+          </>
+        ) : isLoading ? (
           <ActivityIndicator size="small" color="#3b82f6" />
         ) : (
           <>

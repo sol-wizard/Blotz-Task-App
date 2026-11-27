@@ -1,6 +1,4 @@
 import {
-  breakDownAndReplaceTaskSubtasks,
-  BreakdownTaskTarget,
   deleteSubtask,
   updateSubtask,
   toggleSubtaskStatus,
@@ -8,7 +6,6 @@ import {
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
-import { BreakdownAndReplaceTaskResultDTO } from "../models/breakdown-result-dto";
 import { analytics } from "@/shared/services/analytics";
 import { useFirework } from "@/feature/firework-animation/hooks/useFirework";
 
@@ -21,34 +18,6 @@ type ToggleSubtaskStatusVariables = {
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
   const { subtask: subtaskFirework } = useFirework();
-
-  const breakDownAndReplaceSubtasksMutation = useMutation<
-    BreakdownAndReplaceTaskResultDTO | undefined,
-    Error,
-    BreakdownTaskTarget
-  >({
-    mutationFn: async (target: BreakdownTaskTarget) => {
-      const startTime = Date.now();
-      let result: BreakdownAndReplaceTaskResultDTO | undefined;
-
-      try {
-        result = await breakDownAndReplaceTaskSubtasks(target);
-        return result;
-      } finally {
-        analytics.trackTaskBreakdown({
-          success: result?.isSuccess ?? false,
-          durationMs: Date.now() - startTime,
-          generatedSubtaskCount: result?.subtasks?.length ?? 0,
-        });
-      }
-    },
-    onSuccess: async (result) => {
-      if (result) {
-        await queryClient.invalidateQueries({ queryKey: subtaskKeys.all(result.taskItemId) });
-      }
-      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-  });
 
   const deleteSubtaskMutation = useMutation({
     mutationFn: ({ subtaskId, parentTaskId }: { subtaskId: number; parentTaskId: number }) =>
@@ -86,10 +55,6 @@ export const useSubtaskMutations = () => {
   });
 
   return {
-    // Breakdown
-    breakDownAndReplaceSubtasks: breakDownAndReplaceSubtasksMutation.mutateAsync,
-    isBreakingDownAndReplacingSubtasks: breakDownAndReplaceSubtasksMutation.isPending,
-
     // Delete subtask
     deleteSubtask: deleteSubtaskMutation.mutate,
     isDeletingSubtask: deleteSubtaskMutation.isPending,

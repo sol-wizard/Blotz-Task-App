@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Text, useWindowDimensions } from "react-native";
+import { Pressable, TouchableOpacity, View, Text, useWindowDimensions } from "react-native";
 import MaterialCommunityIcons from "@react-native-vector-icons/material-design-icons/static";
 import Toast, { ToastConfigParams } from "react-native-toast-message";
 import Animated from "react-native-reanimated";
@@ -15,9 +15,9 @@ const ErrorToast = (props: ToastConfigParams<unknown>) => {
       <View style={{ flexShrink: 0 }}>
         <ASSETS.toastFail width={27} height={22} />
       </View>
-      <View className="flex-1 justify-center pl-2 pr-2">
+      <Pressable className="flex-1 justify-center pl-2 pr-2" onPress={props.onPress}>
         <Text className="text-white font-baloo leading-5 flex-wrap pt-0.5">{props.text1}</Text>
-      </View>
+      </Pressable>
       <TouchableOpacity
         onPress={() => Toast.hide()}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -46,11 +46,15 @@ const SuccessToast = (props: ToastConfigParams<unknown>) => {
       <View style={{ flexShrink: 0 }}>
         <ASSETS.toastSuccess width={28} height={24} />
       </View>
-      <View className="flex-shrink justify-center pl-2 pr-1" style={{ flexShrink: 1 }}>
+      <Pressable
+        className="flex-shrink justify-center pl-2 pr-1"
+        style={{ flexShrink: 1 }}
+        onPress={props.onPress}
+      >
         <Text style={{ color: "#9CD710" }} className="font-baloo text-sm leading-5 flex-wrap">
           {props.text1}
         </Text>
-      </View>
+      </Pressable>
       <TouchableOpacity
         onPress={() => Toast.hide()}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

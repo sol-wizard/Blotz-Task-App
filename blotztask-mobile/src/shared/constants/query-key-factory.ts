@@ -34,6 +34,10 @@ export const subtaskKeys = {
   all: (parentTaskId: number) => ["subtasks", parentTaskId] as const,
 };
 
+export const breakdownKeys = {
+  status: (taskItemId: number) => ["breakdownStatus", taskItemId] as const,
+};
+
 export const estimateKeys = {
   noteTime: (note: NoteDTO) => ["taskTime", note] as const,
 } as const;

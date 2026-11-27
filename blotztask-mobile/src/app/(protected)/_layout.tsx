@@ -1,5 +1,6 @@
 import { BadgeAchievementModal } from "@/feature/badge/components/badge-achievement-modal";
 import { useBadgeQueueStore } from "@/feature/badge/hooks/useBadgeQueueStore";
+import { BreakdownJobsWatcher } from "@/feature/task-details/components/breakdown-jobs-watcher";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { FireworkOverlays } from "@/feature/firework-animation/components/firework-overlay";
 import { FireworkProvider } from "@/feature/firework-animation/hooks/useFirework";
@@ -106,6 +107,7 @@ export default function ProtectedLayout() {
         <FireworkOverlays />
         <BadgeAchievementModal badge={badgeQueue[0]} onDismiss={dismissBadge} />
         <ScreenshotFeedbackCard />
+        <BreakdownJobsWatcher />
       </View>
     </FireworkProvider>
   );
